@@ -22,13 +22,15 @@ from aiohttp_s3_client.client import AwsUploadError, MultipartUploader, S3Client
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
+    BackupNotFound,
     BackupReaderWriterError,
     OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
-from . import ScalewayConfigEntry, exceptions, helpers
+from . import ScalewayConfigEntry, ScalewayNotReadyException, helpers
 from .const import (
     CONF_OBJECT_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
@@ -167,11 +169,18 @@ class ScalewayBackupAgent(BackupAgent):
                 object_name=object_key,
             )
         except ClientConnectionError as e:
-            raise exceptions.ScalewayConnectionError from e
+            raise ScalewayNotReadyException(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         if response.status == HTTPStatus.NOT_FOUND:
             response.release()
-            raise exceptions.ObjectNotFoundException(object_key=object_key)
+            raise BackupNotFound(
+                translation_domain=DOMAIN,
+                translation_key="object_not_found",
+                translation_placeholders={"object_key": object_key},
+            )
 
         try:
             helpers.raise_for_status(response.status)
@@ -227,7 +236,10 @@ class ScalewayBackupAgent(BackupAgent):
                 headers=self._create_headers(backup),
             )
         except ClientConnectionError as e:
-            raise exceptions.ScalewayConnectionError from e
+            raise ScalewayNotReadyException(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         try:
             helpers.raise_for_status(response.status)
@@ -283,7 +295,11 @@ class ScalewayBackupAgent(BackupAgent):
                     exc_info=e,
                 )
                 queue.shutdown()
-                raise exceptions.ScalewayConnectionError from e
+
+                raise ScalewayNotReadyException(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from e
             except AwsUploadError as e:
                 _LOGGER.warning(
                     "Encountered exception while uploading part", exc_info=e
@@ -382,7 +398,10 @@ class ScalewayBackupAgent(BackupAgent):
                         raise task_exception
 
         except ClientConnectionError as e:
-            raise exceptions.ScalewayConnectionError from e
+            raise ScalewayNotReadyException(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
         except AwsUploadError as e:
             # May happen during creation/completion of MultipartUpload (__aenter__, __aexit__ of MultipartUploader)
             _LOGGER.warning("Got exception while managing multipart upload", exc_info=e)
@@ -395,7 +414,10 @@ class ScalewayBackupAgent(BackupAgent):
         try:
             response = await self._client.delete(object_name=object_key)
         except ClientConnectionError as e:
-            raise exceptions.ScalewayConnectionError from e
+            raise ScalewayNotReadyException(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         try:
             if response.status == HTTPStatus.NOT_FOUND:
@@ -417,15 +439,13 @@ class ScalewayBackupAgent(BackupAgent):
                 object_key=object_key,
                 limiter=limiter,
             )
-        except exceptions.MissingMetadataException:
-            # Assume we encountered an unrelated object.
-            return None
-        except exceptions.ObjectNotFoundException as e:
+        except BackupNotFound:
             _LOGGER.debug(
                 "Unknown object was requested: %s",
-                e.object_key,
+                object_key,
             )
-            # Likely caused by a race condition (object was deleted between listing and reading)
+            # We either encountered an unrelated object (metadata missing or invalid), or the object
+            # was deleted between listing and reading (race condition).
             return None
 
     @override
@@ -451,8 +471,8 @@ class ScalewayBackupAgent(BackupAgent):
                         )
                         backups.append(task)
 
-        except* exceptions.ScalewayException as e:
-            # Each task could raise a ScalewayException.
+        except* HomeAssistantError as e:
+            # Each task could raise an exception. We need to unpack them.
             task_exceptions = list(helpers.unpack_exception_group(e))
             if len(task_exceptions) > 1:
                 _LOGGER.warning(

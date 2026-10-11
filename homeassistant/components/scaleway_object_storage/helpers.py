@@ -11,16 +11,22 @@ from aiohttp import ClientConnectionError, ClientSession, InvalidURL
 from aiohttp_s3_client import S3Client
 from aiohttp_s3_client.client import AwsDownloadError
 
-from homeassistant.components.backup import AgentBackup
+from homeassistant.components.backup import AgentBackup, BackupNotFound
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from . import exceptions
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_REGION,
     CONF_SECRET_KEY,
     CONF_SECTION_CREDENTIALS,
+    DOMAIN,
     HEADER_METADATA,
+)
+from .exceptions import (
+    InvalidBucketException,
+    ScalewayBackupException,
+    ScalewayNotReadyException,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,17 +68,31 @@ def raise_for_status(response_status: int) -> None:
     try:
         status = HTTPStatus(response_status)
     except ValueError:
-        raise exceptions.UnsuccessfulResponseError(response_status) from None
+        raise ScalewayBackupException(
+            translation_domain=DOMAIN,
+            translation_key="unsuccessful_response",
+            translation_placeholders={"status_code": str(response_status)},
+        ) from None
 
     match status:
         case HTTPStatus.UNAUTHORIZED | HTTPStatus.FORBIDDEN:
-            raise exceptions.InvalidAuthException from None
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from None
         case status if status.is_server_error:
-            raise exceptions.ServerUnavailableError from None
+            raise ScalewayNotReadyException(
+                translation_domain=DOMAIN,
+                translation_key="server_unavailable",
+            )
         case status if status.is_success:
-            pass
+            return
         case other:
-            raise exceptions.UnsuccessfulResponseError(other.value) from None
+            raise ScalewayBackupException(
+                translation_domain=DOMAIN,
+                translation_key="unsuccessful_response",
+                translation_placeholders={"status_code": str(other)},
+            ) from None
 
 
 async def check_connection(
@@ -82,17 +102,26 @@ async def check_connection(
     try:
         response = await client.head(object_name="")
     except ClientConnectionError as e:
-        raise exceptions.ScalewayConnectionError from e
+        raise ScalewayNotReadyException(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
     except InvalidURL as e:
         _LOGGER.debug("Invalid URL: %s", e.url, exc_info=e)
         # The bucket is the only part of the URL that's provided by the user,
         # so we assume that an invalid URL must be caused by the bucket name.
-        raise exceptions.InvalidBucketNameException from e
+        raise InvalidBucketException(
+            translation_domain=DOMAIN,
+            translation_key="invalid_bucket_name",
+        ) from e
 
     response.release()
 
     if response.status == HTTPStatus.NOT_FOUND:
-        raise exceptions.BucketNotFoundException
+        raise InvalidBucketException(
+            translation_domain=DOMAIN,
+            translation_key="bucket_not_found",
+        )
 
     raise_for_status(response.status)
 
@@ -116,24 +145,39 @@ async def read_object_metadata(
         try:
             response = await client.head(object_name=object_key)
         except ClientConnectionError as e:
-            raise exceptions.ScalewayConnectionError from e
+            raise ScalewayNotReadyException(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
     response.release()
 
     if response.status == HTTPStatus.NOT_FOUND:
-        raise exceptions.ObjectNotFoundException(object_key=object_key)
+        raise BackupNotFound(
+            translation_domain=DOMAIN,
+            translation_key="object_not_found",
+            translation_placeholders={"object_key": object_key},
+        )
 
     raise_for_status(response.status)
 
     meta = response.headers.get(HEADER_METADATA)
     if meta is None:
-        raise exceptions.MissingMetadataException(object_key=object_key)
+        raise BackupNotFound(
+            translation_domain=DOMAIN,
+            translation_key="missing_object_metadata",
+            translation_placeholders={"object_key": object_key},
+        )
 
     try:
         return AgentBackup.from_dict(json.loads(meta))
     except (TypeError, KeyError, ValueError) as e:
         _LOGGER.warning("Found invalid metadata on object %s", object_key, exc_info=e)
-        raise exceptions.MissingMetadataException(object_key=object_key) from None
+        raise BackupNotFound(
+            translation_domain=DOMAIN,
+            translation_key="missing_object_metadata",
+            translation_placeholders={"object_key": object_key},
+        ) from None
 
 
 async def list_objects(*, client: S3Client, prefix: str) -> AsyncGenerator[str]:
@@ -143,10 +187,16 @@ async def list_objects(*, client: S3Client, prefix: str) -> AsyncGenerator[str]:
             for meta in items:
                 yield meta.key
     except ClientConnectionError as e:
-        raise exceptions.ScalewayConnectionError from e
+        raise ScalewayNotReadyException(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
     except AwsDownloadError as e:
         if e.status == HTTPStatus.NOT_FOUND:
-            raise exceptions.BucketNotFoundException from None
+            raise InvalidBucketException(
+                translation_domain=DOMAIN,
+                translation_key="bucket_not_found",
+            ) from None
         raise_for_status(e.status)
 
 

@@ -2,13 +2,15 @@
 
 from aiohttp_s3_client import S3Client
 
+from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from . import exceptions, helpers
+from . import helpers
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .exceptions import ScalewayNotReadyException
 
 type ScalewayConfigEntry = ConfigEntry[S3Client]
 
@@ -19,11 +21,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScalewayConfigEntry) -> 
     client = helpers.create_client(session, entry.data)
     try:
         await helpers.check_connection(client)
-    except ConfigEntryNotReady, ConfigEntryError:
-        # Re-raise as they are
-        raise
-    except exceptions.ScalewayException as e:
-        # All other exceptions are translated
+    except ScalewayNotReadyException as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key=e.translation_key,
+            translation_placeholders=e.translation_placeholders,
+        ) from e
+    except BackupAgentError as e:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key=e.translation_key,

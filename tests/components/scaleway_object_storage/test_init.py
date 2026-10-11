@@ -5,10 +5,15 @@ from unittest.mock import patch
 import pytest
 import pytest_asyncio
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
-from homeassistant.components.scaleway_object_storage import exceptions
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BackupAgentError
+from homeassistant.components.scaleway_object_storage import ScalewayNotReadyException
+from homeassistant.components.scaleway_object_storage.const import DOMAIN
+from homeassistant.components.scaleway_object_storage.exceptions import (
+    InvalidBucketException,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -47,16 +52,27 @@ async def test_load_unload_config_entry(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (exceptions.ScalewayConnectionError, ConfigEntryState.SETUP_RETRY),
-        (exceptions.ServerUnavailableError, ConfigEntryState.SETUP_RETRY),
-        (exceptions.InvalidAuthException, ConfigEntryState.SETUP_ERROR),
-        (exceptions.BucketNotFoundException, ConfigEntryState.SETUP_ERROR),
+        (
+            ScalewayNotReadyException(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            ScalewayNotReadyException(
+                translation_domain=DOMAIN, translation_key="server_unavailable"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (BackupAgentError, ConfigEntryState.SETUP_ERROR),
+        (ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR),
+        (InvalidBucketException, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_entry_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    exception: exceptions.ScalewayException,
+    exception: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test integration init behavior if a connection error is raised."""

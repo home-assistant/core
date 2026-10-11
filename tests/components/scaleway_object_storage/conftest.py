@@ -12,8 +12,7 @@ from aiohttp_s3_client.client import RequestContextManager
 from multidict import MultiDict
 import pytest
 
-from homeassistant.components.backup import AgentBackup
-from homeassistant.components.scaleway_object_storage import exceptions
+from homeassistant.components.backup import AgentBackup, BackupNotFound
 from homeassistant.components.scaleway_object_storage.const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
@@ -124,7 +123,11 @@ def mock_read_object_metadata(
             if object_key == mock_agent_backup_object_key:
                 return mock_agent_backup
 
-            raise exceptions.ObjectNotFoundException(object_key=object_key)
+            raise BackupNotFound(
+                translation_domain=DOMAIN,
+                translation_key="object_not_found",
+                translation_placeholders={"object_key": object_key},
+            )
 
     with patch(
         "homeassistant.components.scaleway_object_storage.helpers.read_object_metadata",

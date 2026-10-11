@@ -11,13 +11,19 @@ from aiohttp_s3_client import AwsObjectMeta
 from aiohttp_s3_client.client import AwsDownloadError
 import pytest
 
-from homeassistant.components.backup import AgentBackup
-from homeassistant.components.scaleway_object_storage import exceptions, helpers
+from homeassistant.components.backup import AgentBackup, BackupNotFound
+from homeassistant.components.scaleway_object_storage import helpers
 from homeassistant.components.scaleway_object_storage.const import (
     CONF_BUCKET,
     CONF_REGION,
+    DOMAIN,
     HEADER_METADATA,
 )
+from homeassistant.components.scaleway_object_storage.exceptions import (
+    InvalidBucketException,
+    ScalewayNotReadyException,
+)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.util import utcnow
 
 from .conftest import MockS3ResponseFactory
@@ -49,9 +55,11 @@ async def test_list_objects_network_error(
 ) -> None:
     """Test network error during list_objects."""
     mock_s3_client.list_objects_v2.side_effect = ClientConnectionError()
-    with pytest.raises(exceptions.ScalewayConnectionError):
+    with pytest.raises(ScalewayNotReadyException) as e:
         async for _ in helpers.list_objects(client=mock_s3_client, prefix=""):
             pass
+
+    assert e.value.translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize("status_code", [500, 502, 504])
@@ -66,9 +74,11 @@ async def test_list_objects_server_error(
         resp=mock_response, message="An error occurred"
     )
 
-    with pytest.raises(exceptions.ServerUnavailableError):
+    with pytest.raises(ScalewayNotReadyException) as e:
         async for _ in helpers.list_objects(client=mock_s3_client, prefix=""):
             pass
+
+    assert e.value.translation_key == "server_unavailable"
 
 
 async def test_list_objects_bucket_not_found(
@@ -81,9 +91,11 @@ async def test_list_objects_bucket_not_found(
         resp=mock_response, message="An error occurred"
     )
 
-    with pytest.raises(exceptions.BucketNotFoundException):
+    with pytest.raises(InvalidBucketException) as e:
         async for _ in helpers.list_objects(client=mock_s3_client, prefix=""):
             pass
+
+    assert e.value.translation_key == "bucket_not_found"
 
 
 @pytest.mark.parametrize(
@@ -104,9 +116,12 @@ async def test_list_objects_invalid_auth(
         resp=mock_response, message="An error occurred"
     )
 
-    with pytest.raises(exceptions.InvalidAuthException):
+    with pytest.raises(ConfigEntryAuthFailed) as e:
         async for _ in helpers.list_objects(client=mock_s3_client, prefix=""):
             pass
+
+    assert e.value.translation_domain == DOMAIN
+    assert e.value.translation_key == "invalid_auth"
 
 
 async def test_read_object_metadata(
@@ -135,12 +150,16 @@ async def test_read_object_metadata_missing_object(
     mock_response, mock_response_context = mock_s3_response_factory(status_code=404)
     mock_s3_client.head.return_value = mock_response_context
 
-    with pytest.raises(exceptions.ObjectNotFoundException):
+    with pytest.raises(BackupNotFound) as e:
         await helpers.read_object_metadata(
-            client=mock_s3_client, object_key="somekey", limiter=None
+            client=mock_s3_client,
+            object_key="somekey",
+            limiter=None,
         )
 
     assert mock_response.release.call_count == 1
+    assert e.value.translation_domain == DOMAIN
+    assert e.value.translation_key == "object_not_found"
 
 
 @pytest.mark.parametrize(
@@ -162,12 +181,13 @@ async def test_read_object_metadata_server_error(
     )
     mock_s3_client.head.return_value = mock_response_context
 
-    with pytest.raises(exceptions.ServerUnavailableError):
+    with pytest.raises(ScalewayNotReadyException) as e:
         await helpers.read_object_metadata(
             client=mock_s3_client, object_key="somekey", limiter=None
         )
 
     assert mock_response.release.call_count == 1
+    assert e.value.translation_key == "server_unavailable"
 
 
 async def test_read_object_metadata_network_error(
@@ -176,10 +196,12 @@ async def test_read_object_metadata_network_error(
     """Test read_object_metadata with network issues."""
     mock_s3_client.head.side_effect = ClientConnectionError()
 
-    with pytest.raises(exceptions.ScalewayConnectionError):
+    with pytest.raises(ScalewayNotReadyException) as e:
         await helpers.read_object_metadata(
             client=mock_s3_client, object_key="somekey", limiter=None
         )
+
+    assert e.value.translation_key == "cannot_connect"
 
 
 async def test_read_object_metadata_invalid_metadata(
@@ -194,12 +216,14 @@ async def test_read_object_metadata_invalid_metadata(
     }
     mock_s3_client.head.return_value = mock_response_context
 
-    with pytest.raises(exceptions.MissingMetadataException):
+    with pytest.raises(BackupNotFound) as e:
         await helpers.read_object_metadata(
             client=mock_s3_client, object_key="somekey", limiter=None
         )
 
     assert mock_response.release.call_count == 1
+    assert e.value.translation_domain == DOMAIN
+    assert e.value.translation_key == "missing_object_metadata"
 
 
 async def test_read_object_metadata_missing_metadata(
@@ -211,12 +235,14 @@ async def test_read_object_metadata_missing_metadata(
     mock_response.headers = {}
     mock_s3_client.head.return_value = mock_response_context
 
-    with pytest.raises(exceptions.MissingMetadataException):
+    with pytest.raises(BackupNotFound) as e:
         await helpers.read_object_metadata(
             client=mock_s3_client, object_key="somekey", limiter=None
         )
 
     assert mock_response.release.call_count == 1
+    assert e.value.translation_domain == DOMAIN
+    assert e.value.translation_key == "missing_object_metadata"
 
 
 async def test_check_connection(
@@ -241,10 +267,11 @@ async def test_check_connection_bucket_not_found(
     mock_response, mock_response_context = mock_s3_response_factory(status_code=404)
     mock_s3_client.head.return_value = mock_response_context
 
-    with pytest.raises(exceptions.BucketNotFoundException):
+    with pytest.raises(InvalidBucketException) as e:
         await helpers.check_connection(mock_s3_client)
 
     assert mock_response.release.call_count == 1
+    assert e.value.translation_key == "bucket_not_found"
 
 
 @pytest.mark.parametrize(
@@ -267,10 +294,11 @@ async def test_check_connection_server_error(
     )
     mock_s3_client.head.return_value = mock_response_context
 
-    with pytest.raises(exceptions.ServerUnavailableError):
+    with pytest.raises(ScalewayNotReadyException) as e:
         await helpers.check_connection(mock_s3_client)
 
     assert mock_response.release.call_count == 1
+    assert e.value.translation_key == "server_unavailable"
 
 
 async def test_check_connection_invalid_bucket(
@@ -281,8 +309,10 @@ async def test_check_connection_invalid_bucket(
     """Test check_connection with invalid bucket name."""
     mock_s3_client.head.side_effect = InvalidURL("placeholder")
 
-    with pytest.raises(exceptions.InvalidBucketNameException):
+    with pytest.raises(InvalidBucketException) as e:
         await helpers.check_connection(mock_s3_client)
+
+    assert e.value.translation_key == "invalid_bucket_name"
 
 
 async def test_check_connection_network_error(
@@ -292,8 +322,10 @@ async def test_check_connection_network_error(
     """Test check_connection with network error."""
     mock_s3_client.head.side_effect = ClientConnectionError()
 
-    with pytest.raises(exceptions.ScalewayConnectionError):
+    with pytest.raises(ScalewayNotReadyException) as e:
         await helpers.check_connection(mock_s3_client)
+
+    assert e.value.translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize(

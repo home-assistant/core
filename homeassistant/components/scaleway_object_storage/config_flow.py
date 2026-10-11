@@ -1,12 +1,14 @@
 """Config flow for the Scaleway Object Storage integration."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any, Final, override
 
 from probatio import All, Length, Optional, Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import section
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -17,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import exceptions, helpers
+from . import helpers
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
@@ -27,6 +29,9 @@ from .const import (
     CONF_SECTION_CREDENTIALS,
     DOMAIN,
 )
+from .exceptions import InvalidBucketException, ScalewayBackupException
+
+_LOGGER = logging.getLogger(__name__)
 
 DOCS_PLACEHOLDERS: Final = {
     "api_key_docs": "https://www.scaleway.com/docs/iam/api-cli/using-api-key-object-storage/",
@@ -103,8 +108,21 @@ class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
         client = helpers.create_client(session, config)
         try:
             await helpers.check_connection(client)
-        except exceptions.ScalewayConfigException as e:
-            errors[e.config_schema_key] = e.config_translation_key
+        except InvalidBucketException as e:
+            errors[CONF_BUCKET] = e.translation_key
+            return False
+        except ConfigEntryAuthFailed as e:
+            translation_key = e.translation_key
+            if translation_key is None:
+                # This shouldn't happen in our integration, but we safeguard anyway.
+                _LOGGER.warning(
+                    "Encountered ConfigEntryAuthFailed exception without translation key"
+                )
+                translation_key = "invalid_auth"
+            errors[CONF_SECTION_CREDENTIALS] = translation_key
+            return False
+        except ScalewayBackupException as e:
+            errors["base"] = e.translation_key
             return False
         else:
             return True

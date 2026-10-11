@@ -20,6 +20,7 @@ from homeassistant.components.scaleway_object_storage.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from tests.common import MockConfigEntry
 
@@ -143,12 +144,46 @@ async def test_no_conflict_with_similar_configuration(
 @pytest.mark.parametrize(
     ("exception", "error_schema_key", "error_code"),
     [
-        (exceptions.ScalewayConnectionError(), "base", "cannot_connect"),
-        (exceptions.ServerUnavailableError(), "base", "server_unavailable"),
-        (exceptions.UnsuccessfulResponseError(400), "base", "unsuccessful_response"),
-        (exceptions.InvalidBucketNameException(), CONF_BUCKET, "invalid_bucket_name"),
-        (exceptions.BucketNotFoundException(), CONF_BUCKET, "bucket_not_found"),
-        (exceptions.InvalidAuthException(), CONF_SECTION_CREDENTIALS, "invalid_auth"),
+        (
+            exceptions.ScalewayBackupException(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ),
+            "base",
+            "cannot_connect",
+        ),
+        (
+            exceptions.ScalewayBackupException(
+                translation_domain=DOMAIN, translation_key="server_unavailable"
+            ),
+            "base",
+            "server_unavailable",
+        ),
+        (
+            exceptions.ScalewayBackupException(
+                translation_domain=DOMAIN, translation_key="unsuccessful_response"
+            ),
+            "base",
+            "unsuccessful_response",
+        ),
+        (
+            exceptions.InvalidBucketException(
+                translation_domain=DOMAIN, translation_key="invalid_bucket_name"
+            ),
+            CONF_BUCKET,
+            "invalid_bucket_name",
+        ),
+        (
+            exceptions.InvalidBucketException(
+                translation_domain=DOMAIN, translation_key="bucket_not_found"
+            ),
+            CONF_BUCKET,
+            "bucket_not_found",
+        ),
+        (
+            ConfigEntryAuthFailed(translation_key="invalid_auth"),
+            CONF_SECTION_CREDENTIALS,
+            "invalid_auth",
+        ),
     ],
 )
 async def test_form_failed_connection_check(
