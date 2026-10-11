@@ -129,19 +129,22 @@ class ScalewayBackupAgent(BackupAgent):
 
         self._hass = hass
         self._entry = entry
-        self._prefix: str = entry.data[CONF_OBJECT_PREFIX]
+        self._user_object_key_prefix: str = entry.data[CONF_OBJECT_PREFIX]
 
     @property
     def _client(self) -> S3Client:
         return self._entry.runtime_data
 
-    def _calculate_object_key(self, backup_id: str) -> str:
-        prefix = self._prefix
-        object_key = f"home-assistant-backup-{backup_id}.tar"
-        if prefix:
-            return f"{prefix}{object_key}"
+    @property
+    def _object_key_prefix(self) -> str:
+        static_prefix = "home-assistant-backup-"
+        if user_prefix := self._user_object_key_prefix:
+            return f"{user_prefix}{static_prefix}"
 
-        return object_key
+        return static_prefix
+
+    def _calculate_object_key(self, backup_id: str) -> str:
+        return f"{self._object_key_prefix}{backup_id}.tar"
 
     @staticmethod
     async def _yield_chunks(response: ClientResponse) -> AsyncGenerator[bytes]:
@@ -433,7 +436,8 @@ class ScalewayBackupAgent(BackupAgent):
         try:
             async with TaskGroup() as tg:
                 async for object_key in helpers.list_objects(
-                    client=self._client, prefix=self._prefix
+                    client=self._client,
+                    prefix=self._object_key_prefix,
                 ):
                     # Acquire the semaphore here to ensure we don't read too far ahead of
                     # the HEAD requests.
