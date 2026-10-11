@@ -1,5 +1,6 @@
 """The Anthem A/V Receivers integration."""
 
+import asyncio
 import logging
 
 import anthemav
@@ -20,7 +21,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ANTHEMAV_UPDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    CONNECT_TIMEOUT_SECONDS,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 type AnthemavConfigEntry = ConfigEntry[anthemav.Connection]
 
@@ -38,17 +45,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         _LOGGER.debug("Received update callback from AVR: %s", message)
         async_dispatcher_send(hass, f"{ANTHEMAV_UPDATE_SIGNAL}_{entry.entry_id}")
 
+    avr: anthemav.Connection | None = None
+    setup_ok = False
     try:
-        avr = await anthemav.Connection.create(
-            host=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
-            update_callback=async_anthemav_update_callback,
-        )
+        # See CONNECT_TIMEOUT_SECONDS for why this needs a timeout.
+        async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
+            avr = await anthemav.Connection.create(
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+                update_callback=async_anthemav_update_callback,
+            )
 
         # Wait for the zones to be initialised based on the model
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
+        setup_ok = True
+    except TimeoutError as err:
+        if avr is None:
+            raise ConfigEntryNotReady(
+                f"Timed out connecting to Anthem AVR at "
+                f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+            ) from err
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for device info from Anthem AVR at "
+            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        ) from err
     except (OSError, DeviceError) as err:
         raise ConfigEntryNotReady from err
+    finally:
+        # Covers every exit that isn't full success, including
+        # asyncio.CancelledError (a BaseException, so it isn't caught by
+        # the except clauses above) — e.g. the setup task getting cancelled
+        # while awaiting wait_for_device_initialised() after avr already
+        # connected. Without this, that connection is never closed since
+        # runtime_data was never set for async_unload_entry to find it.
+        if not setup_ok and avr is not None:
+            avr.close()
 
     entry.runtime_data = avr
 
