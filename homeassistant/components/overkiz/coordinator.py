@@ -40,7 +40,13 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    EVENTS_MIN_INTERVAL,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    UPDATE_INTERVAL,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -231,7 +237,7 @@ async def on_execution_registered(
         coordinator.executions[event.exec_id] = []
 
     if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
+        coordinator.update_interval = EVENTS_MIN_INTERVAL
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
