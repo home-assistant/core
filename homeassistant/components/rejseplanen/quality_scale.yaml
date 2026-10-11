@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Integration uses generic public transport API without specific brands
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
