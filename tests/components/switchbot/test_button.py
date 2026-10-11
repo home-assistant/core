@@ -44,6 +44,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     [
         (SERVICE_PRESS, "next_image", "button.test_name_next_image"),
         (SERVICE_PRESS, "prev_image", "button.test_name_previous_image"),
+        (SERVICE_PRESS, "random_image", "button.test_name_random_image"),
     ],
 )
 async def test_art_frame_button_press(
