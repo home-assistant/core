@@ -95,6 +95,7 @@ async def test_user_flow_recovers_from_errors(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert result["title"] == "Living Room"
     assert result["data"] == {
         CONF_HOST: HOST,
@@ -288,6 +289,8 @@ async def test_zeroconf_flow_uses_fallback_api_version_when_txt_omits_api(
         )
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert validate.call_args.kwargs["api_version"] is None
     assert result["data"]["port"] == DEFAULT_PORT
     assert result["data"]["api_version"] == "v20"

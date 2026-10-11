@@ -1,5 +1,6 @@
 """Tests for the AirLino data update coordinator."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from airlino_api import AirlinoApiConnectionError, AirlinoApiError
@@ -94,6 +95,21 @@ async def test_receiver_status_failure_preserves_previous_state(
 
     assert data["sender"] == {"enabled": False}
     assert data["receiver"] == previous_receiver
+
+
+async def test_recovery_after_offline_logs_and_returns_online(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Report an online device after a prior offline update."""
+    update_coordinator, _ = coordinator
+    update_coordinator.data = {"online": False}
+    caplog.set_level(logging.INFO)
+
+    data = await update_coordinator._async_update_data()
+
+    assert data["online"] is True
+    assert "AirLino is available again" in caplog.text
 
 
 async def test_device_info_is_refetched_after_offline(

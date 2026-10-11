@@ -278,8 +278,6 @@ class AirlinoMediaPlayer(
         """Remove this device from the multiroom group."""
         uuid = self._sender_uuid(self.coordinator)
         if uuid:
-            # This device is the sender: unlink all group members and stop
-            # broadcasting, returning it to standalone mode.
             for _, runtime in self._all_runtimes():
                 if runtime.coordinator is self.coordinator:
                     continue
