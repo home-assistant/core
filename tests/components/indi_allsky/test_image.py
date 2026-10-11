@@ -103,7 +103,7 @@ async def test_image_events_and_fetching(
     state = hass.states.get("image.indi_allsky_latest_keogram")
     assert state is not None
     assert state.state == "2026-08-13T22:53:41+00:00"
-    assert state.attributes.get("access_token") != initial_keogram_token
+    assert state.attributes["access_token"] != initial_keogram_token
 
     img = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
     assert img.content == b"\xff\xd8\xff\xe0keogram_bytes"
@@ -111,7 +111,7 @@ async def test_image_events_and_fetching(
     state = hass.states.get("image.indi_allsky_latest_star_trail")
     assert state is not None
     assert state.state == "2026-08-13T22:53:41+00:00"
-    assert state.attributes.get("access_token") != initial_startrail_token
+    assert state.attributes["access_token"] != initial_startrail_token
 
     img = await image.async_get_image(hass, "image.indi_allsky_latest_star_trail")
     assert img.content == b"\xff\xd8\xff\xe0startrail_bytes"
@@ -293,7 +293,6 @@ async def test_image_last_updated_timezones_and_fallback(
 
     mock_indi_allsky_client.fetch_image.return_value = b"\xff\xd8\xff\xe0keogram_bytes"
 
-    # Test day_date with timezone offset converts to UTC (line 116)
     tz_keogram = replace(mock_keogram_data, day_date="2026-08-13 22:53:41+02:00")
     for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
         callback(tz_keogram)
@@ -303,7 +302,6 @@ async def test_image_last_updated_timezones_and_fallback(
     assert state is not None
     assert state.state == "2026-08-13T20:53:41+00:00"
 
-    # Test media with empty day_date falls back to updated_fn (line 118)
     no_date_keogram = replace(mock_keogram_data, day_date="")
     for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
         callback(no_date_keogram)
