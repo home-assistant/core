@@ -243,6 +243,30 @@ def _find_step_call_node(root_node: nodes.Module) -> nodes.Call:
             "homeassistant.components.test.config_flow",
             id="options_flow_class",
         ),
+        pytest.param(
+            """
+        async def async_step_user() -> FlowResult:
+            return self.async_show_form(step_id="user" if value else "user")
+        """,
+            "homeassistant.components.test.config_flow",
+            id="duplicate_inferred_step_ids",
+        ),
+        pytest.param(
+            """
+        async def async_step_user() -> FlowResult:
+            return self.async_show_form(step_id="user" if value else ["user"])
+        """,
+            "homeassistant.components.test.config_flow",
+            id="unsupported_inferred_alternative",
+        ),
+        pytest.param(
+            """
+        async def async_step_user(value: Any) -> FlowResult:
+            return self.async_show_form(step_id="user" if value else value.attr)
+        """,
+            "homeassistant.components.test.config_flow",
+            id="uninferable_alternative",
+        ),
     ],
 )
 def test_step_id_match_method(
@@ -414,6 +438,35 @@ def test_step_id_match_method(
             "homeassistant.components.test.config_flow",
             ("other", "async_step_user"),
             id="incorrect_method_config_flow_class",
+        ),
+        pytest.param(
+            """
+        async def async_step_user() -> FlowResult:
+            return self.async_show_form(step_id="other" if value else ["user"])
+        """,
+            "homeassistant.components.test.config_flow",
+            ("other", "async_step_user"),
+            id="incorrect_method_unsupported_alternative",
+        ),
+        pytest.param(
+            """
+        async def async_step_user(value: Any) -> FlowResult:
+            return self.async_show_form(step_id="other" if value else value.attr)
+        """,
+            "homeassistant.components.test.config_flow",
+            ("other", "async_step_user"),
+            id="incorrect_method_uninferable_alternative",
+        ),
+        pytest.param(
+            """
+        async def async_step_custom() -> FlowResult:
+            return self.async_show_form(
+                step_id="user" if value else "user" if other else "custom"
+            )
+        """,
+            "homeassistant.components.test.config_flow",
+            ("user, custom", "async_step_custom"),
+            id="incorrect_method_duplicate_alternatives",
         ),
     ],
 )

@@ -6,7 +6,7 @@ name after removing the 'async_step_' prefix. For example,
 if the method is named async_step_user, the step_id should be 'user'.
 """
 
-from astroid import InferenceError, Uninferable, nodes
+from astroid import InferenceError, nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
@@ -64,39 +64,33 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
                 method_step_id = ancestor.name.removeprefix("async_step_")
                 break
 
-        step_id_node: str | None = None
-        if node.keywords:
-            for keyword in node.keywords:
-                if keyword.arg == "step_id":
-                    try:
-                        values = list(keyword.value.infer())
-                    except InferenceError:
-                        break
-                    if not values or values[0] is Uninferable:
-                        break
-                    if len(values) > 1:
-                        step_id_node = ", ".join(
-                            str(inferred.value) for inferred in values
-                        ).replace("Uninferable", "unknown")
-                        break
-                    inferred = values[0]
-                    if not isinstance(inferred, nodes.Const) or not isinstance(
-                        inferred.value, str
-                    ):
-                        break
-                    step_id_node = inferred.value
-                    break
+        step_ids: list[str] = []
+        for keyword in node.keywords:
+            if keyword.arg != "step_id":
+                continue
+            try:
+                inferred_values = list(keyword.value.infer())
+            except InferenceError:
+                break
+            for inferred in inferred_values:
+                if (
+                    isinstance(inferred, nodes.Const)
+                    and isinstance(inferred.value, str)
+                    and inferred.value not in step_ids
+                ):
+                    step_ids.append(inferred.value)
+            break
 
-        if step_id_node is None or method_step_id is None:
-            # step_id is None when it follows the method directly
+        if not step_ids or method_step_id is None:
+            # No string step_id could be inferred or the call is not in a step method
             return
 
-        if step_id_node != method_step_id:
+        if step_ids != [method_step_id]:
             self.add_message(
                 "home-assistant-step_id-match-method",
                 node=node,
                 args=(
-                    step_id_node,
+                    ", ".join(step_ids),
                     f"async_step_{method_step_id}",
                 ),
             )
