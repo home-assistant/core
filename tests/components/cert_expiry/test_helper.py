@@ -7,7 +7,10 @@ from unittest.mock import Mock, patch
 from cryptography import x509
 import pytest
 
-from homeassistant.components.cert_expiry.errors import ValidationFailure
+from homeassistant.components.cert_expiry.errors import (
+    ConnectionTimeout,
+    ValidationFailure,
+)
 from homeassistant.components.cert_expiry.helper import (
     async_get_cert,
     get_cert_expiry_timestamp,
@@ -106,3 +109,39 @@ async def test_invalid_certificate(
         pytest.raises(ValidationFailure, match=error),
     ):
         await get_cert_expiry_timestamp(hass, HOST, PORT)
+
+
+async def test_transport_closed_on_certificate_error(hass: HomeAssistant) -> None:
+    """Close a successful TLS connection even when reading its certificate fails."""
+    transport = Mock(spec=asyncio.Transport)
+    ssl_object = Mock(spec=ssl.SSLObject)
+    ssl_object.getpeercert.side_effect = ValueError("certificate unavailable")
+    transport.get_extra_info.return_value = ssl_object
+
+    with (
+        patch.object(hass.loop, "create_connection", return_value=(transport, Mock())),
+        pytest.raises(ValueError, match="certificate unavailable"),
+    ):
+        await async_get_cert(hass, HOST, PORT)
+
+    transport.close.assert_called_once_with()
+
+
+async def test_connection_timeout_cancels_handshake(hass: HomeAssistant) -> None:
+    """Cancel a stalled connection rather than leaving its handshake running."""
+    cancelled = asyncio.Event()
+
+    async def stalled_connection(*_args: object, **_kwargs: object) -> None:
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled.set()
+
+    with (
+        patch.object(hass.loop, "create_connection", side_effect=stalled_connection),
+        patch("homeassistant.components.cert_expiry.helper.TIMEOUT", 0),
+        pytest.raises(ConnectionTimeout),
+    ):
+        await get_cert_expiry_timestamp(hass, HOST, PORT)
+
+    assert cancelled.is_set()

@@ -27,7 +27,16 @@ def certificate_key() -> ec.EllipticCurvePrivateKey:
 
 
 @pytest.fixture
-def certificate(certificate_key: ec.EllipticCurvePrivateKey) -> x509.Certificate:
+def certificate_dates() -> tuple[datetime, datetime]:
+    """Keep the test certificate valid independently of the test clock."""
+    return datetime(2020, 1, 1, tzinfo=UTC), datetime(2100, 1, 1, tzinfo=UTC)
+
+
+@pytest.fixture
+def certificate(
+    certificate_key: ec.EllipticCurvePrivateKey,
+    certificate_dates: tuple[datetime, datetime],
+) -> x509.Certificate:
     """Create a self-signed certificate valid independently of the test clock."""
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
     return (
@@ -36,8 +45,8 @@ def certificate(certificate_key: ec.EllipticCurvePrivateKey) -> x509.Certificate
         .issuer_name(name)
         .public_key(certificate_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime(2020, 1, 1, tzinfo=UTC))
-        .not_valid_after(datetime(2100, 1, 1, tzinfo=UTC))
+        .not_valid_before(certificate_dates[0])
+        .not_valid_after(certificate_dates[1])
         .add_extension(
             x509.SubjectAlternativeName([x509.DNSName("localhost")]), critical=False
         )
