@@ -200,6 +200,7 @@ async def test_ac_purify_switch(
 ) -> None:
     """Test Samsung OCF AC purify switch."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -214,6 +215,100 @@ async def test_ac_purify_switch(
         MAIN,
         argument,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+@pytest.mark.parametrize(
+    ("action", "option", "expected_state"),
+    [
+        (SERVICE_TURN_ON, "Light_Off", STATE_ON),
+        (SERVICE_TURN_OFF, "Light_On", STATE_OFF),
+    ],
+)
+async def test_ac_ocf_display_lighting_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    option: str,
+    expected_state: str,
+) -> None:
+    """Test display lighting switch for legacy Samsung OCF air conditioners."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "switch.clim_salon_display_lighting"
+    assert hass.states.get(entity_id).state == STATE_ON
+    # The current state is requested from the device on startup
+    devices.execute_device_command.assert_called_once_with(
+        "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=["/mode/vs/0"],
+    )
+    devices.execute_device_command.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=["/mode/vs/0", {"x.com.samsung.da.options": [option]}],
+    )
+    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+async def test_ac_ocf_display_lighting_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test display lighting state is read from the OCF mode resource."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "switch.clim_salon_display_lighting"
+    device_id = "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977"
+
+    await trigger_update(
+        hass,
+        devices,
+        device_id,
+        Capability.EXECUTE,
+        Attribute.DATA,
+        {"payload": {"x.com.samsung.da.options": ["Comode_Off", "Light_On"]}},
+        {"href": "/mode/vs/0"},
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await trigger_update(
+        hass,
+        devices,
+        device_id,
+        Capability.EXECUTE,
+        Attribute.DATA,
+        {"payload": {"x.com.samsung.da.options": ["Comode_Off", "Light_Off"]}},
+        {"href": "/mode/vs/0"},
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # Responses from other OCF resources don't change the state
+    await trigger_update(
+        hass,
+        devices,
+        device_id,
+        Capability.EXECUTE,
+        Attribute.DATA,
+        {"payload": {"temperature": 22.0}},
+        {"href": "/temperature/desired/0"},
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])

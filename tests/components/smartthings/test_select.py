@@ -200,6 +200,7 @@ async def test_select_option_as_integer(
 ) -> None:
     """Test selecting an option represented as an integer."""
     await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.reset_mock()
 
     state = hass.states.get("select.clim_salon_dust_filter_alarm_threshold")
     assert state.state == "500"

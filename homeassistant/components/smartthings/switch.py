@@ -1,25 +1,29 @@
 """Support for switches through the SmartThings cloud API."""
 
 from dataclasses import dataclass
+import logging
 from typing import Any, cast, override
 
-from pysmartthings import Attribute, Capability, Command, SmartThings
+from pysmartthings import Attribute, Capability, Command, SmartThings, SmartThingsError
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
+
+_LOGGER = logging.getLogger(__name__)
 
 CAPABILITIES = (
     Capability.SWITCH_LEVEL,
@@ -39,6 +43,17 @@ MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
     Capability.AUDIO_VOLUME,
 )
+
+# Older Samsung OCF air conditioners (ARTIK051 Wi-Fi modules) don't expose
+# samsungce.airConditionerLighting, but their display can still be controlled
+# through the generic execute capability on the OCF mode resource.
+LEGACY_OCF_AC_MODEL_PREFIX = "ARTIK051_"
+OCF_MODE_HREF = "/mode/vs/0"
+OCF_OPTIONS_KEY = "x.com.samsung.da.options"
+# Samsung's option names are inverted: "Light_On" enables the light-off
+# option and turns the display off, "Light_Off" turns the display back on.
+OCF_DISPLAY_ON_OPTION = "Light_Off"
+OCF_DISPLAY_OFF_OPTION = "Light_On"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -362,6 +377,11 @@ async def async_setup_entry(
         )
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SWITCHES
     )
+    entities.extend(
+        SmartThingsOcfDisplayLightingSwitch(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if _supports_ocf_display_lighting(device)
+    )
     entity_registry = er.async_get(hass)
     for device in entry_data.devices.values():
         if (
@@ -418,6 +438,115 @@ async def async_setup_entry(
                 )
             )
     async_add_entities(entities)
+
+
+def _supports_ocf_display_lighting(device: FullDevice) -> bool:
+    """Return if the display lighting can only be controlled via execute."""
+    status = device.status[MAIN]
+    if (
+        Capability.EXECUTE not in status
+        or Capability.OCF not in status
+        or Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING in status
+        or not all(capability in status for capability in AC_CAPABILITIES)
+    ):
+        return False
+    model = status[Capability.OCF][Attribute.MODEL_NUMBER].value
+    return isinstance(model, str) and model.startswith(LEGACY_OCF_AC_MODEL_PREFIX)
+
+
+class SmartThingsOcfDisplayLightingSwitch(
+    SmartThingsEntity, SwitchEntity, RestoreEntity
+):
+    """Define a display lighting switch for legacy Samsung OCF air conditioners."""
+
+    _attr_translation_key = "display_lighting"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Initialize the switch."""
+        super().__init__(client, device, {Capability.EXECUTE})
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}_{Capability.EXECUTE}_display_lighting"
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last state and request the current state."""
+        await super().async_added_to_hass()
+        if (
+            self._attr_is_on is None
+            and (last_state := await self.async_get_last_state()) is not None
+            and last_state.state in (STATE_ON, STATE_OFF)
+        ):
+            self._attr_is_on = last_state.state == STATE_ON
+        if self._attr_is_on is None:
+            # The display is lit by default when the unit is powered
+            self._attr_is_on = True
+        self.async_write_ha_state()
+        self.hass.async_create_background_task(
+            self._async_request_state(),
+            f"smartthings_ocf_display_lighting_{self.device.device.device_id}",
+        )
+
+    async def _async_request_state(self) -> None:
+        """Ask the device to report the OCF mode resource."""
+        try:
+            await self.execute_device_command(
+                Capability.EXECUTE, Command.EXECUTE, argument=[OCF_MODE_HREF]
+            )
+        except SmartThingsError as err:
+            _LOGGER.warning(
+                "Could not read display lighting state of %s: %s",
+                self.device.device.label,
+                err,
+            )
+
+    @override
+    def _update_attr(self) -> None:
+        """Update the state from the last OCF mode resource response."""
+        status = self._internal_state[Capability.EXECUTE][Attribute.DATA]
+        if (
+            not status.data
+            or str(status.data.get("href", "")).lstrip("/") != OCF_MODE_HREF.lstrip("/")
+            or not isinstance(status.value, dict)
+        ):
+            return
+        options = status.value.get("payload", {}).get(OCF_OPTIONS_KEY)
+        if not isinstance(options, list):
+            return
+        if OCF_DISPLAY_OFF_OPTION in options:
+            self._attr_is_on = False
+        elif OCF_DISPLAY_ON_OPTION in options:
+            self._attr_is_on = True
+
+    async def _async_set_display(self, on: bool) -> None:
+        """Turn the display lighting on or off."""
+        option = OCF_DISPLAY_ON_OPTION if on else OCF_DISPLAY_OFF_OPTION
+        argument = [OCF_MODE_HREF, {OCF_OPTIONS_KEY: [option]}]
+        try:
+            await self.execute_device_command(
+                Capability.EXECUTE, Command.EXECUTE, argument=argument
+            )
+        except SmartThingsError as err:
+            _LOGGER.error(
+                "Display lighting command %s for %s failed: %s",
+                argument,
+                self.device.device.label,
+                err,
+            )
+            raise
+        self._attr_is_on = on
+        self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the display lighting on."""
+        await self._async_set_display(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the display lighting off."""
+        await self._async_set_display(False)
 
 
 class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
