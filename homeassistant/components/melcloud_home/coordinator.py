@@ -279,9 +279,10 @@ class MelCloudHomeTelemetryCoordinator(
                     energy_coroutines[ata_unit.id] = self._async_get_energy(
                         ata_unit.id, start_of_month, now
                     )
+                # The API doesn't send this flag, so units without it are probed
                 if (
-                    ata_unit.capabilities
-                    and ata_unit.capabilities.has_outdoor_temperature_sensor
+                    ata_unit.capabilities is None
+                    or ata_unit.capabilities.has_outdoor_temperature_sensor is not False
                 ):
                     outdoor_temperature_coroutine[ata_unit.id] = (
                         self._async_get_outdoor_temperature(ata_unit.id)
