@@ -32,6 +32,7 @@ from .const import (
 )
 from .device import ONVIFConfigEntry, ONVIFDevice
 from .services import async_setup_services
+from .util import build_profile_unique_keys
 
 LOGGER = logging.getLogger(__name__)
 
@@ -179,18 +180,31 @@ async def async_populate_options(hass: HomeAssistant, entry: ONVIFConfigEntry) -
 def _async_migrate_camera_entities_unique_ids(
     hass: HomeAssistant, config_entry: ONVIFConfigEntry, device: ONVIFDevice
 ) -> None:
-    """Migrate unique ids of camera entities from profile index to profile token."""
+    """Migrate unique ids of camera entities to the profile name.
+
+    Older unique ids are based on the profile index or the profile token.
+    """
     entity_reg = er.async_get(hass)
     entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
         entity_reg, config_entry.entry_id
     )
 
     mac_or_serial = device.info.mac or device.info.serial_number
+    unique_keys = build_profile_unique_keys(device.profiles)
     old_uid_start = f"{mac_or_serial}_"
     new_uid_start = f"{mac_or_serial}#"
 
     for entity in entities:
         if entity.domain != Platform.CAMERA:
+            continue
+
+        if entity.unique_id.startswith(new_uid_start):
+            token = entity.unique_id[len(new_uid_start) :]
+            if (unique_key := unique_keys.get(token)) is None or unique_key == token:
+                continue
+            _async_update_camera_unique_id(
+                entity_reg, entity, f"{new_uid_start}{unique_key}"
+            )
             continue
 
         if (
@@ -224,11 +238,26 @@ def _async_migrate_camera_entities_unique_ids(
                 entity.unique_id,
             )
             continue
-        new_uid = f"{new_uid_start}{token}"
+        _async_update_camera_unique_id(
+            entity_reg, entity, f"{new_uid_start}{unique_keys[token]}"
+        )
+
+
+def _async_update_camera_unique_id(
+    entity_reg: er.EntityRegistry, entity: er.RegistryEntry, new_uid: str
+) -> None:
+    """Update the unique id of a camera entity, unless it is already taken."""
+    if entity_reg.async_get_entity_id(Platform.CAMERA, DOMAIN, new_uid):
         LOGGER.debug(
-            "Migrating unique id for '%s' from '%s' to '%s'",
+            "Not migrating unique id for '%s' as '%s' already exists",
             entity.entity_id,
-            entity.unique_id,
             new_uid,
         )
-        entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
+        return
+    LOGGER.debug(
+        "Migrating unique id for '%s' from '%s' to '%s'",
+        entity.entity_id,
+        entity.unique_id,
+        new_uid,
+    )
+    entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
