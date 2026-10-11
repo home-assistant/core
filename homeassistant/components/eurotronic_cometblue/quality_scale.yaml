@@ -68,7 +68,7 @@ rules:
   entity-translations:
     status: exempt
     comment: This integration only provides one primary entity.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: Not required.

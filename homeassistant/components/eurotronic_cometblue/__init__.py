@@ -62,11 +62,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
             except TimeoutError as ex:
                 # This likely means PIN was incorrect on Linux and ESPHome backends
                 raise ConfigEntryError(
-                    "Failed to read battery level, likely due to incorrect PIN"
+                    translation_domain=DOMAIN,
+                    translation_key="incorrect_pin",
                 ) from ex
     except BleakError as ex:
         raise ConfigEntryNotReady(
-            f"Failed to get device info from '{cometblue_device.device.address}'"
+            translation_domain=DOMAIN,
+            translation_key="cannot_get_device_info",
+            translation_placeholders={"address": cometblue_device.device.address},
         ) from ex
 
     device_registry = dr.async_get(hass)
