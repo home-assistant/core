@@ -1,6 +1,6 @@
 """Test the OpenRouter config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from python_open_router import OpenRouterError
@@ -8,6 +8,8 @@ from python_open_router import OpenRouterError
 from homeassistant.components.open_router.const import (
     CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
+    CONF_TTS_SPEED,
+    CONF_TTS_VOICE,
     CONF_WEB_SEARCH,
     DOMAIN,
 )
@@ -295,6 +297,180 @@ async def test_subentry_exceptions(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_create_tts_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_router_client: AsyncMock,
+) -> None:
+    """Test creating a TTS service, including the voice-selection step."""
+    await setup_integration(hass, mock_config_entry)
+
+    tts_model = MagicMock()
+    tts_model.id = "openai/gpt-4o-mini-tts"
+    tts_model.name = "GPT-4o mini TTS"
+    tts_model.supported_voices = ["alloy", "echo"]
+    tts_model_2 = MagicMock()
+    tts_model_2.id = "some/other-tts"
+    tts_model_2.name = "Other TTS"
+    tts_model_2.supported_voices = None
+    mock_open_router_client.get_models.return_value = [tts_model, tts_model_2]
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"].schema["model"].config["options"] == [
+        {"value": "openai/gpt-4o-mini-tts", "label": "GPT-4o mini TTS"},
+        {"value": "some/other-tts", "label": "Other TTS"},
+    ]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "openai/gpt-4o-mini-tts"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "voice"
+    assert result["data_schema"].schema["tts_voice"].config["options"] == [
+        {"value": "alloy", "label": "alloy"},
+        {"value": "echo", "label": "echo"},
+    ]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_TTS_VOICE: "echo", CONF_TTS_SPEED: 1.0},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "GPT-4o mini TTS"
+    assert result["data"] == {
+        CONF_MODEL: "openai/gpt-4o-mini-tts",
+        "supported_voices": ["alloy", "echo"],
+        CONF_TTS_VOICE: "echo",
+        CONF_TTS_SPEED: 1.0,
+    }
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_create_tts_service_fallback_voices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_router_client: AsyncMock,
+) -> None:
+    """Test creating a TTS service for a model that exposes no voices."""
+    await setup_integration(hass, mock_config_entry)
+
+    tts_model = MagicMock()
+    tts_model.id = "some/other-tts"
+    tts_model.name = "Other TTS"
+    tts_model.supported_voices = None
+    mock_open_router_client.get_models.return_value = [tts_model]
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "some/other-tts"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "voice"
+    voice_options = result["data_schema"].schema["tts_voice"].config["options"]
+    assert {"value": "alloy", "label": "Alloy"} in voice_options
+    assert {"value": "cedar", "label": "Cedar"} in voice_options
+    voice_key = next(k for k in result["data_schema"].schema if k == CONF_TTS_VOICE)
+    assert voice_key.default() == "alloy"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_TTS_VOICE: "shimmer", CONF_TTS_SPEED: 1.0},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODEL: "some/other-tts",
+        "supported_voices": None,
+        CONF_TTS_VOICE: "shimmer",
+        CONF_TTS_SPEED: 1.0,
+    }
+
+
+async def test_tts_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a TTS service while the entry is not loaded aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_tts_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_router_client: AsyncMock,
+) -> None:
+    """Test connection errors abort the TTS flow with cannot_connect."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_open_router_client.get_models.side_effect = OpenRouterError("exception")
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_tts_unknown_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_router_client: AsyncMock,
+) -> None:
+    """Test an unexpected error aborts the TTS flow with unknown."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_open_router_client.get_models.side_effect = ValueError("boom")
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_tts_no_models(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_router_client: AsyncMock,
+) -> None:
+    """Test the TTS flow aborts when no speech models are available."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_open_router_client.get_models.return_value = []
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_models"
 
 
 async def test_reconfigure_conversation_agent(

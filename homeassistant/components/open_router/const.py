@@ -9,10 +9,31 @@ DOMAIN = "open_router"
 LOGGER = logging.getLogger(__package__)
 
 CONF_RECOMMENDED = "recommended"
+CONF_TTS_SPEED = "tts_speed"
+CONF_TTS_VOICE = "tts_voice"
 CONF_WEB_SEARCH = "web_search"
 CONF_OUTPUT_MODALITIES = "output_modalities"
 
+RECOMMENDED_TTS_SPEED = 1.0
+RECOMMENDED_TTS_VOICE = "alloy"
 RECOMMENDED_WEB_SEARCH = "off"
+
+# OpenAI-compatible voices offered when a model does not expose its own voices
+FALLBACK_TTS_VOICES = (
+    "alloy",
+    "ash",
+    "ballad",
+    "coral",
+    "echo",
+    "fable",
+    "nova",
+    "onyx",
+    "sage",
+    "shimmer",
+    "verse",
+    "marin",
+    "cedar",
+)
 
 RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_RECOMMENDED: True,
