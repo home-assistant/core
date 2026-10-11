@@ -8,7 +8,7 @@ import probatio
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
 from yarl import URL
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -88,6 +88,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     _LOGGER.error("Cannot connect to device after trying all schemas")
     raise CannotConnect from last_error
+
+
+def _rediscovered_host(entry: ConfigEntry | None, ip: str, default: str) -> str:
+    """Return the host to store for a rediscovered device.
+
+    Keep the scheme and port of an existing URL, only replacing its host.
+    """
+    if entry is not None:
+        configured_url = URL(entry.data.get(CONF_HOST, ""))
+        if configured_url.is_absolute():
+            return str(configured_url.with_host(ip))
+    return default
 
 
 class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -250,10 +262,8 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Use the MAC as a placeholder unique_id when nothing matched, so
         # parallel DHCP advertisements don't both reach dhcp_confirm.
-        if entry := await self.async_set_unique_id(device_id or formatted_mac):
-            configured_url = URL(entry.data.get(CONF_HOST, ""))
-            if configured_url.is_absolute():
-                host = str(configured_url.with_host(host))
+        existing_entry = await self.async_set_unique_id(device_id or formatted_mac)
+        host = _rediscovered_host(existing_entry, host, host)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
@@ -293,10 +303,16 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 # Update unique ID to device identifier
                 # if we didn't get it during discovery
-                await self.async_set_unique_id(
+                existing_entry = await self.async_set_unique_id(
                     info["device_id"], raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured(updates={CONF_HOST: info["host"]})
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: _rediscovered_host(
+                            existing_entry, host, info["host"]
+                        )
+                    }
+                )
 
                 return self.async_create_entry(
                     title=info["title"],
