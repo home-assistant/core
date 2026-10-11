@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, Final, override
 
-import voluptuous as vol
+from probatio import All, Length, Optional, Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import section
@@ -34,19 +34,19 @@ DOCS_PLACEHOLDERS: Final = {
 }
 
 
-SECTION_CREDENTIALS_SCHEMA = vol.Schema(
+SECTION_CREDENTIALS_SCHEMA = Schema(
     {
-        vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-        vol.Required(CONF_SECRET_KEY): TextSelector(
+        Required(CONF_ACCESS_KEY_ID): cv.string,
+        Required(CONF_SECRET_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = Schema(
     {
-        vol.Required(CONF_SECTION_CREDENTIALS): section(SECTION_CREDENTIALS_SCHEMA),
-        vol.Required(CONF_REGION, default="fr-par"): SelectSelector(
+        Required(CONF_SECTION_CREDENTIALS): section(SECTION_CREDENTIALS_SCHEMA),
+        Required(CONF_REGION, default="fr-par"): SelectSelector(
             SelectSelectorConfig(
                 translation_key="regions",
                 options=[
@@ -57,13 +57,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 ],
             )
         ),
-        vol.Required(CONF_BUCKET): vol.All(
+        Required(CONF_BUCKET): All(
             cv.string,
-            vol.Length(max=63),
+            Length(max=63),
             # See https://www.scaleway.com/en/docs/object-storage/faq/#is-there-a-limitation-on-the-bucket-name
             cv.matches_regex(r"^[a-z\d\-.]+$"),
         ),
-        vol.Optional(CONF_OBJECT_PREFIX, default=""): cv.string,
+        Optional(CONF_OBJECT_PREFIX, default=""): cv.string,
     }
 )
 
