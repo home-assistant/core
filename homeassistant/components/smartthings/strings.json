@@ -235,6 +235,9 @@
       }
     },
     "number": {
+      "audio_volume": {
+        "name": "[%key:component::smartthings::entity::sensor::audio_volume::name%]"
+      },
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
       },

@@ -124,3 +124,27 @@ async def test_availability_at_start(
     assert (
         hass.states.get("number.theater_washer_rinse_cycles").state == STATE_UNAVAILABLE
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+async def test_set_air_conditioner_volume(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the air conditioner sound volume."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.clim_salon_volume", ATTR_VALUE: 0},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+        Capability.AUDIO_VOLUME,
+        Command.SET_VOLUME,
+        MAIN,
+        0,
+    )
