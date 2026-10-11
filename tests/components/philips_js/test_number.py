@@ -89,7 +89,6 @@ async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_tv")
 async def test_entities_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
