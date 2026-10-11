@@ -380,16 +380,12 @@
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
-      tuple(
-        'unifiprotect',
-        'AABBCCDDEEFF',
-      ),
     }),
     'labels': set({
     }),
     'manufacturer': 'Ubiquiti',
-    'model': 'Alarm Hub',
-    'model_id': None,
+    'model': 'UP-AlarmHub',
+    'model_id': 'UP-AlarmHub',
     'name': 'Alarm Hub',
     'name_by_user': None,
     'serial_number': None,

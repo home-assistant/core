@@ -48,7 +48,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
@@ -712,16 +711,21 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
 )
 
 
-class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
+class ProtectAlarmHubSensor(ProtectDeviceEntity, SensorEntity):
     """A sensor entity for a UniFi Protect alarm hub."""
 
     entity_description: ProtectAlarmHubSensorEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_attrs(self, hub: LinkStation) -> None:
-        super()._async_update_attrs(hub)
-        self._attr_native_value = self.entity_description.value_fn(hub)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (hub := self._ufp_public_obj) is not None:
+            self._attr_native_value = self.entity_description.value_fn(
+                cast(LinkStation, hub)
+            )
 
 
 class ProtectFobSensor(ProtectDeviceEntity, SensorEntity):

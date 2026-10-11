@@ -9,6 +9,7 @@ from uiprotect.data import (
     NVR,
     AlarmHubBatteryStatus,
     AlarmHubCoverStatus,
+    AlarmHubInput,
     AlarmHubInputStatus,
     AlarmHubInputType,
     DeviceState,
@@ -49,7 +50,6 @@ from homeassistant.helpers.entity_platform import (
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    BaseAlarmHubEntity,
     BaseProtectEntity,
     EventEntityMixin,
     PermRequired,
@@ -58,6 +58,7 @@ from .entity import (
     ProtectEventMixin,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectPublicChannelEntity,
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
@@ -867,24 +868,30 @@ FOB_BINARY_SENSORS: tuple[ProtectFobBinaryEntityDescription, ...] = (
 )
 
 
-class ProtectAlarmHubBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
+class ProtectAlarmHubBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     """A hub-level binary sensor for a UniFi Protect alarm hub."""
 
     entity_description: ProtectAlarmHubBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_attrs(self, hub: LinkStation) -> None:
-        super()._async_update_attrs(hub)
-        self._attr_is_on = self.entity_description.value_fn(hub)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (hub := self._ufp_public_obj) is not None:
+            self._attr_is_on = self.entity_description.value_fn(cast(LinkStation, hub))
 
 
-class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
+class ProtectAlarmHubZoneBinarySensor(
+    ProtectPublicChannelEntity[AlarmHubInput], BinarySensorEntity
+):
     """A wired-input (zone) binary sensor for a UniFi Protect alarm hub."""
+
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     def __init__(self, data: ProtectData, hub: LinkStation, input_id: int) -> None:
         """Initialize the zone binary sensor."""
-        self._input_id = input_id
         zone = hub.alarm_hub_inputs[input_id]
         device_class = (
             _ALARM_HUB_INPUT_DEVICE_CLASS.get(zone.input_type)
@@ -895,7 +902,7 @@ class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
             key=f"input_{input_id}",
             device_class=device_class,
         )
-        super().__init__(data, hub, description)
+        super().__init__(data, hub, description, input_id)
         if zone.name:
             # Device-provided names take precedence over the translated default.
             self._attr_name = zone.name
@@ -905,25 +912,26 @@ class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
 
     @callback
     @override
-    def _async_update_attrs(self, hub: LinkStation) -> None:
-        super()._async_update_attrs(hub)
-        zone = hub.alarm_hub_inputs.get(self._input_id)
-        # An unreadable zone (gone, or status UNKNOWN) is unavailable rather than
-        # reported as a definite "not triggered". The wiring-fault statuses
-        # (FAULT/SHORT/CUT) are known non-triggered states, so they read off here;
-        # surfacing them as a trouble indicator is left to a follow-up.
+    def _async_get_channel(self, device: PublicDeviceModel) -> AlarmHubInput | None:
+        zone = cast(LinkStation, device).alarm_hub_inputs.get(self._channel_id)
+        # An unreadable zone is unavailable rather than a definite "not
+        # triggered". FAULT/SHORT/CUT are known states and read off.
         if zone is None or zone.status is AlarmHubInputStatus.UNKNOWN:
-            self._attr_available = False
-            return
-        self._attr_is_on = zone.status is AlarmHubInputStatus.ALARM
+            return None
+        return zone
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: AlarmHubInput) -> None:
+        self._attr_is_on = channel.status is AlarmHubInputStatus.ALARM
 
 
 @callback
 def _async_alarm_hub_entities(
     data: ProtectData, hub: LinkStation
-) -> list[BaseAlarmHubEntity]:
+) -> list[ProtectDeviceEntity]:
     """Build the binary sensors for one alarm hub."""
-    entities: list[BaseAlarmHubEntity] = [
+    entities: list[ProtectDeviceEntity] = [
         ProtectAlarmHubBinarySensor(data, hub, description)
         for description in ALARM_HUB_BINARY_SENSORS
     ]

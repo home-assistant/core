@@ -247,8 +247,8 @@ async def test_alarm_hub_device_and_entities(
     """Snapshot the alarm hub device and all of its entities."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, ALARM_HUB_MAC), ufp_with_alarm_hub.entry.entry_id
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp_with_alarm_hub.entry.entry_id
     )
     assert device is not None
     assert device == snapshot(name="device")
@@ -453,8 +453,8 @@ async def test_plain_link_station_added_at_runtime(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, ALARM_HUB_MAC), ufp.entry.entry_id
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp.entry.entry_id
         )
         is None
     )
@@ -467,19 +467,21 @@ async def test_alarm_hub_without_name(
     ufp: MockUFPFixture,
     alarm_hub: LinkStation,
 ) -> None:
-    """A hub without a name falls back to its MAC for the device name."""
+    """A hub without a name falls back to its model and MAC."""
     unnamed = alarm_hub.model_copy(update={"name": None})
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = _make_public_bootstrap(unnamed)
 
     await init_entry(hass, ufp, [])
 
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, ALARM_HUB_MAC), ufp.entry.entry_id
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp.entry.entry_id
     )
     assert device is not None
-    assert device.name == f"Alarm Hub {ALARM_HUB_MAC}"
-    assert hass.states.get(f"sensor.alarm_hub_{ALARM_HUB_MAC.lower()}_battery_voltage")
+    assert device.name == f"UP-AlarmHub {ALARM_HUB_MAC}"
+    assert hass.states.get(
+        f"sensor.up_alarmhub_{ALARM_HUB_MAC.lower()}_battery_voltage"
+    )
 
 
 async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
@@ -494,7 +496,8 @@ async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
     assert hass.states.get(entity_id).state == "12.108427"
 
     ufp_with_alarm_hub.api.has_public_bootstrap = False
-    msg = public_device_ws_message(alarm_hub)
+    # A frame without a merged object makes the entities re-read the bootstrap.
+    msg = public_device_ws_message(None)
     msg.old_obj = alarm_hub
     assert ufp_with_alarm_hub.devices_ws_subscription is not None
     ufp_with_alarm_hub.devices_ws_subscription(msg)

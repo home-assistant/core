@@ -1,5 +1,6 @@
 """Shared Entity definition for UniFi Protect Integration."""
 
+from abc import abstractmethod
 from collections.abc import Callable, Coroutine, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,9 +19,7 @@ from uiprotect import (
 from uiprotect.data import (
     NVR,
     Camera,
-    DeviceState,
     Event,
-    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -546,6 +545,47 @@ class ProtectDeviceEntity(BaseProtectEntity):
         )
 
 
+class ProtectPublicChannelEntity[ChannelT](ProtectDeviceEntity):
+    """Base for an entity tracking one channel of a public device.
+
+    Alarm hub zones are channels of their hub. The entity goes unavailable
+    while its channel cannot be read, on top of the device's availability.
+    """
+
+    _ufp_uses_public = True
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: PublicDeviceModel,
+        description: EntityDescription,
+        channel_id: int,
+    ) -> None:
+        """Initialize the channel entity."""
+        self._channel_id = channel_id
+        super().__init__(data, device, description)
+
+    @callback
+    @abstractmethod
+    def _async_get_channel(self, device: PublicDeviceModel) -> ChannelT | None:
+        """Return the channel, or None when it cannot be read."""
+
+    @callback
+    @abstractmethod
+    def _async_update_from_channel(self, channel: ChannelT) -> None:
+        """Update the entity state from the channel."""
+
+    @callback
+    @override
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        public = self._ufp_public_obj
+        if public is None or (channel := self._async_get_channel(public)) is None:
+            self._attr_available = False
+            return
+        self._async_update_from_channel(channel)
+
+
 class ProtectNVREntity(BaseProtectEntity):
     """Base class for unifi protect entities."""
 
@@ -752,82 +792,3 @@ class ProtectSettableKeysMixin(ProtectEntityDescription[T]):
             await getattr(obj, self.ufp_set_method)(value)
         elif self.ufp_set_method_fn is not None:
             await self.ufp_set_method_fn(obj, value)
-
-
-class BaseAlarmHubEntity(Entity):
-    """Base entity for a UniFi Protect Alarm Hub (Public API) device.
-
-    The alarm hub is exposed only through the public bootstrap (as a
-    :class:`LinkStation`), so it does not use :class:`BaseProtectEntity` (which
-    is built around private adopted devices). Subclasses set their state in
-    ``_async_update_attrs``.
-    """
-
-    _attr_has_entity_name = True
-    _attr_attribution = DEFAULT_ATTRIBUTION
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        data: ProtectData,
-        hub: LinkStation,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the alarm hub entity."""
-        self.data = data
-        self.entity_description = description
-        self._hub_id = hub.id
-        self._hub_mac = hub.mac
-        self._attr_unique_id = f"{hub.mac}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, hub.mac)},
-            identifiers={(DOMAIN, hub.mac)},
-            manufacturer=DEFAULT_BRAND,
-            model="Alarm Hub",
-            name=hub.name or f"Alarm Hub {hub.mac}",
-            via_device_id=data.nvr_device_id,
-        )
-        self._async_update_attrs(hub)
-
-    @property
-    def _alarm_hub(self) -> LinkStation | None:
-        """Return the current alarm hub object, or ``None`` if it is gone."""
-        api = self.data.api
-        if not api.has_public_bootstrap:
-            return None
-        return api.public_bootstrap.alarm_hubs.get(self._hub_id)
-
-    @callback
-    def _async_update_attrs(self, hub: LinkStation) -> None:
-        """Update cached attributes from the alarm hub object."""
-        # The alarm hub is public-only, so availability tracks the public
-        # websocket health and the hub's own state (CONNECTED only), mirroring
-        # the migrated public entities.
-        self._attr_available = (
-            self.data.last_public_update_success and hub.state is DeviceState.CONNECTED
-        )
-
-    @callback
-    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
-        """Handle a public devices WS update for this alarm hub.
-
-        The state is always re-read from the public bootstrap: the library
-        merges WS updates into it before dispatching, and ``None`` (a websocket
-        state change or a delete) carries no object to read.
-        """
-        if (hub := self._alarm_hub) is None:
-            self._attr_available = False
-        else:
-            self._async_update_attrs(hub)
-        self.async_write_ha_state()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public devices WS updates dispatched by ProtectData."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public(self._hub_mac, self._async_updated)
-        )
-        # Refresh from the bootstrap: an update or delete that landed between
-        # enumeration and this subscription would otherwise be missed.
-        self._async_updated(None)

@@ -2,6 +2,7 @@
   "id": "aaaaaaaaaaaaaaaaaaaaaaaa",
   "state": "CONNECTED",
   "name": "Alarm Hub",
+  "type": "UP-AlarmHub",
   "mac": "AABBCCDDEEFF",
   "isAlarmHub": true,
   "lastEvent": 1780415883894,
