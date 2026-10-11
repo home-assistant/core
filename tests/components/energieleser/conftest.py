@@ -5,6 +5,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from energieleser import (
+    DeviceType,
     GasleserDevice,
     GasleserPulseDevice,
     StromleserOneDevice,
@@ -82,6 +83,14 @@ WASSERLESER_API_RESPONSE: dict = {
     "current_flow_rate": "0 l/h",
     "current_flow_rate_m3": "0.0000 m3/h",
     "signal_strength": "-49 dBm",
+}
+
+LATEST_FIRMWARE_VERSIONS: dict[DeviceType, str] = {
+    DeviceType.STROMLESER: "v1.4.30",
+    DeviceType.GASLESER: "v1.5.35",
+    DeviceType.GASLESER_PULSE: "v1.0.5",
+    DeviceType.WASSERLESER: "v1.6.4",
+    DeviceType.WAERMELESER: "v1.2.4",
 }
 
 
@@ -203,8 +212,20 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
+def mock_latest_firmware_versions() -> Generator[AsyncMock]:
+    """Patch the OTA latest-versions call."""
+    with patch(
+        "homeassistant.components.energieleser.coordinator.get_latest_firmware_versions",
+        autospec=True,
+        return_value=dict(LATEST_FIRMWARE_VERSIONS),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_energieleser_client(
     mock_stromleser_device: StromleserOneDevice,
+    mock_latest_firmware_versions: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Patch EnergieleserClient at both import sites with a default stromleser device."""
     with (
