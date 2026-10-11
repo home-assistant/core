@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import probatio
 
@@ -190,6 +190,71 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
         )
         or INVALID_JSON_PARTIAL_MESSAGE
     )[:-1]
+
+
+_REMOVE_KEY: Final = ENTITY_EVENT_REMOVE.encode()
+
+
+def batched_state_diff_message(
+    message_id_as_bytes: bytes, fragments: list[tuple[bytes, bytes]]
+) -> bytes:
+    """Return one event message describing several state changes.
+
+    The state update format already describes any number of entities at once. Takes
+    fragments resolved by cached_state_diff_fragment rather than events, because they
+    have to be serialized while the event is being dispatched - see _StateDiffBatch -
+    and this only joins them.
+    """
+    # Grouped rather than appended, because the format keys additions, removals and
+    # changes separately. A caller must not place two updates for the same entity in
+    # one batch - see _StateDiffBatch, which flushes instead, since the groups are
+    # applied by the client in a fixed order that need not match the order the events
+    # happened in.
+    grouped: dict[bytes, list[bytes]] = {}
+    for key, entry in fragments:
+        grouped.setdefault(key, []).append(entry)
+
+    parts: list[bytes] = [b'{"id":', message_id_as_bytes, b',"type":"event","event":{']
+    first = True
+    for key, entries in grouped.items():
+        if not first:
+            parts.append(b",")
+        first = False
+        opening, closing = (b'":[', b"]") if key == _REMOVE_KEY else (b'":{', b"}")
+        parts.extend((b'"', key, opening, b",".join(entries), closing))
+    parts.append(b"}}")
+    return b"".join(parts)
+
+
+@lru_cache(maxsize=128)
+def cached_state_diff_fragment(
+    event: Event[EventStateChangedData],
+) -> tuple[bytes, bytes] | None:
+    """Cache and serialize one state change as a fragment of a batched message.
+
+    Returns the group the change belongs to - "a", "r" or "c" - and the entry that
+    goes inside it, or None if it cannot be serialized.
+
+    Callers must resolve a fragment while the bus is dispatching that event, so that
+    every subscription asks for it consecutively and the cache is actually hit.
+    """
+    diff = _state_diff_event(event)
+    key = next(iter(diff))
+    value = diff[key]
+    try:
+        if key == ENTITY_EVENT_REMOVE:
+            # {"r": ["light.kitchen"]} -> b'"light.kitchen"'
+            removed = cast(list[str], value)
+            return _REMOVE_KEY, json_bytes(removed[0])
+        # {"c": {"light.kitchen": diff}} -> b'"light.kitchen":{...}'
+        entity_id, payload = next(iter(cast(dict[str, Any], value).items()))
+        return key.encode(), b"".join(
+            (json_bytes(entity_id), b":", json_bytes(payload))
+        )
+    except ValueError, TypeError:
+        # Deliberately not logged here: the caller sends this change on its own, and
+        # cached_state_diff_message reports the unserializable path when it does.
+        return None
 
 
 def _state_diff_event(

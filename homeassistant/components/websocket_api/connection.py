@@ -49,6 +49,7 @@ class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
+        "_raw_send_message",
         "binary_handlers",
         "can_coalesce",
         "handlers",
@@ -58,10 +59,16 @@ class ActiveConnection:
         "refresh_token_id",
         "remote",
         "send_message",
+        "state_diff_batches",
         "subscriptions",
         "supported_features",
         "user",
     )
+
+    # Annotated because it is reassigned - to the batching sender in __init__, and to
+    # the closed-connection reporter in async_handle_close - and mypy would otherwise
+    # pin it to whichever bound method it saw first.
+    send_message: Callable[[bytes | str | dict[str, Any]], None]
 
     def __init__(
         self,
@@ -75,7 +82,15 @@ class ActiveConnection:
         """Initialize an active connection."""
         self.logger = logger
         self.hass = hass
-        self.send_message = send_message
+        self._raw_send_message = send_message
+        self.state_diff_batches: list[Callable[[], None]] = []
+        # Everything leaves through _async_send_message so that changes a subscription
+        # has collected but not yet sent go first. Those are flushed from the event
+        # loop, so without this a handler that changed state and then sent its result
+        # would have the result queued ahead of the change that caused it, and a
+        # subscription that captured the sender before any of this existed would
+        # overtake it too.
+        self.send_message = self._async_send_message
         self.user = user
         self.refresh_token_id = refresh_token.id if refresh_token else None
         self.remote = remote
@@ -93,6 +108,31 @@ class ActiveConnection:
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"
+
+    @callback
+    def _async_send_message(self, message: bytes | str | dict[str, Any]) -> None:
+        """Send a message, after anything this connection has already collected."""
+        if self.state_diff_batches:
+            for flush in self.state_diff_batches:
+                flush()
+        self._raw_send_message(message)
+
+    @callback
+    def async_register_state_diff_batch(
+        self, flush: Callable[[], None]
+    ) -> Callable[[bytes | str | dict[str, Any]], None]:
+        """Flush this batch before any other message this connection sends.
+
+        Returns the sender the batch must use itself, which skips that flush so
+        flushing cannot re-enter it.
+        """
+        self.state_diff_batches.append(flush)
+        return self._raw_send_message
+
+    @callback
+    def async_unregister_state_diff_batch(self, flush: Callable[[], None]) -> None:
+        """Stop flushing a batch whose subscription has ended."""
+        self.state_diff_batches.remove(flush)
 
     def set_supported_features(self, features: dict[str, float]) -> None:
         """Set supported features."""
