@@ -77,7 +77,10 @@ class PhilipsTVListNode(PhilipsTVSettingsEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        if self._data and (selected_item := self._data["selected_item"]):
+        if (
+            self._data
+            and (selected_item := self._data.get("selected_item")) is not None
+        ):
             return self._options.get(selected_item)
         return None
 
@@ -107,14 +110,25 @@ class PhilipsTVParentNode(PhilipsTVSettingsEntity, SelectEntity):
     ) -> None:
         """Initialize entity."""
         super().__init__(coordinator, node, name)
+        self._options: dict[int, str] = {}
+        self._options_reversed: dict[str, int] = {}
+        self._update_options()
 
+    def _update_options(self) -> None:
+        """Calculate the options from the translated names of the child nodes."""
         self._options = {
-            child["node_id"]: string_id
-            for child in node["data"].get("nodes", {})
+            child["node_id"]: self.coordinator.get_string(string_id)
+            for child in self._node["data"].get("nodes", {})
             if (string_id := child.get("string_id"))
         }
         self._options_reversed = {value: key for key, value in self._options.items()}
         self._attr_options = list(self._options.values())
+
+    @override
+    def _get_coordinator_data(self) -> None:
+        """Get the data from the coordinator on update."""
+        super()._get_coordinator_data()
+        self._update_options()
 
     @property
     @override

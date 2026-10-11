@@ -158,6 +158,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if not (node_ids := self.get_selected_node_ids()):
             return
         if self.api.powerstate not in (TV_STATE_ON, None):
+            self.settings = {}
             return
         try:
             self.settings = await self.api.getMenuItemsSettingsCurrentValue(node_ids)

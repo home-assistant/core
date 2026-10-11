@@ -314,7 +314,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         try:
             self.menu_nodes = await _get_node_descriptions(coordinator.api)
-        except SettingsNotAvailable, ConnectionFailure:
+        except SettingsNotAvailable, ConnectionFailure, GeneralFailure:
             return self.async_abort(reason="cannot_connect")
 
         options = self.config_entry.options

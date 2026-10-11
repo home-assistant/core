@@ -70,8 +70,7 @@ async def get_path_names(
         for node in path[:-1]
         if (string_id := node.get("string_id"))
     }
-    strings = await api.getStringsCached(string_ids)
-    assert strings
+    strings = await api.getStringsCached(string_ids) or {}
 
     def _get_node_name(node: MenuItemsSettingsNode):
         if string_id := node.get("string_id"):

@@ -1,7 +1,9 @@
 """Tests for the Philips TV menu setting entities and options."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from haphilipsjs import ConnectionFailure, GeneralFailure, PhilipsTV
 import pytest
 
@@ -27,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 SLIDER_ID = 100
 LIST_ID = 101
@@ -282,7 +284,7 @@ async def test_toggle_multi_slider_and_parent(
 
     assert hass.states.get("number.philips_tv_name_103_red").state == "4.0"
     parent = hass.states.get("select.philips_tv_name_104")
-    assert parent.state == "string.on"
+    assert parent.state == "On"
     assert parent.attributes["node_id"] == PARENT_ID
     assert parent.attributes["controllable"] is True
 
@@ -309,7 +311,7 @@ async def test_toggle_multi_slider_and_parent(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.philips_tv_name_104", ATTR_OPTION: "string.off"},
+        {ATTR_ENTITY_ID: "select.philips_tv_name_104", ATTR_OPTION: "Off"},
         blocking=True,
     )
     mock_tv.postMenuItemsSettingsUpdateData.assert_awaited_with(
@@ -366,3 +368,56 @@ async def test_values_not_fetched_in_standby(
     await _setup(hass, mock_config_entry)
 
     mock_tv.getMenuItemsSettingsCurrentValue.assert_not_called()
+
+
+async def test_select_zero_option_is_current(
+    hass: HomeAssistant, mock_tv: PhilipsTV, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an option with enum id 0 is reported as the current option."""
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = lambda node_ids: {
+        node_id: {
+            **MOCK_VALUES[node_id],
+            "data": {**MOCK_VALUES[node_id]["data"], "selected_item": 0},
+        }
+        for node_id in node_ids
+    }
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_MENU_NODES: _selected([LIST_ID])}
+    )
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get("select.philips_tv_name_101").state == "Off"
+
+
+async def test_options_flow_general_failure(
+    hass: HomeAssistant, mock_tv: PhilipsTV, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options flow aborts if the TV fails to answer."""
+    await _setup(hass, mock_config_entry)
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = GeneralFailure
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_values_cleared_in_standby(
+    hass: HomeAssistant,
+    mock_tv: PhilipsTV,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the entities become unavailable when the TV goes to standby."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_MENU_NODES: _selected([SLIDER_ID])}
+    )
+    await _setup(hass, mock_config_entry)
+    assert hass.states.get("number.philips_tv_name_100").state == "70.0"
+
+    mock_tv.powerstate = "Standby"
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.philips_tv_name_100").state == STATE_UNAVAILABLE
