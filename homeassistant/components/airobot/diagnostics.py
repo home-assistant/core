@@ -7,7 +7,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .coordinator import AirobotConfigEntry
+from .coordinator import AirobotConfigEntry, AirobotVUCoordinator
 
 TO_REDACT_CONFIG = [CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME]
 
@@ -18,7 +18,13 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
 
-    # Build device capabilities info
+    if isinstance(coordinator, AirobotVUCoordinator):
+        return {
+            "entry_data": async_redact_data(entry.data, TO_REDACT_CONFIG),
+            "data": asdict(coordinator.data) if coordinator.data else None,
+        }
+
+    # Thermostat diagnostics
     device_capabilities = None
     if coordinator.data:
         device_capabilities = {

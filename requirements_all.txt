@@ -2081,6 +2081,9 @@ pyaftership==21.11.0
 pyairnow==1.4.0
 
 # homeassistant.components.airobot
+pyairobotmodbus==1.0.0
+
+# homeassistant.components.airobot
 pyairobotrest==0.4.0
 
 # homeassistant.components.airvisual
