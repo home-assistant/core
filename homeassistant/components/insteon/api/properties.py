@@ -5,9 +5,20 @@ from typing import Any
 import probatio
 from pyinsteon import devices
 from pyinsteon.config import (
+    LED_BRIGHTNESS,
+    LED_DIMMING,
     LOAD_BUTTON,
+    LOAD_BUTTON_NUMBER,
+    NIGHT_MODE_LED_BRIGHTNESS,
+    NIGHT_MODE_RAMP_RATE,
+    NON_TOGGLE_MASK,
+    NON_TOGGLE_ON_OFF_MASK,
+    OFF_MASK,
+    ON_MASK,
     RADIO_BUTTON_GROUPS,
+    RAMP_RATE,
     RAMP_RATE_IN_SEC,
+    TRIGGER_GROUP_MASK,
     get_usable_value,
 )
 from pyinsteon.constants import (
@@ -40,15 +51,63 @@ RAMP_RATE_LIST = [str(seconds) for seconds in RAMP_RATE_SECONDS]
 TOGGLE_MODES = [str(ToggleMode(v)).lower() for v in list(ToggleMode)]
 RELAY_MODES = [str(RelayMode(v)).lower() for v in list(RelayMode)]
 
+# Device guides define ramp rate as 0x00-0x1F and LED brightness as up to 0x7F
+RAMP_RATE_MAX = 0x1F
+LED_BRIGHTNESS_MAX = 0x7F
+RAMP_RATE_NAMES = {RAMP_RATE, NIGHT_MODE_RAMP_RATE}
+LED_BRIGHTNESS_NAMES = {LED_DIMMING, LED_BRIGHTNESS, NIGHT_MODE_LED_BRIGHTNESS}
+BUTTON_MASK_NAMES = {
+    ON_MASK,
+    OFF_MASK,
+    NON_TOGGLE_MASK,
+    NON_TOGGLE_ON_OFF_MASK,
+    TRIGGER_GROUP_MASK,
+}
+
 
 def _bool_schema(name):
     return probatio.to_field_list(probatio.Schema({probatio.Required(name): bool}))[0]
 
 
-def _byte_schema(name):
-    return probatio.to_field_list(probatio.Schema({probatio.Required(name): cv.byte}))[
-        0
-    ]
+def _base_name(name):
+    """Return a per-button property name without its button suffix."""
+    base, _, suffix = name.rpartition("_")
+    return base if suffix.isdigit() else name
+
+
+def _int_range(name, groups):
+    """Return the valid range of an integer property."""
+    base = _base_name(name)
+    if base in RAMP_RATE_NAMES:
+        return 0, RAMP_RATE_MAX
+    if base in LED_BRIGHTNESS_NAMES:
+        return 0, LED_BRIGHTNESS_MAX
+    if name == LOAD_BUTTON_NUMBER:
+        return 1, max(groups)
+    return 0, 255
+
+
+def _int_validator(name, groups):
+    low, high = _int_range(name, groups)
+    return probatio.All(probatio.Coerce(int), probatio.Range(min=low, max=high))
+
+
+def _int_schema(name, groups):
+    return probatio.to_field_list(
+        probatio.Schema({probatio.Required(name): _int_validator(name, groups)})
+    )[0]
+
+
+def _validate_int(name, value, groups):
+    """Check an integer value against the property's range and button bits."""
+    value = _int_validator(name, groups)(value)
+    if _base_name(name) in BUTTON_MASK_NAMES:
+        buttons = sum(1 << (button - 1) for button in groups)
+        if value & ~buttons:
+            raise probatio.Invalid(
+                f"{name} can only set bits for buttons {sorted(groups)}"
+            )
+    return value
 
 
 def _float_schema(name):
@@ -89,7 +148,7 @@ def get_schema(prop, name, groups):
     if prop.value_type is bool:
         return _bool_schema(name)
     if prop.value_type is int:
-        return _byte_schema(name)
+        return _int_schema(name, groups)
     if prop.value_type is float:
         return _float_schema(name)
     if prop.value_type == ToggleMode:
@@ -145,13 +204,20 @@ def property_to_dict(prop):
 
 def update_property(device, prop_name, value):
     """Update the value of a device property."""
-    prop = device.configuration[prop_name]
+    for props in (device.configuration, device.operating_flags, device.properties):
+        if prop_name in props:
+            prop = props[prop_name]
+            break
+    else:
+        raise KeyError(prop_name)
     if prop.value_type == ToggleMode:
         toggle_mode = getattr(ToggleMode, value.upper())
         prop.new_value = toggle_mode
     elif prop.value_type == RelayMode:
         relay_mode = getattr(RelayMode, value.upper())
         prop.new_value = relay_mode
+    elif prop.value_type is int:
+        prop.new_value = _validate_int(prop_name, value, device.groups)
     else:
         prop.new_value = value
 
