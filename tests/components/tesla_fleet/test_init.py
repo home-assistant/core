@@ -3,6 +3,7 @@
 import asyncio
 from copy import deepcopy
 from datetime import timedelta
+from functools import partial
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aiohttp import ClientError
@@ -23,11 +24,18 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.statistics import get_metadata
+from homeassistant.components.tesla_fleet.const import (
+    DOMAIN,
+    ENERGY_HISTORY_FIELDS,
+    SCOPES,
+)
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
     ENERGY_INTERVAL_SECONDS,
+    ENERGY_STATISTICS_INTERVAL,
     VEHICLE_INTERVAL,
     VEHICLE_INTERVAL_SECONDS,
     VEHICLE_WAIT,
@@ -35,14 +43,14 @@ from homeassistant.components.tesla_fleet.coordinator import (
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -52,6 +60,7 @@ from .conftest import create_config_entry
 from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.recorder.common import async_wait_recording_done
 
 SETUP_ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -63,6 +72,7 @@ SETUP_ERRORS = [
 ]
 
 RUNTIME_ERRORS = [InvalidToken, OAuthExpired, LoginRequired, TeslaFleetError]
+ENERGY_SITE_ID = "123456"
 
 
 async def test_load_unload(
@@ -83,6 +93,51 @@ async def test_load_unload(
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hasattr(normal_config_entry, "runtime_data")
+
+
+async def _get_statistic_ids(hass: HomeAssistant) -> set[str]:
+    """Return the statistic IDs imported by this integration."""
+    await async_wait_recording_done(hass)
+    return set(
+        await get_instance(hass).async_add_executor_job(
+            partial(get_metadata, hass, statistic_source=DOMAIN)
+        )
+    )
+
+
+async def test_remove_entry_clears_statistics_after_last_owner(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Clear shared statistics only after removing the last site owner."""
+    await setup_platform(hass, normal_config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    statistic_ids = await _get_statistic_ids(hass)
+    assert f"{DOMAIN}:{ENERGY_SITE_ID}_grid_energy_imported" in statistic_ids
+
+    site_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ENERGY_SITE_ID), normal_config_entry.entry_id
+    )
+    assert site_device is not None
+    shared_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Shared account",
+        unique_id="shared-account",
+    )
+    shared_config_entry.add_to_hass(hass)
+    shared_site_device = device_registry.async_get_or_create(
+        config_entry_id=shared_config_entry.entry_id,
+        identifiers=site_device.identifiers,
+    )
+    assert site_device.id != shared_site_device.id
+
+    await hass.config_entries.async_remove(shared_config_entry.entry_id)
+    assert await _get_statistic_ids(hass) == statistic_ids
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_remove(normal_config_entry.entry_id)
+    assert await _get_statistic_ids(hass) == set()
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
@@ -920,6 +975,9 @@ async def test_energy_history_refresh_ratelimited(
     """Test coordinator refresh handles 429."""
 
     await setup_platform(hass, normal_config_entry)
+    # Ignore the statistics import that runs at setup.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_energy_history.reset_mock()
 
     mock_energy_history.side_effect = RateLimited(
         {"after": str(int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10))}
@@ -953,6 +1011,9 @@ async def test_energy_history_refresh_ratelimited_not_sticky(
     """Test a 429 backoff only delays the next energy history refresh."""
 
     await setup_platform(hass, normal_config_entry)
+    # Ignore the statistics import that runs at setup.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_energy_history.reset_mock()
 
     after = ENERGY_HISTORY_INTERVAL + timedelta(seconds=10)
     # The library passes the raw Retry-After header through as a string
@@ -977,6 +1038,62 @@ async def test_energy_history_refresh_ratelimited_not_sticky(
     await hass.async_block_till_done()
 
     assert mock_energy_history.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("battery", "solar", "expected_calls"),
+    [
+        pytest.param(False, False, 0, id="wall-connector-only"),
+        pytest.param(True, False, 1, id="battery-only"),
+        pytest.param(False, True, 1, id="solar-only"),
+        pytest.param(True, True, 1, id="battery-and-solar"),
+    ],
+)
+async def test_energy_statistics_polling(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_energy_history: AsyncMock,
+    mock_products: AsyncMock,
+    mock_site_info: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    battery: bool,
+    solar: bool,
+    expected_calls: int,
+) -> None:
+    """Test only battery and solar sites import statistics, even without sensors."""
+    components = {"battery": battery, "solar": solar}
+    products = deepcopy(mock_products.return_value)
+    products["response"][1]["components"].update(components)
+    mock_products.return_value = products
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"].update(components)
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    for key in ENERGY_HISTORY_FIELDS:
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            DOMAIN,
+            f"{ENERGY_SITE_ID}-{key}",
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+
+    await setup_platform(hass, normal_config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.wall_connector_power") is not None
+    assert mock_energy_history.call_count == expected_calls
+
+    freezer.tick(ENERGY_STATISTICS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_energy_history.call_count == 2 * expected_calls
+
+    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
+    freezer.tick(ENERGY_STATISTICS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_energy_history.call_count == 2 * expected_calls
 
 
 async def test_init_region_issue(

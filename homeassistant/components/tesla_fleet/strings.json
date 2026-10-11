@@ -610,6 +610,15 @@
     "command_reason": {
       "message": "Command was unsuccessful: {reason}"
     },
+    "history_time_zone_missing": {
+      "message": "Energy history did not include the site's time zone."
+    },
+    "history_time_zone_unknown": {
+      "message": "Energy history included an unknown time zone: {time_zone}"
+    },
+    "history_wrong_day": {
+      "message": "Energy history requested for {date} returned a different day."
+    },
     "homelink_no_location": {
       "message": "Vehicle location is not available. Ensure the vehicle is awake and that the location scope has been granted."
     },

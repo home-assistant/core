@@ -1,6 +1,7 @@
 {
   "response": {
     "period": "day",
+    "installation_time_zone": "America/Los_Angeles",
     "time_series": [
       {
         "timestamp": "2023-06-01T01:00:00-07:00",
