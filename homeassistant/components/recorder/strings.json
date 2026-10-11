@@ -11,7 +11,7 @@
         },
         "step": {
           "confirm": {
-            "description": "The recorder found a corrupt database and moved it aside to start a new one. {count} corrupt database files ({size} MB) are still kept in `{path}`.\n\nThey may still contain history that can be recovered with SQLite tools. If you don't need them, select **Submit** to delete them. To keep them, close this dialog and ignore this issue.",
+            "description": "The recorder found a corrupt database and moved it aside to start a new one. Corrupt database files still kept in `{path}`: {count} ({size} MB).\n\nThey may still contain history that can be recovered with SQLite tools. If you don't need them, select **Submit** to delete them. To keep them, close this dialog and ignore this issue.",
             "title": "[%key:component::recorder::issues::corrupt_database_files::title%]"
           }
         }

@@ -362,7 +362,7 @@ def find_corrupt_database_files(dbfile: str) -> dict[Path, int]:
 
 def _corruption_time(corrupt_file: Path) -> str:
     """Return the ISO time move_away_broken_database put in the file name."""
-    return corrupt_file.name.partition(".corrupt.")[2]
+    return corrupt_file.name.rpartition(".corrupt.")[2]
 
 
 def delete_corrupt_database_files(dbfile: str, newest: str) -> None:
