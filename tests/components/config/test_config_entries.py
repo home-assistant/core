@@ -2347,6 +2347,45 @@ async def test_enable_entry_setup_fails(
     mock_setup_entry.assert_called_once()
 
 
+async def test_enable_entry_component_setup_fails(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test enabling an entry whose integration fails setup requires a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=False),
+            async_setup_entry=mock_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    # A failed integration setup is not retried until Home Assistant restarts
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by is None
+    assert entry.state is core_ce.ConfigEntryState.NOT_LOADED
+    mock_setup_entry.assert_not_called()
+
+
 async def test_disable_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
