@@ -1055,9 +1055,9 @@
     "trigger_alarm_webhook": {
       "description": "Fires an Alarm Manager webhook trigger, running the alarms that use it.",
       "fields": {
-        "device_id": {
-          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]",
-          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]"
+        "config_entry_id": {
+          "description": "The UniFi Protect NVR to send the webhook to.",
+          "name": "NVR"
         },
         "trigger_id": {
           "description": "The ID of the webhook trigger, as shown in the UniFi Protect Alarm Manager.",

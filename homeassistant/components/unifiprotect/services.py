@@ -10,10 +10,15 @@ from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
 from uiprotect.data.public_devices import PublicCamera
-from uiprotect.exceptions import ClientError, GlobalAlarmManagerError, NotAuthorized
+from uiprotect.exceptions import ClientError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_NAME,
+    Platform,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -107,32 +112,28 @@ PTZ_GOTO_PRESET_SCHEMA = probatio.Schema(
 
 TRIGGER_ALARM_WEBHOOK_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_TRIGGER_ID): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_TRIGGER_ID): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
     },
 )
 
 
 @callback
-def _async_get_ufp_instance(
-    hass: HomeAssistant, device_id: str, *, allow_public_only: bool = False
-) -> ProtectApiClient:
+def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
 
     if isinstance(device_entry, dr.ChildDeviceEntry):
-        return _async_get_ufp_instance(
-            hass, device_entry.parent_device_id, allow_public_only=allow_public_only
-        )
+        return _async_get_ufp_instance(hass, device_entry.parent_device_id)
 
     if device_entry is not None and device_entry.via_device_id is not None:
-        return _async_get_ufp_instance(
-            hass, device_entry.via_device_id, allow_public_only=allow_public_only
-        )
+        return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
     _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     ufp_instance = cast(UFPConfigEntry, config_entry).runtime_data.api
-    if ufp_instance.is_public_only and not allow_public_only:
+    if ufp_instance.is_public_only:
         # Actions read/write through the private bootstrap, which an
         # API-key-only entry never initializes.
         raise HomeAssistantError(
@@ -380,28 +381,18 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
 
 async def trigger_alarm_webhook(call: ServiceCall) -> None:
     """Fire an Alarm Manager webhook trigger."""
-    # The webhook goes through the public Integration API, so it also works
-    # for API-key-only entries.
-    instance = _async_get_ufp_instance(
-        call.hass, call.data[ATTR_DEVICE_ID], allow_public_only=True
+    entry: UFPConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
     try:
-        await instance.send_alarm_webhook_public(call.data[ATTR_TRIGGER_ID])
-    except GlobalAlarmManagerError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="global_alarm_manager",
-        ) from err
-    except NotAuthorized as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="not_authorized",
-        ) from err
+        await entry.runtime_data.api.send_alarm_webhook_public(
+            call.data[ATTR_TRIGGER_ID]
+        )
     except ClientError as err:
-        _LOGGER.debug("Error calling UniFi Protect alarm webhook: %s", err)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="service_error",
+            translation_key="command_error",
+            translation_placeholders={"error": str(err)},
         ) from err
 
 
@@ -453,8 +444,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(
             DOMAIN, name, method, schema=schema, supports_response=supports_response
         )
-    # Admin-only: alarms can sound sirens or start recording, and a device ID
-    # action has no entity permission check.
+    # Admin-only, there is no entity permission check.
     service.async_register_admin_service(
         hass,
         DOMAIN,
