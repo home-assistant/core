@@ -3,7 +3,6 @@
 import logging
 from typing import Any, override
 
-import probatio
 from smarttub import Spa, SpaError, SpaReminder
 
 from homeassistant.components.binary_sensor import (
@@ -11,12 +10,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_SENSORS
+from .const import (
+    ATTR_ERRORS,
+    ATTR_REMINDER_DAYS,
+    ATTR_REMINDERS,
+    ATTR_SENSORS,
+    ATTR_STATUS,
+)
 from .controller import SmartTubConfigEntry
 from .entity import (
     SmartTubEntity,
@@ -33,19 +36,6 @@ ATTR_ERROR_DESCRIPTION = "error_description"
 ATTR_ERROR_TYPE = "error_type"
 ATTR_CREATED_AT = "created_at"
 ATTR_UPDATED_AT = "updated_at"
-
-# how many days to snooze the reminder for
-ATTR_REMINDER_DAYS = "days"
-RESET_REMINDER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=30, max=365)
-    )
-}
-SNOOZE_REMINDER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=10, max=120)
-    )
-}
 
 PARALLEL_UPDATES = 0
 
@@ -77,19 +67,6 @@ async def async_setup_entry(
                 )
 
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "snooze_reminder",
-        SNOOZE_REMINDER_SCHEMA,
-        "async_snooze",
-    )
-    platform.async_register_entity_service(
-        "reset_reminder",
-        RESET_REMINDER_SCHEMA,
-        "async_reset",
-    )
 
 
 class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
@@ -172,9 +149,12 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
 
 
 class SmartTubError(SmartTubEntity, BinarySensorEntity):
-    """Indicates whether an error code is present.
+    """Indicates whether the spa is currently reporting an error.
 
-    There may be 0 or more errors. If there are >0, we show the first one.
+    The spa's status reports the current error code (0 means "All Clear"). The
+    errors endpoint also returns past errors, whose `active` flag can remain set
+    after the condition has cleared, so it is only used to look up details for
+    the error the status currently reports.
     """
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
@@ -191,25 +171,36 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         )
 
     @property
+    def error_code(self) -> int:
+        """Return the error code currently reported by the spa (0 if none)."""
+        status = self.coordinator.data[self.spa.id][ATTR_STATUS]
+        return getattr(status, "error_code", None) or 0
+
+    @property
     def error(self) -> SpaError | None:
-        """Return the underlying SpaError object for this entity."""
-        errors = self.coordinator.data[self.spa.id][ATTR_ERRORS]
-        if len(errors) == 0:
+        """Return the SpaError for the current error code, if known."""
+        if not (code := self.error_code):
             return None
-        return errors[0]
+        errors: list[SpaError] = self.coordinator.data[self.spa.id][ATTR_ERRORS]
+        matches = [error for error in errors if error.code == code]
+        return next((error for error in matches if error.active), None) or next(
+            iter(matches), None
+        )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if an error is signaled."""
-        return self.error is not None
+        return self.error_code != 0
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if (error := self.error) is None:
-            return {}
+            if not self.error_code:
+                return {}
+            return {ATTR_ERROR_CODE: self.error_code}
 
         return {
             ATTR_ERROR_CODE: error.code,

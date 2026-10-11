@@ -1062,6 +1062,19 @@ async def test_reauth_flow_cannot_connect(
     assert len(mock_unload_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
+    mock_api.async_start_pairing = AsyncMock(return_value=None)
+    mock_api.async_finish_pairing = AsyncMock(return_value=None)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock

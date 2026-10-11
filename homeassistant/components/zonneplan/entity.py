@@ -59,4 +59,4 @@ class ZonneplanBatteryEntity(CoordinatorEntity[ZonneplanBatteryCoordinator]):
     @property
     def battery(self) -> Battery:
         """Return the battery of this entity."""
-        return self.coordinator.data[self._contract_uuid]
+        return self.coordinator.data[self._contract_uuid].battery

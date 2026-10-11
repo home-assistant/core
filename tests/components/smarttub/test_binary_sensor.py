@@ -1,6 +1,6 @@
 """Test the SmartTub binary sensor platform."""
 
-from unittest.mock import create_autospec
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
 import smarttub
@@ -8,6 +8,8 @@ import smarttub
 from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry
 
 
 async def test_binary_sensors(spa, setup_entry, hass: HomeAssistant) -> None:
@@ -49,10 +51,17 @@ def mock_error(spa):
     return error
 
 
-async def test_error(spa, hass: HomeAssistant, config_entry, mock_error) -> None:
+async def test_error(
+    spa: MagicMock,
+    spa_state: smarttub.SpaStateFull,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_error: MagicMock,
+) -> None:
     """Test the error sensor."""
 
     spa.get_errors.return_value = [mock_error]
+    spa_state.error_code = mock_error.code
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -64,6 +73,82 @@ async def test_error(spa, hass: HomeAssistant, config_entry, mock_error) -> None
 
     assert state.state == STATE_ON
     assert state.attributes["error_code"] == 11
+
+
+async def test_error_matches_current_code(
+    spa: MagicMock,
+    spa_state: smarttub.SpaStateFull,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_error: MagicMock,
+) -> None:
+    """Test details come from the entry matching the current status code."""
+
+    older_error = create_autospec(smarttub.SpaError, instance=True)
+    older_error.code = 1002
+    older_error.title = "AC POWER DISCONNECTED"
+    older_error.description = None
+    older_error.active = True
+    older_error.created_at = dt_util.utcnow()
+    older_error.updated_at = dt_util.utcnow()
+    older_error.error_type = "SYS_ERROR"
+
+    spa.get_errors.return_value = [older_error, mock_error]
+    spa_state.error_code = mock_error.code
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"binary_sensor.{spa.brand}_{spa.model}_error")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["error_code"] == mock_error.code
+    assert state.attributes["error_title"] == mock_error.title
+
+
+async def test_error_history_ignored(
+    spa: MagicMock,
+    spa_state: smarttub.SpaStateFull,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_error: MagicMock,
+) -> None:
+    """Test a stale error in the errors list does not trigger the sensor."""
+
+    spa.get_errors.return_value = [mock_error]
+    spa_state.error_code = 0
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"binary_sensor.{spa.brand}_{spa.model}_error")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert "error_code" not in state.attributes
+
+
+async def test_error_without_history_entry(
+    spa: MagicMock,
+    spa_state: smarttub.SpaStateFull,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the sensor is on, with only the code, when no history entry matches."""
+
+    spa.get_errors.return_value = []
+    spa_state.error_code = 42
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"binary_sensor.{spa.brand}_{spa.model}_error")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["error_code"] == 42
+    assert "error_title" not in state.attributes
 
 
 async def test_snooze_reminder(spa, setup_entry, hass: HomeAssistant) -> None:

@@ -1,21 +1,13 @@
 """Coordinator for handling data fetching and updates."""
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
 import aiohttp
-from lunatone_rest_api_client import (
-    DALIBroadcast,
-    DALIScan,
-    Device,
-    Devices,
-    Info,
-    Sensor,
-    Sensors,
-)
+from lunatone_rest_api_client import DALIScan, Device, Devices, Info, Sensor, Sensors
 from lunatone_rest_api_client.models import InfoData, ScanData, ScanLineData
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +32,6 @@ class LunatoneData:
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
     coordinator_scan: LunatoneScanDataUpdateCoordinator
     coordinator_sensors: LunatoneSensorsDataUpdateCoordinator | None = None
-    dali_line_broadcasts: list[DALIBroadcast] = field(default_factory=list)
 
 
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
@@ -72,11 +63,13 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             await self.info_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve info data from Lunatone REST API"
+                translation_domain=DOMAIN, translation_key="cannot_retrieve_info_data"
             ) from ex
 
         if self.info_api.data is None:
-            raise UpdateFailed("Did not receive info data from Lunatone REST API")
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="missing_info_data"
+            )
         return self.info_api.data
 
 
@@ -111,14 +104,12 @@ class LunatoneDevicesDataUpdateCoordinator(
             await self.devices_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve devices data from Lunatone REST API"
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_devices_data",
             ) from ex
 
-        if self.devices_api.data is None:
-            raise UpdateFailed("Did not receive devices data from Lunatone REST API")
-
         data: dict[int, dict[int, Device]] = defaultdict(dict)
-        for device in self.devices_api.devices:
+        for device in self.devices_api.devices.values():
             data[device.data.line].update({device.data.id: device})
         return dict(data)
 
@@ -153,12 +144,10 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             await self.sensors_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve sensors data from Lunatone REST API"
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_sensors_data",
             ) from ex
-
-        if self.sensors_api.data is None:
-            raise UpdateFailed("Did not receive sensors data from Lunatone REST API")
-        return {sensor.data.id: sensor for sensor in self.sensors_api.sensors}
+        return self.sensors_api.sensors
 
 
 class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
@@ -191,11 +180,9 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             await self.dali_scan_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve scan data from Lunatone REST API"
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_scan_data",
             ) from ex
-
-        if self.dali_scan_api.data is None:
-            raise UpdateFailed("Did not receive scan data from Lunatone REST API")
 
         update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
         if self.dali_scan_api.data.busy:

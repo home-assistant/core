@@ -31,7 +31,6 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
-    ServiceCall,
     State,
     callback,
 )
@@ -40,7 +39,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_component,
     event,
-    service,
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -56,6 +54,7 @@ from .const import (  # noqa: F401
     HOME_ZONE,
     ZoneEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +104,6 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -370,18 +368,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_ZONE] = ZoneData(component, storage_collection, yaml_collection)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all zones and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(conf[DOMAIN])
-
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
+    async_setup_services(hass)
 
     if component.get_entity("zone.home"):
         return True

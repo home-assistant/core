@@ -47,7 +47,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     serial_number: str
     hostname: str
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: EgaugeConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
