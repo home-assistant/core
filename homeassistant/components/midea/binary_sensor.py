@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(kw_only=True, frozen=True)
 class MideaBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Description for a Midea switch entity."""
+    """Description for a Midea binary sensor entity."""
 
     models: list[DeviceType] | None = None
 
