@@ -5,11 +5,18 @@ import socket
 import ssl
 from unittest.mock import patch
 
+from cryptography import x509
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_VERIFY_SSL,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -46,6 +53,44 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") is None
     assert state.attributes.get("is_valid")
+
+
+@pytest.mark.parametrize(
+    ("tls_options", "is_valid"),
+    [
+        pytest.param({}, True, id="legacy-entry"),
+        pytest.param({CONF_VERIFY_SSL: True}, True, id="verified"),
+        pytest.param({CONF_VERIFY_SSL: False}, False, id="unverified"),
+    ],
+)
+async def test_certificate_verification_status(
+    hass: HomeAssistant,
+    certificate: x509.Certificate,
+    certificate_der: bytes,
+    tls_options: dict[str, bool],
+    is_valid: bool,
+) -> None:
+    """Only claim validity when certificate verification was enabled."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT, **tls_options},
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        return_value=certificate_der,
+    ) as get_cert:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    get_cert.assert_awaited_with(hass, HOST, PORT, verify_ssl=is_valid)
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state == certificate.not_valid_after_utc.isoformat()
+    assert state.attributes["is_valid"] is is_valid
+    assert state.attributes["error"] is None
 
 
 async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:

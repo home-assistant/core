@@ -67,5 +67,5 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             return None
 
         self.cert_error = None
-        self.is_cert_valid = True
+        self.is_cert_valid = self.config_entry.data.get(CONF_VERIFY_SSL, True)
         return timestamp
