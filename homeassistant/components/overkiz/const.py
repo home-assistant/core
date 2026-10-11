@@ -46,7 +46,7 @@ UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 # fetch_events is limited to 1 call per second, so stay below it.
 UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
 # Overkiz doesn't say when the quota resets.
-RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=5)
+RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
