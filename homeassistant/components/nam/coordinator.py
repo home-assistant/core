@@ -64,7 +64,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
             data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.
-        except (ApiError, InvalidSensorDataError, RetryError) as error:
+        except (ApiError, InvalidSensorDataError, RetryError, TimeoutError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",

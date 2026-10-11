@@ -50,6 +50,23 @@ async def test_all_entities(
         )
 
 
+async def test_energy_measure_per_unit_type(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test ATA and ATW units fetch their own energy measure."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert {
+        call.args[0]: call.kwargs["measure"]
+        for call in mock_melcloud_client.get_energy_telemetry.call_args_list
+    } == {
+        "ata-unit-uuid-1": "cumulative_energy_consumed_since_last_upload",
+        "atw-unit-uuid-1": "interval_energy_consumed",
+    }
+
+
 @pytest.mark.parametrize(
     ("operation_mode", "expected_state"),
     [
@@ -57,7 +74,10 @@ async def test_all_entities(
         pytest.param("HotWater", "heating_water", id="heating_water"),
         pytest.param("Heat", "heating_zones", id="heat"),
         pytest.param("HeatZones", "heating_zones", id="heating_zones"),
-        pytest.param("Cool", "cooling", id="cooling"),
+        pytest.param("Cool", "cooling", id="cool"),
+        pytest.param("Heating", "heating_zones", id="heating"),
+        pytest.param("FreezeStat", "heating_zones", id="freeze_stat"),
+        pytest.param("Cooling", "cooling", id="cooling"),
         pytest.param("Defrost", STATE_UNKNOWN, id="unsupported_mode"),
     ],
 )
