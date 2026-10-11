@@ -476,6 +476,11 @@ ZEROCONF = {
             "domain": "daikin",
         },
     ],
+    "_dockset._tcp.local.": [
+        {
+            "domain": "airlino",
+        },
+    ],
     "_droplet._tcp.local.": [
         {
             "domain": "droplet",

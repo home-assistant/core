@@ -504,6 +504,9 @@ aioymaps==1.2.5
 # homeassistant.components.airgradient
 airgradient==0.10.0
 
+# homeassistant.components.airlino
+airlino-api==1.0.1
+
 # homeassistant.components.airly
 airly==1.1.0
 
