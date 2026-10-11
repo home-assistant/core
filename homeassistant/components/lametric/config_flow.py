@@ -15,6 +15,7 @@ from demetriek import (
     LaMetricDevice,
     LaMetricError,
     LaMetricLocalAuth,
+    LaMetricUnsupportedError,
     Model,
     Notification,
     NotificationIconType,
@@ -190,12 +191,40 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user's choice.
 
-        Either enter the manual credentials or fetch the cloud credentials.
+        Either press the button on the device, enter the manual credentials,
+        or fetch the cloud credentials.
         """
+        menu_options = ["press_button", "pick_implementation", "manual_entry"]
+
+        # With the host known, ask the device whether it supports the button
+        # press. Nothing shows on its screen for that. A device that does goes
+        # straight to it, one that does not (like an LM 37X8) is not offered it.
+        if host := self._known_host():
+            auth = LaMetricLocalAuth(
+                host=host, session=async_get_clientsession(self.hass)
+            )
+            try:
+                supported = await auth.supported()
+            except LaMetricConnectionError as ex:
+                # No telling, so offer every way to set it up.
+                LOGGER.debug("Could not check for the button press: %s", ex)
+            else:
+                if supported:
+                    return await self.async_step_press_button()
+                menu_options.remove("press_button")
+
         return self.async_show_menu(
             step_id="choice_enter_manual_or_fetch_cloud",
-            menu_options=["pick_implementation", "manual_entry", "press_button"],
+            menu_options=menu_options,
         )
+
+    def _known_host(self) -> str | None:
+        """Return the host of the device, when it is known already."""
+        if self.discovered:
+            return self.discovered_host
+        if self.source == SOURCE_REAUTH:
+            return str(self._get_reauth_entry().data[CONF_HOST])
+        return None
 
     async def async_step_manual_entry(
         self, user_input: dict[str, Any] | None = None
@@ -263,29 +292,26 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             try:
                 self.button_challenge = await auth.request_challenge()
+            except LaMetricUnsupportedError:
+                # A device without this flow, like an LM 37X8, ends up here.
+                errors["base"] = "button_not_supported"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
-            except LaMetricError:
-                # A device without this flow, like an LM 37X8, ends up here.
-                errors["base"] = "button_not_supported"
+            except LaMetricError as ex:
+                LOGGER.error("Error asking LaMetric for a button press: %s", ex)
+                errors["base"] = "unknown"
             else:
                 self.button_task = self.hass.async_create_task(
                     self._async_wait_for_button(auth)
                 )
                 return await self.async_step_press_button_wait()
 
-        host = None
-        if self.discovered:
-            host = self.discovered_host
-        elif self.source == SOURCE_REAUTH:
-            host = self._get_reauth_entry().data[CONF_HOST]
-
         return self.async_show_form(
             step_id="press_button",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema({probatio.Required(CONF_HOST): TextSelector()}),
-                {CONF_HOST: host},
+                {CONF_HOST: self._known_host()},
             ),
             errors=errors,
         )

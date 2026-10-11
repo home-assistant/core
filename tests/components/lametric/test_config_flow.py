@@ -9,6 +9,7 @@ from demetriek import (
     LaMetricConnectionError,
     LaMetricConnectionTimeoutError,
     LaMetricError,
+    LaMetricUnsupportedError,
     Notification,
     NotificationSound,
     Sound,
@@ -60,9 +61,9 @@ async def test_full_cloud_import_flow_multiple_devices(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
     assert result["menu_options"] == [
+        "press_button",
         "pick_implementation",
         "manual_entry",
-        "press_button",
     ]
 
     result = await hass.config_entries.flow.async_configure(
@@ -143,9 +144,9 @@ async def test_full_cloud_import_flow_single_device(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
     assert result["menu_options"] == [
+        "press_button",
         "pick_implementation",
         "manual_entry",
-        "press_button",
     ]
 
     result = await hass.config_entries.flow.async_configure(
@@ -221,9 +222,9 @@ async def test_full_manual(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
     assert result["menu_options"] == [
+        "press_button",
         "pick_implementation",
         "manual_entry",
-        "press_button",
     ]
 
     result = await hass.config_entries.flow.async_configure(
@@ -265,19 +266,18 @@ async def test_full_ssdp_with_cloud_import(
     aioclient_mock: AiohttpClientMocker,
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Check a full flow triggered by SSDP, importing from cloud."""
+    # A device without the button press, like an LM 37X8, gets the menu.
+    mock_lametric_local_auth.supported.return_value = False
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
-    assert result["menu_options"] == [
-        "pick_implementation",
-        "manual_entry",
-        "press_button",
-    ]
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "pick_implementation"}
@@ -337,19 +337,18 @@ async def test_full_ssdp_with_cloud_import(
 async def test_full_ssdp_manual_entry(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Check a full flow triggered by SSDP, with manual API key entry."""
+    # A device without the button press, like an LM 37X8, gets the menu.
+    mock_lametric_local_auth.supported.return_value = False
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
-    assert result["menu_options"] == [
-        "pick_implementation",
-        "manual_entry",
-        "press_button",
-    ]
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "manual_entry"}
@@ -794,8 +793,11 @@ async def test_reauth_cloud_import(
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Test reauth flow importing api keys from the cloud."""
+    # A device without the button press, like an LM 37X8, gets the menu.
+    mock_lametric_local_auth.supported.return_value = False
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -847,8 +849,11 @@ async def test_reauth_cloud_abort_device_not_found(
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Test reauth flow importing api keys from the cloud."""
+    # A device without the button press, like an LM 37X8, gets the menu.
+    mock_lametric_local_auth.supported.return_value = False
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, unique_id="UKNOWN_DEVICE")
 
@@ -893,8 +898,11 @@ async def test_reauth_manual(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Test reauth flow with manual entry."""
+    # A device without the button press, like an LM 37X8, gets the menu.
+    mock_lametric_local_auth.supported.return_value = False
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -925,8 +933,11 @@ async def test_reauth_manual_sky(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Test reauth flow with manual entry for LaMetric Sky."""
+    # A device without the button press, like an LM 37X8, gets the menu.
+    mock_lametric_local_auth.supported.return_value = False
     mock_config_entry.add_to_hass(hass)
     # The entry belongs to the SKY the reauthentication talks to.
     hass.config_entries.async_update_entry(
@@ -1100,8 +1111,9 @@ async def test_full_press_button(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (LaMetricError, "button_not_supported"),
+        (LaMetricUnsupportedError, "button_not_supported"),
         (LaMetricConnectionError, "cannot_connect"),
+        (LaMetricError, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
@@ -1137,6 +1149,7 @@ async def test_press_button_request_errors(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "SA110405124500W00BS9"
     assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
         "mock-local-api-key"
     )
@@ -1186,6 +1199,7 @@ async def test_press_button_not_in_time(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "SA110405124500W00BS9"
     assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
         "mock-local-api-key"
     )
@@ -1233,6 +1247,7 @@ async def test_press_button_api_key_errors(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "SA110405124500W00BS9"
     assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
         "mock-local-api-key"
     )
@@ -1281,6 +1296,7 @@ async def test_press_button_setup_errors(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "SA110405124500W00BS9"
     assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
         "mock-local-api-key"
     )
@@ -1291,18 +1307,64 @@ async def test_press_button_discovered(
     hass: HomeAssistant,
     mock_lametric_local_auth: MagicMock,
 ) -> None:
-    """Test a discovered device has its host filled in already."""
+    """Test a discovered device with the button press goes straight to it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"next_step_id": "press_button"}
-    )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "press_button"
     schema = result["data_schema"].schema
     host_key = next(key for key in schema if key == CONF_HOST)
     assert host_key.description == {"suggested_value": "127.0.0.1"}
+
+    # Checking for the button press is no reason to ask for one.
+    mock_lametric_local_auth.request_challenge.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "SA110405124500W00BS9"
+    assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
+        "mock-local-api-key"
+    )
+
+
+@pytest.mark.parametrize(
+    ("supported", "menu_options"),
+    [
+        (False, ["pick_implementation", "manual_entry"]),
+        (
+            LaMetricConnectionError,
+            ["press_button", "pick_implementation", "manual_entry"],
+        ),
+    ],
+    ids=["not_supported", "cannot_tell"],
+)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
+async def test_press_button_discovered_menu(
+    hass: HomeAssistant,
+    mock_lametric_local_auth: MagicMock,
+    supported: bool | type[Exception],
+    menu_options: list[str],
+) -> None:
+    """Test a discovered device only offers the button press when it can."""
+    if isinstance(supported, bool):
+        mock_lametric_local_auth.supported.return_value = supported
+    else:
+        mock_lametric_local_auth.supported.side_effect = supported
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    assert result["menu_options"] == menu_options
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1316,9 +1378,9 @@ async def test_reauth_press_button(
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"next_step_id": "press_button"}
-    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "press_button"
 
     schema = result["data_schema"].schema
     host_key = next(key for key in schema if key == CONF_HOST)
@@ -1378,9 +1440,9 @@ async def test_reauth_press_button_other_device(
     mock_lametric.device.return_value.serial_number = "SA000000000000000000"
 
     result = await mock_config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"next_step_id": "press_button"}
-    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "press_button"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.42"}
     )

@@ -82,6 +82,7 @@ def mock_lametric_local_auth() -> Generator[MagicMock]:
         patch("homeassistant.components.lametric.config_flow.BUTTON_POLL_INTERVAL", 0),
     ):
         local_auth = local_auth_mock.return_value
+        local_auth.supported.return_value = True
         local_auth.request_challenge.return_value = AuthChallenge(
             challenge_id="mock-challenge", duration=60, state="in-progress"
         )
