@@ -19,7 +19,7 @@ from homeassistant.components.cert_expiry.helper import (
     async_get_ssl_context,
     get_cert_expiry_timestamp,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import create_client_context, get_default_context
 
@@ -62,13 +62,16 @@ async def ignore_tls_client_abort(hass: HomeAssistant) -> AsyncGenerator[None]:
 @pytest.fixture
 def server_context(
     tmp_path: Path,
-    certificate: x509.Certificate,
     certificate_key: ec.EllipticCurvePrivateKey,
+    certificate_pem: str,
+    request: pytest.FixtureRequest,
 ) -> ssl.SSLContext:
     """Load the test server's certificate and private key."""
     cert_path = tmp_path / "certificate.pem"
     key_path = tmp_path / "key.pem"
-    cert_path.write_bytes(certificate.public_bytes(serialization.Encoding.PEM))
+    if hasattr(request, "param"):
+        certificate_pem = request.getfixturevalue(request.param)
+    cert_path.write_text(certificate_pem, encoding="ascii")
     key_path.write_bytes(
         certificate_key.private_bytes(
             serialization.Encoding.PEM,
@@ -149,6 +152,34 @@ async def test_unverified_tls_sensor(
     assert get_default_context() is shared_context
     assert shared_context.check_hostname
     assert shared_context.verify_mode == ssl.CERT_REQUIRED
+
+
+@pytest.mark.parametrize(
+    "server_context",
+    [pytest.param("unsupported_certificate_pem", id="unsupported-version")],
+    indirect=True,
+)
+async def test_unverified_tls_unsupported_version(
+    hass: HomeAssistant, tls_port: int
+) -> None:
+    """Keep an unsupported peer certificate available with a validation error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "localhost", CONF_PORT: tls_port, CONF_VERIFY_SSL: False},
+        unique_id=f"localhost:{tls_port}",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"sensor.localhost_{tls_port}_cert_expiry")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["is_valid"] is False
+    assert state.attributes["error"] == (
+        f"Invalid certificate received from: localhost:{tls_port}"
+    )
 
 
 @pytest.mark.usefixtures("ignore_tls_client_abort")

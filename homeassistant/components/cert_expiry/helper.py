@@ -6,7 +6,11 @@ import socket
 import ssl
 
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificates
+from cryptography.x509 import (
+    InvalidVersion,
+    load_der_x509_certificate,
+    load_pem_x509_certificates,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import (
@@ -33,7 +37,7 @@ def normalize_ca_certificates(ca_certificates: str) -> str:
         return ""
     try:
         certificates = load_pem_x509_certificates(ca_certificates.encode("ascii"))
-    except ValueError as err:
+    except (ValueError, InvalidVersion) as err:
         raise InvalidCACertificate("Invalid PEM certificates") from err
 
     normalized = "".join(
@@ -141,7 +145,7 @@ async def get_cert_expiry_timestamp(
 
     try:
         return load_der_x509_certificate(cert).not_valid_after_utc
-    except ValueError as err:
+    except (ValueError, InvalidVersion) as err:
         raise ValidationFailure(
             f"Invalid certificate received from: {hostname}:{port}"
         ) from err

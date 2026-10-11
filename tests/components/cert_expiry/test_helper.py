@@ -117,6 +117,22 @@ async def test_invalid_certificate(
         await get_cert_expiry_timestamp(hass, HOST, PORT)
 
 
+async def test_unsupported_certificate_version(
+    hass: HomeAssistant, unsupported_certificate_der: bytes
+) -> None:
+    """Map an unsupported peer certificate version to a validation failure."""
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.helper.async_get_cert",
+            return_value=unsupported_certificate_der,
+        ),
+        pytest.raises(ValidationFailure, match="Invalid certificate received") as exc,
+    ):
+        await get_cert_expiry_timestamp(hass, HOST, PORT)
+
+    assert isinstance(exc.value.__cause__, x509.InvalidVersion)
+
+
 async def test_transport_closed_on_certificate_error(hass: HomeAssistant) -> None:
     """Close a successful TLS connection even when reading its certificate fails."""
     transport = Mock(spec=asyncio.Transport)
@@ -217,6 +233,14 @@ async def test_invalid_ca_context(hass: HomeAssistant, ca_data: str) -> None:
     """Reject malformed certificates before attempting a network connection."""
     with pytest.raises(InvalidCACertificate):
         await async_get_ssl_context(hass, ca_certificates=ca_data)
+
+
+def test_unsupported_ca_version(unsupported_certificate_pem: str) -> None:
+    """Map an unsupported CA certificate version to an invalid CA error."""
+    with pytest.raises(InvalidCACertificate) as exc:
+        normalize_ca_certificates(unsupported_certificate_pem)
+
+    assert isinstance(exc.value.__cause__, x509.InvalidVersion)
 
 
 @pytest.mark.parametrize(

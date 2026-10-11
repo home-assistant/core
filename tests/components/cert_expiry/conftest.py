@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime
+import ssl
 from unittest.mock import AsyncMock, patch
 
 from cryptography import x509
@@ -68,6 +69,18 @@ def certificate_der(certificate: x509.Certificate) -> bytes:
 def certificate_pem(certificate: x509.Certificate) -> str:
     """Return the test certificate in PEM format."""
     return certificate.public_bytes(serialization.Encoding.PEM).decode("ascii")
+
+
+@pytest.fixture
+def unsupported_certificate_der(certificate_der: bytes) -> bytes:
+    """Use X.509 v2, which OpenSSL accepts but cryptography cannot parse."""
+    return certificate_der.replace(b"\xa0\x03\x02\x01\x02", b"\xa0\x03\x02\x01\x01", 1)
+
+
+@pytest.fixture
+def unsupported_certificate_pem(unsupported_certificate_der: bytes) -> str:
+    """Encode the unsupported certificate version as PEM."""
+    return ssl.DER_cert_to_PEM_cert(unsupported_certificate_der)
 
 
 @pytest.fixture
