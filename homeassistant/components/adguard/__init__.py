@@ -13,11 +13,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     AdGuardConfigEntry,
     AdGuardData,
@@ -63,6 +67,47 @@ def _async_migrate_device_identifiers(
             continue
 
         device_registry.async_update_device(device.id, new_identifiers=identifiers)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
+    """Migrate an AdGuard Home config entry to the current version."""
+    if entry.minor_version < 2:
+        # Entities were identified by host and port, which change when
+        # AdGuard Home moves. They are identified by the entry ID now.
+        legacy_prefix = f"{DOMAIN}_{entry.data[CONF_HOST]}_{entry.data[CONF_PORT]}_"
+        entity_registry = er.async_get(hass)
+
+        @callback
+        def _migrate_unique_id(entity: er.RegistryEntry) -> dict[str, str] | None:
+            """Return the new unique ID of an entity with a legacy one."""
+            if not entity.unique_id.startswith(legacy_prefix):
+                return None
+
+            # Like `sensor_dns_queries`, or just `update` for the update entity.
+            legacy_key = entity.unique_id.removeprefix(legacy_prefix)
+            if legacy_key == Platform.UPDATE:
+                new_unique_id = entry.entry_id
+            else:
+                key = legacy_key.removeprefix(f"{entity.domain}_")
+                new_unique_id = f"{entry.entry_id}_{key}"
+
+            # Downgrading and upgrading again can leave both behind.
+            if entity_registry.async_get_entity_id(
+                entity.domain, DOMAIN, new_unique_id
+            ):
+                LOGGER.debug(
+                    "Not migrating %s, %s is already in use",
+                    entity.entity_id,
+                    new_unique_id,
+                )
+                return None
+
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
