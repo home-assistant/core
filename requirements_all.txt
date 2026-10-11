@@ -3478,6 +3478,9 @@ wyoming==1.10.2
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.16.1
 
+# homeassistant.components.xiaomi_weather
+xiaomi-weather==0.1.0
+
 # homeassistant.components.knx
 xknx==3.20.0
 
