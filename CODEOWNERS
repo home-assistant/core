@@ -214,6 +214,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/azure_devops/ @timmo001
 /homeassistant/components/azure_event_hub/ @eavanvalkenburg
 /tests/components/azure_event_hub/ @eavanvalkenburg
+/homeassistant/components/azure_openai/ @bexelbie
+/tests/components/azure_openai/ @bexelbie
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/azure_storage/ @zweckj
 /tests/components/azure_storage/ @zweckj
