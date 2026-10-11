@@ -250,6 +250,7 @@
         },
         "description": "You can use the hotkey `s` to spawn this dialog from anywhere in the KNX config panel.",
         "read_button": "Read",
+        "read_response": "Response from {source} for {address}: {value}",
         "response": {
           "description": "Send as GroupValueResponse telegram.",
           "label": "Response"
@@ -1577,6 +1578,12 @@
     "service_exposure_remove_not_found": {
       "message": "Could not find exposure for `{group_address}` to remove."
     },
+    "service_read_no_response": {
+      "message": "No response received for `{address}`."
+    },
+    "service_read_response_single_address": {
+      "message": "Response data is only available when reading a single group address."
+    },
     "service_send_invalid_payload": {
       "message": "Invalid payload for `knx.send` service. {error}"
     },
@@ -1732,7 +1739,7 @@
       "name": "Expose to KNX bus"
     },
     "read": {
-      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities. When response data is requested, waits for the answer to a single group address and returns it.",
       "fields": {
         "address": {
           "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",
