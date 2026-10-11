@@ -1,14 +1,18 @@
 """Tests for the Mealie services."""
 
+from dataclasses import replace
 from datetime import date
 from unittest.mock import AsyncMock
 
 from aiomealie import (
     About,
+    IngredientConfidence,
     MealieConnectionError,
     MealieNotFoundError,
     MealieValidationError,
     MealplanEntryType,
+    ParsedIngredient,
+    RegisteredParser,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -18,6 +22,7 @@ from homeassistant.components.mealie.const import (
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_INGREDIENT,
     ATTR_MEALPLAN_ID,
     ATTR_NOTE_TEXT,
     ATTR_NOTE_TITLE,
@@ -30,6 +35,7 @@ from homeassistant.components.mealie.const import (
 )
 from homeassistant.components.mealie.services import (
     SERVICE_DELETE_MEALPLAN,
+    SERVICE_GET_INGREDIENT,
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
     SERVICE_GET_RECIPES,
@@ -45,7 +51,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_service_mealplan(
@@ -641,6 +647,91 @@ async def test_service_get_shopping_list_items_connection_error(
 
 
 @pytest.mark.parametrize(
+    "confidence",
+    [
+        pytest.param(IngredientConfidence(average=1.0), id="high-confidence"),
+        pytest.param(IngredientConfidence(average=0.98), id="threshold-confidence"),
+        pytest.param(IngredientConfidence(average=0.979), id="low-confidence"),
+        pytest.param(IngredientConfidence(average=0.0), id="zero-confidence"),
+    ],
+)
+async def test_service_get_ingredient(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    confidence: IngredientConfidence,
+) -> None:
+    """Test ingredient parsing and confidence in the service response."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.parse_ingredient.return_value.confidence = confidence
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_INGREDIENT,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_INGREDIENT: "1 can acorn squash",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    mock_mealie_client.parse_ingredient.assert_awaited_once_with(
+        "1 can acorn squash", RegisteredParser.NLP
+    )
+    assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        pytest.param(None, id="missing-result"),
+        pytest.param(
+            replace(
+                ParsedIngredient.from_json(
+                    load_fixture("parse_ingredient.json", DOMAIN)
+                ),
+                confidence=None,
+            ),
+            id="missing-confidence",
+        ),
+    ],
+)
+async def test_service_get_ingredient_parse_failure(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    result: ParsedIngredient | None,
+) -> None:
+    """Test parsing failures raise a translated service error."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.parse_ingredient.return_value = result
+
+    with pytest.raises(
+        ServiceValidationError, match="Mealie could not parse the ingredient"
+    ) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_INGREDIENT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_INGREDIENT: "1 can acorn squash",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "could_not_parse_ingredient"
+    mock_mealie_client.parse_ingredient.assert_awaited_once_with(
+        "1 can acorn squash", RegisteredParser.NLP
+    )
+
+
+@pytest.mark.parametrize(
     (
         "service",
         "payload",
@@ -651,6 +742,16 @@ async def test_service_get_shopping_list_items_connection_error(
         "return_response",
     ),
     [
+        pytest.param(
+            SERVICE_GET_INGREDIENT,
+            {ATTR_INGREDIENT: "1 can acorn squash"},
+            "parse_ingredient",
+            MealieConnectionError,
+            HomeAssistantError,
+            "Error connecting to Mealie instance",
+            True,
+            id="get-ingredient-connection-error",
+        ),
         (
             SERVICE_GET_MEALPLAN,
             {},
@@ -792,6 +893,12 @@ async def test_services_connection_error(
 @pytest.mark.parametrize(
     ("service", "payload", "return_response"),
     [
+        pytest.param(
+            SERVICE_GET_INGREDIENT,
+            {ATTR_INGREDIENT: "1 can acorn squash"},
+            True,
+            id="get-ingredient",
+        ),
         (SERVICE_GET_MEALPLAN, {}, True),
         (SERVICE_GET_RECIPE, {ATTR_RECIPE_ID: "recipe_id"}, True),
         (SERVICE_GET_RECIPES, {}, True),
