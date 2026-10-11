@@ -20,6 +20,7 @@ from homeassistant.components.neopool.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +31,7 @@ MOCK_SERIAL = "1234567890"
 
 
 @asynccontextmanager
-async def _temp_unit_cm(hass: Any, params: Any, unit_id: Any) -> Any:
+async def _temp_unit_cm(hass: HomeAssistant, params: Any, unit_id: Any) -> Any:
     """Stub async_get_temporary_unit, yielding a throwaway unit."""
     yield MagicMock()
 

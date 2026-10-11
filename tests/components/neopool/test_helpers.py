@@ -17,13 +17,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT
         (
             {CONF_HOST: "192.0.2.1", CONF_PORT: 1502, "modbus_framer": "rtu"},
             ModbusSerialParams(
-                device="socket://192.0.2.1:1502", framer="rtu", baudrate=19200
+                device="socket://192.0.2.1:1502", framer="rtu", baudrate=115200
             ),
         ),
         (
             {CONF_HOST: "2001:db8::1", CONF_PORT: 502, "modbus_framer": "rtu"},
             ModbusSerialParams(
-                device="socket://[2001:db8::1]:502", framer="rtu", baudrate=19200
+                device="socket://[2001:db8::1]:502", framer="rtu", baudrate=115200
             ),
         ),
     ],

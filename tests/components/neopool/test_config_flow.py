@@ -90,7 +90,9 @@ async def test_user_flow_probe_errors_recover(
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
-async def test_user_flow_link_conflict(hass: HomeAssistant) -> None:
+async def test_user_flow_link_conflict(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """A link conflict from the shared connection surfaces as cannot_connect."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -105,6 +107,11 @@ async def test_user_flow_link_conflict(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_neopool_client")

@@ -40,7 +40,11 @@ def _async_build_client(
     except HomeAssistantError as err:
         # The device is already in use over different link settings, which one
         # shared connection cannot honour.
-        raise ConfigEntryNotReady(str(err)) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_link_conflict",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     return NeoPoolModbusClient(entry.data, unit=unit)
 
