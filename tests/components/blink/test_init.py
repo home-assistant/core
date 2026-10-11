@@ -141,6 +141,10 @@ async def test_migrate(
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        f"Cannot migrate configuration entry from version {version},"
+        " re-authentication is required"
+    )
 
 
 async def test_migrate_v3_to_v4(
