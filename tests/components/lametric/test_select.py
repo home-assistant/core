@@ -9,9 +9,10 @@ from demetriek import (
     LaMetricError,
     ScreensaverMode,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.lametric.const import DOMAIN
+from homeassistant.components.lametric.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
@@ -28,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -202,7 +203,7 @@ async def test_screensaver_mode_time_based(
 
 async def test_screensaver_mode_time_based_without_times(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the time based mode needs its times set first."""
@@ -210,7 +211,8 @@ async def test_screensaver_mode_time_based_without_times(
     time_based.enabled = False
     time_based.start_time = None
     time_based.end_time = None
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_SCREENSAVER_MODE)
