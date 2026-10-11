@@ -66,7 +66,12 @@ async def test_load_unload_config_entry(
         ),
         (BackupAgentError, ConfigEntryState.SETUP_ERROR),
         (ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR),
-        (InvalidBucketException, ConfigEntryState.SETUP_ERROR),
+        (
+            InvalidBucketException(
+                translation_domain=DOMAIN, translation_key="bucket_not_found"
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
     ],
 )
 async def test_setup_entry_error(
