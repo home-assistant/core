@@ -1689,8 +1689,9 @@ def recorder_db_url(
         # and per test run so concurrent runs on one server don't collide
         suffix = f"-{os.environ['PYTEST_XDIST_TESTRUNUID'][:8]}-{worker}"
         url = sa.make_url(db_url)
-        # Postgres and MySQL limit names to 63 bytes and 64 characters
-        database = f"{url.database[: 63 - len(suffix)]}{suffix}"
+        # Postgres limits names to 63 bytes, MySQL to 64 characters
+        base = url.database.encode()[: 63 - len(suffix)].decode(errors="ignore")
+        database = f"{base}{suffix}"
         db_url = url.set(database=database).render_as_string(hide_password=False)
         # The database belongs to this worker, so a leftover from a failed
         # teardown must not fail all following tests on the worker
