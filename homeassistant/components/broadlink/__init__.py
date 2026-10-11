@@ -1,7 +1,4 @@
 """The Broadlink integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -10,31 +7,22 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA, DOMAIN, BroadlinkData
 from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-@dataclass
-class BroadlinkData:
-    """Class for sharing data within the Broadlink integration."""
-
-    devices: dict[str, BroadlinkDevice] = field(default_factory=dict)
-    platforms: dict = field(default_factory=dict)
-    heartbeat: BroadlinkHeartbeat | None = None
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Broadlink integration."""
-    hass.data[DOMAIN] = BroadlinkData()
+    hass.data[BROADLINK_DATA] = BroadlinkData()
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Broadlink device from a config entry."""
-    data: BroadlinkData = hass.data[DOMAIN]
+    data = hass.data[BROADLINK_DATA]
 
     device = BroadlinkDevice(hass, entry)
     if not await device.async_setup():
@@ -51,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data: BroadlinkData = hass.data[DOMAIN]
+    data = hass.data[BROADLINK_DATA]
 
     device = data.devices.pop(entry.entry_id)
     result = await device.async_unload()
