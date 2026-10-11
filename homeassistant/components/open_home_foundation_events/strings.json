@@ -1,0 +1,48 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "location": "[%key:component::open_home_foundation_events::config_subentries::area::step::area::data_description::location%]",
+          "name": "[%key:component::open_home_foundation_events::config_subentries::area::step::area::data_description::name%]"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "area": {
+      "entry_type": "Area",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure area",
+        "user": "Add area"
+      },
+      "step": {
+        "area": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "location": "The center and radius of the area. Events within this area are shown in the calendar.",
+            "name": "The name of the area"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to fetch events from the Open Home Foundation"
+    },
+    "invalid_response": {
+      "message": "The Open Home Foundation returned an unexpected response"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "calendar": "home-assistant-meetups",
+    "calendarName": "Home Assistant Meetups",
+    "updatedAt": "2026-10-07T11:13:44.774Z",
+    "events": [
+      {
+        "id": "evt-dublin@events.lu.ma",
+        "summary": "Dublin Meetup",
+        "start": "2026-10-20T17:30:00.000Z",
+        "end": "2026-10-20T20:30:00.000Z",
+        "description": "Get up-to-date information at: https://luma.com/dublin",
+        "location": "26 Wexford St, Portobello, Dublin, D02 HX93, Ireland",
+        "url": "https://luma.com/dublin",
+        "address": ["26 Wexford St", "Dublin 8, County Dublin", "Ireland"],
+        "latitude": 53.336691,
+        "longitude": -6.26573,
+        "status": "confirmed"
+      },
+      {
+        "id": "evt-dublin-evening@events.lu.ma",
+        "summary": "Dublin Open Evening",
+        "start": "2026-10-30T18:00:00.000Z",
+        "address": [],
+        "latitude": 53.336691,
+        "longitude": -6.26573
+      },
+      {
+        "id": "evt-galway@events.lu.ma",
+        "summary": "Galway Meetup",
+        "start": "2026-10-25",
+        "address": [],
+        "latitude": 53.273479,
+        "longitude": -9.053466
+      },
+      {
+        "id": "evt-cancelled@events.lu.ma",
+        "summary": "Cancelled Dublin Meetup",
+        "start": "2026-10-21T17:30:00.000Z",
+        "end": "2026-10-21T20:30:00.000Z",
+        "address": [],
+        "latitude": 53.336691,
+        "longitude": -6.26573,
+        "status": "cancelled"
+      },
+      {
+        "id": "evt-online@events.lu.ma",
+        "summary": "Online Meetup",
+        "start": "2026-10-22T17:30:00.000Z",
+        "address": []
+      }
+    ]
+  },
+  {
+    "calendar": "ohf-community-day",
+    "calendarName": "Open Home Foundation Community Day",
+    "updatedAt": "2026-10-08T11:43:45.331Z",
+    "events": [
+      {
+        "id": "evt-dublin@events.lu.ma",
+        "summary": "Dublin Meetup",
+        "start": "2026-10-20T17:30:00.000Z",
+        "end": "2026-10-20T20:30:00.000Z",
+        "address": [],
+        "latitude": 53.336691,
+        "longitude": -6.26573
+      },
+      {
+        "id": "evt-huerth@events.lu.ma",
+        "summary": "Hürth Meetup",
+        "start": "2026-11-05T17:30:00.000Z",
+        "end": "2026-11-05T20:30:00.000Z",
+        "address": [],
+        "latitude": 50.8769,
+        "longitude": 6.8715
+      }
+    ]
+  }
+]

@@ -575,6 +575,7 @@ FLOWS = {
         "onewire",
         "onkyo",
         "onvif",
+        "open_home_foundation_events",
         "open_meteo",
         "open_router",
         "openai_conversation",

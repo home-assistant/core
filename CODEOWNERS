@@ -1365,6 +1365,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/onkyo/ @arturpragacz @eclair4151
 /homeassistant/components/onvif/ @jterrace
 /tests/components/onvif/ @jterrace
+/homeassistant/components/open_home_foundation_events/ @joostlek
+/tests/components/open_home_foundation_events/ @joostlek
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/open_router/ @joostlek @ab3lson
