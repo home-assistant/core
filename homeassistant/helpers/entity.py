@@ -5,6 +5,7 @@ from annotationlib import Format, get_annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextvars import ContextVar
 import dataclasses
 from enum import Enum, auto
 import functools as ft
@@ -76,6 +77,16 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
+
+# Carries (id(entity), expected platform generation) for the duration of a
+# single `async_update_ha_state_for_poll` call (see its docstring).
+# Task-local rather than instance state, so a concurrent non-poll update
+# of the same entity, running in its own task, cannot inherit a pending
+# poll's staleness guard.
+_entity_poll_generation: ContextVar[tuple[int, int] | None] = ContextVar(
+    "entity_poll_generation", default=None
+)
+
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -550,6 +561,17 @@ class Entity(
     # Protect for multiple updates
     _update_staged = False
 
+    # True once the current update has acquired its `PARALLEL_UPDATES`
+    # permit and is actually running, rather than merely queued for one.
+    _update_permit_acquired = False
+
+    # True only while the current update is actually blocked awaiting its
+    # `PARALLEL_UPDATES` permit (not before or after). Unlike the inverse
+    # of `_update_permit_acquired`, this doesn't also cover time spent
+    # running arbitrary user code in an overridden `async_update_ha_state`
+    # before that method ever reaches the semaphore acquisition.
+    _update_waiting_for_permit = False
+
     # _verified_state_writable is set to True if the entity has been verified
     # to be writable. This is used to avoid repeated checks.
     _verified_state_writable = False
@@ -582,6 +604,11 @@ class Entity(
 
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
+
+    # Incremented every time the entity is (re)attached to a platform via
+    # `add_to_platform_start`, so a polling task queued for an earlier
+    # attachment can detect it is stale once its permit is finally granted.
+    _platform_generation = 0
 
     # Attributes to exclude from recording, only set by base components, e.g. light
     _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
@@ -1002,6 +1029,41 @@ class Entity(
         """
         return self.registry_entry is None or not self.registry_entry.disabled
 
+    @property
+    def platform_generation(self) -> int:
+        """Return the generation of the entity's current platform attachment.
+
+        Used by the entity platform to detect a polling task queued for an
+        earlier attachment of this entity instance (e.g. before an
+        entity-id rename removed and re-added it) once that task's permit
+        is finally granted.
+        """
+        return self._platform_generation
+
+    @property
+    def update_permit_acquired(self) -> bool:
+        """Return whether the current update has acquired its permit.
+
+        True once `update()`/`async_update()` is actually running for
+        real, as opposed to merely queued or waiting for a
+        `PARALLEL_UPDATES` permit.
+        """
+        return self._update_permit_acquired
+
+    @property
+    def update_waiting_for_permit(self) -> bool:
+        """Return whether the current update is blocked waiting for its permit.
+
+        Used by the entity platform to decide whether a removed entity's
+        still-tracked polling task is safe to cancel outright. Unlike
+        `update_permit_acquired`, whose negation also covers time spent
+        running arbitrary user code in an overridden
+        `async_update_ha_state` before that method ever reaches the
+        semaphore acquisition, this is only `True` during the narrow
+        window actually blocked on the acquisition itself.
+        """
+        return self._update_waiting_for_permit
+
     @callback
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
@@ -1045,6 +1107,32 @@ class Entity(
             self._async_update_ha_state_reported = True
 
         self._async_write_ha_state()
+
+    async def async_update_ha_state_for_poll(
+        self, *, _expected_platform_generation: int
+    ) -> None:
+        """Update Home Assistant with current state of entity for a poll cycle.
+
+        Called only by `EntityPlatform`'s polling, not meant for general
+        use. The expected generation is carried in a task-local context
+        var rather than passed as a parameter to `async_update_ha_state`/
+        `async_device_update`, so the staleness check further down is
+        still honored even when an entity overrides either of those
+        methods and delegates to `super()`, without widening either
+        overridable method's signature (which would otherwise raise
+        `TypeError`, or silently drop the keyword, for existing
+        overrides using the previous signature). Being task-local (this
+        coroutine always runs as its own task) rather than stashed on the
+        instance also means a concurrent non-poll update of this same
+        entity, running in its own task while this poll is suspended
+        inside an overridden `async_update_ha_state`/`async_device_update`,
+        cannot inherit this poll's staleness guard.
+        """
+        token = _entity_poll_generation.set((id(self), _expected_platform_generation))
+        try:
+            await self.async_update_ha_state(True)
+        finally:
+            _entity_poll_generation.reset(token)
 
     @callback
     def _async_verify_state_writable(self) -> None:
@@ -1400,9 +1488,42 @@ class Entity(
 
         self._update_staged = True
 
+        # Cache the semaphore: `add_to_platform_abort` can reset
+        # `self.parallel_updates` to None while this update is in flight,
+        # which would otherwise make the `finally` below silently skip
+        # releasing the permit acquired here.
+        semaphore = self.parallel_updates
+
         # Process update sequential
-        if self.parallel_updates:
-            await self.parallel_updates.acquire()
+        if semaphore:
+            # Only while actually blocked here is it safe for
+            # `EntityPlatform` to cancel this task on entity removal: it
+            # is not a safe proxy for "before the permit was acquired" in
+            # general, since this method is itself reachable from an
+            # overridable `async_update_ha_state`, which may already be
+            # running arbitrary (non-cancellation-safe) user code before
+            # ever calling this far.
+            self._update_waiting_for_permit = True
+            try:
+                await semaphore.acquire()
+            except BaseException:
+                # Cancelling this await (e.g. the platform cancelling a
+                # task still queued for its permit) must not leave
+                # `_update_staged` stuck `True` forever: the `finally`
+                # below only runs once the permit has actually been
+                # acquired, so without this a reused entity instance
+                # would silently skip every future update.
+                self._update_staged = False
+                raise
+            finally:
+                self._update_waiting_for_permit = False
+
+        # Past this point the update is actually running (not merely
+        # queued for a permit): `EntityPlatform` uses this to decide
+        # whether a removed entity's still-tracked task is safe to
+        # cancel outright, versus one already running `update()` that
+        # must be left to finish on its own.
+        self._update_permit_acquired = True
 
         if warning:
             update_warn = hass.loop.call_at(
@@ -1410,6 +1531,39 @@ class Entity(
             )
 
         try:
+            if self._platform_state is EntityPlatformState.REMOVED:
+                # The task for this update may have been queued behind
+                # another entity's permit; if this entity was removed while
+                # it waited, its removal teardown may already have released
+                # resources its update() depends on, so skip running it now
+                # that a permit is finally available.
+                return
+            # Only trust the task-local poll context if it was set for
+            # *this* entity: it is task-local precisely so a concurrent
+            # non-poll update of this same entity (running in its own
+            # task) cannot inherit another task's pending poll guard.
+            poll_context = _entity_poll_generation.get()
+            expected = (
+                poll_context[1]
+                if poll_context is not None and poll_context[0] == id(self)
+                else None
+            )
+            if expected is not None and expected != self._platform_generation:
+                # This is a polling task queued for an earlier attachment of
+                # this entity instance (e.g. it was removed and re-added for
+                # an entity-id rename while the task waited for its permit).
+                # The re-add's own initialization (`async_added_to_hass`)
+                # may not have finished restoring resources update() depends
+                # on yet, so skip this now-stale task rather than run it.
+                return
+            if (
+                expected is not None
+                and self._platform_state is not EntityPlatformState.ADDED
+            ):
+                # Matching generation alone doesn't mean this attachment's
+                # own `async_added_to_hass` has finished restoring what
+                # `update()` depends on yet (state may still be `ADDING`).
+                return
             if hasattr(self, "async_update"):
                 await self.async_update()
             elif hasattr(self, "update"):
@@ -1418,10 +1572,11 @@ class Entity(
                 return
         finally:
             self._update_staged = False
+            self._update_permit_acquired = False
             if warning:
                 update_warn.cancel()
-            if self.parallel_updates:
-                self.parallel_updates.release()
+            if semaphore:
+                semaphore.release()
 
     @callback
     def async_on_remove(self, func: CALLBACK_TYPE) -> None:
@@ -1455,6 +1610,7 @@ class Entity(
         self.platform_data = platform.platform_data
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDING
+        self._platform_generation += 1
 
     def _call_on_remove_callbacks(self) -> None:
         """Call callbacks registered by async_on_remove."""
@@ -1879,14 +2035,19 @@ class Entity(
 
     async def async_request_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Process request batched."""
-        if self.parallel_updates:
-            await self.parallel_updates.acquire()
+        # Cache the semaphore: `add_to_platform_abort` can reset
+        # `self.parallel_updates` to None while `coro` is in flight, which
+        # would otherwise make the `finally` below silently skip releasing
+        # the permit acquired here.
+        semaphore = self.parallel_updates
+        if semaphore:
+            await semaphore.acquire()
 
         try:
             return await coro
         finally:
-            if self.parallel_updates:
-                self.parallel_updates.release()
+            if semaphore:
+                semaphore.release()
 
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
