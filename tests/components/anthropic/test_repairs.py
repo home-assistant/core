@@ -249,6 +249,22 @@ async def test_repair_flow_no_deprecated_models(
         pytest.param("claude-fable-5", "none", {}, id="fable_5"),
         pytest.param("claude-fable-5-1", "none", {}, id="fable_5_1"),
         pytest.param("claude-opus-5-5-20260921", "none", {}, id="versioned_opus_5_5"),
+        pytest.param("claude-sonnet-5-5", "none", {}, id="sonnet_5_5"),
+        pytest.param(
+            "claude-sonnet-5-5-20260928", "none", {}, id="versioned_sonnet_5_5"
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            "none",
+            {CONF_THINKING_EFFORT: "none"},
+            id="haiku_5_5",
+        ),
+        pytest.param(
+            "claude-haiku-5-5-20261007",
+            "none",
+            {CONF_THINKING_EFFORT: "none"},
+            id="versioned_haiku_5_5",
+        ),
         pytest.param(
             "claude-opus-5-5",
             "high",

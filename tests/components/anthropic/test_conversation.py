@@ -1206,6 +1206,14 @@ async def test_extended_thinking(
             },
             id="no_effort",
         ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-haiku-5-5",
+                CONF_THINKING_EFFORT: "none",
+            },
+            id="haiku_5_5",
+        ),
     ],
 )
 @freeze_time("2024-05-24 12:00:00")
