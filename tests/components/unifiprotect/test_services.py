@@ -627,65 +627,39 @@ async def test_public_only_action_rejected(
         )
 
 
-async def test_trigger_alarm_webhook(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-) -> None:
-    """Test trigger_alarm_webhook service."""
-
-    ufp.api.send_alarm_webhook_public = AsyncMock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TRIGGER_ALARM_WEBHOOK,
-        {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
-        blocking=True,
-    )
-    ufp.api.send_alarm_webhook_public.assert_called_once_with("test-trigger")
-
-
-async def test_trigger_alarm_webhook_subdevice(
-    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
-) -> None:
-    """Test trigger_alarm_webhook service resolves the NVR from a subdevice."""
-
-    ufp.api.send_alarm_webhook_public = AsyncMock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TRIGGER_ALARM_WEBHOOK,
-        {ATTR_DEVICE_ID: subdevice.id, ATTR_TRIGGER_ID: "test-trigger"},
-        blocking=True,
-    )
-    ufp.api.send_alarm_webhook_public.assert_called_once_with("test-trigger")
-
-
 @pytest.mark.parametrize(
     ("side_effect", "translation_key"),
     [
+        (None, None),
         (GlobalAlarmManagerError("global"), "global_alarm_manager"),
         (NotAuthorized("forbidden"), "not_authorized"),
         (BadRequest("unknown trigger"), "service_error"),
     ],
 )
-async def test_trigger_alarm_webhook_error(
+async def test_trigger_alarm_webhook(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
     ufp: MockUFPFixture,
-    side_effect: Exception,
-    translation_key: str,
+    side_effect: Exception | None,
+    translation_key: str | None,
 ) -> None:
-    """Test trigger_alarm_webhook service maps Protect errors."""
+    """Test trigger_alarm_webhook service and its error mapping."""
 
     ufp.api.send_alarm_webhook_public = AsyncMock(side_effect=side_effect)
+    call = hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
+        blocking=True,
+    )
 
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TRIGGER_ALARM_WEBHOOK,
-            {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
-            blocking=True,
-        )
-    assert exc_info.value.translation_key == translation_key
+    if translation_key is None:
+        await call
+    else:
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await call
+        assert exc_info.value.translation_key == translation_key
+    ufp.api.send_alarm_webhook_public.assert_called_once_with("test-trigger")
 
 
 async def test_trigger_alarm_webhook_public_only(
