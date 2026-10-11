@@ -1,15 +1,25 @@
 {
   "config": {
+    "flow_title": "Adax Heater {ip_address}",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "heater_not_available": "Heater not available. Try to reset the heater by pressing + and OK for some seconds.",
       "heater_not_found": "Heater not found. Try to move the heater closer to Home Assistant computer.",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "not_adax_device": "The discovered device is not an Adax heater, or it is currently configured for cloud operation instead of local control."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "dhcp_confirm": {
+        "data": {
+          "token": "Authentication Token"
+        },
+        "title": "Discovered Adax Heater",
+        "description": "An Adax heater was discovered at IP `{ip_address}` (MAC: `{mac}`). Please enter your local authentication token to complete setup."
+      },
       "cloud": {
         "data": {
           "account_id": "Account ID",
