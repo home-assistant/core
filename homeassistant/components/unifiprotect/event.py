@@ -53,7 +53,6 @@ from .entity import (
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectEventMixin,
-    ProtectFobEntity,
     _async_capability_supported,
 )
 
@@ -598,7 +597,16 @@ _FOB_EVENT_TYPES: list[str] = [
 ]
 
 
-class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventEntity):
+_FOB_EVENT_DESCRIPTION = EventEntityDescription(
+    key="keyfob",
+    translation_key="keyfob",
+    event_types=_FOB_EVENT_TYPES,
+)
+
+
+class ProtectFobButtonEventEntity(
+    ProtectFireOnceMixin, ProtectDeviceEntity, EventEntity
+):
     """A UniFi Protect key fob button-press event entity.
 
     Each fob exposes one event entity that fires the pressed button (from a
@@ -606,16 +614,14 @@ class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventE
     type.
     """
 
-    _attr_translation_key = "keyfob"
-    _attr_event_types = _FOB_EVENT_TYPES
+    _ufp_uses_public = True
     # Presses arrive only on the events websocket, so its health gates
     # availability on top of the devices websocket.
     _ufp_requires_events_ws = True
 
     def __init__(self, data: ProtectData, fob: Fob) -> None:
         """Initialize the key fob button event entity."""
-        self._attr_unique_id = f"{fob.mac}_keyfob"
-        super().__init__(data, fob)
+        super().__init__(data, fob, _FOB_EVENT_DESCRIPTION)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -625,7 +631,9 @@ class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventE
         # the fob and whose ``metadata.button`` is the pressed button.
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self._fob_id, EventType.SENSOR_BUTTON_PRESSED, self._async_button_event
+                self.device.id,
+                EventType.SENSOR_BUTTON_PRESSED,
+                self._async_button_event,
             )
         )
 

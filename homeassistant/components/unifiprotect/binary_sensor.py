@@ -56,7 +56,6 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
-    ProtectFobEntity,
     ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
@@ -964,27 +963,19 @@ def _async_alarm_hub_entities(
     return entities
 
 
-class ProtectFobBinarySensor(ProtectFobEntity, BinarySensorEntity):
+class ProtectFobBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     """A binary sensor entity for a UniFi Protect key fob (Public API)."""
 
     entity_description: ProtectFobBinaryEntityDescription
-    _fob_state_attrs = ("_attr_available", "_attr_is_on")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        fob: Fob,
-        description: ProtectFobBinaryEntityDescription,
-    ) -> None:
-        """Initialize the key fob binary sensor."""
-        self.entity_description = description
-        self._attr_unique_id = f"{fob.mac}_{description.key}"
-        super().__init__(data, fob)
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_from_fob(self, fob: Fob) -> None:
-        self._attr_is_on = self.entity_description.value_fn(fob)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (fob := self._ufp_public_obj) is not None:
+            self._attr_is_on = self.entity_description.value_fn(cast(Fob, fob))
 
 
 async def async_setup_entry(

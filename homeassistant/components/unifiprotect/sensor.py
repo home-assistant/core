@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import partial
 import logging
 import operator
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.data import (
     NVR,
@@ -55,7 +55,6 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
-    ProtectFobEntity,
     ProtectNVREntity,
     T,
     async_all_device_entities,
@@ -725,27 +724,19 @@ class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(hub)
 
 
-class ProtectFobSensor(ProtectFobEntity, SensorEntity):
+class ProtectFobSensor(ProtectDeviceEntity, SensorEntity):
     """A sensor entity for a UniFi Protect key fob (Public API)."""
 
     entity_description: ProtectFobSensorEntityDescription
-    _fob_state_attrs = ("_attr_available", "_attr_native_value")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        fob: Fob,
-        description: ProtectFobSensorEntityDescription,
-    ) -> None:
-        """Initialize the key fob sensor."""
-        self.entity_description = description
-        self._attr_unique_id = f"{fob.mac}_{description.key}"
-        super().__init__(data, fob)
+    _state_attrs = ("_attr_available", "_attr_native_value")
+    _ufp_uses_public = True
 
     @callback
     @override
-    def _async_update_from_fob(self, fob: Fob) -> None:
-        self._attr_native_value = self.entity_description.value_fn(fob)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if (fob := self._ufp_public_obj) is not None:
+            self._attr_native_value = self.entity_description.value_fn(cast(Fob, fob))
 
 
 @callback
