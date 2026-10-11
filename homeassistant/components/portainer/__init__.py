@@ -275,6 +275,51 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             version=5,
         )
 
+    if entry.version < 6:
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+        entry_id_prefix = f"{entry.entry_id}_"
+
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            container_identifiers: list[tuple[str, str]] = []
+            for domain, identifier in device.identifiers:
+                if domain != DOMAIN or not identifier.startswith(entry_id_prefix):
+                    continue
+
+                endpoint_id, separator, container_name = identifier[
+                    len(entry_id_prefix) :
+                ].partition("_")
+                if separator and endpoint_id.isdigit() and container_name:
+                    container_identifiers.append((endpoint_id, container_name))
+
+            for entity in er.async_entries_for_device(entity_registry, device.id):
+                for endpoint_id, container_name in sorted(container_identifiers):
+                    legacy_prefix = f"{entry_id_prefix}{container_name}_"
+                    if not entity.unique_id.startswith(legacy_prefix):
+                        continue
+
+                    new_unique_id = (
+                        f"{entry_id_prefix}{endpoint_id}_{container_name}_"
+                        f"{entity.unique_id.removeprefix(legacy_prefix)}"
+                    )
+                    if existing_entity_id := entity_registry.async_get_entity_id(
+                        entity.domain, DOMAIN, new_unique_id
+                    ):
+                        # Preserve the canonical row created by the v4 migration.
+                        if existing_entity_id != entity.entity_id:
+                            entity_registry.async_remove(entity.entity_id)
+                        break
+
+                    entity_registry.async_update_entity(
+                        entity_id=entity.entity_id,
+                        new_unique_id=new_unique_id,
+                    )
+                    break
+
+        hass.config_entries.async_update_entry(entry=entry, version=6)
+
     return True
 
 
@@ -294,8 +339,8 @@ async def async_remove_config_entry_device(
     )
 
     valid_identifiers.update(
-        (DOMAIN, f"{entry.entry_id}_{container_name}")
-        for endpoint in coordinator.data.values()
+        (DOMAIN, f"{entry.entry_id}_{endpoint_id}_{container_name}")
+        for endpoint_id, endpoint in coordinator.data.items()
         for container_name in endpoint.containers
     )
 

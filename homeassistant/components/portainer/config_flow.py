@@ -66,7 +66,7 @@ async def _validate_input(
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
-    VERSION = 5
+    VERSION = 6
 
     @override
     async def async_step_user(
