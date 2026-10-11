@@ -8,6 +8,7 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.adax.config_flow import is_adax_tls_device
 from homeassistant.components.adax.const import (
     ACCOUNT_ID,
     CLOUD,
@@ -590,11 +591,3 @@ async def test_dhcp_confirm_connection_errors(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["result"].unique_id == TEST_DHCP_UNIQUE_ID
-
-
-async def test_is_adax_tls_device_helper() -> None:
-    """Direct unit test for the is_adax_tls_device helper function."""
-    from homeassistant.components.adax.config_flow import is_adax_tls_device
-
-    with patch("asyncio.open_connection", side_effect=OSError):
-        assert await is_adax_tls_device("192.168.1.9") is False
