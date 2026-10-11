@@ -1115,6 +1115,8 @@ async def test_full_press_button(
         (LaMetricUnsupportedError, "button_not_supported"),
         (LaMetricConnectionError, "cannot_connect"),
         (LaMetricError, "unknown"),
+        # Like a URL entered as the host, which demetriek refuses.
+        (ValueError, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
@@ -1154,6 +1156,38 @@ async def test_press_button_request_errors(
     assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
         "mock-local-api-key"
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
+async def test_press_button_closed_while_requesting(
+    hass: HomeAssistant,
+    mock_lametric_local_auth: MagicMock,
+) -> None:
+    """Test closing the flow while the device answers does not wait for a press."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "press_button"}
+    )
+    flow_id = result["flow_id"]
+    challenge = mock_lametric_local_auth.request_challenge.return_value
+
+    async def close_flow_while_answering() -> AuthChallenge:
+        hass.config_entries.flow.async_abort(flow_id)
+        return challenge
+
+    mock_lametric_local_auth.request_challenge.side_effect = close_flow_while_answering
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={CONF_HOST: "127.0.0.1"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+
+    mock_lametric_local_auth.challenge.assert_not_called()
+    mock_lametric_local_auth.api_key.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")

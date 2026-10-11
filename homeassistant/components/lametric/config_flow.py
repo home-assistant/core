@@ -29,6 +29,7 @@ from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -73,6 +74,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     button_error: str | None = None
     button_host: str
     button_task: asyncio.Task[str] | None = None
+    removed: bool = False
     discovered_host: str
     discovered_serial: str
     discovered: bool = False
@@ -82,6 +84,12 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Handle the flow being removed, for example closed by the user."""
+        self.removed = True
 
     @property
     @override
@@ -301,7 +309,13 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except LaMetricError as ex:
                 LOGGER.error("Error asking LaMetric for a button press: %s", ex)
                 errors["base"] = "unknown"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error occurred")
+                errors["base"] = "unknown"
             else:
+                # Closed while the device answered, so no one waits for a press.
+                if self.removed:
+                    return self.async_abort(reason="unknown")
                 self.button_task = self.hass.async_create_task(
                     self._async_wait_for_button(auth)
                 )
