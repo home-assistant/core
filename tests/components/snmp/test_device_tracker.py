@@ -1,6 +1,7 @@
 """Tests for the SNMP device tracker."""
 
 import binascii
+from collections.abc import Iterator
 from itertools import cycle
 from unittest.mock import Mock, patch
 
@@ -19,7 +20,12 @@ from homeassistant.components.snmp.device_tracker import (
     async_setup_scanner,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import (
+    CONF_PLATFORM,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -73,7 +79,7 @@ async def _async_advance_poll(
 
 
 @pytest.fixture
-def mock_walk():
+def mock_walk() -> Iterator[Mock]:
     """Mock bulk_walk_cmd."""
 
     async def side_effect(*args, **kwargs):
@@ -312,7 +318,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.name == "00_11_22_33_44_55"
+    assert state.name == "00:11:22:33:44:55"
 
 
 @pytest.mark.usefixtures("mock_walk")
@@ -723,7 +729,7 @@ async def test_walk_errindication(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_invalid_mac_length_ignored(

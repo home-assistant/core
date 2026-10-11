@@ -19,7 +19,6 @@ from homeassistant.components.snmp.util import (
     create_auth_data,
 )
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 
 def test_create_auth_data_v3() -> None:
@@ -106,9 +105,7 @@ def test_create_auth_data_v3_protocols_need_keys(
     assert auth_data.privProtocol == expected_priv_protocol
 
 
-async def test_async_create_transport_target_ipv4_success(
-    hass: HomeAssistant,
-) -> None:
+async def test_async_create_transport_target_ipv4_success() -> None:
     """Test IPv4 transport target creation succeeds."""
     with patch(
         "homeassistant.components.snmp.util.UdpTransportTarget.create",
@@ -121,9 +118,7 @@ async def test_async_create_transport_target_ipv4_success(
         )
 
 
-async def test_async_create_transport_target_ipv6_fallback(
-    hass: HomeAssistant,
-) -> None:
+async def test_async_create_transport_target_ipv6_fallback() -> None:
     """Test IPv6 fallback when IPv4 transport creation fails."""
     with (
         patch(
@@ -142,9 +137,7 @@ async def test_async_create_transport_target_ipv6_fallback(
         )
 
 
-async def test_async_create_transport_target_all_fail(
-    hass: HomeAssistant,
-) -> None:
+async def test_async_create_transport_target_all_fail() -> None:
     """Test when both IPv4 and IPv6 transport creation fail."""
     with (
         patch(

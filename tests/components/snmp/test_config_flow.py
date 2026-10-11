@@ -13,7 +13,6 @@ from homeassistant.components.snmp.config_flow import (
     AUTH_PROTOCOL_SELECTOR,
     PRIV_PROTOCOL_SELECTOR,
     SNMP_VERSION_SELECTOR,
-    CannotConnect,
     InvalidAuth,
 )
 from homeassistant.components.snmp.const import (
@@ -153,11 +152,9 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Step 2: retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -282,11 +279,9 @@ async def test_user_flow_v3_invalid_auth(
     assert result["errors"] == {"base": "usm_wrong_digests"}
 
     # Retry with correct credentials succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -397,11 +392,9 @@ async def test_user_flow_err_indication(
     assert result["errors"] == {"base": expected_error}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], retry_data
@@ -519,11 +512,9 @@ async def test_user_flow_v1_v2c_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "correct_community"}
@@ -557,11 +548,9 @@ async def test_user_flow_v1_v2c_unknown_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -591,11 +580,9 @@ async def test_user_flow_v3_auth_key_required_for_priv(
     assert result["errors"] == {"auth_key": "auth_key_required_for_priv"}
 
     # Retry with auth_key provided succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -637,11 +624,9 @@ async def test_user_flow_v3_unknown_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -666,11 +651,9 @@ async def test_user_flow_v3_no_keys_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "test-user"}
@@ -763,11 +746,9 @@ async def test_user_flow_transport_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -789,9 +770,15 @@ async def test_user_flow_v3_cannot_connect(
         {"host": "1.1.1.1", "version": "3"},
     )
 
-    with patch(
-        "homeassistant.components.snmp.config_flow.validate_input",
-        side_effect=CannotConnect("Cannot connect"),
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            side_effect=PySnmpError,
+        ),
+        patch(
+            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
+            side_effect=PySnmpError,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -802,11 +789,9 @@ async def test_user_flow_v3_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

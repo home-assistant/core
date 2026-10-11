@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the SNMP integration."""
 
 import binascii
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -26,6 +27,17 @@ _LOGGER = logging.getLogger(__name__)
 
 # A single lost packet must not mark all tracked devices as unavailable
 MAX_CONSECUTIVE_FAILURES = 3
+
+
+@dataclass
+class SnmpRuntimeData:
+    """Runtime data of an SNMP config entry."""
+
+    client: SnmpClient
+    coordinators: dict[str, SnmpDeviceTrackerCoordinator]
+
+
+type SnmpConfigEntry = ConfigEntry[SnmpRuntimeData]
 
 
 def normalize_mac(value: bytes) -> str | None:
@@ -67,10 +79,12 @@ def _ip_address_from_oid(oid: tuple[int, ...]) -> str | None:
 class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     """Class to fetch the MAC addresses of a device tracker subentry."""
 
+    config_entry: SnmpConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SnmpConfigEntry,
         subentry: ConfigSubentry,
         client: SnmpClient,
     ) -> None:
@@ -120,7 +134,7 @@ class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]])
             async for oid, value in self._client.async_walk(self._baseoid):
                 try:
                     octets = value.asOctets()
-                except AttributeError, UnicodeDecodeError:
+                except AttributeError:
                     continue
 
                 if (mac := normalize_mac(octets)) is None:

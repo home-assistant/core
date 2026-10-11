@@ -1,5 +1,6 @@
 """Conftest for SNMP tests."""
 
+from collections.abc import Iterator
 import socket
 from unittest.mock import Mock, patch
 
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def patch_getaddrinfo():
+def patch_getaddrinfo() -> None:
     """Patch getaddrinfo to avoid DNS lookups in SNMP tests."""
     with patch.object(socket, "getaddrinfo"):
         yield
@@ -28,7 +29,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_udp_transport():
+def mock_udp_transport() -> Iterator[Mock]:
     """Patch UdpTransportTarget.create to avoid real network calls."""
     with patch(
         "homeassistant.components.snmp.util.UdpTransportTarget.create",
@@ -38,7 +39,7 @@ def mock_udp_transport():
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Iterator[Mock]:
     """Patch async_setup_entry to avoid setting up the integration."""
     with patch(
         "homeassistant.components.snmp.async_setup_entry",

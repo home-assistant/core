@@ -154,12 +154,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     if err_indication:
         if err_indication in (errind.requestTimedOut, errind.emptyResponse):
-            raise SnmpTimeout from Exception(str(err_indication))
+            raise SnmpTimeout(str(err_indication))
         if err_indication in (
             errind.wrongDigest,
             errind.decryptionError,
         ):
-            raise UsmWrongDigests from Exception(str(err_indication))
+            raise UsmWrongDigests(str(err_indication))
         if err_indication in (
             errind.unknownCommunityName,
             errind.unknownUserName,
@@ -171,8 +171,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             errind.authenticationFailure,
             errind.authenticationError,
         ):
-            raise InvalidAuth from Exception(str(err_indication))
-        raise CannotConnect from Exception(str(err_indication))
+            raise InvalidAuth(str(err_indication))
+        raise CannotConnect(str(err_indication))
 
     if version == "3" and err_status:
         err_status_str = err_status.prettyPrint()
@@ -180,7 +180,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             "wrongdigests" in err_status_str.lower()
             or "decryptionerror" in err_status_str.lower()
         ):
-            raise UsmWrongDigests from Exception(err_status_str)
+            raise UsmWrongDigests(err_status_str)
         # A non-crypto err_status (e.g. VACM access denial on sysDescr.0) means
         # the agent answered, so the credentials themselves are accepted.
         _LOGGER.debug(
@@ -278,10 +278,22 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 if result := await self._async_finish(data, errors):
                     return result
 
+        # Credentials are never sent back to the frontend on an error
+        suggested_values = (
+            {
+                key: value
+                for key, value in user_input.items()
+                if key not in (CONF_AUTH_KEY, CONF_PRIV_KEY, CONF_COMMUNITY)
+            }
+            if user_input
+            else None
+        )
+
         return self.async_show_form(
             step_id="v3" if is_v3 else "v1_v2c",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_V3_DATA_SCHEMA if is_v3 else STEP_V1_V2C_DATA_SCHEMA, user_input
+                STEP_V3_DATA_SCHEMA if is_v3 else STEP_V1_V2C_DATA_SCHEMA,
+                suggested_values,
             ),
             errors=errors,
         )

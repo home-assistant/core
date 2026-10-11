@@ -1,33 +1,19 @@
 """The SNMP integration."""
 
-from dataclasses import dataclass
-
 from pysnmp.error import PySnmpError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .client import SnmpClient
 from .const import SUBENTRY_TYPE_DEVICE_TRACKER
-from .coordinator import SnmpDeviceTrackerCoordinator
+from .coordinator import SnmpConfigEntry, SnmpDeviceTrackerCoordinator, SnmpRuntimeData
 from .util import async_get_snmp_engine
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
 __all__ = ["async_get_snmp_engine"]
-
-
-@dataclass
-class SnmpRuntimeData:
-    """Runtime data of an SNMP config entry."""
-
-    client: SnmpClient
-    coordinators: dict[str, SnmpDeviceTrackerCoordinator]
-
-
-type SnmpConfigEntry = ConfigEntry[SnmpRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool:

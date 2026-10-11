@@ -35,6 +35,7 @@ from .const import (
     DEFAULT_RETRIES,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
+    SNMP_VERSIONS,
 )
 
 DATA_SNMP_ENGINE = "snmp_engine"
@@ -91,7 +92,7 @@ def create_auth_data(
         )
 
     community: str = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
-    return CommunityData(community, mpModel=1 if version == "2c" else 0)
+    return CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
 
 async def async_create_transport_target(

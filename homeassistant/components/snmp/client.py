@@ -98,10 +98,10 @@ class SnmpClient:
                     raise SnmpWalkError(message) from errindication
                 raise SnmpWalkError(message)
             if errstatus:
-                raise SnmpWalkError(
-                    f"SNMP error: {errstatus.prettyPrint()}"
-                    f" at {(errindex and res[int(errindex) - 1][0]) or '?'}"
-                )
+                # The error index is 1 based and may point outside the response
+                index = int(errindex) - 1 if errindex else -1
+                oid = res[index][0] if 0 <= index < len(res) else "?"
+                raise SnmpWalkError(f"SNMP error: {errstatus.prettyPrint()} at {oid}")
             if is_end_of_mib(res):
                 break
             for varbind in res:

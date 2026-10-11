@@ -8,12 +8,12 @@ import probatio
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
     ScannerEntity,
 )
 from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
-    AsyncSeeCallback,
     async_load_config,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -29,7 +29,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SnmpConfigEntry
 from .const import (
     CONF_AUTH_KEY,
     CONF_BASEOID,
@@ -39,7 +38,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
-from .coordinator import SnmpDeviceTrackerCoordinator, normalize_mac
+from .coordinator import SnmpConfigEntry, SnmpDeviceTrackerCoordinator, normalize_mac
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -224,7 +223,7 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac
-        self._attr_name = mac.replace(":", "_")
+        self._attr_name = mac
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
         self._was_tracked = was_tracked
 
