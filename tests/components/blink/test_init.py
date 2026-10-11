@@ -179,11 +179,12 @@ async def test_migrate_v3_to_v4(
     assert entry.data["hardware_id"] == "Home Assistant"
 
 
-@pytest.mark.usefixtures("mock_blink_api", "mock_blink_auth_api")
+@pytest.mark.usefixtures("mock_blink_auth_api")
 @pytest.mark.parametrize(
     ("serial", "removed"),
     [
         pytest.param("12345", False, id="camera_on_account"),
+        pytest.param("54321", False, id="sync_module_on_account"),
         pytest.param("67890", True, id="camera_removed_from_account"),
     ],
 )
@@ -191,11 +192,17 @@ async def test_remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
+    mock_blink_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     serial: str,
     removed: bool,
 ) -> None:
     """Test only devices no longer on the Blink account can be removed."""
+    mock_blink_api.sync = {
+        "Sync module": MagicMock(
+            serial="54321", version="1.0", attributes={}, cameras={}, arm=True
+        )
+    }
     assert await async_setup_component(hass, "config", {})
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
