@@ -44,8 +44,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def is_adax_tls_device(ip: str, timeout: float = 2.0) -> bool:
-    """Connect via TLS port 443 and check if certificate subject CN is ADAX DEVICE."""
-    # Use PROTOCOL_TLS_CLIENT without loading system CA certs (no blocking disk I/O)
+    """Probe port 443 to fingerprint the device via TLS certificate subject.
+    
+    This is a discovery heuristic to filter out non-Adax devices sharing
+    generic hostnames, not an authentication boundary. Adax heaters use
+    self-signed certificates on the local network.
+    """
     ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     ssl_ctx.check_hostname = False
     ssl_ctx.verify_mode = ssl.CERT_NONE
