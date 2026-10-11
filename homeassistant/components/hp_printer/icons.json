@@ -1,0 +1,84 @@
+{
+  "entity": {
+    "sensor": {
+      "black_level": {
+        "default": "mdi:gauge"
+      },
+      "black_pages_remaining": {
+        "default": "mdi:file-document-outline"
+      },
+      "color_pages": {
+        "default": "mdi:file-document-multiple"
+      },
+      "copied_pages": {
+        "default": "mdi:content-copy"
+      },
+      "cyan_level": {
+        "default": "mdi:gauge"
+      },
+      "cyan_pages_remaining": {
+        "default": "mdi:file-document-outline"
+      },
+      "duplex_sheets": {
+        "default": "mdi:file-document-multiple"
+      },
+      "faxed_pages": {
+        "default": "mdi:fax"
+      },
+      "jams": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "magenta_level": {
+        "default": "mdi:gauge"
+      },
+      "magenta_pages_remaining": {
+        "default": "mdi:file-document-outline"
+      },
+      "mispicks": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "monochrome_pages": {
+        "default": "mdi:file-document-multiple"
+      },
+      "scanned_adf_pages": {
+        "default": "mdi:scanner"
+      },
+      "scanned_duplex_sheets": {
+        "default": "mdi:scanner"
+      },
+      "scanned_flatbed_pages": {
+        "default": "mdi:scanner"
+      },
+      "scanned_pages": {
+        "default": "mdi:scanner"
+      },
+      "scanner_jams": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "scanner_mispicks": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "simplex_sheets": {
+        "default": "mdi:file-document-multiple"
+      },
+      "status": {
+        "default": "mdi:printer"
+      },
+      "total_pages": {
+        "default": "mdi:file-document-multiple"
+      },
+      "tri_color_level": {
+        "default": "mdi:gauge"
+      },
+      "tri_color_pages_remaining": {
+        "default": "mdi:file-document-outline"
+      },
+      "yellow_level": {
+        "default": "mdi:gauge"
+      },
+      "yellow_pages_remaining": {
+        "default": "mdi:file-document-outline"
+      }
+    }
+  }
+}
