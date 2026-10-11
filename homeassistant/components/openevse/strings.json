@@ -252,5 +252,36 @@
     "unsupported_feature": {
       "message": "The charger does not support this feature."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "grid": "Grid import/export sensor (optional)",
+          "home_battery_power": "Home battery power sensor (optional)",
+          "home_battery_soc": "Home battery state of charge sensor (optional)",
+          "invert_grid": "Invert grid import/export",
+          "shaper": "Live household power consumption (optional)",
+          "solar": "Solar production sensor (optional)",
+          "vehicle_eta": "Vehicle time-to-full-charge sensor (optional)",
+          "vehicle_range": "Vehicle range sensor (optional)",
+          "vehicle_soc": "Vehicle state of charge sensor (optional)",
+          "voltage": "Grid voltage sensor (optional)"
+        },
+        "data_description": {
+          "grid": "Sensor measuring grid import (positive) and export (negative) power.",
+          "home_battery_power": "Sensor measuring home storage battery power.",
+          "home_battery_soc": "Sensor measuring home storage battery state of charge.",
+          "invert_grid": "Invert the grid power reading if your sensor uses opposite polarity.",
+          "shaper": "Live household power consumption.",
+          "solar": "Sensor measuring solar photovoltaic power production.",
+          "vehicle_eta": "Sensor providing vehicle time remaining until charge completes.",
+          "vehicle_range": "Sensor providing vehicle battery range.",
+          "vehicle_soc": "Sensor providing vehicle battery state of charge.",
+          "voltage": "Sensor measuring grid electrical voltage."
+        },
+        "description": "Configure sensor entities to push data to OpenEVSE.\n\nNOTE: OpenEVSE expects positive import and negative export."
+      }
+    }
   }
 }

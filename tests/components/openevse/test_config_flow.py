@@ -734,3 +734,71 @@ async def test_reconfigure_flow_no_serial(
         CONF_USERNAME: None,
         CONF_PASSWORD: None,
     }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow sets sensor options."""
+    config_entry = MockConfigEntry(
+        title="OpenEVSE",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "grid": "sensor.grid_power",
+            "solar": "sensor.solar_power",
+            "voltage": "sensor.grid_voltage",
+            "shaper": "sensor.shaper_power",
+            "vehicle_soc": "sensor.car_battery",
+            "vehicle_range": "sensor.car_range",
+            "vehicle_eta": "sensor.car_eta",
+            "home_battery_soc": "sensor.home_battery_soc",
+            "home_battery_power": "sensor.home_battery_power",
+            "invert_grid": True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "grid": "sensor.grid_power",
+        "solar": "sensor.solar_power",
+        "voltage": "sensor.grid_voltage",
+        "shaper": "sensor.shaper_power",
+        "vehicle_soc": "sensor.car_battery",
+        "vehicle_range": "sensor.car_range",
+        "vehicle_eta": "sensor.car_eta",
+        "home_battery_soc": "sensor.home_battery_soc",
+        "home_battery_power": "sensor.home_battery_power",
+        "invert_grid": True,
+    }
+
+    # Test re-opening options flow and clearing options
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "grid": "",
+            "solar": "",
+            "voltage": "",
+            "shaper": "",
+            "vehicle_soc": "",
+            "vehicle_range": "",
+            "vehicle_eta": "",
+            "home_battery_soc": "",
+            "home_battery_power": "",
+            "invert_grid": False,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"invert_grid": False}

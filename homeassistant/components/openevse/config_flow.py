@@ -7,23 +7,50 @@ from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    PERCENTAGE,
+    UnitOfLength,
+    UnitOfTime,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    EntitySelector,
+    EntitySelectorConfig,
+    EntityWithDeviceFilterSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 from homeassistant.helpers.service_info import zeroconf
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import (
+    CONF_GRID,
+    CONF_HOME_BATTERY_POWER,
+    CONF_HOME_BATTERY_SOC,
+    CONF_INVERT_GRID,
+    CONF_SERIAL,
+    CONF_SHAPER,
+    CONF_SOLAR,
+    CONF_VEHICLE_ETA,
+    CONF_VEHICLE_RANGE,
+    CONF_VEHICLE_SOC,
+    CONF_VOLTAGE,
+    DOMAIN,
+)
+from .coordinator import OpenEVSEConfigEntry
 
 USER_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
@@ -265,5 +292,166 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 RECONFIGURE_SCHEMA, reconfigure_entry.data
+            ),
+        )
+
+    @staticmethod
+    @override
+    @callback
+    def async_get_options_flow(
+        config_entry: OpenEVSEConfigEntry,
+    ) -> OptionsFlowWithReload:
+        """Get the options flow for this handler."""
+        return OpenEVSEOptionsFlowHandler()
+
+
+class OpenEVSEOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle OpenEVSE options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage OpenEVSE sensor options."""
+        if user_input is not None:
+            cleaned_input = {
+                key: value
+                for key, value in user_input.items()
+                if value not in ("", None)
+            }
+            if CONF_INVERT_GRID in user_input:
+                cleaned_input[CONF_INVERT_GRID] = user_input[CONF_INVERT_GRID]
+            return self.async_create_entry(title="", data=cleaned_input)
+
+        schema = probatio.Schema(
+            {
+                probatio.Optional(CONF_GRID, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            domain=SENSOR_DOMAIN,
+                            device_class=SensorDeviceClass.POWER,
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_SOLAR, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            domain=SENSOR_DOMAIN,
+                            device_class=SensorDeviceClass.POWER,
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_VOLTAGE, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            domain=SENSOR_DOMAIN,
+                            device_class=SensorDeviceClass.VOLTAGE,
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_SHAPER, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            domain=SENSOR_DOMAIN,
+                            device_class=SensorDeviceClass.POWER,
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_VEHICLE_SOC, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            filter=[
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    unit_of_measurement=PERCENTAGE,
+                                )
+                            ]
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_VEHICLE_RANGE, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            filter=[
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    unit_of_measurement=[
+                                        UnitOfLength.MILES,
+                                        UnitOfLength.KILOMETERS,
+                                    ],
+                                )
+                            ]
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_VEHICLE_ETA, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            filter=[
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    device_class=[
+                                        SensorDeviceClass.TIMESTAMP,
+                                        SensorDeviceClass.DURATION,
+                                    ],
+                                ),
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    unit_of_measurement=[
+                                        UnitOfTime.SECONDS,
+                                        UnitOfTime.MINUTES,
+                                        UnitOfTime.HOURS,
+                                        UnitOfTime.DAYS,
+                                    ],
+                                ),
+                            ]
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_HOME_BATTERY_SOC, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            filter=[
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    unit_of_measurement=PERCENTAGE,
+                                )
+                            ]
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_HOME_BATTERY_POWER, default=""): probatio.Any(
+                    None,
+                    "",
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            domain=SENSOR_DOMAIN,
+                            device_class=SensorDeviceClass.POWER,
+                        )
+                    ),
+                ),
+                probatio.Optional(CONF_INVERT_GRID, default=False): BooleanSelector(),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, self.config_entry.options
             ),
         )
