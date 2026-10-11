@@ -1,7 +1,5 @@
 """The Whirlpool Appliances integration."""
 
-import logging
-
 from aiohttp import ClientError
 from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import AccountLockedError as WhirlpoolAccountLocked, Auth
@@ -14,8 +12,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -52,17 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
         ) from ex
 
     if not auth.is_access_token_valid():
-        _LOGGER.error("Authentication failed")
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         )
 
     appliances_manager = AppliancesManager(backend_selector, auth, session)
-    if not await appliances_manager.fetch_appliances():
+    if not await appliances_manager.connect():
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="appliances_fetch_failed"
+            translation_domain=DOMAIN, translation_key="cannot_connect"
         )
-    await appliances_manager.connect()
 
     entry.runtime_data = appliances_manager
 

@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Final
 
-import voluptuous as vol
+import probatio
 from xknx.exceptions import XKNXException
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,6 +40,7 @@ from .const import (
 )
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
+from .llm_api import async_register_llm_api
 from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
 from .schema import (
     BinarySensorSchema,
@@ -70,10 +71,10 @@ _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
                     **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
@@ -98,7 +99,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -131,6 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     hass.data[KNX_MODULE_KEY] = knx_module
+
+    entry.async_on_unload(async_register_llm_api(hass, knx_module))
 
     knx_module.ui_time_server_controller.start(
         knx_module.xknx, knx_module.config_store.get_time_server_config()

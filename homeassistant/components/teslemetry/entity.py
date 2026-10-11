@@ -4,6 +4,7 @@ from abc import abstractmethod
 from typing import Any, override
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
@@ -106,7 +107,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Vehicle entities."""
 
     _last_update: int = 0
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     vehicle: TeslemetryVehicleData
 
     def __init__(
@@ -193,6 +194,10 @@ class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
 
         super().__init__(data.history_coordinator, key)
 
+    @override
+    async def async_update(self) -> None:
+        """Keep the streamed totals; the stream is their only source."""
+
 
 class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
@@ -259,7 +264,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
 class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
     """Parent class for Teslemetry Vehicle Stream entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
     def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
         """Initialize common aspects of a Teslemetry entity."""

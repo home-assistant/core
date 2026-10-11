@@ -81,6 +81,51 @@ async def test_switch_on(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "event_key"),
+    [
+        pytest.param("switch.tracker_device_id_123_led", "led_control", id="led"),
+        pytest.param(
+            "switch.tracker_device_id_123_buzzer", "buzzer_control", id="buzzer"
+        ),
+    ],
+)
+async def test_timed_switch_off_when_expired(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    event_key: str,
+) -> None:
+    """Test a timed switch turns off once its time ran out."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_switch_event(
+        mock_config_entry,
+        {
+            "tracker_id": "device_id_123",
+            event_key: {"active": True, "timeout": 900, "remaining": 896},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    # The API keeps reporting the control as active after it timed out
+    mock_tractive_client.send_switch_event(
+        mock_config_entry,
+        {
+            "tracker_id": "device_id_123",
+            event_key: {"active": True, "timeout": 900, "remaining": 0},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
 async def test_switch_off(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,

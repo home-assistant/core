@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -20,8 +20,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -43,11 +44,11 @@ SCRIPT_FIELDS = (
     CONF_TURN_ON,
 )
 
-SWITCH_COMMON_SCHEMA = vol.Schema(
+SWITCH_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
     }
 )
 

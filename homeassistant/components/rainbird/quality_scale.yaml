@@ -82,7 +82,7 @@ rules:
   entity-category: todo
   dynamic-devices: todo
   docs-troubleshooting: todo
-  diagnostics: todo
+  diagnostics: done
   docs-use-cases: todo
 
   # Platinum

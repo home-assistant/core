@@ -14,13 +14,25 @@
         "default": "mdi:timelapse"
       },
       "daily_active_water_use": {
-        "default": "mdi:water"
+        "default": "mdi:water",
+        "range": {
+          "0": "mdi:water-outline",
+          "0.01": "mdi:water"
+        }
       },
       "daily_inactive_water_use": {
-        "default": "mdi:water"
+        "default": "mdi:water",
+        "range": {
+          "0": "mdi:water-outline",
+          "0.01": "mdi:water"
+        }
       },
       "daily_total_water_use": {
-        "default": "mdi:water"
+        "default": "mdi:water",
+        "range": {
+          "0": "mdi:water-outline",
+          "0.01": "mdi:water"
+        }
       },
       "next_cycle": {
         "default": "mdi:clock-outline"

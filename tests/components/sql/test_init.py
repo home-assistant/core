@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import (
@@ -72,19 +72,19 @@ async def test_setup_invalid_config(
 
 async def test_invalid_query(hass: HomeAssistant) -> None:
     """Test invalid query."""
-    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+    with pytest.raises(probatio.Invalid, match="SQL query must be of type SELECT"):
         validate_sql_select(Template("DROP TABLE *", hass))
 
-    with pytest.raises(vol.Invalid, match="SQL query is empty or unknown type"):
+    with pytest.raises(probatio.Invalid, match="SQL query is empty or unknown type"):
         validate_sql_select(Template("SELECT5 as value", hass))
 
-    with pytest.raises(vol.Invalid, match="SQL query is empty or unknown type"):
+    with pytest.raises(probatio.Invalid, match="SQL query is empty or unknown type"):
         validate_sql_select(Template(";;", hass))
 
 
 async def test_query_no_read_only(hass: HomeAssistant) -> None:
     """Test query no read only."""
-    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+    with pytest.raises(probatio.Invalid, match="SQL query must be of type SELECT"):
         validate_sql_select(
             Template("UPDATE states SET state = 999999 WHERE state_id = 11125", hass)
         )
@@ -92,7 +92,7 @@ async def test_query_no_read_only(hass: HomeAssistant) -> None:
 
 async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     """Test query no read only CTE."""
-    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+    with pytest.raises(probatio.Invalid, match="SQL query must be of type SELECT"):
         validate_sql_select(
             Template(
                 "WITH test AS (SELECT state FROM states)"
@@ -104,7 +104,9 @@ async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
 
 async def test_multiple_queries(hass: HomeAssistant) -> None:
     """Test multiple queries."""
-    with pytest.raises(vol.Invalid, match="Multiple SQL statements are not allowed"):
+    with pytest.raises(
+        probatio.Invalid, match="Multiple SQL statements are not allowed"
+    ):
         validate_sql_select(
             Template("SELECT 5 as value; UPDATE states SET state = 10;", hass)
         )

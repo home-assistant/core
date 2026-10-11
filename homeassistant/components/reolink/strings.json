@@ -2,11 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     },
     "error": {
+      "account_device": "The Reolink device is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}",
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -555,6 +554,7 @@
         "state": {
           "adaptive": "Adaptive",
           "auto": "[%key:common::state::auto%]",
+          "auto_pir": "Auto PIR",
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
@@ -928,6 +928,9 @@
     }
   },
   "exceptions": {
+    "account_device": {
+      "message": "Reolink device {host} is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}, also see the troubleshooting steps: {account_device_link}"
+    },
     "api_error": {
       "message": "The device responded with an error: {err}"
     },
@@ -954,6 +957,9 @@
     },
     "login_error": {
       "message": "Error during login attempt: {err}"
+    },
+    "no_access_to_path": {
+      "message": "Cannot write `{filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },
     "no_data": {
       "message": "Device returned no data: {err}"
@@ -1064,6 +1070,20 @@
         }
       },
       "name": "PTZ move"
+    },
+    "snapshot_past": {
+      "description": "Takes a snapshot from a past moment in time out of the recordings of a camera and stores it in a file.",
+      "fields": {
+        "filename": {
+          "description": "Full path to filename.",
+          "name": "Filename"
+        },
+        "timestamp": {
+          "description": "Moment in time to take the snapshot from, in the local time of Home Assistant.",
+          "name": "Timestamp"
+        }
+      },
+      "name": "Take camera snapshot from past"
     }
   }
 }

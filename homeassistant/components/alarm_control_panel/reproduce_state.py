@@ -17,7 +17,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import DOMAIN, AlarmControlPanelState
+from . import AlarmControlPanelState
+from .const import DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
 

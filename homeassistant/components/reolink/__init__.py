@@ -9,7 +9,11 @@ from typing import Any
 
 from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, RETRY_ATTEMPTS
 from reolink_aio.const import UNKNOWN
-from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    CredentialsInvalidError,
+    LoginAccountDeviceError,
+    ReolinkError,
+)
 
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
@@ -29,6 +33,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ACCOUNT_DEVICE_HA_URL,
+    ACCOUNT_DEVICE_REOLINK_URL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_CONNECT,
     CONF_BC_ONLY,
@@ -85,6 +91,17 @@ async def async_setup_entry(
         await host.stop()
         # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(err) from err
+    except LoginAccountDeviceError as err:
+        await host.stop()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="account_device",
+            translation_placeholders={
+                "host": host.api.host,
+                "account_device_link": ACCOUNT_DEVICE_HA_URL,
+                "reolink_account_device_link": ACCOUNT_DEVICE_REOLINK_URL,
+            },
+        ) from err
     except (
         ReolinkException,
         ReolinkError,
@@ -355,7 +372,7 @@ async def async_remove_config_entry_device(
         # This integration does not create child devices.
         return False
     host: ReolinkHost = config_entry.runtime_data.host
-    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device.identifiers, host)
 
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
@@ -442,7 +459,7 @@ def migrate_entity_ids(
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     ch_device_ids = {}
     for device in devices:
-        (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+        (device_uid, ch, is_chime) = get_device_uid_and_ch(device.identifiers, host)
 
         if host.api.supported(None, "UID") and device_uid[0] != host.unique_id:
             if ch is None:
@@ -465,7 +482,7 @@ def migrate_entity_ids(
             remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
         for old_id in device.identifiers:
             (old_device_uid, _old_ch, _old_is_chime) = get_device_uid_and_ch(
-                old_id, host
+                {old_id}, host
             )
             if (
                 not old_device_uid

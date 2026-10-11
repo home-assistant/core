@@ -1,15 +1,27 @@
 """Test the PECO Outage Counter config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError
+from probatio.error import Invalid
 import pytest
-from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.peco.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+
+@contextmanager
+def _patch_meter_check_success() -> Generator[None]:
+    """Patch a successful meter check and entry setup."""
+    with (
+        patch("peco.PecoOutageApi.meter_check", return_value=True),
+        patch("homeassistant.components.peco.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -85,6 +97,17 @@ async def test_meter_value_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "invalid_phone_number"}
 
+    with _patch_meter_check_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "county": "PHILADELPHIA",
+                "phone_number": "1234567890",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_incompatible_meter_error(hass: HomeAssistant) -> None:
     """Test if the IncompatibleMeter error works."""
@@ -130,6 +153,17 @@ async def test_unresponsive_meter_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "unresponsive_meter"}
 
+    with _patch_meter_check_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "county": "PHILADELPHIA",
+                "phone_number": "1234567890",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_meter_http_error(hass: HomeAssistant) -> None:
     """Test if the InvalidMeter error works."""
@@ -152,6 +186,17 @@ async def test_meter_http_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "http_error"}
+
+    with _patch_meter_check_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "county": "PHILADELPHIA",
+                "phone_number": "1234567890",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_smart_meter(hass: HomeAssistant) -> None:

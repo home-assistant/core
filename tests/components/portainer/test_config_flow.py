@@ -57,6 +57,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
+    assert result["result"].unique_id == TEST_INSTANCE_ID
 
 
 @pytest.mark.parametrize(
