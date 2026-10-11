@@ -554,7 +554,15 @@ class AssistSatelliteEntity(entity.Entity):
     @callback
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        if event.type is PipelineEventType.WAKE_WORD_START:
+        if (
+            event.type is PipelineEventType.RUN_START
+            and event.data
+            and (tts_output := event.data.get("tts_output"))
+            and tts_output.get("start_streaming")
+        ):
+            self._run_has_tts = True
+            self._set_state(AssistSatelliteState.RESPONDING)
+        elif event.type is PipelineEventType.WAKE_WORD_START:
             # Only return to idle if we're not currently responding.
             # The state will return to idle in tts_response_finished.
             if self.state != AssistSatelliteState.RESPONDING:

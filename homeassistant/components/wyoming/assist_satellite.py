@@ -209,6 +209,17 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 # can start streaming TTS before the TTS_END event.
                 self._tts_stream_token = tts_output["token"]
                 self._is_tts_streaming = False
+                if tts_output.get("start_streaming") and (
+                    stream := assist_pipeline.async_get_audio_output_stream(
+                        self.hass, self._tts_stream_token
+                    )
+                ):
+                    self._is_tts_streaming = True
+                    self.config_entry.async_create_background_task(
+                        self.hass,
+                        self._stream_tts(stream),
+                        f"{self.entity_id} {event.type}",
+                    )
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
             self.config_entry.async_create_background_task(
                 self.hass,
@@ -275,7 +286,12 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 event.data
                 and event.data.get("tts_start_streaming")
                 and self._tts_stream_token
-                and (stream := tts.async_get_stream(self.hass, self._tts_stream_token))
+                and not self._is_tts_streaming
+                and (
+                    stream := assist_pipeline.async_get_audio_output_stream(
+                        self.hass, self._tts_stream_token
+                    )
+                )
             ):
                 # Start streaming TTS early (before TTS_END).
                 self._is_tts_streaming = True
@@ -307,7 +323,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 event.data
                 and (tts_output := event.data["tts_output"])
                 and not self._is_tts_streaming
-                and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
+                and (
+                    stream := assist_pipeline.async_get_audio_output_stream(
+                        self.hass, tts_output["token"]
+                    )
+                )
             ):
                 # Send TTS only if we haven't already started
                 # streaming it in INTENT_PROGRESS.
@@ -793,7 +813,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         await self._client.disconnect()
         self._client = None
 
-    async def _stream_tts(self, tts_result: tts.ResultStream) -> None:
+    async def _stream_tts(self, tts_result: assist_pipeline.AudioOutputStream) -> None:
         """Stream TTS WAV audio to satellite in chunks."""
         client = self._client
         if client is None:
