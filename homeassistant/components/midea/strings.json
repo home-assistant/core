@@ -127,6 +127,12 @@
       "filter_cleaning_reminder": {
         "name": "Filter cleaning"
       },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "freezer_door_overtime": {
+        "name": "Freezer door open too long"
+      },
       "full_dust": {
         "name": "Full dust"
       },
@@ -147,6 +153,12 @@
       },
       "protection": {
         "name": "Protection"
+      },
+      "refrigerator_door": {
+        "name": "Refrigerator door"
+      },
+      "refrigerator_door_overtime": {
+        "name": "Refrigerator door open too long"
       },
       "rinse_aid": {
         "name": "Rinse aid"

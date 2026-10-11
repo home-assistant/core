@@ -42,6 +42,28 @@ BINARY_SENSORS: list[MideaBinarySensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     MideaBinarySensorEntityDescription(
+        key="refrigerator_door",
+        translation_key="refrigerator_door",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    MideaBinarySensorEntityDescription(
+        key="freezer_door",
+        translation_key="freezer_door",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    MideaBinarySensorEntityDescription(
+        key="refrigerator_door_overtime",
+        translation_key="refrigerator_door_overtime",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaBinarySensorEntityDescription(
+        key="freezer_door_overtime",
+        translation_key="freezer_door_overtime",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaBinarySensorEntityDescription(
         key="rinse_aid",
         translation_key="rinse_aid",
         device_class=BinarySensorDeviceClass.PROBLEM,

@@ -60,7 +60,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
-        models=[DeviceType.AC],
+        models=[DeviceType.A1, DeviceType.AC],
         entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(

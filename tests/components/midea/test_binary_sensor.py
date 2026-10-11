@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.ca import DeviceAttributes as CAAttributes
 from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
 from midealocal.devices.e2 import DeviceAttributes as E2Attributes
@@ -43,6 +44,18 @@ def _ac_device() -> DummyDevice:
             ACAttributes.indoor_humidity: 50,
             ACAttributes.full_dust: True,
             ACAttributes.water_pump_running: True,
+        },
+    )
+
+
+def _ca_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.CA,
+        attributes={
+            CAAttributes.refrigerator_door: True,
+            CAAttributes.freezer_door: False,
+            CAAttributes.refrigerator_door_overtime: True,
+            CAAttributes.freezer_door_overtime: False,
         },
     )
 
@@ -98,6 +111,7 @@ def _dc_device() -> DummyDevice:
     "device",
     [
         pytest.param(_ac_device(), id="ac"),
+        pytest.param(_ca_device(), id="ca"),
         pytest.param(_dc_device(), id="dc"),
         pytest.param(_e1_device(), id="e1"),
         pytest.param(_e2_device(), id="e2"),
