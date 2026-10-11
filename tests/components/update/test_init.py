@@ -755,12 +755,12 @@ def _restart_update_entity(**values: Any) -> MockUpdateEntity:
 
 
 def _restart_update_entity_with_description(
-    post_restart_required: bool,
+    restart_required: bool,
 ) -> MockUpdateEntity:
     """Return an update entity that sets the flag through its description."""
     entity = _restart_update_entity()
     entity.entity_description = UpdateEntityDescription(
-        key="update", post_restart_required=post_restart_required
+        key="update", restart_required=restart_required
     )
     return entity
 
@@ -770,12 +770,12 @@ def _restart_update_entity_with_description(
     [
         pytest.param(_restart_update_entity(), set(), id="not_set"),
         pytest.param(
-            _restart_update_entity(post_restart_required=True),
+            _restart_update_entity(restart_required=True),
             {TEST_DOMAIN},
             id="attribute",
         ),
         pytest.param(
-            _restart_update_entity(post_restart_required=False),
+            _restart_update_entity(restart_required=False),
             set(),
             id="attribute_false",
         ),
@@ -791,7 +791,7 @@ def _restart_update_entity_with_description(
         ),
     ],
 )
-async def test_post_restart_required(
+async def test_restart_required(
     hass: HomeAssistant, entity: MockUpdateEntity, restart_sources: set[str]
 ) -> None:
     """Test a finished install flags Home Assistant for a restart."""
@@ -814,10 +814,10 @@ async def test_post_restart_required(
     )
 
 
-async def test_post_restart_required_install_failed(hass: HomeAssistant) -> None:
+async def test_restart_required_install_failed(hass: HomeAssistant) -> None:
     """Test a failed install does not flag Home Assistant for a restart."""
     setup_test_component_platform(
-        hass, DOMAIN, [_restart_update_entity(post_restart_required=True)]
+        hass, DOMAIN, [_restart_update_entity(restart_required=True)]
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
