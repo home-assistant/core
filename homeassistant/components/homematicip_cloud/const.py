@@ -21,6 +21,11 @@ PLATFORMS = [
     Platform.WEATHER,
 ]
 
+ATTR_BLOCKING_DEVICES = "blocking_devices"
+MODE_AWAY = "away"
+MODE_HOME = "home"
+SIGNAL_ARMING_PROBLEMS = f"{DOMAIN}_arming_problems_{{}}"
+
 CONF_ACCESSPOINT = "accesspoint"
 CONF_AUTHTOKEN = "authtoken"
 
