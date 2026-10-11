@@ -23,7 +23,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
-from .application_credentials import authorization_server_context
+from .application_credentials import (
+    McpClientMetadataImplementation,
+    authorization_server_context,
+)
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
@@ -65,6 +68,7 @@ class OAuthConfig:
 
     authorization_server: AuthorizationServer
     scopes: list[str] | None = None
+    client_id_metadata_document_supported: bool = False
 
 
 async def async_discover_authorization_server(
@@ -99,12 +103,16 @@ async def async_discover_authorization_server(
     # We have no way to know the minimum set of scopes needed, so request
     # all of them and let the user limit during the authorization step.
     scopes = data.get("scopes_supported")
+    client_id_metadata_document_supported = (
+        data.get("client_id_metadata_document_supported") is True
+    )
     return OAuthConfig(
         authorization_server=AuthorizationServer(
             authorize_url=authorize_url,
             token_url=token_url,
         ),
         scopes=scopes,
+        client_id_metadata_document_supported=client_id_metadata_document_supported,
     )
 
 
@@ -303,6 +311,17 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     ),
                 }
             )
+            if oauth_config.client_id_metadata_document_supported:
+                with authorization_server_context(self.authorization_server()):
+                    implementations = await async_get_implementations(self.hass, DOMAIN)
+                if not implementations:
+                    self.flow_impl = McpClientMetadataImplementation(
+                        self.hass,
+                        oauth_config.authorization_server.authorize_url,
+                        oauth_config.authorization_server.token_url,
+                        self.data[CONF_URL],
+                    )
+                    return await self.async_step_auth()
             return await self.async_step_credentials_choice()
 
     def authorization_server(self) -> AuthorizationServer:
