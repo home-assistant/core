@@ -440,6 +440,11 @@ ZEROCONF = {
             "domain": "blebox",
         },
     ],
+    "_beaver._tcp.local.": [
+        {
+            "domain": "mitsubishi_wf_rac",
+        },
+    ],
     "_bond._tcp.local.": [
         {
             "domain": "bond",
