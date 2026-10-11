@@ -124,6 +124,9 @@
     "switch": {
       "bluetooth": {
         "name": "Bluetooth"
+      },
+      "screensaver": {
+        "name": "Screensaver"
       }
     },
     "time": {
