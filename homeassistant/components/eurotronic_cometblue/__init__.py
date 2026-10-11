@@ -65,16 +65,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
                     "Failed to read battery level, likely due to incorrect PIN"
                 ) from ex
     except BleakError as ex:
-        raise ConfigEntryNotReady(
-            f"Failed to get device info from '{cometblue_device.device.address}'"
-        ) from ex
+        raise ConfigEntryNotReady(f"Failed to get device info from '{address}'") from ex
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, address)},
         connections={(dr.CONNECTION_BLUETOOTH, address)},
-        name=f"{ble_device_info['model']} {cometblue_device.device.address}",
+        name=f"{ble_device_info['model']} {address}",
         manufacturer=ble_device_info["manufacturer"],
         model=ble_device_info["model"],
         sw_version=ble_device_info["version"],
