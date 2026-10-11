@@ -1,64 +1,389 @@
-"""The tests for the london_air platform."""
+"""Tests for the London Air sensor platform."""
 
-from http import HTTPStatus
+import asyncio
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock
 
-import requests_mock
+from aiohttp import ClientConnectorError
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
-from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
-from homeassistant.core import HomeAssistant
+from homeassistant.components.london_air.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.london_air.coordinator import NO_SPECIES_DATA
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_load_fixture
-
-VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_valid_state(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+async def test_sensor_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
 ) -> None:
-    """Test for operational london_air sensor with proper attributes."""
-    requests_mock.get(
-        URL,
-        text=await async_load_fixture(hass, "london_air.json", "london_air"),
-        status_code=HTTPStatus.OK,
-    )
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    """Test the sensor reports the authority air quality band."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.merton")
     assert state is not None
     assert state.state == "Low"
     assert state.attributes["icon"] == "mdi:cloud-outline"
-    assert state.attributes["updated"] == "2017-08-03 03:00:00"
     assert state.attributes["sites"] == 2
-    assert state.attributes["friendly_name"] == "Merton"
+    assert state.attributes["updated"] == "2017-08-03 03:00:00"
+    data = state.attributes["data"]
+    assert len(data) == 2
+    assert data[0]["site_code"] == "ME2"
+    assert data[0]["site_name"] == "Merton Road"
+    assert data[0]["pollutants"][0]["code"] == "PM10"
+    assert data[0]["pollutants"][0]["summary"] == "PM10 is Low"
 
-    sites = state.attributes["data"]
-    assert sites is not None
-    assert len(sites) == 2
-    assert sites[0]["site_code"] == "ME2"
-    assert sites[0]["site_type"] == "Roadside"
-    assert sites[0]["site_name"] == "Merton Road"
-    assert sites[0]["pollutants_status"] == "Low"
-
-    pollutants = sites[0]["pollutants"]
-    assert pollutants is not None
-    assert len(pollutants) == 1
-    assert pollutants[0]["code"] == "PM10"
-    assert pollutants[0]["quality"] == "Low"
-    assert int(pollutants[0]["index"]) == 2
-    assert pollutants[0]["summary"] == "PM10 is Low"
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+    assert device_entries[0].entry_type is dr.DeviceEntryType.SERVICE
 
 
-async def test_api_failure(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+async def test_sensor_no_species_sentinel(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
 ) -> None:
-    """Test for failure in the API."""
-    requests_mock.get(URL, status_code=HTTPStatus.SERVICE_UNAVAILABLE)
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    """Test a site with no species data preserves the legacy sentinel."""
+    payload = {
+        "HourlyAirQualityIndex": {
+            "LocalAuthority": [
+                {
+                    "@LocalAuthorityName": "Merton",
+                    "Site": [
+                        {
+                            "@BulletinDate": "2017-08-03 03:00:00",
+                            "@SiteCode": "ME1",
+                            "@SiteName": "Merton - Test Site",
+                            "@SiteType": "Roadside",
+                            "@Latitude": "51.4",
+                            "@Longitude": "-0.1",
+                            "Species": [],
+                        }
+                    ],
+                }
+            ]
+        }
+    }
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.merton")
     assert state is not None
-    assert state.attributes["updated"] is None
-    assert state.attributes["sites"] == 0
+    assert state.state == "unknown"
+    data = state.attributes["data"]
+    assert data[0]["pollutants"] == [NO_SPECIES_DATA]
+    assert data[0]["pollutants_status"] == NO_SPECIES_DATA
+    assert data[0]["number_of_pollutants"] == 0
+
+
+async def test_sensor_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test the sensor becomes unavailable when a refresh fails."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientConnectorError(Mock(), OSError("test"))
+        )
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.merton")
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+async def test_setup_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """Test setup retries when the API is unavailable."""
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientConnectorError(Mock(), OSError("test"))
+        )
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_yaml_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test YAML setup imports a config entry and keeps the legacy entity IDs."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "london_air",
+                "locations": ["Merton", "City of London"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].unique_id == DOMAIN
+    assert entries[0].data["locations"] == ["Merton", "City of London"]
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entries[0].entry_id))
+        == 2
+    )
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_key == "deprecated_yaml"
+    assert (
+        issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml") is None
+    )
+
+    state = hass.states.get("sensor.merton")
+    assert state is not None
+    assert state.state == "Low"
+
+    assert hass.states.get("sensor.city_of_london") is not None
+
+
+async def test_yaml_migration_import_failure(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+) -> None:
+    """Test YAML setup registers a repair issue when the import fails."""
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientConnectorError(Mock(), OSError("test"))
+        )
+    )
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {"sensor": {"platform": "london_air", "locations": ["Merton"]}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_key == "deprecated_yaml_import_issue"
+
+    assert hass.states.get("sensor.merton") is None
+
+
+async def test_yaml_migration_existing_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test YAML setup with an existing entry does not create duplicates."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {"sensor": {"platform": "london_air", "locations": ["Merton"]}},
+    )
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entries[0].entry_id))
+        == 1
+    )
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.parametrize("delay", [0, 0.5], ids=["instant", "slow_setup"])
+async def test_yaml_migration_multiple_blocks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+    delay: float,
+) -> None:
+    """Test that multiple YAML blocks merge into a single entry."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+
+    async def _get(*args: Any, **kwargs: Any) -> MagicMock:
+        # Yield so both import flows run concurrently; a non-zero delay keeps
+        # the entry SETUP_IN_PROGRESS for several merge-poll cycles.
+        await asyncio.sleep(delay)
+        return response
+
+    mock_session.get.side_effect = _get
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": "london_air", "locations": ["Merton"]},
+                {"platform": "london_air", "locations": ["City of London"]},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].unique_id == DOMAIN
+    assert entries[0].data["locations"] == ["Merton", "City of London"]
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entries[0].entry_id))
+        == 2
+    )
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_already_configured"
+        )
+        is None
+    )
+
+    assert hass.states.get("sensor.merton") is not None
+    assert hass.states.get("sensor.city_of_london") is not None
+
+
+@pytest.mark.parametrize("delay", [0, 0.5], ids=["instant", "slow_setup"])
+async def test_yaml_migration_multiple_blocks_import_failure(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+    delay: float,
+) -> None:
+    """Test concurrent YAML blocks report the import failure when the API is down."""
+
+    async def _get(*args: Any, **kwargs: Any) -> Any:
+        # Yield so both import flows run concurrently before the API fails.
+        await asyncio.sleep(delay)
+        raise ClientConnectorError(Mock(), OSError("test"))
+
+    mock_session.get.side_effect = _get
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": "london_air", "locations": ["Merton"]},
+                {"platform": "london_air", "locations": ["City of London"]},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert hass.config_entries.flow.async_progress() == []
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml_import_issue"
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
+
+    assert hass.states.get("sensor.merton") is None
+    assert hass.states.get("sensor.city_of_london") is None

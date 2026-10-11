@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Already configured"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "required": "Please select at least one location."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "locations": "Locations"
+        },
+        "data_description": {
+          "locations": "Select the London boroughs to track."
+        }
+      },
+      "user": {
+        "data": {
+          "locations": "Locations"
+        },
+        "data_description": {
+          "locations": "Select the London boroughs to track."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error fetching London Air data"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring London Air using a YAML sensor platform is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the air quality API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "London Air YAML configuration deprecated"
+    }
+  }
+}
