@@ -40,15 +40,8 @@ class OverkizExecutor:
                 return self.device.definition.states[state_name]
         return None
 
-    async def async_execute_command(
-        self, command_name: str, *args: Any, refresh_afterwards: bool = True
-    ) -> None:
-        """Execute device command in async context.
-
-        :param refresh_afterwards: Whether to refresh the device
-            state after the command is executed. If several
-            commands are executed, it will be refreshed only once.
-        """
+    async def async_execute_command(self, command_name: str, *args: Any) -> None:
+        """Execute device command in async context."""
         parameters = [arg for arg in args if arg is not None]
 
         try:
@@ -80,20 +73,18 @@ class OverkizExecutor:
                 "command_name": command_name,
             }
         )
-        if refresh_afterwards:
-            await self.coordinator.async_refresh()
+        # Entities derive their in-progress state from coordinator.executions,
+        # which just changed locally, so publish it without waiting for the
+        # debounced refresh.
+        self.coordinator.async_update_listeners()
 
-    async def async_execute_commands(
-        self, commands: list[Command], refresh_afterwards: bool = True
-    ) -> None:
+        await self.coordinator.async_request_refresh()
+
+    async def async_execute_commands(self, commands: list[Command]) -> None:
         """Execute multiple device commands as a single batch execution.
 
         The Overkiz API processes all commands in order within a single action group,
         which is required when commands depend on each other.
-
-        :param refresh_afterwards: Whether to refresh the device state
-            after the batch is executed. Disable it to refresh only once
-            when this batch is part of a larger sequence of commands.
         """
         if not commands:
             return
@@ -119,8 +110,12 @@ class OverkizExecutor:
                 "command_name": commands[-1].name,
             }
         )
-        if refresh_afterwards:
-            await self.coordinator.async_refresh()
+        # Entities derive their in-progress state from coordinator.executions,
+        # which just changed locally, so publish it without waiting for the
+        # debounced refresh.
+        self.coordinator.async_update_listeners()
+
+        await self.coordinator.async_request_refresh()
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
