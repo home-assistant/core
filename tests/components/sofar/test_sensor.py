@@ -101,28 +101,241 @@ async def test_sensor_entities_created_and_state(
     assert state.state == "grid_connected"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("raw", "expected"),
+    ("key", "address", "raw", "expected"),
     [
-        pytest.param(8, "svg_state", id="svg"),
-        pytest.param(9, "pid_state", id="pid"),
+        pytest.param("system_state", 0x0404, 0, "waiting", id="system_state-waiting"),
+        pytest.param("system_state", 0x0404, 1, "checking", id="system_state-checking"),
+        pytest.param(
+            "system_state",
+            0x0404,
+            2,
+            "grid_connected",
+            id="system_state-grid_connected",
+        ),
+        pytest.param(
+            "system_state",
+            0x0404,
+            3,
+            "emergency_power_supply",
+            id="system_state-emergency_power_supply",
+        ),
+        pytest.param(
+            "system_state",
+            0x0404,
+            4,
+            "recoverable_fault",
+            id="system_state-recoverable_fault",
+        ),
+        pytest.param(
+            "system_state",
+            0x0404,
+            5,
+            "permanent_fault",
+            id="system_state-permanent_fault",
+        ),
+        pytest.param(
+            "system_state", 0x0404, 6, "upgrading", id="system_state-upgrading"
+        ),
+        pytest.param(
+            "system_state", 0x0404, 7, "self_charging", id="system_state-self_charging"
+        ),
+        pytest.param(
+            "system_state", 0x0404, 8, "svg_state", id="system_state-svg_state"
+        ),
+        pytest.param(
+            "system_state", 0x0404, 9, "pid_state", id="system_state-pid_state"
+        ),
+        pytest.param(
+            "bat_config_protocol",
+            0x1046,
+            0,
+            "first_flight_built_in_bms_default",
+            id="bat_config_protocol-first_flight_built_in_bms_default",
+        ),
+        pytest.param(
+            "bat_config_protocol",
+            0x1046,
+            1,
+            "pie_energy_protocol_pylon",
+            id="bat_config_protocol-pie_energy_protocol_pylon",
+        ),
+        pytest.param(
+            "bat_config_protocol",
+            0x1046,
+            2,
+            "first_flight_protocol_general",
+            id="bat_config_protocol-first_flight_protocol_general",
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 3, "amass", id="bat_config_protocol-amass"
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 4, "lg", id="bat_config_protocol-lg"
+        ),
+        pytest.param(
+            "bat_config_protocol",
+            0x1046,
+            5,
+            "alphaess",
+            id="bat_config_protocol-alphaess",
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 6, "catl", id="bat_config_protocol-catl"
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 7, "weco", id="bat_config_protocol-weco"
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 8, "fronus", id="bat_config_protocol-fronus"
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 9, "ems", id="bat_config_protocol-ems"
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 10, "nilar", id="bat_config_protocol-nilar"
+        ),
+        pytest.param(
+            "bat_config_protocol", 0x1046, 11, "bts_5k", id="bat_config_protocol-bts_5k"
+        ),
+        pytest.param(
+            "bat_config_protocol",
+            0x1046,
+            12,
+            "move_for",
+            id="bat_config_protocol-move_for",
+        ),
+        pytest.param(
+            "bat_config_cell_type",
+            0x1051,
+            0,
+            "lead_acid",
+            id="bat_config_cell_type-lead_acid",
+        ),
+        pytest.param(
+            "bat_config_cell_type",
+            0x1051,
+            1,
+            "lithium_iron_phosphate",
+            id="bat_config_cell_type-lithium_iron_phosphate",
+        ),
+        pytest.param(
+            "bat_config_cell_type",
+            0x1051,
+            2,
+            "ternary",
+            id="bat_config_cell_type-ternary",
+        ),
+        pytest.param(
+            "bat_config_cell_type",
+            0x1051,
+            3,
+            "lithium_titanate",
+            id="bat_config_cell_type-lithium_titanate",
+        ),
+        pytest.param(
+            "bat_config_cell_type", 0x1051, 4, "agm", id="bat_config_cell_type-agm"
+        ),
+        pytest.param(
+            "bat_config_cell_type", 0x1051, 5, "gel", id="bat_config_cell_type-gel"
+        ),
+        pytest.param(
+            "bat_config_cell_type",
+            0x1051,
+            6,
+            "flooded",
+            id="bat_config_cell_type-flooded",
+        ),
+        pytest.param(
+            "sync_rtc_result", 0x100A, 0, "successful", id="sync_rtc_result-successful"
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            1,
+            "operation_in_progress",
+            id="sync_rtc_result-operation_in_progress",
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            2,
+            "enabled_discharging",
+            id="sync_rtc_result-enabled_discharging",
+        ),
+        pytest.param(
+            "sync_rtc_result", 0x100A, 4, "disabled", id="sync_rtc_result-disabled"
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            65531,
+            "operation_failed_controller_refused_to_respond",
+            id="sync_rtc_result-operation_failed_controller_refused_to_respond",
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            65532,
+            "operation_failed_no_response_from_the_controller",
+            id="sync_rtc_result-operation_failed_no_response_from_the_controller",
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            65533,
+            "operation_failed_current_function_disabled",
+            id="sync_rtc_result-operation_failed_current_function_disabled",
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            65534,
+            "operation_failed_parameter_access_failed",
+            id="sync_rtc_result-operation_failed_parameter_access_failed",
+        ),
+        pytest.param(
+            "sync_rtc_result",
+            0x100A,
+            65535,
+            "operation_failed_input_parameters_incorrect",
+            id="sync_rtc_result-operation_failed_input_parameters_incorrect",
+        ),
     ],
 )
-async def test_system_state_reports_every_state(
+async def test_enum_sensor_reports_every_state(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_connection: MockModbusConnection,
-    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    address: int,
     raw: int,
     expected: str,
 ) -> None:
-    """Test the system state sensor takes on states past self charging."""
-    mock_connection.for_unit(1).holding[0x0404] = raw
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    """Test each enum sensor reports every state its register holds."""
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    unit.holding[address] = raw
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get("sensor.4_4_ktlx_g3_system_state")) is not None
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_{key}"
+    )
+    assert entity_id is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == expected
 
 
