@@ -654,6 +654,11 @@ async def test_atw_zone_temperature_range(
             {"OperationMode": "HeatZones"}, HVACAction.HEATING, id="heat_zones"
         ),
         pytest.param({"OperationMode": "Cool"}, HVACAction.COOLING, id="cool"),
+        pytest.param({"OperationMode": "Heating"}, HVACAction.HEATING, id="heating"),
+        pytest.param(
+            {"OperationMode": "FreezeStat"}, HVACAction.HEATING, id="freeze_stat"
+        ),
+        pytest.param({"OperationMode": "Cooling"}, HVACAction.COOLING, id="cooling"),
         pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
         pytest.param(
             {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"

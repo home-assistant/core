@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -224,6 +225,74 @@ async def test_ac_switch_services(
         [("set_attribute", ACAttributes.aux_heating, False)],
         device,
     )
+
+
+@pytest.mark.parametrize(
+    "device_type",
+    [
+        pytest.param(DeviceType.A1, id="dehumidifier"),
+        pytest.param(DeviceType.AC, id="air_conditioner"),
+    ],
+)
+async def test_prompt_tone_switch_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+) -> None:
+    """Test prompt tone can be disabled and enabled through switch services."""
+    device = DummyDevice(device_type, attributes={"prompt_tone": True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_prompt_tone"]
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", "prompt_tone", False)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", "prompt_tone", True)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("device_type", "attributes"),
+    [
+        pytest.param(DeviceType.A1, {}, id="a1_missing_attribute"),
+        pytest.param(DeviceType.CC, {"prompt_tone": True}, id="unsupported_type"),
+    ],
+)
+async def test_prompt_tone_switch_not_created(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+    attributes: dict[str, bool],
+) -> None:
+    """Test prompt tone requires a supported device type and its attribute."""
+    device = DummyDevice(device_type, attributes=attributes)
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_prompt_tone" not in entity_entries(hass, config_entry)
 
 
 async def test_dc_ai_switch_services(
