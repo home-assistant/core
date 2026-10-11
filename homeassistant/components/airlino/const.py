@@ -5,6 +5,7 @@ import logging
 
 DOMAIN = "airlino"
 CONF_SETUP_VERIFIED = "setup_verified"
+DATA_GROUP_MUTATION_LOCK = "group_mutation_lock"
 
 VALID_MODELS = {
     "AirLino pro",

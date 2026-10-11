@@ -1,6 +1,7 @@
 """The AirLino integration."""
 
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field
 import logging
 
 from airlino_api import DEFAULT_API_VERSION, DEFAULT_PORT, AirlinoApi
@@ -10,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SETUP_VERIFIED, is_supported_api_version
+from .const import CONF_SETUP_VERIFIED, DOMAIN, is_supported_api_version
 from .coordinator import AirlinoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,9 +25,18 @@ class AirlinoRuntimeData:
 
     api: AirlinoApi
     coordinator: AirlinoDataUpdateCoordinator
+    group_mutation_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 type AirlinoConfigEntry = ConfigEntry[AirlinoRuntimeData]
+
+
+def _group_mutation_lock(hass: HomeAssistant) -> asyncio.Lock:
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        runtime_data = getattr(entry, "runtime_data", None)
+        if isinstance(runtime_data, AirlinoRuntimeData):
+            return runtime_data.group_mutation_lock
+    return asyncio.Lock()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> bool:
@@ -47,6 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> b
     )
 
     coordinator = AirlinoDataUpdateCoordinator(hass, entry, api)
+    entry.runtime_data = AirlinoRuntimeData(
+        api=api,
+        coordinator=coordinator,
+        group_mutation_lock=_group_mutation_lock(hass),
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -54,8 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> b
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_SETUP_VERIFIED: True}
         )
-
-    entry.runtime_data = AirlinoRuntimeData(api=api, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

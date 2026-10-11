@@ -1,5 +1,6 @@
 """Tests for the AirLino media player."""
 
+import asyncio
 from collections.abc import Callable
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -82,6 +83,7 @@ def make_player(hass: HomeAssistant) -> PlayerFactory:
         api.async_get_receiver_state = AsyncMock(return_value={"sender": None})
         coordinator = MagicMock(spec=AirlinoDataUpdateCoordinator)
         coordinator.hass = hass
+        coordinator.config_entry = entry
         coordinator.api = api
         coordinator.data = {
             "online": True,
@@ -93,6 +95,7 @@ def make_player(hass: HomeAssistant) -> PlayerFactory:
             **(data or {}),
         }
         coordinator.async_request_refresh = AsyncMock()
+        entry.runtime_data = AirlinoRuntimeData(api=api, coordinator=coordinator)
         player = AirlinoMediaPlayer(coordinator, entry)
         player.hass = hass
         player.entity_id = "media_player.living_room"
@@ -356,6 +359,7 @@ async def test_group_members_include_master_and_receivers(
     )
     player = AirlinoMediaPlayer(master.runtime_data.coordinator, master)
     player.hass = hass
+    player._group_mutation_lock = master.runtime_data.group_mutation_lock
     player.entity_id = entity_registry.async_get_entity_id(
         "media_player", DOMAIN, master.unique_id
     )
@@ -389,6 +393,7 @@ async def test_group_members_skips_unrelated_devices(
     )
     player = AirlinoMediaPlayer(master.runtime_data.coordinator, master)
     player.hass = hass
+    player._group_mutation_lock = master.runtime_data.group_mutation_lock
     player.entity_id = entity_registry.async_get_entity_id(
         "media_player", DOMAIN, master.unique_id
     )
@@ -789,6 +794,76 @@ async def test_join_ignores_self_and_links_requested_receiver(
     receiver_api.async_receiver_link.assert_awaited_once_with("sender-uuid")
     receiver_coordinator.async_request_refresh.assert_awaited_once()
     coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_overlapping_joins_serialize_receiver_mutations(
+    hass: HomeAssistant,
+    make_player: PlayerFactory,
+) -> None:
+    """Prevent two masters from concurrently claiming one receiver."""
+    first_player, first_entry, _first_coordinator, first_api = make_player()
+    second_player, second_entry, second_coordinator, second_api = make_player()
+    shared_lock = first_entry.runtime_data.group_mutation_lock
+    second_entry.runtime_data = AirlinoRuntimeData(
+        api=second_api,
+        coordinator=second_coordinator,
+        group_mutation_lock=shared_lock,
+    )
+    second_player._group_mutation_lock = shared_lock
+    first_sender_status_started = asyncio.Event()
+    continue_first_join = asyncio.Event()
+
+    async def get_first_sender_status() -> dict[str, str | bool]:
+        first_sender_status_started.set()
+        await continue_first_join.wait()
+        return {"uuid": "first-sender", "enabled": False}
+
+    first_api.async_get_sender_status.side_effect = get_first_sender_status
+    second_api.async_get_sender_status.return_value = {
+        "uuid": "second-sender",
+        "enabled": False,
+    }
+    receiver_api = MagicMock()
+    receiver_coordinator = MagicMock()
+    receiver_coordinator.data = {"online": True, "receiver": {"sender": None}}
+    receiver_coordinator.async_request_refresh = AsyncMock()
+    receiver_api.async_get_sender_status = AsyncMock(return_value={"enabled": False})
+
+    async def get_receiver_state() -> dict[str, str | None]:
+        return receiver_coordinator.data["receiver"]
+
+    async def link_receiver(uuid: str) -> None:
+        receiver_coordinator.data["receiver"] = {"sender": uuid}
+
+    receiver_api.async_get_receiver_state = AsyncMock(side_effect=get_receiver_state)
+    receiver_api.async_receiver_link = AsyncMock(side_effect=link_receiver)
+    runtime = AirlinoRuntimeData(api=receiver_api, coordinator=receiver_coordinator)
+    first_player._async_find_runtime_by_entity_id = AsyncMock(return_value=runtime)
+    second_player._async_find_runtime_by_entity_id = AsyncMock(return_value=runtime)
+
+    first_join = asyncio.create_task(
+        first_player.async_join_players(["media_player.receiver"])
+    )
+    await asyncio.wait_for(first_sender_status_started.wait(), timeout=1)
+    lock = first_player._group_mutation_lock
+    second_join = asyncio.create_task(
+        second_player.async_join_players(["media_player.receiver"])
+    )
+    await asyncio.sleep(0)
+
+    assert lock.locked()
+    second_api.async_get_sender_status.assert_not_awaited()
+
+    continue_first_join.set()
+    first_result, second_result = await asyncio.gather(
+        first_join, second_join, return_exceptions=True
+    )
+
+    assert first_result is None
+    assert isinstance(second_result, ServiceValidationError)
+    first_api.async_enable_sender.assert_awaited_once_with("Living room Group")
+    second_api.async_enable_sender.assert_not_awaited()
+    receiver_api.async_receiver_link.assert_awaited_once_with("first-sender")
 
 
 async def test_empty_or_self_only_join_does_not_query_sender(

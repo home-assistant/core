@@ -61,7 +61,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
-    comment: Integration type device not hub or service where we dont have standalone devices.
+    comment: Integration type device not hub or service where we don't have standalone devices.
   entity-category:
     status: exempt
     comment: For the entity (once per device) the default category is appropriate.

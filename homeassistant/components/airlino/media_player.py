@@ -1,5 +1,6 @@
 """Media player platform for AirLino."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 import logging
@@ -119,6 +120,7 @@ class AirlinoMediaPlayer(
         assert entry.unique_id is not None
         self._attr_unique_id = entry.unique_id
         self._device_name = entry.title
+        self._group_mutation_lock: asyncio.Lock = entry.runtime_data.group_mutation_lock
         self._attr_name = None
 
     @override
@@ -207,6 +209,10 @@ class AirlinoMediaPlayer(
     @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add devices to the multiroom group (Songcast sender/receiver)."""
+        async with self._group_mutation_lock:
+            await self._async_join_players(group_members)
+
+    async def _async_join_players(self, group_members: list[str]) -> None:
         self._ensure_not_multiroom_receiver()
         requested_entity_ids = [
             entity_id for entity_id in group_members if entity_id != self.entity_id
@@ -276,6 +282,10 @@ class AirlinoMediaPlayer(
     @override
     async def async_unjoin_player(self) -> None:
         """Remove this device from the multiroom group."""
+        async with self._group_mutation_lock:
+            await self._async_unjoin_player()
+
+    async def _async_unjoin_player(self) -> None:
         uuid = self._sender_uuid(self.coordinator)
         if uuid:
             for _, runtime in self._all_runtimes():
