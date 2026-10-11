@@ -32,4 +32,6 @@ class IPSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        self._attr_native_value = await async_get_source_ip(self.hass)
+        self._attr_native_value = await async_get_source_ip(
+            self.hass, allow_ipv6_fallback=True
+        )
