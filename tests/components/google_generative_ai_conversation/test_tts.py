@@ -2,9 +2,11 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
+import wave
 
 from google.genai import types
 from google.genai.errors import APIError
@@ -25,6 +27,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_mock_service
@@ -293,3 +296,62 @@ async def test_tts_wire_parameters(
         config["speechConfig"]["voice_config"]["prebuilt_voice_config"]["voice_name"]
         == "zephyr"
     )
+
+
+@pytest.fixture
+def wav_audio() -> bytes:
+    """Create a complete WAV with known PCM samples."""
+    output = BytesIO()
+    with wave.open(output, "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(24000)
+        audio.writeframes(b"\x00\x00\x01\x00\xff\x7f\x00\x80")
+    return output.getvalue()
+
+
+@pytest.mark.usefixtures("setup")
+@pytest.mark.parametrize(
+    ("mime_type", "header_size"),
+    [("audio/wav", 0), ("audio/L16;rate=24000", 44)],
+)
+async def test_tts_audio_formats(
+    hass: HomeAssistant,
+    wav_audio: bytes,
+    mime_type: str,
+    header_size: int,
+) -> None:
+    """Preserve complete WAV output and wrap legacy PCM exactly once."""
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    response = entity._genai_client.aio.models.generate_content.return_value
+    response.candidates[0].content.parts[0].inline_data = types.Blob(
+        data=wav_audio[header_size:], mime_type=mime_type
+    )
+
+    audio_format, audio_data = await entity.async_get_tts_audio(
+        "Hello", "en-US", dict(entity.default_options)
+    )
+
+    assert audio_format == "wav"
+    assert audio_data == wav_audio
+    with wave.open(BytesIO(audio_data), "rb") as audio:
+        assert audio.getnchannels() == 1
+        assert audio.getsampwidth() == 2
+        assert audio.getframerate() == 24000
+        assert audio.getnframes() == 4
+        assert audio.readframes(4) == b"\x00\x00\x01\x00\xff\x7f\x00\x80"
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_unsupported_audio_format(hass: HomeAssistant) -> None:
+    """Keep unsupported audio formats as visible failures."""
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    response = entity._genai_client.aio.models.generate_content.return_value
+    response.candidates[0].content.parts[0].inline_data = types.Blob(
+        data=b"unsupported-audio", mime_type="audio/mpeg"
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Unsupported audio MIME type: audio/mpeg"
+    ):
+        await entity.async_get_tts_audio("Hello", "en-US", dict(entity.default_options))

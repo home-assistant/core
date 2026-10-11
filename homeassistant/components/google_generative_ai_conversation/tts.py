@@ -252,4 +252,6 @@ class GoogleGenerativeAITextToSpeechEntity(
             # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Error during TTS: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
+        if mime_type == "audio/wav":
+            return "wav", data
         return "wav", convert_to_wav(data, mime_type)
