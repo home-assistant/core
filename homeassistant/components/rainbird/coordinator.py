@@ -15,7 +15,8 @@ from pyrainbird.async_client import (
 from pyrainbird.data import ModelAndVersion, Schedule
 
 from homeassistant.const import CONF_MAC
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -119,6 +120,21 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac_address)}
         return device_info
 
+    def zone_device_info(self, zone: int) -> DeviceInfo | None:
+        """Return information about a zone device, shared by its entities."""
+        if self._unique_id is None:
+            return None
+        return DeviceInfo(
+            name=f"{MANUFACTURER} Sprinkler {zone}",
+            identifiers={(DOMAIN, f"{self._unique_id}-{zone}")},
+            manufacturer=MANUFACTURER,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._unique_id),
+                config_entry_id=self.config_entry.entry_id,
+            ),
+        )
+
     @override
     async def _async_update_data(self) -> RainbirdDeviceState:
         """Fetch data from Rain Bird device."""
@@ -173,6 +189,32 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
         self._controller = controller
         self._device_lock = device_lock
         self._load_started = False
+        self._schedule_callbacks: list[CALLBACK_TYPE] = []
+
+    @callback
+    def async_add_schedule_callback(
+        self, schedule_callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Call back each time the schedule loads.
+
+        Unlike a listener, this does not keep the schedule refreshing, so it
+        is still only loaded while an entity that uses it is enabled.
+        """
+        self._schedule_callbacks.append(schedule_callback)
+
+        @callback
+        def remove_callback() -> None:
+            self._schedule_callbacks.remove(schedule_callback)
+
+        return remove_callback
+
+    @override
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Notify schedule callbacks once a refresh has loaded the schedule."""
+        if self.data is not None:
+            for schedule_callback in list(self._schedule_callbacks):
+                schedule_callback()
 
     @callback
     def async_load(self) -> None:
