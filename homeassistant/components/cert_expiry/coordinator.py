@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+import ssl
 from typing import override
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,10 +30,12 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         config_entry: CertExpiryConfigEntry,
         host: str,
         port: int,
+        ssl_context: ssl.SSLContext,
     ) -> None:
         """Initialize global Cert Expiry data updater."""
         self.host = host
         self.port = port
+        self._ssl_context = ssl_context
         self.cert_error: ValidationFailure | None = None
         self.is_cert_valid = False
 
@@ -56,6 +59,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
                 self.host,
                 self.port,
                 verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, True),
+                ssl_context=self._ssl_context,
             )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err

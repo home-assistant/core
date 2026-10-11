@@ -2,12 +2,14 @@
 
 import socket
 import ssl
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
+from cryptography import x509
+from cryptography.hazmat.primitives.serialization import Encoding
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.const import CONF_CA_CERTIFICATES, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -49,6 +51,82 @@ async def test_user(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
     assert result["data"][CONF_VERIFY_SSL] is verify_ssl
+    assert result["data"][CONF_CA_CERTIFICATES] == ""
+    assert result["result"].unique_id == f"{HOST}:{PORT}"
+
+
+@pytest.mark.parametrize(
+    "whitespace",
+    [pytest.param("", id="pem"), pytest.param(" \n\t ", id="outer-whitespace")],
+)
+async def test_user_with_ca_certificates(
+    hass: HomeAssistant, certificate_pem: str, whitespace: str
+) -> None:
+    """Persist normalized CA certificates after validating them."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ) as get_timestamp:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_CA_CERTIFICATES: whitespace + certificate_pem + whitespace,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CA_CERTIFICATES] == certificate_pem
+    assert result["result"].unique_id == f"{HOST}:{PORT}"
+    get_timestamp.assert_awaited_once_with(
+        hass, HOST, PORT, verify_ssl=True, ssl_context=ANY
+    )
+
+
+@pytest.mark.parametrize(
+    "verify_ssl",
+    [pytest.param(True, id="verified"), pytest.param(False, id="unverified")],
+)
+async def test_invalid_ca_certificates_recovers(
+    hass: HomeAssistant, certificate_pem: str, verify_ssl: bool
+) -> None:
+    """Show a field error for invalid CA input and allow correcting it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ) as get_timestamp:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_VERIFY_SSL: verify_ssl,
+                CONF_CA_CERTIFICATES: "-----BEGIN CERTIFICATE-----\nZmFrZQ==\n-----END CERTIFICATE-----",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_CA_CERTIFICATES: "invalid_ca_certificates"}
+        get_timestamp.assert_not_awaited()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_VERIFY_SSL: verify_ssl,
+                CONF_CA_CERTIFICATES: certificate_pem,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CA_CERTIFICATES] == certificate_pem
+    assert result["data"][CONF_VERIFY_SSL] is verify_ssl
+
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
@@ -217,6 +295,63 @@ async def test_reconfigure_verification(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_VERIFY_SSL] is verify_ssl
+    assert entry.unique_id == f"{HOST}:{PORT}"
+
+
+@pytest.mark.parametrize(
+    ("initial_bundle", "new_bundle", "expected_bundle"),
+    [
+        pytest.param("empty", "first", "first", id="add"),
+        pytest.param("first", "second", "second", id="replace"),
+        pytest.param("first", "empty", "empty", id="clear"),
+        pytest.param("first", "whitespace", "empty", id="clear-with-whitespace"),
+    ],
+)
+async def test_reconfigure_ca_certificates(
+    hass: HomeAssistant,
+    certificate_pem: str,
+    ca_certificate: x509.Certificate,
+    initial_bundle: str,
+    new_bundle: str,
+    expected_bundle: str,
+) -> None:
+    """Allow adding, replacing, and clearing trusted certificates on an entry."""
+    bundles = {
+        "empty": "",
+        "first": certificate_pem,
+        "second": ca_certificate.public_bytes(Encoding.PEM).decode("ascii"),
+        "whitespace": " \n\t ",
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_VERIFY_SSL: True,
+            CONF_CA_CERTIFICATES: bundles[initial_bundle],
+        },
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_VERIFY_SSL: True,
+                CONF_CA_CERTIFICATES: bundles[new_bundle],
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_CA_CERTIFICATES] == bundles[expected_bundle]
     assert entry.unique_id == f"{HOST}:{PORT}"
 
 

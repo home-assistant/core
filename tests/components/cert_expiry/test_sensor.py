@@ -3,14 +3,14 @@
 from datetime import timedelta
 import socket
 import ssl
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from cryptography import x509
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.const import CONF_CA_CERTIFICATES, DOMAIN
 from homeassistant.components.cert_expiry.errors import ValidationFailure
 from homeassistant.const import (
     CONF_HOST,
@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
+from homeassistant.util.ssl import SSL_ALPN_HTTP11, create_client_context
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
@@ -87,7 +88,7 @@ async def test_certificate_verification_status(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    get_cert.assert_awaited_with(hass, HOST, PORT, verify_ssl=is_valid)
+    get_cert.assert_awaited_with(hass, HOST, PORT, verify_ssl=is_valid, ssl_context=ANY)
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state is not None
     assert state.state == certificate.not_valid_after_utc.isoformat()
@@ -176,6 +177,47 @@ async def test_validation_error_changes(
     assert state.state == STATE_UNKNOWN
     assert state.attributes["is_valid"] is False
     assert state.attributes["error"] == "certificate has expired"
+
+
+@pytest.mark.freeze_time(static_datetime())
+async def test_custom_ca_context_reused(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    certificate_pem: str,
+) -> None:
+    """Build an entry's custom context once and reuse it across scheduled polls."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_CA_CERTIFICATES: certificate_pem,
+        },
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.helper.create_client_context",
+            wraps=create_client_context,
+        ) as create_context,
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(100),
+        ) as get_timestamp,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        context = get_timestamp.await_args.kwargs["ssl_context"]
+
+        freezer.tick(timedelta(hours=12))
+        async_fire_time_changed(hass, utcnow())
+        await hass.async_block_till_done()
+
+    create_context.assert_called_once_with(alpn_protocols=SSL_ALPN_HTTP11)
+    get_timestamp.assert_awaited_with(
+        hass, HOST, PORT, verify_ssl=True, ssl_context=context
+    )
 
 
 async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:

@@ -5,15 +5,19 @@ import ssl
 from unittest.mock import Mock, patch
 
 from cryptography import x509
+from cryptography.hazmat.primitives.serialization import Encoding
 import pytest
 
 from homeassistant.components.cert_expiry.errors import (
     ConnectionTimeout,
+    InvalidCACertificate,
     ValidationFailure,
 )
 from homeassistant.components.cert_expiry.helper import (
     async_get_cert,
+    async_get_ssl_context,
     get_cert_expiry_timestamp,
+    normalize_ca_certificates,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -85,7 +89,9 @@ async def test_certificate_expiry(
             == certificate.not_valid_after_utc
         )
 
-    get_cert.assert_awaited_once_with(hass, HOST, PORT, verify_ssl=verify_ssl)
+    get_cert.assert_awaited_once_with(
+        hass, HOST, PORT, verify_ssl=verify_ssl, ssl_context=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -145,3 +151,98 @@ async def test_connection_timeout_cancels_handshake(hass: HomeAssistant) -> None
         await get_cert_expiry_timestamp(hass, HOST, PORT)
 
     assert cancelled.is_set()
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "context"),
+    [
+        pytest.param(True, get_default_context(), id="verified"),
+        pytest.param(False, get_default_no_verify_context(), id="unverified"),
+    ],
+)
+async def test_default_ssl_context(
+    hass: HomeAssistant, verify_ssl: bool, context: ssl.SSLContext
+) -> None:
+    """Reuse the existing contexts when no custom certificates are configured."""
+    assert await async_get_ssl_context(hass, verify_ssl=verify_ssl) is context
+
+
+async def test_custom_ca_context(
+    hass: HomeAssistant, ca_certificate: x509.Certificate
+) -> None:
+    """Add custom trust to an independent context retaining the normal CA bundle."""
+    shared = get_default_context()
+    original_certs = shared.get_ca_certs(binary_form=True)
+    ca_pem = ca_certificate.public_bytes(Encoding.PEM).decode("ascii")
+
+    context = await async_get_ssl_context(hass, ca_certificates=ca_pem)
+
+    assert context is not shared
+    assert context.check_hostname
+    assert context.verify_mode == ssl.CERT_REQUIRED
+    assert set(original_certs).issubset(context.get_ca_certs(binary_form=True))
+    assert ca_certificate.public_bytes(Encoding.DER) in context.get_ca_certs(
+        binary_form=True
+    )
+    assert shared.get_ca_certs(binary_form=True) == original_certs
+    assert shared.check_hostname
+    assert shared.verify_mode == ssl.CERT_REQUIRED
+
+
+async def test_ca_not_used_without_verification(
+    hass: HomeAssistant, certificate_pem: str
+) -> None:
+    """Configured CA data does not enable verification when it was disabled."""
+    assert (
+        await async_get_ssl_context(
+            hass, verify_ssl=False, ca_certificates=certificate_pem
+        )
+        is get_default_no_verify_context()
+    )
+
+
+@pytest.mark.parametrize(
+    "ca_data",
+    [
+        pytest.param("not a certificate", id="text"),
+        pytest.param("\u00e9", id="non-ascii"),
+        pytest.param("-----BEGIN CERTIFICATE-----\n", id="incomplete"),
+        pytest.param(
+            "-----BEGIN CERTIFICATE-----\nZmFrZQ==\n-----END CERTIFICATE-----\n",
+            id="base64-without-x509",
+        ),
+    ],
+)
+async def test_invalid_ca_context(hass: HomeAssistant, ca_data: str) -> None:
+    """Reject malformed certificates before attempting a network connection."""
+    with pytest.raises(InvalidCACertificate):
+        await async_get_ssl_context(hass, ca_certificates=ca_data)
+
+
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        pytest.param("not a certificate", id="trailing-text"),
+        pytest.param("-----BEGIN CERTIFICATE-----\n", id="partial-certificate"),
+        pytest.param(
+            "-----BEGIN PRIVATE KEY-----\nZmFrZQ==\n-----END PRIVATE KEY-----\n",
+            id="private-key",
+        ),
+    ],
+)
+def test_ca_bundle_rejects_other_data(certificate_pem: str, extra_data: str) -> None:
+    """Reject data that would otherwise be silently stored alongside certificates."""
+    with pytest.raises(InvalidCACertificate):
+        normalize_ca_certificates(certificate_pem + extra_data)
+
+
+def test_ca_bundle(certificate_pem: str, ca_certificate: x509.Certificate) -> None:
+    """Support multiple trusted certificates and normalize outer whitespace."""
+    bundle = certificate_pem + ca_certificate.public_bytes(Encoding.PEM).decode("ascii")
+    assert normalize_ca_certificates(f" \n{bundle}\n\t ") == bundle
+
+
+@pytest.mark.parametrize("ca_data", ["", " \n\t "])
+def test_empty_ca_bundle(ca_data: str) -> None:
+    """Normalize a cleared field to the same empty string used by default."""
+    assert normalize_ca_certificates(ca_data) == ""

@@ -13,9 +13,12 @@ from cryptography.hazmat.primitives.asymmetric import ec
 import pytest
 import pytest_socket
 
-from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.const import CONF_CA_CERTIFICATES, DOMAIN
 from homeassistant.components.cert_expiry.errors import ValidationFailure
-from homeassistant.components.cert_expiry.helper import get_cert_expiry_timestamp
+from homeassistant.components.cert_expiry.helper import (
+    async_get_ssl_context,
+    get_cert_expiry_timestamp,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import create_client_context, get_default_context
@@ -172,6 +175,39 @@ async def test_trusted_tls_certificate(
         )
 
 
+@pytest.mark.parametrize(
+    ("certificate_dates", "error"),
+    [
+        pytest.param(
+            (datetime(2010, 1, 1, tzinfo=UTC), datetime(2020, 1, 1, tzinfo=UTC)),
+            "certificate has expired",
+            id="expired",
+        ),
+        pytest.param(
+            (datetime(2090, 1, 1, tzinfo=UTC), datetime(2100, 1, 1, tzinfo=UTC)),
+            "certificate is not yet valid",
+            id="not-yet-valid",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("ignore_tls_client_abort")
+async def test_verified_tls_invalid_dates(
+    hass: HomeAssistant,
+    tls_port: int,
+    trusted_context: ssl.SSLContext,
+    error: str,
+) -> None:
+    """Trusting a certificate still enforces its validity period."""
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.helper.get_default_context",
+            return_value=trusted_context,
+        ),
+        pytest.raises(ValidationFailure, match=error),
+    ):
+        await get_cert_expiry_timestamp(hass, "localhost", tls_port)
+
+
 @pytest.mark.usefixtures("ignore_tls_client_abort")
 async def test_tls_hostname_mismatch(
     hass: HomeAssistant, tls_port: int, trusted_context: ssl.SSLContext
@@ -185,3 +221,55 @@ async def test_tls_hostname_mismatch(
         pytest.raises(ValidationFailure, match="IP address mismatch"),
     ):
         await get_cert_expiry_timestamp(hass, "127.0.0.1", tls_port)
+
+
+@pytest.mark.parametrize("certificate", ["private-ca"], indirect=True)
+async def test_private_ca_tls_sensor(
+    hass: HomeAssistant,
+    certificate: x509.Certificate,
+    ca_certificate: x509.Certificate,
+    tls_port: int,
+) -> None:
+    """Verify a real CA-issued certificate using only the entry's extra trust."""
+    shared_certificates = get_default_context().get_ca_certs(binary_form=True)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: tls_port,
+            CONF_VERIFY_SSL: True,
+            CONF_CA_CERTIFICATES: ca_certificate.public_bytes(
+                serialization.Encoding.PEM
+            ).decode("ascii"),
+        },
+        unique_id=f"localhost:{tls_port}",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"sensor.localhost_{tls_port}_cert_expiry")
+    assert state is not None
+    assert state.state == certificate.not_valid_after_utc.isoformat()
+    assert state.attributes["is_valid"] is True
+    assert state.attributes["error"] is None
+    assert get_default_context().get_ca_certs(binary_form=True) == shared_certificates
+
+
+@pytest.mark.parametrize("certificate", ["private-ca"], indirect=True)
+@pytest.mark.usefixtures("ignore_tls_client_abort")
+async def test_private_ca_hostname_mismatch(
+    hass: HomeAssistant, ca_certificate: x509.Certificate, tls_port: int
+) -> None:
+    """Additional CA trust does not weaken hostname validation."""
+    context = await async_get_ssl_context(
+        hass,
+        ca_certificates=ca_certificate.public_bytes(serialization.Encoding.PEM).decode(
+            "ascii"
+        ),
+    )
+    with pytest.raises(ValidationFailure, match="IP address mismatch"):
+        await get_cert_expiry_timestamp(
+            hass, "127.0.0.1", tls_port, ssl_context=context
+        )
