@@ -1086,7 +1086,8 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
-            --numprocesses 1 \
+            --numprocesses logical \
+            --dist=loadfile \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1234,7 +1235,8 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --numprocesses 1 \
+            --numprocesses logical \
+            --dist=loadfile \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
