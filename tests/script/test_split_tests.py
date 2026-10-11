@@ -636,7 +636,7 @@ def test_split_tests_keeps_siblings_together_when_snapshots_present(
     (snapshots / "test_one.ambr").write_text("")
 
     folder = _build_folder(tmp_path, {one: 60, two: 60})
-    holder = split_tests.BucketHolder(tests_per_bucket=50, bucket_count=3)
+    holder = split_tests.BucketHolder(weight_per_bucket=50, bucket_count=3)
     holder.split_tests(folder)
     # Both files must end up in one bucket; the other two stay empty.
     sizes = sorted(b.total_tests for b in holder._buckets)
@@ -653,7 +653,69 @@ def test_split_tests_splits_siblings_when_no_snapshots(tmp_path: Path) -> None:
     # No snapshots dir → free to split.
 
     folder = _build_folder(tmp_path, {one: 60, two: 60})
-    holder = split_tests.BucketHolder(tests_per_bucket=70, bucket_count=2)
+    holder = split_tests.BucketHolder(weight_per_bucket=70, bucket_count=2)
     holder.split_tests(folder)
     sizes = sorted(b.total_tests for b in holder._buckets)
     assert sizes == [60, 60]
+
+
+def test_split_tests_balances_by_duration(tmp_path: Path) -> None:
+    """Durations, not test counts, decide the buckets when given."""
+    paths = [tmp_path / name / "test_a.py" for name in ("slow", "fast", "mid")]
+    for path in paths:
+        path.parent.mkdir()
+        path.touch()
+    slow, fast, mid = paths
+    folder = _build_folder(tmp_path, {slow: 10, fast: 100, mid: 50})
+    assert split_tests.apply_durations(
+        folder, {slow.as_posix(): 90.0, fast.as_posix(): 10.0}
+    )
+    # mid has no timing: 50 tests at (90 + 10) / 110 seconds per test.
+    assert folder.children[mid.parent].total_weight == pytest.approx(500 / 11)
+
+    holder = split_tests.BucketHolder(
+        weight_per_bucket=folder.total_weight / 2, bucket_count=2, timed=True
+    )
+    holder.split_tests(folder)
+    assert sorted(b.total_tests for b in holder._buckets) == [10, 150]
+
+
+def test_apply_durations_without_matches_keeps_counts(tmp_path: Path) -> None:
+    """Durations for unknown files leave the test counts as weights."""
+    one = tmp_path / "alpha" / "test_one.py"
+    one.parent.mkdir()
+    one.touch()
+    folder = _build_folder(tmp_path, {one: 7})
+    assert not split_tests.apply_durations(folder, {"tests/other.py": 3.0})
+    assert folder.total_weight == 7
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        pytest.param(
+            '{"tests/test_a.py": 1.5, "tests/test_b.py": 2}',
+            {"tests/test_a.py": 1.5, "tests/test_b.py": 2.0},
+            id="valid",
+        ),
+        pytest.param(
+            '{"tests/test_a.py": -1, "tests/test_b.py": "x", "tests/test_c.py": true}',
+            {},
+            id="bad_values",
+        ),
+        pytest.param("[1, 2]", {}, id="not_a_dict"),
+        pytest.param("{not json", {}, id="invalid_json"),
+    ],
+)
+def test_load_durations(
+    tmp_path: Path, content: str, expected: dict[str, float]
+) -> None:
+    """Only non-negative numbers are loaded; anything else is ignored."""
+    path = tmp_path / "durations.json"
+    path.write_text(content)
+    assert split_tests.load_durations(path) == expected
+
+
+def test_load_durations_missing_file(tmp_path: Path) -> None:
+    """A cold cache (no file) means no durations."""
+    assert split_tests.load_durations(tmp_path / "missing.json") == {}

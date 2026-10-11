@@ -828,6 +828,15 @@ jobs:
             steps.python.outputs.python-version }}-restore-sentinel
           restore-keys: |
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
+      - name: Restore pytest durations cache
+        # Saved by save-pytest-durations after a full run; without it
+        # split_tests.py balances the buckets by test count.
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: pytest_durations.json
+          key: pytest-durations-${{ runner.os }}-${{ runner.arch }}-restore-sentinel
+          restore-keys: |
+            pytest-durations-${{ runner.os }}-${{ runner.arch }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
@@ -835,6 +844,7 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests \
             --cache pytest_test_counts.json \
+            --durations pytest_durations.json \
             ${TEST_GROUP_COUNT} tests
       - name: Hash pytest test counts cache
         id: cache-pytest-counts-hash
@@ -991,6 +1001,71 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+
+  save-pytest-durations:
+    name: Save pytest durations for the full run split
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    needs:
+      - info
+      - pytest-full
+    # Only pushes and manual runs save, so pull requests read dev's timings
+    # instead of adding a cache entry per pull request. A failed bucket still
+    # has a JUnit report; files without one keep their previous duration.
+    if: |
+      !cancelled()
+      && needs.pytest-full.result != 'skipped'
+      && github.event_name != 'pull_request'
+      && needs.info.outputs.lint_only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
+      && needs.info.outputs.skip_coverage != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: ".python-version"
+      - name: Restore pytest durations cache
+        id: cache-pytest-durations
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: pytest_durations.json
+          key: pytest-durations-${{ runner.os }}-${{ runner.arch }}-restore-sentinel
+          restore-keys: |
+            pytest-durations-${{ runner.os }}-${{ runner.arch }}-
+      - name: Download test results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: test-results-full-*
+          path: test-results
+      - name: Merge test durations
+        run: |
+          shopt -s nullglob
+          python -m script.pytest_durations \
+            --base pytest_durations.json \
+            --output pytest_durations.json \
+            test-results/*/junit.xml
+      - name: Hash pytest durations
+        id: cache-pytest-durations-hash
+        run: |
+          echo "hash=$(sha256sum pytest_durations.json | cut -d' ' -f1)" \
+            >> "$GITHUB_OUTPUT"
+      - name: Save pytest durations cache
+        if: >-
+          !endsWith(
+            steps.cache-pytest-durations.outputs.cache-matched-key,
+            steps.cache-pytest-durations-hash.outputs.hash
+          )
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: pytest_durations.json
+          key: >-
+            pytest-durations-${{ runner.os }}-${{ runner.arch }}-${{
+            steps.cache-pytest-durations-hash.outputs.hash }}
 
   pytest-mariadb:
     name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}

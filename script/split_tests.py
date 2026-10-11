@@ -37,12 +37,14 @@ class Bucket:
     def __init__(self) -> None:
         """Initialize bucket."""
         self.total_tests = 0
+        self.total_weight = 0.0
         self._paths: list[str] = []
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         part.add_to_bucket()
         self.total_tests += part.total_tests
+        self.total_weight += part.total_weight
         self._paths.append(str(part.path))
 
     def get_paths_line(self) -> str:
@@ -53,27 +55,34 @@ class Bucket:
 class BucketHolder:
     """Class to hold buckets."""
 
-    def __init__(self, tests_per_bucket: int, bucket_count: int) -> None:
-        """Initialize bucket holder."""
-        self._tests_per_bucket = tests_per_bucket
+    def __init__(
+        self, weight_per_bucket: float, bucket_count: int, *, timed: bool = False
+    ) -> None:
+        """Initialize bucket holder.
+
+        Weights are test counts, or estimated seconds when ``timed``.
+        """
+        self._weight_per_bucket = weight_per_bucket
         self._bucket_count = bucket_count
+        self._timed = timed
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
     def split_tests(self, test_folder: TestFolder) -> None:
         """Place atomic units via best-fit; oversized ones go to the smallest bucket."""
         digits = len(str(test_folder.total_tests))
-        by_load = attrgetter("total_tests")
+        by_load = attrgetter("total_weight")
         units = sorted(self._atomic_units(test_folder), key=itemgetter(0), reverse=True)
         for size, items in units:
             fits = [
                 b
                 for b in self._buckets
-                if b.total_tests + size <= self._tests_per_bucket
+                if b.total_weight + size <= self._weight_per_bucket
             ]
             bucket = max(fits, key=by_load) if fits else min(self._buckets, key=by_load)
             for item in items:
                 tag = " (same bucket)" if item is not items[0] else ""
-                print(f"{item.total_tests:>{digits}} tests in {item.path}{tag}")
+                timing = f" (~{item.total_weight:.0f}s)" if self._timed else ""
+                print(f"{item.total_tests:>{digits}} tests{timing} in {item.path}{tag}")
                 bucket.add(item)
 
         if not test_folder.added_to_bucket:
@@ -81,27 +90,27 @@ class BucketHolder:
 
     def _atomic_units(
         self, folder: TestFolder
-    ) -> Iterator[tuple[int, list[TestFolder | TestFile]]]:
+    ) -> Iterator[tuple[float, list[TestFolder | TestFile]]]:
         """Yield ``(size, items)`` placement units.
 
         A folder that fits is one unit; otherwise same-dir files form
         a unit only when the folder has syrupy snapshots, else each
         file stands alone.  Sub-folders recurse independently.
         """
-        if folder.total_tests <= self._tests_per_bucket:
-            yield folder.total_tests, [folder]
+        if folder.total_weight <= self._weight_per_bucket:
+            yield folder.total_weight, [folder]
             return
 
         sibling_files = [c for c in folder.children.values() if isinstance(c, TestFile)]
         if sibling_files:
             if _has_snapshots(folder.path):
                 yield (
-                    sum(f.total_tests for f in sibling_files),
+                    sum(f.total_weight for f in sibling_files),
                     list(sibling_files),
                 )
             else:
                 for file in sibling_files:
-                    yield file.total_tests, [file]
+                    yield file.total_weight, [file]
         for child in folder.children.values():
             if isinstance(child, TestFolder):
                 yield from self._atomic_units(child)
@@ -110,7 +119,8 @@ class BucketHolder:
         """Create output file."""
         with Path("pytest_buckets.txt").open("w", encoding="utf-8") as file:
             for idx, bucket in enumerate(self._buckets):
-                print(f"Bucket {idx + 1} has {bucket.total_tests} tests")
+                timing = f" (~{bucket.total_weight:.0f}s)" if self._timed else ""
+                print(f"Bucket {idx + 1} has {bucket.total_tests} tests{timing}")
                 file.write(bucket.get_paths_line())
 
 
@@ -120,8 +130,15 @@ class TestFile:
 
     total_tests: int
     path: Path
+    # Estimated seconds; ``None`` weighs the file by its test count.
+    duration: float | None = None
     added_to_bucket: bool = field(default=False, init=False)
     parent: TestFolder | None = field(default=None, init=False)
+
+    @property
+    def total_weight(self) -> float:
+        """Return the weight used to balance buckets."""
+        return self.total_tests if self.duration is None else self.duration
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
@@ -146,6 +163,11 @@ class TestFolder:
     def total_tests(self) -> int:
         """Return total tests."""
         return sum([test.total_tests for test in self.children.values()])
+
+    @property
+    def total_weight(self) -> float:
+        """Return total weight."""
+        return sum(child.total_weight for child in self.children.values())
 
     @property
     def added_to_bucket(self) -> bool:
@@ -527,6 +549,45 @@ def _build_folder(root: Path, counts: dict[Path, int]) -> TestFolder:
     return folder
 
 
+def load_durations(path: Path) -> dict[str, float]:
+    """Load ``{test file: seconds}``; a missing or malformed file returns ``{}``."""
+    try:
+        raw = json.loads(path.read_bytes())
+    except OSError, ValueError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    return {
+        key: float(value)
+        for key, value in raw.items()
+        if isinstance(key, str)
+        and isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and value >= 0
+    }
+
+
+def apply_durations(folder: TestFolder, durations: dict[str, float]) -> bool:
+    """Weigh files by measured seconds; return False when none were measured.
+
+    Files without a measurement (new or renamed) get their test count times
+    the average seconds per test of the measured files.
+    """
+    files = [f for f in folder.get_all_flatten() if isinstance(f, TestFile)]
+    timed = [f for f in files if f.path.as_posix() in durations]
+    timed_tests = sum(f.total_tests for f in timed)
+    if not timed_tests:
+        return False
+    per_test = sum(durations[f.path.as_posix()] for f in timed) / timed_tests
+    for file in files:
+        file.duration = durations.get(file.path.as_posix(), file.total_tests * per_test)
+    print(
+        f"Durations: {len(timed)} of {len(files)} files measured,"
+        f" {per_test:.3f}s per test for the rest"
+    )
+    return True
+
+
 def _exit_if_empty(paths: list[Path], root: Path) -> None:
     """Exit with a clear message when no eligible test paths were found."""
     if not paths:
@@ -611,19 +672,39 @@ def main() -> None:
         type=Path,
         default=None,
     )
+    parser.add_argument(
+        "--durations",
+        help=(
+            "Path to a JSON file mapping test files to seconds; when present,"
+            " buckets are balanced by duration instead of test count"
+        ),
+        type=Path,
+        default=None,
+    )
 
     arguments = parser.parse_args()
 
     print("Collecting tests...")
     tests = collect_tests(arguments.path, arguments.cache)
-    tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
+    timed = arguments.durations is not None and apply_durations(
+        tests, load_durations(arguments.durations)
+    )
+    if arguments.durations is not None and not timed:
+        print("No usable durations, splitting by test count")
+    if timed:
+        weight_per_bucket: float = tests.total_weight / arguments.bucket_count
+    else:
+        weight_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
 
-    bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
+    bucket_holder = BucketHolder(weight_per_bucket, arguments.bucket_count, timed=timed)
     print("Splitting tests...")
     bucket_holder.split_tests(tests)
 
     print(f"Total tests: {tests.total_tests}")
-    print(f"Estimated tests per bucket: {tests_per_bucket}")
+    if timed:
+        print(f"Estimated seconds per bucket: {weight_per_bucket:.0f}")
+    else:
+        print(f"Estimated tests per bucket: {weight_per_bucket}")
 
     bucket_holder.create_output_file()
 
