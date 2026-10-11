@@ -11,6 +11,7 @@ from haphilipsjs import (
     PairingFailure,
     PhilipsTV,
 )
+from haphilipsjs.typing import MenuItemsSettingsCurrentValueValue, MenuItemsSettingsNode
 import probatio
 
 from homeassistant.config_entries import (
@@ -18,6 +19,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -29,14 +31,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
-)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import LOGGER
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_MENU_NODES,
+    CONF_SYSTEM,
+    CONST_APP_ID,
+    CONST_APP_NAME,
+    DOMAIN,
+    MENU_NODE_TYPES,
+)
+from .coordinator import (
+    EntitySetupData,
+    PhilipsTVConfigEntry,
+    PhilipsTVDataUpdateCoordinator,
+)
+from .helpers import SettingsNotAvailable, get_node_paths, get_path_names
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -49,15 +61,6 @@ USER_SCHEMA = probatio.Schema(
         ): probatio.In(["1", "5", "6"]),
     }
 )
-
-OPTIONS_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
-    }
-)
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
-}
 
 
 class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -243,6 +246,102 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+        return OptionsFlowHandler()
+
+
+async def get_usable_nodes(
+    api: PhilipsTV,
+    paths: list[tuple[MenuItemsSettingsNode, ...]],
+) -> list[tuple[MenuItemsSettingsNode, ...]]:
+    """Filter out parent nodes that do not have an active node in their value."""
+    parent_node_ids = [
+        node["node_id"]
+        for node, *_ in paths
+        if node["type"] == "PARENT_NODE" and "nodes" in node.get("data", {})
+    ]
+
+    parent_node_current: dict[int, MenuItemsSettingsCurrentValueValue | None] = {}
+    if data := await api.getMenuItemsSettingsCurrentValue(parent_node_ids):
+        parent_node_current.update(data)
+
+    def _accepted(node: MenuItemsSettingsNode) -> bool:
+        if node["type"] not in MENU_NODE_TYPES:
+            return False
+        if node["type"] == "PARENT_NODE":
+            current = parent_node_current.get(node["node_id"])
+            return bool(current and current.get("data", {}).get("activenode_id"))
+        return True
+
+    return [path for path in paths if _accepted(path[0])]
+
+
+async def _get_node_descriptions(api: PhilipsTV) -> dict[str, EntitySetupData]:
+    """Fetch the node descriptions that can be exposed as entities."""
+    paths = await get_usable_nodes(api, list(get_node_paths(api)))
+    names = await get_path_names(api, paths)
+
+    return {
+        str(node["node_id"]): EntitySetupData(node=node, name=name)
+        for (node, *_), name in zip(paths, names, strict=True)
+    }
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle the options flow."""
+
+    config_entry: PhilipsTVConfigEntry
+
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        self.menu_nodes: dict[str, EntitySetupData] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options flow."""
+        coordinator: PhilipsTVDataUpdateCoordinator = self.config_entry.runtime_data
+
+        if user_input is not None:
+            selected = [self.menu_nodes[key] for key in user_input[CONF_MENU_NODES]]
+            return self.async_create_entry(
+                data={
+                    CONF_ALLOW_NOTIFY: user_input[CONF_ALLOW_NOTIFY],
+                    CONF_MENU_NODES: selected,
+                }
+            )
+
+        try:
+            self.menu_nodes = await _get_node_descriptions(coordinator.api)
+        except SettingsNotAvailable, ConnectionFailure:
+            return self.async_abort(reason="cannot_connect")
+
+        options = self.config_entry.options
+        selected_default = [
+            str(description["node"]["node_id"])
+            for description in options.get(CONF_MENU_NODES, [])
+            if str(description["node"]["node_id"]) in self.menu_nodes
+        ]
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_ALLOW_NOTIFY,
+                    default=options.get(CONF_ALLOW_NOTIFY, False),
+                ): selector.BooleanSelector(),
+                probatio.Required(
+                    CONF_MENU_NODES, default=selected_default
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=node_id, label=data["name"])
+                            for node_id, data in self.menu_nodes.items()
+                        ],
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

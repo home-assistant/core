@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TypedDict, override
 
 from haphilipsjs import (
     AutenticationFailure,
@@ -11,7 +11,11 @@ from haphilipsjs import (
     GeneralFailure,
     PhilipsTV,
 )
-from haphilipsjs.typing import MenuItemsSettingsCurrentValueValue, SystemType
+from haphilipsjs.typing import (
+    MenuItemsSettingsCurrentValueValue,
+    MenuItemsSettingsNode,
+    SystemType,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -20,9 +24,18 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN, TV_STATE_ON
+from .const import CONF_ALLOW_NOTIFY, CONF_MENU_NODES, CONF_SYSTEM, DOMAIN, TV_STATE_ON
+from .helpers import get_node_strings
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class EntitySetupData(TypedDict):
+    """Description of a menu node selected to be exposed as an entity."""
+
+    node: MenuItemsSettingsNode
+    name: str
+
 
 type PhilipsTVConfigEntry = ConfigEntry[PhilipsTVDataUpdateCoordinator]
 
@@ -40,9 +53,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Set up the coordinator."""
         self.api = api
-        self.menu_node_ids: set[int] = set()
-        self.menu_values: dict[int, MenuItemsSettingsCurrentValueValue | None] = {}
         self._notify_future: asyncio.Task | None = None
+        self.settings: dict[int, MenuItemsSettingsCurrentValueValue | None] = {}
+        self.settings_nodes: list[EntitySetupData] = config_entry.options.get(
+            CONF_MENU_NODES, []
+        )
 
         super().__init__(
             hass,
@@ -101,6 +116,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
     async def _notify_task(self):
+        settings_version = self.api.settings_version
         while self._notify_wanted:
             try:
                 res = await self.api.notifyChange(130)
@@ -108,6 +124,9 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 res = None
 
             if res:
+                if settings_version != self.api.settings_version:
+                    settings_version = self.api.settings_version
+                    await self._async_update_settings()
                 self.async_set_updated_data(None)
             elif res is None:
                 _LOGGER.debug("Aborting notify due to unexpected return")
@@ -134,29 +153,37 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
-    async def async_update_menu_values(self) -> None:
-        """Fetch the current values of the registered menu settings."""
-        if (
-            not self.api.on
-            or self.api.powerstate not in (TV_STATE_ON, None)
-            or not self.menu_node_ids
-        ):
+    async def _async_update_settings(self) -> None:
+        """Fetch the values of the selected menu nodes."""
+        if not (node_ids := self.get_selected_node_ids()):
+            return
+        if self.api.powerstate not in (TV_STATE_ON, None):
             return
         try:
-            self.menu_values = await self.api.getMenuItemsSettingsCurrentValue(
-                sorted(self.menu_node_ids)
+            self.settings = await self.api.getMenuItemsSettingsCurrentValue(node_ids)
+            await self.api.getStringsCached(
+                string_id
+                for description in self.settings_nodes
+                for string_id in get_node_strings(description["node"])
             )
-        except KeyError:
-            # The TV answered without values, for instance while switching state
-            _LOGGER.debug("The TV did not return any menu setting values")
-            self.menu_values = {}
+        except ConnectionFailure, GeneralFailure, KeyError:
+            _LOGGER.debug("Unable to fetch the menu settings of the TV")
+            self.settings = {}
+
+    def get_string(self, string_id: str) -> str:
+        """Return a cached translation."""
+        return self.api.strings.get(string_id, string_id)
+
+    def get_selected_node_ids(self) -> list[int]:
+        """Return the ids of the selected menu nodes."""
+        return [description["node"]["node_id"] for description in self.settings_nodes]
 
     @override
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:
-            await self.api.update()
-            await self.async_update_menu_values()
+            if await self.api.update():
+                await self._async_update_settings()
             self._async_notify_schedule()
         except ConnectionFailure:
             pass
