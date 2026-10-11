@@ -32,11 +32,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "now_playing": {
-        "name": "Now playing"
-      }
-    },
     "sensor": {
       "currently_playing_track": { "name": "Currently playing track" },
       "minutes_listened": { "name": "Minutes listened" },

@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiokoito import (
     KoitoAuthenticationError,
@@ -22,7 +22,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.parametrize("platform", [Platform.SENSOR, Platform.BINARY_SENSOR])
+@pytest.mark.parametrize("platform", [Platform.SENSOR])
 async def test_entities(
     hass: HomeAssistant,
     mock_client: AsyncMock,
@@ -33,9 +33,13 @@ async def test_entities(
 ) -> None:
     """Snapshot every entity's state and registry metadata."""
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.koito.PLATFORMS", [platform]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 9
+    assert {entity.domain for entity in entities} == {platform.value}
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -147,7 +151,6 @@ async def test_optional_playback_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.koito_plays").state == "42"
-    assert hass.states.get("binary_sensor.koito_now_playing").state == "unavailable"
     track = hass.states.get("sensor.koito_currently_playing_track")
     assert track.state == "unknown"
     assert "title" not in track.attributes
@@ -169,12 +172,10 @@ async def test_sparse_playback(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    playback = hass.states.get("binary_sensor.koito_now_playing")
-    assert playback.state == ("on" if active else "off")
-    assert playback.attributes.get("album_id") == (9 if active else None)
-    assert "title" not in playback.attributes
-    assert "image_url" not in playback.attributes
-    assert hass.states.get("sensor.koito_currently_playing_track").state == "unknown"
+    track = hass.states.get("sensor.koito_currently_playing_track")
+    assert track.state == "unknown"
+    assert "title" not in track.attributes
+    assert "image_url" not in track.attributes
 
 
 async def test_empty_rankings(
