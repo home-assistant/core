@@ -54,6 +54,11 @@ class ISYEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
+        self._async_subscribe_to_events()
+
+    @callback
+    def _async_subscribe_to_events(self) -> None:
+        """Subscribe to the node change events."""
         self._change_handler = self._node.status_events.subscribe(self.async_on_update)
         self.async_on_remove(self._change_handler.unsubscribe)
 
@@ -248,6 +253,11 @@ class ISYAuxControlEntity(Entity):
 
     @override
     async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events."""
+        self._async_subscribe_to_events()
+
+    @callback
+    def _async_subscribe_to_events(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.control_events.subscribe(
             self.async_on_update,
