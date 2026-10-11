@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import (
@@ -27,6 +28,7 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_CURRENT_SECURITY_STATE,
     CHAR_TARGET_SECURITY_STATE,
+    PROP_VALID_VALUES,
     SERV_SECURITY_SYSTEM,
 )
 
@@ -97,8 +99,8 @@ class SecuritySystem(HomeAccessory):
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         current_char = serv_alarm.get_characteristic(CHAR_CURRENT_SECURITY_STATE)
         target_char = serv_alarm.get_characteristic(CHAR_TARGET_SECURITY_STATE)
-        default_current_states = current_char.properties.get("ValidValues")
-        default_target_services = target_char.properties.get("ValidValues")
+        default_current_states = current_char.properties.get(PROP_VALID_VALUES)
+        default_target_services = target_char.properties.get(PROP_VALID_VALUES)
 
         current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
         target_supported_services = [HK_ALARM_DISARMED]
@@ -151,6 +153,23 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
+    def _set_if_valid(self, char: Characteristic, value: int) -> bool:
+        """Push value to char, or skip (returning False) if not advertised.
+
+        The characteristic's valid values are frozen at build time; pushing a
+        value outside that set would raise ValueError in pyhap.
+        """
+        if value in char.properties[PROP_VALID_VALUES].values():
+            char.set_value(value)
+            return True
+        _LOGGER.warning(
+            "%s: Skipping unsupported %s value %d",
+            self.entity_id,
+            char.display_name,
+            value,
+        )
+        return False
+
     @callback
     @override
     def async_update_state(self, new_state: State) -> None:
@@ -159,21 +178,17 @@ class SecuritySystem(HomeAccessory):
         if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
             # Bail out early for no state, unknown or unavailable
             return
-        if hass_state is not None:
-            hass_state = AlarmControlPanelState(hass_state)
-        if (
-            hass_state
-            and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None
+        hass_state = AlarmControlPanelState(hass_state)
+        current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
+        target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
+        if current_state is not None and self._set_if_valid(
+            self.char_current_state, current_state
         ):
-            self.char_current_state.set_value(current_state)
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
                 self.entity_id,
                 hass_state,
                 current_state,
             )
-        if (
-            hass_state
-            and (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None
-        ):
-            self.char_target_state.set_value(target_state)
+        if target_state is not None:
+            self._set_if_valid(self.char_target_state, target_state)

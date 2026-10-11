@@ -8,6 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
@@ -16,7 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 
 from tests.common import async_mock_service
 
@@ -342,3 +343,61 @@ async def test_handle_non_alarm_states(
 
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 3
+
+
+@pytest.mark.parametrize(
+    ("build_features", "value_is_valid", "expected_current", "expected_target"),
+    [
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_AWAY, False, 3, 3, id="outside_valid"
+        ),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME, True, 0, 0, id="inside_valid"
+        ),
+    ],
+)
+async def test_set_if_valid_guards_frozen_valid_values(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hk_driver: HomeDriver,
+    build_features: AlarmControlPanelEntityFeature,
+    value_is_valid: bool,
+    expected_current: int,
+    expected_target: int,
+) -> None:
+    """Test armed_home is pushed only when it is in the frozen valid values.
+
+    armed_home maps to StayArm (0) for both the current and target
+    characteristics, so a build without ARM_HOME must skip both.
+    """
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": build_features},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert (0 in acc.char_current_state.properties["ValidValues"].values()) is (
+        value_is_valid
+    )
+
+    # Call the update path directly: the state-change dispatcher swallows
+    # callback exceptions, so a regressed set_value would raise unnoticed there.
+    # The live state advertises ARM_HOME, as after a reload-skipping feature change.
+    acc.async_update_state(
+        State(
+            entity_id,
+            AlarmControlPanelState.ARMED_HOME,
+            attributes={"supported_features": AlarmControlPanelEntityFeature.ARM_HOME},
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_current_state.value == expected_current
+    assert acc.char_target_state.value == expected_target
+    assert ("Skipping unsupported" in caplog.text) is not value_is_valid
