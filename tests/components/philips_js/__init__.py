@@ -312,6 +312,20 @@ MOCK_MENU_SOUND_STYLES = [
     }
     for node_id in (8, 9)
 ]
+# Nodes sharing both name and first enum, told apart by their node id
+MOCK_MENU_INPUTS = [
+    {
+        "node_id": node_id,
+        "type": "LIST_NODE",
+        "string_id": "org.droidtv.ui.strings.R.string.MAIN_INPUT",
+        "data": {
+            "enums": [
+                {"enum_id": 0, "string_id": "org.droidtv.ui.strings.R.string.MAIN_HDMI"}
+            ]
+        },
+    }
+    for node_id in (17, 18)
+]
 # Node without string id or name in its current value
 MOCK_MENU_UNNAMED = {
     "node_id": 10,
@@ -331,6 +345,7 @@ MOCK_MENU_ROOT = {
             MOCK_MENU_STYLE,
             *MOCK_MENU_TIME_ZONES,
             *MOCK_MENU_SOUND_STYLES,
+            *MOCK_MENU_INPUTS,
             MOCK_MENU_UNNAMED,
         ]
     },
@@ -398,6 +413,8 @@ MOCK_MENU_STRINGS = {
     "org.droidtv.ui.strings.R.string.MAIN_VICTORIA": "Victoria",
     "org.droidtv.ui.strings.R.string.MAIN_AZORES": "Azores",
     "org.droidtv.ui.strings.R.string.MAIN_SOUND_STYLE": "Sound style",
+    "org.droidtv.ui.strings.R.string.MAIN_INPUT": "Input",
+    "org.droidtv.ui.strings.R.string.MAIN_HDMI": "HDMI",
 }
 # The menu data cached from MOCK_MENU_ROOT, untranslated strings map to themselves
 MOCK_MENU_DATA = {

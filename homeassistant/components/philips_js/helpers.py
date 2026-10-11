@@ -34,7 +34,7 @@ def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
 def get_node_paths_from_node(
     root: MenuItemsSettingsNode,
 ) -> Generator[tuple[MenuItemsSettingsNode, ...]]:
-    """Yield a list with a the full path to all nodes."""
+    """Yield each node with its parents up to the root, starting with the node."""
     stack: deque[tuple[MenuItemsSettingsNode, ...]] = deque([(root,)])
     while stack:
         node, *path = stack.pop()
@@ -152,9 +152,18 @@ def get_menu_nodes(menu: MenuData) -> dict[int, EntitySetupData]:
     }
 
     name_count = Counter(data["name"] for data in menu_nodes.values())
-    for data in menu_nodes.values():
-        if name_count[data["name"]] > 1:
-            data["name"] = f"{data['name']} ({_get_distinct_suffix(data['node'])})"
+    suffixed_names = {
+        node_id: f"{data['name']} ({_get_distinct_suffix(data['node'])})"
+        for node_id, data in menu_nodes.items()
+        if name_count[data["name"]] > 1
+    }
+    # Nodes can also share their first enum, the node id is unique
+    suffixed_count = Counter(suffixed_names.values())
+    for node_id, name in suffixed_names.items():
+        data = menu_nodes[node_id]
+        if suffixed_count[name] > 1:
+            name = f"{data['name']} ({node_id})"
+        data["name"] = name
     return menu_nodes
 
 
