@@ -630,45 +630,40 @@ async def test_public_only_action_rejected(
 @pytest.mark.parametrize(
     ("side_effect", "translation_key"),
     [
-        (None, None),
         (GlobalAlarmManagerError("global"), "global_alarm_manager"),
         (NotAuthorized("forbidden"), "not_authorized"),
         (BadRequest("unknown trigger"), "service_error"),
     ],
 )
-async def test_trigger_alarm_webhook(
+async def test_trigger_alarm_webhook_error(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
     ufp: MockUFPFixture,
-    side_effect: Exception | None,
-    translation_key: str | None,
+    side_effect: Exception,
+    translation_key: str,
 ) -> None:
-    """Test trigger_alarm_webhook service and its error mapping."""
+    """Test trigger_alarm_webhook service maps Protect errors."""
 
     ufp.api.send_alarm_webhook_public = AsyncMock(side_effect=side_effect)
-    call = hass.services.async_call(
-        DOMAIN,
-        SERVICE_TRIGGER_ALARM_WEBHOOK,
-        {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
-        blocking=True,
-    )
 
-    if translation_key is None:
-        await call
-    else:
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await call
-        assert exc_info.value.translation_key == translation_key
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
     ufp.api.send_alarm_webhook_public.assert_called_once_with("test-trigger")
 
 
-async def test_trigger_alarm_webhook_public_only(
+async def test_trigger_alarm_webhook(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
-    """Test trigger_alarm_webhook works on an API-key-only entry."""
+    """Test trigger_alarm_webhook, which also works on an API-key-only entry."""
     await setup_public_only()
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
