@@ -151,6 +151,7 @@ class TelldusLiveClient:
         self._platforms_lock = asyncio.Lock()
         self.platforms: set[str] = set()
         self._cancel_update: CALLBACK_TYPE | None = None
+        self._stopped = False
 
         self._hass = hass
         self._config_entry = config_entry
@@ -222,13 +223,16 @@ class TelldusLiveClient:
             self._known_devices |= new_devices
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
         finally:
-            self._cancel_update = async_call_later(
-                self._hass, self._interval, self.update
-            )
+            # An update still in flight at unload must not schedule another.
+            if not self._stopped:
+                self._cancel_update = async_call_later(
+                    self._hass, self._interval, self.update
+                )
 
     @callback
     def async_cancel_update(self) -> None:
-        """Cancel the scheduled update."""
+        """Cancel the scheduled update and stop polling."""
+        self._stopped = True
         if self._cancel_update is not None:
             self._cancel_update()
             self._cancel_update = None
