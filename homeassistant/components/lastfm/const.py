@@ -11,6 +11,7 @@ PLATFORMS = [Platform.SENSOR]
 DEFAULT_NAME = "LastFM"
 
 CONF_API_SECRET = "api_secret"
+CONF_ENABLE_AUTHENTICATION = "enable_authentication"
 CONF_MAIN_USER = "main_user"
 CONF_SESSION_KEY = "session_key"
 CONF_USERS = "users"

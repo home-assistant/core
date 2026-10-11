@@ -11,13 +11,16 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lastfm.const import (
     ATTR_LAST_PLAYED,
     CONF_API_SECRET,
+    CONF_ENABLE_AUTHENTICATION,
     CONF_SESSION_KEY,
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
+from . import API_KEY, API_SECRET, SESSION_KEY, MockSessionKeyGenerator, MockUser
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -110,6 +113,56 @@ async def test_sensor_now_playing_with_hidden_listening_information(
     assert config_entry.runtime_data.last_update_success
 
     assert caplog.messages.count(warning) == 1
+
+
+async def test_reconfigure_unlocks_hidden_listening_information(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    hidden_user: MockUser,
+    default_user: MockUser,
+) -> None:
+    """Reload the existing sensor with authenticated access to private tracks."""
+    await setup_integration(config_entry, hidden_user)
+    entity_id = "sensor.lastfm_testaccount1"
+    assert hass.states.get(entity_id).attributes[ATTR_LAST_PLAYED] is None
+    original_entity = entity_registry.async_get(entity_id)
+
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",
+            return_value=MockSessionKeyGenerator(),
+        ),
+        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
+        patch(
+            "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+            wraps=LastFMNetwork,
+        ) as network,
+    ):
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: API_KEY,
+                CONF_API_SECRET: API_SECRET,
+                CONF_ENABLE_AUTHENTICATION: True,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    network.assert_called_once_with(
+        api_key=API_KEY, api_secret=API_SECRET, session_key=SESSION_KEY
+    )
+    assert hass.states.get(entity_id).attributes[ATTR_LAST_PLAYED] == "artist - title"
+    entity = entity_registry.async_get(entity_id)
+    assert entity.id == original_entity.id
+    assert entity.device_id == original_entity.device_id
+    assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
 
 
 @pytest.mark.parametrize(

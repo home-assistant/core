@@ -20,12 +20,13 @@ from pylast import (
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -38,6 +39,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_API_SECRET,
+    CONF_ENABLE_AUTHENTICATION,
     CONF_MAIN_USER,
     CONF_SESSION_KEY,
     CONF_USERS,
@@ -67,6 +69,16 @@ CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _credentials_changed(
+    options: Mapping[str, Any], original_options: Mapping[str, Any]
+) -> bool:
+    """Check whether the credentials used by a flow are still current."""
+    return any(
+        options.get(key) != original_options.get(key)
+        for key in (CONF_API_KEY, CONF_API_SECRET, CONF_SESSION_KEY, CONF_MAIN_USER)
+    )
 
 
 def get_lastfm_user(
@@ -169,6 +181,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     _session_key_error: bool = False
     _session_key_generator: SessionKeyGenerator
     _polling_task: asyncio.Task[None] | None = None
+    _original_options: Mapping[str, Any] | None = None
 
     @staticmethod
     @callback
@@ -220,6 +233,13 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_start_web_auth(self) -> str | None:
         """Start Last.fm web authentication and return an error key on failure."""
+        if (polling_task := self._polling_task) is not None:
+            self._cancel_polling_task()
+            with suppress(asyncio.CancelledError):
+                await polling_task
+        self._authorized_username = None
+        self._session_key_error = False
+        self.data.pop(CONF_SESSION_KEY, None)
         try:
             (
                 self._session_key_generator,
@@ -293,6 +313,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Start reauthentication for an invalid Last.fm session."""
         options = self._get_reauth_entry().options
+        self._original_options = options
         self.data = {
             CONF_API_KEY: options[CONF_API_KEY],
             CONF_API_SECRET: options[CONF_API_SECRET],
@@ -305,6 +326,107 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Retry starting Last.fm reauthentication."""
         return await self._async_start_reauth()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure credentials for an existing Last.fm entry."""
+        entry = self._get_reconfigure_entry()
+        if self._original_options is None:
+            if self._async_in_progress(
+                include_uninitialized=True, match_context={"entry_id": entry.entry_id}
+            ):
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
+            self._original_options = entry.options
+        if _credentials_changed(entry.options, self._original_options):
+            return self.async_abort(reason="configuration_changed")
+        options = entry.options
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.data = {
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_MAIN_USER: options[CONF_MAIN_USER] or user_input[CONF_MAIN_USER],
+            }
+            if user_input[CONF_ENABLE_AUTHENTICATION]:
+                api_secret = user_input.get(CONF_API_SECRET) or options.get(
+                    CONF_API_SECRET
+                )
+                if not api_secret or (
+                    self.data[CONF_API_KEY] != options[CONF_API_KEY]
+                    and not user_input.get(CONF_API_SECRET)
+                ):
+                    errors[CONF_API_SECRET] = "api_secret_required"
+                else:
+                    self.data[CONF_API_SECRET] = api_secret
+            if not errors:
+                _, errors = await self.hass.async_add_executor_job(
+                    partial(
+                        get_lastfm_user,
+                        self.data[CONF_API_KEY],
+                        self.data[CONF_MAIN_USER],
+                        check_recent_tracks=False,
+                    )
+                )
+                if _credentials_changed(entry.options, self._original_options):
+                    return self.async_abort(reason="configuration_changed")
+            if not errors:
+                if CONF_API_SECRET not in self.data:
+                    return await self.async_step_finish_reconfigure()
+                if (
+                    self.data[CONF_API_KEY] == options[CONF_API_KEY]
+                    and self.data[CONF_API_SECRET] == options.get(CONF_API_SECRET)
+                    and options.get(CONF_SESSION_KEY)
+                ):
+                    self.data[CONF_SESSION_KEY] = options[CONF_SESSION_KEY]
+                    return await self.async_step_finish_reconfigure()
+                if (error := await self._async_start_web_auth()) is None:
+                    return await self.async_step_auth_url()
+                errors["base"] = error
+        schema: dict[probatio.Marker, Any] = {
+            probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+            probatio.Required(CONF_ENABLE_AUTHENTICATION): bool,
+            probatio.Optional(probatio.Secret(CONF_API_SECRET)): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            ),
+        }
+        if not options[CONF_MAIN_USER]:
+            schema[probatio.Required(CONF_MAIN_USER)] = SelectSelector(
+                SelectSelectorConfig(options=options[CONF_USERS], custom_value=True)
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(schema),
+                user_input
+                or {
+                    CONF_API_KEY: options[CONF_API_KEY],
+                    CONF_ENABLE_AUTHENTICATION: bool(options.get(CONF_SESSION_KEY)),
+                },
+            ),
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+        )
+
+    async def async_step_finish_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Save validated credentials without replacing the entry or its users."""
+        entry = self._get_reconfigure_entry()
+        assert self._original_options is not None
+        if _credentials_changed(entry.options, self._original_options):
+            return self.async_abort(reason="configuration_changed")
+        options = {**entry.options, CONF_API_KEY: self.data[CONF_API_KEY]}
+        if CONF_SESSION_KEY in self.data:
+            options.update(self.data)
+        else:
+            options.pop(CONF_API_SECRET, None)
+            options.pop(CONF_SESSION_KEY, None)
+        return self.async_update_reload_and_abort(
+            entry, options=options, reload_even_if_entry_is_unchanged=False
+        )
 
     async def async_step_auth_url(
         self, user_input: dict[str, Any] | None = None
@@ -326,11 +448,13 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self._async_get_session_key()
         if CONF_SESSION_KEY in self.data:
             self._cancel_polling_task()
-            return self.async_external_step_done(
-                next_step_id=(
-                    "finish_reauth" if self.source == SOURCE_REAUTH else "friends"
-                )
-            )
+            if self.source == SOURCE_REAUTH:
+                next_step_id = "finish_reauth"
+            elif self.source == SOURCE_RECONFIGURE:
+                next_step_id = "finish_reconfigure"
+            else:
+                next_step_id = "friends"
+            return self.async_external_step_done(next_step_id=next_step_id)
         if self._authorized_username is not None and CONF_SESSION_KEY not in self.data:
             self._cancel_polling_task()
             return self.async_external_step_done(next_step_id="wrong_account")
@@ -344,6 +468,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Save the replacement Last.fm session key."""
         reauth_entry = self._get_reauth_entry()
+        assert self._original_options is not None
+        if _credentials_changed(reauth_entry.options, self._original_options):
+            return self.async_abort(reason="configuration_changed")
         return self.async_update_reload_and_abort(
             reauth_entry,
             options={
@@ -471,12 +598,14 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
                     session_key=options.get(CONF_SESSION_KEY, ""),
                 )
             )
+            if _credentials_changed(self.config_entry.options, options):
+                return self.async_abort(reason="configuration_changed")
             user_input[CONF_USERS] = users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        **options,
+                        **self.config_entry.options,
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
