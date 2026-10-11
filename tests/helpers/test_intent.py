@@ -811,6 +811,54 @@ async def test_run_then_background_validation_error(hass: HomeAssistant) -> None
         )
 
 
+async def test_failed_results_match_failed_entity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a failed service call is attributed to the entity that failed."""
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+
+    # The slow entity is matched first, but its service call finishes last.
+    slow_entry = entity_registry.async_get_or_create("light", "demo", "slow")
+    entity_registry.async_update_entity(slow_entry.entity_id, area_id=area_kitchen.id)
+    fast_entry = entity_registry.async_get_or_create("light", "demo", "fast")
+    entity_registry.async_update_entity(fast_entry.entity_id, area_id=area_kitchen.id)
+
+    hass.states.async_set(
+        slow_entry.entity_id, "off", {ATTR_FRIENDLY_NAME: "slow light"}
+    )
+    hass.states.async_set(
+        fast_entry.entity_id, "off", {ATTR_FRIENDLY_NAME: "fast light"}
+    )
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Fail immediately for one entity and succeed slowly for the other."""
+        if call.data["entity_id"] == fast_entry.entity_id:
+            raise HomeAssistantError("Boom")
+
+        await asyncio.sleep(0.05)
+
+    hass.services.async_register("light", "turn_on", mock_service)
+
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"area": {"value": "kitchen"}},
+    )
+
+    assert [target.id for target in response.failed_results] == [fast_entry.entity_id]
+    assert [
+        target.id
+        for target in response.success_results
+        if target.type is intent.IntentResponseTargetType.ENTITY
+    ] == [slow_entry.entity_id]
+
+
 async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
     """Test that we throw an appropriate errors with invalid area/floor names."""
     handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
