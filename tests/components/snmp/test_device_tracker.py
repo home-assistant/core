@@ -2,6 +2,7 @@
 
 import binascii
 from datetime import timedelta
+from itertools import cycle
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,7 +12,7 @@ import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.components.snmp.const import DOMAIN
+from homeassistant.components.snmp.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
     async_setup_scanner,
@@ -51,6 +52,20 @@ def _known_devices(*macs: str) -> dict[str, str]:
             {mac: {"name": mac, "mac": mac, "track": True} for mac in macs}
         )
     }
+
+
+async def _async_advance_poll(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Advance one poll so the tracker writes its state after the legacy tracker.
+
+    The legacy device tracker writes not_home once during setup for the devices it
+    loaded from known_devices.yaml and never saw, and that write can land after the
+    new entity wrote its state.
+    """
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -120,14 +135,15 @@ async def test_device_tracker_legacy_state_is_not_an_enable_signal(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
-    assert entity_id == LEGACY_ENTITY_ID
+    assert entity_id is not None
+    assert entity_id != LEGACY_ENTITY_ID
 
     ent_entry = entity_registry.async_get(entity_id)
     assert ent_entry is not None
     assert ent_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
-    # The stale state is removed so the new entity keeps its unsuffixed entity_id
-    assert hass.states.get(LEGACY_ENTITY_ID) is None
+    # The state belongs to the legacy tracker, so it is left alone
+    assert hass.states.get(LEGACY_ENTITY_ID) is not None
 
 
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
@@ -252,6 +268,7 @@ async def test_device_tracker_update(
     with patch_yaml_files(_known_devices(mac1_str)):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
 
     entity_id_1 = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
@@ -507,45 +524,32 @@ async def test_device_tracker_properties_empty_coordinator(
 
 
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
-async def test_device_tracker_state_cleanup(
+async def test_device_tracker_entity_id_changed_repair(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_coordinator_entry: MockConfigEntry,
 ) -> None:
-    """Test that existing states are cleaned up during setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
-    entry.add_to_hass(hass)
+    """Test that a migrated entity which lost its entity id is reported."""
+    # Another entity already claimed the entity id the migration keeps
+    hass.states.async_set(LEGACY_ENTITY_ID, STATE_HOME)
 
-    mac = "00:11:22:33:44:55"
-    reg_entry = entity_registry.async_get_or_create(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, mac, config_entry=entry
-    )
-
-    # Set a state that should be cleaned up
-    hass.states.async_set(reg_entry.entity_id, STATE_HOME)
-
-    original_remove = hass.states.async_remove
-
-    def mock_remove_side_effect(self, entity_id, context=None):
-        return original_remove(entity_id, context=context)
-
-    with (
-        patch(
-            "homeassistant.core.StateMachine.async_remove",
-            side_effect=mock_remove_side_effect,
-            autospec=True,
-        ) as mock_remove,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    with patch_yaml_files(_known_devices(MAC)):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_remove.assert_called_with(hass.states, reg_entry.entity_id)
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC)
+    assert entity_id is not None
+    assert entity_id != LEGACY_ENTITY_ID
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"entity_id_changed_{MAC}")
+    assert issue is not None
+    assert issue.translation_key == "entity_id_changed"
+    assert issue.translation_placeholders == {
+        "mac": MAC,
+        "entity_id": LEGACY_ENTITY_ID,
+        "new_entity_id": entity_id,
+    }
 
 
 @pytest.mark.usefixtures("mock_get_cmd")
@@ -627,6 +631,7 @@ async def test_mac_normalization(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     input_bytes: bytes,
     expected_mac: str,
 ) -> None:
@@ -655,6 +660,7 @@ async def test_mac_normalization(
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, expected_mac
@@ -797,17 +803,12 @@ async def test_walk_errindication(
     async def mock_walk_error(*args, **kwargs):
         yield errindication, None, None, []
 
-    call_count = 0
+    fail = False
 
     async def mock_walk_side_effect(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            async for item in mock_walk_first(*args, **kwargs):
-                yield item
-        else:
-            async for item in mock_walk_error(*args, **kwargs):
-                yield item
+        walk = mock_walk_error if fail else mock_walk_first
+        async for item in walk(*args, **kwargs):
+            yield item
 
     with (
         patch_yaml_files(_known_devices(MAC)),
@@ -827,6 +828,7 @@ async def test_walk_errindication(
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
 
         # First poll succeeded - entity should be home
 
@@ -839,6 +841,7 @@ async def test_walk_errindication(
         assert state.state == STATE_HOME
 
         # Trigger second poll with errindication
+        fail = True
         freezer.tick(timedelta(seconds=20))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -929,6 +932,7 @@ async def test_walk_end_of_mib(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that walk stops when end of MIB is reached."""
     mac1_bytes = binascii.unhexlify("001122334455")
@@ -959,11 +963,12 @@ async def test_walk_end_of_mib(
         ),
         patch(
             "homeassistant.components.snmp.coordinator.is_end_of_mib",
-            side_effect=[False, True],
+            side_effect=cycle((False, True)),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
 
     # First MAC should have been processed (is_end_of_mib returned False)
     entity_id_1 = entity_registry.async_get_entity_id(

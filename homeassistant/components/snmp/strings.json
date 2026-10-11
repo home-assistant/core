@@ -49,6 +49,10 @@
     "deprecated_yaml_import_issue_credentials_required": {
       "description": "Configuring the {integration_title} integration through YAML is deprecated. Your configuration uses SNMPv3 credentials, which cannot be imported automatically.\n\nSet up the integration through the UI with your SNMPv3 credentials, then remove configuration from your `configuration.yaml` file and restart Home Assistant.",
       "title": "The {integration_title} YAML configuration cannot be imported"
+    },
+    "entity_id_changed": {
+      "description": "The SNMP device tracker for `{mac}` could not keep its entity id `{entity_id}` because it is already in use, so it is now `{new_entity_id}`.\n\nUpdate the automations and scripts that refer to `{entity_id}`.",
+      "title": "SNMP device tracker entity id changed"
     }
   }
 }

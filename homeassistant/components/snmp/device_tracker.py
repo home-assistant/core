@@ -1,7 +1,6 @@
 """Support for fetching WiFi associations through SNMP."""
 
 import binascii
-import logging
 from typing import override
 
 import probatio
@@ -40,8 +39,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import SnmpUpdateCoordinator, normalize_mac
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -154,16 +151,6 @@ async def async_setup_entry(
     registry_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     initial_macs = {e.unique_id for e in registry_entries if e.unique_id}
 
-    # Remove legacy or restored states so their entity_ids are available for
-    # the new entities we're about to create.
-    for reg_entry in registry_entries:
-        if hass.states.get(reg_entry.entity_id):
-            _LOGGER.debug(
-                "Removing existing state %s to avoid conflicts during setup",
-                reg_entry.entity_id,
-            )
-            hass.states.async_remove(reg_entry.entity_id)
-
     # Only the devices the legacy YAML configuration was tracking are enabled, so an
     # upgrade does not disable the presence automations of the user. Anything else,
     # including a device seen for the first time after the migration, keeps the
@@ -190,13 +177,6 @@ async def async_setup_entry(
         for mac in coordinator.data:
             # Discovery of a brand new device.
             if mac not in tracked_macs:
-                # The legacy tracker keeps writing the state of the trackers it
-                # loaded from known_devices.yaml, which would take the entity_id of
-                # the entity we are about to add.
-                legacy_id = f"{DEVICE_TRACKER_DOMAIN}.{mac.replace(':', '_').lower()}"
-                if not ent_reg.async_get(legacy_id) and hass.states.get(legacy_id):
-                    hass.states.async_remove(legacy_id)
-
                 tracked_macs.add(mac)
                 new_entities.append(
                     SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
@@ -225,6 +205,43 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         self._attr_name = mac.replace(":", "_")
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
         self._was_tracked = was_tracked
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle the entity being added to hass."""
+        await super().async_added_to_hass()
+
+        if not self._was_tracked:
+            return
+
+        # The migration keeps the entity id of the legacy tracker, so the user has
+        # to be told when another entity claimed it in the meantime.
+        mac = self._attr_mac_address
+        entity_id = self.entity_id
+        assert mac is not None
+        assert entity_id is not None
+
+        legacy_entity_id = f"{DEVICE_TRACKER_DOMAIN}.{mac.replace(':', '_')}"
+        issue_id = f"entity_id_changed_{mac}"
+
+        if entity_id == legacy_entity_id:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="entity_id_changed",
+            translation_placeholders={
+                "mac": mac,
+                "entity_id": legacy_entity_id,
+                "new_entity_id": entity_id,
+            },
+        )
 
     @property
     @override
