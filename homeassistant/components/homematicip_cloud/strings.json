@@ -91,6 +91,9 @@
       "heating": {
         "name": "Heating"
       },
+      "height": {
+        "name": "Height"
+      },
       "smoke_detector_alarm_counter": {
         "name": "Alarm counter"
       },
