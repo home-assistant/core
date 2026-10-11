@@ -1,7 +1,8 @@
 """Provide functionality to STT."""
 
 from abc import abstractmethod
-from collections.abc import AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable
+from contextlib import aclosing
 from dataclasses import asdict
 import logging
 from typing import Any, final, override
@@ -46,6 +47,7 @@ from .legacy import (
 )
 from .models import (
     DEFAULT_AUDIO_PROCESSING,
+    PartialSpeechResult,
     SpeechAudioProcessing,
     SpeechMetadata,
     SpeechResult,
@@ -58,6 +60,7 @@ __all__ = [
     "AudioCodecs",
     "AudioFormats",
     "AudioSampleRates",
+    "PartialSpeechResult",
     "Provider",
     "SpeechMetadata",
     "SpeechResult",
@@ -227,22 +230,46 @@ class SpeechToTextEntity(RestoreEntity):
     async def internal_async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
-        """Process an audio stream to STT service.
-
-        Only streaming content is allowed!
-        """
+        """Process an audio stream to STT service."""
         self.__last_processed = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
         return await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
-    @abstractmethod
+    @final
+    async def internal_async_process_audio_stream_with_progress(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream to STT service, yielding partial results."""
+        self.__last_processed = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        # aclosing so a consumer that stops early still closes the entity's generator.
+        async with aclosing(
+            self.async_process_audio_stream_with_progress(
+                metadata=metadata, stream=stream
+            )
+        ) as results:
+            async for result in results:
+                yield result
+
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
-        """Process an audio stream to STT service.
+        """Process an audio stream to STT service."""
+        raise NotImplementedError
 
-        Only streaming content is allowed!
+    async def async_process_audio_stream_with_progress(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream with an STT service, yielding partial results.
+
+        Yield zero or more partial results followed by exactly one final
+        speech result. Each partial contains the complete transcript so far for
+        its speaker, and replaces the previous partial with the same speaker id.
+
+        The default implementation falls back to async_process_audio_stream and
+        yields only the final result.
         """
+        yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:

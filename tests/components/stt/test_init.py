@@ -1,6 +1,6 @@
 """Test STT component setup."""
 
-from collections.abc import Generator, Iterable
+from collections.abc import AsyncGenerator, Generator, Iterable
 from contextlib import ExitStack
 from http import HTTPStatus
 from pathlib import Path
@@ -15,13 +15,17 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    PartialSpeechResult,
     SpeechAudioProcessing,
+    SpeechMetadata,
+    SpeechResult,
+    SpeechResultState,
     async_default_engine,
     async_get_provider,
     async_get_speech_to_text_engine,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -30,6 +34,8 @@ from .common import (
     TEST_DOMAIN,
     MockSTTProvider,
     MockSTTProviderEntity,
+    MockSTTProviderPartialEntity,
+    MockSTTProviderSpeakersEntity,
     mock_stt_entity_platform,
     mock_stt_platform,
 )
@@ -44,6 +50,20 @@ from tests.common import (
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
+_TEST_METADATA = SpeechMetadata(
+    language="en",
+    format=AudioFormats.WAV,
+    codec=AudioCodecs.PCM,
+    bit_rate=AudioBitRates.BITRATE_16,
+    sample_rate=AudioSampleRates.SAMPLERATE_16000,
+    channel=AudioChannels.CHANNEL_MONO,
+)
+
+
+async def _one_chunk_stream() -> AsyncGenerator[bytes]:
+    """Yield a single chunk of audio."""
+    yield b"audio"
+
 
 @pytest.fixture
 def mock_provider() -> MockSTTProvider:
@@ -55,6 +75,18 @@ def mock_provider() -> MockSTTProvider:
 def mock_provider_entity() -> MockSTTProviderEntity:
     """Test provider entity fixture."""
     return MockSTTProviderEntity()
+
+
+@pytest.fixture
+def mock_provider_partial_entity() -> MockSTTProviderPartialEntity:
+    """Test provider entity fixture emitting partial transcripts."""
+    return MockSTTProviderPartialEntity(text="hello world again")
+
+
+@pytest.fixture
+def mock_provider_speakers_entity() -> MockSTTProviderSpeakersEntity:
+    """Test provider entity fixture identifying speakers."""
+    return MockSTTProviderSpeakersEntity(text="turn on the lights no wait")
 
 
 class STTFlow(ConfigFlow):
@@ -374,6 +406,140 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
+
+
+async def test_default_entity_emits_no_partial_results(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockSTTProviderEntity,
+) -> None:
+    """Test an entity that does not override the partial method yields only the result."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    results = [
+        result
+        async for result in mock_provider_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    ]
+
+    assert results == [SpeechResult("test_result", SpeechResultState.SUCCESS)]
+    assert mock_provider_entity.received == [b"audio"]
+
+
+async def test_entity_emits_partial_results(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test an entity that overrides the partial method yields partials then the result."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    results = [
+        result
+        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    ]
+
+    assert results == [
+        PartialSpeechResult("hello"),
+        PartialSpeechResult("hello world"),
+        SpeechResult("hello world again", SpeechResultState.SUCCESS),
+    ]
+    assert mock_provider_partial_entity.received == [b"audio"]
+
+
+async def test_partial_results_update_state(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test the last processed timestamp is written when the partial stream starts."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    entity_id = "stt.test_partial"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    results = (
+        mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    )
+    assert await anext(results) == PartialSpeechResult("hello")
+
+    # The timestamp is written when the stream starts, not when it completes.
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    await results.aclose()
+
+
+async def test_partial_results_closed_when_consumer_stops_early(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test closing the stream early also closes the generator of the entity."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    results = (
+        mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    )
+    assert await anext(results) == PartialSpeechResult("hello")
+    assert mock_provider_partial_entity.closed is False
+
+    await results.aclose()
+
+    assert mock_provider_partial_entity.closed is True
+
+
+async def test_partial_results_without_speaker_id(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test partial transcripts leave the speaker unidentified by default."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    results = [
+        result
+        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    ]
+
+    assert all(
+        result.speaker_id is None
+        for result in results
+        if isinstance(result, PartialSpeechResult)
+    )
+
+
+async def test_partial_results_with_speaker_id(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_speakers_entity: MockSTTProviderSpeakersEntity,
+) -> None:
+    """Test partials of interleaved speakers are tagged with their speaker."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_speakers_entity)
+
+    results = [
+        result
+        async for result in mock_provider_speakers_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    ]
+
+    assert results == [
+        PartialSpeechResult("turn", speaker_id="speaker_0"),
+        PartialSpeechResult("no", speaker_id="speaker_1"),
+        # Each partial supersedes the previous one for the same speaker only.
+        PartialSpeechResult("turn on the lights", speaker_id="speaker_0"),
+        PartialSpeechResult("no wait", speaker_id="speaker_1"),
+        SpeechResult("turn on the lights no wait", SpeechResultState.SUCCESS),
+    ]
 
 
 @pytest.mark.parametrize(
