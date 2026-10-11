@@ -81,7 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
             str(err) or "Transient connection failure during authentication"
         ) from err
     except SleepIQLoginException as err:
-        _LOGGER.error("Could not authenticate with SleepIQ server")
         raise ConfigEntryAuthFailed(err) from err
     except SleepIQTimeoutException as err:
         raise ConfigEntryNotReady(

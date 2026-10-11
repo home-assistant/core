@@ -1,5 +1,7 @@
 """Define tests for the QNAP QSW config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from aioqsw.const import API_MAC_ADDR, API_PRODUCT, API_RESULT
@@ -27,6 +29,31 @@ DHCP_SERVICE_INFO = DhcpServiceInfo(
 TEST_PASSWORD = "test-password"
 TEST_URL = f"http://{DHCP_SERVICE_INFO.ip}"
 TEST_USERNAME = "test-username"
+SYSTEM_BOARD_UNIQUE_ID = format_mac(SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR])
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the API calls of a successful attempt and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.qnap_qsw.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+            return_value=LIVE_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
+            return_value=SYSTEM_BOARD_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
+            return_value=USERS_LOGIN_MOCK,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -76,6 +103,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["data"][CONF_URL] == CONFIG[CONF_URL]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == SYSTEM_BOARD_UNIQUE_ID
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -162,6 +190,13 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {CONF_URL: "cannot_connect"}
 
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_login_error(hass: HomeAssistant) -> None:
     """Test login error."""
@@ -183,6 +218,13 @@ async def test_login_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
@@ -232,6 +274,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_URL: TEST_URL,
     }
+    assert result2["result"].unique_id == format_mac(DHCP_SERVICE_INFO.macaddress)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -283,6 +326,16 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_dhcp_login_error(hass: HomeAssistant) -> None:
     """Test DHCP login error."""
@@ -313,3 +366,13 @@ async def test_dhcp_login_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

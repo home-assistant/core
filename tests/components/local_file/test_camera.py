@@ -6,6 +6,7 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
+from homeassistant.components.camera import async_get_image
 from homeassistant.components.local_file.const import (
     DEFAULT_NAME,
     DOMAIN,
@@ -14,7 +15,7 @@ from homeassistant.components.local_file.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -38,23 +39,19 @@ async def test_loading_file(
     assert body == "hello"
 
 
-async def test_file_not_readable_after_setup(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-    loaded_entry: MockConfigEntry,
-) -> None:
-    """Test a warning is shown setup when file is not readable."""
-
-    client = await hass_client()
-
-    with patch(
-        "homeassistant.components.local_file.camera.open", side_effect=FileNotFoundError
+@pytest.mark.usefixtures("loaded_entry")
+async def test_file_not_readable_after_setup(hass: HomeAssistant) -> None:
+    """Test an error is raised when the file is not readable after setup."""
+    with (
+        patch(
+            "homeassistant.components.local_file.camera.open",
+            side_effect=FileNotFoundError,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
-        resp = await client.get("/api/camera_proxy/camera.local_file")
+        await async_get_image(hass, "camera.local_file")
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert "Could not read camera Local File image from file: mock.file" in caplog.text
+    assert exc_info.value.translation_key == "file_not_found"
 
 
 @pytest.mark.parametrize(

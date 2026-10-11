@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from aiohttp import ClientError
-from pyeconet.errors import PyeconetError
+from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import pytest
 
 from homeassistant.components.econet.const import DOMAIN
@@ -36,3 +36,21 @@ async def test_login_error_retries_setup(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
+    """Test setup fails with invalid credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_EMAIL: "admin@localhost.com", CONF_PASSWORD: "password0"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "pyeconet.EcoNetApiInterface.login", side_effect=InvalidCredentialsError
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Invalid credentials provided"

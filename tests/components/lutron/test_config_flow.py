@@ -44,6 +44,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         assert result["result"].title == "Lutron"
 
         assert result["data"] == MOCK_DATA_STEP
+        assert result["result"].unique_id == "12345678901"
 
 
 @pytest.mark.parametrize(

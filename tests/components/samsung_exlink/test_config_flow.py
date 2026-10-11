@@ -152,6 +152,19 @@ async def test_user_form_query_unexpected_error(
     assert result["errors"] == {"base": "unknown"}
     mock_samsung_tv.disconnect.assert_awaited_once()
 
+    mock_samsung_tv.query_power.side_effect = None
+
+    with patch(
+        "homeassistant.components.samsung_exlink.config_flow.SamsungTV",
+        return_value=mock_samsung_tv,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: MOCK_DEVICE, CONF_MODEL: MOCK_MODEL},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("exception", "error"),

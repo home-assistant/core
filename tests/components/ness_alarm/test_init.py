@@ -1,10 +1,8 @@
 """Tests for the ness_alarm component."""
 
 from types import MappingProxyType
-from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
-import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -36,8 +34,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -598,35 +594,3 @@ async def test_alarm_panel_home_mode_enabled_by_default(
     assert supported & AlarmControlPanelEntityFeature.ARM_HOME
     assert supported & AlarmControlPanelEntityFeature.ARM_AWAY
     assert supported & AlarmControlPanelEntityFeature.TRIGGER
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_yaml_import_triggers_flow(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test that YAML configuration triggers import flow."""
-    with patch(
-        "homeassistant.components.ness_alarm.config_flow.Client",
-        return_value=AsyncMock(),
-    ):
-        config = {
-            DOMAIN: {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 1992,
-            }
-        }
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-        # Check that a config entry was created from the import
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
-        assert entries[0].data[CONF_HOST] == "192.168.1.100"
-        assert entries[0].data[CONF_PORT] == 1992
-
-        # Check that a deprecation repair issue was created
-        issue = issue_registry.async_get_issue(
-            "homeassistant", f"deprecated_yaml_{DOMAIN}"
-        )
-        assert issue is not None
-        assert issue.severity == "warning"
