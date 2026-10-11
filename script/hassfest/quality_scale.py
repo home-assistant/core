@@ -825,7 +825,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sms",
     "smtp",
     "snapcast",
-    "snmp",
     "snooz",
     "solaredge",
     "solaredge_local",

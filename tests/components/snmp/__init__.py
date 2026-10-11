@@ -3,6 +3,7 @@
 from homeassistant.components.snmp.const import (
     CONF_BASEOID,
     CONF_COMMUNITY,
+    CONF_CONTEXT_NAME,
     DEFAULT_PORT,
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
@@ -31,6 +32,7 @@ def mock_entry(
             CONF_HOST: host,
             CONF_PORT: DEFAULT_PORT,
             CONF_COMMUNITY: community,
+            CONF_CONTEXT_NAME: "",
         },
         subentries_data=(
             []

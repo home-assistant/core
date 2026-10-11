@@ -21,7 +21,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -269,7 +268,13 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = self._validate_v3_coherence(user_input)
 
             if not errors:
-                data = {**self._user_data, **user_input}
+                data = {
+                    **self._user_data,
+                    **user_input,
+                    # Stored for every entry, also when there is none, so the
+                    # duplicate check can compare it symmetrically.
+                    CONF_CONTEXT_NAME: user_input.get(CONF_CONTEXT_NAME) or "",
+                }
                 if result := await self._async_finish(data, errors):
                     return result
 
@@ -320,6 +325,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
             CONF_VERSION: user_input.get(CONF_VERSION, DEFAULT_VERSION),
             CONF_COMMUNITY: user_input.get(CONF_COMMUNITY, DEFAULT_COMMUNITY),
+            CONF_CONTEXT_NAME: "",
         }
         self._abort_if_already_configured(entry_data)
 
@@ -344,21 +350,18 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     def _abort_if_already_configured(self, data: dict[str, Any]) -> None:
         """Abort when the same device is already configured.
 
-        The context name is compared explicitly: two SNMPv3 devices on the same
-        host and port can be addressed through different contexts. The entry
-        being reconfigured or reauthenticated is not a duplicate of itself.
+        The context name is part of the identity: two SNMPv3 devices on the same
+        host and port can be addressed through different contexts. Every entry
+        stores it, also when there is none, which makes the comparison symmetric
+        and lets the framework exclude the entry being reconfigured.
         """
-        current_entry_id = self.context.get("entry_id")
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.entry_id == current_entry_id:
-                continue
-            if (
-                entry.data.get(CONF_HOST) == data[CONF_HOST]
-                and entry.data.get(CONF_PORT, DEFAULT_PORT)
-                == data.get(CONF_PORT, DEFAULT_PORT)
-                and entry.data.get(CONF_CONTEXT_NAME) == data.get(CONF_CONTEXT_NAME)
-            ):
-                raise AbortFlow("already_configured")
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: data[CONF_HOST],
+                CONF_PORT: data.get(CONF_PORT, DEFAULT_PORT),
+                CONF_CONTEXT_NAME: data.get(CONF_CONTEXT_NAME) or "",
+            }
+        )
 
     @callback
     def _abort_if_host_is_configured(self, data: dict[str, Any]) -> None:

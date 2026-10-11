@@ -24,7 +24,9 @@
           "version": "SNMP Version"
         },
         "data_description": {
-          "host": "Please make sure this device has a static IP or DHCP reservation."
+          "host": "Please make sure this device has a static IP or DHCP reservation.",
+          "port": "The SNMP port of the device, 161 by default.",
+          "version": "The SNMP version of the device. SNMPv1 and v2c authenticate with a community string, SNMPv3 with a user name."
         },
         "title": "Reconfigure the SNMP device"
       },
@@ -35,13 +37,18 @@
           "version": "SNMP Version"
         },
         "data_description": {
-          "host": "Please make sure this device has a static IP or DHCP reservation."
+          "host": "Please make sure this device has a static IP or DHCP reservation.",
+          "port": "The SNMP port of the device, 161 by default.",
+          "version": "The SNMP version of the device. SNMPv1 and v2c authenticate with a community string, SNMPv3 with a user name."
         },
         "title": "SNMP Configuration"
       },
       "v1_v2c": {
         "data": {
           "community": "Community String"
+        },
+        "data_description": {
+          "community": "The community string of the device, usually set to `public` with read-only access."
         },
         "title": "v1/v2c Authentication"
       },
@@ -53,6 +60,14 @@
           "priv_key": "Privacy Key",
           "priv_protocol": "Privacy Protocol",
           "username": "Username"
+        },
+        "data_description": {
+          "auth_key": "The authentication key of the user, which proves who is sending the request.",
+          "auth_protocol": "The authentication protocol, which has to be set together with the authentication key.",
+          "context_name": "The context name to read from, only needed when the device is divided into contexts.",
+          "priv_key": "The privacy key of the user, which encrypts the requests.",
+          "priv_protocol": "The privacy protocol, which has to be set together with the privacy key. Privacy requires authentication.",
+          "username": "The SNMPv3 user name configured on the device."
         },
         "title": "v3 Authentication"
       }

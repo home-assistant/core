@@ -73,6 +73,7 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
         "community": "public",
         "port": 161,
         "version": "1",
+        "context_name": "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -186,6 +187,7 @@ async def test_import_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) 
         "port": 161,
         "version": "1",
         "community": "public",
+        "context_name": "",
     }
 
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
@@ -1171,3 +1173,20 @@ async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) ->
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["context_name"] == "other-context"
+
+
+async def test_subentry_flow_reconfigure_invalid_oid(hass: HomeAssistant) -> None:
+    """Test that reconfiguring to an OID pysnmp cannot resolve is rejected."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"baseoid": "not_an_oid"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"baseoid": "invalid_oid"}
