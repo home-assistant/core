@@ -1,6 +1,7 @@
 """Support for Telldus Live."""
 
 import asyncio
+from dataclasses import dataclass
 from functools import partial
 import logging
 
@@ -10,7 +11,7 @@ from tellduslive import DIM, TURNON, UP, Session
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -49,14 +50,19 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-DATA_CONFIG_ENTRY_LOCK = "tellduslive_config_entry_lock"
-CONFIG_ENTRY_IS_SETUP = "telldus_config_entry_is_setup"
 
-NEW_CLIENT_TASK = "telldus_new_client_task"
-INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
+@dataclass
+class TelldusLiveData:
+    """Runtime data for a Telldus Live config entry."""
+
+    client: TelldusLiveClient
+    setup_task: asyncio.Task[None]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type TelldusLiveConfigEntry = ConfigEntry[TelldusLiveData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> bool:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -75,23 +81,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="authentication_error",
         )
 
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-    hass.data[NEW_CLIENT_TASK] = hass.loop.create_task(
-        async_new_client(hass, session, entry)
+    interval = entry.data[KEY_SCAN_INTERVAL]
+    _LOGGER.debug("Update interval %s seconds", interval)
+    client = TelldusLiveClient(hass, entry, session, interval)
+    entry.runtime_data = TelldusLiveData(
+        client=client,
+        setup_task=hass.loop.create_task(async_new_client(hass, client, entry)),
     )
 
     return True
 
 
-async def async_new_client(hass, session, entry):
+async def async_new_client(
+    hass: HomeAssistant, client: TelldusLiveClient, entry: TelldusLiveConfigEntry
+) -> None:
     """Add the hubs associated with the current client to device_registry."""
-    interval = entry.data[KEY_SCAN_INTERVAL]
-    _LOGGER.debug("Update interval %s seconds", interval)
-    client = TelldusLiveClient(hass, entry, session, interval)
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data[DOMAIN] = client
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub["name"])
@@ -124,19 +128,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if not hass.data[NEW_CLIENT_TASK].done():
-        hass.data[NEW_CLIENT_TASK].cancel()
-    interval_tracker = hass.data.pop(INTERVAL_TRACKER)
-    interval_tracker()
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, hass.data[CONFIG_ENTRY_IS_SETUP]
+    data = config_entry.runtime_data
+    if not data.setup_task.done():
+        data.setup_task.cancel()
+    data.client.async_cancel_update()
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, data.client.platforms
     )
-    del hass.data[DOMAIN]
-    del hass.data[DATA_CONFIG_ENTRY_LOCK]
-    del hass.data[CONFIG_ENTRY_IS_SETUP]
-    return unload_ok
 
 
 class TelldusLiveClient:
@@ -146,6 +148,9 @@ class TelldusLiveClient:
         """Initialize the Tellus data object."""
         self._known_devices = set()
         self._device_infos = {}
+        self._platforms_lock = asyncio.Lock()
+        self.platforms: set[str] = set()
+        self._cancel_update: CALLBACK_TYPE | None = None
 
         self._hass = hass
         self._config_entry = config_entry
@@ -185,12 +190,12 @@ class TelldusLiveClient:
         self._device_infos.update(
             {device_id: await self._hass.async_add_executor_job(device.info)}
         )
-        async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
-            if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
+        async with self._platforms_lock:
+            if component not in self.platforms:
                 await self._hass.config_entries.async_forward_entry_setups(
                     self._config_entry, [component]
                 )
-                self._hass.data[CONFIG_ENTRY_IS_SETUP].add(component)
+                self.platforms.add(component)
         device_ids = []
         if device.is_sensor:
             device_ids.extend(
@@ -217,9 +222,16 @@ class TelldusLiveClient:
             self._known_devices |= new_devices
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
         finally:
-            self._hass.data[INTERVAL_TRACKER] = async_call_later(
+            self._cancel_update = async_call_later(
                 self._hass, self._interval, self.update
             )
+
+    @callback
+    def async_cancel_update(self) -> None:
+        """Cancel the scheduled update."""
+        if self._cancel_update is not None:
+            self._cancel_update()
+            self._cancel_update = None
 
     def device(self, device_id):
         """Return device representation."""

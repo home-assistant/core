@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.tellduslive import NEW_CLIENT_TASK
 from homeassistant.components.tellduslive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -25,7 +24,7 @@ async def test_device_via_device_links(
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     # Hubs and devices are registered from a background task spawned by setup.
-    await hass.data[NEW_CLIENT_TASK]
+    await mock_config_entry.runtime_data.setup_task
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -59,7 +58,7 @@ async def test_device_added_without_hub(
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.data[NEW_CLIENT_TASK]
+    await mock_config_entry.runtime_data.setup_task
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
