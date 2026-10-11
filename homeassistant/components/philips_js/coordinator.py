@@ -135,7 +135,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if settings_version != self.api.settings_version:
                     try:
                         await self._async_update_settings()
-                    except ConnectionFailure, AutenticationFailure:
+                    except GeneralFailure:
                         _LOGGER.debug("Aborting notify due to failed settings update")
                         break
                     settings_version = self.api.settings_version
@@ -271,7 +271,8 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 await self._async_update_settings()
             self._async_notify_schedule()
         except ConnectionFailure:
-            pass
+            # The TV went away after the update, the old settings are stale
+            self.settings = {}
         except AutenticationFailure as exception:
             raise ConfigEntryAuthFailed(str(exception)) from exception
         except GeneralFailure as exception:

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -223,18 +224,28 @@ async def test_notify_settings_changed(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ConnectionFailure(""), id="connection-failure"),
+        pytest.param(GeneralFailure(""), id="general-failure"),
+    ],
+)
 async def test_notify_settings_update_failed(
     hass: HomeAssistant,
     mock_menu_config_entry: MockConfigEntry,
     mock_tv: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
     """Test the notify loop stops when reading changed settings fails."""
+    caplog.set_level(logging.DEBUG)
     mock_tv.powerstate = "On"
     mock_tv.notify_change_supported = True
 
     def _notify_change(timeout: int) -> bool:
         mock_tv.settings_version = 1
-        mock_tv.getMenuItemsSettingsCurrentValue.side_effect = ConnectionFailure("")
+        mock_tv.getMenuItemsSettingsCurrentValue.side_effect = exception
         return True
 
     mock_tv.notifyChange.side_effect = _notify_change
@@ -242,5 +253,27 @@ async def test_notify_settings_update_failed(
     await hass.async_block_till_done()
 
     assert mock_tv.notifyChange.call_count == 1
+    assert "Aborting notify due to failed settings update" in caplog.text
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
     assert state.state == STATE_ON
+
+
+async def test_settings_read_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_menu_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+) -> None:
+    """Test menu entities are unavailable when reading settings fails."""
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
+    assert state.state == STATE_ON
+
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = ConnectionFailure("")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
