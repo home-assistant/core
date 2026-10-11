@@ -123,13 +123,14 @@ BINARY_SENSORS: list[MideaBinarySensorEntityDescription] = [
         translation_key="heating",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
+        models=[DeviceType.E2],
     ),
     MideaBinarySensorEntityDescription(
         key="keep_warm",
         translation_key="keep_warm",
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.E2, DeviceType.EA],
+        models=[DeviceType.E2],
     ),
 ]
 

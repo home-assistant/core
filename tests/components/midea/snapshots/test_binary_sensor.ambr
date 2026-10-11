@@ -457,57 +457,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[ea][binary_sensor.electric_rice_cooker_keep_warm-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.electric_rice_cooker_keep_warm',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Keep warm',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
-    'original_icon': None,
-    'original_name': 'Keep warm',
-    'platform': 'midea',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'keep_warm',
-    'unique_id': '12345678_keep_warm',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[ea][binary_sensor.electric_rice_cooker_keep_warm-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Rice Cooker Keep warm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.electric_rice_cooker_keep_warm',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_all_entities[x26][binary_sensor.bathroom_master_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -476,6 +476,30 @@ async def test_e2_switch_services(
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == STATE_ON
 
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", attribute, False)],
+        device,
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == STATE_OFF
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", attribute, True)],
+        device,
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == STATE_ON
+
 
 async def test_switch_unknown_when_attribute_becomes_non_bool(
     hass: HomeAssistant,

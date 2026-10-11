@@ -9,7 +9,6 @@ from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
 from midealocal.devices.e2 import DeviceAttributes as E2Attributes
 from midealocal.devices.e3 import DeviceAttributes as E3Attributes
-from midealocal.devices.ea import DeviceAttributes as EAAttributes
 from midealocal.devices.x26 import DeviceAttributes as X26Attributes
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -79,15 +78,6 @@ def _e3_device() -> DummyDevice:
     )
 
 
-def _ea_device() -> DummyDevice:
-    return DummyDevice(
-        DeviceType.EA,
-        attributes={
-            EAAttributes.keep_warm: True,
-        },
-    )
-
-
 def _x26_device() -> DummyDevice:
     return DummyDevice(
         DeviceType.X26,
@@ -112,7 +102,6 @@ def _dc_device() -> DummyDevice:
         pytest.param(_e1_device(), id="e1"),
         pytest.param(_e2_device(), id="e2"),
         pytest.param(_e3_device(), id="e3"),
-        pytest.param(_ea_device(), id="ea"),
         pytest.param(_x26_device(), id="x26"),
     ],
 )
