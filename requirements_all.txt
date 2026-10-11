@@ -3192,6 +3192,9 @@ subarulink==0.7.21
 # homeassistant.components.sunsynk
 sunsynk-api-client==1.4.0
 
+# homeassistant.components.sunsynk
+sunsynk-modbus==0.2.0
+
 # homeassistant.components.surepetcare
 surepy==0.10.0
 

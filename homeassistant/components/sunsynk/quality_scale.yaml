@@ -57,7 +57,9 @@ rules:
     comment: no mDNS and DHCP is a generic device.
   discovery-update-info:
     status: exempt
-    comment: The integration connects to the cloud. It does not store a local address.
+    comment: |
+      The cloud connection does not store a local address. Modbus TCP gateways
+      are generic devices, so they cannot be discovered.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

@@ -1,14 +1,16 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_serial_number": "The inverter did not send a serial number."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
-      "user": {
+      "cloud": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
@@ -18,6 +20,26 @@
           "username": "The email address of your Sunsynk Connect account."
         },
         "description": "Connect to your Sunsynk Connect account to get data from your inverters."
+      },
+      "modbus": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Unit ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Modbus TCP gateway. The gateway connects to the RS485 port of the inverter.",
+          "port": "The TCP port of the Modbus TCP gateway.",
+          "unit_id": "The Modbus SN of the inverter. To find it on the inverter, go to Advanced > Multi-Inverter."
+        },
+        "description": "Get data directly from the inverter. Home Assistant reads the data through a Modbus TCP gateway on your network."
+      },
+      "user": {
+        "description": "Select how Home Assistant connects to your inverter.",
+        "menu_options": {
+          "cloud": "Sunsynk Connect account",
+          "modbus": "Modbus TCP gateway"
+        }
       }
     }
   },
@@ -74,6 +96,17 @@
       "state_of_charge": {
         "name": "State of charge"
       }
+    }
+  },
+  "exceptions": {
+    "connection_in_use": {
+      "message": "Cannot use the Modbus TCP gateway. Another integration uses the gateway with different settings: {error}"
+    },
+    "modbus_error": {
+      "message": "Cannot communicate with the inverter over Modbus: {error}"
+    },
+    "wrong_inverter": {
+      "message": "The inverter at this address has the serial number {found}. The expected serial number is {expected}. Make sure that the host and the unit ID are correct."
     }
   }
 }
