@@ -1,5 +1,6 @@
 """Config flow for Subaru integration."""
 
+from collections.abc import Mapping
 import logging
 import time
 from typing import TYPE_CHECKING, Any, override
@@ -13,7 +14,12 @@ from subarulink import (
 )
 from subarulink.const import COUNTRY_CAN, COUNTRY_USA
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -32,6 +38,9 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CONTACT_METHOD = "contact_method"
 CONF_VALIDATION_CODE = "validation_code"
 PIN_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_PIN)): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -173,6 +182,10 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                 if await self.controller.submit_auth_code(
                     user_input[CONF_VALIDATION_CODE]
                 ):
+                    if self.source == SOURCE_REAUTH:
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(), data=self.config_data
+                        )
                     if self.controller.is_pin_required():
                         return await self.async_step_pin()
                     return self.async_create_entry(
@@ -209,6 +222,44 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self.config_data[CONF_USERNAME], data=self.config_data
                 )
         return self.async_show_form(step_id="pin", data_schema=PIN_SCHEMA, errors=error)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await self.validate_login_creds({**reauth_entry.data, **user_input})
+            except InvalidCredentials:
+                errors["base"] = "invalid_auth"
+            except SubaruException as ex:
+                _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
+                errors["base"] = "cannot_connect"
+            else:
+                if TYPE_CHECKING:
+                    assert self.controller
+                if not self.controller.device_registered:
+                    _LOGGER.debug("2FA validation is required")
+                    return await self.async_step_two_factor()
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data=self.config_data
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(OptionsFlow):
