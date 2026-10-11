@@ -6,7 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
@@ -71,7 +71,11 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
                     title=title,
-                    data={CONF_HOST: host, CONF_PORT: port},
+                    data={
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                        CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, True),
+                    },
                 )
         else:
             user_input = {}
@@ -86,6 +90,9 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
+                    probatio.Required(
+                        CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
+                    ): bool,
                 }
             ),
             errors=self._errors,
@@ -112,7 +119,11 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             if await self._test_connection(user_input):
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data_updates={CONF_HOST: host, CONF_PORT: port},
+                    data_updates={
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                        CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, True),
+                    },
                     unique_id=f"{host}:{port}",
                 )
 
@@ -123,6 +134,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         probatio.Required(CONF_HOST): str,
                         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
                     }
                 ),
                 user_input or reconfigure_entry.data,

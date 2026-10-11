@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -19,7 +19,17 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_user(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("tls_options", "verify_ssl"),
+    [
+        pytest.param({}, True, id="default"),
+        pytest.param({CONF_VERIFY_SSL: True}, True, id="verified"),
+        pytest.param({CONF_VERIFY_SSL: False}, False, id="unverified"),
+    ],
+)
+async def test_user(
+    hass: HomeAssistant, tls_options: dict[str, bool], verify_ssl: bool
+) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -31,12 +41,14 @@ async def test_user(hass: HomeAssistant) -> None:
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
+            result["flow_id"],
+            user_input={CONF_HOST: HOST, CONF_PORT: PORT, **tls_options},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_VERIFY_SSL] is verify_ssl
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
@@ -166,6 +178,46 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     assert entry.data[CONF_HOST] == new_host
     assert entry.data[CONF_PORT] == new_port
     assert entry.unique_id == f"{new_host}:{new_port}"
+
+
+@pytest.mark.parametrize(
+    ("initial_options", "verify_ssl"),
+    [
+        pytest.param({}, False, id="legacy-entry"),
+        pytest.param({CONF_VERIFY_SSL: True}, False, id="disable-verification"),
+        pytest.param({CONF_VERIFY_SSL: False}, True, id="enable-verification"),
+    ],
+)
+async def test_reconfigure_verification(
+    hass: HomeAssistant, initial_options: dict[str, bool], verify_ssl: bool
+) -> None:
+    """Allow changing verification without replacing the config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT, **initial_options},
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_VERIFY_SSL: verify_ssl,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_VERIFY_SSL] is verify_ssl
+    assert entry.unique_id == f"{HOST}:{PORT}"
 
 
 @pytest.mark.parametrize(

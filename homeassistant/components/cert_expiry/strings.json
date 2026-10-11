@@ -13,11 +13,13 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "Verify certificate"
         },
         "data_description": {
           "host": "The hostname or IP address of the server to monitor.",
-          "port": "The port to connect to on the server."
+          "port": "The port to connect to on the server.",
+          "verify_ssl": "Validate the certificate's trust chain and hostname. Turn this off to monitor self-signed or expired certificates. When verification is off, the certificate is not authenticated and its is_valid attribute is false."
         },
         "title": "Reconfigure the certificate to test"
       },
@@ -25,11 +27,13 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "The name of the certificate",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "Verify certificate"
         },
         "data_description": {
           "host": "The hostname or IP address of the server to monitor.",
-          "port": "The port to connect to on the server."
+          "port": "The port to connect to on the server.",
+          "verify_ssl": "Validate the certificate's trust chain and hostname. Turn this off to monitor self-signed or expired certificates. When verification is off, the certificate is not authenticated and its is_valid attribute is false."
         },
         "title": "Define the certificate to test"
       }
