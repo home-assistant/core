@@ -1,6 +1,7 @@
 """The tests for lastfm."""
 
 import asyncio
+from threading import Event
 from typing import Any
 from unittest.mock import patch
 
@@ -127,6 +128,32 @@ class MockUser:
         if len(self._friends) == 0:
             raise PyLastError("network", "status", "Page not found")
         return self._friends
+
+
+class BlockingUser(MockUser):
+    """Pause recent-tracks validation while another flow changes the entry."""
+
+    def __init__(self, thrown_error: Exception | None = None) -> None:
+        """Initialize validation events."""
+        super().__init__(thrown_error=thrown_error)
+        self.validation_started = Event()
+        self.validation_release = Event()
+
+    def get_recent_tracks(self, limit: int) -> list[MockLastTrack]:
+        """Wait until reconfiguration has finished before returning tracks."""
+        self.validation_started.set()
+        assert self.validation_release.wait(5)
+        return super().get_recent_tracks(limit)
+
+
+class BlockingAccountUser(BlockingUser):
+    """Pause account validation during reconfiguration."""
+
+    def get_playcount(self) -> int:
+        """Wait until the entry credentials change before finishing validation."""
+        self.validation_started.set()
+        assert self.validation_release.wait(5)
+        return super().get_playcount()
 
 
 class MockSessionKeyGenerator:

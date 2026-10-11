@@ -174,7 +174,7 @@ def get_session_key(
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
-    data: dict[str, Any] = {}
+    data: dict[str, Any]
     _auth_url: str
     _authorized_username: str | None = None
     _session_key_lock: asyncio.Lock
@@ -182,6 +182,13 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     _session_key_generator: SessionKeyGenerator
     _polling_task: asyncio.Task[None] | None = None
     _original_options: Mapping[str, Any] | None = None
+
+    def __init__(self) -> None:
+        """Initialize per-flow credential and session locks."""
+        super().__init__()
+        self.data = {}
+        self._reconfigure_lock = asyncio.Lock()
+        self._session_key_lock = asyncio.Lock()
 
     @staticmethod
     @callback
@@ -204,6 +211,24 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._polling_task:
             self._polling_task.cancel()
             self._polling_task = None
+
+    async def _async_cancel_polling_task(self) -> None:
+        """Wait for cancelled polling before replacing authorization state."""
+        if (polling_task := self._polling_task) is not None:
+            self._cancel_polling_task()
+            with suppress(asyncio.CancelledError):
+                await polling_task
+
+    @callback
+    def _raise_if_removed(self) -> None:
+        """Reject an operation if its flow was removed while awaiting I/O."""
+        if not any(
+            flow["flow_id"] == self.flow_id
+            for flow in self.hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, include_uninitialized=True
+            )
+        ):
+            raise UnknownFlow
 
     @callback
     def _set_session(self, session: tuple[str, str]) -> None:
@@ -231,37 +256,41 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 if session is not None:
                     self._set_session(session)
 
-    async def _async_start_web_auth(self) -> str | None:
+    async def _async_start_web_auth(
+        self, data: dict[str, Any] | None = None
+    ) -> str | None:
         """Start Last.fm web authentication and return an error key on failure."""
-        if (polling_task := self._polling_task) is not None:
-            self._cancel_polling_task()
-            with suppress(asyncio.CancelledError):
-                await polling_task
-        self._authorized_username = None
-        self._session_key_error = False
-        self.data.pop(CONF_SESSION_KEY, None)
-        try:
-            (
-                self._session_key_generator,
-                self._auth_url,
-            ) = await self.hass.async_add_executor_job(
-                get_web_auth_url,
-                self.data[CONF_API_KEY],
-                self.data[CONF_API_SECRET],
-            )
-        except MalformedResponseError, NetworkError:
-            return "cannot_connect"
-        except WSError as error:
-            status = str(error.status)
-            if status in ERROR_CODES_RETRYABLE:
+        candidate = (self.data if data is None else data).copy()
+        candidate.pop(CONF_SESSION_KEY, None)
+        async with self._session_key_lock:
+            await self._async_cancel_polling_task()
+            try:
+                (
+                    session_key_generator,
+                    auth_url,
+                ) = await self.hass.async_add_executor_job(
+                    get_web_auth_url,
+                    candidate[CONF_API_KEY],
+                    candidate[CONF_API_SECRET],
+                )
+            except MalformedResponseError, NetworkError:
                 return "cannot_connect"
-            if status in ERROR_CODES_INVALID_AUTH:
-                return "invalid_auth"
-            return "unknown"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return "unknown"
-        self._session_key_lock = asyncio.Lock()
+            except WSError as error:
+                status = str(error.status)
+                if status in ERROR_CODES_RETRYABLE:
+                    return "cannot_connect"
+                if status in ERROR_CODES_INVALID_AUTH:
+                    return "invalid_auth"
+                return "unknown"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                return "unknown"
+            self._raise_if_removed()
+            self.data = candidate
+            self._session_key_generator = session_key_generator
+            self._auth_url = auth_url
+            self._authorized_username = None
+            self._session_key_error = False
         return None
 
     async def _async_start_reauth(self) -> ConfigFlowResult:
@@ -283,23 +312,28 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize user input."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.data = user_input.copy()
-            if not self.data.get(CONF_API_SECRET):
-                self.data.pop(CONF_API_SECRET, None)
+            candidate = user_input.copy()
+            if not candidate.get(CONF_API_SECRET):
+                candidate.pop(CONF_API_SECRET, None)
             _, errors = await self.hass.async_add_executor_job(
                 partial(
                     get_lastfm_user,
-                    self.data[CONF_API_KEY],
-                    self.data[CONF_MAIN_USER],
-                    check_recent_tracks=CONF_API_SECRET not in self.data,
+                    candidate[CONF_API_KEY],
+                    candidate[CONF_MAIN_USER],
+                    check_recent_tracks=CONF_API_SECRET not in candidate,
                 )
             )
             if not errors:
-                if CONF_API_SECRET in self.data:
-                    if (error := await self._async_start_web_auth()) is None:
+                self._raise_if_removed()
+                if CONF_API_SECRET in candidate:
+                    if (error := await self._async_start_web_auth(candidate)) is None:
                         return await self.async_step_auth_url()
                     errors["base"] = error
                 else:
+                    async with self._session_key_lock:
+                        await self._async_cancel_polling_task()
+                        self._raise_if_removed()
+                        self.data = candidate
                     return await self.async_step_friends()
         return self.async_show_form(
             step_id="user",
@@ -331,6 +365,15 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure credentials for an existing Last.fm entry."""
+        if user_input is None:
+            return await self._async_reconfigure(None)
+        async with self._reconfigure_lock:
+            return await self._async_reconfigure(user_input)
+
+    async def _async_reconfigure(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Validate and apply one reconfigure submission."""
         entry = self._get_reconfigure_entry()
         if self._original_options is None:
             if self._async_in_progress(
@@ -343,10 +386,11 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._original_options = entry.options
         if _credentials_changed(entry.options, self._original_options):
             return self.async_abort(reason="configuration_changed")
+        self._raise_if_removed()
         options = entry.options
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.data = {
+            candidate = {
                 CONF_API_KEY: user_input[CONF_API_KEY],
                 CONF_MAIN_USER: options[CONF_MAIN_USER] or user_input[CONF_MAIN_USER],
             }
@@ -355,36 +399,44 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_API_SECRET
                 )
                 if not api_secret or (
-                    self.data[CONF_API_KEY] != options[CONF_API_KEY]
+                    candidate[CONF_API_KEY] != options[CONF_API_KEY]
                     and not user_input.get(CONF_API_SECRET)
                 ):
                     errors[CONF_API_SECRET] = "api_secret_required"
                 else:
-                    self.data[CONF_API_SECRET] = api_secret
+                    candidate[CONF_API_SECRET] = api_secret
             if not errors:
                 _, errors = await self.hass.async_add_executor_job(
                     partial(
                         get_lastfm_user,
-                        self.data[CONF_API_KEY],
-                        self.data[CONF_MAIN_USER],
+                        candidate[CONF_API_KEY],
+                        candidate[CONF_MAIN_USER],
                         check_recent_tracks=False,
                     )
                 )
                 if _credentials_changed(entry.options, self._original_options):
                     return self.async_abort(reason="configuration_changed")
+                self._raise_if_removed()
             if not errors:
-                if CONF_API_SECRET not in self.data:
-                    return await self.async_step_finish_reconfigure()
-                if (
-                    self.data[CONF_API_KEY] == options[CONF_API_KEY]
-                    and self.data[CONF_API_SECRET] == options.get(CONF_API_SECRET)
-                    and options.get(CONF_SESSION_KEY)
-                ):
-                    self.data[CONF_SESSION_KEY] = options[CONF_SESSION_KEY]
-                    return await self.async_step_finish_reconfigure()
-                if (error := await self._async_start_web_auth()) is None:
-                    return await self.async_step_auth_url()
-                errors["base"] = error
+                if CONF_API_SECRET in candidate:
+                    if (
+                        candidate[CONF_API_KEY] == options[CONF_API_KEY]
+                        and candidate[CONF_API_SECRET] == options.get(CONF_API_SECRET)
+                        and options.get(CONF_SESSION_KEY)
+                    ):
+                        candidate[CONF_SESSION_KEY] = options[CONF_SESSION_KEY]
+                    else:
+                        error = await self._async_start_web_auth(candidate)
+                        if _credentials_changed(entry.options, self._original_options):
+                            return self.async_abort(reason="configuration_changed")
+                        if error is None:
+                            return await self.async_step_auth_url()
+                        errors["base"] = error
+                if not errors:
+                    async with self._session_key_lock:
+                        await self._async_cancel_polling_task()
+                        self.data = candidate
+                        return await self.async_step_finish_reconfigure()
         schema: dict[probatio.Marker, Any] = {
             probatio.Required(probatio.Secret(CONF_API_KEY)): str,
             probatio.Required(CONF_ENABLE_AUTHENTICATION): bool,
@@ -414,6 +466,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Save validated credentials without replacing the entry or its users."""
+        self._raise_if_removed()
         entry = self._get_reconfigure_entry()
         assert self._original_options is not None
         if _credentials_changed(entry.options, self._original_options):

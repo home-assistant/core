@@ -34,6 +34,7 @@ from . import (
     SESSION_KEY,
     USERNAME_1,
     USERNAME_2,
+    BlockingAccountUser,
     MockSessionKeyGenerator,
     MockUser,
     get_session_key_polling_task,
@@ -67,6 +68,55 @@ class BlockingSessionKeyGenerator(MockSessionKeyGenerator):
         self.exchange_started.set()
         assert self.exchange_release.wait(1)
         return super().get_web_auth_session_key_username(url, token)
+
+
+async def test_user_overlapping_candidates_keep_validated_credentials(
+    hass: HomeAssistant,
+    default_user: MockUser,
+) -> None:
+    """A rejected setup submission must not change another submission's credentials."""
+    user = BlockingAccountUser()
+    invalid_user = MockUser(
+        thrown_error=WSError(
+            "network",
+            "10",
+            "Invalid API key - You must be granted a valid key by last.fm",
+        )
+    )
+    with (
+        patch("pylast.User", side_effect=[user, invalid_user, default_user]),
+        patch_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        first_submission = hass.async_create_task(
+            hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=CONF_USER_DATA
+            )
+        )
+        try:
+            assert await hass.async_add_executor_job(user.validation_started.wait, 5)
+            invalid_result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={**CONF_USER_DATA, CONF_API_KEY: "invalid-api-key"},
+            )
+            assert invalid_result["errors"] == {"base": "invalid_auth"}
+        finally:
+            user.validation_release.set()
+        result = await first_submission
+        assert result["step_id"] == "friends"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_USERS: []}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        CONF_API_KEY: API_KEY,
+        CONF_MAIN_USER: USERNAME_1,
+        CONF_USERS: [USERNAME_1],
+    }
 
 
 @pytest.mark.parametrize(
