@@ -560,8 +560,9 @@ async def test_alarm_hub_without_name(
     assert device.name == f"{model} {ALARM_HUB_MAC}"
     assert device.model == model
     assert device.model_id == device_type
-    assert hass.states.get(
-        f"sensor.{object_id}_{ALARM_HUB_MAC.lower()}_battery_voltage"
+    assert (
+        hass.states.get(f"sensor.{object_id}_{ALARM_HUB_MAC.lower()}_battery_voltage")
+        is not None
     )
 
 

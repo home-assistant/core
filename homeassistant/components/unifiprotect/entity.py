@@ -465,6 +465,9 @@ class BaseProtectEntity(Entity):
         unavailable), and after a reconnect a value that changed during the
         outage is picked up.
         """
+        if obj is not None and not self._ufp_has_private:
+            # A re-adopted device keeps its mac but gets a new id.
+            self.device = obj
         self._ufp_public_obj = (
             obj if obj is not None else self.data.async_get_public_device(self.device)
         )
@@ -548,8 +551,9 @@ class ProtectDeviceEntity(BaseProtectEntity):
 class ProtectPublicChannelEntity[ChannelT](ProtectDeviceEntity):
     """Base for an entity tracking one channel of a public device.
 
-    Alarm hub zones are channels of their hub. The entity goes unavailable
-    while its channel cannot be read, on top of the device's availability.
+    Alarm hub zones and relay inputs and outputs are channels of their device.
+    The entity goes unavailable while its channel cannot be read, on top of the
+    device's availability.
     """
 
     _ufp_uses_public = True
