@@ -52,6 +52,7 @@ class UnifiEntityLoader:
             id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
                 hub, hub.api.firewall_policies
             ),
+            id(hub.api.networks): UnifiDataUpdateCoordinator(hub, hub.api.networks),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
                 hub,
                 hub.api.object_oriented_network_configs,
