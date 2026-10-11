@@ -596,19 +596,20 @@ async def config_entry_disable(
     if (disabled_by := msg["disabled_by"]) is not None:
         disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
-    success = False
     try:
         success = await hass.config_entries.async_set_disabled_by(
             msg["entry_id"], disabled_by
         )
+        # The entry may have been removed while it was reloading
+        entry = hass.config_entries.async_get_known_entry(msg["entry_id"])
     except config_entries.OperationNotAllowed:
         # Failed to unload the config entry
-        pass
+        connection.send_result(msg["id"], {"require_restart": True})
+        return
     except config_entries.UnknownEntry:
         send_entry_not_found(connection, msg["id"])
         return
 
-    entry = hass.config_entries.async_get_known_entry(msg["entry_id"])
     result = {
         "require_restart": not success
         and entry.state
