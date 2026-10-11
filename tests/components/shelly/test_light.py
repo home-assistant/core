@@ -14,6 +14,7 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -1101,11 +1102,11 @@ async def test_rpc_ledstrip_light(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip light."""
     entity_id = f"{LIGHT_DOMAIN}.test_name_ledstrip_0"
-    effects = ["solid", "blink", "fade", "rainbow"]
 
     config = deepcopy(mock_rpc_device.config)
     config["ledstrip:0"] = {
@@ -1116,7 +1117,7 @@ async def test_rpc_ledstrip_light(
         "protocol": "ws2812b",
         "color_order": "rgb",
         "ddp_port": 4048,
-        "effects": effects,
+        "effects": ["solid", "blink", "fade", "rainbow"],
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
@@ -1133,15 +1134,11 @@ async def test_rpc_ledstrip_light(
 
     await init_integration(hass, 4)
 
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-ledstrip:0"
-    assert entry.translation_key == "ledstrip"
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.EFFECT
-    assert state.attributes[ATTR_EFFECT_LIST] == effects
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
