@@ -150,6 +150,7 @@ async def test_equivalent_url_variants_share_identity(
         ("fmd.example.com", "invalid_url"),
         ("ftp://fmd.example.com", "invalid_url"),
         ("file:///tmp/fmd", "invalid_url"),
+        ("http://[invalid", "invalid_url"),
     ],
 )
 async def test_invalid_url_rejected(

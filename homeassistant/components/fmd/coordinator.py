@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 from fmd_api import AuthenticationError, FmdApiException, FmdClient
 from fmd_api.models import Location
 
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -33,7 +33,9 @@ class FmdCoordinator(DataUpdateCoordinator[Location]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{entry.data[CONF_ID]}",
+            # Server-scoped so same CONF_ID on different servers (supported)
+            # does not produce colliding coordinator names in logs.
+            name=f"{DOMAIN}_{entry.data[CONF_URL]}/{entry.data[CONF_ID]}",
             update_interval=timedelta(minutes=DEFAULT_POLLING_INTERVAL),
             config_entry=entry,
         )

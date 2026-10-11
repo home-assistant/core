@@ -5,9 +5,10 @@ from unittest.mock import MagicMock, patch
 from fmd_api import AuthenticationError, FmdApiException
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from . import TEST_ID, TEST_URL, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -70,3 +71,28 @@ async def test_first_refresh_failure_retries(
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_name_is_server_scoped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test same CONF_ID on two servers yields distinct coordinator names."""
+    second_entry = MockConfigEntry(
+        domain=mock_config_entry.domain,
+        unique_id=f"https://fmd2.example.com/{mock_config_entry.data[CONF_ID]}",
+        title=mock_config_entry.data[CONF_ID],
+        data={**mock_config_entry.data, CONF_URL: "https://fmd2.example.com"},
+    )
+    second_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await setup_integration(hass, mock_config_entry)
+
+    first = mock_config_entry.runtime_data.name
+    second = second_entry.runtime_data.name
+    assert first != second
+    assert first == f"fmd_{TEST_URL}/{TEST_ID}"
+    assert second == "fmd_https://fmd2.example.com/test_user"
