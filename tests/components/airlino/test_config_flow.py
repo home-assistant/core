@@ -274,26 +274,23 @@ async def test_zeroconf_flow_confirms_and_creates_entry(
     assert result["data"]["setup_verified"] is False
 
 
-async def test_zeroconf_flow_uses_default_values(
+async def test_zeroconf_flow_uses_fallback_api_version_when_txt_omits_api(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Verify zeroconf defaults are used when records omit values."""
+    """Verify discovery persists the API version selected by validation."""
     discovery = _discovery_info(properties={"model": "AirLino"}, port=0)
     with patch(
         "homeassistant.components.airlino.config_flow.validate_input",
-        return_value={
-            "title": "AirLino",
-            "mac": MAC,
-            "api_version": DEFAULT_API_VERSION,
-        },
-    ):
+        return_value={"title": "AirLino", "mac": MAC, "api_version": "v20"},
+    ) as validate:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
         )
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    assert validate.call_args.kwargs["api_version"] is None
     assert result["data"]["port"] == DEFAULT_PORT
-    assert result["data"]["api_version"] == DEFAULT_API_VERSION
+    assert result["data"]["api_version"] == "v20"
 
 
 async def test_zeroconf_flow_aborts_if_device_is_configured(
@@ -482,6 +479,57 @@ async def test_validate_input_raises_unsupported_when_no_version_works(
         patch(
             "homeassistant.components.airlino.config_flow.AirlinoApi",
             return_value=api,
+        ) as api_class,
+        pytest.raises(UnsupportedApiVersion),
+    ):
+        await validate_input(hass, {CONF_HOST: HOST})
+
+    assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
+        "v22",
+        "v21",
+        "v20",
+        "v19",
+    ]
+
+
+async def test_validate_input_continues_after_api_error_without_status(
+    hass: HomeAssistant,
+) -> None:
+    """Verify version fallback continues when an API error has no status."""
+    failed_api = MagicMock()
+    failed_api.async_get_device_info = AsyncMock(side_effect=AirlinoApiError("failed"))
+    working_api = MagicMock()
+    working_api.async_get_device_info = AsyncMock(
+        return_value={"devicename": "Living Room"}
+    )
+    working_api.async_get_network_info = AsyncMock(
+        return_value={"eth": {"mac": "00:23:b1:a4:35:9e"}}
+    )
+    with (
+        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.airlino.config_flow.AirlinoApi",
+            side_effect=[failed_api, working_api],
+        ) as api_class,
+    ):
+        result = await validate_input(hass, {CONF_HOST: HOST})
+
+    assert result["api_version"] == "v21"
+    assert [call.kwargs["api_version"] for call in api_class.call_args_list] == [
+        "v22",
+        "v21",
+    ]
+
+
+async def test_validate_input_rejects_invalid_supported_version_range(
+    hass: HomeAssistant,
+) -> None:
+    """Verify invalid supported API version bounds are rejected."""
+    with (
+        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.airlino.config_flow.api_version_number",
+            return_value=None,
         ),
         pytest.raises(UnsupportedApiVersion),
     ):
@@ -578,6 +626,26 @@ async def test_validate_input_handles_missing_mac(hass: HomeAssistant) -> None:
         pytest.raises(CannotIdentify),
     ):
         await validate_input(hass, {CONF_HOST: HOST}, api_version="v22")
+
+
+async def test_validate_input_handles_missing_mac_during_version_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Verify a successful response without a MAC is not treated as unsupported."""
+    api = MagicMock()
+    api.async_get_device_info = AsyncMock(return_value={})
+    api.async_get_network_info = AsyncMock(return_value={})
+    with (
+        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.airlino.config_flow.AirlinoApi",
+            return_value=api,
+        ) as api_class,
+        pytest.raises(CannotIdentify),
+    ):
+        await validate_input(hass, {CONF_HOST: HOST})
+
+    api_class.assert_called_once()
 
 
 async def test_validate_input_rejects_unsupported_version(

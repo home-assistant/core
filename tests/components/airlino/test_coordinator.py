@@ -14,7 +14,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def coordinator(hass: HomeAssistant):
+def coordinator(
+    hass: HomeAssistant,
+) -> tuple[AirlinoDataUpdateCoordinator, MagicMock]:
     """Create a coordinator and mocked AirLino API."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -33,7 +35,9 @@ def coordinator(hass: HomeAssistant):
     return AirlinoDataUpdateCoordinator(hass, entry, api), api
 
 
-async def test_update_returns_current_device_data(coordinator) -> None:
+async def test_update_returns_current_device_data(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Check that a successful update returns core and Songcast data."""
     update_coordinator, api = coordinator
 
@@ -50,7 +54,9 @@ async def test_update_returns_current_device_data(coordinator) -> None:
     api.async_get_master_volume.assert_awaited_once()
 
 
-async def test_songcast_failure_preserves_previous_state(coordinator) -> None:
+async def test_songcast_failure_preserves_previous_state(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Keep the last known group status after an optional call fails."""
     update_coordinator, api = coordinator
     previous_sender = {"enabled": True, "uuid": "sender-uuid"}
@@ -69,7 +75,9 @@ async def test_songcast_failure_preserves_previous_state(coordinator) -> None:
     api.async_get_receiver_state.assert_not_awaited()
 
 
-async def test_receiver_status_failure_preserves_previous_state(coordinator) -> None:
+async def test_receiver_status_failure_preserves_previous_state(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Preserve successful sender data when the receiver query fails."""
     update_coordinator, api = coordinator
     previous_sender = {"enabled": True, "uuid": "sender-uuid"}
@@ -88,7 +96,9 @@ async def test_receiver_status_failure_preserves_previous_state(coordinator) -> 
     assert data["receiver"] == previous_receiver
 
 
-async def test_device_info_is_refetched_after_offline(coordinator) -> None:
+async def test_device_info_is_refetched_after_offline(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Fetch device information again after a previous offline result."""
     update_coordinator, api = coordinator
     update_coordinator._device_info = {"devicename": "Old name"}
@@ -100,7 +110,9 @@ async def test_device_info_is_refetched_after_offline(coordinator) -> None:
     api.async_get_device_info.assert_awaited_once()
 
 
-async def test_initial_connection_failure_fails_update(coordinator) -> None:
+async def test_initial_connection_failure_fails_update(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Fail the initial update for an unverified config entry."""
     update_coordinator, api = coordinator
     api.async_get_device_info.side_effect = AirlinoApiConnectionError("offline")
@@ -111,7 +123,9 @@ async def test_initial_connection_failure_fails_update(coordinator) -> None:
     api.async_get_player_status.assert_not_awaited()
 
 
-async def test_verified_entry_reports_offline_after_restart(coordinator) -> None:
+async def test_verified_entry_reports_offline_after_restart(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Allow an established entry to load offline after a restart."""
     update_coordinator, api = coordinator
     update_coordinator._setup_verified = True
@@ -123,7 +137,9 @@ async def test_verified_entry_reports_offline_after_restart(coordinator) -> None
     api.async_get_player_status.assert_not_awaited()
 
 
-async def test_connection_failure_reports_offline(coordinator) -> None:
+async def test_connection_failure_reports_offline(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Report an unreachable device as offline after a successful update."""
     update_coordinator, api = coordinator
     update_coordinator._setup_verified = True
@@ -136,7 +152,9 @@ async def test_connection_failure_reports_offline(coordinator) -> None:
     api.async_get_player_status.assert_not_awaited()
 
 
-async def test_unexpected_failure_becomes_update_failed(coordinator) -> None:
+async def test_unexpected_failure_becomes_update_failed(
+    coordinator: tuple[AirlinoDataUpdateCoordinator, MagicMock],
+) -> None:
     """Translate unexpected polling errors into UpdateFailed."""
     update_coordinator, api = coordinator
     api.async_get_device_info.side_effect = RuntimeError("unexpected")

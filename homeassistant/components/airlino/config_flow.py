@@ -78,8 +78,6 @@ async def validate_input(
 
         mac = _get_mac(network_info)
         if not mac:
-            if api_version is None:
-                continue
             raise CannotIdentify
 
         return {
@@ -184,10 +182,8 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_airlino")
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
-        # The device announces its API version in the TXT record ("api=v22").
-        self._api_version = (
-            _txt_str(discovery_info.properties, "api") or DEFAULT_API_VERSION
-        )
+        announced_api_version = _txt_str(discovery_info.properties, "api")
+        self._api_version = announced_api_version or DEFAULT_API_VERSION
         _LOGGER.debug(
             "AirLino discovered via zeroconf: host=%s port=%s api_version=%s",
             self._host,
@@ -199,7 +195,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(
                 self.hass,
                 {CONF_HOST: self._host, "port": self._port},
-                api_version=self._api_version,
+                api_version=announced_api_version,
             )
         except UnsupportedApiVersion:
             _LOGGER.debug(
@@ -222,6 +218,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during discovery")
             return self.async_abort(reason="unknown")
 
+        self._api_version = info["api_version"]
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured(
             updates={

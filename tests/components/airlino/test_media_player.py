@@ -1,5 +1,6 @@
 """Tests for the AirLino media player."""
 
+from collections.abc import Callable
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -28,9 +29,14 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
+PlayerFactory = Callable[
+    [dict | None],
+    tuple[AirlinoMediaPlayer, MockConfigEntry, MagicMock, MagicMock],
+]
+
 
 @pytest.fixture
-def make_player(hass: HomeAssistant):
+def make_player(hass: HomeAssistant) -> PlayerFactory:
     """Create an AirLino media player with mocked coordinator and API."""
 
     def create(
@@ -90,7 +96,7 @@ def make_player(hass: HomeAssistant):
 
 
 async def test_availability_requires_online_and_coordinator_available(
-    make_player,
+    make_player: PlayerFactory,
 ) -> None:
     """Require both the device and coordinator to report availability."""
     player, _, coordinator, _ = make_player({"online": False})
@@ -102,7 +108,7 @@ async def test_availability_requires_online_and_coordinator_available(
     assert player.available is False
 
 
-async def test_state_volume_and_metadata(make_player) -> None:
+async def test_state_volume_and_metadata(make_player: PlayerFactory) -> None:
     """Expose playback state, volume, and track metadata from coordinator data."""
     player, _, _, _ = make_player(
         {
@@ -152,7 +158,7 @@ async def test_state_volume_and_metadata(make_player) -> None:
     ],
 )
 async def test_state_uses_songcast_status(
-    data: dict, expected_state: MediaPlayerState, make_player
+    data: dict, expected_state: MediaPlayerState, make_player: PlayerFactory
 ) -> None:
     """Prefer receiver and sender playback status where available."""
     player, _, _, _ = make_player(data)
@@ -160,7 +166,9 @@ async def test_state_uses_songcast_status(
     assert player.state is expected_state
 
 
-async def test_device_info_uses_entry_title_when_name_missing(make_player) -> None:
+async def test_device_info_uses_entry_title_when_name_missing(
+    make_player: PlayerFactory,
+) -> None:
     """Fall back to the configured title when device info lacks a name."""
     player, _, _, _ = make_player({"device": {"model": "AirLino"}})
 
@@ -169,7 +177,9 @@ async def test_device_info_uses_entry_title_when_name_missing(make_player) -> No
     assert device_info["model"] == "AirLino"
 
 
-async def test_group_members_include_master_and_receivers(make_player) -> None:
+async def test_group_members_include_master_and_receivers(
+    make_player: PlayerFactory,
+) -> None:
     """Return sorted entity IDs for the sender and its linked receivers."""
     player, entry, coordinator, _ = make_player(
         {"sender": {"enabled": True, "uuid": "sender-uuid"}}
@@ -193,7 +203,7 @@ async def test_group_members_include_master_and_receivers(make_player) -> None:
     assert player.group_members == ["media_player.kitchen", "media_player.living_room"]
 
 
-async def test_group_members_is_none_without_sender(make_player) -> None:
+async def test_group_members_is_none_without_sender(make_player: PlayerFactory) -> None:
     """Return no group members for a standalone device."""
     player, _, _, _ = make_player()
 
@@ -201,7 +211,7 @@ async def test_group_members_is_none_without_sender(make_player) -> None:
 
 
 async def test_group_members_without_registered_entity_ids_returns_none(
-    make_player,
+    make_player: PlayerFactory,
 ) -> None:
     """Return no group when none of its members has a registered entity."""
     player, entry, coordinator, _ = make_player(
@@ -217,7 +227,9 @@ async def test_group_members_without_registered_entity_ids_returns_none(
     assert player.group_members is None
 
 
-async def test_async_find_runtime_returns_none_for_unknown_entity(make_player) -> None:
+async def test_async_find_runtime_returns_none_for_unknown_entity(
+    make_player: PlayerFactory,
+) -> None:
     """Return no runtime when no loaded integration entry matches the entity."""
     player, _, _, _ = make_player()
     player._all_runtimes = MagicMock(return_value=[])
@@ -225,7 +237,9 @@ async def test_async_find_runtime_returns_none_for_unknown_entity(make_player) -
     assert await player._async_find_runtime_by_entity_id("media_player.unknown") is None
 
 
-async def test_media_position_updated_at_only_accepts_datetime(make_player) -> None:
+async def test_media_position_updated_at_only_accepts_datetime(
+    make_player: PlayerFactory,
+) -> None:
     """Expose the update timestamp only when it is a datetime."""
     player, _, coordinator, _ = make_player()
     timestamp = dt_util.utcnow()
@@ -237,7 +251,9 @@ async def test_media_position_updated_at_only_accepts_datetime(make_player) -> N
     assert player.media_position_updated_at is None
 
 
-async def test_receiver_has_restricted_features_and_cannot_play(make_player) -> None:
+async def test_receiver_has_restricted_features_and_cannot_play(
+    make_player: PlayerFactory,
+) -> None:
     """Restrict direct playback commands on multiroom receivers."""
     player, _, _, api = make_player({"receiver": {"sender": "master-uuid"}})
 
@@ -252,7 +268,9 @@ async def test_receiver_has_restricted_features_and_cannot_play(make_player) -> 
     api.async_play.assert_not_awaited()
 
 
-async def test_play_media_resolves_media_source_and_normalizes_url(make_player) -> None:
+async def test_play_media_resolves_media_source_and_normalizes_url(
+    make_player: PlayerFactory,
+) -> None:
     """Resolve media-source content and normalize the URL before playback."""
     player, _, _, api = make_player()
     resolved = SimpleNamespace(url="/api/media_source_proxy/audio")
@@ -281,7 +299,9 @@ async def test_play_media_resolves_media_source_and_normalizes_url(make_player) 
     )
 
 
-async def test_direct_url_is_normalized_before_playback(make_player) -> None:
+async def test_direct_url_is_normalized_before_playback(
+    make_player: PlayerFactory,
+) -> None:
     """Normalize Home Assistant-relative URLs before sending them to AirLino."""
     player, _, _, api = make_player()
     with patch(
@@ -296,7 +316,7 @@ async def test_direct_url_is_normalized_before_playback(make_player) -> None:
     )
 
 
-async def test_play_media_rejects_unsupported_types(make_player) -> None:
+async def test_play_media_rejects_unsupported_types(make_player: PlayerFactory) -> None:
     """Reject non-URL media types without calling the device API."""
     player, _, _, api = make_player()
 
@@ -305,7 +325,7 @@ async def test_play_media_rejects_unsupported_types(make_player) -> None:
     api.async_play_station.assert_not_awaited()
 
 
-async def test_play_media_rejects_https(make_player) -> None:
+async def test_play_media_rejects_https(make_player: PlayerFactory) -> None:
     """Reject HTTPS URLs that the device cannot play."""
     player, _, _, api = make_player()
 
@@ -314,7 +334,9 @@ async def test_play_media_rejects_https(make_player) -> None:
     api.async_play_station.assert_not_awaited()
 
 
-async def test_repeated_play_media_errors_each_raise(make_player) -> None:
+async def test_repeated_play_media_errors_each_raise(
+    make_player: PlayerFactory,
+) -> None:
     """Raise for each failed stream command, including repeated errors."""
     player, _, _, api = make_player()
     api.async_play_station.side_effect = AirlinoApiError("invalid stream")
@@ -326,7 +348,9 @@ async def test_repeated_play_media_errors_each_raise(make_player) -> None:
     assert api.async_play_station.await_count == 2
 
 
-async def test_play_pause_stop_track_and_volume_commands_refresh(make_player) -> None:
+async def test_play_pause_stop_track_and_volume_commands_refresh(
+    make_player: PlayerFactory,
+) -> None:
     """Refresh entity data after each successful playback and volume command."""
     player, _, coordinator, api = make_player(
         {"player": {"state": PLAYER_STATE_PLAYING, "status": {}}}
@@ -347,7 +371,9 @@ async def test_play_pause_stop_track_and_volume_commands_refresh(make_player) ->
     assert coordinator.async_request_refresh.await_count == 6
 
 
-async def test_play_and_volume_commands_refresh_coordinator(make_player) -> None:
+async def test_play_and_volume_commands_refresh_coordinator(
+    make_player: PlayerFactory,
+) -> None:
     """Refresh coordinator data after play and volume commands."""
     player, _, coordinator, api = make_player()
 
@@ -367,7 +393,7 @@ async def test_play_and_volume_commands_refresh_coordinator(make_player) -> None
 
 
 async def test_play_media_command_error_becomes_home_assistant_error(
-    make_player,
+    make_player: PlayerFactory,
 ) -> None:
     """Translate failed stream-play commands and skip refresh on failure."""
     player, _, coordinator, api = make_player()
@@ -379,7 +405,9 @@ async def test_play_media_command_error_becomes_home_assistant_error(
     coordinator.async_request_refresh.assert_not_awaited()
 
 
-async def test_api_command_error_becomes_home_assistant_error(make_player) -> None:
+async def test_api_command_error_becomes_home_assistant_error(
+    make_player: PlayerFactory,
+) -> None:
     """Convert AirLino API command failures to Home Assistant errors."""
     player, _, _, api = make_player()
     api.async_play.side_effect = AirlinoApiConnectionError("request failed")
@@ -388,7 +416,9 @@ async def test_api_command_error_becomes_home_assistant_error(make_player) -> No
         await player.async_media_play()
 
 
-async def test_join_rejects_unknown_member_before_mutations(make_player) -> None:
+async def test_join_rejects_unknown_member_before_mutations(
+    make_player: PlayerFactory,
+) -> None:
     """Validate unknown group members before enabling the sender."""
     player, _, _, api = make_player()
 
@@ -399,7 +429,7 @@ async def test_join_rejects_unknown_member_before_mutations(make_player) -> None
     api.async_receiver_link.assert_not_awaited()
 
 
-async def test_join_requires_sender_uuid(make_player) -> None:
+async def test_join_requires_sender_uuid(make_player: PlayerFactory) -> None:
     """Reject group creation when the sender has no UUID."""
     player, _, _, api = make_player()
     api.async_get_sender_status.return_value = {"enabled": False}
@@ -410,7 +440,9 @@ async def test_join_requires_sender_uuid(make_player) -> None:
     api.async_enable_sender.assert_not_awaited()
 
 
-async def test_join_does_not_reenable_or_relink_existing_group(make_player) -> None:
+async def test_join_does_not_reenable_or_relink_existing_group(
+    make_player: PlayerFactory,
+) -> None:
     """Avoid re-enabling an active sender or relinking an attached receiver."""
     player, _, coordinator, api = make_player(
         {"sender": {"enabled": True, "uuid": "sender-uuid"}}
@@ -439,7 +471,9 @@ async def test_join_does_not_reenable_or_relink_existing_group(make_player) -> N
     coordinator.async_request_refresh.assert_awaited_once()
 
 
-async def test_join_ignores_self_and_links_requested_receiver(make_player) -> None:
+async def test_join_ignores_self_and_links_requested_receiver(
+    make_player: PlayerFactory,
+) -> None:
     """Skip the command target and link other requested devices."""
     player, _, coordinator, api = make_player()
     receiver_api = MagicMock()
@@ -460,7 +494,9 @@ async def test_join_ignores_self_and_links_requested_receiver(make_player) -> No
     coordinator.async_request_refresh.assert_awaited_once()
 
 
-async def test_empty_or_self_only_join_does_not_enable_sender(make_player) -> None:
+async def test_empty_or_self_only_join_does_not_enable_sender(
+    make_player: PlayerFactory,
+) -> None:
     """Do not leave a sender running when no receivers were requested."""
     player, _, coordinator, api = make_player()
 
@@ -471,7 +507,9 @@ async def test_empty_or_self_only_join_does_not_enable_sender(make_player) -> No
     coordinator.async_request_refresh.assert_not_awaited()
 
 
-async def test_unjoin_sender_does_not_unlink_unrelated_receivers(make_player) -> None:
+async def test_unjoin_sender_does_not_unlink_unrelated_receivers(
+    make_player: PlayerFactory,
+) -> None:
     """Leave receivers in other groups untouched while disabling this sender."""
     player, _, coordinator, api = make_player(
         {"sender": {"enabled": True, "uuid": "sender-uuid"}}
@@ -499,7 +537,9 @@ async def test_unjoin_sender_does_not_unlink_unrelated_receivers(make_player) ->
     coordinator.async_request_refresh.assert_awaited_once()
 
 
-async def test_unjoin_sender_unlinks_receivers_and_disables_sender(make_player) -> None:
+async def test_unjoin_sender_unlinks_receivers_and_disables_sender(
+    make_player: PlayerFactory,
+) -> None:
     """Dissolve a sender group by unlinking each receiver first."""
     player, _, coordinator, api = make_player(
         {"sender": {"enabled": True, "uuid": "sender-uuid"}}
@@ -527,7 +567,9 @@ async def test_unjoin_sender_unlinks_receivers_and_disables_sender(make_player) 
     coordinator.async_request_refresh.assert_awaited_once()
 
 
-async def test_unjoin_receiver_only_unlinks_requested_receiver(make_player) -> None:
+async def test_unjoin_receiver_only_unlinks_requested_receiver(
+    make_player: PlayerFactory,
+) -> None:
     """Unlink only the requested receiver without inspecting cached members."""
     player, _, coordinator, api = make_player({"receiver": {"sender": "master-uuid"}})
 
@@ -537,7 +579,9 @@ async def test_unjoin_receiver_only_unlinks_requested_receiver(make_player) -> N
     coordinator.async_request_refresh.assert_awaited_once()
 
 
-async def test_offline_member_fails_before_enabling_sender(make_player) -> None:
+async def test_offline_member_fails_before_enabling_sender(
+    make_player: PlayerFactory,
+) -> None:
     """Reject offline group members before changing sender state."""
     player, _, _, api = make_player()
     offline_api = MagicMock()
@@ -561,7 +605,7 @@ async def test_offline_member_fails_before_enabling_sender(make_player) -> None:
     ],
 )
 async def test_join_rejects_member_already_in_group(
-    make_player, receiver_state: dict, sender_state: dict
+    make_player: PlayerFactory, receiver_state: dict, sender_state: dict
 ) -> None:
     """Reject grouped receivers and active senders before changing groups."""
     player, _, _, sender_api = make_player()
