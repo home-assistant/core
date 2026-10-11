@@ -1131,7 +1131,7 @@ async def test_rpc_ledstrip_light(
     }
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
-    await init_integration(hass, 4, "S4NL-0A11EUM")
+    await init_integration(hass, 4)
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-ledstrip:0"
