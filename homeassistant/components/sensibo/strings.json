@@ -395,6 +395,9 @@
     "auth_error": {
       "message": "Authentication failed, please update your API key"
     },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "climate_react_not_available": {
       "message": "Use the Sensibo 'Enable Climate React' action once to enable the switch, or use the Sensibo app"
     },
@@ -409,6 +412,9 @@
     },
     "no_data": {
       "message": "[%key:component::sensibo::config::error::no_devices%]"
+    },
+    "no_username": {
+      "message": "[%key:component::sensibo::config::error::no_username%]"
     },
     "service_raised": {
       "message": "Could not perform action for {name} with error {error}"

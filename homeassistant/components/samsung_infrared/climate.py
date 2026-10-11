@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -32,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
 from .entity import SamsungIrEntity
@@ -155,7 +157,18 @@ class SamsungIrClimate(
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in HA_TO_LIB_FAN:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_native_target_temperature = float(temperature)
+            self._attr_native_target_temperature = float(
+                round(
+                    TemperatureConverter.convert(
+                        float(temperature),
+                        last_state.attributes.get(
+                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                            self.hass.config.units.temperature_unit,
+                        ),
+                        self.native_temperature_unit,
+                    )
+                )
+            )
 
         if self._attr_hvac_mode != HVACMode.OFF:
             self._last_on_hvac_mode = self._attr_hvac_mode

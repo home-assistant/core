@@ -478,6 +478,7 @@ async def test_reconfigure_conversation_agent(
     ("stored_apis", "expected_apis"),
     [
         pytest.param(["assist"], ["assist"], id="valid-api"),
+        pytest.param(["homeassistant"], ["homeassistant"], id="homeassistant-api"),
         pytest.param(["mcp-deleted-entry"], [], id="removed-api"),
         pytest.param(
             ["assist", "mcp-deleted-entry"], ["assist"], id="valid-and-removed-api"
@@ -510,7 +511,10 @@ async def test_reconfigure_conversation_agent_filters_removed_llm_api(
 
     schema = result["data_schema"].schema
     key = next(k for k in schema if k == CONF_LLM_HASS_API)
-    assert [option["value"] for option in schema[key].config["options"]] == ["assist"]
+    assert [option["value"] for option in schema[key].config["options"]] == [
+        "assist",
+        "homeassistant",
+    ]
     assert key.default() == expected_apis
 
     # An unchanged form submission must pass the selector's validation.

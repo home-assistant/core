@@ -4751,8 +4751,9 @@ async def test_bluetooth_proxy_with_voice_assistant_awaits_forward(
         async with asyncio.timeout(2):
             assert await setup_task is True
             # The connection runs outside of the tasks Home Assistant tracks
-            while Platform.ASSIST_SATELLITE not in entry.runtime_data.loaded_platforms:
-                await asyncio.sleep(0.01)
+            await entry.runtime_data.first_connect_done.wait()
+
+    assert Platform.ASSIST_SATELLITE in entry.runtime_data.loaded_platforms
 
     assert "without awaiting async_forward_entry_setups" not in caplog.text
 
