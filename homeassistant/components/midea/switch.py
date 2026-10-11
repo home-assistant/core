@@ -5,7 +5,11 @@ from typing import Any, override
 
 from midealocal.const import DeviceType
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -56,7 +60,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
-        models=[DeviceType.AC],
+        models=[DeviceType.A1, DeviceType.AC],
         entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
@@ -123,6 +127,18 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         translation_key="night_light",
         models=[DeviceType.CC],
         entity_category=EntityCategory.CONFIG,
+    ),
+    MideaSwitchEntityDescription(
+        key="power",
+        translation_key="power",
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    MideaSwitchEntityDescription(
+        key="start",
+        translation_key="running",
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        device_class=SwitchDeviceClass.SWITCH,
     ),
     MideaSwitchEntityDescription(
         key="ai_switch",

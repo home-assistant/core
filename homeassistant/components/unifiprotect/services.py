@@ -9,6 +9,7 @@ import probatio
 from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
+from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import ClientError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -282,20 +283,33 @@ async def _async_ptz_command(
         ) from err
 
 
+@callback
+def _async_get_public_camera(camera: Camera) -> PublicCamera:
+    """Get the public camera matching a private camera."""
+    if (public := camera.api.public_bootstrap.cameras.get(camera.id)) is not None:
+        return public
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_available",
+        translation_placeholders={"device_name": camera.display_name},
+    )
+
+
 async def ptz_goto_preset(call: ServiceCall) -> None:
     """Move a PTZ camera to a preset position."""
     camera = _async_get_ptz_camera(call)
+    public = _async_get_public_camera(camera)
     preset_name: str = call.data[ATTR_PRESET]
 
     if preset_name.lower() == "home":
-        await _async_ptz_command(camera.ptz_goto_preset_public, slot=-1)
+        await _async_ptz_command(public.ptz_goto_preset, slot=-1)
         return
 
     presets = await _async_ptz_command(camera.get_ptz_presets)
 
     for preset in presets:
         if preset.name == preset_name:
-            await _async_ptz_command(camera.ptz_goto_preset_public, slot=preset.slot)
+            await _async_ptz_command(public.ptz_goto_preset, slot=preset.slot)
             return
 
     raise ServiceValidationError(

@@ -39,6 +39,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
+    CIRCULATOR_FAN_PRO = "circulator_fan_pro"
     K20_VACUUM = "k20_vacuum"
     S10_VACUUM = "s10_vacuum"
     K10_VACUUM = "k10_vacuum"
@@ -96,6 +97,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: SupportedModels.CIRCULATOR_FAN_PRO,
     SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
     SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
     SwitchbotModel.S20_VACUUM: SupportedModels.S20_VACUUM,
@@ -188,6 +190,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI,
     SwitchbotModel.CANDLE_WARMER_LAMP,
+    SwitchbotModel.CIRCULATOR_FAN_PRO,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT,
 }
@@ -226,6 +229,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
     SwitchbotModel.CANDLE_WARMER_LAMP: switchbot.SwitchbotCandleWarmerLamp,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: switchbot.SwitchbotCirculatorFanPro,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
 }
@@ -259,6 +263,17 @@ ROLLER_SHADE_SPEED_QUIET = "quiet"
 ROLLER_SHADE_SPEED_TO_MODE = {
     ROLLER_SHADE_SPEED_PERFORMANCE: 0,
     ROLLER_SHADE_SPEED_QUIET: 1,
+}
+
+# Curtain movement speeds, exposed as cover speeds.
+# Only the Curtain 3 (identified by its advertised model friendly name)
+# honours the speed byte; other curtain models always move at normal speed.
+CURTAIN_3_MODEL_FRIENDLY_NAME = "Curtain 3"
+CURTAIN_SPEED_NORMAL = "normal"
+CURTAIN_SPEED_SILENT = "silent"
+CURTAIN_SPEED_TO_VALUE = {
+    CURTAIN_SPEED_NORMAL: 255,
+    CURTAIN_SPEED_SILENT: 1,
 }
 
 AIRPURIFIER_BASIC_MODELS = {

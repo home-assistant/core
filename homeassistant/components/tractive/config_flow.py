@@ -19,7 +19,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 USER_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_EMAIL): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 

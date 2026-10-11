@@ -3123,6 +3123,13 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
+def test_async_noop() -> None:
+    """Test async_noop is a callback that does nothing."""
+    assert ha.is_callback(ha.async_noop)
+    assert HassJob(ha.async_noop).job_type is ha.HassJobType.Callback
+    assert ha.async_noop() is None
+
+
 def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
@@ -3529,11 +3536,11 @@ async def test_async_listen_with_run_immediately_deprecated(
         pass
 
     func = getattr(hass.bus, method)
-    func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
-    assert (
-        f"Detected code that calls `{method}` with run_immediately. "
-        "This will stop working in Home Assistant 2025.5"
-    ) in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match=f"Detected code that calls `{method}` with run_immediately. Please report this issue",
+    ):
+        func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
 
 
 async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:

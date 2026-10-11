@@ -2,6 +2,7 @@
 
 import datetime
 from datetime import timedelta
+import errno
 import textwrap
 from unittest.mock import patch
 
@@ -9,14 +10,17 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.local_calendar.const import DOMAIN
+from homeassistant.components.local_calendar.store import LocalCalendarStore
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
     FRIENDLY_NAME,
+    STORAGE_KEY,
     TEST_ENTITY,
     ClientFixture,
     GetEventsFn,
@@ -1009,6 +1013,46 @@ async def test_delete_invalid_event_id(
     assert resp["error"].get("code") == "failed"
 
 
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
+async def test_create_event_write_error(
+    hass: HomeAssistant, error: int, translation_key: str
+) -> None:
+    """Test creating an event when the calendar can't be written."""
+    with (
+        patch.object(LocalCalendarStore, "_store", side_effect=OSError(error, "Error")),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "calendar",
+            "create_event",
+            {
+                "start_date_time": "1997-07-14T17:00:00+00:00",
+                "end_date_time": "1997-07-15T04:00:00+00:00",
+                "summary": "Bastille Day Party",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {
+        "path": hass.config.path(f".storage/local_calendar.{STORAGE_KEY}.ics")
+    }
+
+
 @pytest.mark.parametrize(
     ("start_date_time", "end_date_time"),
     [
@@ -1238,11 +1282,6 @@ END:VCALENDAR
         pytest.param(
             ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
         ),
-        pytest.param(
-            ICS_WITH_STATUS.format(status="CANCELLED"),
-            None,
-            id="cancelled_is_not_reported",
-        ),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
@@ -1254,3 +1293,92 @@ async def test_event_status(
     events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
     assert len(events) == 1
     assert events[0]["status"] == expected_status
+
+
+@pytest.mark.parametrize("ics_content", [ICS_WITH_STATUS.format(status="CANCELLED")])
+@pytest.mark.usefixtures("setup_integration")
+async def test_cancelled_event_is_not_returned(get_events: GetEventsFn) -> None:
+    """Test that an event called off is not returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+
+    assert events == []
+
+
+ONGOING_CANCELLED_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260729T014500
+DTEND:20260729T021500
+SUMMARY:Called off
+UID:called-off
+STATUS:CANCELLED
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [ONGOING_CANCELLED_ICS])
+async def test_cancelled_event_does_not_turn_the_entity_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an event called off is not picked up as the current event.
+
+    The event would be ongoing at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    freezer.move_to("2026-07-29 07:50:20+00:00")  # 01:50:20 in America/Regina
+
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
+CANCELLED_OCCURRENCE_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261002
+DTEND;VALUE=DATE:20261003
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Daily series
+UID:daily-series
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261003
+DTEND;VALUE=DATE:20261004
+RECURRENCE-ID;VALUE=DATE:20261003
+SUMMARY:Daily series
+UID:daily-series
+STATUS:CANCELLED
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [CANCELLED_OCCURRENCE_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_cancelled_occurrence_of_a_series_is_not_returned(
+    get_events: GetEventsFn,
+) -> None:
+    """Test that only the cancelled occurrence of a recurring series is dropped.
+
+    The filtering has to happen after the series is expanded: dropping the
+    cancelled VEVENT before expansion would remove the override, and the RRULE
+    would then produce that day as an ordinary event again.
+    """
+    events = await get_events("2026-10-01T00:00:00", "2026-10-08T00:00:00")
+
+    assert [event["start"] for event in events] == [
+        {"date": "2026-10-02"},
+        {"date": "2026-10-04"},
+        {"date": "2026-10-05"},
+        {"date": "2026-10-06"},
+    ]

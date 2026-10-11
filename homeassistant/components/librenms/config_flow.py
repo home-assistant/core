@@ -42,7 +42,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
@@ -166,7 +166,7 @@ class LibrenmsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     )
                 }

@@ -65,6 +65,8 @@
     ]),
     <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Voice event',
     'intent': 'PlayMusicIntent',
+    'person_first_name': 'Jane',
+    'person_type': 'ADULT',
     'voice_command': 'Play some music',
     'voice_reply': 'Echo Test',
   })

@@ -7,20 +7,23 @@ from typing import Any, Final, final, override
 
 import probatio
 
-from homeassistant.components.light import ATTR_TRANSITION
+from homeassistant.components.light import ATTR_TRANSITION  # noqa: F401
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
+from homeassistant.const import (  # noqa: F401
+    CONF_PLATFORM,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DATA_COMPONENT, DOMAIN
+from .services import async_setup_services
 
-DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
 STATES: Final = "states"
 
 
@@ -76,15 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         eager_start=True,
     )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {
-            ATTR_TRANSITION: probatio.All(
-                probatio.Coerce(float), probatio.Clamp(min=0, max=6553)
-            )
-        },
-        "_async_activate",
-    )
+    async_setup_services(hass)
 
     return True
 

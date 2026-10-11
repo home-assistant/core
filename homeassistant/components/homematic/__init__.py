@@ -120,22 +120,24 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_INTERFACES, default={}): {
                     cv.match_all: {
                         probatio.Required(CONF_HOST): cv.string,
-                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
                         probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
                         probatio.Optional(
                             CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES
                         ): probatio.In(CONF_RESOLVENAMES_OPTIONS),
                         probatio.Optional(
                             CONF_JSONPORT, default=DEFAULT_JSONPORT
-                        ): cv.port,
+                        ): probatio.Port(),
                         probatio.Optional(
                             CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
                         probatio.Optional(
-                            CONF_PASSWORD, default=DEFAULT_PASSWORD
+                            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
                         ): cv.string,
                         probatio.Optional(CONF_CALLBACK_IP): cv.string,
-                        probatio.Optional(CONF_CALLBACK_PORT): cv.port,
+                        probatio.Optional(CONF_CALLBACK_PORT): probatio.Port(),
                         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                         probatio.Optional(
                             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
@@ -145,17 +147,19 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_HOSTS, default={}): {
                     cv.match_all: {
                         probatio.Required(CONF_HOST): cv.string,
-                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
                         probatio.Optional(
                             CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
                         probatio.Optional(
-                            CONF_PASSWORD, default=DEFAULT_PASSWORD
+                            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
                         ): cv.string,
                     }
                 },
                 probatio.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
-                probatio.Optional(CONF_LOCAL_PORT): cv.port,
+                probatio.Optional(CONF_LOCAL_PORT): probatio.Port(),
             }
         )
     },

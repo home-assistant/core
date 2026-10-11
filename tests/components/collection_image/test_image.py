@@ -1,6 +1,8 @@
 """The tests for the Collection Image image platform."""
 
+import errno
 from http import HTTPStatus
+import os
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -73,6 +75,7 @@ async def test_image(
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
     assert state and state.state == TEST_TIME
+    assert state.attributes["current_media_id"] == MOCK_MEDIA_IMAGE_URI_1
 
     await _verify_path_image(hass, hass_client)
 
@@ -300,6 +303,7 @@ async def test_unresolvable(
     state = hass.states.get(DEFAULT_ENTITY_ID)
 
     assert state and state.state == STATE_UNKNOWN
+    assert state.attributes["current_media_id"] == MOCK_MEDIA_IMAGE_URI_1
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -336,21 +340,24 @@ async def test_unresolvable(
     await _verify_path_image(hass, hass_client)
 
 
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
 @pytest.mark.usefixtures("mock_media_source")
 async def test_image_file_read_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    media_source_state: MediaSourceState,
     hass_client: ClientSessionGenerator,
+    error_no: int,
+    translation_key: str,
 ) -> None:
     """Test that a file read error is surfaced when serving the image."""
-    missing_path = Path(__file__).parent / "does_not_exist.png"
-    media_source_state.resolve_results[MOCK_MEDIA_IMAGE_URI_1] = PlayMedia(
-        url="",
-        mime_type="image/png",
-        path=missing_path,
-    )
-
     with (
         freeze_time(TEST_TIME),
     ):
@@ -362,13 +369,17 @@ async def test_image_file_read_error(
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state == TEST_TIME
 
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await async_get_image(hass, DEFAULT_ENTITY_ID)
-    assert exc_info.value.translation_key == "image_read_error"
-    assert exc_info.value.translation_placeholders["path"] == str(missing_path)
-
     client = await hass_client()
-    resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+    with patch.object(
+        Path, "read_bytes", side_effect=OSError(error_no, os.strerror(error_no))
+    ):
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await async_get_image(hass, DEFAULT_ENTITY_ID)
+        resp = await client.get(f"/api/image_proxy/{DEFAULT_ENTITY_ID}")
+
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": str(TEST_IMAGE)}
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 

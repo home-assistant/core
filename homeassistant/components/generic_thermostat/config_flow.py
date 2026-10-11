@@ -1,4 +1,7 @@
-"""Config flow for Generic hygrostat."""
+"""Config flow for Generic Thermostat.
+
+DEVELOPMENT OF THE GENERIC THERMOSTAT INTEGRATION IS FROZEN.
+"""
 
 from collections.abc import Mapping
 from datetime import timedelta
@@ -7,8 +10,9 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import fan, switch
+from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import CONF_NAME, DEGREE
+from homeassistant.const import CONF_NAME, DEGREE, UnitOfTemperature
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -16,6 +20,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowError,
     SchemaFlowFormStep,
 )
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -109,6 +114,24 @@ async def _validate_config(
 
         if min_cycle >= max_cycle:
             raise SchemaFlowError("min_max_runtime")
+
+    if CONF_MIN_TEMP in user_input or CONF_MAX_TEMP in user_input:
+        # A missing bound falls back to the climate default at runtime
+        unit = handler.parent_handler.hass.config.units.temperature_unit
+        min_temp = user_input.get(
+            CONF_MIN_TEMP,
+            TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, unit
+            ),
+        )
+        max_temp = user_input.get(
+            CONF_MAX_TEMP,
+            TemperatureConverter.convert(
+                DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, unit
+            ),
+        )
+        if min_temp > max_temp:
+            raise SchemaFlowError("min_max_temp")
 
     return user_input
 

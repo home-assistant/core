@@ -1089,6 +1089,74 @@ async def test_base_scanner_entity_associated_zone_removed_after_set(
 
 
 @pytest.mark.parametrize("unique_id", ["unique_scanner"])
+async def test_base_scanner_entity_associated_zone_entity_id_changed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test the associated zone repair issue and listener survive an entity_id change."""
+    hass.states.async_set(
+        "zone.home",
+        "0",
+        {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 1000},
+    )
+    kitchen_attributes = {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: 60.0, ATTR_RADIUS: 50}
+    hass.states.async_set("zone.kitchen", "0", kitchen_attributes)
+    base_scanner_entity._connected = True
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    entity_registry.async_update_entity_options(
+        entity_id, DOMAIN, {CONF_ASSOCIATED_ZONE: "zone.kitchen"}
+    )
+    hass.states.async_remove("zone.kitchen")
+    await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "zone": "zone.kitchen",
+    }
+
+    entity_registry.async_update_entity(
+        entity_id, new_entity_id="device_tracker.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert base_scanner_entity.entity_id == "device_tracker.renamed"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.translation_placeholders == {
+        "entity_id": "device_tracker.renamed",
+        "zone": "zone.kitchen",
+    }
+
+    # The zone listener survived the entity_id change
+    hass.states.async_set("zone.kitchen", "0", kitchen_attributes)
+    await hass.async_block_till_done()
+    entity_state = hass.states.get("device_tracker.renamed")
+    assert entity_state
+    assert entity_state.state == "kitchen"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    hass.states.async_remove("zone.kitchen")
+    await hass.async_block_till_done()
+    entity_state = hass.states.get("device_tracker.renamed")
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.translation_placeholders == {
+        "entity_id": "device_tracker.renamed",
+        "zone": "zone.kitchen",
+    }
+
+
+@pytest.mark.parametrize("unique_id", ["unique_scanner"])
 async def test_base_scanner_entity_associated_zone_missing_at_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1316,6 +1384,55 @@ async def test_scanner_entity_state(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("ip_address", "mac_address", "hostname"),
+    [("0.0.0.0", "ad:de:ef:be:ed:fe", "test.hostname.org")],
+)
+async def test_scanner_entity_entity_id_changed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    mac_address: str,
+    scanner_entity: MockScannerEntity,
+) -> None:
+    """Test a scanner entity's entity_id is changed in place."""
+    other_config_entry = MockConfigEntry(domain="not_fake_integration")
+    other_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        name="Device from other integration",
+        config_entry_id=other_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+    )
+    config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+
+    with (
+        patch.object(
+            ScannerEntity, "async_prepare_to_add_to_hass", autospec=True
+        ) as mock_prepare,
+        patch.object(
+            ScannerEntity, "async_internal_added_to_hass", autospec=True
+        ) as mock_internal_added,
+    ):
+        entity_registry.async_update_entity(
+            entity_id, new_entity_id="device_tracker.renamed"
+        )
+        await hass.async_block_till_done()
+
+    mock_prepare.assert_not_called()
+    mock_internal_added.assert_not_called()
+    assert hass.states.get(entity_id) is None
+    entity_state = hass.states.get("device_tracker.renamed")
+    assert entity_state
+    assert entity_state.state == STATE_NOT_HOME
+    new_entry = entity_registry.async_get("device_tracker.renamed")
+    assert new_entry
+    assert new_entry.device_id == entity_entry.device_id
 
 
 def test_tracker_entity() -> None:
