@@ -1,20 +1,32 @@
 """Matter to Home Assistant adapter."""
 
-from typing import TYPE_CHECKING, cast
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import BridgedNode
+from matter_server.common.errors import NodeNotReady
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
 from .helpers import MatterConfigEntry, get_device_endpoint, get_device_id
+from .thread_border_router import (
+    async_import_dataset,
+    get_active_dataset_timestamp,
+    get_active_dataset_timestamp_path,
+    get_border_router_endpoints,
+    get_extended_address,
+)
+
+THREAD_DATASET_RETRY_DELAY = 30  # seconds
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -44,6 +56,17 @@ class MatterAdapter:
         self.config_entry = config_entry
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
         self.discovered_entities: set[str] = set()
+        # (node_id, endpoint_id) -> (active dataset timestamp, extended
+        # address) as of the last import; the address is part of the key
+        # because a router can regenerate it without touching the dataset,
+        # and the store tracks it per entry.
+        self._thread_dataset_timestamps: dict[tuple[int, int], tuple[Any, Any]] = {}
+        # border router endpoints with an ActiveDatasetTimestamp subscription
+        self._thread_dataset_subscriptions: dict[
+            tuple[int, int], Callable[[], None]
+        ] = {}
+        # pending NodeNotReady retries, one timer per endpoint
+        self._thread_dataset_retries: dict[tuple[int, int], Callable[[], None]] = {}
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
@@ -53,6 +76,17 @@ class MatterAdapter:
 
     async def setup_nodes(self) -> None:
         """Set up all existing nodes and subscribe to new nodes."""
+
+        def unsubscribe_thread_dataset_updates() -> None:
+            while self._thread_dataset_subscriptions:
+                _, unsubscribe = self._thread_dataset_subscriptions.popitem()
+                unsubscribe()
+            while self._thread_dataset_retries:
+                _, cancel = self._thread_dataset_retries.popitem()
+                cancel()
+
+        self.config_entry.async_on_unload(unsubscribe_thread_dataset_updates)
+
         for node in self.matter_client.get_nodes():
             self._setup_node(node)
 
@@ -81,9 +115,18 @@ class MatterAdapter:
             ):
                 self._setup_endpoint(node.endpoints[0])
             self._setup_endpoint(endpoint)
+            # An endpoint can be delivered on its own, without any node-level
+            # event; a border router arriving this way still has to be read.
+            self._schedule_thread_dataset_import(node)
 
         def endpoint_removed_callback(event: EventType, data: dict[str, int]) -> None:
             """Handle endpoint removed event."""
+            key = (data["node_id"], data["endpoint_id"])
+            if unsubscribe := self._thread_dataset_subscriptions.pop(key, None):
+                unsubscribe()
+            if cancel_retry := self._thread_dataset_retries.pop(key, None):
+                cancel_retry()
+            self._thread_dataset_timestamps.pop(key, None)
             server_info = cast(ServerInfoMessage, self.matter_client.server_info)
             try:
                 node = self.matter_client.get_node(data["node_id"])
@@ -106,6 +149,18 @@ class MatterAdapter:
 
         def node_removed_callback(event: EventType, node_id: int) -> None:
             """Handle node removed event."""
+            # The client may already have evicted the node, in which case the
+            # endpoint iteration below never happens; the Thread import state
+            # has to go regardless, or a node reusing the id with an unchanged
+            # dataset would have its import suppressed.
+            for key in [
+                k for k in self._thread_dataset_subscriptions if k[0] == node_id
+            ]:
+                self._thread_dataset_subscriptions.pop(key)()
+            for key in [k for k in self._thread_dataset_timestamps if k[0] == node_id]:
+                del self._thread_dataset_timestamps[key]
+            for key in [k for k in self._thread_dataset_retries if k[0] == node_id]:
+                self._thread_dataset_retries.pop(key)()
             try:
                 node = self.matter_client.get_node(node_id)
             except KeyError:
@@ -132,6 +187,7 @@ class MatterAdapter:
                 callback=node_removed_callback, event_filter=EventType.NODE_REMOVED
             )
         )
+
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
                 callback=node_added_callback, event_filter=EventType.NODE_ADDED
@@ -161,6 +217,119 @@ class MatterAdapter:
                 node.node_id,
                 err,
             )
+        # Outside the catch-all above so the datasets of a node whose entity
+        # setup failed are still read; the read runs in a background task, so
+        # its errors surface on their own terms either way.
+        self._schedule_thread_dataset_import(node)
+
+    def _schedule_thread_dataset_import(self, node: MatterNode) -> None:
+        """Import Thread datasets from any border router endpoints on this node.
+
+        Reading the dataset needs an await and this runs from synchronous
+        callbacks, so the work is scheduled as a background task.
+        """
+        # An unavailable node cannot answer the read, and setup_nodes() visits
+        # cached offline nodes too: without this gate every visit ends in
+        # NodeNotReady and re-arms the retry, polling an offline border router
+        # indefinitely. The node-updated path schedules the import once the
+        # node comes back.
+        if not node.available:
+            return
+        for endpoint in get_border_router_endpoints(node):
+            key = (node.node_id, endpoint.endpoint_id)
+            self._subscribe_thread_dataset_updates(node, endpoint)
+            state = (
+                get_active_dataset_timestamp(endpoint),
+                get_extended_address(endpoint),
+            )
+            # _setup_node also runs on every node update; only re-read when
+            # the timestamp shows the dataset changed or the router's
+            # extended address moved underneath the same dataset.
+            if self._thread_dataset_timestamps.get(key, object()) == state:
+                continue
+            self._thread_dataset_timestamps[key] = state
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._import_thread_dataset(key, endpoint),
+                name=f"matter_thread_dataset_{node.node_id}_{endpoint.endpoint_id}",
+            )
+
+    async def _import_thread_dataset(
+        self, key: tuple[int, int], endpoint: MatterEndpoint
+    ) -> None:
+        """Import the dataset, forgetting the timestamp when the read fails.
+
+        The timestamp is recorded before the read to deduplicate concurrent
+        triggers, but a failed read must not count as done, or a transient
+        error (a server reconnect, say) would suppress the import until the
+        dataset changes again.
+        """
+        try:
+            await async_import_dataset(self.hass, self.matter_client, endpoint)
+        except NodeNotReady:
+            # The node is mid-resubscription after a restart; the availability
+            # event can even arrive while it is still not ready, so a plain
+            # retrigger is not enough. Try again once things have settled.
+            self._thread_dataset_timestamps.pop(key, None)
+
+            @callback
+            def _retry(_now: Any) -> None:
+                self._thread_dataset_retries.pop(key, None)
+                try:
+                    node = self.matter_client.get_node(key[0])
+                except KeyError:
+                    return  # node removed meanwhile
+                self._schedule_thread_dataset_import(node)
+
+            # One timer per endpoint, replaced on re-arm: registering each
+            # one-shot timer for unload instead would retain a callback per
+            # retry cycle for the entry's lifetime.
+            if cancel_previous := self._thread_dataset_retries.pop(key, None):
+                cancel_previous()
+            self._thread_dataset_retries[key] = async_call_later(
+                self.hass, THREAD_DATASET_RETRY_DELAY, _retry
+            )
+        except ValueError:
+            # A malformed response is not an unprovisioned router: forget the
+            # timestamp so the next trigger re-reads instead of trusting it.
+            self._thread_dataset_timestamps.pop(key, None)
+            LOGGER.warning(
+                "Border router %s returned an unusable dataset response", key
+            )
+        except Exception:
+            self._thread_dataset_timestamps.pop(key, None)
+            raise
+
+    def _subscribe_thread_dataset_updates(
+        self, node: MatterNode, endpoint: MatterEndpoint
+    ) -> None:
+        """Re-import this border router's dataset when its timestamp changes.
+
+        Node updates only happen on interviews, so a dataset changed by a
+        scheduled migration would otherwise go unnoticed until the next
+        interview or restart. The client dispatches attribute events by path;
+        the timestamp bookkeeping in _schedule_thread_dataset_import decides
+        whether a read is due.
+        """
+        key = (node.node_id, endpoint.endpoint_id)
+        if key in self._thread_dataset_subscriptions:
+            return
+
+        def timestamp_updated_callback(event: EventType, data: Any) -> None:
+            try:
+                updated_node = self.matter_client.get_node(node.node_id)
+            except KeyError:
+                return  # race condition
+            self._schedule_thread_dataset_import(updated_node)
+
+        # Kept per endpoint so removal can unsubscribe; anything still
+        # subscribed when the entry unloads is released in one sweep there.
+        self._thread_dataset_subscriptions[key] = self.matter_client.subscribe_events(
+            callback=timestamp_updated_callback,
+            event_filter=EventType.ATTRIBUTE_UPDATED,
+            node_filter=node.node_id,
+            attr_path_filter=get_active_dataset_timestamp_path(endpoint),
+        )
 
     def _create_device_registry(
         self,
