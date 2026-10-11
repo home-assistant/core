@@ -350,6 +350,15 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         self.async_call_service(COVER_DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     @callback
+    @override
+    def async_stop(self) -> None:
+        """Cancel a pending position write when the accessory is stopped."""
+        if self._move_timer:
+            self._move_timer()
+            self._move_timer = None
+        super().async_stop()
+
+    @callback
     def _async_update_target_position_while_moving(
         self, state: str, current_position: int
     ) -> None:

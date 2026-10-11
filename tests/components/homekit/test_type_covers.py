@@ -359,6 +359,38 @@ async def test_windowcovering_set_cover_position_while_dragging(
     assert events[-1].data[ATTR_VALUE] == 55
 
 
+async def test_windowcovering_set_cover_position_after_stop(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test a pending position is not sent after the accessory is stopped."""
+    entity_id = "cover.window"
+
+    hass.states.async_set(
+        entity_id,
+        CoverState.CLOSED,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 0,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_cover_position = async_mock_service(
+        hass, COVER_DOMAIN, "set_cover_position"
+    )
+
+    acc.char_target_position.client_update_value(55)
+    await hass.async_block_till_done()
+    acc.async_stop()
+
+    await _wait_for_position_debounce(hass)
+    assert not call_set_cover_position
+    assert not events
+
+
 async def test_windowcovering_target_position_while_moving(
     hass: HomeAssistant, hk_driver
 ) -> None:
