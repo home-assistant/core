@@ -1051,6 +1051,20 @@
         }
       },
       "name": "Set chime paired doorbells"
+    },
+    "trigger_alarm_webhook": {
+      "description": "Fires an Alarm Manager webhook trigger, running the alarms that use it.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The UniFi Protect NVR to send the webhook to.",
+          "name": "NVR"
+        },
+        "trigger_id": {
+          "description": "The ID of the webhook trigger, as shown in the UniFi Protect Alarm Manager.",
+          "name": "Trigger ID"
+        }
+      },
+      "name": "Trigger alarm webhook"
     }
   }
 }

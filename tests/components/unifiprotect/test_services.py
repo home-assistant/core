@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+import probatio
 import pytest
 from uiprotect.data import Camera, Chime, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
@@ -21,24 +22,35 @@ from homeassistant.components.unifiprotect.const import (
 )
 from homeassistant.components.unifiprotect.services import (
     ATTR_PRESET,
+    ATTR_TRIGGER_ID,
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_PTZ_GOTO_PRESET,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
+    SERVICE_TRIGGER_ALARM_WEBHOOK,
 )
 from homeassistant.config_entries import ConfigEntryDisabler
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
 from .conftest import UNIFI_MAC
 from .utils import MockUFPFixture, init_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 @pytest.fixture(name="device")
@@ -618,3 +630,79 @@ async def test_public_only_action_rejected(
             {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
             blocking=True,
         )
+
+
+async def test_trigger_alarm_webhook(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test trigger_alarm_webhook, which also works on an API-key-only entry."""
+    await setup_public_only()
+    ufp_public_only.api.send_alarm_webhook_public = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        {
+            ATTR_CONFIG_ENTRY_ID: ufp_public_only.entry.entry_id,
+            ATTR_TRIGGER_ID: "test-trigger",
+        },
+        blocking=True,
+    )
+    ufp_public_only.api.send_alarm_webhook_public.assert_awaited_once_with(
+        "test-trigger"
+    )
+
+
+async def test_trigger_alarm_webhook_error(
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
+    """Test trigger_alarm_webhook reports Protect errors."""
+    ufp.api.send_alarm_webhook_public = AsyncMock(side_effect=BadRequest("400"))
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "command_error"
+    assert exc_info.value.translation_placeholders == {"error": "400"}
+
+
+async def test_trigger_alarm_webhook_empty_trigger_id(
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
+    """Test trigger_alarm_webhook rejects an empty trigger ID."""
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: ""},
+            blocking=True,
+        )
+    ufp.api.send_alarm_webhook_public.assert_not_awaited()
+
+
+async def test_trigger_alarm_webhook_non_admin(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    ufp: MockUFPFixture,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test trigger_alarm_webhook rejects non-admin callers."""
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    ufp.api.send_alarm_webhook_public.assert_not_awaited()
