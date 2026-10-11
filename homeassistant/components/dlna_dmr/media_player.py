@@ -736,8 +736,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 meta_data=metadata,
             )
 
-        # Stop current playing media
-        if self._device.can_stop:
+        # Stop is invalid when no media is present.
+        if (
+            self._device.transport_state != TransportState.NO_MEDIA_PRESENT
+            and self._device.can_stop
+        ):
             await self.async_media_stop()
 
         # Queue media

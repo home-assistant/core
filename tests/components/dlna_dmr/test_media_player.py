@@ -686,13 +686,31 @@ async def test_services(
     dmr_device_mock.async_select_preset.assert_awaited_once_with("Default")
 
 
-async def test_play_media_stopped(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+@pytest.mark.parametrize(
+    "transport_state",
+    [
+        pytest.param(TransportState.STOPPED, id="stopped"),
+        pytest.param(TransportState.PLAYING, id="playing"),
+        pytest.param(TransportState.PAUSED_PLAYBACK, id="paused"),
+        pytest.param(TransportState.TRANSITIONING, id="transitioning"),
+        pytest.param(None, id="unknown"),
+    ],
+)
+async def test_play_media_stop_existing(
+    hass: HomeAssistant,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+    transport_state: TransportState | None,
 ) -> None:
-    """Test play_media, starting from stopped and the device can stop."""
+    """Test play_media stops existing media before loading a new URI."""
     # play_media performs a few calls to the device for setup and play
     dmr_device_mock.can_stop = True
-    dmr_device_mock.transport_state = TransportState.STOPPED
+    dmr_device_mock.transport_state = transport_state
+
+    async def async_stop() -> None:
+        dmr_device_mock.transport_state = TransportState.STOPPED
+
+    dmr_device_mock.async_stop.side_effect = async_stop
     await hass.services.async_call(
         mp.DOMAIN,
         mp.SERVICE_PLAY_MEDIA,
@@ -719,6 +737,120 @@ async def test_play_media_stopped(
     )
     dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
     dmr_device_mock.async_play.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    "autoplay",
+    [pytest.param(True, id="autoplay"), pytest.param(False, id="queue_only")],
+)
+async def test_play_media_no_media_present(
+    hass: HomeAssistant,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+    autoplay: bool,
+) -> None:
+    """Load media without an invalid Stop when no media is present."""
+    dmr_device_mock.can_stop = True
+    dmr_device_mock.transport_state = TransportState.NO_MEDIA_PRESENT
+    dmr_device_mock.async_stop.side_effect = UpnpActionResponseError(
+        status=500, error_code=701, error_desc="Transition not available"
+    )
+
+    async def async_set_transport_uri(
+        _media_id: str, _title: str, _metadata: str
+    ) -> None:
+        dmr_device_mock.transport_state = TransportState.STOPPED
+
+    dmr_device_mock.async_set_transport_uri.side_effect = async_set_transport_uri
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            mp.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
+            mp.ATTR_MEDIA_EXTRA: {"autoplay": autoplay},
+        },
+        blocking=True,
+    )
+
+    dmr_device_mock.async_stop.assert_not_awaited()
+    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+    )
+    assert dmr_device_mock.async_wait_for_can_play.await_count == int(autoplay)
+    assert dmr_device_mock.async_play.await_count == int(autoplay)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            UpnpActionResponseError(
+                status=500, error_code=701, error_desc="Transition not available"
+            ),
+            id="transition_not_available",
+        ),
+        pytest.param(
+            UpnpActionResponseError(
+                status=500, error_code=714, error_desc="Illegal MIME-type"
+            ),
+            id="other_action_error",
+        ),
+        pytest.param(UpnpConnectionError(), id="connection_error"),
+    ],
+)
+async def test_play_media_stop_error(
+    hass: HomeAssistant,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+    error: UpnpError,
+) -> None:
+    """An error stopping existing media must still abort playback."""
+    dmr_device_mock.can_stop = True
+    dmr_device_mock.transport_state = TransportState.PLAYING
+    dmr_device_mock.async_stop.side_effect = error
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            mp.SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: mock_entity_id,
+                mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                mp.ATTR_MEDIA_CONTENT_ID: (
+                    "http://198.51.100.20:8200/MediaItems/17621.mp3"
+                ),
+            },
+            blocking=True,
+        )
+
+    dmr_device_mock.async_stop.assert_awaited_once_with()
+    dmr_device_mock.async_set_transport_uri.assert_not_awaited()
+    dmr_device_mock.async_play.assert_not_awaited()
+
+
+async def test_media_stop_no_media_present_error(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """An explicit Stop must continue to report a rejected transition."""
+    dmr_device_mock.transport_state = TransportState.NO_MEDIA_PRESENT
+    dmr_device_mock.async_stop.side_effect = UpnpActionResponseError(
+        status=500, error_code=701, error_desc="Transition not available"
+    )
+
+    with pytest.raises(HomeAssistantError, match="Transition not available"):
+        await hass.services.async_call(
+            mp.DOMAIN,
+            ha_const.SERVICE_MEDIA_STOP,
+            {ATTR_ENTITY_ID: mock_entity_id},
+            blocking=True,
+        )
+
+    dmr_device_mock.async_stop.assert_awaited_once_with()
 
 
 async def test_play_media_playing(
