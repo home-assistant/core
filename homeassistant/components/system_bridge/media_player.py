@@ -21,6 +21,8 @@ from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordina
 from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
+PARALLEL_UPDATES = 0
+
 STATUS_CHANGING: Final[str] = "CHANGING"
 STATUS_STOPPED: Final[str] = "STOPPED"
 STATUS_PLAYING: Final[str] = "PLAYING"
