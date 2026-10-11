@@ -271,17 +271,73 @@ async def test_dhcp_discovery(
     assert result["result"].unique_id == "DISCOVERED123"
 
 
+@pytest.mark.parametrize(
+    ("configured_host", "discovered_ip", "expected_host"),
+    [
+        pytest.param(
+            "192.168.1.1",
+            "192.168.1.50",
+            "192.168.1.50",
+            id="bare-ip-changed",
+        ),
+        pytest.param(
+            "https://192.168.1.1:8443",
+            "192.168.1.50",
+            "https://192.168.1.50:8443",
+            id="https-custom-port-changed-ip",
+        ),
+        pytest.param(
+            "https://192.168.1.1:8443",
+            "192.168.1.1",
+            "https://192.168.1.1:8443",
+            id="https-custom-port-same-ip",
+        ),
+        pytest.param(
+            "http://192.168.1.1:8080",
+            "192.168.1.50",
+            "http://192.168.1.50:8080",
+            id="http-custom-port-changed-ip",
+        ),
+        pytest.param(
+            "https://192.168.1.1",
+            "192.168.1.50",
+            "https://192.168.1.50",
+            id="https-default-port",
+        ),
+        pytest.param(
+            "http://192.168.1.1",
+            "192.168.1.50",
+            "http://192.168.1.50",
+            id="http-default-port",
+        ),
+        pytest.param(
+            "https://[2001:db8::1]:8443",
+            "192.168.1.50",
+            "https://192.168.1.50:8443",
+            id="configured-ipv6-url",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_teltasync")
 async def test_dhcp_discovery_already_configured(
-    hass: HomeAssistant, mock_teltasync: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    configured_host: str,
+    discovered_ip: str,
+    expected_host: str,
 ) -> None:
-    """Test DHCP discovery when device is already configured."""
+    """Test DHCP rediscovery preserves the configured scheme and port."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_HOST: configured_host},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
-            ip="192.168.1.50",  # Different IP
+            ip=discovered_ip,
             macaddress="209727112233",
             hostname="teltonika",
         ),
@@ -289,8 +345,33 @@ async def test_dhcp_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # Verify IP was updated
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_HOST] == expected_host
+
+
+@pytest.mark.usefixtures("mock_teltasync")
+async def test_dhcp_discovery_ignored(hass: HomeAssistant) -> None:
+    """Test rediscovery of an ignored device without a configured host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": "1234567890", "title": "RUTX50 Test"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
+    assert result["result"].unique_id == "1234567890"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.50",
+            macaddress="209727112233",
+            hostname="teltonika",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_dhcp_discovery_cannot_connect(

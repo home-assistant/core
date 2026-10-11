@@ -6,6 +6,7 @@ from typing import Any, override
 
 import probatio
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
@@ -249,7 +250,10 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Use the MAC as a placeholder unique_id when nothing matched, so
         # parallel DHCP advertisements don't both reach dhcp_confirm.
-        await self.async_set_unique_id(device_id or formatted_mac)
+        if entry := await self.async_set_unique_id(device_id or formatted_mac):
+            configured_url = URL(entry.data.get(CONF_HOST, ""))
+            if configured_url.is_absolute():
+                host = str(configured_url.with_host(host))
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
