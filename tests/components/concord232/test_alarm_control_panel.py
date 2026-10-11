@@ -1,5 +1,6 @@
 """Tests for the Concord232 alarm control panel platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -13,266 +14,220 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_DISARM,
     AlarmControlPanelState,
 )
+from homeassistant.components.concord232.alarm_control_panel import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     CONF_CODE,
-    CONF_HOST,
     CONF_MODE,
-    CONF_NAME,
-    CONF_PORT,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_time_changed
+from .conftest import setup_integration
 
-VALID_CONFIG = {
-    ALARM_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-        CONF_NAME: "Test Alarm",
-    }
-}
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-VALID_CONFIG_WITH_CODE = {
-    ALARM_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-        CONF_NAME: "Test Alarm",
-        CONF_CODE: "1234",
-    }
-}
-
-VALID_CONFIG_SILENT_MODE = {
-    ALARM_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-        CONF_NAME: "Test Alarm",
-        CONF_MODE: "silent",
-    }
-}
-
-
-async def test_setup_platform(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test platform setup."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("alarm_control_panel.test_alarm")
-    assert state is not None
-    assert state.state == AlarmControlPanelState.DISARMED
-
-
-async def test_setup_platform_connection_error(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test platform setup with connection error."""
-    mock_concord232_client.list_partitions.side_effect = (
-        requests.exceptions.ConnectionError("Connection failed")
-    )
-
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("alarm_control_panel.test_alarm") is None
-
-
-async def test_alarm_disarm(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test disarm service."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_alarm"},
-        blocking=True,
-    )
-    mock_concord232_client.disarm.assert_called_once_with(None)
-
-
-async def test_alarm_disarm_with_code(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test disarm service with code."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
-        },
-        blocking=True,
-    )
-    mock_concord232_client.disarm.assert_called_once_with("1234")
-
-
-async def test_alarm_disarm_invalid_code(
-    hass: HomeAssistant,
-    mock_concord232_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test disarm service with invalid code."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "9999",
-        },
-        blocking=True,
-    )
-    mock_concord232_client.disarm.assert_not_called()
-    assert "Invalid code given" in caplog.text
+ENTITY_ID = "alarm_control_panel.localhost"
 
 
 @pytest.mark.parametrize(
-    ("service", "expected_arm_call"),
+    ("arming_level", "expected"),
     [
-        (SERVICE_ALARM_ARM_HOME, "stay"),
-        (SERVICE_ALARM_ARM_AWAY, "away"),
+        ("Off", AlarmControlPanelState.DISARMED),
+        ("Stay/Home", AlarmControlPanelState.ARMED_HOME),
+        ("Away", AlarmControlPanelState.ARMED_AWAY),
     ],
 )
-async def test_alarm_arm(
+async def test_alarm_state(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
-    service: str,
-    expected_arm_call: str,
+    mock_config_entry: MockConfigEntry,
+    arming_level: str,
+    expected: AlarmControlPanelState,
 ) -> None:
-    """Test arm service."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG_WITH_CODE)
+    """Test the panel state maps from the partition arming level."""
+    mock_concord232_client.list_partitions.return_value = [
+        {"arming_level": arming_level}
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+
+
+async def test_state_updates_on_poll(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the panel state follows the polled partition state."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    mock_concord232_client.list_partitions.return_value = [{"arming_level": "Away"}]
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
+
+
+async def test_connection_error_keeps_last_state(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the panel keeps its last state when the server stops answering."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    mock_concord232_client.list_partitions.side_effect = (
+        requests.exceptions.ConnectionError("boom")
+    )
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+    assert "Unable to connect to" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_args"),
+    [
+        (SERVICE_ALARM_ARM_HOME, ("stay",)),
+        (SERVICE_ALARM_ARM_AWAY, ("away",)),
+    ],
+)
+async def test_arm_services(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    expected_args: tuple[str, ...],
+) -> None:
+    """Test arming without a configured code."""
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         ALARM_DOMAIN,
         service,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
-        },
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_concord232_client.arm.assert_called_once_with(expected_arm_call)
+    mock_concord232_client.arm.assert_called_once_with(*expected_args)
 
 
-async def test_alarm_arm_home_silent_mode(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
+async def test_arm_home_silent_mode(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test arm home service with silent mode."""
-    config_with_code = VALID_CONFIG_SILENT_MODE.copy()
-    config_with_code[ALARM_DOMAIN][CONF_CODE] = "1234"
-    await async_setup_component(hass, ALARM_DOMAIN, config_with_code)
+    """Test the silent option is passed through when arming home."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_MODE: "silent"}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         ALARM_DOMAIN,
         SERVICE_ALARM_ARM_HOME,
-        {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
-        },
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with("stay", "silent")
 
 
-async def test_update_state_disarmed(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
+async def test_disarm(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test update when alarm is disarmed."""
-    mock_concord232_client.list_partitions.return_value = [{"arming_level": "Off"}]
-    mock_concord232_client.list_zones.return_value = [
-        {"number": 1, "name": "Zone 1", "state": "Normal"},
-    ]
+    """Test disarming passes the code to the client."""
+    await setup_integration(hass, mock_config_entry)
 
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("alarm_control_panel.test_alarm")
-    assert state.state == AlarmControlPanelState.DISARMED
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_DISARM,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: "1234"},
+        blocking=True,
+    )
+    mock_concord232_client.disarm.assert_called_once_with("1234")
 
 
 @pytest.mark.parametrize(
-    ("arming_level", "expected_state"),
+    ("service", "client_method"),
     [
-        ("Home", AlarmControlPanelState.ARMED_HOME),
-        ("Away", AlarmControlPanelState.ARMED_AWAY),
+        (SERVICE_ALARM_ARM_HOME, "arm"),
+        (SERVICE_ALARM_ARM_AWAY, "arm"),
+        (SERVICE_ALARM_DISARM, "disarm"),
     ],
 )
-async def test_update_state_armed(
+@pytest.mark.parametrize(
+    ("code", "command_sent"),
+    [
+        ("1234", True),
+        ("9999", False),
+    ],
+)
+async def test_code_validation(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    arming_level: str,
-    expected_state: str,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    client_method: str,
+    code: str,
+    command_sent: bool,
 ) -> None:
-    """Test update when alarm is armed."""
-    mock_concord232_client.list_partitions.return_value = [
-        {"arming_level": arming_level}
-    ]
-    mock_concord232_client.partitions = (
-        mock_concord232_client.list_partitions.return_value
+    """Test a configured code gates every command."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_CODE: "1234"}
     )
-    mock_concord232_client.list_zones.return_value = [
-        {"number": 1, "name": "Zone 1", "state": "Normal"},
-    ]
-
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Trigger update
-    freezer.tick(10)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("alarm_control_panel.test_alarm")
-    assert state.state == expected_state
-
-
-async def test_update_connection_error(
-    hass: HomeAssistant,
-    mock_concord232_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test update with connection error."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    mock_concord232_client.list_partitions.side_effect = (
-        requests.exceptions.ConnectionError("Connection failed")
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: code},
+        blocking=True,
     )
-
-    freezer.tick(10)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "Unable to connect to" in caplog.text
+    assert getattr(mock_concord232_client, client_method).called is command_sent
 
 
-async def test_update_no_partitions(
+async def test_no_partitions_reports_unknown(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test update when no partitions are available."""
+    """Test the panel state is unknown when the server reports no partitions."""
     mock_concord232_client.list_partitions.return_value = []
+    await setup_integration(hass, mock_config_entry)
 
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
-    assert "Concord232 reports no partitions" in caplog.text
+
+async def test_setup_connection_error_creates_no_entity(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a connection error during setup leaves no panel entity."""
+    mock_concord232_client.list_partitions.side_effect = (
+        requests.exceptions.ConnectionError("boom")
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+    assert "Unable to connect to Concord232" in caplog.text
