@@ -105,13 +105,16 @@ class SkylightDataUpdateCoordinator(DataUpdateCoordinator[SkylightData]):
     @override
     async def _async_update_data(self) -> SkylightData:
         today = dt_util.now().date()
-        self._window_min = today - timedelta(days=EVENTS_PAST_DAYS)
-        self._window_max = today + timedelta(days=EVENTS_FUTURE_DAYS)
-        return SkylightData(
-            events=await self._async_fetch_events(
-                self._window_min.isoformat(), self._window_max.isoformat()
-            )
+        window_min = today - timedelta(days=EVENTS_PAST_DAYS)
+        window_max = today + timedelta(days=EVENTS_FUTURE_DAYS)
+        events = await self._async_fetch_events(
+            window_min.isoformat(), window_max.isoformat()
         )
+        # Advance the cached-window bounds only after a successful fetch, so
+        # a failed refresh keeps the bounds honest about what data is cached.
+        self._window_min = window_min
+        self._window_max = window_max
+        return SkylightData(events=events)
 
     async def _async_fetch_events(
         self, date_min: str, date_max: str

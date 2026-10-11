@@ -406,3 +406,42 @@ async def test_token_rotation_persists_new_tokens(
     assert token["access_token"] == "rotated-access"
     assert token["refresh_token"] == "rotated-refresh"
     assert token["device_fingerprint"] == "mock-fingerprint"
+
+
+async def test_failed_refresh_does_not_advance_window_bounds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed scheduled refresh keeps the cached-window bounds honest.
+
+    The bounds describe what data is actually cached; advancing them on a
+    failed fetch would let async_events_between treat an uncached day as
+    cached and return incomplete results without a live fetch.
+    """
+    freezer.move_to(datetime(2030, 6, 1, 12, 0, tzinfo=UTC))
+
+    with patch(
+        "skylight_api.SkylightAPI.get_calendar_events", return_value={"data": []}
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator._window_max == datetime(
+        2030, 6, 1, tzinfo=UTC
+    ).date() + timedelta(days=60)
+
+    # The next scheduled refresh fails; the bounds must not move.
+    freezer.tick(timedelta(days=2))
+    with patch(
+        "skylight_api.SkylightAPI.get_calendar_events",
+        side_effect=SkylightAPIError("endpoint down"),
+    ):
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert coordinator._window_max == datetime(
+        2030, 6, 1, tzinfo=UTC
+    ).date() + timedelta(days=60)

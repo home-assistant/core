@@ -43,7 +43,7 @@
   },
   "exceptions": {
     "update_error": {
-      "message": "Error fetching skylight data: {error}"
+      "message": "Error fetching Skylight data: {error}"
     }
   }
 }
