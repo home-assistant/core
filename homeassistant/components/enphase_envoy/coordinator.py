@@ -7,10 +7,11 @@ import logging
 import math
 from typing import Any, override
 
-from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
+from aiohttp import ClientSession
+from pyenphase import Envoy, EnvoyClientClosedError, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -52,7 +53,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     token_lifetime: int  # days of token life left
 
     def __init__(
-        self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
+        self,
+        hass: HomeAssistant,
+        envoy: Envoy,
+        entry: EnphaseConfigEntry,
+        session: ClientSession,
     ) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
@@ -61,6 +66,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.password = entry_data.get(CONF_PASSWORD)
         self.manual_token = entry_data.get(CONF_MANUAL_TOKEN, False)
         self._setup_complete = False
+        self._background_started = False
         self._operational_timeout = False
         self.envoy_firmware = ""
         self.interface = None
@@ -69,6 +75,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._cancel_mac_verification: CALLBACK_TYPE | None = None
         self.token_lifetime = 0
         self._acb_sleep_soc_band: str | None = None
+        self._client_session: ClientSession = session
         super().__init__(
             hass,
             _LOGGER,
@@ -135,8 +142,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         if not fresh:
             if not self.manual_token:
-                self.hass.async_create_background_task(
-                    self._async_try_refresh_token(), f"{name} token refresh"
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_try_refresh_token(),
+                    f"{self.name} token refresh",
                 )
                 return
 
@@ -183,15 +192,17 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # If the token actually ends up expiring, we'll
             # re-authenticate with username/password and get a new token
             # or log an error if that fails
-            _LOGGER.debug("%s: Error refreshing token: %s", err, self.name)
+            _LOGGER.debug("%s: Error refreshing token: %s", self.name, err)
             return
         self._async_update_saved_token()
 
     @callback
     def _async_refresh_firmware(self, now: datetime.datetime) -> None:
         """Proactively check for firmware changes in Envoy."""
-        self.hass.async_create_background_task(
-            self._async_try_refresh_firmware(), "{name} firmware refresh"
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_try_refresh_firmware(),
+            f"{self.name} firmware refresh",
         )
 
     async def _async_try_refresh_firmware(self) -> None:
@@ -201,8 +212,22 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.envoy.setup()
         except EnvoyError as err:
             # just try again next time
-            _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
+            _LOGGER.debug("%s: Error reading firmware: %s", self.name, err)
             return
+        except EnvoyClientClosedError:
+            _LOGGER.debug("%s: Client is closed when reading firmware", self.name)
+            return
+        except RuntimeError as err:
+            # We may get session is closed if we still run at unload
+            if (
+                self._client_session.closed
+                and self.config_entry.state is not ConfigEntryState.LOADED
+            ):
+                _LOGGER.debug(
+                    "%s: Client is closed when reading firmware: %s", self.name, err
+                )
+                return
+            raise
         if (current_firmware := self.envoy_firmware) and current_firmware != (
             new_firmware := self.envoy.firmware
         ):
@@ -232,15 +257,36 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _async_verify_mac(self, now: datetime.datetime) -> None:
         """Verify Envoy active interface mac address in background."""
-        self.hass.async_create_background_task(
-            self._async_fetch_and_compare_mac(), "{name} verify envoy mac address"
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_and_compare_mac(),
+            f"{self.name} verify envoy mac address",
         )
 
     async def _async_fetch_and_compare_mac(self) -> None:
         """Get Envoy interface information and update mac in device connections."""
-        interface: (
-            EnvoyInterfaceInformation | None
-        ) = await self.envoy.interface_settings()
+        try:
+            interface: (
+                EnvoyInterfaceInformation | None
+            ) = await self.envoy.interface_settings()
+        except EnvoyClientClosedError:
+            _LOGGER.debug(
+                "%s: Client is closed when reading interface information", self.name
+            )
+            return
+        except RuntimeError as err:
+            # We may get session is closed if we still run at unload
+            if (
+                self._client_session.closed
+                and self.config_entry.state is not ConfigEntryState.LOADED
+            ):
+                _LOGGER.debug(
+                    "%s: Client is closed when reading interface information: %s",
+                    self.name,
+                    err,
+                )
+                return
+            raise
         if interface is None:
             _LOGGER.debug("%s: interface information returned None", self.name)
             return
@@ -280,9 +326,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("added connection: %s to %s", connection, self.name)
 
     @callback
-    def _async_mark_setup_complete(self) -> None:
-        """Mark setup as complete, setup firmware checks and token refresh."""
-        self._setup_complete = True
+    def _async_start_background_task_timers(self) -> None:
+        """Setup firmware check, mac verification and token refresh background task timers."""
         self.async_cancel_firmware_refresh()
         self._cancel_firmware_refresh = async_track_time_interval(
             self.hass,
@@ -300,6 +345,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             TOKEN_REFRESH_CHECK_INTERVAL,
             cancel_on_shutdown=True,
         )
+        self._background_started = True
 
     async def _async_setup_and_authenticate(self) -> None:
         """Set up and authenticate with the envoy."""
@@ -355,21 +401,34 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for tries in range(2):
             try:
                 if not self._setup_complete:
-                    _LOGGER.debug("update on try %s, setup not complete", tries)
+                    _LOGGER.debug(
+                        "update on try %s, setup completed: %s, config state: %s",
+                        tries,
+                        self._setup_complete,
+                        self.config_entry.state,
+                    )
                     self.envoy.set_retry_policy(max_delay=SETUP_RETRY_TIMEOUT)
                     self._operational_timeout = False
                     await self._async_setup_and_authenticate()
-                    self._async_mark_setup_complete()
-                # dump all received data in debug mode to assist troubleshooting
+                    self._setup_complete = True
                 envoy_data = await envoy.update()
                 if not self._operational_timeout:
                     self.envoy.set_retry_policy(max_delay=OPERATIONAL_RETRY_TIMEOUT)
                     self._operational_timeout = True
             except INVALID_AUTH_ERRORS as err:
-                _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
+                _LOGGER.debug(
+                    "update on try %s, INVALID_AUTH_ERRORS %s, config state: %s",
+                    tries,
+                    err,
+                    self.config_entry.state,
+                )
                 if self._setup_complete and tries == 0:
                     # token likely expired or firmware changed, try to re-authenticate
-                    _LOGGER.debug("update on try %s, setup was complete, retry", tries)
+                    _LOGGER.debug(
+                        "update on try %s, setup was complete, retry, config state: %s",
+                        tries,
+                        self.config_entry.state,
+                    )
                     self._setup_complete = False
                     continue
                 raise ConfigEntryAuthFailed(
@@ -381,7 +440,12 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     },
                 ) from err
             except EnvoyError as err:
-                _LOGGER.debug("update on try %s, EnvoyError %s", tries, err)
+                _LOGGER.debug(
+                    "update on try %s, EnvoyError %s, config state: %s",
+                    tries,
+                    err,
+                    self.config_entry.state,
+                )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="envoy_error",
@@ -416,21 +480,29 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def async_cancel_token_refresh(self) -> None:
-        """Cancel token refresh."""
+        """Cancel token refresh timer."""
         if self._cancel_token_refresh:
             self._cancel_token_refresh()
             self._cancel_token_refresh = None
 
     @callback
     def async_cancel_firmware_refresh(self) -> None:
-        """Cancel firmware refresh."""
+        """Cancel firmware refresh timer."""
         if self._cancel_firmware_refresh:
             self._cancel_firmware_refresh()
             self._cancel_firmware_refresh = None
 
     @callback
     def async_cancel_mac_verification(self) -> None:
-        """Cancel mac verification."""
+        """Cancel mac verification delayed starter."""
         if self._cancel_mac_verification:
             self._cancel_mac_verification()
             self._cancel_mac_verification = None
+
+    @callback
+    def state_changes(self) -> None:
+        """Process config entry state changes."""
+        _LOGGER.debug("State changed for %s: %s", self.name, self.config_entry.state)
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            _LOGGER.debug("Config entry loaded, starting background task timers")
+            self._async_start_background_task_timers()
