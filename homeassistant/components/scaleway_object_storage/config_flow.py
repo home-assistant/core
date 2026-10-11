@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, override
 
-from probatio import All, Length, Match, Optional, Required, Schema
+from probatio import All, Length, Match, Optional, Required, Schema, Secret
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import section
@@ -42,7 +42,7 @@ DOCS_PLACEHOLDERS: Final = {
 SECTION_CREDENTIALS_SCHEMA = Schema(
     {
         Required(CONF_ACCESS_KEY_ID): cv.string,
-        Required(CONF_SECRET_KEY): TextSelector(
+        Required(Secret(CONF_SECRET_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
