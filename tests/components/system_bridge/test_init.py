@@ -51,6 +51,17 @@ async def test_entry_setup_unload(
     mock_websocket_client.close.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_websocket_closed_on_stop(
+    hass: HomeAssistant, mock_websocket_client: MagicMock
+) -> None:
+    """Test the WebSocket is closed when Home Assistant stops."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_websocket_client.close.assert_awaited_once()
+
+
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
     """Test migration."""
     config_entry = MockConfigEntry(
