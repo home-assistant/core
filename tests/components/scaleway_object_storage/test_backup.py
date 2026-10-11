@@ -782,7 +782,7 @@ async def test_multipart_upload(
     mock_s3_response_factory: MockS3ResponseFactory,
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
-    agent_id,
+    agent_id: str,
 ) -> None:
     """Test multipart upload."""
     upload_id = "cafe"
