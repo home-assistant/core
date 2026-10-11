@@ -341,6 +341,7 @@ homeassistant.components.kaco_modbus.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*
+homeassistant.components.koito.*
 homeassistant.components.kraken.*
 homeassistant.components.kulersky.*
 homeassistant.components.labs.*
