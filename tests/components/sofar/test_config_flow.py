@@ -235,6 +235,14 @@ async def test_user_step_link_settings_conflict(
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["description_placeholders"] == {"error": str(error)}
 
+    working_conn = MockModbusConnection()
+    seed_pv_inverter(working_conn.for_unit(1))
+
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(flow_id, MOCK_TCP_INPUT)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:
     """Test aborting when the inverter is already configured."""
@@ -507,6 +515,16 @@ async def test_reconfigure_new_line_settings_cannot_connect(
     assert entry.unique_id == MOCK_SERIAL
     # Set back up against the same dead device, so it lands in retry.
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_connection.for_unit(1).fail_requests(None)
+    with _patch_temporary_unit(mock_connection):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures("mock_get_unit")

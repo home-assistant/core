@@ -125,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, line_unique_id)},
-            name=f"DALI Line {line_id}",
+            translation_key="dali_line",
+            translation_placeholders={"line_id": str(line_id)},
             via_device_id=dr.async_get_device_id_by_identifier(
                 hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
             ),

@@ -1,7 +1,7 @@
 {
   "domain": "indevolt",
   "name": "Indevolt",
-  "codeowners": ["@xirt"],
+  "codeowners": ["@xirt", "@INDEVOLT", "@indevolt-y"],
   "config_flow": true,
   "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/indevolt",

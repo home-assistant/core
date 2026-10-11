@@ -110,15 +110,6 @@ async def _authenticate(
     auth = pydrawise_auth.HybridAuth(username, password, api_key)
     try:
         await auth.check()
-    except NotAuthorizedError:
-        errors["base"] = "invalid_auth"
-    except TimeoutError:
-        errors["base"] = "timeout_connect"
-
-    if errors:
-        return unique_id, errors
-
-    try:
         api = hybrid.HybridClient(auth, app_id=APP_ID)
         # Don't fetch zones because we don't need them yet.
         user = await api.get_user(fetch_zones=False)
@@ -129,6 +120,9 @@ async def _authenticate(
     except (APIError, ClientError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
         errors["base"] = "cannot_connect"
+    except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
     else:
         unique_id = f"hydrawise-{user.customer_id}"
 

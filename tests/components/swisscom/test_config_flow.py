@@ -110,3 +110,4 @@ async def test_user_flow_no_model_name_uses_default_title(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Internet-Box"
+    assert result["result"].unique_id == TEST_FORMATTED_MAC

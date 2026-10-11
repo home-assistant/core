@@ -20,6 +20,9 @@
     }
   },
   "exceptions": {
+    "file_not_found": {
+      "message": "Could not read the image file {file_path}."
+    },
     "file_path_not_accessible": {
       "message": "Path {file_path} is not accessible"
     },

@@ -42,6 +42,11 @@
       }
     }
   },
+  "device": {
+    "intrusion_system": {
+      "name": "Alarm system"
+    }
+  },
   "entity": {
     "button": {
       "reset_tamper": {
