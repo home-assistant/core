@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+import threading
 from typing import Any
 from unittest import mock
 
@@ -94,7 +95,7 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -1996,6 +1997,57 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_state_changes_handled_in_order_in_event_loop(
+    hass: HomeAssistant, client: ClientSessionGenerator
+) -> None:
+    """Test state changes are handled in order in the event loop.
+
+    At startup an entity often goes from unknown to its value within the same
+    millisecond. If the second event overtakes the first, the entity stays
+    exported as unavailable until its next state change.
+    """
+    handled: list[tuple[str, bool]] = []
+    handle_state = prometheus.PrometheusMetrics.handle_state
+
+    def record_handle_state(
+        metrics: prometheus.PrometheusMetrics, state: State
+    ) -> None:
+        handled.append((state.state, threading.get_ident() == hass.loop_thread_id))
+        handle_state(metrics, state)
+
+    with mock.patch.object(
+        prometheus.PrometheusMetrics, "handle_state", record_handle_state
+    ):
+        hass.states.async_set(
+            "binary_sensor.door_contact",
+            STATE_UNKNOWN,
+            {ATTR_FRIENDLY_NAME: "Door Contact"},
+        )
+        hass.states.async_set(
+            "binary_sensor.door_contact", STATE_ON, {ATTR_FRIENDLY_NAME: "Door Contact"}
+        )
+        await hass.async_block_till_done()
+
+    assert handled == [(STATE_UNKNOWN, True), (STATE_ON, True)]
+
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="binary_sensor",
+        friendly_name="Door Contact",
+        entity="binary_sensor.door_contact",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="binary_sensor_state",
+        domain="binary_sensor",
+        friendly_name="Door Contact",
+        entity="binary_sensor.door_contact",
     ).withValue(1).assert_in_metrics(body)
 
 
