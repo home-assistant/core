@@ -5,7 +5,7 @@ from unittest.mock import patch
 import broadlink.exceptions as blke
 import pytest
 
-from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.const import BROADLINK_DATA, DOMAIN
 from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
@@ -178,7 +178,7 @@ async def test_device_request_endpoint_closed(hass: HomeAssistant) -> None:
     mock_api.auth.reset_mock()
     mock_api.check_sensors.reset_mock()
 
-    broadlink_device = hass.data[DOMAIN].devices[mock_setup.entry.entry_id]
+    broadlink_device = hass.data[BROADLINK_DATA].devices[mock_setup.entry.entry_id]
     with pytest.raises(blke.EndpointClosedError):
         await broadlink_device.async_request(mock_api.check_sensors)
 
