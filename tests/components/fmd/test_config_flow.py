@@ -37,6 +37,7 @@ async def test_form(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_ID
+    assert result["result"].unique_id == f"{TEST_URL}/{TEST_ID}"
     assert result["data"][CONF_URL] == TEST_URL
     assert result["data"][CONF_ID] == TEST_ID
     assert "artifacts" in result["data"]
@@ -176,6 +177,14 @@ async def test_invalid_url_rejected(
     assert result["errors"] == {CONF_URL: error}
     assert not hass.config_entries.async_entries(DOMAIN)
     mock_fmd_client.create.assert_not_called()
+
+    # The user fixes the URL; the same flow finishes and creates the entry.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{TEST_URL}/{TEST_ID}"
 
 
 async def test_url_query_and_fragment_dropped_from_identity(
