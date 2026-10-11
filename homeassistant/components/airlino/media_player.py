@@ -208,6 +208,11 @@ class AirlinoMediaPlayer(
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add devices to the multiroom group (Songcast sender/receiver)."""
         self._ensure_not_multiroom_receiver()
+        requested_entity_ids = [
+            entity_id for entity_id in group_members if entity_id != self.entity_id
+        ]
+        if not requested_entity_ids:
+            return
         # Grouping is purely sender enable + receiver link: a linked receiver
         # starts playing the sender's stream on its own once connected.
         sender_status: dict[str, Any] = await self._async_call(
@@ -223,9 +228,7 @@ class AirlinoMediaPlayer(
         requested_runtimes: list[
             tuple[str, AirlinoRuntimeData, dict[str, Any] | None]
         ] = []
-        for entity_id in group_members:
-            if entity_id == self.entity_id:
-                continue
+        for entity_id in requested_entity_ids:
             runtime = await self._async_find_runtime_by_entity_id(entity_id)
             if runtime is None:
                 raise HomeAssistantError(
@@ -258,9 +261,6 @@ class AirlinoMediaPlayer(
                     translation_placeholders={"entity_id": entity_id},
                 )
             requested_runtimes.append((entity_id, runtime, receiver_state))
-
-        if not requested_runtimes:
-            return
 
         if not (sender_status or {}).get("enabled"):
             await self._async_call(

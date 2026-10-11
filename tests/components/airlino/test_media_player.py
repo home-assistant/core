@@ -730,15 +730,17 @@ async def test_join_ignores_self_and_links_requested_receiver(
     coordinator.async_request_refresh.assert_awaited_once()
 
 
-async def test_empty_or_self_only_join_does_not_enable_sender(
+async def test_empty_or_self_only_join_does_not_query_sender(
     make_player: PlayerFactory,
 ) -> None:
-    """Do not leave a sender running when no receivers were requested."""
+    """Do not interact with the device when no receivers were requested."""
     player, _, coordinator, api = make_player()
+    api.async_get_sender_status.return_value = {"enabled": False}
 
     await player.async_join_players([])
     await player.async_join_players([player.entity_id])
 
+    api.async_get_sender_status.assert_not_awaited()
     api.async_enable_sender.assert_not_awaited()
     coordinator.async_request_refresh.assert_not_awaited()
 
