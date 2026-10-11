@@ -6,7 +6,7 @@ from aioindiallsky import ImageItem, MediaData, MonthItem, VideoItem
 import pytest
 
 from homeassistant.components.indi_allsky.const import DOMAIN
-from homeassistant.components.media_player import MediaType
+from homeassistant.components.media_player import BrowseError, MediaType
 from homeassistant.components.media_source import (
     URI_SCHEME,
     MediaSourceError,
@@ -247,10 +247,16 @@ async def test_async_browse_media_root(
     assert f"{mock_config_entry.entry_id}#videos" in cat_ids
     assert f"{mock_config_entry.entry_id}#images" in cat_ids
 
-    # Invalid category raises MediaSourceError
-    with pytest.raises(MediaSourceError):
+    # Invalid category raises BrowseError
+    with pytest.raises(BrowseError):
         await async_browse_media(
             hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#unknown_category"
+        )
+
+    # Browsing unloaded entry raises BrowseError
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/{unloaded_entry.entry_id}"
         )
 
 

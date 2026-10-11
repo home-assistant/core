@@ -7,7 +7,7 @@ from typing import override
 from aiohttp import ClientError
 import yarl
 
-from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
@@ -100,7 +100,14 @@ class IndiAllSkyMediaSource(MediaSource):
 
         parts = item.identifier.split("#")
         entry_id = parts[0]
-        entry = self._get_config_entry_or_raise(entry_id)
+        try:
+            entry = self._get_config_entry_or_raise(entry_id)
+        except MediaSourceError as err:
+            raise BrowseError(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 
         if len(parts) == 1:
             return self._build_instance_categories(entry)
@@ -115,7 +122,7 @@ class IndiAllSkyMediaSource(MediaSource):
         if category == CATEGORY_IMAGES:
             return await self._browse_images(entry, parts[2:])
 
-        raise MediaSourceError(
+        raise BrowseError(
             translation_domain=DOMAIN,
             translation_key="incomplete_media_identifier",
         )
