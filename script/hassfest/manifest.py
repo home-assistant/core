@@ -17,6 +17,7 @@ from probatio.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from homeassistant.loader import LORAWAN_SCHEMA
 from script.util import sort_manifest as util_sort_manifest
 
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
@@ -211,6 +212,7 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
         ),
         probatio.Optional("config_flow"): bool,
         probatio.Optional("mqtt"): [str],
+        probatio.Optional("lorawan"): LORAWAN_SCHEMA,
         probatio.Optional("zeroconf"): [
             probatio.Any(
                 str,

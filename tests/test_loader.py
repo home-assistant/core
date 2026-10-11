@@ -2293,3 +2293,96 @@ async def test_async_get_integrations_multiple_non_existent(
     ):
         integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
     assert integrations["does_not_exist"] is integration
+
+
+@pytest.mark.parametrize(
+    "vendors",
+    [
+        [("chirpstack", 744), ("tts", "sensecap")],
+        [("chirpstack", 0), ("chirpstack", 1)],
+        [],
+    ],
+)
+async def test_get_lorawan(
+    hass: HomeAssistant, vendors: list[tuple[str, int | str]]
+) -> None:
+    """Custom registrations replace built-ins without changing generated data."""
+    integration = _get_test_integration(hass, "sensecap", True)
+    integration.manifest["lorawan"] = [list(vendor) for vendor in vendors]
+    integration.manifest["config_flow"] = True
+    integration.dependencies.append("lorawan")
+    with (
+        patch(
+            "homeassistant.loader.LORAWAN",
+            {
+                "sensecap": [("chirpstack", 744), ("tts", "sensecap")],
+                "dragino": [("chirpstack", 676), ("tts", "dragino")],
+            },
+        ),
+        patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"sensecap": integration},
+        ),
+    ):
+        registrations = await loader.async_get_lorawan(hass)
+        assert loader.LORAWAN["sensecap"] == [("chirpstack", 744), ("tts", "sensecap")]
+    assert registrations.get("sensecap", []) == vendors
+    assert registrations["dragino"] == [("chirpstack", 676), ("tts", "dragino")]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        744,
+        "744",
+        {"vendor": 744},
+        [True],
+        [-1],
+        [65536],
+        [744, 744],
+        [["chirpstack", True]],
+        [["chirpstack", False]],
+        [["chirpstack", -1]],
+        [["tts", ""]],
+        [["", "sensecap"]],
+        [["tts", "sensecap", "extra"]],
+        [["tts", "sensecap"], ["tts", "sensecap"]],
+    ],
+)
+async def test_invalid_lorawan_registration(hass: HomeAssistant, value: object) -> None:
+    """An invalid custom matcher cannot break other vendors' discovery."""
+    integration = _get_test_integration(hass, "sensecap", True)
+    integration.manifest["lorawan"] = value
+    integration.dependencies.append("lorawan")
+    with (
+        patch(
+            "homeassistant.loader.LORAWAN",
+            {
+                "sensecap": [("chirpstack", 744), ("tts", "sensecap")],
+                "dragino": [("chirpstack", 676), ("tts", "dragino")],
+            },
+        ),
+        patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"sensecap": integration},
+        ),
+    ):
+        registrations = await loader.async_get_lorawan(hass)
+        assert loader.LORAWAN["sensecap"] == [("chirpstack", 744), ("tts", "sensecap")]
+    assert "sensecap" not in registrations
+    assert registrations["dragino"] == [("chirpstack", 676), ("tts", "dragino")]
+
+
+@pytest.mark.parametrize("missing", ["config_flow", "dependencies"])
+async def test_missing_lorawan_requirement(hass: HomeAssistant, missing: str) -> None:
+    """Custom discovery requires a config flow and the shared integration."""
+    integration = _get_test_integration(hass, "sensecap", True)
+    integration.manifest["lorawan"] = [["chirpstack", 744]]
+    integration.manifest["dependencies"] = ["lorawan"]
+    integration.manifest.pop(missing)
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"sensecap": integration},
+    ):
+        registrations = await loader.async_get_lorawan(hass)
+    assert "sensecap" not in registrations
