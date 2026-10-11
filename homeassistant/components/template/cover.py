@@ -87,6 +87,9 @@ COVER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         probatio.Optional(CONF_POSITION): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_SUPPORTED_SPEEDS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_TILT): cv.template,
         probatio.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
@@ -102,9 +105,6 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
 COVER_YAML_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Optional(CONF_SUPPORTED_SPEEDS): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
             probatio.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
         }
     )

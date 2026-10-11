@@ -172,10 +172,12 @@
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "supported_speeds": "Supported speeds"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "supported_speeds": "List of speeds supported by the cover. If set, the actions on open, close and set position receive the requested speed in variable `speed`."
             },
             "name": "[%key:component::template::common::additional_options%]"
           }
@@ -814,10 +816,12 @@
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "supported_speeds": "[%key:component::template::config::step::cover::sections::additional_options::data::supported_speeds%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "supported_speeds": "[%key:component::template::config::step::cover::sections::additional_options::data_description::supported_speeds%]"
             },
             "name": "[%key:component::template::common::additional_options%]"
           }

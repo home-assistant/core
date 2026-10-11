@@ -1410,6 +1410,33 @@ async def test_setup_config_entry(
     assert state == snapshot
 
 
+async def test_setup_config_entry_supported_speeds(hass: HomeAssistant) -> None:
+    """Test a cover from a config entry with speeds in the additional options."""
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ 'open' }}",
+            "set_cover_position": [],
+            "additional_options": {"supported_speeds": TEST_SPEEDS},
+            "template_type": COVER_DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.my_template")
+    assert state.attributes["supported_speeds"] == TEST_SPEEDS
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SPEED
+        == CoverEntityFeature.SPEED
+    )
+
+
 async def test_flow_preview(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1420,10 +1447,20 @@ async def test_flow_preview(
         hass,
         hass_ws_client,
         cover.DOMAIN,
-        {"name": "My template", "state": "{{ 'open' }}", "set_cover_position": []},
+        {
+            "name": "My template",
+            "state": "{{ 'open' }}",
+            "set_cover_position": [],
+            "additional_options": {"supported_speeds": TEST_SPEEDS},
+        },
     )
 
     assert state["state"] == CoverState.OPEN
+    assert state["attributes"]["supported_speeds"] == TEST_SPEEDS
+    assert (
+        state["attributes"]["supported_features"] & CoverEntityFeature.SPEED
+        == CoverEntityFeature.SPEED
+    )
 
 
 @pytest.mark.parametrize(
