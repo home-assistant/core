@@ -1,9 +1,11 @@
 """Tests for the Philips TV switches."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from haphilipsjs import PhilipsTV
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -23,7 +26,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_MENU_CURRENT
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 MENU_SWITCH_ENTITY_ID = "switch.philips_tv_toggle"
 
@@ -137,6 +140,28 @@ async def test_menu_switch_unavailable(
     with patch.dict(MOCK_MENU_CURRENT, {2: value}):
         assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_menu_switch_unavailable_when_tv_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_menu_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+) -> None:
+    """Test a menu switch becomes unavailable when the TV turns off."""
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
+    assert state.state == STATE_ON
+
+    mock_tv.on = False
+    mock_tv.update.return_value = False
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE

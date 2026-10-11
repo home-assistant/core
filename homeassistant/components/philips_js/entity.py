@@ -57,7 +57,8 @@ class PhilipsTVSettingsEntity(PhilipsJsEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if not super().available:
+        # Settings are kept from the last update while the TV is off
+        if not super().available or not self.coordinator.api.on:
             return False
 
         if self._value:
