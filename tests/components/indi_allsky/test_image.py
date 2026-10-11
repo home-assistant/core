@@ -173,7 +173,9 @@ async def test_image_fetch_error(
     # Background fetch failure for the same media does not clear valid cached image
     coordinator.async_set_keogram_image(mock_keogram_data, None)
     assert coordinator.latest_keogram_image == b"\xff\xd8\xff\xe0recovered_keogram"
+    coordinator.latest_startrail_image = b"\xff\xd8\xff\xe0recovered_startrail"
     coordinator.async_set_startrail_image(mock_startrail_data, None)
+    assert coordinator.latest_startrail_image == b"\xff\xd8\xff\xe0recovered_startrail"
 
 
 async def test_stale_media_fetch_ignored(
@@ -329,13 +331,28 @@ async def test_on_demand_fetch_captures_media_identity_before_fetch(
     assert coordinator.latest_keogram_image == b"\xff\xd8\xff\xe0newer_image_bytes"
 
 
+@pytest.mark.parametrize(
+    ("callback_name", "media_fixture", "entity_id"),
+    [
+        ("keogram_complete", "mock_keogram_data", "image.indi_allsky_latest_keogram"),
+        (
+            "startrail_complete",
+            "mock_startrail_data",
+            "image.indi_allsky_latest_star_trail",
+        ),
+    ],
+)
 async def test_image_fetch_auth_failure_triggers_reauth(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_keogram_data: MediaData,
+    callback_name: str,
+    media_fixture: str,
+    entity_id: str,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test handling of image fetch auth errors triggering reauth."""
+    media_data = request.getfixturevalue(media_fixture)
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.IMAGE]):
         await setup_integration(hass, mock_config_entry)
 
@@ -346,12 +363,12 @@ async def test_image_fetch_auth_failure_triggers_reauth(
     with patch.object(
         mock_config_entry, "async_start_reauth"
     ) as mock_async_start_reauth:
-        for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
-            callback(mock_keogram_data)
+        for callback in mock_indi_allsky_client.callbacks.get(callback_name, []):
+            callback(media_data)
         await hass.async_block_till_done()
 
         with pytest.raises(HomeAssistantError):
-            await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+            await image.async_get_image(hass, entity_id)
 
     assert mock_async_start_reauth.call_count >= 1
 
