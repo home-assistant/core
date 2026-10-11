@@ -1,5 +1,6 @@
 """Config flow for INDI Allsky integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -12,7 +13,14 @@ from aioindiallsky import (
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,14 +54,48 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 mode=NumberSelectorMode.BOX,
             ),
         ),
+        probatio.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        probatio.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
         probatio.Optional(CONF_SSL, default=True): BooleanSelector(),
         probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
+    }
+)
+
+REAUTH_CONFIRM_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        probatio.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
     }
 )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate that the user input allows us to connect to INDI Allsky."""
+    username = data.get(CONF_USERNAME)
+    password = data.get(CONF_PASSWORD)
+    if (username and not password) or (password and not username):
+        raise MissingCredentials
+
     client = IndiAllSkyClient(
         host=data[CONF_HOST],
         port=int(data[CONF_PORT]),
@@ -61,6 +103,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             data.get(CONF_SSL, True),
             data.get(CONF_VERIFY_SSL, True),
         ),
+        username=username or None,
+        password=password or None,
         session=async_get_clientsession(hass),
     )
 
@@ -110,6 +154,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, user_input)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -125,9 +171,20 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     if port != default_port
                     else user_input[CONF_HOST]
                 )
+                entry_data = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_SSL: user_input.get(CONF_SSL, True),
+                    CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, True),
+                }
+                if user_input.get(CONF_USERNAME):
+                    entry_data[CONF_USERNAME] = user_input[CONF_USERNAME]
+                if user_input.get(CONF_PASSWORD):
+                    entry_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
                 return self.async_create_entry(
                     title=f"INDI Allsky ({host_str})",
-                    data=user_input,
+                    data=entry_data,
                 )
 
         return self.async_show_form(
@@ -137,6 +194,54 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication upon auth failure."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with INDI Allsky credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            validate_data = {**reauth_entry.data, **user_input}
+            try:
+                await validate_input(self.hass, validate_data)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+
+        suggested_values = dict(user_input or {})
+        if CONF_USERNAME not in suggested_values:
+            suggested_values[CONF_USERNAME] = reauth_entry.data.get(CONF_USERNAME, "")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_CONFIRM_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
+
+
+class MissingCredentials(HomeAssistantError):
+    """Error to indicate one credential field was provided without the other."""
 
 
 class CannotConnect(HomeAssistantError):

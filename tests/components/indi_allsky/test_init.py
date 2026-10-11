@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aioindiallsky import IndiAllSkyConnectionError
+from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -48,3 +48,18 @@ async def test_setup_failure_retry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_failure_auth(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an authentication failure during initial setup marks the entry as SETUP_ERROR."""
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyAuthError(
+        "Invalid username or password"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

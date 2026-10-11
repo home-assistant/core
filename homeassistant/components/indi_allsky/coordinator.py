@@ -6,6 +6,7 @@ from typing import override
 
 from aioindiallsky import (
     ExposureData,
+    IndiAllSkyAuthError,
     IndiAllSkyClient,
     IndiAllSkyError,
     MediaData,
@@ -13,8 +14,16 @@ from aioindiallsky import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -48,6 +57,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 entry.data[CONF_SSL],
                 entry.data[CONF_VERIFY_SSL],
             ),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
             session=async_get_clientsession(hass),
         )
         self.latest_exposure: ExposureData | None = None
@@ -198,6 +209,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 await self.client.connect()
             if self.latest_sensor is None:
                 await self.client.fetch_sensors()
+        except IndiAllSkyAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
