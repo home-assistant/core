@@ -1,6 +1,7 @@
 """INDI Allsky Media Source Implementation."""
 
 import logging
+import mimetypes
 from typing import override
 
 from aiohttp import ClientError
@@ -80,10 +81,10 @@ class IndiAllSkyMediaSource(MediaSource):
                 )
 
         clean_url = url.split("?")[0].lower()
-        if path == "latesttimelapse" or clean_url.endswith(
-            (".mp4", ".mkv", ".webm", ".mov", ".avi")
-        ):
+        if path == "latesttimelapse":
             mime_type = "video/mp4"
+        elif mime := mimetypes.guess_type(clean_url)[0]:
+            mime_type = mime
         else:
             mime_type = "image/jpeg"
         return PlayMedia(url, mime_type)
@@ -133,7 +134,11 @@ class IndiAllSkyMediaSource(MediaSource):
     def _get_config_entry_or_raise(self, entry_id: str) -> IndiAllSkyConfigEntry:
         """Get config entry or raise MediaSourceError."""
         entry = self.hass.config_entries.async_get_entry(entry_id)
-        if not entry or entry.state is not ConfigEntryState.LOADED:
+        if (
+            not entry
+            or entry.domain != DOMAIN
+            or entry.state is not ConfigEntryState.LOADED
+        ):
             raise MediaSourceError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_found",
@@ -142,7 +147,7 @@ class IndiAllSkyMediaSource(MediaSource):
 
     def _build_root_instances(self) -> BrowseMediaSource:
         """Build root media sources listing all configured INDI Allsky instances."""
-        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entries = self.hass.config_entries.async_loaded_entries(DOMAIN)
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier="",
@@ -277,7 +282,6 @@ class IndiAllSkyMediaSource(MediaSource):
         """Browse video catalog (Years -> Months -> Videos)."""
         client = entry.runtime_data.client
 
-        # Level 1: Years
         if not path_parts:
             years = await client.get_video_years()
             children = [
@@ -307,7 +311,6 @@ class IndiAllSkyMediaSource(MediaSource):
 
         year = int(path_parts[0])
 
-        # Level 2: Months
         if len(path_parts) == 1:
             months = await client.get_video_months(year)
             children = [
@@ -334,7 +337,6 @@ class IndiAllSkyMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
             )
 
-        # Level 3: Videos in Year + Month
         month = int(path_parts[1])
         videos = await client.get_videos(year, month)
         children = []
@@ -409,7 +411,6 @@ class IndiAllSkyMediaSource(MediaSource):
         """Browse image history (Years -> Months -> Days -> Hours -> Images)."""
         client = entry.runtime_data.client
 
-        # Level 1: Years
         if not path_parts:
             years = await client.get_image_years()
             children = [
@@ -439,7 +440,6 @@ class IndiAllSkyMediaSource(MediaSource):
 
         year = int(path_parts[0])
 
-        # Level 2: Months
         if len(path_parts) == 1:
             months = await client.get_image_months(year)
             children = [
@@ -467,7 +467,6 @@ class IndiAllSkyMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
             )
 
-        # Level 3: Days
         month = int(path_parts[1])
         if len(path_parts) == 2:
             days = await client.get_image_days(year, month)
@@ -496,7 +495,6 @@ class IndiAllSkyMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
             )
 
-        # Level 4: Hours
         day = int(path_parts[2])
         if len(path_parts) == 3:
             hours = await client.get_image_hours(year, month, day)
@@ -525,7 +523,6 @@ class IndiAllSkyMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
             )
 
-        # Level 5: Images in that hour
         hour = int(path_parts[3])
         images = await client.get_images(year, month, day, hour)
         children = [

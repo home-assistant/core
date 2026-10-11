@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -91,6 +92,127 @@ async def test_async_resolve_media_errors(
             None,
         )
 
+    # Entry from another domain
+    other_entry = MockConfigEntry(domain="other_domain", data={})
+    other_entry.add_to_hass(hass)
+    with pytest.raises(MediaSourceError):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{other_entry.entry_id}#media#test.mp4",
+            None,
+        )
+
+    # Unloaded config entry
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    with pytest.raises(MediaSourceError):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#test.mp4",
+            None,
+        )
+
+
+async def test_async_resolve_media_redirect_resolution(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test resolving latest media with redirect resolution."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/latestimage"
+    )
+
+    # Successful redirect with relative location
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latestimage",
+        status=302,
+        headers={"Location": "/indi-allsky/images/captured_1234.jpg"},
+    )
+    resolved = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latestimage",
+        None,
+    )
+    assert resolved == PlayMedia(
+        "https://127.0.0.1/indi-allsky/images/captured_1234.jpg",
+        "image/jpeg",
+    )
+
+    # Latest timelapse resolves to video/mp4
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse"
+    )
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        status=200,
+    )
+    resolved_tl = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latesttimelapse",
+        None,
+    )
+    assert resolved_tl == PlayMedia(
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        "video/mp4",
+    )
+
+    # Redirect error fallback (ClientError or TimeoutError) keeps original url
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/latestkeogram"
+    )
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latestkeogram",
+        exc=TimeoutError(),
+    )
+    resolved_fallback = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latestkeogram",
+        None,
+    )
+    assert resolved_fallback == PlayMedia(
+        "https://127.0.0.1:443/indi-allsky/latestkeogram",
+        "image/jpeg",
+    )
+
+
+async def test_async_resolve_media_mime_types(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test resolving media with different file extensions and fallback MIME type."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # public/ path format
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/public/video.webm"
+    )
+    res_webm = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#public/video.webm",
+        None,
+    )
+    assert res_webm.mime_type == "video/webm"
+
+    # Unknown extension falls back to image/jpeg
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/unknown.unknownext"
+    )
+    res_fallback = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#unknown.unknownext",
+        None,
+    )
+    assert res_fallback.mime_type == "image/jpeg"
+
 
 async def test_async_browse_media_root(
     hass: HomeAssistant,
@@ -100,9 +222,14 @@ async def test_async_browse_media_root(
     """Test browsing root and instance categories."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # An unloaded entry should not be listed in root
+    unloaded_entry = MockConfigEntry(domain=DOMAIN, data={})
+    unloaded_entry.add_to_hass(hass)
+
     await hass.async_block_till_done()
 
-    # Root level: Lists configured instances
+    # Root level: Lists only loaded configured instances
     res_root = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert res_root.domain == DOMAIN
     assert res_root.identifier == ""
@@ -119,6 +246,12 @@ async def test_async_browse_media_root(
     assert f"{mock_config_entry.entry_id}#latest" in cat_ids
     assert f"{mock_config_entry.entry_id}#videos" in cat_ids
     assert f"{mock_config_entry.entry_id}#images" in cat_ids
+
+    # Invalid category raises MediaSourceError
+    with pytest.raises(MediaSourceError):
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#unknown_category"
+        )
 
 
 async def test_async_browse_latest_media(
@@ -183,7 +316,15 @@ async def test_async_browse_videos_hierarchy(
             success=True,
             keogram_url="images/keogram20261011.jpg",
             startrail_url="images/startrail20261011.jpg",
-        )
+        ),
+        VideoItem(
+            id=11,
+            url="images/timelapse_failed.mp4",
+            day_date="20261011",
+            day_date_long="October 11, 2026",
+            night=False,
+            success=False,
+        ),
     ]
     mock_indi_allsky_client.get_media_url.side_effect = lambda p: (
         f"https://127.0.0.1/{p}"
