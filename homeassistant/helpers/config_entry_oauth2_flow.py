@@ -196,6 +196,8 @@ class AbstractOAuth2Implementation(ABC):
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     """Local OAuth2 implementation."""
 
+    token_auth_method: oauth2.ClientAuthMethod = "client_secret_post"
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -289,12 +291,15 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         Raises OAuth2TokenRequestError on token request failure.
         """
-        data["client_id"] = self.client_id
-        if self.client_secret:
-            data["client_secret"] = self.client_secret
-
+        body, headers = oauth2.client_auth(
+            data, self.client_id, self.client_secret, self.token_auth_method
+        )
         return await oauth2.async_token_request(
-            self.hass, self.token_url, data, domain=self.service_domain
+            self.hass,
+            self.token_url,
+            body,
+            domain=self.service_domain,
+            headers=headers or None,
         )
 
 
