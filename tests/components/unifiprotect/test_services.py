@@ -37,15 +37,19 @@ from homeassistant.components.unifiprotect.services import (
 )
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
 from .conftest import UNIFI_MAC
 from .utils import MockUFPFixture, init_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 @pytest.fixture(name="device")
@@ -680,3 +684,24 @@ async def test_trigger_alarm_webhook(
     ufp_public_only.api.send_alarm_webhook_public.assert_called_once_with(
         "test-trigger"
     )
+
+
+async def test_trigger_alarm_webhook_non_admin(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    ufp: MockUFPFixture,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test trigger_alarm_webhook rejects non-admin callers."""
+
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    ufp.api.send_alarm_webhook_public.assert_not_awaited()
