@@ -5,6 +5,7 @@ import contextlib
 from fnmatch import translate
 from functools import lru_cache, partial
 from ipaddress import IPv4Address, IPv6Address
+from itertools import chain
 import logging
 import re
 from typing import TYPE_CHECKING, Any, Final, cast
@@ -133,7 +134,9 @@ def async_get_homekit_discovery(
     return None
 
 
-def info_from_service(service: AsyncServiceInfo) -> _ZeroconfServiceInfo | None:
+def info_from_service(
+    service: AsyncServiceInfo, *, prefer_ipv6: bool = False
+) -> _ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
     # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
     # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
@@ -145,7 +148,10 @@ def info_from_service(service: AsyncServiceInfo) -> _ZeroconfServiceInfo | None:
     else:
         ip_addresses = maybe_ip_addresses
     ip_address: IPv4Address | IPv6Address | None = None
-    for ip_addr in ip_addresses:
+    for ip_addr in chain(
+        service.ip_addresses_by_version(IPVersion.V6Only) if prefer_ipv6 else (),
+        ip_addresses,
+    ):
         if not ip_addr.is_link_local and not ip_addr.is_unspecified:
             ip_address = ip_addr
             break
@@ -193,6 +199,11 @@ class ZeroconfDiscovery:
         self._local_ips: set[IPv4Address | IPv6Address] = set()
         if self._local_service_info:
             self._local_ips = set(self._local_service_info.ip_addresses)
+        self._prefer_ipv6 = any(
+            isinstance(ip, IPv6Address) and not ip.is_loopback for ip in self._local_ips
+        ) and not any(
+            isinstance(ip, IPv4Address) and not ip.is_loopback for ip in self._local_ips
+        )
 
     @callback
     def async_register_service_update_listener(
@@ -338,7 +349,7 @@ class ZeroconfDiscovery:
         """Process a zeroconf update."""
         for listener in self._service_update_listeners:
             listener(async_service_info)
-        info = info_from_service(async_service_info)
+        info = info_from_service(async_service_info, prefer_ipv6=self._prefer_ipv6)
         if not info:
             # Prevent the browser thread from collapsing
             _LOGGER.debug("Failed to get addresses for device %s", name)

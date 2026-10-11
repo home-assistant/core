@@ -8,6 +8,7 @@ from typing import cast
 import ifaddr
 
 from homeassistant.core import callback
+from homeassistant.util.network import is_ipv6_address
 
 from .const import MDNS_TARGET_IP
 from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
@@ -137,11 +138,13 @@ def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
 @callback
 def async_get_source_ip(target_ip: str) -> str | None:
     """Return the source ip that will reach target_ip."""
-    test_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    family = socket.AF_INET6 if is_ipv6_address(target_ip) else socket.AF_INET
+    test_sock = socket.socket(family, socket.SOCK_DGRAM)
     test_sock.setblocking(False)  # must be non-blocking for async
     try:
         test_sock.connect((target_ip, 1))
-        return cast(str, test_sock.getsockname()[0])
+        sockname = test_sock.getsockname()
+        source_ip = cast(str, sockname[0])
     except Exception:  # noqa: BLE001
         _LOGGER.debug(
             (
@@ -153,3 +156,7 @@ def async_get_source_ip(target_ip: str) -> str | None:
         return None
     finally:
         test_sock.close()
+
+    if family == socket.AF_INET6 and IPv6Address(source_ip).is_link_local:
+        return f"{source_ip}%{sockname[3]}"
+    return source_ip

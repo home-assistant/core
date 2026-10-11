@@ -12,13 +12,18 @@ from homeassistant.components.network.const import (
     ATTR_ADAPTERS,
     ATTR_CONFIGURED_ADAPTERS,
     DOMAIN,
+    LOOPBACK_TARGET_IP,
     MDNS_TARGET_IP,
+    PUBLIC_TARGET_IP,
+    PUBLIC_TARGET_IPV6,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from homeassistant.components.network.models import Adapter
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_setup_component
 
 from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
@@ -700,6 +705,260 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
+@pytest.mark.parametrize(
+    ("adapters", "target", "allow_ipv6_fallback", "route_source", "expected", "probe"),
+    [
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+            UNDEFINED,
+            False,
+            "127.0.0.1",
+            "127.0.0.1",
+            PUBLIC_TARGET_IP,
+            id="legacy_ipv4",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+            UNDEFINED,
+            True,
+            "2001:db8::",
+            "2001:db8::",
+            PUBLIC_TARGET_IPV6,
+            id="ipv6_default",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+            UNDEFINED,
+            True,
+            None,
+            "2001:db8::",
+            PUBLIC_TARGET_IPV6,
+            id="ipv6_without_route",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+            UNDEFINED,
+            True,
+            "fd12::99",
+            "2001:db8::",
+            PUBLIC_TARGET_IPV6,
+            id="ipv6_disabled_route",
+        ),
+        pytest.param(
+            _ADAPTERS_WITH_MANUAL_CONFIG,
+            UNDEFINED,
+            True,
+            "192.168.1.5",
+            "192.168.1.5",
+            PUBLIC_TARGET_IP,
+            id="dual_stack",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[1]],
+            UNDEFINED,
+            True,
+            "192.168.1.5",
+            "192.168.1.5",
+            PUBLIC_TARGET_IP,
+            id="ipv4_only_with_ipv6_fallback_enabled",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0], _ADAPTERS_WITH_MANUAL_CONFIG[3]],
+            UNDEFINED,
+            True,
+            None,
+            "2001:db8::",
+            PUBLIC_TARGET_IPV6,
+            id="disabled_ipv4",
+        ),
+        pytest.param(
+            [
+                _ADAPTERS_WITH_MANUAL_CONFIG[0],
+                {
+                    **_ADAPTERS_WITH_MANUAL_CONFIG[1],
+                    "ipv4": [{"address": "127.0.0.1", "network_prefix": 8}],
+                },
+            ],
+            UNDEFINED,
+            True,
+            None,
+            "2001:db8::",
+            PUBLIC_TARGET_IPV6,
+            id="ipv6_before_ipv4_loopback",
+        ),
+        pytest.param(
+            [],
+            UNDEFINED,
+            True,
+            "127.0.0.1",
+            "127.0.0.1",
+            PUBLIC_TARGET_IP,
+            id="no_enabled_addresses",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+            "2001:db8::20",
+            False,
+            None,
+            "2001:db8::",
+            "2001:db8::20",
+            id="explicit_ipv6",
+        ),
+        pytest.param(
+            _ADAPTERS_WITH_MANUAL_CONFIG,
+            "fe80::20%eth0",
+            False,
+            None,
+            "fe80::1234:5678:9abc:def0%1",
+            "fe80::20%eth0",
+            id="link_local_named_scope",
+        ),
+        pytest.param(
+            _ADAPTERS_WITH_MANUAL_CONFIG,
+            "fe80::20%3",
+            False,
+            "fe80::1234:5678:9abc:def0%1",
+            "fe80::dead:beef:dead:beef%3",
+            "fe80::20%3",
+            id="link_local_numeric_scope",
+        ),
+        pytest.param(
+            [{**_ADAPTERS_WITH_MANUAL_CONFIG[0], "index": None}],
+            "fe80::20%1",
+            False,
+            None,
+            "fe80::1234:5678:9abc:def0%1",
+            "fe80::20%1",
+            id="link_local_without_adapter_index",
+        ),
+        pytest.param(
+            [{**_ADAPTERS_WITH_MANUAL_CONFIG[0], "index": 2}],
+            "fe80::20%1",
+            False,
+            None,
+            "fe80::1234:5678:9abc:def0%1",
+            "fe80::20%1",
+            id="link_local_distinct_ipv6_index",
+        ),
+        pytest.param(
+            _ADAPTERS_WITH_MANUAL_CONFIG,
+            MDNS_TARGET_IP,
+            True,
+            None,
+            "192.168.1.5",
+            MDNS_TARGET_IP,
+            id="explicit_ipv4",
+        ),
+    ],
+)
+async def test_async_get_source_ip_address_family(
+    hass: HomeAssistant,
+    adapters: list[Adapter],
+    target: str | UndefinedType,
+    allow_ipv6_fallback: bool,
+    route_source: str | None,
+    expected: str,
+    probe: str,
+) -> None:
+    """Respect the target family and fall back only to enabled source addresses."""
+    with (
+        patch(
+            "homeassistant.components.network.async_get_adapters", return_value=adapters
+        ),
+        patch(
+            "homeassistant.components.network.util.async_get_source_ip",
+            return_value=route_source,
+        ) as source_ip,
+    ):
+        assert (
+            await network.async_get_source_ip(
+                hass, target, allow_ipv6_fallback=allow_ipv6_fallback
+            )
+            == expected
+        )
+
+    source_ip.assert_called_once_with(probe)
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param("fe80::20%4", id="disabled_scope"),
+        pytest.param("fe80::20%99", id="unknown_scope"),
+        pytest.param("fe80::20", id="missing_scope"),
+    ],
+)
+async def test_async_get_source_ip_link_local_requires_enabled_scope(
+    hass: HomeAssistant, target: str
+) -> None:
+    """Never select a link local fallback from a different interface."""
+    with (
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+        ),
+        pytest.raises(HomeAssistantError, match="No enabled IPv6 source address"),
+    ):
+        await network.async_get_source_ip(hass, target)
+
+
+async def test_async_get_source_ip_ipv4_target_without_ipv4(
+    hass: HomeAssistant,
+) -> None:
+    """An explicit IPv4 destination cannot fall back to an IPv6 source."""
+    with (
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=[_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+        ),
+        patch(
+            "homeassistant.components.network.util.async_get_source_ip",
+            return_value=None,
+        ),
+        pytest.raises(
+            HomeAssistantError, match="does not have any enabled IPv4 addresses"
+        ),
+    ):
+        await network.async_get_source_ip(
+            hass, MDNS_TARGET_IP, allow_ipv6_fallback=True
+        )
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        pytest.param("fe80::1234", id="link_local"),
+        pytest.param("::1", id="loopback"),
+        pytest.param("::", id="unspecified"),
+        pytest.param("ff02::fb", id="multicast"),
+    ],
+)
+async def test_async_get_source_ip_excludes_ipv6_default(
+    hass: HomeAssistant, address: str
+) -> None:
+    """Unsuitable IPv6 addresses must not become HTTP's default address."""
+    adapter: Adapter = {
+        **_ADAPTERS_WITH_MANUAL_CONFIG[0],
+        "ipv6": [
+            {"address": address, "scope_id": 1, "flowinfo": 0, "network_prefix": 64}
+        ],
+    }
+    with (
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=[adapter],
+        ),
+        patch(
+            "homeassistant.components.network.util.async_get_source_ip",
+            side_effect={LOOPBACK_TARGET_IP: "127.0.0.1"}.get,
+        ),
+    ):
+        assert (
+            await network.async_get_source_ip(hass, allow_ipv6_fallback=True)
+            == "127.0.0.1"
+        )
+
+
 async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
     """Test addresses for mDNS/etc announcement."""
     first_ip = "172.16.1.5"
@@ -764,6 +1023,42 @@ async def test_async_get_announce_addresses_no_source_ip(hass: HomeAssistant) ->
         "172.16.1.5",
         "fe80::dead:beef:dead:beef",
     ]
+
+
+@pytest.mark.parametrize(
+    ("adapters", "expected"),
+    [
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0]],
+            ["2001:db8::", "fe80::1234:5678:9abc:def0"],
+            id="ipv6_only",
+        ),
+        pytest.param(
+            [_ADAPTERS_WITH_MANUAL_CONFIG[0], _ADAPTERS_WITH_MANUAL_CONFIG[3]],
+            ["2001:db8::", "fe80::1234:5678:9abc:def0"],
+            id="disabled_ipv4",
+        ),
+        pytest.param([_ADAPTERS_WITH_MANUAL_CONFIG[3]], [], id="all_disabled"),
+        pytest.param([], [], id="no_adapters"),
+    ],
+)
+async def test_async_get_announce_addresses_without_ipv4(
+    hass: HomeAssistant, adapters: list[Adapter], expected: list[str]
+) -> None:
+    """Only announce enabled addresses when no IPv4 interface is selected."""
+    with (
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=adapters,
+        ),
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value="192.0.2.20",
+        ) as source_ip,
+    ):
+        assert await network.async_get_announce_addresses(hass) == expected
+
+    source_ip.assert_not_awaited()
 
 
 async def test_websocket_network_url(
