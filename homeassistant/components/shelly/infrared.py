@@ -113,7 +113,9 @@ RPC_INFRARED_ENTITIES: Final = {
         key="ir",
         translation_key="infrared_receiver",
         entity_class=ShellyInfraredReceiver,
-        removal_condition=lambda config, _, key: not config[key]["raw_receive"],
+        removal_condition=lambda config, _, key: (
+            not config[key].get("raw_receive", False)
+        ),
     ),
 }
 
