@@ -31,8 +31,6 @@ set_system_mode:
         duration:
           enable_second: false
 
-reset_system:
-
 refresh_system:
 
 set_zone_override:
@@ -55,14 +53,6 @@ set_zone_override:
       selector:
         duration:
           enable_second: false
-
-clear_zone_override:
-  target:
-    entity:
-      integration: evohome
-      domain: climate
-      supported_features:
-        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
 
 set_dhw_override:
   target:
