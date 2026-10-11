@@ -475,3 +475,105 @@ async def test_initial_sensor_fetch_preserved(
     state = hass.states.get("sensor.indi_allsky_dew_point")
     assert state is not None
     assert state.state == "14.8"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_coverage_branches(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_exposure_data: ExposureData,
+) -> None:
+    """Test sensor edge branches: timezone offsets, angle state class, non-numeric values, and missing data."""
+    # Test exposure createDate with timezone offset (line 44)
+    tz_exposure = replace(mock_exposure_data, create_date="2026-08-13 22:53:41+02:00")
+
+    # Test custom sensors:
+    # 1. Wind direction -> MEASUREMENT_ANGLE (line 293)
+    # 2. Non-numeric value with measurement state class -> None (lines 437-439)
+    # 3. Item not in sensors dict (line 391)
+    custom_sensor_data = SensorData.from_dict(
+        {
+            "last_update": "2026-08-13 22:53:41",
+            "sensors": {
+                "dynamic_wind_dir": {
+                    "name": "Custom Wind Dir",
+                    "device_class": "wind_direction",
+                    "unit": "°",
+                    "value": 180.0,
+                },
+                "temp_invalid": {
+                    "name": "Broken Temp",
+                    "device_class": "temperature",
+                    "unit": "°C",
+                    "value": "corrupt",
+                },
+            },
+        }
+    )
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Dispatch exposure complete with timezone
+    for cb in mock_indi_allsky_client.callbacks.get("exposure_complete", []):
+        cb(tz_exposure)
+
+    # Dispatch sensor update
+    for cb in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        cb(custom_sensor_data)
+    await hass.async_block_till_done()
+
+    # Verify exposure creation time converts to UTC
+    state = hass.states.get("sensor.indi_allsky_exposure_creation_time")
+    assert state is not None
+    assert state.state == "2026-08-13T20:53:41+00:00"
+
+    # Verify dynamic wind direction has MEASUREMENT_ANGLE state class
+    state = hass.states.get("sensor.indi_allsky_custom_wind_dir")
+    assert state is not None
+    assert state.state == "180.0"
+    assert state.attributes.get("state_class") == "measurement_angle"
+
+    # Verify corrupt temperature with state class returns None (state unknown/unavailable)
+    state = hass.states.get("sensor.indi_allsky_broken_temp")
+    assert state is not None
+    assert state.state in ("unknown", "unavailable")
+
+    # Update with item that has no 'value' (line 439)
+    no_value_sensor_data = SensorData.from_dict(
+        {
+            "last_update": "2026-08-13 22:53:41",
+            "sensors": {
+                "dynamic_wind_dir": {"name": "Custom Wind Dir", "value": None},
+            },
+        }
+    )
+    for cb in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        cb(no_value_sensor_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_custom_wind_dir")
+    assert state is not None
+    assert state.state in ("unknown", "unavailable")
+
+    # Set non-dict sensors field to exercise line 391 fallback
+    coordinator = mock_config_entry.runtime_data
+    non_dict_sensor_data = replace(no_value_sensor_data, sensors=None)  # type: ignore[arg-type]
+    coordinator.async_set_updated_data(
+        replace(coordinator.data, sensor=non_dict_sensor_data)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_custom_wind_dir")
+    assert state is not None
+    assert state.state in ("unknown", "unavailable")
+
+    # Clear sensor entirely to exercise line 424 (if not self.coordinator.data.sensor)
+    coordinator.latest_sensor = None
+    coordinator.async_set_updated_data(replace(coordinator.data, sensor=None))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_custom_wind_dir")
+    assert state is not None
+    assert state.state in ("unknown", "unavailable")
