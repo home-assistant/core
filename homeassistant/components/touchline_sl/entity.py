@@ -4,6 +4,7 @@ from typing import override
 
 from pytouchlinesl import Zone
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,7 +25,11 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
             identifiers={(DOMAIN, f"{coordinator.data.module.id}-{zone_id}")},
             name=self.zone.name,
             manufacturer="Roth",
-            via_device=(DOMAIN, coordinator.data.module.id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.data.module.id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             model="zone",
             suggested_area=self.zone.name,
         )

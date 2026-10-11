@@ -4,6 +4,7 @@ import logging
 from typing import Any, cast, override
 
 from pyvesync.base_devices import VeSyncFanBase, VeSyncPurifier
+from pyvesync.devices.vesyncpurifier import VeSyncAirBaseV2
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +21,7 @@ from .const import (
     VS_DEVICES,
     VS_DISCOVERY,
     VS_FAN_MODE_AUTO,
+    VS_FAN_MODE_ECO,
     VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL,
     VS_FAN_MODE_PET,
@@ -40,6 +42,7 @@ VS_TO_HA_MODE_MAP = {
     VS_FAN_MODE_PET: VS_FAN_MODE_PET,
     VS_FAN_MODE_MANUAL: VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL: VS_FAN_MODE_NORMAL,
+    VS_FAN_MODE_ECO: VS_FAN_MODE_ECO,
 }
 
 PARALLEL_UPDATES = 1
@@ -160,18 +163,23 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     @property
     @override
     def percentage(self) -> int | None:
-        """Return the currently set speed."""
+        """Return the current speed."""
 
         current_level = self.device.state.fan_level
-        if self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
-            if current_level == 0:
-                return 0
-            # The device can report an out-of-range level (e.g. -1) when the
-            # speed is not applicable; treat it as unknown instead of crashing.
-            if current_level in self.device.fan_levels:
-                return ordered_list_item_to_percentage(
-                    self.device.fan_levels, current_level
-                )
+        in_manual_mode = self.device.state.mode in (
+            VS_FAN_MODE_MANUAL,
+            VS_FAN_MODE_NORMAL,
+        )
+        # The legacy purifier API reports the manual setting, not the running level
+        if not in_manual_mode and not isinstance(self.device, VeSyncAirBaseV2):
+            return None
+        if current_level in self.device.fan_levels:
+            return ordered_list_item_to_percentage(
+                self.device.fan_levels, current_level
+            )
+        if current_level == 0 and in_manual_mode:
+            return 0
+        # Unknown or out-of-range level (e.g. -1 or the 255 sentinel)
         return None
 
     @property
@@ -313,6 +321,8 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         elif vs_mode == VS_FAN_MODE_NORMAL:
             if hasattr(self.device, "set_normal_mode"):
                 success = await self.device.set_normal_mode()
+        elif vs_mode == VS_FAN_MODE_ECO:
+            success = await self.device.set_mode(VS_FAN_MODE_ECO)
 
         if not success:
             if self.device.last_response:

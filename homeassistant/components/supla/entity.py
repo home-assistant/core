@@ -31,6 +31,7 @@ class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
         """Return a unique ID."""
         uid = self.channel_data["iodevice"]["gUIDString"].lower()
         channel_number = self.channel_data["channelNumber"]
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"supla-{uid}-{channel_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
@@ -43,7 +44,7 @@ class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.channel_data is None:
+        if not super().available or self.channel_data is None:
             return False
         if (state := self.channel_data.get("state")) is None:
             return False

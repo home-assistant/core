@@ -7,6 +7,7 @@ from typing import Any, override
 
 from demetriek import (
     CloudDevice,
+    LaMetricAuthenticationError,
     LaMetricCloud,
     LaMetricConnectionError,
     LaMetricDevice,
@@ -18,7 +19,7 @@ from demetriek import (
     Simple,
     Sound,
 )
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -118,6 +119,57 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle initiation of re-authentication with LaMetric."""
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and API key of a device."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            lametric = LaMetricDevice(
+                host=user_input[CONF_HOST],
+                api_key=user_input[CONF_API_KEY],
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                device = await lametric.device()
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except LaMetricConnectionError as ex:
+                LOGGER.error("Error connecting to LaMetric: %s", ex)
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error occurred")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): TextSelector(),
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                        ),
+                    }
+                ),
+                {CONF_HOST: reconfigure_entry.data[CONF_HOST]},
+            ),
+            description_placeholders={"devices_url": DEVICES_URL},
+            errors=errors,
+        )
+
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -149,6 +201,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except AbortFlow:
                 raise
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -158,16 +212,16 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # Don't ask for a host if it was discovered
         schema = {
-            vol.Required(CONF_API_KEY): TextSelector(
+            probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }
         if not self.discovered and self.source != SOURCE_REAUTH:
-            schema = {vol.Required(CONF_HOST): TextSelector()} | schema
+            schema = {probatio.Required(CONF_HOST): TextSelector()} | schema
 
         return self.async_show_form(
             step_id="manual_entry",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             description_placeholders={
                 "devices_url": DEVICES_URL,
             },
@@ -215,6 +269,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except AbortFlow:
                 raise
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -224,9 +280,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="cloud_select_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             mode=SelectSelectorMode.DROPDOWN,
                             options=[
@@ -305,7 +361,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle dhcp discovery to update existing entries."""
         mac = format_mac(discovery_info.macaddress)
         for entry in self._async_current_entries():
-            if format_mac(entry.data[CONF_MAC]) == mac:
+            if (entry_mac := entry.data.get(CONF_MAC)) and format_mac(entry_mac) == mac:
                 self.hass.config_entries.async_update_entry(
                     entry,
                     data=entry.data | {CONF_HOST: discovery_info.ip},

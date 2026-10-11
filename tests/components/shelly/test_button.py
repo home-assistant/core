@@ -3,7 +3,12 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE, MODEL_WALL_DISPLAY
+from aioshelly.const import (
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_PLUS_2PM,
+    MODEL_PLUS_SMOKE,
+    MODEL_WALL_DISPLAY,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -29,6 +34,23 @@ from . import (
     register_device,
     register_entity,
 )
+
+IRCODE_CONFIG = {
+    "ircode:200": {"id": 200, "name": "Speed 1", "device_id": 200},
+    "ircode:201": {"id": 201, "name": "Turn On", "device_id": 201},
+    "ircode:202": {"id": 202, "name": "Turn Off", "device_id": 201},
+    "ircode:203": {"id": 203, "name": "Turn Off", "device_id": 200},
+    "irdevice:200": {"id": 200, "name": "Fan"},
+    "irdevice:201": {"id": 201, "name": "Light"},
+}
+IRCODE_STATUS = {
+    "ircode:200": {"id": 200},
+    "ircode:201": {"id": 201},
+    "ircode:202": {"id": 202},
+    "ircode:203": {"id": 203},
+    "irdevice:200": {"id": 200},
+    "irdevice:201": {"id": 201},
+}
 
 
 @pytest.fixture(autouse=True)
@@ -153,19 +175,21 @@ async def test_rpc_button_reauth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
+@pytest.mark.parametrize("model", [MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM])
 async def test_rpc_blu_trv_button(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
     snapshot: SnapshotAssertion,
+    model: str,
 ) -> None:
     """Test RPC BLU TRV button."""
     monkeypatch.delitem(mock_blu_trv.status, "script:1")
     monkeypatch.delitem(mock_blu_trv.status, "script:2")
     monkeypatch.delitem(mock_blu_trv.status, "script:3")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    await init_integration(hass, 3, model=model)
 
     entity_id = "button.trv_name_calibrate"
 
@@ -461,3 +485,97 @@ async def test_rpc_remove_restart_button_for_sleeping_devices(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(entity_id) is None
+
+
+async def test_rpc_ircode_buttons(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test RPC IR code buttons."""
+    monkeypatch.setattr(mock_rpc_device, "config", IRCODE_CONFIG)
+    monkeypatch.setattr(mock_rpc_device, "status", IRCODE_STATUS)
+
+    await init_integration(hass, 4)
+
+    for entity_id in (
+        "button.fan_speed_1",
+        "button.light_turn_on",
+        "button.light_turn_off",
+        "button.fan_turn_off",
+    ):
+        assert (state := hass.states.get(entity_id))
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        assert (entry := entity_registry.async_get(entity_id))
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNKNOWN
+
+    assert mock_rpc_device.ircode_emit.call_count == 4
+
+
+async def test_rpc_ircode_button_no_custom_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC IR code button with no custom name in config."""
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "config",
+        {
+            "ircode:20": {"id": 20, "device_id": 30},
+            "irdevice:30": {"id": 30},
+        },
+    )
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "status",
+        {
+            "ircode:20": {"id": 20},
+            "irdevice:30": {"id": 30},
+        },
+    )
+
+    config_entry = await init_integration(hass, 4)
+
+    # With no custom name:
+    # translated name -> IR code 20
+    # device fallback name -> IR Device 30
+    entity_id = "button.ir_device_30_ir_code_20"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-ircode:20-ircode"
+
+    # Verify IR device with fallback name
+    ir_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789ABC-irdevice:30"), config_entry.entry_id
+    )
+    assert ir_device is not None
+    assert ir_device.name == "IR Device 30"
+
+    # Verify entity belongs to the IR device
+    assert entry.device_id == ir_device.id
+
+    # Verify via_device points to main device
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789ABC"), config_entry.entry_id
+    )
+    assert main_device is not None
+    assert ir_device.via_device_id == main_device.id

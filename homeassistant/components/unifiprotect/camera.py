@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import cast, override
+from typing import override
 
 from uiprotect.data import (
     Camera as UFPCamera,
@@ -17,14 +17,10 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform,
-    issue_registry as ir,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import entity_platform, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -35,7 +31,6 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DEFAULT_BRAND,
     DOMAIN,
 )
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -186,6 +181,15 @@ def _async_camera_entities(
             or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif streams is None:
+            # None means the best-effort read failed, not that streams are absent.
+            _LOGGER.warning(
+                (
+                    "Could not read RTSPS streams for camera %s;"
+                    " live streaming stays disabled until streams can be read again"
+                ),
+                public.display_name,
+            )
         else:
             _create_rtsp_repair(hass, entry, public)
     return entities
@@ -263,11 +267,13 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._last_image: bytes | None = None
         # The base tracks the private device in hybrid (unchanged behaviour) and
         # the public device in public-only, so it always has a mac to key on.
-        super().__init__(data, cast(ProtectDeviceType, private or public))
+        super().__init__(data, private or public)
         self._attr_unique_id = f"{self.device.mac}_{self._channel_id}"
         self._attr_name = get_camera_base_name(quality)
         # only the default (first active) quality channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default
+        # RTSPS uses a self-signed certificate on the console IP
+        self.stream_options[CONF_VERIFY_SSL] = False
         # Set the stream source before finishing the init
         # because async_added_to_hass is too late and camera
         # integration uses async_internal_added_to_hass to access
@@ -293,25 +299,6 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             source = streams.get_stream_url(quality, srtp=False)
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
         self._stream_source = source
-
-    @callback
-    @override
-    def _async_set_device_info(self) -> None:
-        if self._private is not None:
-            super()._async_set_device_info()
-            return
-        # public-only: no market_name/firmware_version/protect_url, and
-        # ``type`` only on newer firmware, so device identity is limited. The
-        # NVR link is omitted — an API-key-only client has no private
-        # bootstrap to read the NVR mac from, and resolving it publicly is
-        # async; the public-only config mode wires it at setup instead.
-        public = self._public
-        self._attr_device_info = DeviceInfo(
-            name=public.display_name,
-            model=public.type,
-            manufacturer=DEFAULT_BRAND,
-            connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
-        )
 
     @callback
     @override
@@ -408,11 +395,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._public_missing = False
         else:
             self._public_missing = True
-        device = (
-            self._private
-            if self._private is not None
-            else cast(ProtectDeviceType, self._public)
-        )
+        device = self._private if self._private is not None else self._public
         self._async_updated_event(device)
 
     @override

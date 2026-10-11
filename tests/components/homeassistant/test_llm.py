@@ -1,6 +1,8 @@
 """Tests for the homeassistant LLM tools platform."""
 
+from probatio import to_openapi
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant import llm as ha_llm
@@ -42,10 +44,10 @@ def _llm_context() -> llm.LLMContext:
 
 
 async def test_live_context_always_offered(hass: HomeAssistant) -> None:
-    """Test GetLiveContext is offered even when nothing is exposed."""
+    """Test homeassistant__GetLiveContext is offered even when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert "GetLiveContext" in [tool.name for tool in result.tools]
+    assert "homeassistant__GetLiveContext" in [tool.name for tool in result.tools]
 
 
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
@@ -70,30 +72,37 @@ async def test_prompt_no_entities(hass: HomeAssistant) -> None:
 
 
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
-    """Test GetLiveContext reports an error when nothing is exposed."""
+    """Test homeassistant__GetLiveContext reports an error when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next(tool for tool in result.tools if tool.name == "GetLiveContext")
+    tool = next(
+        tool for tool in result.tools if tool.name == "homeassistant__GetLiveContext"
+    )
 
     response = await tool.async_call(
-        hass, llm.ToolInput("GetLiveContext", {}), llm_context
+        hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
-    assert response == {"success": False, "error": ha_llm.NO_ENTITIES_PROMPT}
+    assert response == llm.ToolResult(
+        data={"error": ha_llm.NO_ENTITIES_PROMPT}, error=True
+    )
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
-    """Test GetLiveContext returns exposed entity state."""
+    """Test homeassistant__GetLiveContext returns exposed entity state."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next((tool for tool in result.tools if tool.name == "GetLiveContext"), None)
+    tool = next(
+        (tool for tool in result.tools if tool.name == "homeassistant__GetLiveContext"),
+        None,
+    )
     assert tool is not None
 
     response = await tool.async_call(
-        hass, llm.ToolInput("GetLiveContext", {}), llm_context
+        hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
-    assert response["success"] is True
-    assert "Kitchen Light" in response["result"]
+    assert response.error is False
+    assert "Kitchen Light" in response.data["result"]
 
 
 async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
@@ -156,7 +165,7 @@ async def test_get_live_context_tool_filter(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test the filter parameters of the GetLiveContext tool."""
+    """Test the filter parameters of the homeassistant__GetLiveContext tool."""
     # The autouse fixture exposes light.kitchen; drop it for a clean entity set.
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     assert await async_setup_component(hass, "intent", {})
@@ -252,144 +261,196 @@ async def test_get_live_context_tool_filter(
 
     await hass.async_block_till_done()
     tools = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next(t for t in tools.tools if t.name == "GetLiveContext")
+    tool = next(t for t in tools.tools if t.name == "homeassistant__GetLiveContext")
 
-    async def _get_live_context(tool_args: dict) -> dict:
+    async def _get_live_context(tool_args: dict) -> llm.ToolResult:
         return await tool.async_call(
-            hass, llm.ToolInput("GetLiveContext", tool_args), llm_context
+            hass, llm.ToolInput("homeassistant__GetLiveContext", tool_args), llm_context
         )
 
     # Filter by area and domain (example 1)
     result = await _get_live_context({"area": "Office", "domain": "light"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Filter by name (example 2)
     result = await _get_live_context({"name": "Front Door"})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
-    assert "Office Light" not in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Name filter is case insensitive
     result = await _get_live_context({"name": "front door"})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
 
     # Area filter matches area aliases
     result = await _get_live_context({"area": "workspace"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Domain filter accepts a list
     result = await _get_live_context({"domain": ["switch", "lock"]})
-    assert result["success"] is True
-    assert "Office Switch" in result["result"]
-    assert "Front Door" in result["result"]
-    assert "Office Light" not in result["result"]
-    assert "Kitchen Light" not in result["result"]
+    assert result.error is False
+    assert "Office Switch" in result.data["result"]
+    assert "Front Door" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
 
     # Domain filter is case insensitive
     result = await _get_live_context({"domain": "Light"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" in result["result"]
-    assert "Office Switch" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # No filters returns all exposed entities
     result = await _get_live_context({})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Front Door" in result.data["result"]
 
     # Filter that matches nothing returns a descriptive error
     result = await _get_live_context({"name": "Does Not Exist"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities matched name 'Does Not Exist'",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities matched name 'Does Not Exist'"},
+        error=True,
+    )
 
     # Name filter strips surrounding whitespace
     result = await _get_live_context({"name": "  Front Door  "})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
 
     # Area filter strips surrounding whitespace
     result = await _get_live_context({"area": "  Office  "})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
 
     # Name filter accepts entity_id
     result = await _get_live_context({"name": office_light.entity_id})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Area filter accepts area_id
     result = await _get_live_context({"area": office.id})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Name filter matches entity aliases
     result = await _get_live_context({"name": "cooking lamp"})
-    assert result["success"] is True
-    assert "Kitchen Light" in result["result"]
-    assert "Office Light" not in result["result"]
+    assert result.error is False
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
 
     # Combining name + area narrows the result
     result = await _get_live_context({"name": "Office Light", "area": "Office"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Combining name + area returns the failing constraint in the error
     result = await _get_live_context({"name": "Office Light", "area": "Kitchen"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities found in area 'Kitchen'",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in area 'Kitchen'"}, error=True
+    )
 
     # Unknown area distinguishes "invalid area" from "no entities in area"
     result = await _get_live_context({"area": "Garage"})
-    assert result == {
-        "success": False,
-        "error": "Area 'Garage' does not exist",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "Area 'Garage' does not exist"}, error=True
+    )
 
     # Unknown domain reports which domain(s) failed
     result = await _get_live_context({"domain": "fan"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities found in domain(s): fan",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in domain(s): fan"}, error=True
+    )
 
     # Entities sharing a name are all returned rather than failing as an
     # ambiguous match, since this tool only returns context.
     result = await _get_live_context({"name": "AC"})
-    assert result["success"] is True
-    assert result["result"].count("domain: climate") == 2
-    assert "Office" in result["result"]
-    assert "Kitchen" in result["result"]
+    assert result.error is False
+    assert result.data["result"].count("domain: climate") == 2
+    assert "Office" in result.data["result"]
+    assert "Kitchen" in result.data["result"]
 
     # Combining a shared name with an area narrows to the single match
     result = await _get_live_context({"name": "AC", "area": "Kitchen"})
-    assert result["success"] is True
-    assert result["result"].count("domain: climate") == 1
-    assert "Kitchen" in result["result"]
-    assert "Office" not in result["result"]
+    assert result.error is False
+    assert result.data["result"].count("domain: climate") == 1
+    assert "Kitchen" in result.data["result"]
+    assert "Office" not in result.data["result"]
+
+
+async def test_get_live_context_schema(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test that homeassistant__GetLiveContext tool parameters convert to a sane OpenAPI schema."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(t for t in result.tools if t.name == "homeassistant__GetLiveContext")
+
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+    schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
+
+    assert schema == snapshot
+
+
+async def test_get_exposed_entities_brightness_percentage(hass: HomeAssistant) -> None:
+    """Test that a light's brightness is also rendered as a percentage."""
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 128}
+    )
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    attributes = exposed[ENTITY_ID]["attributes"]
+
+    # The raw attribute is unchanged, so anything reading it keeps working.
+    assert attributes["brightness"] == "128"
+    # The percentage is the inverse of the percentage-to-brightness conversion.
+    assert attributes["brightness_pct"] == "50"
+
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 255}
+    )
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed[ENTITY_ID]["attributes"]["brightness_pct"] == "100"
+
+    # A lit light never rounds down to nothing.
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 1}
+    )
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed[ENTITY_ID]["attributes"]["brightness_pct"] == "1"
+
+    hass.states.async_set(ENTITY_ID, "off", {"friendly_name": "Kitchen Light"})
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert "brightness_pct" not in exposed[ENTITY_ID].get("attributes", {})
+
+    # Only lights get the percentage, whatever attribute another domain carries.
+    hass.states.async_set(
+        "fan.kitchen", "on", {"friendly_name": "Kitchen Fan", "brightness": 128}
+    )
+    async_expose_entity(hass, "conversation", "fan.kitchen", True)
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed["fan.kitchen"]["attributes"]["brightness"] == "128"
+    assert "brightness_pct" not in exposed["fan.kitchen"]["attributes"]

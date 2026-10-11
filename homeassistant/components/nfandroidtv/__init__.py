@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.NOTIFY]
@@ -24,11 +25,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NFAndroidTV component."""
 
     hass.data[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NFAndroidTVConfigEntry) -> bool:
     """Set up NFAndroidTV from a config entry."""
+
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: entry.title, **entry.data},
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
 
     try:
         client = await hass.async_add_executor_job(Notifications, entry.data[CONF_HOST])
@@ -41,16 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NFAndroidTVConfigEntry) 
         ) from e
 
     entry.runtime_data = client
-
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {CONF_NAME: entry.title, **entry.data},
-            hass.data[DATA_HASS_CONFIG],
-        )
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

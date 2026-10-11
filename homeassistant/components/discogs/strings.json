@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "token": "Personal access token from Discogs developer settings."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "collection": {
+        "name": "Collection"
+      },
+      "random_record": {
+        "name": "Random record"
+      },
+      "wantlist": {
+        "name": "Wantlist"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your YAML configuration, the Discogs API could not be reached or the token was invalid. Please verify your token and restart Home Assistant to retry, or remove the {domain} sensor from your configuration and set up the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  }
+}

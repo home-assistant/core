@@ -115,6 +115,36 @@ SWITCHES = (
         state=lambda data: data.block_parked_domains,
     ),
     NextDnsSwitchEntityDescription(
+        key="block_data_drop_services",
+        translation_key="block_data_drop_services",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_data_drop_services,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_decentralized_web_gateways",
+        translation_key="block_decentralized_web_gateways",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_decentralized_web_gateways,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_free_hosting_domains",
+        translation_key="block_free_hosting_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_free_hosting_domains,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_residential_hosting",
+        translation_key="block_residential_hosting",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_residential_hosting,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_tunneling_endpoints",
+        translation_key="block_tunneling_endpoints",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_tunneling_endpoints,
+    ),
+    NextDnsSwitchEntityDescription(
         key="cryptojacking_protection",
         translation_key="cryptojacking_protection",
         entity_category=EntityCategory.CONFIG,
@@ -533,11 +563,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
-    coordinator = entry.runtime_data.settings
-
-    async_add_entities(
-        NextDnsSwitch(coordinator, description) for description in SWITCHES
-    )
+    for subentry_id, profile_data in entry.runtime_data.profiles.items():
+        coordinator = profile_data.settings
+        async_add_entities(
+            (NextDnsSwitch(coordinator, description) for description in SWITCHES),
+            config_subentry_id=subentry_id,
+        )
 
 
 class NextDnsSwitch(NextDnsEntity, SwitchEntity):
@@ -591,10 +622,22 @@ class NextDnsSwitch(NextDnsEntity, SwitchEntity):
                     "error": repr(err),
                 },
             ) from err
-        except InvalidApiKeyError:
+        except InvalidApiKeyError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={
+                    "entry": self.coordinator.config_entry.title,
+                },
+            ) from err
 
-        if result:
-            self._attr_is_on = new_state
-            self.async_write_ha_state()
+        if not result:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_setting_error",
+                translation_placeholders={"entity": self.entity_id},
+            )
+
+        self._attr_is_on = new_state
+        self.async_write_ha_state()

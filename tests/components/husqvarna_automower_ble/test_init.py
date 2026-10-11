@@ -33,8 +33,9 @@ async def test_setup(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078"),
+        mock_config_entry.entry_id,
     )
 
     assert device_entry == snapshot

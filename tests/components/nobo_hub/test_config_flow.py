@@ -1,8 +1,8 @@
 """Test the Nobø Ecohub config flow."""
 
-import errno
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+from pynobo import PynoboConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -81,16 +81,22 @@ async def test_configure_with_discover(
 
 
 @pytest.mark.parametrize(
-    ("discovered", "expected_devices", "selected_device"),
+    ("discovered", "expected_devices", "selected_device", "expected_unique_id"),
     [
         # Same IP+prefix hidden; sibling with same prefix at a different IP shown.
         (
             [("1.1.1.1", "111111111"), ("2.2.2.2", "111111111")],
             {"2.2.2.2", "manual"},
             "2.2.2.2",
+            "111111111999",
         ),
         # Same IP, different prefix → different hub (e.g. replacement), shown.
-        ([("1.1.1.1", "222222222")], {"1.1.1.1", "manual"}, "1.1.1.1"),
+        (
+            [("1.1.1.1", "222222222")],
+            {"1.1.1.1", "manual"},
+            "1.1.1.1",
+            "222222222999",
+        ),
     ],
     ids=["sibling_different_ip", "replaced_hub"],
 )
@@ -100,6 +106,7 @@ async def test_configure_filters_configured_hubs(
     discovered: list[tuple[str, str]],
     expected_devices: set[str],
     selected_device: str,
+    expected_unique_id: str,
 ) -> None:
     """Configured (IP, prefix) pairs are hidden; the user can pick a remaining one."""
     MockConfigEntry(
@@ -139,6 +146,7 @@ async def test_configure_filters_configured_hubs(
         )
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["result"].unique_id == expected_unique_id
 
 
 async def test_configure_skips_user_step_when_all_configured(
@@ -178,6 +186,7 @@ async def test_configure_skips_user_step_when_all_configured(
         )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "999999999999"
 
 
 async def test_configure_manual(
@@ -407,7 +416,10 @@ async def test_configure_invalid_ip_address(
     ("connect_outcome", "expected_error"),
     [
         ({"return_value": False}, "cannot_connect"),
-        ({"side_effect": ConnectionRefusedError(61, "")}, "cannot_connect_ip"),
+        (
+            {"side_effect": PynoboConnectionError("Failed to connect")},
+            "cannot_connect_ip",
+        ),
     ],
     ids=["serial_mismatch", "tcp_failure"],
 )
@@ -420,10 +432,10 @@ async def test_configure_cannot_connect(
     """Connect failures map to distinct error keys; retry recovers.
 
     pynobo's async_connect_hub returns False on a successful TCP connect
-    followed by a handshake REJECT (serial mismatch) and raises OSError
-    on TCP-level failure (wrong IP / hub offline). We surface these as
-    cannot_connect ("check serial number") and cannot_connect_ip
-    ("check IP address") respectively.
+    followed by a handshake REJECT (serial mismatch) and raises
+    PynoboConnectionError on TCP-level failure (wrong IP / hub offline).
+    We surface these as cannot_connect ("check serial number") and
+    cannot_connect_ip ("check IP address") respectively.
     """
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
@@ -818,7 +830,7 @@ async def test_reconfigure_flow_changes_ip(
     [
         (
             "192.168.1.200",
-            {"side_effect": ConnectionRefusedError(errno.ECONNREFUSED, "")},
+            {"side_effect": PynoboConnectionError("Failed to connect")},
             "cannot_connect_ip",
             1,
         ),

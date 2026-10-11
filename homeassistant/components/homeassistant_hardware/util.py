@@ -7,12 +7,10 @@ from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING, cast
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
-from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
-from universal_silabs_flasher.firmware import parse_firmware_image
-from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -26,6 +24,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util import dt as dt_util
 
@@ -39,7 +38,16 @@ from .const import (
 )
 from .helpers import async_firmware_update_context
 
+if TYPE_CHECKING:
+    from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
+    from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher
+
 _LOGGER = logging.getLogger(__name__)
+
+# The flasher library pulls in the full Zigbee stack, only load it when used
+FLASHER_MODULE = "universal_silabs_flasher.flasher"
+COMMON_MODULE = "universal_silabs_flasher.common"
+FIRMWARE_MODULE = "universal_silabs_flasher.firmware"
 
 ADDON_STATE_POLL_INTERVAL = 3
 ADDON_INFO_POLL_TIMEOUT = 15 * 60
@@ -109,8 +117,31 @@ class ApplicationType(StrEnum):
         return cls(app_type.value)
 
     def as_flasher_application_type(self) -> FlasherApplicationType:
-        """Convert the application type enum into one compatible with USF."""
+        """Convert the application type enum into one compatible with USF.
+
+        Only call this once the flasher library has been imported.
+        """
+        from universal_silabs_flasher.const import (  # noqa: PLC0415
+            ApplicationType as FlasherApplicationType,
+        )
+
         return FlasherApplicationType(self.value)
+
+
+class FlasherType(StrEnum):
+    """Device specific flasher class of the flasher library."""
+
+    YELLOW = "YellowFlasher"
+    ZBT1 = "Zbt1Flasher"
+    ZBT2 = "Zbt2Flasher"
+
+
+async def async_get_flasher_cls(
+    hass: HomeAssistant, flasher_type: FlasherType
+) -> type[DeviceSpecificFlasher]:
+    """Return a device specific flasher class, importing the flasher on first use."""
+    flasher_module = await async_import_module(hass, FLASHER_MODULE)
+    return cast("type[DeviceSpecificFlasher]", getattr(flasher_module, flasher_type))
 
 
 @singleton(OTBR_ADDON_MANAGER_DATA)
@@ -404,7 +435,7 @@ async def probe_silabs_firmware_info(
                 else None
             )
         )
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
     if flasher.app_type is None:
@@ -424,12 +455,14 @@ async def probe_silabs_firmware_info(
 
 
 async def probe_silabs_firmware_type(
+    hass: HomeAssistant,
     device: str,
     *,
     application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> ApplicationType | None:
     """Probe the running firmware type on a SiLabs device."""
-    flasher = Flasher(
+    flasher_module = await async_import_module(hass, FLASHER_MODULE)
+    flasher = flasher_module.Flasher(
         device=device,
         probe_methods=[
             (m.as_flasher_application_type(), b) for m, b in application_probe_methods
@@ -438,7 +471,7 @@ async def probe_silabs_firmware_type(
 
     try:
         await flasher.probe_app_type()
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
     if flasher.app_type is None:
@@ -476,7 +509,10 @@ async def async_flash_silabs_firmware(
     This function is meant to be used within a firmware update context.
     """
 
-    fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
+    firmware_module = await async_import_module(hass, FIRMWARE_MODULE)
+    fw_image = await hass.async_add_executor_job(
+        firmware_module.parse_firmware_image, fw_data
+    )
 
     flasher = flasher_cls(device=device)
 

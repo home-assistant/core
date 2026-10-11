@@ -3,7 +3,7 @@
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
@@ -50,21 +50,21 @@ class CheckConfigView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "config/core/update",
-        vol.Optional("country"): cv.country,
-        vol.Optional("currency"): cv.currency,
-        vol.Optional("elevation"): vol.Coerce(int),
-        vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
-        vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
-        vol.Optional("language"): cv.language,
-        vol.Optional("latitude"): cv.latitude,
-        vol.Optional("location_name"): str,
-        vol.Optional("longitude"): cv.longitude,
-        vol.Optional("radius"): cv.positive_int,
+        probatio.Optional("country"): cv.country,
+        probatio.Optional("currency"): cv.currency,
+        probatio.Optional("elevation"): probatio.Coerce(int),
+        probatio.Optional("external_url"): probatio.Any(cv.url_no_path, None),
+        probatio.Optional("internal_url"): probatio.Any(cv.url_no_path, None),
+        probatio.Optional("language"): cv.language,
+        probatio.Optional("latitude"): cv.latitude,
+        probatio.Optional("location_name"): str,
+        probatio.Optional("longitude"): cv.longitude,
+        probatio.Optional("radius"): cv.positive_int,
         # Validated by async_set_time_zone in the executor to avoid
         # blocking I/O loading zoneinfo data on the event loop.
-        vol.Optional("time_zone"): str,
-        vol.Optional("update_units"): bool,
-        vol.Optional("unit_system"): unit_system.validate_unit_system,
+        probatio.Optional("time_zone"): str,
+        probatio.Optional("update_units"): bool,
+        probatio.Optional("unit_system"): unit_system.validate_unit_system,
     }
 )
 @websocket_api.async_response

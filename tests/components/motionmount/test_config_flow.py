@@ -43,9 +43,15 @@ async def test_user_connection_error(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -62,9 +68,15 @@ async def test_user_connection_error_invalid_hostname(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -81,9 +93,15 @@ async def test_user_timeout_error(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -100,9 +118,15 @@ async def test_user_not_connected_error(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -120,11 +144,18 @@ async def test_user_response_error_single_device_new_ce_old_pro(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ZEROCONF_NAME
 
@@ -146,9 +177,15 @@ async def test_user_response_error_single_device_new_ce_new_pro(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -176,9 +213,15 @@ async def test_user_response_error_multi_device_new_ce_new_pro(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -198,9 +241,15 @@ async def test_user_response_authentication_needed(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -443,9 +492,15 @@ async def test_authentication_incorrect_then_correct_pin(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -493,9 +548,15 @@ async def test_authentication_first_incorrect_pin_to_backoff(
     type(mock_motionmount).can_authenticate = PropertyMock(side_effect=[True, 1])
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=MOCK_USER_INPUT.copy(),
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT.copy(),
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -549,9 +610,15 @@ async def test_authentication_multiple_incorrect_pins(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -602,9 +669,15 @@ async def test_authentication_show_backoff_when_still_running(
     type(mock_motionmount).can_authenticate = PropertyMock(return_value=1)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=MOCK_USER_INPUT.copy(),
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT.copy(),
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -666,9 +739,15 @@ async def test_authentication_correct_pin(
     user_input = MOCK_USER_INPUT.copy()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM

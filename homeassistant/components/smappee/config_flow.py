@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pysmappee import helper, mqtt
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
@@ -129,11 +129,11 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="environment",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required("environment", default=ENV_CLOUD): vol.In(
-                            [ENV_CLOUD, ENV_LOCAL]
-                        )
+                        probatio.Required(
+                            "environment", default=ENV_CLOUD
+                        ): probatio.In([ENV_CLOUD, ENV_LOCAL])
                     }
                 ),
                 errors={},
@@ -158,7 +158,7 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="local",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
                 errors={},
             )
         # In a LOCAL setup we still need to resolve the host to serial number

@@ -66,7 +66,10 @@ async def test_coordinator_device_cleanup(
     assert f"Skipping entity {DEVICE_2_HOST}" in caplog.text
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE_1_MAC), mock_config_entry.entry_id
+        )
+        is None
     )
     assert f"Removing device: {DEVICE_1_HOST}" in caplog.text
 

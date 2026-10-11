@@ -58,6 +58,22 @@ _MODEL_INFORMATION = {
             }
         ),
     },
+    "dmaker.fan.p33": {
+        "patch_class": "homeassistant.components.xiaomi_miio.FanMiot",
+        "mock_status": FanStatusMiot(
+            {
+                "swing_mode_angle": 90,
+                "buzzer": False,
+                "child_lock": False,
+                "power_off_time": 0,
+                "power": False,
+                "light": True,
+                "mode": 0,
+                "swing_mode": False,
+                "fan_speed": 100,
+            }
+        ),
+    },
 }
 
 

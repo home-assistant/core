@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -25,9 +25,11 @@ async def test_webostv_turn_on_trigger_device_id(
     client,
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
 
     assert await async_setup_component(
         hass,
@@ -118,6 +120,52 @@ async def test_webostv_turn_on_trigger_entity_id(
     assert service_calls[1].data["id"] == 0
 
 
+@pytest.mark.parametrize("option", [ATTR_DEVICE_ID, ATTR_ENTITY_ID])
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_options(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    option: str,
+) -> None:
+    """Test the options form the automation editor saves."""
+    entry = await setup_webostv(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
+    value = {ATTR_DEVICE_ID: device.id, ATTR_ENTITY_ID: ENTITY_ID}[option]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": "webostv.turn_on",
+                        "options": {option: [value]},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.device_id }}"},
+                    },
+                },
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+
+
 async def test_unknown_trigger_platform_type(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
 ) -> None:
@@ -146,7 +194,7 @@ async def test_unknown_trigger_platform_type(
         },
     )
 
-    assert "Unknown trigger platform: webostv.unknown" in caplog.text
+    assert "Invalid trigger 'webostv.unknown' specified" in caplog.text
 
 
 async def test_trigger_invalid_entity_id(

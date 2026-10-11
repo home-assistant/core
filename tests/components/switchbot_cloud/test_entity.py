@@ -22,10 +22,10 @@ async def test_sw_version_cast_to_string(
     mock_get_status.return_value = {"version": 123}
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
-        await configure_integration(hass)
+        entry = await configure_integration(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, METER_INFO.device_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, METER_INFO.device_id), entry.entry_id
     )
     assert device is not None
     assert device.sw_version == "123"
@@ -43,10 +43,10 @@ async def test_sw_version_none_when_missing(
     mock_get_status.return_value = {}
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
-        await configure_integration(hass)
+        entry = await configure_integration(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, METER_INFO.device_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, METER_INFO.device_id), entry.entry_id
     )
     assert device is not None
     assert device.sw_version is None

@@ -31,10 +31,11 @@ from ..common import (
 async def test_ecobee3_setup(hass: HomeAssistant) -> None:
     """Test that a Ecbobee 3 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
-    await setup_test_accessories(hass, accessories)
+    config_entry, _ = await setup_test_accessories(hass, accessories)
 
     await assert_devices_and_entities_created(
         hass,
+        config_entry.entry_id,
         DeviceTestInfo(
             unique_id=HUB_TEST_ACCESSORY_ID,
             name="HomeW",
@@ -130,7 +131,7 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                 ),
                 EntityTestInfo(
                     entity_id="select.homew_current_mode",
-                    friendly_name="HomeW Current Mode",
+                    friendly_name="HomeW Current mode",
                     unique_id="00:00:00:00:00:00_1_16_33",
                     capabilities={"options": ["home", "sleep", "away"]},
                     state="home",

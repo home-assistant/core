@@ -5,6 +5,8 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
+from aioshelly.ble import get_device_from_model_id
+from aioshelly.ble.manufacturer_data import parse_shelly_manufacturer_data
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
@@ -12,8 +14,8 @@ from aioshelly.const import (
     BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
+    DEVICES,
     MODEL_1L,
-    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
@@ -21,6 +23,7 @@ from aioshelly.const import (
     MODEL_NAMES,
     MODEL_PLUG,
     RPC_GENERATIONS,
+    ShellyDevice,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 from yarl import URL
@@ -59,7 +62,9 @@ from .const import (
     DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    DYNAMIC_COMPONENTS_MAP,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    FW_ID_VERSION_PATTERN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
@@ -72,10 +77,9 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
-    VIRTUAL_COMPONENTS_MAP,
     WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
@@ -322,6 +326,30 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def is_device_supported(info: dict[str, Any]) -> bool:
+    """Return True if the device model is supported."""
+    if get_info_gen(info) in RPC_GENERATIONS:
+        # Devices with firmware not fully provisioned
+        model = info.get(CONF_MODEL, "")
+    else:
+        model = info["type"]
+    if (device := DEVICES.get(model)) is None:
+        return True
+
+    return device.supported
+
+
+def get_device_from_manufacturer_data(
+    manufacturer_data: dict[int, bytes],
+) -> ShellyDevice | None:
+    """Return the Shelly device matching the advertised BLE model ID."""
+    parsed = parse_shelly_manufacturer_data(manufacturer_data)
+    if not parsed or not isinstance(model_id := parsed.get("model_id"), int):
+        return None
+
+    return get_device_from_model_id(model_id)
+
+
 def get_shelly_model_name(
     model: str,
     sleep_period: int,
@@ -522,9 +550,10 @@ def update_device_fw_info(
     assert entry.unique_id
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
+    if device := (
+        dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
+        )
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
@@ -557,6 +586,14 @@ def mac_address_from_name(name: str) -> str | None:
     return mac.upper()
 
 
+def get_version_from_fw_id(fw_id: str) -> str | None:
+    """Return the version part of a Shelly firmware ID."""
+    if match := FW_ID_VERSION_PATTERN.search(fw_id):
+        return match["version"]
+
+    return None
+
+
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
     if (
@@ -564,7 +601,7 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if model in SHELLY_WALL_DISPLAY_MODELS:
+    if model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX):
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
@@ -636,7 +673,7 @@ def async_remove_shelly_rpc_entities(
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP[platform]
+    component = DYNAMIC_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
@@ -655,7 +692,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
-    component = VIRTUAL_COMPONENTS_MAP[platform]
+    component = DYNAMIC_COMPONENTS_MAP[platform]
     view = config[key]["meta"]["ui"]["view"]
     return view in component["modes"]
 
@@ -784,6 +821,8 @@ def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
 
 
 def get_rpc_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: RpcDevice,
     mac: str,
     configuration_url: str,
@@ -808,7 +847,9 @@ def get_rpc_device_info(
             model=model_name,
             model_id=model,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, mac), config_entry_id=config_entry_id
+            ),
             configuration_url=configuration_url,
         )
 
@@ -829,25 +870,55 @@ def get_rpc_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
+    hass: HomeAssistant,
+    config_entry_id: str,
+    config: dict[str, Any],
+    ble_addr: str,
+    parent_mac: str,
+    fw_ver: str | None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
     return DeviceInfo(
         connections={(CONNECTION_BLUETOOTH, ble_addr)},
         identifiers={(DOMAIN, ble_addr)},
-        via_device=(DOMAIN, parent_mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, parent_mac), config_entry_id=config_entry_id
+        ),
         manufacturer="Shelly",
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
         sw_version=fw_ver,
+    )
+
+
+def get_ir_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    device: RpcDevice,
+    mac: str,
+    key: str,
+) -> DeviceInfo:
+    """Return device info for IR code sub-device."""
+    device_id = device.config[key]["device_id"]
+    ir_device_key = f"irdevice:{device_id}"
+    name = device.config[ir_device_key].get("name") or f"IR Device {device_id}"
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{ir_device_key}")},
+        name=name,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
     )
 
 
@@ -861,6 +932,8 @@ def is_block_single_device(device: BlockDevice, block: Block | None = None) -> b
 
 
 def get_block_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: BlockDevice,
     mac: str,
     configuration_url: str,
@@ -885,7 +958,9 @@ def get_block_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
@@ -895,11 +970,8 @@ def remove_stale_blu_trv_devices(
     hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
-    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
-        return
-
     dev_reg = dr.async_get(hass)
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     config = rpc_device.config
     blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
     trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
@@ -909,6 +981,12 @@ def remove_stale_blu_trv_devices(
             # Device is not a sub-device, skip
             continue
 
+        if not any(
+            connection[0] == CONNECTION_BLUETOOTH for connection in device.connections
+        ):
+            # Channel sub-devices have no Bluetooth connection
+            continue
+
         if any(
             identifier[0] == DOMAIN and identifier[1] in trv_addrs
             for identifier in device.identifiers
@@ -916,7 +994,7 @@ def remove_stale_blu_trv_devices(
             continue
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
-        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+        dev_reg.async_remove_device(device.id)
 
 
 @callback
@@ -925,7 +1003,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     for device in devices:
         if not device.via_device_id:
@@ -938,9 +1016,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         if any(identifier[0] == DOMAIN for identifier in device.identifiers):
             LOGGER.debug("Removing empty sub-device %s", device.name)
-            dev_reg.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            dev_reg.async_remove_device(device.id)
 
 
 def format_ble_addr(ble_addr: str) -> str:

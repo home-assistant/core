@@ -8,7 +8,7 @@ import orjson
 import pytest
 
 from homeassistant.components.skybell.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -60,34 +60,42 @@ async def set_aioclient_responses(
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/info/",
         text=await async_load_fixture(hass, "device_info.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/settings/",
         text=await async_load_fixture(hass, "device_settings.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/activities/",
         text=await async_load_fixture(hass, "activities.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/",
         text=await async_load_fixture(hass, "device.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         USERS_ME_URL,
         text=await async_load_fixture(hass, "me.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.post(
         f"{BASE_URL}login/",
         text=await async_load_fixture(hass, "login.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/activities/1234567890ab1234567890ac/video/",
         text=await async_load_fixture(hass, "video.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         f"{BASE_URL}devices/{DEVICE_ID}/avatar/",
         text=await async_load_fixture(hass, "avatar.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         f"https://v3-production-devices-avatar.s3.us-west-2.amazonaws.com/{DEVICE_ID}.jpg",

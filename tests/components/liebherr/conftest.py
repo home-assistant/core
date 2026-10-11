@@ -1,8 +1,8 @@
 """Common fixtures for the liebherr tests."""
 
-from collections.abc import Generator
+import asyncio
+from collections.abc import AsyncIterator, Callable, Generator
 import copy
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyliebherrhomeapi import (
@@ -10,6 +10,7 @@ from pyliebherrhomeapi import (
     BioFreshPlusControl,
     BioFreshPlusMode,
     Device,
+    DeviceControl,
     DeviceState,
     DeviceType,
     DoorState,
@@ -22,6 +23,11 @@ from pyliebherrhomeapi import (
     TemperatureUnit,
     ToggleControl,
     ZonePosition,
+)
+from pyliebherrhomeapi.exceptions import (
+    LiebherrAuthenticationError,
+    LiebherrConnectionError,
+    LiebherrTimeoutError,
 )
 import pytest
 
@@ -52,6 +58,8 @@ MOCK_DEVICE_STATE = DeviceState(
             min=2,
             max=8,
             unit=TemperatureUnit.CELSIUS,
+            set_temperature_steps=[2, 4, 6, 8],
+            set_temperature_steps_enabled=True,
         ),
         TemperatureControl(
             zone_id=2,
@@ -104,12 +112,14 @@ MOCK_DEVICE_STATE = DeviceState(
             name="hydrobreeze",
             type="HydroBreezeControl",
             zone_id=1,
+            zone_position=ZonePosition.TOP,
             current_mode=HydroBreezeMode.LOW,
         ),
         BioFreshPlusControl(
             name="biofreshplus",
             type="BioFreshPlusControl",
             zone_id=1,
+            zone_position=ZonePosition.TOP,
             current_mode=BioFreshPlusMode.ZERO_ZERO,
             supported_modes=[
                 BioFreshPlusMode.ZERO_ZERO,
@@ -135,16 +145,6 @@ MOCK_DEVICE_STATE = DeviceState(
 )
 
 
-@pytest.fixture(autouse=True)
-def patch_refresh_delay() -> Generator[None]:
-    """Patch REFRESH_DELAY to 0 to avoid delays in tests."""
-    with patch(
-        "homeassistant.components.liebherr.entity.REFRESH_DELAY",
-        timedelta(seconds=0),
-    ):
-        yield
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -152,6 +152,71 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.liebherr.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+class SSEStreamHelper:
+    """Test helper simulating ``LiebherrClient.stream_controls_forever``.
+
+    Yields the current ``client.get_device_state`` result to the coordinator
+    when :meth:`async_push` is called. Auth errors from the mocked
+    ``get_device_state`` propagate to the coordinator; connection/timeout
+    errors trigger the ``on_disconnect`` callback and drop the pending
+    update without terminating the stream.
+    """
+
+    def __init__(self, hass: HomeAssistant, client: MagicMock) -> None:
+        """Initialize the helper."""
+        self._hass = hass
+        self._client = client
+        self._events: dict[str, asyncio.Event] = {}
+        self._on_disconnect: dict[str, Callable[[], None] | None] = {}
+        self._on_connect: dict[str, Callable[[], None] | None] = {}
+        self._reconnect_next: dict[str, bool] = {}
+
+    def _stream(
+        self,
+        device_id: str,
+        *,
+        on_connect: Callable[[], None] | None = None,
+        on_disconnect: Callable[[], None] | None = None,
+        **_: object,
+    ) -> AsyncIterator[list[DeviceControl]]:
+        self._on_connect[device_id] = on_connect
+        self._on_disconnect[device_id] = on_disconnect
+        return self._iter(device_id)
+
+    async def _iter(self, device_id: str) -> AsyncIterator[list[DeviceControl]]:
+        event = self._events.setdefault(device_id, asyncio.Event())
+        state = await self._client.get_device_state(device_id)
+        if (cb := self._on_connect.get(device_id)) is not None:
+            cb()
+        yield state.controls
+        while True:
+            await event.wait()
+            event.clear()
+            reconnect = self._reconnect_next.pop(device_id, False)
+            try:
+                state = await self._client.get_device_state(device_id)
+            except LiebherrAuthenticationError:
+                raise
+            except LiebherrConnectionError, LiebherrTimeoutError:
+                if (cb := self._on_disconnect.get(device_id)) is not None:
+                    cb()
+                continue
+            if reconnect and (cb := self._on_connect.get(device_id)) is not None:
+                cb()
+            yield state.controls
+
+    async def async_push(self, device_id: str = "test_device_id") -> None:
+        """Trigger a stream event: coordinator re-reads ``get_device_state``."""
+        event = self._events.setdefault(device_id, asyncio.Event())
+        event.set()
+        await self._hass.async_block_till_done()
+
+    async def async_reconnect(self, device_id: str = "test_device_id") -> None:
+        """Trigger a stream event that simulates a reconnect (full state replace)."""
+        self._reconnect_next[device_id] = True
+        await self.async_push(device_id)
 
 
 @pytest.fixture
@@ -165,7 +230,9 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_liebherr_client() -> Generator[MagicMock]:
+def mock_liebherr_client(
+    hass: HomeAssistant,
+) -> Generator[MagicMock]:
     """Return a mocked Liebherr client."""
     with (
         patch(
@@ -193,7 +260,16 @@ def mock_liebherr_client() -> Generator[MagicMock]:
         client.set_bio_fresh_plus = AsyncMock()
         client.set_presentation_light = AsyncMock()
         client.trigger_auto_door = AsyncMock()
+        helper = SSEStreamHelper(hass, client)
+        client.stream_controls_forever.side_effect = helper._stream
+        client._sse_helper = helper
         yield client
+
+
+@pytest.fixture
+def sse_helper(mock_liebherr_client: MagicMock) -> SSEStreamHelper:
+    """Return the SSE stream helper for the mocked client."""
+    return mock_liebherr_client._sse_helper
 
 
 @pytest.fixture

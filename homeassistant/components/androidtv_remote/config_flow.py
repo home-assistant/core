@@ -10,7 +10,7 @@ from androidtvremote2 import (
     ConnectionClosed,
     InvalidAuth,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -44,9 +44,9 @@ _EXAMPLE_APP_PLAY_STORE_URL = (
     f"https://play.google.com/store/apps/details?id={_EXAMPLE_APP_ID}"
 )
 
-STEP_PAIR_DATA_SCHEMA = vol.Schema(
+STEP_PAIR_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required("pin"): str,
+        probatio.Required("pin"): str,
     }
 )
 
@@ -96,13 +96,13 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
         else:
             user_input = {}
-        default_host = user_input.get(CONF_HOST, vol.UNDEFINED)
+        default_host = user_input.get(CONF_HOST, probatio.UNDEFINED)
         if self.source == SOURCE_RECONFIGURE:
             default_host = self._get_reconfigure_entry().data[CONF_HOST]
         return self.async_show_form(
             step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_HOST, default=default_host): str}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST, default=default_host): str}
             ),
             errors=errors,
         )
@@ -293,16 +293,16 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
         ]
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_APPS): SelectSelector(
+                    probatio.Optional(CONF_APPS): SelectSelector(
                         SelectSelectorConfig(
                             options=apps,
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="apps",
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_ENABLE_IME,
                         default=get_enable_ime(self.config_entry),
                     ): bool,
@@ -336,7 +336,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
         """Return configuration form for apps."""
 
         app_schema = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_APP_NAME,
                 description={
                     "suggested_value": self._apps[app_id].get(CONF_APP_NAME, "")
@@ -344,7 +344,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
                     else ""
                 },
             ): str,
-            vol.Optional(
+            probatio.Optional(
                 CONF_APP_ICON,
                 description={
                     "suggested_value": self._apps[app_id].get(CONF_APP_ICON, "")
@@ -354,10 +354,12 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
             ): str,
         }
         if app_id == APPS_NEW_ID:
-            data_schema = vol.Schema({**app_schema, vol.Optional(CONF_APP_ID): str})
+            data_schema = probatio.Schema(
+                {**app_schema, probatio.Optional(CONF_APP_ID): str}
+            )
         else:
-            data_schema = vol.Schema(
-                {**app_schema, vol.Optional(CONF_APP_DELETE, default=False): bool}
+            data_schema = probatio.Schema(
+                {**app_schema, probatio.Optional(CONF_APP_DELETE, default=False): bool}
             )
 
         return self.async_show_form(

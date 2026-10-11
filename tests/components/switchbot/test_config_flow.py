@@ -26,6 +26,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
     WOCURTAIN_SERVICE_INFO,
@@ -81,6 +83,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -109,6 +112,7 @@ async def test_bluetooth_discovery_requires_password(hass: HomeAssistant) -> Non
         CONF_SENSOR_TYPE: "bot",
         CONF_PASSWORD: "abc123",
     }
+    assert result["result"].unique_id == "798a8547-2a3d-c609-55ff-73fa824b923b"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -176,6 +180,79 @@ async def test_bluetooth_discovery_encrypted_key(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
+    """Test discovery of an encrypted Lock Ultra Max."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=LOCK_ULTRA_MAX_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "lock_ultra_max"
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_circulator_fan_pro(hass: HomeAssistant) -> None:
+    """Test discovery of an encrypted Circulator Fan Pro."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotCirculatorFanPro.verify_encryption_key",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "circulator_fan_pro"
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a encrypted device."""
     result = await hass.config_entries.flow.async_init(
@@ -217,6 +294,7 @@ async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "relay_switch_1pm",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -272,6 +350,7 @@ async def test_bluetooth_discovery_encrypted_key_back_navigation(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -325,6 +404,7 @@ async def test_bluetooth_discovery_encrypted_auth_back_navigation(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -397,6 +477,7 @@ async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "hygrometer_co2",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -442,6 +523,7 @@ async def test_user_setup_wohand(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -517,6 +599,7 @@ async def test_user_setup_wohand_replaces_ignored(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -556,6 +639,7 @@ async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_SENSOR_TYPE: "curtain",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -600,6 +684,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_SENSOR_TYPE: "curtain",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -652,6 +737,7 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) ->
         CONF_PASSWORD: "abc123",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result3["result"].unique_id == "798a8547-2a3d-c609-55ff-73fa824b923b"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -692,6 +778,7 @@ async def test_user_setup_single_bot_with_password(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "abc123",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result2["result"].unique_id == "798a8547-2a3d-c609-55ff-73fa824b923b"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1045,6 +1132,7 @@ async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1083,6 +1171,7 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_SENSOR_TYPE: "hygrometer",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1139,6 +1228,7 @@ async def test_user_cloud_login(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -1174,6 +1264,35 @@ async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud_login"
     assert result["errors"] == {"base": "auth_failed"}
     assert "Invalid credentials" in result["description_placeholders"]["error_detail"]
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -1368,6 +1487,7 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1435,6 +1555,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_SENSOR_TYPE: "curtain",
     }
+    assert result2["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
     # Verify the original one was aborted
@@ -1658,6 +1779,7 @@ async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "relay_switch_1pm",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1836,6 +1958,7 @@ async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) 
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1880,18 +2003,22 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
+    assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow_lock_pro_wifi(hass: HomeAssistant) -> None:
-    """Test updating options for lock_pro_wifi."""
+@pytest.mark.parametrize("sensor_type", ["lock_pro_wifi", "lock_ultra_max"])
+async def test_options_flow_lock_with_night_latch(
+    hass: HomeAssistant, sensor_type: str
+) -> None:
+    """Test updating options for locks with night latch support."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
-            CONF_SENSOR_TYPE: "lock_pro_wifi",
+            CONF_SENSOR_TYPE: sensor_type,
         },
         options={CONF_RETRY_COUNT: 10},
         unique_id="aabbccddeeff",

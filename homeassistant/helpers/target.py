@@ -8,6 +8,8 @@ import logging
 from logging import Logger
 from typing import Any, TypeGuard, override
 
+import probatio
+
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -28,7 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     area_registry as ar,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -71,24 +72,26 @@ class TargetSelection:
 
     def __init__(self, config: ConfigType) -> None:
         """Extract ids from the config."""
-        entity_ids: str | list | None = config.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = config.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = config.get(ATTR_AREA_ID)
-        floor_ids: str | list | None = config.get(ATTR_FLOOR_ID)
-        label_ids: str | list | None = config.get(ATTR_LABEL_ID)
+        entity_ids: str | list[str] | None = config.get(ATTR_ENTITY_ID)
+        device_ids: str | list[str] | None = config.get(ATTR_DEVICE_ID)
+        area_ids: str | list[str] | None = config.get(ATTR_AREA_ID)
+        floor_ids: str | list[str] | None = config.get(ATTR_FLOOR_ID)
+        label_ids: str | list[str] | None = config.get(ATTR_LABEL_ID)
 
         self.entity_ids = (
-            set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
+            set(probatio.EnsureList()(entity_ids)) if _has_match(entity_ids) else set()
         )
         self.device_ids = (
-            set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
+            set(probatio.EnsureList()(device_ids)) if _has_match(device_ids) else set()
         )
-        self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+        self.area_ids = (
+            set(probatio.EnsureList()(area_ids)) if _has_match(area_ids) else set()
+        )
         self.floor_ids = (
-            set(cv.ensure_list(floor_ids)) if _has_match(floor_ids) else set()
+            set(probatio.EnsureList()(floor_ids)) if _has_match(floor_ids) else set()
         )
         self.label_ids = (
-            set(cv.ensure_list(label_ids)) if _has_match(label_ids) else set()
+            set(probatio.EnsureList()(label_ids)) if _has_match(label_ids) else set()
         )
 
     @property
@@ -155,6 +158,41 @@ class SelectedEntities:
         )
 
 
+@callback
+def _add_referenced_device(
+    dev_reg: dr.DeviceRegistry, device_id: str, selected: SelectedEntities
+) -> None:
+    """Add a device and its child devices."""
+    selected.referenced_devices.add(device_id)
+    selected.referenced_devices.update(
+        child_device.id
+        for child_device in dr.async_entries_for_parent_device(dev_reg, device_id)
+    )
+
+
+@callback
+def _resolve_referenced_devices(
+    dev_reg: dr.DeviceRegistry, device_ids: set[str], selected: SelectedEntities
+) -> None:
+    """Resolve targeted device ids into referenced device ids."""
+    for device_id in device_ids:
+        device = dev_reg.async_get(device_id)
+        if device is None:
+            selected.missing_devices.add(device_id)
+            selected.referenced_devices.add(device_id)
+        elif split_devices := dev_reg.async_get_devices_for_composite_device_id(
+            device_id
+        ):
+            # A multi config entry composite device id is no longer a device itself;
+            # it resolves to the devices it was split into so actions targeting it
+            # still trickle down. Only the splits are referenced, not the composite id,
+            # so a device-id consumer does not act on the same underlying device twice.
+            for split_device in split_devices:
+                _add_referenced_device(dev_reg, split_device.id, selected)
+        else:
+            _add_referenced_device(dev_reg, device_id, selected)
+
+
 def async_extract_referenced_entity_ids(
     hass: HomeAssistant,
     target_selection: TargetSelection,
@@ -205,9 +243,7 @@ def async_extract_referenced_entity_ids(
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
-    for device_id in target_selection.device_ids:
-        if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)
+    _resolve_referenced_devices(dev_reg, target_selection.device_ids, selected)
 
     if target_selection.label_ids:
         label_reg = lr.async_get(hass)
@@ -219,8 +255,9 @@ def async_extract_referenced_entity_ids(
                 if entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
-            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
-                selected.referenced_devices.add(device_entry.id)
+            # Labeled devices expand like directly targeted devices, children included.
+            for device_entry in dr.async_entries_for_label(dev_reg, label_id):
+                _add_referenced_device(dev_reg, device_entry.id, selected)
 
             for area_entry in area_reg.areas.get_areas_for_label(label_id):
                 selected.referenced_areas.add(area_entry.id)
@@ -234,7 +271,6 @@ def async_extract_referenced_entity_ids(
         )
 
     selected.referenced_areas.update(target_selection.area_ids)
-    selected.referenced_devices.update(target_selection.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
@@ -259,7 +295,7 @@ def async_extract_referenced_entity_ids(
         for area_id in selected.referenced_areas:
             referenced_devices_by_area.update(
                 device_entry.id
-                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+                for device_entry in dr.async_entries_for_area(dev_reg, area_id)
             )
     selected.referenced_devices.update(referenced_devices_by_area)
 
@@ -336,7 +372,8 @@ class TargetEntityChangeTracker(abc.ABC):
         # Subscribe to registry updates that can change the entities to track:
         # - Entity registry: entity added/removed;
         #   entity labels changed; entity area changed.
-        # - Device registry: device labels changed; device area changed.
+        # - Device registry: device labels changed; device area changed;
+        #   child device added/removed under a targeted parent.
         # - Area registry: area floor changed.
         #
         # We don't track other registries (like floor or label registries) because their

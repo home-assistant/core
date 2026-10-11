@@ -5,15 +5,18 @@ from typing import Any
 import pytest
 
 from homeassistant.components.update import DOMAIN
+from homeassistant.components.update.trigger import TRIGGERS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -24,6 +27,11 @@ from tests.components.common import (
 async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple update entities associated with different targets."""
     return await target_entities(hass, DOMAIN)
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "became_available": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -47,6 +55,11 @@ async def test_update_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

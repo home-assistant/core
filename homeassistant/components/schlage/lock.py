@@ -29,7 +29,7 @@ async def async_setup_entry(
             for device_id in locks
         )
 
-    _add_new_locks(coordinator.data.locks)
+    _add_new_locks(coordinator.data)
     coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
@@ -49,7 +49,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.device_id in self.coordinator.data.locks:
+        if self.device_id in self.coordinator.data:
             self._update_attrs()
         super()._handle_coordinator_update()
 

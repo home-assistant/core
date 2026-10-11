@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from aiohttp import ClientSession
 from linkplay.controller import LinkPlayController
 
 from homeassistant.const import Platform
@@ -17,7 +18,6 @@ class LinkPlaySharedData:
 
 
 DOMAIN = "linkplay"
-SHARED_DATA = "shared_data"
-SHARED_DATA_KEY: HassKey[LinkPlaySharedData] = HassKey(SHARED_DATA)
+SHARED_DATA_KEY: HassKey[LinkPlaySharedData] = HassKey(f"{DOMAIN}_shared_data")
+SESSION_KEY: HassKey[ClientSession] = HassKey(f"{DOMAIN}_session")
 PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SELECT]
-DATA_SESSION = "session"

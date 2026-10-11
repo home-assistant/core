@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -77,11 +77,11 @@ from .const import (
 from .helpers import async_get_blueprints
 from .trace import trace_script
 
-SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
+SCRIPT_SERVICE_SCHEMA = probatio.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): {str: cv.match_all}}
+    {probatio.Optional(ATTR_VARIABLES): {str: cv.match_all}}
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -250,6 +250,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not script_entities:
             return
 
+        for script_entity in script_entities:
+            script_entity.async_set_context(service.context)
+
         await asyncio.wait(
             [
                 create_eager_task(script_entity.async_turn_off())
@@ -334,6 +337,7 @@ async def _create_script_entities(
                 UnavailableScriptEntity(
                     script_config.key,
                     script_config.raw_config,
+                    script_config.raw_blueprint_inputs,
                     cast(str, script_config.validation_error),
                     script_config.validation_status,
                 )
@@ -467,6 +471,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self,
         key: str,
         raw_config: ConfigType | None,
+        raw_blueprint_inputs: ConfigType | None,
         validation_error: str,
         validation_status: ValidationStatus,
     ) -> None:
@@ -474,6 +479,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
+        self._raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -499,6 +505,15 @@ class UnavailableScriptEntity(BaseScriptEntity):
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
+        # The config is invalid, but it can still point at its blueprint. Once
+        # the blueprint was applied, only its inputs hold that reference.
+        for config in (self._raw_blueprint_inputs, self.raw_config):
+            if (
+                config is not None
+                and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
+                and isinstance(path := blueprint.get(CONF_PATH), str)
+            ):
+                return path
         return None
 
     @cached_property
@@ -513,14 +528,17 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return a set of referenced entities."""
         return set()
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Create a repair issue to notify the user the automation has errors."""
-        await super().async_added_to_hass()
+    def _issue_id(self, entity_id: str) -> str:
+        """Return the repair issue id for the entity_id."""
+        return f"{entity_id}_validation_{self._validation_status}"
+
+    @callback
+    def _async_create_issue(self) -> None:
+        """Create a repair issue to notify the user the script has errors."""
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"{self.entity_id}_validation_{self._validation_status}",
+            self._issue_id(self.entity_id),
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"validation_{self._validation_status}",
@@ -533,12 +551,24 @@ class UnavailableScriptEntity(BaseScriptEntity):
         )
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the script has errors."""
+        await super().async_added_to_hass()
+        self._async_create_issue()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the repair issue, its id and placeholders use the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(old_entity_id))
+        self._async_create_issue()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(
-            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
-        )
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
 
 
 class ScriptEntity(BaseScriptEntity, RestoreEntity):
@@ -736,6 +766,17 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             return response or {}
         return None
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
@@ -770,15 +811,11 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
-
-        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script as it will be reused.
-            await self.script.async_stop()
-            return
         await self.script.async_unload()
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

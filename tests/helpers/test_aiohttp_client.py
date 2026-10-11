@@ -393,6 +393,17 @@ async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:
         session.headers.update({"user-agent": "bla"})
 
 
+async def test_create_clientsession_keeps_headers(hass: HomeAssistant) -> None:
+    """Test default headers passed to the session are kept."""
+    session = client.async_create_clientsession(
+        hass, headers={"Authorization": "Basic bla", "User-Agent": "bla"}
+    )
+
+    assert session.headers["authorization"] == "Basic bla"
+    # We always identify as Home Assistant
+    assert session.headers["user-agent"] == client.SERVER_SOFTWARE
+
+
 @pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_async_mdnsresolver(

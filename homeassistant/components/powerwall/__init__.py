@@ -18,7 +18,11 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -28,6 +32,8 @@ from .const import (
     AUTH_COOKIE_KEY,
     CONFIG_ENTRY_COOKIE,
     DOMAIN,
+    MANUFACTURER,
+    MODEL,
     POWERWALL_API_CHANGED,
     POWERWALL_COORDINATOR,
 )
@@ -109,14 +115,13 @@ class PowerwallDataManager:
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
-                _LOGGER.error("The powerwall api has changed: %s", str(err))
-                # The error might include some important information
-                # about what exactly changed.
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
                 self.runtime_data[POWERWALL_API_CHANGED] = True
-                raise UpdateFailed("The powerwall api has changed") from err
+                # The error might include some important information
+                # about what exactly changed.
+                raise UpdateFailed(f"The powerwall api has changed: {err}") from err
             except AccessDeniedError as err:
                 if attempt == 1:
                     # failed to authenticate => the credentials must be wrong
@@ -187,13 +192,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise ConfigEntryNotReady from err
             except MissingAttributeError as err:
-                # The error might include some important
-                # information about what exactly changed.
-                _LOGGER.error("The powerwall api has changed: %s", str(err))
                 persistent_notification.async_create(
                     hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
-                return False
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_changed",
+                ) from err
             except AccessDeniedError as err:
                 if use_auth_cookie and tries == 0:
                     _LOGGER.debug(
@@ -238,6 +243,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
 
     await async_migrate_entity_unique_ids(hass, entry, base_info)
 
+    # Register the gateway device so battery devices can link to it via
+    # via_device_id, which must resolve to an already-registered device.
+    model = (
+        f"{MODEL} ({base_info.device_type.name})"
+        if base_info.device_type is not None
+        else MODEL
+    )
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, gateway_din)},
+        manufacturer=MANUFACTURER,
+        model=model,
+        name=base_info.site_name,
+        sw_version=base_info.status.version if base_info.status else None,
+        configuration_url=base_info.url,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -253,7 +276,9 @@ async def async_migrate_entity_unique_ids(
     new_base_unique_id = base_info.gateway_din
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, old_base_unique_id), entry.entry_id
+    ):
         dev_reg.async_update_device(
             device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
         )
