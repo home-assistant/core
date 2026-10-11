@@ -1404,7 +1404,7 @@ async def test_step_id_is_none(manager: MockFlowManager) -> None:
             if user_input is not None:
                 self.data = user_input
                 return await self.async_step_second()
-            return self.async_show_form(data_schema=vol.Schema([str]))
+            return self.async_show_form(data_schema=probatio.Schema([str]))
 
         async def async_step_second(self, user_input=None):
             return await self.async_step_third()
@@ -1414,7 +1414,7 @@ async def test_step_id_is_none(manager: MockFlowManager) -> None:
                 return self.async_create_entry(
                     title="Test Entry", data=self.data + user_input
                 )
-            return self.async_show_form(data_schema=vol.Schema([str]))
+            return self.async_show_form(data_schema=probatio.Schema([str]))
 
     form = await manager.async_init("test", context={"init_step": "first"})
     assert form["step_id"] == "first"
