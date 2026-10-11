@@ -84,7 +84,10 @@ class BaseEntityConfig:
 def _name_or_device_required(config: BaseEntityConfig) -> BaseEntityConfig:
     """Require a name, unless the entity is named after its device."""
     if not config.name and config.device_info is None:
-        raise probatio.AnyInvalid("One of `Device` or `Name` is required")
+        raise probatio.AnyInvalid(
+            "One of `Device` or `Name` is required",
+            translation_key="name_or_device_required",
+        )
     return config
 
 
@@ -174,7 +177,11 @@ def _button_payload_matches_dpt(config: ButtonKnxConfig) -> ButtonKnxConfig:
         # without DPT only raw payloads are allowed
         if isinstance(config.data, RawPayload):
             return config
-        raise probatio.Invalid("Invalid configuration for button entity")
+        raise probatio.Invalid(
+            "A value requires a data point type, without one only raw payloads"
+            " can be sent",
+            translation_key="value_requires_dpt",
+        )
 
     transcoder = DPTBase.parse_transcoder(config.ga_send.dpt)
     assert transcoder is not None  # already checked by GASelector
@@ -186,6 +193,8 @@ def _button_payload_matches_dpt(config: ButtonKnxConfig) -> ButtonKnxConfig:
                 raise probatio.Invalid(
                     f"Value invalid for DPT {transcoder.dpt_number_str()}",
                     path=[CONF_DATA],
+                    translation_key="value_invalid_for_dpt",
+                    placeholders={"dpt": transcoder.dpt_number_str()},
                 ) from ex
         case RawPayload(payload_length=length):
             if length != transcoder.payload_length or (
@@ -194,6 +203,8 @@ def _button_payload_matches_dpt(config: ButtonKnxConfig) -> ButtonKnxConfig:
                 raise probatio.Invalid(
                     f"Payload length invalid for DPT {transcoder.dpt_number_str()}",
                     path=[CONF_DATA],
+                    translation_key="payload_length_invalid_for_dpt",
+                    placeholders={"dpt": transcoder.dpt_number_str()},
                 )
     return config
 
@@ -251,7 +262,8 @@ def _cover_control_sub_validator(config: CoverKnxConfig) -> CoverKnxConfig:
     ):
         raise probatio.Invalid(
             "At least one of 'Open/Close control' or"
-            " 'Position - Set position' is required."
+            " 'Position - Set position' is required.",
+            translation_key="cover_control_required",
         )
     return config
 
@@ -337,7 +349,8 @@ def _fan_switch_or_speed_required(config: FanKnxConfig) -> FanKnxConfig:
     """Require a switch or a speed address."""
     if config.ga_switch is None and config.speed is None:
         raise probatio.AnyInvalid(
-            "At least one of 'Switch' or 'Fan speed' is required."
+            "At least one of 'Switch' or 'Fan speed' is required.",
+            translation_key="fan_switch_or_speed_required",
         )
     return config
 
@@ -467,12 +480,17 @@ def _light_control_required(config: LightKnxConfig) -> LightKnxConfig:
     if config.ga_switch is None and not isinstance(
         config.color, LightColorIndividualAddresses
     ):
-        raise probatio.AnyInvalid("either 'address' or 'individual_colors' is required")
+        raise probatio.AnyInvalid(
+            "At least one of 'Switch' or 'Individual addresses' is required.",
+            translation_key="light_switch_or_individual_colors_required",
+        )
     if (
         isinstance(config.color, LightColorHsvAddresses)
         and config.ga_brightness is None
     ):
-        raise probatio.AnyInvalid(_hs_color_inclusion_msg)
+        raise probatio.AnyInvalid(
+            _hs_color_inclusion_msg, translation_key="light_hsv_requires_brightness"
+        )
     return config
 
 
@@ -656,6 +674,7 @@ def _select_options_match_dpt(config: SelectKnxConfig) -> SelectKnxConfig:
                 raise probatio.Invalid(
                     "An enum data point type is required",
                     path=[SelectConf.OPTIONS_SOURCE, SelectConf.GA_ENUM],
+                    translation_key="enum_dpt_required",
                 )
         case SelectCustomOptions(ga_custom=ga_custom, custom_options=options):
             _validate_custom_options(options, ga_custom.dpt)
@@ -672,7 +691,11 @@ def _validate_custom_options(options: list[SelectOption], dpt: str | None) -> No
     """
     error_path: list[Hashable] = [SelectConf.OPTIONS_SOURCE, SelectConf.CUSTOM_OPTIONS]
     if not options:
-        raise probatio.Invalid("At least one option is required", path=error_path)
+        raise probatio.Invalid(
+            "At least one option is required",
+            path=error_path,
+            translation_key="select_option_required",
+        )
 
     transcoder = DPTBase.parse_transcoder(dpt) if dpt is not None else None
     payload_length = raw_payload_length(transcoder) if transcoder is not None else None
@@ -683,7 +706,10 @@ def _validate_custom_options(options: list[SelectOption], dpt: str | None) -> No
         name = option.name
         if name in options_seen:
             raise probatio.Invalid(
-                f"Duplicate option not allowed: {name}", path=error_path
+                f"Duplicate option not allowed: {name}",
+                path=error_path,
+                translation_key="select_option_duplicate",
+                placeholders={"option": name},
             )
         options_seen.add(name)
 
@@ -693,6 +719,8 @@ def _validate_custom_options(options: list[SelectOption], dpt: str | None) -> No
                     raise probatio.Invalid(
                         f"A data point type is required for typed option '{name}'",
                         path=error_path,
+                        translation_key="select_option_value_requires_dpt",
+                        placeholders={"option": name},
                     )
                 try:
                     payload = int.from_bytes(
@@ -704,25 +732,48 @@ def _validate_custom_options(options: list[SelectOption], dpt: str | None) -> No
                         f"Value invalid for option '{name}' with DPT "
                         f"{transcoder.dpt_number_str()}",
                         path=error_path,
+                        translation_key="select_option_value_invalid_for_dpt",
+                        placeholders={
+                            "option": name,
+                            "dpt": transcoder.dpt_number_str(),
+                        },
                     ) from ex
             case RawPayload(payload=payload, payload_length=option_length):
                 if payload_length is None:
                     payload_length = option_length
                 elif option_length != payload_length:
-                    expected = (
-                        f"DPT {transcoder.dpt_number_str()}"
-                        if transcoder is not None
-                        else "the other options"
-                    )
+                    placeholders: dict[str, Any] = {
+                        "option": name,
+                        "payload_length": option_length,
+                        "expected_length": payload_length,
+                    }
+                    if transcoder is None:
+                        raise probatio.Invalid(
+                            f"Payload length {option_length} of option '{name}'"
+                            f" doesn't match payload length {payload_length} of"
+                            " the other options",
+                            path=error_path,
+                            translation_key="select_option_payload_length_mismatch",
+                            placeholders=placeholders,
+                        )
                     raise probatio.Invalid(
-                        f"Payload length {option_length} of option '{name}' doesn't "
-                        f"match payload length {payload_length} of {expected}",
+                        f"Payload length {option_length} of option '{name}' doesn't"
+                        f" match payload length {payload_length} of DPT"
+                        f" {transcoder.dpt_number_str()}",
                         path=error_path,
+                        translation_key="select_option_payload_length_mismatch_dpt",
+                        placeholders={
+                            **placeholders,
+                            "dpt": transcoder.dpt_number_str(),
+                        },
                     )
 
         if payload in payloads_seen:
             raise probatio.Invalid(
-                f"Duplicate payload not allowed for option '{name}'", path=error_path
+                f"Duplicate payload not allowed for option '{name}'",
+                path=error_path,
+                translation_key="select_option_payload_duplicate",
+                placeholders={"option": name},
             )
         payloads_seen.add(payload)
 
@@ -1025,6 +1076,7 @@ def _sensor_attribute_sub_validator(config: SensorKnxConfig) -> SensorKnxConfig:
         raise probatio.Invalid(
             "Device class 'enum' is not supported for KNX sensors",
             path=[CONF_DEVICE_CLASS],
+            translation_key="sensor_enum_device_class_unsupported",
         )
     validate_sensor_attributes(
         get_supported_dpts()[config.ga_sensor.dpt],
