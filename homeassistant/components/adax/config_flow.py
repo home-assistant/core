@@ -45,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def is_adax_tls_device(ip: str, timeout: float = 2.0) -> bool:
     """Probe port 443 to fingerprint the device via TLS certificate subject.
-    
+
     This is a discovery heuristic to filter out non-Adax devices sharing
     generic hostnames, not an authentication boundary. Adax heaters use
     self-signed certificates on the local network.
