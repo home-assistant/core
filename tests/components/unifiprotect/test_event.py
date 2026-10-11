@@ -1,13 +1,13 @@
 """Test the UniFi Protect event platform."""
 
-import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
@@ -28,6 +28,7 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     DOMAIN,
     EVENT_TYPE_PACKAGE_DETECTED,
+    VEHICLE_EVENT_DELAY_SECONDS,
 )
 from homeassistant.components.unifiprotect.event import (
     _MAX_TRACKED_EVENTS,
@@ -51,18 +52,7 @@ from .utils import (
     setup_public_camera,
 )
 
-# Short delay for testing
-TEST_VEHICLE_EVENT_DELAY = 0.05
-
-
-@pytest.fixture(autouse=True)
-def short_vehicle_delay():
-    """Use a short delay for vehicle event tests."""
-    with patch(
-        "homeassistant.components.unifiprotect.event.VEHICLE_EVENT_DELAY_SECONDS",
-        TEST_VEHICLE_EVENT_DELAY,
-    ):
-        yield
+from tests.common import async_fire_time_changed
 
 
 async def test_camera_remove(
@@ -888,6 +878,7 @@ async def test_vehicle_detection_basic(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test basic vehicle detection event with thumbnails."""
 
@@ -940,7 +931,8 @@ async def test_vehicle_detection_basic(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -962,6 +954,7 @@ async def test_vehicle_detection_with_lpr_ufp6(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with license plate recognition (UFP 6.0+ format)."""
 
@@ -1023,7 +1016,8 @@ async def test_vehicle_detection_with_lpr_ufp6(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1046,6 +1040,7 @@ async def test_vehicle_detection_with_lpr_legacy(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with license plate recognition (legacy format)."""
 
@@ -1099,7 +1094,8 @@ async def test_vehicle_detection_with_lpr_legacy(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1119,6 +1115,7 @@ async def test_vehicle_detection_multiple_thumbnails(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with multiple thumbnails - should pick best LPR."""
 
@@ -1200,7 +1197,8 @@ async def test_vehicle_detection_multiple_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event with highest confidence LPR
@@ -1220,6 +1218,7 @@ async def test_vehicle_detection_no_thumbnails(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection event without thumbnails - should not fire."""
 
@@ -1263,7 +1262,8 @@ async def test_vehicle_detection_no_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should NOT have received any events (no vehicle thumbnails)
@@ -1278,6 +1278,7 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that timer resets when new thumbnails arrive for same event."""
 
@@ -1332,7 +1333,8 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     await hass.async_block_till_done()
 
     # Wait briefly (timer hasn't expired yet)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS / 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # No event yet (timer hasn't expired)
@@ -1370,7 +1372,8 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     assert len(events) == 0
 
     # Wait for timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Now should have the event with the better LPR
@@ -1389,6 +1392,7 @@ async def test_vehicle_detection_new_event_cancels_timer(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new event cancels timer for previous event."""
 
@@ -1447,7 +1451,8 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait briefly (timer hasn't expired yet)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS / 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # No event yet
@@ -1491,7 +1496,8 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait for second event's timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have two events - first fired immediately when second arrived
@@ -1561,6 +1567,7 @@ async def test_vehicle_detection_line_crossing_in_zone(
     fixed_now: datetime,
     end_order: tuple[str, str],
     expected_event_id: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A vehicle crossing a line inside a zone fires once with its plate."""
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
@@ -1616,7 +1623,8 @@ async def test_vehicle_detection_line_crossing_in_zone(
         )
         _process_vehicle_event(ufp, protect_event)
     await hass.async_block_till_done()
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -1634,6 +1642,7 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that pending timer is cancelled when entity is removed."""
 
@@ -1685,7 +1694,8 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     await hass.async_block_till_done()
 
     # Wait past when timer would have fired
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Entity should be gone and no event should have fired
@@ -1699,6 +1709,7 @@ async def test_vehicle_detection_refire_on_lpr_data(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that event refires when LPR data arrives after initial detection."""
 
@@ -1751,7 +1762,8 @@ async def test_vehicle_detection_refire_on_lpr_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire - first event should fire without LPR
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received first event without LPR
@@ -1790,7 +1802,8 @@ async def test_vehicle_detection_refire_on_lpr_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the new timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received second event WITH LPR data
@@ -1810,6 +1823,7 @@ async def test_vehicle_detection_no_refire_same_data(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that event does NOT refire when same data arrives again."""
 
@@ -1867,7 +1881,8 @@ async def test_vehicle_detection_no_refire_same_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received one event
@@ -1879,7 +1894,8 @@ async def test_vehicle_detection_no_refire_same_data(
 
     # Send the same event again with identical data
     ufp.ws_msg(mock_msg)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should NOT have received another event (same data)

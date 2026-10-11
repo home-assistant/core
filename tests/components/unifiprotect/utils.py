@@ -768,6 +768,8 @@ def setup_public_sensor(
     pb.get = _get
     _mirror_on_update_public(ufp, "sensors", public_bootstrap.sensors, make)
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 
@@ -797,6 +799,8 @@ def setup_public_light(ufp: MockUFPFixture, **mirror_overrides: Any) -> None:
         ufp, "lights", public_bootstrap.lights, make, keep_existing=True
     )
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 
@@ -819,6 +823,8 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
 
     pb.get = _get
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 
@@ -877,6 +883,8 @@ def setup_public_chime(ufp: MockUFPFixture) -> None:
         ufp, "chimes", public_bootstrap.chimes, make_public_chime, keep_existing=True
     )
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 

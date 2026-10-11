@@ -274,8 +274,21 @@ async def test_user_flow_no_device_id(
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_kiosker_api.status.return_value.device_id = (
+        "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "10.0.1.5",
+            CONF_API_TOKEN: "test_token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow_success(
@@ -347,5 +360,13 @@ async def test_reauth_flow_errors(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": expected_error}
+
+    mock_kiosker_api.status.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

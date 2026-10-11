@@ -199,8 +199,15 @@ async def test_form_cannot_read_device(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_modbus_unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TCP_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_shared_link_conflict(
@@ -208,6 +215,7 @@ async def test_form_shared_link_conflict(
     mock_get_temporary_modbus_unit: MagicMock,
 ) -> None:
     """Test an incompatible shared connection is a connection error."""
+    temporary_unit = mock_get_temporary_modbus_unit.side_effect
     mock_get_temporary_modbus_unit.side_effect = HomeAssistantError
 
     result = await hass.config_entries.flow.async_init(
@@ -221,8 +229,14 @@ async def test_form_shared_link_conflict(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_get_temporary_modbus_unit.side_effect = temporary_unit
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TCP_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(
@@ -361,9 +375,15 @@ async def test_reconfigure_loaded_entry_restored_after_error(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_serial_config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**SERIAL_USER_INPUT, "baudrate": 38400}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_stops_when_unload_fails(
@@ -396,9 +416,15 @@ async def test_reconfigure_stops_when_unload_fails(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     check_connection.assert_not_awaited()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**SERIAL_USER_INPUT, "baudrate": 38400}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_flow_errors(

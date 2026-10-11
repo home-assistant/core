@@ -90,8 +90,20 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"token": "invalid_auth"}
+
+    with (
+        patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
+        patch(
+            "homeassistant.components.syncthing.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -110,5 +122,17 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
+        patch(
+            "homeassistant.components.syncthing.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_ENTRY
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

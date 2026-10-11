@@ -44,6 +44,7 @@ async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> N
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("setup_guardian")
 async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that the config entry errors out if the device cannot connect."""
 
@@ -63,8 +64,12 @@ async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> Non
             result["flow_id"], user_input=config
         )
         assert result["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_get_pin_from_discovery_hostname() -> None:

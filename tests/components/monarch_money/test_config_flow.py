@@ -276,10 +276,21 @@ async def test_reauth_subscription_auth_failure(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
     assert CONF_EMAIL in result["data_schema"].schema
     assert CONF_PASSWORD in result["data_schema"].schema
+
+    client.get_subscription_details.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_form_mfa(

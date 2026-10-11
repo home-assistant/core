@@ -58,8 +58,12 @@ async def test_form(
     ],
     ids=["invalid-auth", "unknown-error"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_error(
-    hass: HomeAssistant, mock_ring_auth: Mock, error_type, errors_msg
+    hass: HomeAssistant,
+    mock_ring_auth: Mock,
+    error_type: type[Exception],
+    errors_msg: str,
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -72,8 +76,15 @@ async def test_form_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": errors_msg}
+
+    mock_ring_auth.async_fetch_token.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "hello@home-assistant.io", "password": "test-password"},
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_2fa(

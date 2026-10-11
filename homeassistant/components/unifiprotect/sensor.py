@@ -372,15 +372,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_public_value="wireless_connection_state.signal_state.signal_quality",
     ),
     ProtectSensorEntityDescription(
-        key="sensitivity",
-        translation_key="sensitivity",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="motion_settings.sensitivity",
-        ufp_capability=SensorFeatureCapability.MOTION,
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectSensorEntityDescription(
         key="mount_type",
         translation_key="mount_type",
         entity_category=EntityCategory.DIAGNOSTIC,

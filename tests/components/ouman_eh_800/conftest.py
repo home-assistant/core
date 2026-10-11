@@ -253,6 +253,7 @@ def mock_ouman_client(registry_set: OumanRegistrySet) -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.get_active_registries.return_value = registry_set
         client.get_values.return_value = values
+        client.get_is_l1_summer_function_active.return_value = False
 
         # Simulate the device: a successful write changes what subsequent
         # reads return, so the coordinator's post-write refresh keeps the

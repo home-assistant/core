@@ -20,12 +20,12 @@ from homeassistant.components.plex.const import (
     CONF_USE_EPISODE_ART,
     DOMAIN,
     PLEX_SERVER_CONFIG,
-    SERVERS,
 )
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_USER,
     ConfigEntryState,
+    ConfigFlowResult,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -46,7 +46,26 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+async def _async_retry_website_auth(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlowResult:
+    """Retry the website authentication with a valid token."""
+    with (
+        patch("plexauth.PlexAuth.initiate_auth"),
+        patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN),
+    ):
+        result = await hass.config_entries.flow.async_configure(flow_id, {})
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        result = await hass.config_entries.flow.async_configure(flow_id)
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        return await hass.config_entries.flow.async_configure(flow_id)
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_plex_calls", "mock_setup_entry"
+)
 async def test_bad_credentials(hass: HomeAssistant) -> None:
     """Test when provided credentials are rejected."""
     result = await hass.config_entries.flow.async_init(
@@ -75,12 +94,16 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "website_auth"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
+    result = await _async_retry_website_auth(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_plex_calls", "mock_setup_entry"
+)
+async def test_bad_hostname(hass: HomeAssistant) -> None:
     """Test when an invalid address is provided."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -109,8 +132,10 @@ async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "website_auth"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"][CONF_HOST] == "not_found"
+
+    result = await _async_retry_website_auth(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -141,12 +166,14 @@ async def test_unknown_exception(hass: HomeAssistant) -> None:
         assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_plex_calls", "mock_setup_entry"
+)
 async def test_no_servers_found(
     hass: HomeAssistant,
-    mock_plex_calls,
     requests_mock: requests_mock.Mocker,
-    empty_payload,
+    empty_payload: str,
+    plextv_resources: str,
 ) -> None:
     """Test when no servers are on an account."""
     requests_mock.get("https://plex.tv/api/v2/resources", text=empty_payload)
@@ -173,8 +200,11 @@ async def test_no_servers_found(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "website_auth"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "no_servers"
+
+    requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
+    result = await _async_retry_website_auth(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -468,8 +498,7 @@ async def test_option_flow_new_users_available(
     mock_plex_server = await setup_plex_server(config_entry=entry)
     await hass.async_block_till_done()
 
-    server_id = "unique_id_123"
-    monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
+    monitored_users = entry.runtime_data.server.option_monitored_users
 
     new_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
     assert len(monitored_users) == 1
