@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities
@@ -178,17 +178,6 @@ async def async_setup_entry(
                 for unit in units
                 if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
-            (
-                ATAOutdoorTemperatureSensor(
-                    coordinator,
-                    telemetry_coordinator,
-                    OUTDOOR_TEMPERATURE_DESCRIPTION,
-                    unit,
-                )
-                for unit in units
-                if unit.capabilities
-                and unit.capabilities.has_outdoor_temperature_sensor
-            ),
         ),
         lambda units: chain(
             (
@@ -208,6 +197,35 @@ async def async_setup_entry(
                 if unit.capabilities and unit.capabilities.has_energy_consumed_meter
             ),
         ),
+    )
+
+    outdoor_temperature_units: set[str] = set()
+
+    @callback
+    def _async_add_outdoor_temperature_sensors() -> None:
+        """Add an outdoor temperature sensor once a unit reports a value."""
+        outdoor_temperature_units.intersection_update(coordinator.ata_units)
+        new_units = [
+            unit
+            for unit_id, value in telemetry_coordinator.data.outdoor_temperature.items()
+            if value is not None
+            and unit_id not in outdoor_temperature_units
+            and (unit := coordinator.ata_units.get(unit_id))
+        ]
+        outdoor_temperature_units.update(unit.id for unit in new_units)
+        async_add_entities(
+            ATAOutdoorTemperatureSensor(
+                coordinator,
+                telemetry_coordinator,
+                OUTDOOR_TEMPERATURE_DESCRIPTION,
+                unit,
+            )
+            for unit in new_units
+        )
+
+    _async_add_outdoor_temperature_sensors()
+    entry.async_on_unload(
+        telemetry_coordinator.async_add_listener(_async_add_outdoor_temperature_sensors)
     )
 
 
