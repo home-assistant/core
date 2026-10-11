@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: The integration logs disconnections; the library logs successful connections.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The serial protocol does not use authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo # Deferred from the initial contribution.
+  discovery-update-info:
+    status: exempt
+    comment: The serial protocol provides no discovery or stable receiver identifier.
+  discovery:
+    status: exempt
+    comment: The receiver cannot be discovered through a generic serial adapter.
+  docs-data-update: done
+  docs-examples: todo # Deferred from the initial contribution.
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: "The integration does not create dynamic devices."
+  entity-category:
+    status: done
+    comment: Both entities control receiver outputs, so neither is diagnostic nor configuration-only.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: done
+    comment: Only the main and responding multi-room outputs are exposed; neither is noisy.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: done
+    comment: The receiver device class supplies the appropriate icon for both outputs.
+  reconfiguration-flow: todo # Deferred from the initial contribution.
+  repair-issues: todo # Deferred from the initial contribution.
+  stale-devices:
+    status: exempt
+    comment: "The integration does not create devices that can become stale."
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The library uses serial connections, not HTTP.
+  strict-typing: done
