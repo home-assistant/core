@@ -25,6 +25,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -253,10 +254,10 @@ class OverkizConfigFlow(
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
-                errors["base"] = "cannot_connect"
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except TimeoutError, ClientError, ServiceUnavailableError:
+                errors["base"] = "cannot_connect"
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
@@ -330,11 +331,11 @@ class OverkizConfigFlow(
             except ClientConnectorCertificateError as exception:
                 errors["base"] = "certificate_verify_failed"
                 LOGGER.debug(exception)
-            except (TimeoutError, ClientError) as exception:
-                errors["base"] = "cannot_connect"
-                LOGGER.debug(exception)
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except (TimeoutError, ClientError, ServiceUnavailableError) as exception:
+                errors["base"] = "cannot_connect"
+                LOGGER.debug(exception)
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
