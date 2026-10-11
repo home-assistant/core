@@ -76,32 +76,6 @@ _ALARM_HUB_INPUT_DEVICE_CLASS: dict[AlarmHubInputType, BinarySensorDeviceClass] 
 }
 
 
-def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_motion_sensor_enabled over the public API.
-    sensor = cast(PublicSensor, obj)
-    return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
-
-
-def _async_contact_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_contact_sensor_enabled over the public API.
-    return cast(PublicSensor, obj).is_contact_sensor_enabled
-
-
-def _async_leak_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Leak-mounted (UP Sense), or the capability map advertises water_leak with a
-    # leak channel enabled — the USL family detects leaks without a leak mount.
-    # Settings alone are not a valid gate: sensors without the capability report
-    # inert default leak settings.
-    sensor = cast(PublicSensor, obj)
-    return sensor.is_leak_sensor_enabled or (
-        sensor.supports(SensorFeatureCapability.WATER_LEAK)
-        and (
-            sensor.leak_settings.is_internal_enabled
-            or sensor.leak_settings.is_external_enabled
-        )
-    )
-
-
 _RELAY_INPUT_STATE_MAP: dict[RelayInputState, bool] = {
     RelayInputState.ON: True,
     RelayInputState.OFF: False,
@@ -858,13 +832,11 @@ def _alarm_hub_battery_problem(hub: LinkStation) -> bool:
 ALARM_HUB_BINARY_SENSORS: tuple[ProtectAlarmHubBinaryEntityDescription, ...] = (
     ProtectAlarmHubBinaryEntityDescription(
         key="tamper",
-        translation_key="alarm_hub_tamper",
         device_class=BinarySensorDeviceClass.TAMPER,
         value_fn=_alarm_hub_tamper,
     ),
     ProtectAlarmHubBinaryEntityDescription(
         key="battery",
-        translation_key="alarm_hub_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_alarm_hub_battery_problem,
@@ -1005,7 +977,8 @@ async def async_setup_entry(
             )
             return
         if isinstance(device, LinkStation):
-            async_add_entities(_async_alarm_hub_entities(data, device))
+            if device.is_alarm_hub:
+                async_add_entities(_async_alarm_hub_entities(data, device))
             return
         async_add_entities(_async_model_entities(data, public_device=device))
 
