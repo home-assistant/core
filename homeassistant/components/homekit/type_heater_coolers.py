@@ -210,6 +210,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             CHAR_CURRENT_HEATER_COOLER_STATE,
             CHAR_TARGET_HEATER_COOLER_STATE,
             CHAR_CURRENT_TEMPERATURE,
+            CHAR_NAME,
         ]
         if self._has_cool_threshold:
             chars.append(CHAR_COOLING_THRESHOLD_TEMPERATURE)
@@ -239,6 +240,8 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         serv = self.add_preload_service(SERV_HEATER_COOLER, chars)
 
+        # Without a Name, iOS Control Center toggles Swing Mode instead of Active.
+        serv.configure_char(CHAR_NAME, value=self.display_name)
         self.char_active = serv.configure_char(CHAR_ACTIVE, value=0)
         self.char_current_state = serv.configure_char(
             CHAR_CURRENT_HEATER_COOLER_STATE, value=HC_INACTIVE

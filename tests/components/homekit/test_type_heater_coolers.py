@@ -190,6 +190,10 @@ async def test_heatercooler_with_fan_and_swing(
     assert acc.char_speed.value == 25  # FAN_LOW maps to 25% (index 0 of 4 speeds)
     assert acc.char_swing.value == 0  # off
 
+    # Control Center toggles Swing Mode instead of Active when Name is missing
+    serv = acc.get_service(SERV_HEATER_COOLER)
+    assert serv.get_characteristic(CHAR_NAME).value == "Climate"
+
 
 @pytest.mark.parametrize(
     ("hvac_modes", "expected_auto_mode"),
