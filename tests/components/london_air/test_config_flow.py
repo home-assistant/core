@@ -182,6 +182,33 @@ async def test_import_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_import_merges_existing_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test importing from YAML merges locations into an existing entry."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_LOCATIONS: ["City of London"]},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_LOCATIONS] == ["Merton", "City of London"]
+    await hass.async_block_till_done()
+
+
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -248,6 +275,50 @@ async def test_reconfigure_preserves_submitted_locations(
         key.default() for key in data_schema.schema if key == CONF_LOCATIONS
     )
     assert locations == ["Merton", "Barnet"]
+
+    mock_session.get.return_value = response
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton", "Barnet"]}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_LOCATIONS] == ["Merton", "Barnet"]
+    await hass.async_block_till_done()
+
+
+async def test_reconfigure_required(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test the reconfigure flow requires at least one location."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: []}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_LOCATIONS: "required"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton"]}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_LOCATIONS] == ["Merton"]
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_removes_location(

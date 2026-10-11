@@ -1,5 +1,6 @@
 """Tests for the London Air sensor platform."""
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
@@ -277,3 +278,61 @@ async def test_yaml_migration_existing_entry(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+async def test_yaml_migration_multiple_blocks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test that multiple YAML blocks merge into a single entry."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+
+    async def _get(*args: Any, **kwargs: Any) -> MagicMock:
+        # Yield so both import flows are in progress at the same time.
+        await asyncio.sleep(0)
+        return response
+
+    mock_session.get.side_effect = _get
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": "london_air", "locations": ["Merton"]},
+                {"platform": "london_air", "locations": ["City of London"]},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].unique_id == DOMAIN
+    assert entries[0].data["locations"] == ["Merton", "City of London"]
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entries[0].entry_id))
+        == 2
+    )
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_already_configured"
+        )
+        is None
+    )
+
+    assert hass.states.get("sensor.merton") is not None
+    assert hass.states.get("sensor.city_of_london") is not None
