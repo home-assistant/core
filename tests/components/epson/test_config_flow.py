@@ -1,5 +1,7 @@
 """Test the epson config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from epson_projector.const import PWR_OFF_STATE
@@ -9,6 +11,21 @@ from homeassistant.components.epson.const import CONF_CONNECTION_TYPE, DOMAIN, H
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+
+@contextmanager
+def _patch_projector_on() -> Generator[None]:
+    """Patch a powered on projector and the entry setup."""
+    with (
+        patch("homeassistant.components.epson.Projector.get_power", return_value="01"),
+        patch(
+            "homeassistant.components.epson.Projector.get_serial_number",
+            return_value="12345",
+        ),
+        patch("homeassistant.components.epson.Projector.close", return_value=True),
+        patch("homeassistant.components.epson.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -68,8 +85,16 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_projector_on():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_powered_off(hass: HomeAssistant) -> None:
@@ -88,5 +113,13 @@ async def test_form_powered_off(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "powered_off"}
+
+    with _patch_projector_on():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

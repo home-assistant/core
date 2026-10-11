@@ -97,16 +97,9 @@ async def test_form_exceptions(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": reason}
 
     mock_firefly_client.get_about.side_effect = None
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,

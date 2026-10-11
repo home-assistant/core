@@ -73,7 +73,7 @@ async def test_canceling_debouncer_normal(
 
     debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
     debouncer.async_schedule()
-    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass)
     assert debouncer._task is not None
     await debouncer.async_cleanup()
     assert debouncer._task is None
@@ -90,7 +90,7 @@ async def test_canceling_debouncer_throws(
 
     debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
     debouncer.async_schedule()
-    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass)
     assert debouncer._task is not None
     # let debouncer._task fail by mocking it
     with patch.object(debouncer, "_task") as task:

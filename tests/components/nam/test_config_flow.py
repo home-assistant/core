@@ -166,7 +166,10 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_with_auth_errors(
+    hass: HomeAssistant, error: tuple[Exception | type[Exception], str]
+) -> None:
     """Test we handle errors when auth is required."""
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
@@ -196,8 +199,19 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
             VALID_AUTH,
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_AUTH,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -208,7 +222,10 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, error) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_errors(
+    hass: HomeAssistant, error: tuple[Exception | type[Exception], str]
+) -> None:
     """Test we handle errors."""
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
@@ -226,8 +243,19 @@ async def test_form_errors(hass: HomeAssistant, error) -> None:
             user_input=VALID_CONFIG,
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_abort(hass: HomeAssistant) -> None:

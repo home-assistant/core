@@ -424,7 +424,6 @@ async def test_reconfigure_flow_retains_user_input_on_error(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["data_schema"]({CONF_PASSWORD: ""}) == {
         CONF_HOST: user_input[CONF_HOST],
@@ -433,6 +432,13 @@ async def test_reconfigure_flow_retains_user_input_on_error(
         CONF_PORT: user_input[CONF_PORT],
         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
     }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**user_input, CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(

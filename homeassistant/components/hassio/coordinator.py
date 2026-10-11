@@ -13,6 +13,7 @@ from aiohasupervisor.models import (
     AddonsStats,
     AddonState,
     CIFSMountResponse,
+    DiskMountResponse,
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
@@ -835,7 +836,7 @@ class HassioMainData:
     core: HomeAssistantInfo
     supervisor: SupervisorInfo
     host: HostInfo
-    mounts: dict[str, CIFSMountResponse | NFSMountResponse]
+    mounts: dict[str, CIFSMountResponse | DiskMountResponse | NFSMountResponse]
     os: OSInfo | None
     panels: dict[str, IngressPanel]
 
@@ -1133,7 +1134,7 @@ def async_register_addons_in_dev_reg(
 def async_register_mounts_in_dev_reg(
     entry_id: str,
     dev_reg: dr.DeviceRegistry,
-    mounts: list[CIFSMountResponse | NFSMountResponse],
+    mounts: list[CIFSMountResponse | DiskMountResponse | NFSMountResponse],
 ) -> None:
     """Register mounts in the device registry."""
     for mount in mounts:

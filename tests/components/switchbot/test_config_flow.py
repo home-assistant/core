@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
     LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
@@ -210,6 +211,44 @@ async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SENSOR_TYPE] == "lock_ultra_max"
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_circulator_fan_pro(hass: HomeAssistant) -> None:
+    """Test discovery of an encrypted Circulator Fan Pro."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotCirculatorFanPro.verify_encryption_key",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "circulator_fan_pro"
     assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1223,9 +1262,37 @@ async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud_login"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "auth_failed"}
     assert "Invalid credentials" in result["description_placeholders"]["error_detail"]
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")

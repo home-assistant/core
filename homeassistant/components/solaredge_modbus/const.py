@@ -51,6 +51,12 @@ SUBSYSTEM_ADVANCED_POWER_CONTROL: Final = "advanced_power_control"
 SUBSYSTEM_POWER_CONTROL: Final = "power_control"
 SUBSYSTEM_SITE_CONTROL: Final = "site_control"
 
+# How long a request may take once the inverter's blocks are known. Over Wi-Fi
+# a SolarEdge inverter answers some requests well past the link's default 10 s,
+# and one late answer fails the whole poll. Probing keeps the default: a block
+# the inverter never answers costs a full timeout there.
+READ_TIMEOUT: Final = 30
+
 # Local Modbus is cheap to read and PV production moves fast.
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 

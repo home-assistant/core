@@ -1,5 +1,4 @@
 """Support for LinkPlay media players."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
@@ -26,8 +25,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import SHARED_DATA, LinkPlayConfigEntry
-from .const import DOMAIN
+from . import LinkPlayConfigEntry
+from .const import DOMAIN, SHARED_DATA_KEY
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,15 +141,20 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         await super().async_added_to_hass()
-        entity_to_bridge = self.hass.data[DOMAIN][SHARED_DATA].entity_to_bridge
+        entity_to_bridge = self.hass.data[SHARED_DATA_KEY].entity_to_bridge
         entity_to_bridge[self.entity_id] = self._bridge.device.uuid
-        self.async_on_remove(lambda: entity_to_bridge.pop(self.entity_id, None))
+
+        @callback
+        def _remove_entity_mapping() -> None:
+            entity_to_bridge.pop(self.entity_id, None)
+
+        self.async_on_remove(_remove_entity_mapping)
 
     @callback
     @override
     def async_entity_id_changed(self, old_entity_id: str) -> None:
         """Map the new entity_id to the bridge."""
-        entity_to_bridge = self.hass.data[DOMAIN][SHARED_DATA].entity_to_bridge
+        entity_to_bridge = self.hass.data[SHARED_DATA_KEY].entity_to_bridge
         entity_to_bridge.pop(old_entity_id, None)
         entity_to_bridge[self.entity_id] = self._bridge.device.uuid
         super().async_entity_id_changed(old_entity_id)
@@ -283,7 +287,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
-        controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller
+        controller: LinkPlayController = self.hass.data[SHARED_DATA_KEY].controller
         multiroom = self._bridge.multiroom
         if multiroom is None:
             multiroom = LinkPlayMultiroom(self._bridge)
@@ -298,7 +302,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     async def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
         """Get linkplay bridge from entity_id."""
 
-        shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        shared_data = self.hass.data[SHARED_DATA_KEY]
         controller = shared_data.controller
         bridge_uuid = shared_data.entity_to_bridge.get(entity_id, None)
         bridge = await controller.find_bridge(bridge_uuid)
@@ -320,7 +324,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         if multiroom is None:
             return []
 
-        shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        shared_data = self.hass.data[SHARED_DATA_KEY]
         leader_id: str | None = None
         followers = []
 
@@ -360,7 +364,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller
+        controller: LinkPlayController = self.hass.data[SHARED_DATA_KEY].controller
 
         multiroom = self._bridge.multiroom
         if multiroom is not None:

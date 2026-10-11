@@ -98,7 +98,8 @@ async def test_flow_user_already_configured(hass: HomeAssistant, api) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_cannot_connect(hass: HomeAssistant, conn_error) -> None:
+@pytest.mark.usefixtures("conn_error")
+async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -113,11 +114,18 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, conn_error) -> None
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch("deluge_client.client.DelugeRPCClient.connect"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_flow_user_unknown_error(hass: HomeAssistant, unknown_error) -> None:
+
+@pytest.mark.usefixtures("unknown_error")
+async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -132,8 +140,14 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown_error) -> No
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with patch("deluge_client.client.DelugeRPCClient.connect"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_reauth(hass: HomeAssistant, api) -> None:

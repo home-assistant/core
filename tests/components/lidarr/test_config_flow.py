@@ -1,14 +1,41 @@
 """Test Lidarr config flow."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.lidarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_SOURCE
+from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import CONF_DATA, MOCK_INPUT, ComponentSetup
+from .conftest import API_URL, CONF_DATA, MOCK_INPUT, URL, ComponentSetup
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@asynccontextmanager
+async def _patch_connection(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> AsyncGenerator[None]:
+    """Mock a working Lidarr connection and skip entry setup."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{URL}/initialize.js",
+        text=await async_load_fixture(hass, "initialize.js", DOMAIN),
+        headers={"Content-Type": "application/javascript"},
+    )
+    aioclient_mock.get(
+        f"{API_URL}/system/status",
+        text=await async_load_fixture(hass, "system-status.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    with patch("homeassistant.components.lidarr.async_setup_entry", return_value=True):
+        yield
 
 
 async def test_flow_user_form(hass: HomeAssistant, connection) -> None:
@@ -30,7 +57,10 @@ async def test_flow_user_form(hass: HomeAssistant, connection) -> None:
     assert result["data"] == CONF_DATA
 
 
-async def test_flow_user_invalid_auth(hass: HomeAssistant, invalid_auth) -> None:
+@pytest.mark.usefixtures("invalid_auth")
+async def test_flow_user_invalid_auth(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test invalid authentication."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -39,11 +69,20 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant, invalid_auth) -> None
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
+    async with _patch_connection(hass, aioclient_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_flow_user_cannot_connect(hass: HomeAssistant, cannot_connect) -> None:
+
+@pytest.mark.usefixtures("cannot_connect")
+async def test_flow_user_cannot_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -53,11 +92,20 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, cannot_connect) -> 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
 
+    async with _patch_connection(hass, aioclient_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_wrong_app(hass: HomeAssistant, wrong_app) -> None:
+
+@pytest.mark.usefixtures("wrong_app")
+async def test_wrong_app(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on wrong app."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -67,11 +115,20 @@ async def test_wrong_app(hass: HomeAssistant, wrong_app) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "wrong_app"
 
+    async with _patch_connection(hass, aioclient_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_INPUT,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_zeroconf_failed(hass: HomeAssistant, zeroconf_failed) -> None:
+
+@pytest.mark.usefixtures("zeroconf_failed")
+async def test_zeroconf_failed(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on zeroconf failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -81,11 +138,20 @@ async def test_zeroconf_failed(hass: HomeAssistant, zeroconf_failed) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "zeroconf_failed"
 
+    async with _patch_connection(hass, aioclient_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_INPUT,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_flow_user_unknown_error(hass: HomeAssistant, unknown) -> None:
+
+@pytest.mark.usefixtures("unknown")
+async def test_flow_user_unknown_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -97,8 +163,14 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "unknown"
+
+    async with _patch_connection(hass, aioclient_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_reauth(

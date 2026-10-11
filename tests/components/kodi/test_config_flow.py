@@ -1,5 +1,7 @@
 """Test the Kodi config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -26,6 +28,26 @@ from .util import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_kodi_success() -> Generator[None]:
+    """Patch a reachable Kodi and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.kodi.config_flow.Kodi.ping",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=MockConnection(),
+        ),
+        patch(
+            "homeassistant.components.kodi.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -296,7 +318,6 @@ async def test_form_invalid_auth(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
     with (
@@ -322,6 +343,14 @@ async def test_form_invalid_auth(hass: HomeAssistant, user_flow: str) -> None:
     assert result["step_id"] == "ws_port"
     assert result["errors"] == {}
 
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow: str) -> None:
     """Test we handle cannot connect over HTTP error."""
@@ -339,8 +368,15 @@ async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow: str) -> 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_HOST
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_exception_http(hass: HomeAssistant, user_flow: str) -> None:
@@ -359,8 +395,15 @@ async def test_form_exception_http(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_HOST
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow: str) -> None:
@@ -423,8 +466,15 @@ async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow: str) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_exception_ws(hass: HomeAssistant, user_flow: str) -> None:
@@ -467,8 +517,15 @@ async def test_form_exception_ws(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_WS_PORT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery(hass: HomeAssistant) -> None:

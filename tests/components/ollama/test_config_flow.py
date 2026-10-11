@@ -1,6 +1,8 @@
 """Test the Ollama config flow."""
 
 import asyncio
+from collections.abc import Iterator
+from contextlib import contextmanager
 from unittest.mock import ANY, AsyncMock, patch
 
 from httpx2 import HTTPError
@@ -18,6 +20,22 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 TEST_MODEL = "test_model:latest"
+
+
+@contextmanager
+def _patch_success() -> Iterator[None]:
+    """Patch a successful connection and setup."""
+    with (
+        patch(
+            "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+            return_value={"models": [{"model": TEST_MODEL}]},
+        ),
+        patch(
+            "homeassistant.components.ollama.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -443,7 +461,9 @@ async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> No
         (RuntimeError(), "unknown"),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
+async def test_form_errors(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -458,8 +478,15 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -514,8 +541,15 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_url"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -867,8 +901,15 @@ async def test_user_step_errors(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_trim_url(hass: HomeAssistant) -> None:

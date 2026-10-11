@@ -1635,9 +1635,19 @@ async def test_reauth_offline_device_stops_candidate_probing(
 
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "connection_error"}
     mock_get_encryption_key.assert_not_called()
+
+    mock_client.device_info.side_effect = None
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
@@ -1677,9 +1687,16 @@ async def test_user_flow_offline_device_stops_candidate_probing(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "connection_error"}
     mock_get_encryption_key.assert_not_called()
+
+    mock_client.device_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")

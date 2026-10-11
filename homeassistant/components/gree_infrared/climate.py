@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.infrared import (
@@ -162,7 +163,10 @@ class GreeAcClimateEntity(
                     round(
                         TemperatureConverter.convert(
                             float(temperature),
-                            self.hass.config.units.temperature_unit,
+                            last_state.attributes.get(
+                                ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                                self.hass.config.units.temperature_unit,
+                            ),
                             self.native_temperature_unit,
                         )
                     )

@@ -1,7 +1,7 @@
 {
   "domain": "hydrawise",
   "name": "Hunter Hydrawise",
-  "codeowners": ["@dknowles2", "@thomaskistler", "@ptcryan"],
+  "codeowners": ["@dknowles2", "@thomaskistler", "@ptcryan", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hydrawise",
   "integration_type": "hub",

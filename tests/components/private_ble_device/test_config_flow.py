@@ -20,6 +20,29 @@ def assert_form_error(result: FlowResult, key: str, value: str) -> None:
     assert result["errors"][key] == value
 
 
+async def _async_configure_valid_irk(hass: HomeAssistant, flow_id: str) -> FlowResult:
+    """Configure the flow with the IRK of a discovered device."""
+    inject_bluetooth_service_info(
+        hass,
+        BluetoothServiceInfo(
+            name="Test Test Test",
+            address="40:01:02:0a:c4:a6",
+            rssi=-63,
+            service_data={},
+            manufacturer_data={},
+            service_uuids=[],
+            source="local",
+        ),
+    )
+    with patch(
+        "homeassistant.components.private_ble_device.async_setup_entry",
+        return_value=True,
+    ):
+        return await hass.config_entries.flow.async_configure(
+            flow_id, user_input={"irk": "irk:00000000000000000000000000000000"}
+        )
+
+
 @pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_setup_user_no_bluetooth(hass: HomeAssistant) -> None:
     """Test setting up via user interaction when bluetooth is not enabled."""
@@ -42,8 +65,11 @@ async def test_invalid_irk(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:000000"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_valid")
+
+    result = await _async_configure_valid_irk(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00000000000000000000000000000000"
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -57,8 +83,11 @@ async def test_invalid_irk_base64(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "Ucredacted4T8n!!ZZZ=="}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_valid")
+
+    result = await _async_configure_valid_irk(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00000000000000000000000000000000"
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -72,8 +101,11 @@ async def test_invalid_irk_hex(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:abcdefghi"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_valid")
+
+    result = await _async_configure_valid_irk(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00000000000000000000000000000000"
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -88,8 +120,11 @@ async def test_irk_not_found(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"irk": "irk:00000000000000000000000000000000"},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_found")
+
+    result = await _async_configure_valid_irk(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00000000000000000000000000000000"
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

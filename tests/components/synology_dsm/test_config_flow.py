@@ -1,13 +1,19 @@
 """Tests for the Synology DSM config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from ipaddress import ip_address
+from operator import attrgetter
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMAPIInsufficientPrivilegeException,
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
@@ -60,6 +66,18 @@ from .consts import (
 )
 
 from tests.common import MockConfigEntry
+
+USER_INPUT = {CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+
+
+@contextmanager
+def _patch_dsm(service: MagicMock) -> Generator[None]:
+    """Patch the config flow to use a working service."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        yield
 
 
 @pytest.fixture(name="service")
@@ -577,8 +595,13 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock) -> None:
         user_input={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -601,8 +624,13 @@ async def test_connection_failed(hass: HomeAssistant, service: MagicMock) -> Non
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -623,13 +651,78 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("failing_call", "side_effect", "errors"),
+    [
+        pytest.param(
+            "login",
+            SynologyDSMLogin2SAForcedException(USERNAME),
+            {"base": "otp_enforced"},
+            id="otp_enforced",
+        ),
+        pytest.param(
+            "utilisation.update",
+            SynologyDSMAPIInsufficientPrivilegeException(
+                "SYNO.Core.System.Utilization", None
+            ),
+            {"base": "insufficient_privilege"},
+            id="insufficient_privilege",
+        ),
+        pytest.param(
+            "utilisation.update",
+            SynologyDSMAPIErrorException("SYNO.Core.System.Utilization", 117, None),
+            {"base": "unknown"},
+            id="other_api_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_errors_after_connect(
+    hass: HomeAssistant,
+    service: MagicMock,
+    failing_call: str,
+    side_effect: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test errors raised by the NAS during login and initial data fetch."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    attrgetter(failing_call)(service).side_effect = side_effect
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == errors
+
+    attrgetter(failing_call)(service).side_effect = None
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_missing_data_after_login(
-    hass: HomeAssistant, service_failed: MagicMock
+    hass: HomeAssistant, service: MagicMock, service_failed: MagicMock
 ) -> None:
     """Test when we have errors during connection."""
     result = await hass.config_entries.flow.async_init(
@@ -652,8 +745,13 @@ async def test_missing_data_after_login(
             },
         )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_data"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
