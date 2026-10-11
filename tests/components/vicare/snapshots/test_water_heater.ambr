@@ -121,3 +121,128 @@
     'state': 'unknown',
   })
 # ---
+# name: test_get_circulation_schedule
+  dict({
+    'water_heater.model0_domestic_hot_water': dict({
+      'friday': list([
+        dict({
+          'from': '05:30:00',
+          'mode': 'on',
+          'to': '09:00:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+      'monday': list([
+        dict({
+          'from': '05:30:00',
+          'mode': 'on',
+          'to': '09:00:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+      'saturday': list([
+        dict({
+          'from': '07:00:00',
+          'mode': 'on',
+          'to': '09:30:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+      'sunday': list([
+        dict({
+          'from': '07:00:00',
+          'mode': 'on',
+          'to': '09:30:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+      'thursday': list([
+        dict({
+          'from': '05:30:00',
+          'mode': 'on',
+          'to': '09:00:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+      'tuesday': list([
+        dict({
+          'from': '05:30:00',
+          'mode': 'on',
+          'to': '09:00:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+      'wednesday': list([
+        dict({
+          'from': '05:30:00',
+          'mode': 'on',
+          'to': '09:00:00',
+        }),
+        dict({
+          'from': '12:00:00',
+          'mode': 'on',
+          'to': '13:00:00',
+        }),
+        dict({
+          'from': '18:00:00',
+          'mode': 'on',
+          'to': '20:00:00',
+        }),
+      ]),
+    }),
+  })
+# ---
