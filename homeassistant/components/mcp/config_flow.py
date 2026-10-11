@@ -76,10 +76,10 @@ async def async_discover_authorization_server(
         str(parsed_url.with_path(path))
         for path in _authorization_server_discovery_paths(parsed_url)
     ]
-    # Pick any successful response and propagate exceptions except for
-    # 404 where we fall back to assuming some default paths.
+    # The first successful response follows the discovery priority order.
+    # A 404 from every URL falls back to the default paths.
     try:
-        response = await _async_fetch_any(hass, urls_to_try)
+        response = (await _async_fetch_any(hass, urls_to_try))[0]
     except NotFoundError:
         _LOGGER.info("Authorization Server Metadata not found, using default paths")
         return OAuthConfig(
@@ -431,8 +431,12 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 async def _async_fetch_any(
     hass: HomeAssistant,
     urls: Iterable[str],
-) -> httpx2.Response:
-    """Fetch all URLs concurrently and return the first successful response."""
+) -> list[httpx2.Response]:
+    """Fetch URLs and return each successful response, in request order.
+
+    Per-URL failures stay here. A 404 is ignored when another URL succeeds.
+    When none succeed, a transport or HTTP error is raised ahead of a 404.
+    """
 
     async def fetch(url: str) -> httpx2.Response:
         _LOGGER.debug("Fetching URL %s", url)
@@ -453,22 +457,62 @@ async def _async_fetch_any(
             _LOGGER.debug("Cannot fetch URL %s: %s", url, error)
             raise CannotConnect from error
 
-    tasks = [asyncio.create_task(fetch(url)) for url in urls]
-    return_err: Exception | None = None
+    url_list = list(urls)
+    tasks = [asyncio.create_task(fetch(url)) for url in url_list]
     try:
-        for future in asyncio.as_completed(tasks):
-            try:
-                return await future
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Fetch failed: %s", err)
-                if return_err is None:
-                    return_err = err
-                continue
+        results = await asyncio.gather(*tasks, return_exceptions=True)
     finally:
         for task in tasks:
             task.cancel()
 
-    raise return_err or CannotConnect("No responses received from any URL")
+    responses: list[httpx2.Response] = []
+    not_found = False
+    transport_error: TimeoutConnectError | CannotConnect | None = None
+    other_error: Exception | None = None
+    for result in results:
+        if isinstance(result, httpx2.Response):
+            responses.append(result)
+        elif isinstance(result, NotFoundError):
+            _LOGGER.debug("Fetch failed: %s", result)
+            not_found = True
+        elif isinstance(result, (TimeoutConnectError, CannotConnect)):
+            _LOGGER.debug("Fetch failed: %s", result)
+            if transport_error is None:
+                transport_error = result
+        elif isinstance(result, Exception):
+            _LOGGER.debug("Fetch failed: %s", result)
+            if other_error is None:
+                other_error = result
+    if responses:
+        return responses
+    # A 404 is not the failure when another URL had a transport error.
+    if transport_error is not None:
+        raise transport_error
+    if not_found:
+        raise NotFoundError("No responses received from any URL")
+    raise other_error or NotFoundError("No responses received from any URL")
+
+
+def _resource_metadata_from_response(
+    response: httpx2.Response, mcp_server_url: str
+) -> ResourceMetadata | None:
+    """Build resource metadata when the document describes this MCP server."""
+    try:
+        data = response.json()
+    except ValueError:
+        return None
+    if (
+        isinstance(data, dict)
+        and (authorization_servers := data.get("authorization_servers"))
+        and isinstance(authorization_servers, list)
+        and data.get("resource") == mcp_server_url
+    ):
+        return ResourceMetadata(
+            authorization_servers=authorization_servers,
+            supported_scopes=data.get("scopes_supported"),
+        )
+    _LOGGER.debug("Ignoring OAuth resource metadata from %s", response.url)
+    return None
 
 
 async def async_discover_protected_resource(
@@ -483,12 +527,17 @@ async def async_discover_protected_resource(
     from the WWW-Authenticate header to fetch the resource metadata
     implementing RFC9728.
 
-    For the url https://example.com/public/mcp we attempt these urls:
+    The WWW-Authenticate resource_metadata URL is tried first. For
+    https://example.com/public/mcp the fallbacks are:
     - https://example.com/.well-known/oauth-protected-resource/public/mcp
     - https://example.com/.well-known/oauth-protected-resource
+
+    A document whose resource is not this MCP server is skipped, so a root
+    document for another path cannot win ahead of the header URL.
     """
     parsed_url = URL(mcp_server_url)
-    urls_to_try = {
+    urls_to_try: list[str] = []
+    for url in (
         auth_url,
         str(
             parsed_url.with_path(
@@ -496,25 +545,17 @@ async def async_discover_protected_resource(
             )
         ),
         str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
-    }
-
-    response = await _async_fetch_any(hass, list(urls_to_try))
-
-    # Parse the OAuth Authorization Protected Resource Metadata (rfc9728). We
-    # expect to find at least one authorization server in the response and
-    # a valid resource field that matches the MCP server URL.
-    data = response.json()
-    if (
-        not (authorization_servers := data.get("authorization_servers"))
-        or not (resource := data.get("resource"))
-        or (resource != mcp_server_url)
     ):
-        _LOGGER.error("Invalid OAuth resource metadata: %s", data)
-        raise CannotConnect("OAuth resource metadata is invalid")
-    return ResourceMetadata(
-        authorization_servers=authorization_servers,
-        supported_scopes=data.get("scopes_supported"),
-    )
+        if url not in urls_to_try:
+            urls_to_try.append(url)
+
+    for response in await _async_fetch_any(hass, urls_to_try):
+        if (
+            metadata := _resource_metadata_from_response(response, mcp_server_url)
+        ) is not None:
+            return metadata
+    _LOGGER.error("Invalid OAuth resource metadata for %s", mcp_server_url)
+    raise CannotConnect("OAuth resource metadata is invalid")
 
 
 def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:
