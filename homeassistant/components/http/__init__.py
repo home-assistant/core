@@ -174,7 +174,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Created only after the fallback chain succeeded: if setup fails above,
     # an already running task would be left behind unawaited.
-    source_ip_task = create_eager_task(async_get_source_ip(hass))
+    source_ip_task = create_eager_task(
+        async_get_source_ip(hass, allow_ipv6_fallback=True)
+    )
 
     async def stop_server(event: Event) -> None:
         """Stop the server."""

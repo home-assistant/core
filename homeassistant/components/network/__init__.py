@@ -9,6 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.util import package
+from homeassistant.util.network import is_ipv6_address
 
 from . import util
 from .const import (
@@ -17,6 +18,7 @@ from .const import (
     LOOPBACK_TARGET_IP,
     MDNS_TARGET_IP,
     PUBLIC_TARGET_IP,
+    PUBLIC_TARGET_IPV6,
 )
 from .models import Adapter
 from .network import Network, async_get_loaded_network, async_get_network
@@ -52,14 +54,55 @@ def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
 
 
 async def async_get_source_ip(
-    hass: HomeAssistant, target_ip: str | UndefinedType = UNDEFINED
+    hass: HomeAssistant,
+    target_ip: str | UndefinedType = UNDEFINED,
+    *,
+    allow_ipv6_fallback: bool = False,
 ) -> str:
-    """Get the source ip for a target ip."""
+    """Get the source IP for a target, defaulting to IPv4.
+
+    With no target, allow_ipv6_fallback permits IPv6 when no enabled non-loopback
+    IPv4 address is available. Explicit IPv6 targets always use IPv6.
+    """
     adapters = await async_get_adapters(hass)
-    all_ipv4s = []
-    for adapter in adapters:
-        if adapter["enabled"] and (ipv4s := adapter["ipv4"]):
-            all_ipv4s.extend([ipv4["address"] for ipv4 in ipv4s])
+    sources = async_get_enabled_source_ips_from_adapters(adapters)
+    all_ipv4s = [str(ip) for ip in sources if isinstance(ip, IPv4Address)]
+
+    ipv6_target = (
+        IPv6Address(target_ip)
+        if target_ip is not UNDEFINED and is_ipv6_address(target_ip)
+        else None
+    )
+    if ipv6_target is not None or (
+        target_ip is UNDEFINED
+        and allow_ipv6_fallback
+        and not any(
+            isinstance(ip, IPv4Address) and not ip.is_loopback for ip in sources
+        )
+    ):
+        destination = ipv6_target or IPv6Address(PUBLIC_TARGET_IPV6)
+        if destination.is_link_local:
+            sources = [
+                ip
+                for adapter in adapters
+                for ip in async_get_enabled_source_ips_from_adapters([adapter])
+                if isinstance(ip, IPv6Address)
+                and destination.scope_id in (adapter["name"], ip.scope_id)
+            ]
+        all_ipv6s = [
+            str(ip) if ip.is_link_local else str(IPv6Address(ip.packed))
+            for ip in sources
+            if isinstance(ip, IPv6Address)
+            and not ip.is_unspecified
+            and not ip.is_multicast
+            and ip.is_link_local == destination.is_link_local
+            and ip.is_loopback == destination.is_loopback
+        ]
+        if all_ipv6s:
+            source_ip = util.async_get_source_ip(str(destination))
+            return source_ip if source_ip in all_ipv6s else all_ipv6s[0]
+        if ipv6_target is not None:
+            raise HomeAssistantError("No enabled IPv6 source address for the target")
 
     if target_ip is UNDEFINED:
         source_ip = (
@@ -144,16 +187,20 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Add
 async def async_get_announce_addresses(hass: HomeAssistant) -> list[str]:
     """Return a list of IP addresses to announce/use via zeroconf/ssdp/etc.
 
-    The default ip address is always returned first if available.
+    The default IPv4 address is returned first when IPv4 is enabled.
     """
     adapters = await async_get_adapters(hass)
     addresses: list[str] = []
-    default_ip: str | None = None
+    has_ipv4 = False
     for adapter in adapters:
         if not adapter["enabled"]:
             continue
+        has_ipv4 = has_ipv4 or bool(adapter["ipv4"])
         addresses.extend(str(IPv4Address(ips["address"])) for ips in adapter["ipv4"])
         addresses.extend(str(IPv6Address(ips["address"])) for ips in adapter["ipv6"])
+
+    if not has_ipv4:
+        return addresses
 
     # Puts the default IPv4 address first in the list to preserve compatibility,
     # because some mDNS implementations ignores anything but the first announced

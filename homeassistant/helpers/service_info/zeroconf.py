@@ -14,21 +14,20 @@ ATTR_PROPERTIES_ID: Final = "id"
 class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries.
 
-    The ip_address is the most recently updated address
-    that is not a link local or unspecified address.
+    The ip_address is the most recently updated eligible address in the
+    preferred family. IPv4 is preferred unless Home Assistant only has
+    non-loopback IPv6 announcement addresses. Link local and unspecified
+    addresses are excluded. The other family is used as a fallback.
 
-    The ip_addresses are all addresses in order of most
-    recently updated to least recently updated.
+    The ip_addresses are all addresses, with IPv4 before IPv6 and each
+    family ordered from most recently updated to least recently updated.
 
     The host is the string representation of the ip_address.
 
     The addresses are the string representations of the
     ip_addresses.
 
-    It is recommended to use the ip_address to determine
-    the address to connect to as it will be the most
-    recently updated address that is not a link local
-    or unspecified address.
+    Use ip_address to determine the address to connect to.
     """
 
     ip_address: IPv4Address | IPv6Address

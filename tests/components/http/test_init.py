@@ -15,6 +15,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+import ifaddr
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
@@ -41,7 +42,7 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
-from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
@@ -144,6 +145,36 @@ def _supervisor_default_config() -> Iterator[None]:
         ),
     ):
         yield
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        pytest.param("fd12:3456::10", id="unique_local"),
+        pytest.param("2001:4860::10", id="global"),
+    ],
+)
+async def test_ipv6_only_source_ip(hass: HomeAssistant, address: str) -> None:
+    """Use IPv6 for the automatic HTTP URL without requiring an internet route."""
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[
+                ifaddr.Adapter(
+                    "eth0", "eth0", [ifaddr.IP((address, 0, 0), 64, "eth0")], index=2
+                )
+            ],
+        ),
+        patch(
+            "homeassistant.components.network.util.async_get_source_ip",
+            side_effect={"127.0.0.1": "127.0.0.1"}.get,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    assert hass.config.api is not None
+    assert hass.config.api.local_ip == address
+    assert get_url(hass, allow_external=False) == f"http://[{address}]:8123"
 
 
 async def _setup_http_with_onboarding(
