@@ -58,7 +58,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from . import KnxEntityGenerator
+from . import KnxEntityGenerator, KnxSuggestionGetter
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
@@ -509,6 +509,28 @@ async def create_ui_entity(
         return entity
 
     return _create_ui_entity
+
+
+@pytest.fixture
+async def get_entity_suggestions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> KnxSuggestionGetter:
+    """Return a helper to query entity suggestions via WS.
+
+    The KNX integration must be set up before using the helper.
+    """
+    ws_client = await hass_ws_client(hass)
+
+    async def _get_entity_suggestions(**filters: Any) -> dict[str, Any]:
+        """Return the result of `knx/get_entity_suggestions` with given filters."""
+        await ws_client.send_json_auto_id(
+            {"type": "knx/get_entity_suggestions"} | filters
+        )
+        res = await ws_client.receive_json()
+        assert res["success"], res
+        return res["result"]
+
+    return _get_entity_suggestions
 
 
 @pytest.fixture(autouse=True)
