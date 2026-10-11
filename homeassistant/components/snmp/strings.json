@@ -1,0 +1,153 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "credentials_required": "SNMPv3 credentials cannot be imported from YAML"
+    },
+    "error": {
+      "auth_key_required_for_auth_protocol": "Authentication key is required when an authentication protocol is selected (SNMP v3)",
+      "auth_key_required_for_priv": "Authentication key is required when using a privacy key (SNMP v3)",
+      "auth_protocol_required_for_auth_key": "Authentication protocol is required when an authentication key is set (SNMP v3)",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "priv_key_required_for_priv_protocol": "Privacy key is required when a privacy protocol is selected (SNMP v3)",
+      "priv_protocol_required_for_priv_key": "Privacy protocol is required when a privacy key is set (SNMP v3)",
+      "snmp_timeout": "SNMP request timed out",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "usm_wrong_digests": "Invalid authentication credentials or protocols"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "version": "SNMP version"
+        },
+        "data_description": {
+          "host": "Please make sure this device has a static IP or DHCP reservation.",
+          "port": "The SNMP port of the device, 161 by default.",
+          "version": "The SNMP version of the device. SNMPv1 and v2c authenticate with a community string, SNMPv3 with a user name."
+        },
+        "title": "Reconfigure the SNMP device"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "version": "SNMP version"
+        },
+        "data_description": {
+          "host": "Please make sure this device has a static IP or DHCP reservation.",
+          "port": "The SNMP port of the device, 161 by default.",
+          "version": "The SNMP version of the device. SNMPv1 and v2c authenticate with a community string, SNMPv3 with a user name."
+        }
+      },
+      "v1_v2c": {
+        "data": {
+          "community": "Community string"
+        },
+        "data_description": {
+          "community": "The community string of the device, usually set to `public` with read-only access."
+        },
+        "title": "v1/v2c Authentication"
+      },
+      "v3": {
+        "data": {
+          "auth_key": "Authentication key",
+          "auth_protocol": "Authentication protocol",
+          "context_name": "Context name",
+          "priv_key": "Privacy key",
+          "priv_protocol": "Privacy protocol",
+          "username": "Username"
+        },
+        "data_description": {
+          "auth_key": "The authentication key of the user, which proves who is sending the request.",
+          "auth_protocol": "The authentication protocol, which has to be set together with the authentication key.",
+          "context_name": "The context name to read from, only needed when the device is divided into contexts.",
+          "priv_key": "The privacy key of the user, which encrypts the requests.",
+          "priv_protocol": "The privacy protocol, which has to be set together with the privacy key. Privacy requires authentication.",
+          "username": "The SNMPv3 user name configured on the device."
+        },
+        "title": "v3 Authentication"
+      }
+    }
+  },
+  "config_subentries": {
+    "device_tracker": {
+      "abort": {
+        "already_configured": "A device tracker is already configured for this device"
+      },
+      "entry_type": "Device tracker",
+      "error": {
+        "invalid_oid": "The provided OID is invalid"
+      },
+      "initiate_flow": {
+        "user": "Add device tracker"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "baseoid": "Base OID",
+            "interval_seconds": "Update interval"
+          },
+          "data_description": {
+            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2).",
+            "interval_seconds": "How often the device is polled, in seconds."
+          },
+          "title": "Configure device tracker"
+        },
+        "user": {
+          "data": {
+            "baseoid": "Base OID",
+            "interval_seconds": "Update interval"
+          },
+          "data_description": {
+            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2).",
+            "interval_seconds": "How often the device is polled, in seconds."
+          },
+          "title": "Configure device tracker"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_credentials_required": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated. Your configuration uses SNMPv3 credentials, which cannot be imported automatically.\n\nSet up the integration through the UI with your SNMPv3 credentials, then remove configuration from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration cannot be imported"
+    },
+    "entity_id_changed": {
+      "description": "The SNMP device tracker for `{mac}` could not keep its entity id `{entity_id}` because it is already in use, so it is now `{new_entity_id}`.\n\nUpdate the automations and scripts that refer to `{entity_id}`.",
+      "title": "SNMP device tracker entity id changed"
+    }
+  },
+  "selector": {
+    "auth_protocol": {
+      "options": {
+        "hmac-md5": "HMAC-MD5",
+        "hmac-sha": "HMAC-SHA",
+        "hmac128-sha224": "HMAC-128-SHA-224",
+        "hmac192-sha256": "HMAC-192-SHA-256",
+        "hmac256-sha384": "HMAC-256-SHA-384",
+        "hmac384-sha512": "HMAC-384-SHA-512",
+        "none": "None"
+      }
+    },
+    "priv_protocol": {
+      "options": {
+        "3des-ede": "3DES-EDE",
+        "aes-cfb-128": "AES-128",
+        "aes-cfb-192": "AES-192",
+        "aes-cfb-256": "AES-256",
+        "des": "DES",
+        "none": "None"
+      }
+    },
+    "version": {
+      "options": {
+        "1": "SNMP v1",
+        "2c": "SNMP v2c",
+        "3": "SNMP v3"
+      }
+    }
+  }
+}

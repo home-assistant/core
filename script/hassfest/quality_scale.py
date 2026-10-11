@@ -813,7 +813,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smhi",
     "sms",
     "snapcast",
-    "snmp",
     "snooz",
     "solaredge",
     "solax",
