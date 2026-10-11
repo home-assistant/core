@@ -21,6 +21,7 @@ from homeassistant.helpers.json import (
     JSONEncoder as DefaultHASSJSONEncoder,
     cached_json_bytes,
     cached_json_fragment,
+    cached_json_fragment_sorted,
     find_paths_unserializable_data,
     json_bytes,
     json_bytes_sorted,
@@ -236,10 +237,19 @@ def test_cached_json_bytes() -> None:
     )
 
 
+def test_cached_json_fragment_sorted() -> None:
+    """Test cached_json_fragment_sorted serializes with sorted keys."""
+    data = {"c": 3, "a": 1, "b": 2}
+
+    fragment = cached_json_fragment_sorted(data)
+    assert isinstance(fragment, json_fragment)
+    assert json_dumps([fragment]) == '[{"a":1,"b":2,"c":3}]'
+
+
 @pytest.mark.parametrize(
     "cached_serializer",
-    [cached_json_bytes, cached_json_fragment],
-    ids=["cached_json_bytes", "cached_json_fragment"],
+    [cached_json_bytes, cached_json_fragment, cached_json_fragment_sorted],
+    ids=["cached_json_bytes", "cached_json_fragment", "cached_json_fragment_sorted"],
 )
 def test_cached_json_helpers_trim_buffer(
     cached_serializer: Callable[[Any], object],

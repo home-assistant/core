@@ -127,6 +127,7 @@
           "radius": "RADIUS",
           "real_browser": "HTTP(s) - Browser engine",
           "redis": "Redis",
+          "sftp": "SFTP",
           "sip_options": "SIP OPTIONS Ping",
           "smtp": "SMTP",
           "snmp": "SNMP",

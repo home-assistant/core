@@ -1,9 +1,11 @@
 """Support for Sofar binary sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import override
 
+from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import PowerControlFlags
 from sofar_modbus.modern.faults import FaultCategory
 
@@ -60,7 +62,7 @@ class SofarFlagBinarySensorDescription(
 ):
     """Describe a Sofar binary sensor backed by one flags-register bit."""
 
-    attribute: str
+    flags_fn: Callable[[SofarInverter], IntFlag | None]
     flag: IntFlag
 
 
@@ -71,7 +73,7 @@ FLAG_SENSOR_DESCRIPTIONS: tuple[SofarFlagBinarySensorDescription, ...] = (
         translation_key="active_power_limit_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        attribute="power_control",
+        flags_fn=lambda device: device.active_power_control.power_control,
         flag=PowerControlFlags.ACTIVE_POWER,
     ),
 )
@@ -82,7 +84,7 @@ async def async_setup_entry(
     entry: SofarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Sofar Inverter Modbus binary sensor platform."""
+    """Set up the Sofar binary sensor platform."""
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
     async_add_entities(
@@ -105,10 +107,9 @@ class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):
     @property
     @override
     def is_on(self) -> bool:
-        component = getattr(self.coordinator.device, self.entity_description.component)
         return any(
             fault.category is self.entity_description.category
-            for fault in component.active_faults
+            for fault in self.coordinator.device.state.active_faults
         )
 
 
@@ -119,7 +120,6 @@ class SofarFlagBinarySensor(SofarEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        flags = getattr(component, self.entity_description.attribute)
-        return self.entity_description.flag in flags
+    def is_on(self) -> bool | None:
+        flags = self.entity_description.flags_fn(self.coordinator.device)
+        return None if flags is None else self.entity_description.flag in flags

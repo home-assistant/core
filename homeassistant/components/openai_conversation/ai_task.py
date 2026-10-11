@@ -91,6 +91,7 @@ class OpenAITaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,
@@ -140,7 +141,7 @@ class OpenAITaskEntity(
         else:
             mime_type = "image/png"
 
-        if hasattr(image_call, "size") and (size := image_call.size):
+        if size := image_call.size:
             width, height = tuple(size.split("x"))
         else:
             width, height = None, None

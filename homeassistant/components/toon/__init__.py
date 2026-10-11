@@ -1,6 +1,6 @@
 """Support for Toon van Eneco devices."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -11,6 +11,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -30,22 +31,22 @@ PLATFORMS = [
 ]
 
 # Validation of the user's configuration
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.deprecated(CONF_SCAN_INTERVAL),
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                    vol.Optional(
+                    probatio.Required(CONF_CLIENT_ID): cv.string,
+                    probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
+                    probatio.Optional(
                         CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                     ): cv.positive_time_period,
                 }
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -79,7 +80,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data={CONF_MIGRATE: entry.entry_id},
             )
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_required",
+        )
 
     if entry.version == 2:
         # 2 -> 2.2: Unique ID from integer to string

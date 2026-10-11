@@ -34,7 +34,6 @@ TRYDAN_SENSORS = (
     ),
     V2CBinarySensorEntityDescription(
         key="charging",
-        translation_key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value_fn=lambda evse: evse.charging,
     ),

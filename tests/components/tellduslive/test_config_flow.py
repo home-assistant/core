@@ -1,6 +1,6 @@
 """Tests for the TelldusLive config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -208,7 +208,7 @@ async def test_step_auth(hass: HomeAssistant, mock_tellduslive) -> None:
 
 @pytest.mark.parametrize("authorize", [False])
 async def test_wrong_auth_flow_implementation(
-    hass: HomeAssistant, mock_tellduslive
+    hass: HomeAssistant, mock_tellduslive: tuple[MagicMock, MagicMock]
 ) -> None:
     """Test wrong auth."""
     flow = init_config_flow(hass)
@@ -218,6 +218,11 @@ async def test_wrong_auth_flow_implementation(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"]["base"] == "invalid_auth"
+
+    session_cls, _ = mock_tellduslive
+    session_cls.return_value.authorize.return_value = True
+    result = await flow.async_step_auth("")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_not_pick_host_if_only_one(hass: HomeAssistant, mock_tellduslive) -> None:

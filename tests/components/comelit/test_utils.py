@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import CLIMATE, WATT
 from aiocomelit.exceptions import (
     CannotAuthenticate,
@@ -53,7 +53,7 @@ async def test_device_remove_stale(
     assert state.attributes[ATTR_HUMIDITY] == 50.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,

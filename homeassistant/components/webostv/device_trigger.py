@@ -1,30 +1,35 @@
 """Provides device automations for control of LG webOS TV."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    PluggableAction,
+    TriggerActionType,
+    TriggerInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, trigger
+from . import DOMAIN
 from .helpers import async_get_device_entry_by_device_id
 from .triggers.turn_on import (
     PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
+    async_get_turn_on_description,
     async_get_turn_on_trigger,
 )
 
 TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 
@@ -80,15 +85,15 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if (trigger_type := config[CONF_TYPE]) == TURN_ON_PLATFORM_TYPE:
-        trigger_config = {
+        device_id = config[CONF_DEVICE_ID]
+        variables = {
+            **trigger_info["trigger_data"],
             CONF_PLATFORM: trigger_type,
-            CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+            ATTR_DEVICE_ID: device_id,
+            "description": async_get_turn_on_description(hass, device_id),
         }
-        trigger_config = await trigger.async_validate_trigger_config(
-            hass, trigger_config
-        )
-        return await trigger.async_attach_trigger(
-            hass, trigger_config, action, trigger_info
+        return PluggableAction.async_attach_trigger(
+            hass, async_get_turn_on_trigger(device_id), action, {"trigger": variables}
         )
 
     raise HomeAssistantError(

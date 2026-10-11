@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockModule, mock_integration
+
 
 @pytest.fixture(autouse=True)
 def _disable_translations_once(disable_translations_once: None) -> None:
@@ -807,3 +809,182 @@ async def test_get_translations_still_has_title_without_translations_files(
     assert translations == {
         "component.component1.title": "Component 1",
     }
+
+
+async def test_english_cache_populated_for_partial_batch_overlap(
+    hass: HomeAssistant,
+) -> None:
+    """Test English caching when a non-English batch partially overlaps it."""
+    integration_a = Mock(file_path=pathlib.Path(__file__))
+    integration_a.name = "Component A"
+    integration_b = Mock(file_path=pathlib.Path(__file__))
+    integration_b.name = "Component B"
+
+    component_strings = {
+        "comp_a": {
+            "en": {"issues": {"broken": {"title": "A is broken"}}},
+            "de": {"issues": {"broken": {"title": "A kaputt"}}},
+        },
+        "comp_b": {
+            "en": {"issues": {"detached": {"title": "B detached"}}},
+            "de": {"issues": {"detached": {"title": "B abgetrennt"}}},
+        },
+    }
+
+    def mock_load_translation_files(
+        files: dict[str, dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
+        """Return language-keyed strings for the requested components."""
+        return {
+            language: {
+                component: component_strings[component][language]
+                for component in components
+            }
+            for language, components in files.items()
+        }
+
+    cache = translation._async_get_translations_cache(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            mock_load_translation_files,
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"comp_a": integration_a, "comp_b": integration_b},
+        ),
+    ):
+        # Bootstrap: comp_a is set up (and cached in English) first.
+        await cache.async_load("en", {"comp_a"})
+        # Preload the full set in the real language; the batch overlaps comp_a.
+        await cache.async_load("de", {"comp_a", "comp_b"})
+
+    # comp_b's English strings were fetched during the "de" load and must be in
+    # the English cache even though comp_a was already cached in English.
+    assert translation.async_get_cached_translations(
+        hass, "en", "issues", "comp_b"
+    ) == {"component.comp_b.issues.detached.title": "B detached"}
+    # The already-cached component is unaffected.
+    assert translation.async_get_cached_translations(
+        hass, "en", "issues", "comp_a"
+    ) == {"component.comp_a.issues.broken.title": "A is broken"}
+    # The requested language keeps the localized strings on top of English.
+    assert translation.async_get_cached_translations(
+        hass, "de", "issues", "comp_b"
+    ) == {"component.comp_b.issues.detached.title": "B abgetrennt"}
+
+
+@pytest.mark.parametrize("language", ["en", "de"])
+@pytest.mark.parametrize("category", ["title", "entity_component"])
+async def test_invalidate_translations(
+    hass: HomeAssistant, language: str, category: str
+) -> None:
+    """Invalidation removes all categories and languages only for the domain."""
+    for locale in ("en", "de"):
+        await translation.async_get_translations(
+            hass, locale, "title", {"sensor", "light"}
+        )
+    unrelated = translation.async_get_cached_translations(
+        hass, language, category, "light"
+    )
+    original = translation.async_get_cached_translations(
+        hass, language, category, "sensor"
+    )
+    assert original
+    assert unrelated
+
+    translation.async_invalidate_translations(hass, {"sensor"})
+
+    assert (
+        translation.async_get_cached_translations(hass, language, category, "sensor")
+        == {}
+    )
+    assert (
+        translation.async_get_cached_translations(hass, language, category, "light")
+        == unrelated
+    )
+    assert (
+        await translation.async_get_translations(hass, language, category, {"sensor"})
+        == original
+    )
+
+
+async def test_invalidate_translations_during_load(hass: HomeAssistant) -> None:
+    """An older load cannot restore invalidated strings or English fallbacks."""
+    started = asyncio.Event()
+    resume = asyncio.Event()
+
+    async def load_stale(*args: Any) -> dict[str, dict[str, Any]]:
+        started.set()
+        await resume.wait()
+        return {
+            "en": {"sensor": {"title": "Old"}, "light": {"title": "Light"}},
+            "de": {"sensor": {"title": "Alt"}, "light": {"title": "Licht"}},
+        }
+
+    with patch(
+        "homeassistant.helpers.translation._async_get_component_strings",
+        side_effect=load_stale,
+    ) as load:
+        task = hass.async_create_task(
+            translation.async_get_translations(hass, "de", "title", {"sensor", "light"})
+        )
+        await started.wait()
+        translation.async_invalidate_translations(hass, {"sensor"})
+        load.side_effect = None
+        load.return_value = {
+            "en": {"sensor": {"title": "New"}},
+            "de": {"sensor": {"title": "Neu"}},
+        }
+        resume.set()
+        assert await task == {
+            "component.sensor.title": "Neu",
+            "component.light.title": "Licht",
+        }
+        assert load.await_count == 2
+        assert load.call_args.args[2] == {"sensor"}
+
+    assert translation.async_get_cached_translations(hass, "en", "title", "sensor") == {
+        "component.sensor.title": "New"
+    }
+    assert translation.async_get_cached_translations(hass, "en", "title", "light") == {
+        "component.light.title": "Light"
+    }
+
+
+async def test_invalidate_translations_before_first_load(hass: HomeAssistant) -> None:
+    """Invalidating an empty cache leaves subsequent loading functional."""
+    translation.async_invalidate_translations(hass, {"sensor"})
+    assert await translation.async_get_translations(
+        hass, "en", "title", {"sensor"}
+    ) == {"component.sensor.title": "Sensor"}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected"),
+    [
+        ("sensor", {"component.sensor.title": "Sensor"}),
+        ("nonexisting", {}),
+    ],
+)
+async def test_invalidate_translations_after_custom_integration_removal(
+    hass: HomeAssistant, domain: str, expected: dict[str, str]
+) -> None:
+    """Removed custom integrations fall back to core translations when available."""
+    custom = mock_integration(
+        hass, MockModule(domain, partial_manifest={"name": "Custom"}), built_in=False
+    )
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {domain: custom}
+    assert await translation.async_get_translations(hass, "en", "title", {domain}) == {
+        f"component.{domain}.title": "Custom"
+    }
+
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
+    translation.async_invalidate_translations(hass, {domain})
+
+    assert (
+        await translation.async_get_translations(hass, "en", "title", {domain})
+        == expected
+    )
+    assert await loader.async_get_integration(hass, domain) is custom
