@@ -93,11 +93,14 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Fetch and parse events in a specific time frame."""
+        # Servers match all-day (DATE) events in UTC, so they may miss or add
+        # events near day boundaries in other time zones. Widen the query by a
+        # day on each side and filter the result below.
         vevent_list = cast(
             list[CalendarObjectResource],
             self.calendar.search(
-                start=start_date,
-                end=end_date,
+                start=start_date - timedelta(days=1),
+                end=end_date + timedelta(days=1),
                 event=True,
                 expand=True,
             ),
@@ -111,6 +114,13 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             if not self.is_matching(vevent, self.search):
                 continue
             if _is_cancelled(vevent):
+                continue
+            # Re-filter against the requested range, with all-day events
+            # starting and ending at local midnight.
+            if (
+                self.to_datetime(self.get_end_date(vevent)) <= start_date
+                or self.to_datetime(vevent.dtstart.value) >= end_date
+            ):
                 continue
             event_list.append(
                 CalendarEvent(
@@ -129,6 +139,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 )
             )
 
+        event_list.sort(key=lambda event: event.start_datetime_local)
         return event_list
 
     @override
