@@ -1043,7 +1043,7 @@ def test_has_update(
     update._attr_installed_version = installed_version
     update._attr_latest_version = latest_version
 
-    assert update.has_update() is expected
+    assert update.has_update is expected
 
 
 @pytest.mark.parametrize(
@@ -1054,9 +1054,10 @@ def test_has_update(
     ],
 )
 def test_custom_has_update(update_available: bool, expected_state: str) -> None:
-    """Test UpdateEntity with an overridden has_update method."""
+    """Test UpdateEntity with an overridden has_update property."""
 
     class MockUpdateEntity(UpdateEntity):
+        @property
         def has_update(self) -> bool:
             """Return whether an update is available."""
             return update_available
@@ -1084,7 +1085,7 @@ def test_custom_version_is_newer_incomparable() -> None:
     update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "awesome_update"
 
-    assert update.has_update() is True
+    assert update.has_update is True
     assert update.state == STATE_ON
 
 
@@ -1104,6 +1105,7 @@ def test_custom_has_update_state_precedence(
     """Test version state checks take precedence over custom availability."""
 
     class MockUpdateEntity(UpdateEntity):
+        @property
         def has_update(self) -> bool:
             """Fail if update availability is checked."""
             raise AssertionError
