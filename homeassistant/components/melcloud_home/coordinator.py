@@ -29,6 +29,10 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=60)
 TELEMETRY_UPDATE_INTERVAL = timedelta(minutes=15)
 
+# ATA telemetry reports Wh, ATW telemetry kWh per interval
+ATA_ENERGY_MEASURE = "cumulative_energy_consumed_since_last_upload"
+ATW_ENERGY_MEASURE = "interval_energy_consumed"
+
 
 @dataclass(kw_only=True, frozen=True)
 class MelCloudHomeRuntimeData:
@@ -215,19 +219,29 @@ class MelCloudHomeTelemetryCoordinator(
         return result
 
     async def _async_get_energy(
-        self, unit_id: str, start_of_month: datetime, now: datetime
+        self,
+        unit_id: str,
+        start_of_month: datetime,
+        now: datetime,
+        *,
+        measure: str = ATA_ENERGY_MEASURE,
+        wh_per_unit: float = 1,
     ) -> float | None:
-        """Fetch energy telemetry for a unit without failing the whole update."""
+        """Fetch energy telemetry in Wh for a unit without failing the whole update."""
         energy = await self._async_fetch_telemetry(
             "Energy telemetry",
             unit_id,
             self.client.get_energy_telemetry(
-                unit_id, from_dt=start_of_month, to_dt=now, interval="Day"
+                unit_id,
+                from_dt=start_of_month,
+                to_dt=now,
+                interval="Day",
+                measure=measure,
             ),
         )
         if energy is None:
             return None
-        return sum(float(e.value) for e in energy)
+        return sum(float(e.value) for e in energy) * wh_per_unit
 
     async def _async_get_outdoor_temperature(self, unit_id: str) -> float | None:
         """Fetch outdoor temperature for a unit without failing the whole update."""
@@ -293,7 +307,11 @@ class MelCloudHomeTelemetryCoordinator(
                     and atw_unit.capabilities.has_energy_consumed_meter
                 ):
                     energy_coroutines[atw_unit.id] = self._async_get_energy(
-                        atw_unit.id, start_of_month, now
+                        atw_unit.id,
+                        start_of_month,
+                        now,
+                        measure=ATW_ENERGY_MEASURE,
+                        wh_per_unit=1000,
                     )
 
         energy_values, outdoor_temperature_values = await asyncio.gather(
