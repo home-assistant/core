@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final, override
 
-from probatio import All, Length, Optional, Required, Schema
+from probatio import All, Length, Match, Optional, Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import section
@@ -66,7 +66,10 @@ STEP_USER_DATA_SCHEMA = Schema(
             cv.string,
             Length(max=63),
             # See https://www.scaleway.com/en/docs/object-storage/faq/#is-there-a-limitation-on-the-bucket-name
-            cv.matches_regex(r"^[a-z\d\-.]+$"),
+            Match(
+                r"^[a-z\d\-.]+$",
+                "must consist of lowercase letters, digits, hyphens, and periods",
+            ),
         ),
         Optional(CONF_OBJECT_PREFIX, default=""): cv.string,
     }
