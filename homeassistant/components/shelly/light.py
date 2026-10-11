@@ -628,6 +628,7 @@ LIGHTS: Final = {
     "ledstrip": RpcEntityDescription(
         key="ledstrip",
         sub_key="on",
+        translation_key="ledstrip",
         entity_class=RpcShellyLedStrip,
     ),
 }
