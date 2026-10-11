@@ -10,8 +10,15 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_JOIN,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -398,3 +405,140 @@ async def test_unjoin_group_is_none(
             blocking=True,
         )
     mock_group_1.remove_client.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("service", "command"),
+    [
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_PLAY_PAUSE, "playPause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+    ],
+)
+async def test_stream_transport_controls(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_stream_1: AsyncMock,
+    service: str,
+    command: str,
+) -> None:
+    """Test transport controls are forwarded to the active Snapcast stream."""
+    mock_stream_1.properties = {
+        "canControl": True,
+        "canPlay": True,
+        "canPause": True,
+        "canGoNext": True,
+        "canGoPrevious": True,
+        "canSeek": False,
+        "playbackStatus": "playing",
+    }
+
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+        },
+        blocking=True,
+    )
+
+    mock_create_server.stream_control.assert_awaited_once_with(
+        mock_stream_1.identifier,
+        command,
+        {},
+    )
+
+
+async def test_stream_transport_supported_features(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_stream_1: AsyncMock,
+) -> None:
+    """Test transport capabilities come from the active Snapcast stream."""
+    mock_stream_1.properties = {
+        "canControl": True,
+        "canPlay": True,
+        "canPause": True,
+        "canGoNext": True,
+        "canGoPrevious": False,
+        "canSeek": False,
+        "playbackStatus": "playing",
+    }
+
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("media_player.test_client_1_snapcast_client")
+    assert state is not None
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+
+    assert features & MediaPlayerEntityFeature.PLAY
+    assert features & MediaPlayerEntityFeature.PAUSE
+    assert features & MediaPlayerEntityFeature.NEXT_TRACK
+    assert not features & MediaPlayerEntityFeature.PREVIOUS_TRACK
+    assert features & MediaPlayerEntityFeature.STOP
+    assert not features & MediaPlayerEntityFeature.SEEK
+
+
+async def test_stream_transport_not_supported_without_control(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_stream_1: AsyncMock,
+) -> None:
+    """Test transport features are hidden for an uncontrollable stream."""
+    mock_stream_1.properties = {
+        "canControl": False,
+        "canPlay": True,
+        "canPause": True,
+        "canGoNext": True,
+        "canGoPrevious": True,
+        "playbackStatus": "playing",
+    }
+
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("media_player.test_client_1_snapcast_client")
+    assert state is not None
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+
+    assert not features & MediaPlayerEntityFeature.PLAY
+    assert not features & MediaPlayerEntityFeature.PAUSE
+    assert not features & MediaPlayerEntityFeature.NEXT_TRACK
+    assert not features & MediaPlayerEntityFeature.PREVIOUS_TRACK
+    assert not features & MediaPlayerEntityFeature.STOP
+
+
+async def test_stream_playback_status_paused(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_stream_1: AsyncMock,
+) -> None:
+    """Test playback status from the stream is reflected by the client."""
+    mock_stream_1.properties = {
+        "canControl": True,
+        "canPlay": True,
+        "canPause": True,
+        "playbackStatus": "paused",
+    }
+
+    with patch("secrets.token_hex", return_value="mock_token"):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("media_player.test_client_1_snapcast_client")
+    assert state is not None
+    assert state.state == MediaPlayerState.PAUSED
