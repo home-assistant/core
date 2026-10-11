@@ -1,5 +1,7 @@
 """Test for the SmartThings switch platform."""
 
+import asyncio
+from typing import Any
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command
@@ -21,7 +23,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -34,7 +36,7 @@ from . import (
     trigger_update,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_all_entities(
@@ -309,6 +311,49 @@ async def test_ac_ocf_display_lighting_state_update(
         {"href": "/temperature/desired/0"},
     )
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+async def test_ac_ocf_display_lighting_restore_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test display lighting restores an off state before the device reports."""
+    entity_id = "switch.clim_salon_display_lighting"
+    mock_restore_cache(hass, (State(entity_id, STATE_OFF),))
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+async def test_ac_ocf_display_lighting_request_cancelled_on_unload(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the startup state request is cancelled when the entry unloads."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def _hang(*args: Any, **kwargs: Any) -> None:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    devices.execute_device_command.side_effect = _hang
+    await setup_integration(hass, mock_config_entry)
+    await started.wait()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert cancelled.is_set()
 
 
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])

@@ -12,7 +12,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -483,10 +483,16 @@ class SmartThingsOcfDisplayLightingSwitch(
             # The display is lit by default when the unit is powered
             self._attr_is_on = True
         self.async_write_ha_state()
-        self.hass.async_create_background_task(
+        task = self.hass.async_create_background_task(
             self._async_request_state(),
             f"smartthings_ocf_display_lighting_{self.device.device.device_id}",
         )
+
+        @callback
+        def _cancel_state_request() -> None:
+            task.cancel()
+
+        self.async_on_remove(_cancel_state_request)
 
     async def _async_request_state(self) -> None:
         """Ask the device to report the OCF mode resource."""
