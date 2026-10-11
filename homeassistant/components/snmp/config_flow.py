@@ -213,6 +213,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             self._user_data = user_input
+            self._abort_if_host_is_configured(user_input)
             return await self._async_step_credentials()
 
         return self.async_show_form(
@@ -239,6 +240,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._user_data = user_input
+            self._abort_if_host_is_configured(user_input)
             return await self._async_step_credentials()
 
         return self.async_show_form(
@@ -357,6 +359,17 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 and entry.data.get(CONF_CONTEXT_NAME) == data.get(CONF_CONTEXT_NAME)
             ):
                 raise AbortFlow("already_configured")
+
+    @callback
+    def _abort_if_host_is_configured(self, data: dict[str, Any]) -> None:
+        """Abort before asking for credentials when the device is known.
+
+        Two SNMPv3 devices can share a host and port and differ only by their
+        context name, which is collected together with the credentials, so v3
+        is checked once it is known as well.
+        """
+        if data.get(CONF_VERSION) != "3":
+            self._abort_if_already_configured(data)
 
     async def _async_finish(
         self,

@@ -243,14 +243,6 @@ async def test_user_flow_already_configured(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "v1_v2c"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"community": "public"},
-    )
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -1110,10 +1102,6 @@ async def test_reconfigure_flow_aborts_on_duplicate_device(
         result["flow_id"], {"host": "192.168.1.2", "version": "1"}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"community": "public"}
-    )
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "192.168.1.1"
@@ -1154,3 +1142,32 @@ async def test_reauth_flow_updates_credentials(hass: HomeAssistant) -> None:
     assert result["reason"] == "reauth_successful"
     assert entry.data["auth_key"] == "new-key"
     assert entry.data["host"] == "192.168.1.1"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) -> None:
+    """Test that a v3 flow is not aborted before its context name is known."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "user", "context_name": "other-context"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["context_name"] == "other-context"
