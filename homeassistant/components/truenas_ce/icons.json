@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "system_cache_size_arc_value": {
+        "default": "mdi:memory"
+      },
+      "system_cpu_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "system_cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "system_load_longterm": {
+        "default": "mdi:gauge"
+      },
+      "system_load_midterm": {
+        "default": "mdi:gauge"
+      },
+      "system_load_shortterm": {
+        "default": "mdi:gauge"
+      },
+      "system_memory_free": {
+        "default": "mdi:memory"
+      },
+      "system_memory_total": {
+        "default": "mdi:memory"
+      },
+      "system_memory_usage": {
+        "default": "mdi:memory"
+      },
+      "system_uptime": {
+        "default": "mdi:clock-outline"
+      },
+      "traffic_rx": {
+        "default": "mdi:download-network-outline"
+      },
+      "traffic_tx": {
+        "default": "mdi:upload-network-outline"
+      }
+    }
+  }
+}
