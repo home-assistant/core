@@ -11,6 +11,7 @@ from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
@@ -311,6 +312,20 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "update_needed"}
 
+    reolink_host.get_host_data.side_effect = LoginAccountDeviceError("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "account_device"}
+
     reolink_host.valid_password.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -505,6 +520,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_dhcp_ip_update_aborted_if_wrong_mac(

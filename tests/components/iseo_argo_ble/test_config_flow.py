@@ -237,6 +237,12 @@ async def test_gw_register_connection_error(
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
+    mock_iseo_client.setup_gateway.side_effect = None
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("_patch_identity")
 async def test_gw_register_auth_error(
@@ -265,8 +271,14 @@ async def test_gw_register_auth_error(
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "auth_failed"}
 
+    mock_iseo_client.setup_gateway.side_effect = None
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
-@pytest.mark.usefixtures("_patch_identity")
+
+@pytest.mark.usefixtures("_patch_identity", "mock_iseo_client")
 async def test_gw_register_no_ble_device(
     hass: HomeAssistant,
 ) -> None:
@@ -293,6 +305,11 @@ async def test_gw_register_no_ble_device(
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("_patch_identity")
@@ -321,6 +338,12 @@ async def test_gw_register_unknown_error(
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "unknown"}
+
+    mock_iseo_client.setup_gateway.side_effect = None
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discover_locks(hass: HomeAssistant) -> None:

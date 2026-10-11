@@ -73,6 +73,7 @@ async def help_setup_mock_config_entry(
 async def test_fetching_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -101,8 +102,8 @@ async def test_fetching_url(
     body = await resp.read()
     assert body == fakeimgbytes_png
 
-    # sleep .1 seconds to make cached image expire
-    await asyncio.sleep(0.1)
+    # advance time by .1 seconds to make cached image expire
+    freezer.tick(timedelta(seconds=0.1))
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 2
@@ -110,8 +111,8 @@ async def test_fetching_url(
     # If the template renders to an invalid URL we return the last image from cache
     hass.states.async_set("sensor.temp", "invalid url")
 
-    # sleep another .1 seconds to make cached image expire
-    await asyncio.sleep(0.1)
+    # advance time by another .1 seconds to make cached image expire
+    freezer.tick(timedelta(seconds=0.1))
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 2
@@ -121,7 +122,7 @@ async def test_fetching_url(
 
     # Restore a valid URL
     hass.states.async_set("sensor.temp", "http://example.com/1a")
-    await asyncio.sleep(0.1)
+    freezer.tick(timedelta(seconds=0.1))
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 3
@@ -548,6 +549,7 @@ async def test_camera_content_type(
 async def test_timeout_cancelled(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     fakeimgbytes_jpg: bytes,
 ) -> None:
@@ -589,8 +591,8 @@ async def test_timeout_cancelled(
     ]
 
     for total_calls in range(2, 4):
-        # sleep .1 seconds to make cached image expire
-        await asyncio.sleep(0.1)
+        # advance time by .1 seconds to make cached image expire
+        freezer.tick(timedelta(seconds=0.1))
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK

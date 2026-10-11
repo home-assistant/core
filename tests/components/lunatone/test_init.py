@@ -14,11 +14,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     BASE_URL,
-    INFO_DATA,
     PRODUCT_NAME,
     SERIAL_NUMBER,
     UUID,
     VERSION,
+    build_info_data,
     setup_integration,
 )
 
@@ -234,8 +234,9 @@ async def test_config_entry_setup_error_no_info_data(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone config entry setup error due to missing info data."""
+    info_data = build_info_data()
     type(mock_lunatone_info).data = PropertyMock(
-        side_effect=[INFO_DATA, INFO_DATA, None]
+        side_effect=[info_data, info_data, None]
     )
 
     await setup_integration(hass, mock_config_entry)

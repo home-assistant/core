@@ -44,7 +44,7 @@ class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.channel_data is None:
+        if not super().available or self.channel_data is None:
             return False
         if (state := self.channel_data.get("state")) is None:
             return False

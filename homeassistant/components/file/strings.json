@@ -60,9 +60,6 @@
     },
     "unsupported_file_encoding": {
       "message": "Cannot read {filename}, unsupported file encoding {encoding}."
-    },
-    "write_access_failed": {
-      "message": "Write access to {filename} failed: {exc}."
     }
   },
   "options": {

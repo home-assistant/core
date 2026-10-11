@@ -1,5 +1,4 @@
 """The Hisense AEH-W4A1 integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import ipaddress
 import logging
@@ -16,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_HISENSE_AEHW4A1_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hisense AEH-W4A1 integration."""
     conf = config.get(DOMAIN)
-    hass.data[DOMAIN] = {}
+    hass.data[DATA_HISENSE_AEHW4A1_CONFIG] = {}
 
     if conf is not None:
         devices = conf[CONF_IP_ADDRESS][:]
@@ -64,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 conf[CONF_IP_ADDRESS].remove(device)
                 _LOGGER.warning("Hisense AEH-W4A1 at %s not found", device)
         if conf[CONF_IP_ADDRESS]:
-            hass.data[DOMAIN] = conf
+            hass.data[DATA_HISENSE_AEHW4A1_CONFIG] = conf
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,

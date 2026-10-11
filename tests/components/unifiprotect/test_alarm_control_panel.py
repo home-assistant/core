@@ -360,6 +360,7 @@ async def test_public_only_nvr_websocket_updates_alarm(
     msg = Mock()
     msg.new_obj = ufp_public_only.api.public_bootstrap.nvr  # model == NVR
     msg.old_obj = None
+    msg.changed_data = {}
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
