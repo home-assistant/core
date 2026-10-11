@@ -1129,6 +1129,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/marantz_infrared/ @balloob
 /homeassistant/components/marketplace/ @home-assistant/core
 /tests/components/marketplace/ @home-assistant/core
+/homeassistant/components/marstek/ @MarstekEnergy
+/tests/components/marstek/ @MarstekEnergy
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah

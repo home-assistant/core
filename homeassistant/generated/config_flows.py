@@ -474,6 +474,7 @@ FLOWS = {
         "mailgun",
         "marantz_infrared",
         "marketplace",
+        "marstek",
         "mastodon",
         "matter",
         "mcp",
