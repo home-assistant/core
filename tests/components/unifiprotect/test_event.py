@@ -2308,6 +2308,57 @@ async def test_detection_event_removed_change_ignored(
     assert events == []
 
 
+async def test_doorbell_ring_follows_readopted_camera(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Hybrid ring events follow a camera re-adopted under a new id."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
+    )
+
+    readopted = doorbell.model_copy(update={"id": "readopted-doorbell"})
+    ufp.api.bootstrap.cameras = {readopted.id: readopted}
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = readopted
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    for event_id, device_id in (("ring-new", readopted.id), ("ring-old", doorbell.id)):
+        ufp.events_msg(
+            ProtectEvent(
+                id=event_id,
+                type=EventType.RING,
+                channel=ProtectEventChannel.DETECTION,
+                device_id=device_id,
+                device_mac=doorbell.mac,
+                start=fixed_now - timedelta(seconds=1),
+                end=fixed_now,
+            ),
+            EventChange.STARTED,
+        )
+    await hass.async_block_till_done()
+    unsub()
+
+    # The old id no longer belongs to this camera.
+    assert [event.data["new_state"].attributes[ATTR_EVENT_ID] for event in events] == [
+        "ring-new"
+    ]
+
+
 async def test_doorbell_ring_dedup_across_dispatches(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
