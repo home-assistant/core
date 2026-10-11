@@ -13,8 +13,11 @@ from homeassistant.components.blink.coordinator import SCAN_INTERVAL
 from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 CAMERA_NAME = "Camera 1"
 FILENAME = "blah"
@@ -174,3 +177,43 @@ async def test_migrate_v3_to_v4(
     assert "hardware_id" in entry.data
     assert "device_id" not in entry.data
     assert entry.data["hardware_id"] == "Home Assistant"
+
+
+@pytest.mark.usefixtures("mock_blink_auth_api")
+@pytest.mark.parametrize(
+    ("serial", "removed"),
+    [
+        pytest.param("12345", False, id="camera_on_account"),
+        pytest.param("54321", False, id="sync_module_on_account"),
+        pytest.param("67890", True, id="camera_removed_from_account"),
+    ],
+)
+async def test_remove_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_blink_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    serial: str,
+    removed: bool,
+) -> None:
+    """Test only devices no longer on the Blink account can be removed."""
+    mock_blink_api.sync = {
+        "Sync module": MagicMock(
+            serial="54321", version="1.0", attributes={}, cameras={}, arm=True
+        )
+    }
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, serial)},
+    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert response["success"] is removed
+    assert (device_registry.async_get(device_entry.id) is None) is removed
