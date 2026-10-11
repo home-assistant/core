@@ -384,8 +384,8 @@
     'labels': set({
     }),
     'manufacturer': 'Ubiquiti',
-    'model': 'UP-AlarmHub',
-    'model_id': 'UP-AlarmHub',
+    'model': 'Alarm Hub',
+    'model_id': None,
     'name': 'Alarm Hub',
     'name_by_user': None,
     'serial_number': None,

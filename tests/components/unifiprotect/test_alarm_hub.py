@@ -530,14 +530,24 @@ async def test_plain_link_station_added_at_runtime(
     assert hass.states.get("sensor.alarm_hub_battery_voltage") is None
 
 
+@pytest.mark.parametrize(
+    ("device_type", "model", "object_id"),
+    [
+        pytest.param(None, "Alarm Hub", "alarm_hub", id="no_type"),
+        pytest.param("UP-Hub-Test", "UP-Hub-Test", "up_hub_test", id="type"),
+    ],
+)
 async def test_alarm_hub_without_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     ufp: MockUFPFixture,
     alarm_hub: LinkStation,
+    device_type: str | None,
+    model: str,
+    object_id: str,
 ) -> None:
     """A hub without a name falls back to its model and MAC."""
-    unnamed = alarm_hub.model_copy(update={"name": None})
+    unnamed = alarm_hub.model_copy(update={"name": None, "device_type": device_type})
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = _make_public_bootstrap(unnamed)
 
@@ -547,9 +557,11 @@ async def test_alarm_hub_without_name(
         (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp.entry.entry_id
     )
     assert device is not None
-    assert device.name == f"UP-AlarmHub {ALARM_HUB_MAC}"
+    assert device.name == f"{model} {ALARM_HUB_MAC}"
+    assert device.model == model
+    assert device.model_id == device_type
     assert hass.states.get(
-        f"sensor.up_alarmhub_{ALARM_HUB_MAC.lower()}_battery_voltage"
+        f"sensor.{object_id}_{ALARM_HUB_MAC.lower()}_battery_voltage"
     )
 
 
