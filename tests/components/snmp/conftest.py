@@ -28,16 +28,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_get_cmd():
-    """Patch get_cmd so reading the host name never sends a request."""
-    with patch(
-        "homeassistant.components.snmp.client.get_cmd",
-        return_value=(None, None, None, []),
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture(autouse=True)
 def mock_udp_transport():
     """Patch UdpTransportTarget.create to avoid real network calls."""
     with patch(

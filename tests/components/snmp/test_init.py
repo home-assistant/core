@@ -198,7 +198,7 @@ async def test_async_setup_entry_without_subentries(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that a device without capabilities is set up."""
+    """Test that an entry without capabilities sets up without a device."""
     entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
 
@@ -207,85 +207,7 @@ async def test_async_setup_entry_without_subentries(
 
     assert entry.state is ConfigEntryState.LOADED
     assert not entry.runtime_data.coordinators
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, entry.entry_id), entry.entry_id
-    )
-    assert device is not None
-    assert device.name == entry.title
-
-
-async def test_device_name_from_sys_name(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that the host device is named after the sysName of the device."""
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=_async_mock_walk,
-        ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(None, None, None, [("oid1", "router01")]),
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, entry.entry_id), entry.entry_id
-    )
-    assert device is not None
-    assert device.name == "router01"
-    assert device.manufacturer is None
-    assert device.model is None
-    assert device.sw_version is None
-
-
-@pytest.mark.parametrize(
-    "get_cmd_result",
-    [
-        pytest.param(PySnmpError("Connection timed out"), id="exception"),
-        pytest.param(("some error indication", None, None, []), id="errindication"),
-        pytest.param((None, None, None, []), id="no_data"),
-    ],
-)
-async def test_device_name_falls_back_to_entry_title(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    get_cmd_result: PySnmpError | tuple,
-) -> None:
-    """Test that the host device falls back to the title when sysName is unknown."""
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.snmp.client.bulk_walk_cmd",
-            side_effect=_async_mock_walk,
-        ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            side_effect=get_cmd_result
-            if isinstance(get_cmd_result, Exception)
-            else None,
-            return_value=None
-            if isinstance(get_cmd_result, Exception)
-            else get_cmd_result,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, entry.entry_id), entry.entry_id
-    )
-    assert device is not None
-    assert device.name == entry.title
+    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
 
 async def test_walk_error_makes_entry_not_ready(hass: HomeAssistant) -> None:

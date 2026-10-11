@@ -263,7 +263,7 @@ async def test_device_tracker_device_registry_linking(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that entities and devices are correctly linked in the registry."""
+    """Test that the tracker entity is not linked to a device."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
@@ -272,17 +272,15 @@ async def test_device_tracker_device_registry_linking(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify Host Device
-    host_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, entry.entry_id), entry.entry_id
+    # The entry creates no device of its own, and ScannerEntity does not create
+    # one for the MAC either
+    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+        )
+        is None
     )
-    assert host_device is not None
-
-    # Verify Client Device Linking (it should not exist because device_info was removed)
-    client_device = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
-    )
-    assert client_device is None
 
     # Verify Entity Linking
     entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
@@ -556,15 +554,6 @@ async def test_mac_normalization(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
-        ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
@@ -622,15 +611,6 @@ async def test_ip_extraction(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
-        ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
@@ -664,15 +644,6 @@ async def test_ip_extraction_oid_too_short(
         patch(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
-        ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
@@ -724,15 +695,6 @@ async def test_walk_errindication(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk_side_effect,
         ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
-        ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
@@ -780,15 +742,6 @@ async def test_invalid_mac_length_ignored(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
-        ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
@@ -819,15 +772,6 @@ async def test_mac_processing_exception_ignored(
         patch(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
-        ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
@@ -862,15 +806,6 @@ async def test_walk_end_of_mib(
         patch(
             "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
-        ),
-        patch(
-            "homeassistant.components.snmp.client.get_cmd",
-            return_value=(
-                None,
-                None,
-                None,
-                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
-            ),
         ),
         patch(
             "homeassistant.components.snmp.client.is_end_of_mib",

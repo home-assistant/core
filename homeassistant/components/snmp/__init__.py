@@ -1,7 +1,6 @@
 """The SNMP integration."""
 
 from dataclasses import dataclass
-import logging
 
 from pysnmp.error import PySnmpError
 
@@ -9,14 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 
 from .client import SnmpClient
-from .const import DOMAIN, SUBENTRY_TYPE_DEVICE_TRACKER
+from .const import SUBENTRY_TYPE_DEVICE_TRACKER
 from .coordinator import SnmpDeviceTrackerCoordinator
 from .util import async_get_snmp_engine
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
@@ -41,9 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     except PySnmpError as err:
         raise ConfigEntryNotReady(f"Unable to set up the SNMP device: {err}") from err
 
-    # The name of the device is read once, it is not polled
-    sys_name = await client.async_get_sys_name()
-
     coordinators = {
         subentry.subentry_id: SnmpDeviceTrackerCoordinator(
             hass, entry, subentry, client
@@ -52,13 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=sys_name or entry.title,
-    )
 
     entry.runtime_data = SnmpRuntimeData(client=client, coordinators=coordinators)
 

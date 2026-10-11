@@ -2,10 +2,8 @@
 
 from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
-import logging
 from typing import Any
 
-from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ContextData,
@@ -16,7 +14,6 @@ from pysnmp.hlapi.v3arch.asyncio import (
     UdpTransportTarget,
     UsmUserData,
     bulk_walk_cmd,
-    get_cmd,
     is_end_of_mib,
 )
 from pysnmp.smi.error import WrongValueError
@@ -33,10 +30,6 @@ from .const import (
     DEFAULT_VERSION,
 )
 from .util import async_create_transport_target, async_get_snmp_engine, create_auth_data
-
-_LOGGER = logging.getLogger(__name__)
-
-SYS_NAME_OID = "1.3.6.1.2.1.1.5.0"
 
 # Number of varbinds requested per bulk walk request
 MAX_REPETITIONS = 50
@@ -85,30 +78,6 @@ class SnmpClient:
                 else ContextData()
             ),
         )
-
-    async def async_get_sys_name(self) -> str | None:
-        """Return the sysName of the device, if it can be read."""
-        try:
-            errindication, errstatus, _, restable = await get_cmd(
-                self.engine,
-                self.auth_data,
-                self.target,
-                self.context_data,
-                ObjectType(ObjectIdentity(SYS_NAME_OID)),
-            )
-        except PySnmpError as err:
-            _LOGGER.debug("Unable to read the SNMP host name: %s", err)
-            return None
-
-        if errindication or errstatus or not restable:
-            _LOGGER.debug(
-                "Unable to read the SNMP host name: errindication=%s, errstatus=%s",
-                errindication,
-                errstatus,
-            )
-            return None
-
-        return str(restable[0][1]) or None
 
     async def async_walk(self, baseoid: str) -> AsyncGenerator[tuple[Any, Any]]:
         """Walk the subtree of baseoid, yielding the values it contains."""
