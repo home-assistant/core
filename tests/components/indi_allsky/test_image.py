@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioindiallsky import IndiAllSkyError, MediaData
+from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyError, MediaData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -118,6 +118,35 @@ async def test_image_fetch_error(
 
     with pytest.raises(HomeAssistantError):
         await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+
+
+async def test_image_fetch_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_keogram_data: MediaData,
+) -> None:
+    """Test handling of image fetch auth errors triggering reauth."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.IMAGE]):
+        await setup_integration(hass, mock_config_entry)
+
+    for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
+        callback(mock_keogram_data)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyAuthError(
+        "Unauthorized"
+    )
+
+    with (
+        patch.object(
+            mock_config_entry, "async_start_reauth"
+        ) as mock_async_start_reauth,
+        pytest.raises(HomeAssistantError),
+    ):
+        await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+
+    mock_async_start_reauth.assert_called_once_with(hass)
 
 
 async def test_image_fetching_before_events(
