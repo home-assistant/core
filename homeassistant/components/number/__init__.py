@@ -173,6 +173,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: float | None = None
     _deprecated_number_entity_reported = False
+    _invalid_unit_of_measurement_reported = False
     _number_option_unit_of_measurement: str | None = None
 
     @override
@@ -337,7 +338,37 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def state(self) -> float | None:
         """Return the entity state."""
+        if not self._invalid_unit_of_measurement_reported:
+            self._report_invalid_unit_of_measurement()
         return self.value
+
+    def _report_invalid_unit_of_measurement(self) -> None:
+        """Warn once if the native unit is not valid for the device class."""
+        if (
+            (device_class := self.device_class) is None
+            or (units := DEVICE_CLASS_UNITS.get(device_class)) is None
+            or (native_unit_of_measurement := self.__native_unit_of_measurement_compat)
+            in units
+        ):
+            return
+
+        self._invalid_unit_of_measurement_reported = True
+        # This should raise in Home Assistant Core 2027.5
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using native unit of measurement '%s' which "
+                "is not a valid unit for the device class ('%s') it is using; "
+                "expected one of %s. This will stop working in Home Assistant "
+                "2027.5. Please update your configuration if your entity is "
+                "manually configured, otherwise %s"
+            ),
+            self.entity_id,
+            type(self),
+            native_unit_of_measurement,
+            device_class,
+            sorted(str(unit) if unit else "no unit of measurement" for unit in units),
+            self._suggest_report_issue(),
+        )
 
     @cached_property
     def native_unit_of_measurement(self) -> str | None:
