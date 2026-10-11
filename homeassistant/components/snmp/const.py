@@ -12,10 +12,15 @@ CONF_BASEOID = "baseoid"
 CONF_COMMUNITY = "community"
 CONF_CONTEXT_NAME = "context_name"
 CONF_DEFAULT_VALUE = "default_value"
+CONF_INTERVAL_SECONDS = "interval_seconds"
 CONF_PRIV_KEY = "priv_key"
 CONF_PRIV_PROTOCOL = "priv_protocol"
 CONF_VERSION = "version"
 CONF_VARTYPE = "vartype"
+
+# Subentry types, one per capability of an SNMP device
+SUBENTRY_TYPE_DEVICE_TRACKER = "device_tracker"
+DEVICE_TRACKER_SUBENTRY_TITLE = "Device tracker"
 
 DEFAULT_AUTH_PROTOCOL = "none"
 DEFAULT_COMMUNITY = "public"
@@ -23,11 +28,12 @@ DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "SNMP"
 DEFAULT_PORT = 161
 DEFAULT_PRIV_PROTOCOL = "none"
+DEFAULT_INTERVAL_SECONDS = 30
 DEFAULT_TIMEOUT = 8
 DEFAULT_VERSION = "1"
 DEFAULT_VARTYPE = "none"
 
-SCAN_INTERVAL = timedelta(seconds=10)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=DEFAULT_INTERVAL_SECONDS)
 
 
 SNMP_VERSIONS = {"1": 0, "2c": 1, "3": None}

@@ -10,9 +10,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.snmp.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.snmp.const import DOMAIN
+from homeassistant.components.snmp.const import DOMAIN, SUBENTRY_TYPE_DEVICE_TRACKER
+from homeassistant.config_entries import SubentryFlowContext
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import mock_entry
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +33,6 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
         result["flow_id"],
         {
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "1",
         },
     )
@@ -54,7 +56,6 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
     assert result["title"] == "192.168.1.1"
     assert result["data"] == {
         "host": "192.168.1.1",
-        "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
         "community": "public",
         "port": 161,
         "version": "1",
@@ -75,7 +76,6 @@ async def test_user_flow_v3_success(
         result["flow_id"],
         {
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "3",
         },
     )
@@ -118,7 +118,6 @@ async def test_user_flow_cannot_connect(
         result["flow_id"],
         {
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "1",
         },
     )
@@ -155,7 +154,7 @@ async def test_user_flow_cannot_connect(
 
 
 async def test_import_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
-    """Test successful YAML import flow."""
+    """Test that YAML is imported as a device with a device tracker subentry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -167,10 +166,17 @@ async def test_import_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) 
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
+    entry = result["result"]
+    assert entry.data == {
         "host": "192.168.1.1",
-        "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+        "port": 161,
+        "version": "1",
+        "community": "public",
     }
+
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
+    assert len(subentries) == 1
+    assert subentries[0].data["baseoid"] == "1.3.6.1.4.1.2021.10.1.3.1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -181,7 +187,6 @@ async def test_import_flow_with_v3_credentials_aborts(hass: HomeAssistant) -> No
         context={"source": config_entries.SOURCE_IMPORT},
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "auth_key": "auth_key",
             "priv_key": "priv_key",
         },
@@ -201,7 +206,6 @@ async def test_import_flow_already_configured(
         context={"source": config_entries.SOURCE_IMPORT},
         data={
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
         },
     )
 
@@ -221,7 +225,6 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         {
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "1",
         },
     )
@@ -251,7 +254,6 @@ async def test_user_flow_v3_invalid_auth(
         result["flow_id"],
         {
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "3",
         },
     )
@@ -300,7 +302,6 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
         result["flow_id"],
         {
             "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "3",
         },
     )
@@ -365,7 +366,7 @@ async def test_user_flow_err_indication(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": version},
+        {"host": "1.1.1.1", "version": version},
     )
 
     with patch(
@@ -394,51 +395,88 @@ async def test_user_flow_err_indication(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_invalid_oid(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
-    """Test user setup flow rejects an OID that pysnmp cannot resolve."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+async def _async_start_subentry_flow(hass: HomeAssistant, entry: MockConfigEntry):
+    """Start the device tracker subentry flow of an entry."""
+    return await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_DEVICE_TRACKER),
+        context=SubentryFlowContext(source=config_entries.SOURCE_USER),
     )
 
-    result = await hass.config_entries.flow.async_configure(
+
+async def test_subentry_flow_user(hass: HomeAssistant) -> None:
+    """Test adding a device tracker to an SNMP device."""
+    entry = mock_entry(baseoid=None)
+    entry.add_to_hass(hass)
+
+    result = await _async_start_subentry_flow(hass, entry)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
-            "host": "192.168.1.1",
-            "baseoid": "not_an_oid",
-            "version": "1",
-        },
+        {"baseoid": "1.3.6.1.2.1.4.22.1.2", "interval_seconds": 60},
     )
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
+    assert len(subentries) == 1
+    assert subentries[0].data == {
+        "baseoid": "1.3.6.1.2.1.4.22.1.2",
+        "interval_seconds": 60,
+    }
+
+
+async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
+    """Test that the subentry flow rejects an OID pysnmp cannot resolve."""
+    entry = mock_entry(baseoid=None)
+    entry.add_to_hass(hass)
+
+    result = await _async_start_subentry_flow(hass, entry)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"baseoid": "not_an_oid"},
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"baseoid": "invalid_oid"}
 
-    # Retry with valid OID succeeds (goes to v1_v2c step)
-    result = await hass.config_entries.flow.async_configure(
+    # Retry with a valid OID
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-            "version": "1",
-        },
+        {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "v1_v2c"
-
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"community": "public"},
-        )
-        await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
+
+
+async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test that a device can only have one device tracker."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    result = await _async_start_subentry_flow(hass, entry)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_subentry_flow_reconfigure(hass: HomeAssistant) -> None:
+    """Test changing the table of an existing device tracker."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"baseoid": "1.3.6.1.2.1.17.4.3.1.1"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data["baseoid"] == "1.3.6.1.2.1.17.4.3.1.1"
 
 
 async def test_user_flow_v1_v2c_invalid_auth(
@@ -450,7 +488,7 @@ async def test_user_flow_v1_v2c_invalid_auth(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
+        {"host": "1.1.1.1", "version": "1"},
     )
 
     with patch(
@@ -488,7 +526,7 @@ async def test_user_flow_v1_v2c_unknown_error(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
+        {"host": "1.1.1.1", "version": "1"},
     )
 
     with patch(
@@ -526,7 +564,7 @@ async def test_user_flow_v3_auth_key_required_for_priv(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
+        {"host": "1.1.1.1", "version": "3"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -567,7 +605,7 @@ async def test_user_flow_v3_unknown_error(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
+        {"host": "1.1.1.1", "version": "3"},
     )
 
     with patch(
@@ -605,7 +643,7 @@ async def test_user_flow_v3_no_keys_success(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.2.3.4", "baseoid": "1.3.6.1.2.1.1", "version": "3"},
+        {"host": "1.2.3.4", "version": "3"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -633,7 +671,7 @@ async def test_user_flow_v3_auth_creation_error(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.2.3.4", "baseoid": "1.3.6.1.2.1.1", "version": "3"},
+        {"host": "1.2.3.4", "version": "3"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -659,7 +697,7 @@ async def test_user_flow_v3_wrong_value_error(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.2.3.4", "baseoid": "1.3.6.1.2.1.1", "version": "3"},
+        {"host": "1.2.3.4", "version": "3"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -685,7 +723,7 @@ async def test_user_flow_transport_cannot_connect(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
+        {"host": "1.1.1.1", "version": "1"},
     )
 
     with (
@@ -729,7 +767,7 @@ async def test_user_flow_v3_cannot_connect(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
+        {"host": "1.1.1.1", "version": "3"},
     )
 
     with patch(
@@ -758,19 +796,19 @@ async def test_user_flow_v3_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_import_flow_with_port_and_context_name(
+async def test_import_flow_with_port_and_interval(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
-    """Test import flow with port and context_name."""
+    """Test import flow with a custom port and poll interval."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
         data={
             "host": "192.168.1.1",
             "port": 1161,
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "community": "public",
-            "context_name": "vlan100",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "interval_seconds": 60,
         },
     )
     await hass.async_block_till_done()
@@ -780,5 +818,58 @@ async def test_import_flow_with_port_and_context_name(
     assert entry.unique_id is None
     assert entry.data["host"] == "192.168.1.1"
     assert entry.data["port"] == 1161
-    assert entry.data["baseoid"] == "1.3.6.1.4.1.2021.10.1.3.1"
-    assert entry.data["context_name"] == "vlan100"
+
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)[0]
+    assert subentry.data["baseoid"] == "1.3.6.1.4.1.2021.10.1.3.1"
+    assert subentry.data["interval_seconds"] == 60
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("context_input", "expected_type"),
+    [
+        pytest.param({}, FlowResultType.CREATE_ENTRY, id="no_context"),
+        pytest.param(
+            {"context_name": "other"}, FlowResultType.CREATE_ENTRY, id="other_context"
+        ),
+        pytest.param(
+            {"context_name": "test-context"}, FlowResultType.ABORT, id="same_context"
+        ),
+    ],
+)
+async def test_user_flow_context_is_part_of_the_device(
+    hass: HomeAssistant,
+    context_input: dict[str, str],
+    expected_type: FlowResultType,
+) -> None:
+    """Test that only an identical SNMPv3 context is a duplicate device."""
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.1.1",
+        data={
+            "host": "192.168.1.1",
+            "port": 161,
+            "version": "3",
+            "username": "user",
+            "context_name": "test-context",
+        },
+    )
+    existing.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+    )
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "user", **context_input}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is expected_type

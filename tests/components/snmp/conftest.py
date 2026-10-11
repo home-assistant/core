@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.core import HomeAssistant
+
+from . import mock_entry
 
 from tests.common import MockConfigEntry
 
@@ -21,15 +22,19 @@ def patch_getaddrinfo():
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock SNMP config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-        },
-    )
+    entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
     return entry
+
+
+@pytest.fixture(autouse=True)
+def mock_get_cmd():
+    """Patch get_cmd so reading the host name never sends a request."""
+    with patch(
+        "homeassistant.components.snmp.client.get_cmd",
+        return_value=(None, None, None, []),
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture(autouse=True)

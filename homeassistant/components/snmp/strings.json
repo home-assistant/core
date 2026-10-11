@@ -8,7 +8,6 @@
       "auth_key_required_for_priv": "Authentication Key is required when using a Privacy Key (SNMP v3)",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_oid": "The provided OID is invalid",
       "snmp_timeout": "SNMP request timed out.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "usm_wrong_digests": "Invalid authentication credentials or protocols"
@@ -16,7 +15,6 @@
     "step": {
       "user": {
         "data": {
-          "baseoid": "Base OID",
           "host": "Host",
           "port": "Port",
           "version": "SNMP Version"
@@ -42,6 +40,44 @@
           "username": "Username"
         },
         "title": "v3 Authentication"
+      }
+    }
+  },
+  "config_subentries": {
+    "device_tracker": {
+      "abort": {
+        "already_configured": "A device tracker is already configured for this device"
+      },
+      "entry_type": "Device tracker",
+      "error": {
+        "invalid_oid": "The provided OID is invalid"
+      },
+      "initiate_flow": {
+        "user": "Add device tracker"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "baseoid": "Base OID",
+            "interval_seconds": "Update interval"
+          },
+          "data_description": {
+            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2).",
+            "interval_seconds": "How often the device is polled, in seconds."
+          },
+          "title": "Configure device tracker"
+        },
+        "user": {
+          "data": {
+            "baseoid": "Base OID",
+            "interval_seconds": "Update interval"
+          },
+          "data_description": {
+            "baseoid": "The OID of the table which lists the connected devices, for example the MAC column of the ARP table (1.3.6.1.2.1.4.22.1.2).",
+            "interval_seconds": "How often the device is polled, in seconds."
+          },
+          "title": "Configure device tracker"
+        }
       }
     }
   },

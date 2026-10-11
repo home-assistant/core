@@ -1,7 +1,6 @@
 """Tests for the SNMP device tracker."""
 
 import binascii
-from datetime import timedelta
 from itertools import cycle
 from unittest.mock import Mock, patch
 
@@ -12,7 +11,8 @@ import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.components.snmp.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
     async_setup_scanner,
@@ -27,6 +27,8 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import dump
+
+from . import mock_entry
 
 from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_files
 
@@ -55,17 +57,18 @@ def _known_devices(*macs: str) -> dict[str, str]:
 
 
 async def _async_advance_poll(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, polls: int = 1
 ) -> None:
-    """Advance one poll so the tracker writes its state after the legacy tracker.
+    """Advance the given number of polls, one by default.
 
     The legacy device tracker writes not_home once during setup for the devices it
     loaded from known_devices.yaml and never saw, and that write can land after the
-    new entity wrote its state.
+    new entity wrote its state, so tests assert after a poll of the tracker.
     """
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    for _ in range(polls):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -80,35 +83,13 @@ def mock_walk():
         yield None, None, None, [(oid1, OctetString(mac1))]
 
     with patch(
-        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
         side_effect=side_effect,
     ) as mock:
         yield mock
 
 
-@pytest.fixture
-def mock_get_cmd():
-    """Mock get_cmd for host info."""
-
-    async def side_effect(*args, **kwargs):
-        return (
-            None,
-            None,
-            None,
-            [
-                ("oid_descr", OctetString("TestManufacturer TestModel")),
-                ("oid_name", OctetString("TestSysName")),
-            ],
-        )
-
-    with patch(
-        "homeassistant.components.snmp.coordinator.get_cmd",
-        side_effect=side_effect,
-    ) as mock:
-        yield mock
-
-
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_legacy_state_is_not_an_enable_signal(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -119,14 +100,7 @@ async def test_device_tracker_legacy_state_is_not_an_enable_signal(
     up, so such a state is not a sign that the device was tracked; known_devices.yaml
     is. This entry is not an import either, so its entities stay disabled.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry()
     entry.add_to_hass(hass)
 
     hass.states.async_set(LEGACY_ENTITY_ID, STATE_HOME)
@@ -146,7 +120,7 @@ async def test_device_tracker_legacy_state_is_not_an_enable_signal(
     assert hass.states.get(LEGACY_ENTITY_ID) is not None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_yaml_migration_keeps_entity_enabled(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -189,7 +163,7 @@ async def test_yaml_migration_keeps_entity_enabled(
     assert hass.states.get(LEGACY_ENTITY_ID) is not None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_new_entity_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -199,14 +173,7 @@ async def test_device_tracker_new_entity_disabled_by_default(
     When a new MAC is discovered (no legacy state, no pre-existing device),
     the entity should be disabled by default following the freebox/unifi pattern.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry()
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -227,7 +194,6 @@ async def test_device_tracker_new_entity_disabled_by_default(
     assert hass.states.get(entity_id) is None
 
 
-@pytest.mark.usefixtures("mock_get_cmd")
 async def test_device_tracker_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -235,15 +201,7 @@ async def test_device_tracker_update(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update of SNMP device tracker."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_IMPORT,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry(source=SOURCE_IMPORT)
     entry.add_to_hass(hass)
 
     mac1 = binascii.unhexlify("001122334455")
@@ -279,7 +237,7 @@ async def test_device_tracker_update(
 
     mock_walk.side_effect = mock_walk_2
 
-    freezer.tick(timedelta(seconds=20))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -299,21 +257,14 @@ async def test_device_tracker_update(
     assert hass.states.get(entity_id_2) is None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_device_registry_linking(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that entities and devices are correctly linked in the registry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry()
     entry.add_to_hass(hass)
 
     mac = "00:11:22:33:44:55"
@@ -341,21 +292,13 @@ async def test_device_tracker_device_registry_linking(
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_name_resolves_to_mac_address(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the entity name resolves to the expected MAC address format."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_IMPORT,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry(source=SOURCE_IMPORT)
     entry.add_to_hass(hass)
 
     # The device was tracked by the legacy YAML configuration
@@ -373,7 +316,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
     assert state.name == "00_11_22_33_44_55"
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_enabled_if_device_exists(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -384,14 +327,7 @@ async def test_device_tracker_enabled_if_device_exists(
     ScannerEntity only enables new entities when a device with the same MAC is
     already known to Home Assistant.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry()
     entry.add_to_hass(hass)
 
     # Pre-register the device in the registry with a valid config entry
@@ -416,7 +352,7 @@ async def test_device_tracker_enabled_if_device_exists(
     assert reg_entry.disabled_by is None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_async_setup_scanner_import(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -478,20 +414,13 @@ async def test_async_setup_scanner_v3_credentials(
     }
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_initial_macs(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup of SNMP device tracker with initial MACs in the registry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry()
     entry.add_to_hass(hass)
 
     mac = "00:11:22:33:44:55"
@@ -507,14 +436,8 @@ async def test_device_tracker_initial_macs(
     assert hass.states.get(entity_id) is not None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
-async def test_device_tracker_properties_empty_coordinator(
-    hass: HomeAssistant,
-) -> None:
+async def test_device_tracker_properties_empty_coordinator() -> None:
     """Test entity properties when coordinator data is empty."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
-    entry.add_to_hass(hass)
-
     mock_coord = Mock()
     mock_coord.data = {}
 
@@ -523,7 +446,7 @@ async def test_device_tracker_properties_empty_coordinator(
     assert entity.ip_address is None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk")
 async def test_device_tracker_entity_id_changed_repair(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -552,7 +475,6 @@ async def test_device_tracker_entity_id_changed_repair(
     }
 
 
-@pytest.mark.usefixtures("mock_get_cmd")
 async def test_device_tracker_update_empty_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -560,14 +482,7 @@ async def test_device_tracker_update_empty_data(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator update with empty data."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry()
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -580,11 +495,12 @@ async def test_device_tracker_update_empty_data(
 
     mock_walk.side_effect = mock_empty_walk
 
-    freezer.tick(timedelta(seconds=20))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert entry.runtime_data.last_update_success
+    coordinator = next(iter(entry.runtime_data.coordinators.values()))
+    assert coordinator.last_update_success
 
     # Entity should still exist in the registry but no new entities created
 
@@ -601,15 +517,7 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
     The entry mimics a migration, so the devices listed in known_devices.yaml are
     enabled and the tests can assert on live entities.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_IMPORT,
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            "community": "public",
-        },
-    )
+    entry = mock_entry(source=SOURCE_IMPORT)
     entry.add_to_hass(hass)
     return entry
 
@@ -645,11 +553,11 @@ async def test_mac_normalization(
     with (
         patch_yaml_files(_known_devices(expected_mac)),
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -711,11 +619,11 @@ async def test_ip_extraction(
     with (
         patch_yaml_files(_known_devices(mac_str)),
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -754,11 +662,11 @@ async def test_ip_extraction_oid_too_short(
     with (
         patch_yaml_files(_known_devices(MAC)),
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -792,7 +700,7 @@ async def test_walk_errindication(
     errindication: str | PySnmpError,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that an errindication during walk causes entity to become unavailable."""
+    """Test that repeated errindications make the entity unavailable."""
     mac_bytes = binascii.unhexlify("001122334455")
     oid = Mock()
     oid.asTuple.return_value = (1, 192, 168, 1, 1)
@@ -813,11 +721,11 @@ async def test_walk_errindication(
     with (
         patch_yaml_files(_known_devices(MAC)),
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk_side_effect,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -840,13 +748,16 @@ async def test_walk_errindication(
         assert state is not None
         assert state.state == STATE_HOME
 
-        # Trigger second poll with errindication
+        # A transient failure keeps the last known state
         fail = True
-        freezer.tick(timedelta(seconds=20))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await _async_advance_poll(hass, freezer)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_HOME
 
-    # Entity should become unavailable due to UpdateFailed
+        # The entity becomes unavailable once the failures pile up
+        await _async_advance_poll(hass, freezer, polls=MAX_CONSECUTIVE_FAILURES - 1)
+
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
@@ -866,11 +777,11 @@ async def test_invalid_mac_length_ignored(
 
     with (
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -906,11 +817,11 @@ async def test_mac_processing_exception_ignored(
 
     with (
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -949,11 +860,11 @@ async def test_walk_end_of_mib(
     with (
         patch_yaml_files(_known_devices(MAC)),
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            "homeassistant.components.snmp.client.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.get_cmd",
+            "homeassistant.components.snmp.client.get_cmd",
             return_value=(
                 None,
                 None,
@@ -962,7 +873,7 @@ async def test_walk_end_of_mib(
             ),
         ),
         patch(
-            "homeassistant.components.snmp.coordinator.is_end_of_mib",
+            "homeassistant.components.snmp.client.is_end_of_mib",
             side_effect=cycle((False, True)),
         ),
     ):

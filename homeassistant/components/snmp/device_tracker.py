@@ -37,8 +37,9 @@ from .const import (
     CONF_PRIV_KEY,
     DEFAULT_COMMUNITY,
     DOMAIN,
+    SUBENTRY_TYPE_DEVICE_TRACKER,
 )
-from .coordinator import SnmpUpdateCoordinator, normalize_mac
+from .coordinator import SnmpDeviceTrackerCoordinator, normalize_mac
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -138,18 +139,8 @@ async def async_setup_entry(
     entry: SnmpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the SNMP device tracker from a Config Entry.
-
-    Follows the same pattern as other router integrations: entities are added via
-    async_add_entities. ScannerEntity handles the state and attributes.
-    """
-    coordinator = entry.runtime_data
+    """Set up the device trackers of the entry's subentries."""
     ent_reg = er.async_get(hass)
-
-    # Ensure previously known MACs show up as 'not_home' instead of disappearing
-    # if missing from the current poll.
-    registry_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-    initial_macs = {e.unique_id for e in registry_entries if e.unique_id}
 
     # Only the devices the legacy YAML configuration was tracking are enabled, so an
     # upgrade does not disable the presence automations of the user. Anything else,
@@ -159,10 +150,41 @@ async def async_setup_entry(
     if entry.source == SOURCE_IMPORT:
         legacy_macs = await _async_legacy_tracked_macs(hass)
 
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
+        _async_setup_subentry(
+            entry, subentry.subentry_id, ent_reg, legacy_macs, async_add_entities
+        )
+
+
+@callback
+def _async_setup_subentry(
+    entry: SnmpConfigEntry,
+    subentry_id: str,
+    ent_reg: er.EntityRegistry,
+    legacy_macs: set[str],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add the tracker entities of a single subentry."""
+    coordinator = entry.runtime_data.coordinators[subentry_id]
+
+    # Ensure previously known MACs show up as 'not_home' instead of disappearing
+    # if missing from the current poll.
+    initial_macs = {
+        reg_entry.unique_id
+        for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+        if reg_entry.unique_id
+        and reg_entry.config_subentry_id == subentry_id
+        and reg_entry.domain == DEVICE_TRACKER_DOMAIN
+        and reg_entry.platform == DOMAIN
+    }
+
     if initial_macs:
         async_add_entities(
-            SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
-            for mac in initial_macs
+            (
+                SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
+                for mac in initial_macs
+            ),
+            config_subentry_id=subentry_id,
         )
 
     tracked_macs = set(initial_macs)
@@ -173,28 +195,28 @@ async def async_setup_entry(
         if not coordinator.data:
             return
 
-        new_entities = []
+        new_entities: list[SnmpTrackerEntity] = []
         for mac in coordinator.data:
-            # Discovery of a brand new device.
-            if mac not in tracked_macs:
-                tracked_macs.add(mac)
-                new_entities.append(
-                    SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
-                )
+            if mac in tracked_macs:
+                continue
+            tracked_macs.add(mac)
+            new_entities.append(
+                SnmpTrackerEntity(coordinator, mac, was_tracked=mac in legacy_macs)
+            )
 
         if new_entities:
-            async_add_entities(new_entities)
+            async_add_entities(new_entities, config_subentry_id=subentry_id)
 
     entry.async_on_unload(coordinator.async_add_listener(_handle_coordinator_update))
     _handle_coordinator_update()
 
 
-class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity):
+class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], ScannerEntity):
     """Represent an individual device tracked via SNMP."""
 
     def __init__(
         self,
-        coordinator: SnmpUpdateCoordinator,
+        coordinator: SnmpDeviceTrackerCoordinator,
         mac: str,
         *,
         was_tracked: bool = False,

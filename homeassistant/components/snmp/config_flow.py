@@ -9,9 +9,16 @@ from pysnmp.hlapi.v3arch.asyncio import get_cmd
 from pysnmp.proto import errind
 from pysnmp.smi.error import WrongValueError
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -25,19 +32,23 @@ from .const import (
     CONF_BASEOID,
     CONF_COMMUNITY,
     CONF_CONTEXT_NAME,
+    CONF_INTERVAL_SECONDS,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
+    DEFAULT_INTERVAL_SECONDS,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
+    DEVICE_TRACKER_SUBENTRY_TITLE,
     DOMAIN,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
+    SUBENTRY_TYPE_DEVICE_TRACKER,
 )
 from .util import (
     async_create_request_cmd_args,
@@ -54,7 +65,6 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        probatio.Required(CONF_BASEOID): str,
         probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
             SNMP_VERSIONS
         ),
@@ -82,6 +92,15 @@ STEP_V3_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+DEVICE_TRACKER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_BASEOID): str,
+        probatio.Optional(
+            CONF_INTERVAL_SECONDS, default=DEFAULT_INTERVAL_SECONDS
+        ): cv.positive_int,
+    }
+)
+
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
@@ -103,7 +122,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     # Use sysDescr.0 to verify connectivity and authentication.
     # This OID is standard and responds to GET on almost all devices.
-    # This avoids false InvalidAuth errors if baseoid is a table or node.
     test_oid = "1.3.6.1.2.1.1.1.0"
     request_args = await async_create_request_cmd_args(
         hass, auth_data, target, test_oid, context_name
@@ -156,34 +174,38 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for SNMP."""
+    """Handle a config flow for an SNMP device."""
 
     VERSION = 1
     MINOR_VERSION = 1
     _user_data: dict[str, Any]
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {SUBENTRY_TYPE_DEVICE_TRACKER: SnmpDeviceTrackerSubentryFlow}
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            if await async_validate_oid(self.hass, user_input[CONF_BASEOID]):
-                self._user_data = user_input
+            self._user_data = user_input
 
-                if user_input[CONF_VERSION] == "3":
-                    return await self.async_step_v3()
-                return await self.async_step_v1_v2c()
-
-            errors[CONF_BASEOID] = "invalid_oid"
+            if user_input[CONF_VERSION] == "3":
+                return await self.async_step_v3()
+            return await self.async_step_v1_v2c()
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input or getattr(self, "_user_data", None)
+                STEP_USER_DATA_SCHEMA, getattr(self, "_user_data", None)
             ),
-            errors=errors,
             last_step=False,
         )
 
@@ -228,35 +250,54 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from the old YAML configuration file."""
+        """Import the YAML configuration as a device and a device tracker subentry."""
         # The legacy YAML schema had no way to specify SNMPv3 protocols, so a
         # configuration with v3 keys cannot be turned into a working v3 entry.
         if CONF_AUTH_KEY in user_input or CONF_PRIV_KEY in user_input:
             return self.async_abort(reason="credentials_required")
 
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_BASEOID: user_input[CONF_BASEOID]}
+        # The legacy platform schema adds keys (platform, consider_home,
+        # new_device_defaults) which are not part of a config entry.
+        entry_data: dict[str, Any] = {
+            CONF_HOST: user_input[CONF_HOST],
+            CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+            CONF_VERSION: user_input.get(CONF_VERSION, DEFAULT_VERSION),
+            CONF_COMMUNITY: user_input.get(CONF_COMMUNITY, DEFAULT_COMMUNITY),
+        }
+        self._abort_if_already_configured(entry_data)
+
+        tracker_data: dict[str, Any] = {CONF_BASEOID: user_input[CONF_BASEOID]}
+        if interval := user_input.get(CONF_INTERVAL_SECONDS):
+            tracker_data[CONF_INTERVAL_SECONDS] = interval
+
+        return self.async_create_entry(
+            title=entry_data[CONF_HOST],
+            data=entry_data,
+            subentries=[
+                {
+                    "subentry_type": SUBENTRY_TYPE_DEVICE_TRACKER,
+                    "title": DEVICE_TRACKER_SUBENTRY_TITLE,
+                    "unique_id": SUBENTRY_TYPE_DEVICE_TRACKER,
+                    "data": tracker_data,
+                }
+            ],
         )
 
-        # Filter to only include keys that are relevant to SNMP config entries.
-        # The legacy platform schema adds extra keys (platform, consider_home,
-        # new_device_defaults) that are not serializable or not needed.
-        allowed_keys = {
-            CONF_HOST,
-            CONF_PORT,
-            CONF_BASEOID,
-            CONF_COMMUNITY,
-            CONF_CONTEXT_NAME,
-            CONF_VERSION,
-            CONF_USERNAME,
-            CONF_AUTH_KEY,
-            CONF_AUTH_PROTOCOL,
-            CONF_PRIV_KEY,
-            CONF_PRIV_PROTOCOL,
-        }
-        clean_data = {k: v for k, v in user_input.items() if k in allowed_keys}
+    @callback
+    def _abort_if_already_configured(self, data: dict[str, Any]) -> None:
+        """Abort when the same device is already configured.
 
-        return self.async_create_entry(title=clean_data[CONF_HOST], data=clean_data)
+        The context name is compared explicitly: two SNMPv3 devices on the same
+        host and port can be addressed through different contexts.
+        """
+        for entry in self._async_current_entries(include_ignore=False):
+            if (
+                entry.data.get(CONF_HOST) == data[CONF_HOST]
+                and entry.data.get(CONF_PORT, DEFAULT_PORT)
+                == data.get(CONF_PORT, DEFAULT_PORT)
+                and entry.data.get(CONF_CONTEXT_NAME) == data.get(CONF_CONTEXT_NAME)
+            ):
+                raise AbortFlow("already_configured")
 
     async def _async_validate_and_create_entry(
         self,
@@ -264,9 +305,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str],
     ) -> ConfigFlowResult | None:
         """Validate input and create entry."""
-        self._async_abort_entries_match(
-            {CONF_HOST: data[CONF_HOST], CONF_BASEOID: data[CONF_BASEOID]}
-        )
+        self._abort_if_already_configured(data)
         try:
             await validate_input(self.hass, data)
         except SnmpTimeout:
@@ -280,6 +319,55 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return self.async_create_entry(title=data[CONF_HOST], data=data)
         return None
+
+
+class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
+    """Handle the device tracker subentry of an SNMP device."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a device tracker to the SNMP device."""
+        if self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
+            return self.async_abort(reason="already_configured")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if await async_validate_oid(self.hass, user_input[CONF_BASEOID]):
+                return self.async_create_entry(
+                    title=DEVICE_TRACKER_SUBENTRY_TITLE,
+                    data=user_input,
+                    unique_id=SUBENTRY_TYPE_DEVICE_TRACKER,
+                )
+            errors[CONF_BASEOID] = "invalid_oid"
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=DEVICE_TRACKER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Change the device tracker of the SNMP device."""
+        subentry = self._get_reconfigure_subentry()
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if await async_validate_oid(self.hass, user_input[CONF_BASEOID]):
+                return self.async_update_and_abort(
+                    self._get_entry(), subentry, data=user_input
+                )
+            errors[CONF_BASEOID] = "invalid_oid"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DEVICE_TRACKER_DATA_SCHEMA, user_input or subentry.data
+            ),
+            errors=errors,
+        )
 
 
 class CannotConnect(Exception):
