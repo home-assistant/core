@@ -192,6 +192,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> No
 
         # Fetch device metadata
         device = await bsblan.device()
+        if device.is_pps_bus:
+            circuits = list(DEFAULT_HEATING_CIRCUITS)
         info = await bsblan.info()
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(

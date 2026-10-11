@@ -10,6 +10,7 @@ from bsblan import (
     BSBLANError,
     BSBLANUnsupportedFeatureError,
     BSBLANVersionError,
+    Device,
     State,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -85,18 +86,25 @@ async def test_setup_minimal_mode_creates_outdated_firmware_issue(
     assert issue.translation_key == "outdated_firmware"
 
 
+@pytest.mark.parametrize(
+    ("api_version", "bus"),
+    [
+        pytest.param("1.0", "BSB", id="reduced-api"),
+        pytest.param("3.0", "PPS", id="pps"),
+    ],
+)
 async def test_setup_minimal_mode_restricts_to_single_circuit(
     hass: HomeAssistant,
     mock_config_entry_dual_circuit: MockConfigEntry,
     mock_bsblan: MagicMock,
+    api_version: str,
+    bus: str,
 ) -> None:
-    """Test a dual-circuit entry restricts to circuit 1 on a reduced-mode device.
-
-    A device previously configured with circuit 2 may later report a JSON-API
-    version below v2 (reduced single-circuit mode). Setup must restrict to
-    circuit 1 instead of failing on the now-unsupported circuit.
-    """
-    mock_bsblan.json_api_version = "1.0"
+    """Test single-circuit devices load without requesting stored circuit 2."""
+    mock_bsblan.json_api_version = api_version
+    mock_bsblan.device.return_value = Device.model_validate(
+        {**mock_bsblan.device.return_value.model_dump(), "bus": bus}
+    )
 
     def _state(include: list[str] | None = None, circuit: int = 1) -> State:
         if circuit != 1:
@@ -113,6 +121,11 @@ async def test_setup_minimal_mode_restricts_to_single_circuit(
 
     assert mock_config_entry_dual_circuit.state is ConfigEntryState.LOADED
     assert mock_config_entry_dual_circuit.runtime_data.available_circuits == [1]
+    assert mock_config_entry_dual_circuit.data[CONF_HEATING_CIRCUITS] == [1, 2]
+    assert mock_config_entry_dual_circuit.runtime_data.fast_coordinator.circuits == [1]
+    assert mock_config_entry_dual_circuit.runtime_data.slow_coordinator.circuits == [1]
+    mock_bsblan.static_values.assert_awaited_once_with(circuit=1)
+    assert {call.kwargs["circuit"] for call in mock_bsblan.state.await_args_list} == {1}
 
 
 async def test_setup_full_mode_no_outdated_firmware_issue(
