@@ -132,6 +132,7 @@ class CameraCapabilities:
     """Camera capabilities."""
 
     frontend_stream_types: set[StreamType]
+    supports_two_way_audio: bool = False
 
 
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
@@ -366,6 +367,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "model",
     "motion_detection_enabled",
     "supported_features",
+    "supports_two_way_audio",
 }
 
 
@@ -388,6 +390,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_should_poll: bool = False  # No need to poll cameras
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
+    _attr_supports_two_way_audio: bool = False
 
     __supports_stream: CameraEntityFeature | None = None
 
@@ -455,6 +458,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def frame_interval(self) -> float:
         """Return the interval between frames of the mjpeg stream."""
         return self._attr_frame_interval
+
+    @cached_property
+    def supports_two_way_audio(self) -> bool:
+        """Return true if the camera supports two way audio."""
+        return self._attr_supports_two_way_audio
 
     @property
     @override
@@ -759,7 +767,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 if self._webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
-        return CameraCapabilities(frontend_stream_types)
+        return CameraCapabilities(
+            frontend_stream_types,
+            # Two way audio is only available over WebRTC
+            supports_two_way_audio=self.supports_two_way_audio
+            and StreamType.WEB_RTC in frontend_stream_types,
+        )
 
     @callback
     @override
