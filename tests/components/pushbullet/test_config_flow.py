@@ -1,6 +1,6 @@
 """Test pushbullet config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from pushbullet import InvalidKeyError, PushbulletError
 import pytest
@@ -142,3 +142,76 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
         result["flow_id"], user_input=MOCK_CONFIG
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth updates the API key."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, unique_id="ujpah72o0")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "NEWKEY"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == MOCK_CONFIG | {CONF_API_KEY: "NEWKEY"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            InvalidKeyError, {CONF_API_KEY: "invalid_api_key"}, id="invalid_api_key"
+        ),
+        pytest.param(PushbulletError, {"base": "cannot_connect"}, id="cannot_connect"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant, side_effect: type[Exception], errors: dict[str, str]
+) -> None:
+    """Test reauth handles errors and can recover."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, unique_id="ujpah72o0")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.pushbullet.config_flow.PushBullet",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "NEWKEY"}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "NEWKEY"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "NEWKEY"
+
+
+async def test_reauth_wrong_account(hass: HomeAssistant) -> None:
+    """Test reauth aborts when the API key belongs to another account."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, unique_id="ujpah72o0")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.pushbullet.config_flow.PushBullet",
+        return_value=MagicMock(user_info={"iden": "other_account"}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "OTHERKEY"}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert entry.data == MOCK_CONFIG
