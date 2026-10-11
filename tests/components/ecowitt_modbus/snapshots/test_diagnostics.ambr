@@ -1,0 +1,85 @@
+# serializer version: 1
+# name: test_diagnostics[WN69LP]
+  dict({
+    'configuration': dict({
+      'auto_report_interval': 0.0,
+      'baud_rate': 2,
+      'device_address': 36,
+      'sampling_period': 16.0,
+    }),
+    'coordinator': dict({
+      'last_update_success': True,
+      'scan_interval': '0:00:30',
+    }),
+    'device': dict({
+      'manufacturer': 'Ecowitt',
+      'model': 'WN69LP',
+      'serial_number': None,
+      'sw_version': '1.0.0',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'model': 'WN69LP',
+        'port': 502,
+        'unit_id': 36,
+      }),
+      'unique_id': None,
+    }),
+    'readings': dict({
+      'absolute_pressure': 1001.5,
+      'battery_voltage': 3.12,
+      'gust_speed': 2.8,
+      'humidity': 60,
+      'light': 17670,
+      'rainfall': 35.306,
+      'recent_rainfall': 1.27,
+      'supply_voltage': 12.0,
+      'temperature': 26.2,
+      'uv_index': 1,
+      'wind_direction': 150,
+      'wind_speed': 1.2,
+    }),
+  })
+# ---
+# name: test_diagnostics[WN90LP]
+  dict({
+    'configuration': dict({
+      'baud_rate': 2,
+      'device_address': 144,
+      'device_code': 144,
+      'device_id': '**REDACTED**',
+    }),
+    'coordinator': dict({
+      'last_update_success': True,
+      'scan_interval': '0:00:30',
+    }),
+    'device': dict({
+      'manufacturer': 'Ecowitt',
+      'model': 'WN90LP',
+      'serial_number': '**REDACTED**',
+      'sw_version': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'model': 'WN90LP',
+        'port': 502,
+        'unit_id': 144,
+      }),
+      'unique_id': '**REDACTED**',
+    }),
+    'readings': dict({
+      'absolute_pressure': 1001.0,
+      'gust_speed': 0.0,
+      'humidity': 60,
+      'light': 17670,
+      'rain_counter': 0.18,
+      'rainfall': 0.0,
+      'temperature': 26.2,
+      'uv_index': 1.3,
+      'wind_direction': 150,
+      'wind_speed': 0.0,
+    }),
+  })
+# ---
