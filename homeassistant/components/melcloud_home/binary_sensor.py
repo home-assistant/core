@@ -53,7 +53,7 @@ def _common_sensor_descriptions[_UnitT: ATAUnit | ATWUnit](
             key="holiday_mode",
             translation_key="holiday_mode",
             state_fn=lambda unit: (
-                unit.holiday_mode.enabled if unit.holiday_mode else None
+                unit.holiday_mode.active if unit.holiday_mode else None
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
