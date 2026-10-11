@@ -1,6 +1,7 @@
 """Tests for the WLED sensor platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -8,12 +9,26 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Wifi
 
-from homeassistant.components.wled.const import SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -222,3 +237,183 @@ async def test_fail_when_other_device(
 
     assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
     assert state.state == "unavailable"
+
+
+async def _async_setup_with_readings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    readings: dict[str, Any],
+) -> dict[str, Any]:
+    """Set up a device whose usermods report the given readings."""
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    data["info"]["sensor"] = readings
+    mock_wled.update.return_value.update_from_dict(data)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.mark.parametrize(
+    ("readings", "entity_id", "state", "unit", "device_class"),
+    [
+        # The Temperature usermod, like a DS18B20.
+        (
+            {"temperature": [21.5, "°C"]},
+            "sensor.wled_rgb_light_temperature",
+            "21.5",
+            UnitOfTemperature.CELSIUS,
+            SensorDeviceClass.TEMPERATURE,
+        ),
+        # Home Assistant shows it in the system's unit, Celsius in tests.
+        (
+            {"temperature": [70.7, "°F"]},
+            "sensor.wled_rgb_light_temperature",
+            "21.5",
+            UnitOfTemperature.CELSIUS,
+            SensorDeviceClass.TEMPERATURE,
+        ),
+        # The SHT usermod, which pads its humidity unit with a space.
+        (
+            {"temp": [22.1, "°C"], "humidity": [48.3, " RH"]},
+            "sensor.wled_rgb_light_temperature",
+            "22.1",
+            UnitOfTemperature.CELSIUS,
+            SensorDeviceClass.TEMPERATURE,
+        ),
+        (
+            {"temp": [22.1, "°C"], "humidity": [48.3, " RH"]},
+            "sensor.wled_rgb_light_humidity",
+            "48.3",
+            PERCENTAGE,
+            SensorDeviceClass.HUMIDITY,
+        ),
+    ],
+)
+async def test_usermod_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    readings: dict[str, Any],
+    entity_id: str,
+    state: str,
+    unit: str,
+    device_class: SensorDeviceClass,
+) -> None:
+    """Test the readings usermods report become sensors."""
+    await _async_setup_with_readings(hass, mock_config_entry, mock_wled, readings)
+
+    assert (sensor := hass.states.get(entity_id))
+    assert sensor.state == state
+    assert sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+    assert sensor.attributes[ATTR_DEVICE_CLASS] == device_class
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_usermod_internal_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the chip temperature becomes a diagnostic sensor."""
+    await _async_setup_with_readings(
+        hass, mock_config_entry, mock_wled, {"Internal Temperature": [47.2, "°C"]}
+    )
+
+    assert (sensor := hass.states.get("sensor.wled_rgb_light_internal_temperature"))
+    assert sensor.state == "47.2"
+    assert (entry := entity_registry.async_get(sensor.entity_id))
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+async def test_usermod_internal_temperature_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the chip temperature sensor is disabled by default."""
+    await _async_setup_with_readings(
+        hass, mock_config_entry, mock_wled, {"Internal Temperature": [47.2, "°C"]}
+    )
+
+    assert hass.states.get("sensor.wled_rgb_light_internal_temperature") is None
+    assert (
+        entry := entity_registry.async_get("sensor.wled_rgb_light_internal_temperature")
+    )
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_usermod_readings_without_a_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test readings that aren't a number in a known unit don't become sensors."""
+    await _async_setup_with_readings(
+        hass,
+        mock_config_entry,
+        mock_wled,
+        {
+            # The PIR sensor switch reports motion without a unit.
+            "motion": True,
+            "temperature": ["warm", "°C"],
+            "humidity": [48.3, "grams"],
+        },
+    )
+
+    assert hass.states.get("sensor.wled_rgb_light_temperature") is None
+    assert hass.states.get("sensor.wled_rgb_light_humidity") is None
+
+
+async def test_usermod_readings_in_a_unit_of_another_kind(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test readings in a unit that doesn't fit the sensor don't become sensors."""
+    await _async_setup_with_readings(
+        hass,
+        mock_config_entry,
+        mock_wled,
+        {"temperature": [48.3, "%"], "humidity": [22.1, "°C"]},
+    )
+
+    assert hass.states.get("sensor.wled_rgb_light_temperature") is None
+    assert hass.states.get("sensor.wled_rgb_light_humidity") is None
+
+
+async def test_usermod_sensor_follows_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a usermod sensor follows its reading, unit, and errors."""
+    data = await _async_setup_with_readings(hass, mock_config_entry, mock_wled, {})
+    assert hass.states.get("sensor.wled_rgb_light_temperature") is None
+
+    async def async_report(readings: dict[str, Any]) -> None:
+        data["info"]["sensor"] = readings
+        mock_wled.update.return_value.update_from_dict(data)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The usermod starts reporting, like after connecting the sensor.
+    await async_report({"temperature": [21.5, "°C"]})
+    assert (sensor := hass.states.get("sensor.wled_rgb_light_temperature"))
+    assert sensor.state == "21.5"
+
+    # The usermod is set to Fahrenheit; Home Assistant shows it in Celsius.
+    await async_report({"temperature": [77, "°F"]})
+    assert (sensor := hass.states.get("sensor.wled_rgb_light_temperature"))
+    assert sensor.state == "25.0"
+
+    # On a sensor error, the usermod leaves the reading out.
+    await async_report({})
+    assert (sensor := hass.states.get("sensor.wled_rgb_light_temperature"))
+    assert sensor.state == STATE_UNKNOWN

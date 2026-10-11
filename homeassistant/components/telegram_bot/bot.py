@@ -50,6 +50,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
@@ -1129,21 +1130,27 @@ class TelegramNotificationService:
             file_name = os.path.basename(file.file_path)
 
         custom_path = os.path.join(directory_path, file_name)
-        await self.hass.async_add_executor_job(
-            self._prepare_download_directory, directory_path
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self._prepare_download_directory, directory_path
+            )
+        except OSError as err:
+            raise os_write_error(err, directory_path) from err
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
             file_content = await file.download_as_bytearray()
-            await self.hass.async_add_executor_job(
-                Path(custom_path).write_bytes, file_content
-            )
         except (RuntimeError, OSError, TelegramError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",
                 translation_placeholders={"error": str(exc)},
             ) from exc
+        try:
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
+        except OSError as err:
+            raise os_write_error(err, custom_path) from err
         return {ATTR_FILE_PATH: custom_path}
 
     @staticmethod
