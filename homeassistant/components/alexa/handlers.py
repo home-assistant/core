@@ -2382,7 +2382,11 @@ async def async_api_initiate_session_with_offer(
     )
 
     start = hass.loop.time()
-    answer = await _async_get_webrtc_answer(hass, camera_entity, offer, session_id)
+    try:
+        answer = await _async_get_webrtc_answer(hass, camera_entity, offer, session_id)
+    except asyncio.CancelledError:
+        camera_entity.close_webrtc_session(session_id)
+        raise
     _LOGGER.debug(
         "Generated WebRTC answer for session %s in %.2f s",
         session_id,
