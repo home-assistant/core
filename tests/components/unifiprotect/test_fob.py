@@ -640,6 +640,47 @@ async def test_fob_unavailable_when_removed_from_bootstrap(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_fob_readopted_with_new_id_fires_button_events(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Button presses follow a fob re-adopted under a new id."""
+    ufp, fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+    del ufp.api.public_bootstrap.fobs[fob.id]
+    mock_msg = Mock()
+    mock_msg.old_obj = fob
+    mock_msg.new_obj = None
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+
+    readopted = _make_fob()
+    readopted.id = "fob-id-2"
+    ufp.api.public_bootstrap.fobs[readopted.id] = readopted
+    msg = public_device_ws_message(readopted)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
+
+    ufp.events_msg(_button_event(readopted, event_id="evt-new"), EventChange.STARTED)
+    # The old id no longer belongs to this fob.
+    ufp.events_msg(_button_event(fob, event_id="evt-old"), EventChange.STARTED)
+    await hass.async_block_till_done()
+
+    assert [event.data["new_state"].attributes[ATTR_EVENT_ID] for event in events] == [
+        "evt-new"
+    ]
+    unsub()
+
+
 async def test_fob_without_wireless_data_is_unknown(
     hass: HomeAssistant,
     ufp: MockUFPFixture,

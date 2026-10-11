@@ -467,11 +467,18 @@ class BaseProtectEntity(Entity):
         """
         if obj is not None and not self._ufp_has_private:
             # A re-adopted device keeps its mac but gets a new id.
+            id_changed = obj.id != self.device.id
             self.device = obj
+            if id_changed:
+                self._async_device_id_changed()
         self._ufp_public_obj = (
             obj if obj is not None else self.data.async_get_public_device(self.device)
         )
         self._async_updated_event(self.device)
+
+    @callback
+    def _async_device_id_changed(self) -> None:
+        """Handle a public device that was re-adopted under a new id."""
 
     @override
     async def async_added_to_hass(self) -> None:
