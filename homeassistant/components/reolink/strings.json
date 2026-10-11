@@ -934,11 +934,20 @@
     "api_error": {
       "message": "The device responded with an error: {err}"
     },
+    "authentication_failed": {
+      "message": "Authentication with Reolink device {host} failed"
+    },
+    "config_entry_not_found": {
+      "message": "Could not find Reolink config entry ID {config_entry_id}"
+    },
     "config_entry_not_ready": {
       "message": "Error while trying to set up {host}: {err}"
     },
     "connection_error": {
       "message": "Could not connect to the device: {err}"
+    },
+    "firmware_check_failed": {
+      "message": "Error checking Reolink firmware update from {name}, if the camera is blocked from accessing the internet, disable the update entity"
     },
     "firmware_install_error": {
       "message": "Error trying to update Reolink firmware: {err}"
@@ -985,8 +994,17 @@
     "unexpected_data": {
       "message": "Device returned unexpected data: {err}"
     },
+    "unknown_media_item": {
+      "message": "Unknown Reolink media item {identifier}"
+    },
     "update_already_running": {
       "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "update_failed": {
+      "message": "Error updating data from Reolink device {host}"
+    },
+    "update_invalid_credentials": {
+      "message": "Invalid credentials while updating data from Reolink device {host}"
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
