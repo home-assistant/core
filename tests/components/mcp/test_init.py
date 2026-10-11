@@ -18,6 +18,7 @@ import probatio
 import pytest
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
+from homeassistant.components.mcp.coordinator import _representative_mcp_error
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import Context, HomeAssistant
@@ -860,3 +861,11 @@ async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
     apis = llm.async_get_apis(hass)
     api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
     assert api.id == "mcp-a0d7b954_mcp"
+
+
+def test_wrapped_error_with_a_cause_cycle() -> None:
+    """A cause that points at itself is not followed forever."""
+    error = ValueError("loop")
+    error.__cause__ = error
+
+    assert _representative_mcp_error(error) is error
