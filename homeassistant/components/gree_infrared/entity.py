@@ -1,9 +1,9 @@
 """Common entity for Gree IR integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from . import GreeIrConfigEntry
 from .const import DOMAIN
 
 
@@ -14,11 +14,12 @@ class GreeIrEntity(Entity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GreeIrConfigEntry,
         unique_id_suffix: str | None = None,
         device_name: str = "Gree AC",
     ) -> None:
         """Initialize Gree IR entity."""
+        self._runtime_data = entry.runtime_data
         self._attr_unique_id = (
             entry.entry_id
             if unique_id_suffix is None

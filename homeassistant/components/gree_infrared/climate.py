@@ -1,6 +1,6 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, override
 
 from infrared_protocols.commands.gree_ac import (
@@ -8,7 +8,6 @@ from infrared_protocols.commands.gree_ac import (
     MIN_TEMP,
     GreeAcCommand,
     GreeAcFanSpeed,
-    GreeAcMode,
 )
 
 from homeassistant.components.climate import (
@@ -28,7 +27,6 @@ from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     InfraredReceiverConsumerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
@@ -40,10 +38,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import GreeIrConfigEntry
 from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    DEFAULT_HVAC_MODES,
+    HA_MODE_TO_LIB,
+    LIB_MODE_TO_HA,
 )
 from .entity import GreeIrEntity
 
@@ -57,16 +59,12 @@ _HA_FAN_TO_LIB: dict[str, GreeAcFanSpeed] = {
 }
 _LIB_FAN_TO_HA: dict[GreeAcFanSpeed, str] = {v: k for k, v in _HA_FAN_TO_LIB.items()}
 
-# Every mode other than OFF; the protocol has no OFF mode of its own, power is a
-# separate field, so this dict intentionally has no HVACMode.OFF entry.
-_HA_MODE_TO_LIB: dict[HVACMode, GreeAcMode] = {
-    HVACMode.AUTO: GreeAcMode.AUTO,
-    HVACMode.COOL: GreeAcMode.COOL,
-    HVACMode.HEAT: GreeAcMode.HEAT,
-    HVACMode.DRY: GreeAcMode.DRY,
-    HVACMode.FAN_ONLY: GreeAcMode.FAN_ONLY,
-}
-_LIB_MODE_TO_HA: dict[GreeAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
+
+def _hvac_mode_changes(hvac_mode: HVACMode) -> dict[str, Any]:
+    """Return the frame fields an HVAC mode sets; off keeps the mode last active."""
+    if hvac_mode is HVACMode.OFF:
+        return {"power": False}
+    return {"power": True, "mode": HA_MODE_TO_LIB[hvac_mode]}
 
 
 @dataclass
@@ -96,7 +94,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GreeIrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gree AC climate entity from config entry."""
@@ -128,21 +126,26 @@ class GreeAcClimateEntity(
     )
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
-    def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
+    def __init__(self, entry: GreeIrConfigEntry, emitter_entity_id: str) -> None:
         """Initialize Gree AC climate entity."""
         super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
 
-        configured_modes = entry.data.get(
-            CONF_HVAC_MODES, [HVACMode.COOL, HVACMode.DRY]
-        )
+        configured_modes = entry.data.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_native_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
-        # Power-off frames still need a mode field; this tracks the mode to send it
-        # with, since the protocol has no dedicated OFF mode.
-        self._last_active_hvac_mode = self._attr_hvac_modes[1]
+
+    @property
+    def _last_active_hvac_mode(self) -> HVACMode:
+        """Return the mode to send a power-off frame with.
+
+        Those frames still carry a mode field, since the protocol has no dedicated
+        OFF mode, so the shared state keeps the last active one while the unit is
+        off.
+        """
+        return LIB_MODE_TO_HA[self._runtime_data.ac_state.mode]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -172,15 +175,24 @@ class GreeAcClimateEntity(
                     )
                 )
 
+        last_active_hvac_mode = self._last_active_hvac_mode
         current_mode = self._attr_hvac_mode
         if current_mode is not None and current_mode is not HVACMode.OFF:
-            self._last_active_hvac_mode = current_mode
+            last_active_hvac_mode = current_mode
         elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
             restored = _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
             if restored is not None and restored.last_active_hvac_mode in (
                 mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
             ):
-                self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+                last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+
+        self._runtime_data.ac_state = replace(
+            self._runtime_data.ac_state,
+            power=self._attr_hvac_mode is not HVACMode.OFF,
+            mode=HA_MODE_TO_LIB[last_active_hvac_mode],
+            temperature=int(self._attr_native_target_temperature or MIN_TEMP),
+            fan=_HA_FAN_TO_LIB[self._attr_fan_mode or FAN_AUTO],
+        )
 
     @property
     @override
@@ -190,26 +202,34 @@ class GreeAcClimateEntity(
             last_active_hvac_mode=self._last_active_hvac_mode.value
         )
 
-    async def _async_send_state(
-        self, hvac_mode: HVACMode, temp: int, fan_mode: str
-    ) -> None:
-        """Send a full-state frame for the given target state."""
-        power = hvac_mode is not HVACMode.OFF
-        active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
-        await self._send_command(
-            self._build_command(active_hvac_mode, power, temp, fan_mode)
-        )
-        if power:
-            self._last_active_hvac_mode = hvac_mode
+    async def _async_send_changes(self, **changes: Any) -> None:
+        """Send a frame applying the given fields to the shared state."""
+        async with self._runtime_data.send_lock:
+            await self._send_command(
+                replace(self._runtime_data.ac_state, **changes).to_command()
+            )
+            # Only the fields asked for are written back: a frame from the remote
+            # may have landed while this one was going out, and the rest of what it
+            # carries is not this call's to undo.
+            self._runtime_data.ac_state = replace(
+                self._runtime_data.ac_state, **changes
+            )
+
+    async def _async_record_changes(self, **changes: Any) -> None:
+        """Record fields changed while the unit is off, without sending a frame.
+
+        The shared state is the latest known state of the unit, so it has to hold
+        what this entity shows even when no frame goes out.
+        """
+        async with self._runtime_data.send_lock:
+            self._runtime_data.ac_state = replace(
+                self._runtime_data.ac_state, **changes
+            )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        await self._async_send_state(
-            hvac_mode,
-            int(self._attr_native_target_temperature or MIN_TEMP),
-            self._attr_fan_mode or FAN_AUTO,
-        )
+        await self._async_send_changes(**_hvac_mode_changes(hvac_mode))
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
@@ -221,12 +241,16 @@ class GreeAcClimateEntity(
         if hvac_mode is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
 
+        changes: dict[str, Any] = {"temperature": temp}
+        if hvac_mode is not None:
+            changes |= _hvac_mode_changes(hvac_mode)
+
         effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
         # A temperature change on its own has nothing to send while the unit is off.
         if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
-            await self._async_send_state(
-                effective_mode, temp, self._attr_fan_mode or FAN_AUTO
-            )
+            await self._async_send_changes(**changes)
+        else:
+            await self._async_record_changes(**changes)
 
         if hvac_mode is not None:
             self._attr_hvac_mode = hvac_mode
@@ -239,36 +263,18 @@ class GreeAcClimateEntity(
         """Set fan mode."""
         hvac_mode = self._attr_hvac_mode
         if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-            await self._async_send_state(
-                hvac_mode,
-                int(self._attr_native_target_temperature or MIN_TEMP),
-                fan_mode,
-            )
+            await self._async_send_changes(fan=_HA_FAN_TO_LIB[fan_mode])
+        else:
+            await self._async_record_changes(fan=_HA_FAN_TO_LIB[fan_mode])
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
-
-    def _build_command(
-        self, hvac_mode: HVACMode, power: bool, temp: int, fan_mode: str
-    ) -> GreeAcCommand:
-        """Build a command from a mode, power state, a temperature and a fan mode."""
-        return GreeAcCommand(
-            power=power,
-            mode=_HA_MODE_TO_LIB[hvac_mode],
-            temperature=temp,
-            fan=_HA_FAN_TO_LIB[fan_mode],
-            swing_v=False,
-            swing_h=False,
-            turbo=False,
-            display=True,
-            blow=False,
-        )
 
 
 class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEntity):
     """Gree AC climate entity that also tracks a configured infrared receiver."""
 
     def __init__(
-        self, entry: ConfigEntry, emitter_entity_id: str, receiver_entity_id: str
+        self, entry: GreeIrConfigEntry, emitter_entity_id: str, receiver_entity_id: str
     ) -> None:
         """Initialize Gree AC climate entity with a receiver."""
         super().__init__(entry, emitter_entity_id)
@@ -279,19 +285,13 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Update state from a physical remote signal."""
         command = GreeAcCommand.from_raw_timings(signal.timings)
-        if command is None:
+        if command is None or not self._runtime_data.apply_received_command(command):
             return
 
-        # Off frames carry a mode field too, so the mode is recorded either way.
-        embedded_hvac_mode = _LIB_MODE_TO_HA[command.mode]
-        if embedded_hvac_mode in self._attr_hvac_modes:
-            self._last_active_hvac_mode = embedded_hvac_mode
-        elif command.power:
-            return
-
-        hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
-
-        self._attr_hvac_mode = hvac_mode
-        self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
-        self._attr_native_target_temperature = float(command.temperature)
+        state = self._runtime_data.ac_state
+        self._attr_hvac_mode = (
+            LIB_MODE_TO_HA[state.mode] if state.power else HVACMode.OFF
+        )
+        self._attr_fan_mode = _LIB_FAN_TO_HA[state.fan]
+        self._attr_native_target_temperature = float(state.temperature)
         self.async_write_ha_state()
