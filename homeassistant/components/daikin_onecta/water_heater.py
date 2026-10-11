@@ -1,0 +1,318 @@
+"""Support for the Daikin BRP069A62."""
+
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Any, override
+
+from daikin_onecta.client import DomesticHotWaterClient
+from daikin_onecta.models import ManagementPoint, Setpoint
+
+from homeassistant.components.water_heater import (
+    STATE_HEAT_PUMP,
+    STATE_OFF,
+    STATE_PERFORMANCE,
+    WaterHeaterEntity,
+    WaterHeaterEntityFeature,
+)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import DaikinOnectaConfigEntry
+from .device import DaikinOnectaDevice
+from .entity import DaikinManagementPointEntity
+
+PARALLEL_UPDATES = 1
+
+if TYPE_CHECKING:
+    from .coordinator import OnectaDataUpdateCoordinator
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: DaikinOnectaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Daikin water tank entities."""
+    coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    entities: list[DaikinWaterTank] = []
+    for device in (coordinator.data or {}).values():
+        supported_management_point_types = (
+            "domesticHotWaterTank",
+            "domesticHotWaterFlowThrough",
+        )
+        for management_point_type in supported_management_point_types:
+            entities.extend(
+                DaikinWaterTank(
+                    device,
+                    coordinator,
+                    management_point.embedded_id,
+                )
+                for management_point in device.device.management_points_by_type(
+                    management_point_type
+                )
+            )
+    async_add_entities(entities)
+
+
+class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
+    """Representation of a Daikin Water Tank."""
+
+    def __init__(
+        self,
+        device: DaikinOnectaDevice,
+        coordinator: OnectaDataUpdateCoordinator,
+        embedded_id: str,
+    ) -> None:
+        """Initialize the Water device."""
+        super().__init__(device, coordinator, embedded_id)
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_unique_id = f"{self._device.id}_{self._embedded_id}"
+        self.update_state()
+
+    def update_state(self) -> None:
+        """Refresh all state attributes from the device."""
+        self._attr_supported_features = self.get_supported_features()
+        self._attr_native_current_temperature = self.get_current_temperature()
+        self._attr_native_target_temperature = self.get_target_temperature()
+        self._attr_min_temp = self.get_min_temp()
+        self._attr_max_temp = self.get_max_temp()
+        dht = self.domestic_hotwater_temperature
+        self._attr_target_temperature_step = (
+            float(dht.step_value)
+            if dht is not None and dht.step_value is not None
+            else None
+        )
+        self._attr_operation_list = self.get_operation_list()
+        self._attr_current_operation = self.get_current_operation()
+
+    async def _async_execute_hot_water_command(
+        self,
+        command: Callable[[DomesticHotWaterClient], Awaitable[None]],
+        translation_key: str,
+    ) -> None:
+        """Execute a typed hot-water command through the cloud adapter."""
+        await self._async_execute_command(
+            lambda client: command(
+                client.domestic_hot_water(self._device.id, self._embedded_id)
+            ),
+            translation_key,
+        )
+
+    def _publish_write_update(self) -> None:
+        """Publish a successful write to all entities sharing the device data."""
+        self.update_state()
+        self.coordinator.async_update_listeners()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        self.update_state()
+        self.async_write_ha_state()
+
+    @property
+    def hot_water_management_point(self) -> ManagementPoint | None:
+        """Return the typed hot-water management point."""
+        return self._device.management_point(self._embedded_id)
+
+    @property
+    def domestic_hotwater_temperature(self) -> Setpoint | None:
+        """Return the domestic hot-water temperature setpoint."""
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        return hot_water.temperature if hot_water is not None else None
+
+    def get_supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the list of supported features."""
+        sf = WaterHeaterEntityFeature(0)
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        if (
+            hot_water is not None
+            and hot_water.power is not None
+            and hot_water.power.settable
+        ):
+            sf |= WaterHeaterEntityFeature.ON_OFF
+        if self.get_operation_list():
+            sf |= WaterHeaterEntityFeature.OPERATION_MODE
+        # Only when we have a fixed setpointMode we can control the target
+        # temperature of the tank
+        dht = self.domestic_hotwater_temperature
+        if dht and dht.settable:
+            sf |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        return sf
+
+    def get_current_temperature(self) -> float | None:
+        """Return tank temperature."""
+        ret = None
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        if hot_water is not None and hot_water.current_temperature is not None:
+            ret = float(hot_water.current_temperature)
+
+        return ret
+
+    def get_target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        ret = None
+        dht = self.domestic_hotwater_temperature
+        if dht is not None and dht.value is not None:
+            ret = float(dht.value)
+        return ret
+
+    def get_min_temp(self) -> float:
+        """Return the supported minimum value target temperature."""
+        ret = super().min_temp
+        dht = self.domestic_hotwater_temperature
+        if dht is not None and dht.min_value is not None:
+            ret = float(dht.min_value)
+        return ret
+
+    def get_max_temp(self) -> float:
+        """Return the supported maximum value of target temperature."""
+        ret = super().max_temp
+        dht = self.domestic_hotwater_temperature
+        if dht is not None and dht.max_value is not None:
+            ret = float(dht.max_value)
+        return ret
+
+    async def async_set_tank_temperature(self, value: float) -> None:
+        """Set new target temperature."""
+        if self.current_operation == STATE_OFF:
+            self._raise_service_validation_error("water_heater_off")
+        dht = self.domestic_hotwater_temperature
+        if dht is None or not dht.settable:
+            self._raise_service_validation_error(
+                "water_heater_temperature_not_settable"
+            )
+
+        int_value = int(value)
+        if int_value != self._attr_native_target_temperature:
+            await self._async_execute_hot_water_command(
+                lambda hot_water: hot_water.set_temperature(int_value),
+                "water_heater_set_temperature_failed",
+            )
+            dht = self.domestic_hotwater_temperature
+            if dht is not None:
+                dht.value = int_value
+            self._publish_write_update()
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        # The service climate.set_temperature can set the hvac_mode too, see
+        # https://www.home-assistant.io/integrations/climate/#service-climateset_temperature
+        # se we first set the hvac_mode, if provided, then the temperature.
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            await self.async_set_tank_temperature(float(temperature))
+
+    def get_current_operation(self) -> str:
+        """Return current operation ie. heat, cool, idle."""
+        state = STATE_OFF
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        onoff = hot_water.power if hot_water is not None else None
+        if onoff is not None and onoff.value == "on":
+            state = STATE_HEAT_PUMP
+            pwf = hot_water.powerful_mode if hot_water is not None else None
+            if pwf is not None and pwf.value == "on":
+                state = STATE_PERFORMANCE
+        return state
+
+    def get_operation_list(self) -> list[str]:
+        """Return the list of available operation modes."""
+        states: list[str] = []
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        power = hot_water.power if hot_water is not None else None
+        if power is not None and power.settable:
+            states = [STATE_OFF, STATE_HEAT_PUMP]
+        pwf = hot_water.powerful_mode if hot_water is not None else None
+        if (
+            power is not None
+            and (power.settable or power.value == "on")
+            and pwf is not None
+            and pwf.settable
+        ):
+            if STATE_HEAT_PUMP not in states:
+                states.append(STATE_HEAT_PUMP)
+            states.append(STATE_PERFORMANCE)
+        return states
+
+    def _requested_modes(self, operation_mode: str) -> tuple[str, str]:
+        """Return the required on/off and powerful-mode values."""
+        on_off_mode = ""
+        powerful_mode = ""
+        if operation_mode == STATE_OFF:
+            on_off_mode = "off" if self.current_operation != STATE_OFF else ""
+        elif operation_mode == STATE_PERFORMANCE:
+            powerful_mode = "on"
+            on_off_mode = "on" if self.current_operation == STATE_OFF else ""
+        elif operation_mode == STATE_HEAT_PUMP:
+            powerful_mode = "off" if self.current_operation == STATE_PERFORMANCE else ""
+            on_off_mode = "on" if self.current_operation == STATE_OFF else ""
+        return on_off_mode, powerful_mode
+
+    @override
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Set new tank state."""
+        if operation_mode not in self.get_operation_list():
+            self._raise_service_validation_error(
+                "water_heater_operation_mode_unavailable"
+            )
+        # First determine the new settings for onOffMode/powerfulMode, we need these to set them to Daikin
+        # and update our local cached version when succeeded
+        on_off_mode, powerful_mode = self._requested_modes(operation_mode)
+
+        # Only set the on/off to Daikin when we need to change it
+        if on_off_mode != "":
+            await self._async_execute_hot_water_command(
+                lambda hot_water: hot_water.set_power(on_off_mode == "on"),
+                "water_heater_set_operation_mode_failed",
+            )
+            hwtd = self.hot_water_management_point
+            if hwtd is not None and hwtd.on_off_mode is not None:
+                hwtd.on_off_mode.value = on_off_mode
+            self._publish_write_update()
+
+        # Only set powerfulMode when it is set and supported by the device
+        if powerful_mode != "" and STATE_PERFORMANCE in (self.operation_list or []):
+            await self._async_execute_hot_water_command(
+                lambda hot_water: hot_water.set_powerful_mode(powerful_mode == "on"),
+                "water_heater_set_operation_mode_failed",
+            )
+            hwtd = self.hot_water_management_point
+            hot_water = hwtd.domestic_hot_water if hwtd is not None else None
+            pwf = hot_water.powerful_mode if hot_water is not None else None
+            if pwf is not None and pwf.settable:
+                pwf.value = powerful_mode
+            self._publish_write_update()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn water heater on."""
+        if self.current_operation == STATE_OFF:
+            if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
+                self._raise_service_validation_error("water_heater_on_off_unavailable")
+            await self._async_execute_hot_water_command(
+                lambda hot_water: hot_water.set_power(True),
+                "water_heater_turn_on_failed",
+            )
+            hwtd = self.hot_water_management_point
+            if hwtd is not None and hwtd.on_off_mode is not None:
+                hwtd.on_off_mode.value = "on"
+            self._publish_write_update()
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn water heater off."""
+        if self.current_operation != STATE_OFF:
+            if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
+                self._raise_service_validation_error("water_heater_on_off_unavailable")
+            await self._async_execute_hot_water_command(
+                lambda hot_water: hot_water.set_power(False),
+                "water_heater_turn_off_failed",
+            )
+            hwtd = self.hot_water_management_point
+            if hwtd is not None and hwtd.on_off_mode is not None:
+                hwtd.on_off_mode.value = "off"
+            self._publish_write_update()
