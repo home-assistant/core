@@ -969,27 +969,33 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     assert hass.states.get(entity_id).state == "51.5"
 
 
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        pytest.param(MOCK_TCP_INPUT, MOCK_ENTRY_DATA, id="legacy_tcp"),
+        pytest.param(
+            MOCK_SERIAL_ENTRY_DATA,
+            MOCK_SERIAL_ENTRY_DATA,
+            id="reconfigured_while_disabled",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_migrate_entry_adds_the_connection_type(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+    hass: HomeAssistant, data: dict[str, Any], expected: dict[str, Any]
 ) -> None:
-    """Test migration marks a legacy entry as TCP."""
+    """Test migration marks legacy entries as TCP and keeps a set type."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data=MOCK_TCP_INPUT,
+        data=data,
         title=MOCK_MODEL,
         minor_version=1,
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.minor_version == 2
-    assert entry.data == MOCK_ENTRY_DATA
+    assert entry.data == expected
