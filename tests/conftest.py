@@ -1687,11 +1687,11 @@ def recorder_db_url(
 
         # One database per xdist worker so the workers can run in parallel,
         # and per test run so concurrent runs on one server don't collide
-        run = os.environ["PYTEST_XDIST_TESTRUNUID"][:8]
+        suffix = f"-{os.environ['PYTEST_XDIST_TESTRUNUID'][:8]}-{worker}"
         url = sa.make_url(db_url)
-        db_url = url.set(database=f"{url.database}-{run}-{worker}").render_as_string(
-            hide_password=False
-        )
+        # Postgres and MySQL limit names to 63 bytes and 64 characters
+        database = f"{url.database[: 63 - len(suffix)]}{suffix}"
+        db_url = url.set(database=database).render_as_string(hide_password=False)
         # The database belongs to this worker, so a leftover from a failed
         # teardown must not fail all following tests on the worker
         drop_existing_db = True
