@@ -17,6 +17,17 @@
       "usm_wrong_digests": "Invalid authentication credentials or protocols"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "version": "SNMP Version"
+        },
+        "data_description": {
+          "host": "Please make sure this device has a static IP or DHCP reservation."
+        },
+        "title": "Reconfigure the SNMP device"
+      },
       "user": {
         "data": {
           "host": "Host",

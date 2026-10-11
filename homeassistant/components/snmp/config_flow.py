@@ -1,5 +1,6 @@
 """Config flow for SNMP."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -10,6 +11,8 @@ from pysnmp.proto import errind
 from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -210,54 +213,68 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is not None:
             self._user_data = user_input
-
-            if user_input[CONF_VERSION] == "3":
-                return await self.async_step_v3()
-            return await self.async_step_v1_v2c()
+            return await self._async_step_credentials()
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, getattr(self, "_user_data", None)
-            ),
-            last_step=False,
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, last_step=False
         )
 
     async def async_step_v1_v2c(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle V1/V2c authentication."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            data = {**self._user_data, **user_input}
-            if result := await self._async_validate_and_create_entry(data, errors):
-                return result
-
-        return self.async_show_form(
-            step_id="v1_v2c",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_V1_V2C_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
-        )
+        return await self._async_step_credentials(user_input)
 
     async def async_step_v3(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle V3 authentication."""
-        errors: dict[str, str] = {}
+        return await self._async_step_credentials(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfiguration of an existing device."""
+        entry = self._get_reconfigure_entry()
+
         if user_input is not None:
-            errors = self._validate_v3_coherence(user_input)
+            self._user_data = user_input
+            return await self._async_step_credentials()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, entry.data
+            ),
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle the credentials of a request which failed to authenticate."""
+        self._user_data = dict(entry_data)
+        return await self._async_step_credentials()
+
+    async def _async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the credentials of the selected version, then store them."""
+        is_v3 = self._user_data[CONF_VERSION] == "3"
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if is_v3:
+                errors = self._validate_v3_coherence(user_input)
 
             if not errors:
                 data = {**self._user_data, **user_input}
-                if result := await self._async_validate_and_create_entry(data, errors):
+                if result := await self._async_finish(data, errors):
                     return result
 
         return self.async_show_form(
-            step_id="v3",
+            step_id="v3" if is_v3 else "v1_v2c",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_V3_DATA_SCHEMA, user_input
+                STEP_V3_DATA_SCHEMA if is_v3 else STEP_V1_V2C_DATA_SCHEMA, user_input
             ),
             errors=errors,
         )
@@ -326,9 +343,13 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Abort when the same device is already configured.
 
         The context name is compared explicitly: two SNMPv3 devices on the same
-        host and port can be addressed through different contexts.
+        host and port can be addressed through different contexts. The entry
+        being reconfigured or reauthenticated is not a duplicate of itself.
         """
+        current_entry_id = self.context.get("entry_id")
         for entry in self._async_current_entries(include_ignore=False):
+            if entry.entry_id == current_entry_id:
+                continue
             if (
                 entry.data.get(CONF_HOST) == data[CONF_HOST]
                 and entry.data.get(CONF_PORT, DEFAULT_PORT)
@@ -337,13 +358,14 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 raise AbortFlow("already_configured")
 
-    async def _async_validate_and_create_entry(
+    async def _async_finish(
         self,
         data: dict[str, Any],
         errors: dict[str, str],
     ) -> ConfigFlowResult | None:
-        """Validate input and create entry."""
+        """Validate the credentials and create or update the config entry."""
         self._abort_if_already_configured(data)
+
         try:
             await validate_input(self.hass, data)
         except SnmpTimeout:
@@ -355,6 +377,14 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         else:
+            if self.source == SOURCE_RECONFIGURE:
+                return self.async_update_and_abort(
+                    self._get_reconfigure_entry(), title=data[CONF_HOST], data=data
+                )
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_and_abort(
+                    self._get_reauth_entry(), title=data[CONF_HOST], data=data
+                )
             return self.async_create_entry(title=data[CONF_HOST], data=data)
         return None
 
