@@ -1,6 +1,7 @@
 """Config flow for SNMP."""
 
 from collections.abc import Mapping
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -342,8 +343,14 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_already_configured(entry_data)
 
         tracker_data: dict[str, Any] = {CONF_BASEOID: user_input[CONF_BASEOID]}
+        # The YAML schema types interval_seconds as a time period, while the
+        # subentry stores seconds, and entry data has to be JSON serializable.
         if interval := user_input.get(CONF_INTERVAL_SECONDS):
-            tracker_data[CONF_INTERVAL_SECONDS] = interval
+            tracker_data[CONF_INTERVAL_SECONDS] = int(
+                interval.total_seconds()
+                if isinstance(interval, timedelta)
+                else interval
+            )
 
         return self.async_create_entry(
             title=entry_data[CONF_HOST],

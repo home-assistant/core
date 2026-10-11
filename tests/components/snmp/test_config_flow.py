@@ -1,5 +1,6 @@
 """Tests for the SNMP config flow."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, Mock, patch
 
 from pysnmp.error import PySnmpError
@@ -802,8 +803,15 @@ async def test_user_flow_v3_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "interval",
+    [
+        pytest.param(60, id="plain_seconds"),
+        pytest.param(timedelta(seconds=60), id="time_period"),
+    ],
+)
 async def test_import_flow_with_port_and_interval(
-    hass: HomeAssistant, mock_setup_entry: Mock
+    hass: HomeAssistant, mock_setup_entry: Mock, interval: int | timedelta
 ) -> None:
     """Test import flow with a custom port and poll interval."""
     result = await hass.config_entries.flow.async_init(
@@ -814,7 +822,7 @@ async def test_import_flow_with_port_and_interval(
             "port": 1161,
             "community": "public",
             "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-            "interval_seconds": 60,
+            "interval_seconds": interval,
         },
     )
     await hass.async_block_till_done()
