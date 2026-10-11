@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_infrared_emitter[infrared.test_name_infrared_emitter-entry]
+# name: test_infrared_entities[infrared.test_name_infrared_emitter][infrared.test_name_infrared_emitter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_infrared_emitter[infrared.test_name_infrared_emitter-state]
+# name: test_infrared_entities[infrared.test_name_infrared_emitter][infrared.test_name_infrared_emitter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'emitter',
@@ -50,7 +50,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_infrared_receiver[infrared.test_name_infrared_receiver-entry]
+# name: test_infrared_entities[infrared.test_name_infrared_receiver][infrared.test_name_infrared_receiver-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -87,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_infrared_receiver[infrared.test_name_infrared_receiver-state]
+# name: test_infrared_entities[infrared.test_name_infrared_receiver][infrared.test_name_infrared_receiver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
