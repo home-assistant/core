@@ -112,6 +112,7 @@ async def test_reauth(
     assert len(mock_setup_entry.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(hass: HomeAssistant, mock_tv: MagicMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
