@@ -11,20 +11,26 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
 from .const import (
+    CONF_COMMAND_STEP_DELAY,
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
+    DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
     DysonDeviceType,
 )
 
 DEVICE_TYPE_NAMES: dict[DysonDeviceType, str] = {
     DysonDeviceType.FAN: "Fan",
+    DysonDeviceType.HEATER_COOLER: "Heater/Cooler",
 }
 
 
@@ -45,9 +51,9 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            device_type = user_input[CONF_DEVICE_TYPE]
+            device_type = DysonDeviceType(user_input[CONF_DEVICE_TYPE])
 
-            await self.async_set_unique_id(f"{device_type}_{entity_id}")
+            await self.async_set_unique_id(f"{device_type.value}_{entity_id}")
             self._abort_if_unique_id_configured()
 
             ent_reg = er.async_get(self.hass)
@@ -55,10 +61,11 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
             entity_name = (
                 entry.name or entry.original_name or entity_id if entry else entity_id
             )
-            device_type_name = DEVICE_TYPE_NAMES[DysonDeviceType(device_type)]
-            title = f"Dyson {device_type_name} via {entity_name}"
+            device_type_name = DEVICE_TYPE_NAMES[device_type]
 
-            return self.async_create_entry(title=title, data=user_input)
+            return self.async_create_entry(
+                title=f"Dyson {device_type_name} via {entity_name}", data=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -77,6 +84,17 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_COMMAND_STEP_DELAY, default=DEFAULT_COMMAND_STEP_DELAY
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=5,
+                            step=0.05,
+                            unit_of_measurement="s",
+                            mode=NumberSelectorMode.BOX,
                         )
                     ),
                 }
