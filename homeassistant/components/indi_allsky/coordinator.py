@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
 import asyncio
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -158,8 +157,12 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         while True:
             self._sensor_fetch_queued = False
             try:
-                with suppress(IndiAllSkyError):
+                try:
                     await self.client.fetch_sensors()
+                except IndiAllSkyAuthError:
+                    self.config_entry.async_start_reauth(self.hass)
+                except IndiAllSkyError:
+                    pass
             finally:
                 if not self._sensor_fetch_queued:
                     self._sensor_fetch_task = None
@@ -208,6 +211,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("latestkeogram")
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
         except IndiAllSkyError as err:
             _LOGGER.warning("Failed to fetch latest keogram image: %s", err)
             image_bytes = None
@@ -255,6 +261,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("lateststartrail")
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
         except IndiAllSkyError as err:
             _LOGGER.warning("Failed to fetch latest startrail image: %s", err)
             image_bytes = None

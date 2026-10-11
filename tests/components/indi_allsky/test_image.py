@@ -339,23 +339,21 @@ async def test_image_fetch_auth_failure_triggers_reauth(
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.IMAGE]):
         await setup_integration(hass, mock_config_entry)
 
-    for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
-        callback(mock_keogram_data)
-    await hass.async_block_till_done()
-
     mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyAuthError(
         "Unauthorized"
     )
 
-    with (
-        patch.object(
-            mock_config_entry, "async_start_reauth"
-        ) as mock_async_start_reauth,
-        pytest.raises(HomeAssistantError),
-    ):
-        await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+    with patch.object(
+        mock_config_entry, "async_start_reauth"
+    ) as mock_async_start_reauth:
+        for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
+            callback(mock_keogram_data)
+        await hass.async_block_till_done()
 
-    mock_async_start_reauth.assert_called_once_with(hass)
+        with pytest.raises(HomeAssistantError):
+            await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+
+    assert mock_async_start_reauth.call_count >= 1
 
 
 async def test_image_fetching_before_events(
