@@ -377,7 +377,10 @@ class ScalewayBackupAgent(BackupAgent):
 
                     await self._clean_up_queue(queue)
                     queue.shutdown()
-                    raise BackupReaderWriterError from e
+                    raise BackupReaderWriterError(
+                        translation_domain=DOMAIN,
+                        translation_key="input_reading_failed",
+                    ) from e
 
                 done, pending = await asyncio.wait(
                     workers, return_when=asyncio.FIRST_EXCEPTION

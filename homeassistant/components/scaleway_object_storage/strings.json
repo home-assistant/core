@@ -48,6 +48,9 @@
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "input_reading_failed": {
+      "message": "Failed to read input stream for backup."
+    },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
