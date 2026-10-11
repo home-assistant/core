@@ -3,9 +3,10 @@
 from pyscorpiontrack import ScorpionTrackClient
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SHARE_TOKEN, PLATFORMS
+from .const import CONF_SHARE_TOKEN, DOMAIN, PLATFORMS
 from .coordinator import ScorpionTrackConfigEntry, ScorpionTrackCoordinator
 
 
@@ -30,3 +31,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: ScorpionTrackConfigEntry
+) -> None:
+    """Remove the repair issue when its config entry is removed."""
+    ir.async_delete_issue(hass, DOMAIN, f"share_unavailable_{entry.entry_id}")

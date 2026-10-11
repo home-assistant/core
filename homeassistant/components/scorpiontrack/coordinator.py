@@ -15,7 +15,7 @@ from pyscorpiontrack import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -60,16 +60,21 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
                 translation_key="cannot_connect",
             ) from err
         except ScorpionTrackInvalidTokenError as err:
+            self._create_share_issue()
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_token",
             ) from err
         except ScorpionTrackShareUnavailableError as err:
+            self._create_share_issue()
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="share_unavailable",
             ) from err
         else:
+            ir.async_delete_issue(
+                self.hass, DOMAIN, f"share_unavailable_{self.config_entry.entry_id}"
+            )
             self.vehicles_by_id = {vehicle.id: vehicle for vehicle in share.vehicles}
             device_registry = dr.async_get(self.hass)
             vehicle_identifiers = {
@@ -82,3 +87,15 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
                 if device.identifiers.isdisjoint(vehicle_identifiers):
                     device_registry.async_remove_device(device.id)
             return share
+
+    def _create_share_issue(self) -> None:
+        """Explain how to restore access to the configured share."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"share_unavailable_{self.config_entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="share_unavailable",
+            translation_placeholders={"name": self.config_entry.title},
+        )
