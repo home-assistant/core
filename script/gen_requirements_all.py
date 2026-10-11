@@ -241,7 +241,7 @@ backoff==2.2.1
 python-backoff<2.4.0
 
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
-# (used by pydrawise) still imports
+# (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
