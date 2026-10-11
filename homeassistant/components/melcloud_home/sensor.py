@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import utcnow
 
 from .common import async_setup_unit_entities
 from .coordinator import (
@@ -276,8 +275,8 @@ class ATAEnergySensor(MelCloudHomeATATelemetrySensor):
     @property
     @override
     def last_reset(self) -> datetime:
-        """Return start of month."""
-        return utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        """Return the start of the period the energy was fetched for."""
+        return self._telemetry_coordinator.data.energy_period_start
 
 
 class ATAOutdoorTemperatureSensor(MelCloudHomeATATelemetrySensor):
@@ -329,5 +328,5 @@ class ATWEnergySensor(MelCloudHomeATWUnitEntity, SensorEntity):
     @property
     @override
     def last_reset(self) -> datetime:
-        """Return start of month."""
-        return utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        """Return the start of the period the energy was fetched for."""
+        return self._telemetry_coordinator.data.energy_period_start

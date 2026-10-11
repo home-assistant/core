@@ -444,6 +444,9 @@
       "lamp_life": {
         "name": "Lamp life"
       },
+      "last_seen": {
+        "name": "Last seen"
+      },
       "left_slot_level": {
         "name": "Left slot level"
       },
@@ -868,6 +871,20 @@
         }
       },
       "name": "Get Shelly KVS value"
+    },
+    "set_cover_position_and_tilt": {
+      "description": "Moves a cover and its tilt to the target positions with a single command.",
+      "fields": {
+        "position": {
+          "description": "Target position of the cover. 0 means closed, 100 means fully open.",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "Target tilt position of the cover. 0 means closed, 100 means fully open.",
+          "name": "Tilt position"
+        }
+      },
+      "name": "Set cover position and tilt"
     },
     "set_kvs_value": {
       "description": "Sets a value in a Shelly device's Key-Value Storage.",
