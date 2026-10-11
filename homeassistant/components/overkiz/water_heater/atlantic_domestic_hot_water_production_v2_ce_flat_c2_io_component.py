@@ -131,10 +131,13 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE,
             temperature,
+            refresh_afterwards=False,
         )
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_WATER_TARGET_TEMPERATURE,
+            refresh_afterwards=False,
         )
+        await self.coordinator.async_refresh()
 
     @property
     def is_boost_mode_on(self) -> bool:
@@ -174,9 +177,10 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         """Set new operation mode."""
         if operation_mode == STATE_PERFORMANCE:
             if self.is_away_mode_on:
-                await self.async_turn_away_mode_off()
+                await self.async_turn_away_mode_off(refresh_afterwards=False)
 
             await self._async_turn_boost_mode_on()
+            await self.coordinator.async_refresh()
 
             return
 
@@ -186,21 +190,25 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         if self.is_boost_mode_on:
             await self._async_turn_boost_mode_off()
         if self.is_away_mode_on:
-            await self.async_turn_away_mode_off()
+            await self.async_turn_away_mode_off(refresh_afterwards=False)
 
         await self.executor.async_execute_command(
             OverkizCommand.SET_DHW_MODE,
             OPERATION_MODE_TO_OVERKIZ[operation_mode],
+            refresh_afterwards=False,
         )
 
         # Switching from auto changes the target temperature, so refresh it.
         if previous_operation == STATE_AUTO:
             await self.executor.async_execute_command(
                 OverkizCommand.REFRESH_WATER_TARGET_TEMPERATURE,
+                refresh_afterwards=False,
             )
 
+        await self.coordinator.async_refresh()
+
     @override
-    async def async_turn_away_mode_on(self) -> None:
+    async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode on.
 
         Sets absence start/end dates and 'prog' mode in a single batch.
@@ -225,14 +233,16 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
                     parameters=[OverkizCommandParam.PROG],
                 ),
             ],
+            refresh_afterwards=refresh_afterwards,
         )
 
     @override
-    async def async_turn_away_mode_off(self) -> None:
+    async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode off."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_ABSENCE_MODE,
             OverkizCommandParam.OFF,
+            refresh_afterwards=refresh_afterwards,
         )
 
     async def _async_turn_boost_mode_on(self) -> None:
@@ -250,6 +260,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
                     parameters=[OverkizCommandParam.ON],
                 ),
             ],
+            refresh_afterwards=False,
         )
 
     async def _async_turn_boost_mode_off(self) -> None:
@@ -257,4 +268,5 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         await self.executor.async_execute_command(
             OverkizCommand.SET_BOOST_MODE,
             OverkizCommandParam.OFF,
+            refresh_afterwards=False,
         )
