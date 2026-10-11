@@ -655,8 +655,9 @@ async def test_trigger_alarm_webhook(
     )
 
 
+@pytest.mark.usefixtures("device")
 async def test_trigger_alarm_webhook_error(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+    hass: HomeAssistant, ufp: MockUFPFixture
 ) -> None:
     """Test trigger_alarm_webhook reports Protect errors."""
     ufp.api.send_alarm_webhook_public = AsyncMock(side_effect=BadRequest("400"))
@@ -672,8 +673,9 @@ async def test_trigger_alarm_webhook_error(
     assert exc_info.value.translation_placeholders == {"error": "400"}
 
 
+@pytest.mark.usefixtures("device")
 async def test_trigger_alarm_webhook_empty_trigger_id(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+    hass: HomeAssistant, ufp: MockUFPFixture
 ) -> None:
     """Test trigger_alarm_webhook rejects an empty trigger ID."""
     ufp.api.send_alarm_webhook_public = AsyncMock()
@@ -688,9 +690,9 @@ async def test_trigger_alarm_webhook_empty_trigger_id(
     ufp.api.send_alarm_webhook_public.assert_not_awaited()
 
 
+@pytest.mark.usefixtures("device")
 async def test_trigger_alarm_webhook_non_admin(
     hass: HomeAssistant,
-    device: dr.DeviceEntry,
     ufp: MockUFPFixture,
     hass_read_only_user: MockUser,
 ) -> None:
