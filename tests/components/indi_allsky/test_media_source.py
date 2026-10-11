@@ -145,7 +145,7 @@ async def test_async_resolve_media_redirect_resolution(
         "image/jpeg",
     )
 
-    # Latest timelapse resolves to video/mp4
+    # Latest timelapse with unknown extension falls back to video/mp4
     mock_indi_allsky_client.get_media_url.return_value = (
         "https://127.0.0.1:443/indi-allsky/latesttimelapse"
     )
@@ -161,6 +161,26 @@ async def test_async_resolve_media_redirect_resolution(
     assert resolved_tl == PlayMedia(
         "https://127.0.0.1:443/indi-allsky/latesttimelapse",
         "video/mp4",
+    )
+
+    # Latest timelapse redirecting to .webm uses detected video/webm
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse"
+    )
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        status=302,
+        headers={"Location": "/indi-allsky/videos/timelapse.webm"},
+    )
+    resolved_tl_webm = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latesttimelapse",
+        None,
+    )
+    assert resolved_tl_webm == PlayMedia(
+        "https://127.0.0.1/indi-allsky/videos/timelapse.webm",
+        "video/webm",
     )
 
     # Redirect error fallback (ClientError or TimeoutError) keeps original url

@@ -116,7 +116,7 @@
       "message": "The INDI Allsky configuration entry could not be found or is not loaded."
     },
     "incomplete_media_identifier": {
-      "message": "Incomplete media identifier specified."
+      "message": "The media identifier is invalid or incomplete."
     },
     "update_failed": {
       "message": "Error communicating with INDI Allsky API"

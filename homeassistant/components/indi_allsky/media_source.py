@@ -87,10 +87,10 @@ class IndiAllSkyMediaSource(MediaSource):
                 )
 
         clean_url = url.split("?")[0].lower()
-        if path == "latesttimelapse":
-            mime_type = "video/mp4"
-        elif mime := mimetypes.guess_type(clean_url)[0]:
+        if mime := mimetypes.guess_type(clean_url)[0]:
             mime_type = mime
+        elif path == "latesttimelapse":
+            mime_type = "video/mp4"
         else:
             mime_type = "image/jpeg"
         return PlayMedia(url, mime_type)
