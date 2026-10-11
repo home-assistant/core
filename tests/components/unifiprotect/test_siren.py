@@ -40,6 +40,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .utils import (
     MockUFPFixture,
     assert_entity_counts,
+    bind_public_device_properties,
     init_entry,
     make_public_bootstrap,
 )
@@ -47,6 +48,7 @@ from .utils import (
 SIREN_ID = "siren-id-1"
 SIREN_MAC = "AA:BB:CC:DD:EE:02"
 SIREN_NAME = "Garage Siren"
+SIREN_TYPE = "UP-Siren-PoE"
 
 SIREN_ENTITY_ID = "siren.garage_siren"
 
@@ -56,9 +58,11 @@ def _make_siren(
 ) -> Mock:
     """Build a mock :class:`Siren`."""
     siren = Mock(spec=Siren)
+    bind_public_device_properties(siren, Siren)
     siren.id = SIREN_ID
     siren.mac = SIREN_MAC
     siren.name = SIREN_NAME
+    siren.type = SIREN_TYPE
     siren.model = ModelType.SIREN
     siren.state = state
     siren.volume = 50
@@ -171,11 +175,13 @@ async def test_siren_device_links_to_nvr_via_device_id(
     )
     assert nvr_device is not None
 
-    siren_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SIREN_MAC), ufp_with_siren.entry.entry_id
+    siren_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, SIREN_MAC), ufp_with_siren.entry.entry_id
     )
     assert siren_device is not None
     assert siren_device.via_device_id == nvr_device.id
+    assert siren_device.name == SIREN_NAME
+    assert siren_device.model == SIREN_TYPE
 
 
 # ---------------------------------------------------------------------------
