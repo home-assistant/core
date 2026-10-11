@@ -249,6 +249,7 @@ async def test_bluetooth_discovery_circulator_fan_pro(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SENSOR_TYPE] == "circulator_fan_pro"
+    assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

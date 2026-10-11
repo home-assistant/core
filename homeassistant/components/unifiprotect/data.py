@@ -85,7 +85,12 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 # Device families the public API alone provides; the private bootstrap has no
 # store for them, so hybrid has no adopt path either and their add always goes
 # through the public add signal.
-_PUBLIC_ONLY_MODELS = {ModelType.FOB, ModelType.RELAY, ModelType.SIREN}
+_PUBLIC_ONLY_MODELS = {
+    ModelType.FOB,
+    ModelType.LINK_STATION,
+    ModelType.RELAY,
+    ModelType.SIREN,
+}
 
 
 def _pair_public_private[
