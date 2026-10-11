@@ -628,6 +628,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/fuelprices_dk/ @MTrab
 /homeassistant/components/fujitsu_fglair/ @crevetor
 /tests/components/fujitsu_fglair/ @crevetor
+/homeassistant/components/fujitsu_infrared/ @Dr-Blank
+/tests/components/fujitsu_infrared/ @Dr-Blank
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/fumis/ @frenck

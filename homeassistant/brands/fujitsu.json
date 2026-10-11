@@ -1,5 +1,5 @@
 {
   "domain": "fujitsu",
   "name": "Fujitsu",
-  "integrations": ["fujitsu_anywair", "fujitsu_fglair"]
+  "integrations": ["fujitsu_anywair", "fujitsu_fglair", "fujitsu_infrared"]
 }

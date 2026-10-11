@@ -2408,6 +2408,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "FGLair"
+        },
+        "fujitsu_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Fujitsu Infrared"
         }
       }
     },
