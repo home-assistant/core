@@ -1727,7 +1727,8 @@ def recorder_db_url(
             with engine.begin() as connection:
                 rows = connection.execute(query, parameters={"db": db}).fetchall()
                 if rows and terminate:
-                    # A leftover of an earlier test on this worker
+                    # The database belongs to this worker, so a connection
+                    # still open after its tests can safely be closed
                     for (session_id,) in rows:
                         # The session can close between the query and the kill
                         with suppress(sa.exc.OperationalError):
@@ -1767,7 +1768,7 @@ def recorder_db_url(
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
     elif db_url.startswith(("mysql://", "postgresql://")):
-        drop_db()
+        drop_db(terminate=worker_db)
 
 
 async def _async_init_recorder_component(
