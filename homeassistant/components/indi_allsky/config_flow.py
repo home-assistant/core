@@ -212,6 +212,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             validate_data = {**reauth_entry.data, **user_input}
             try:
                 await validate_input(self.hass, validate_data)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:

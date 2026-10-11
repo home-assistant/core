@@ -427,3 +427,45 @@ async def test_reauth_failures(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_USERNAME] == "new_user"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.parametrize(
+    "credentials_input",
+    [
+        {CONF_USERNAME: "new_user", CONF_PASSWORD: ""},
+        {CONF_USERNAME: "", CONF_PASSWORD: "new_password"},
+    ],
+)
+async def test_reauth_missing_credentials_failure(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    credentials_input: dict[str, str],
+) -> None:
+    """Test entering empty username or password during reauth yields missing_credentials error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        credentials_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_credentials"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "valid_user",
+            CONF_PASSWORD: "valid_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "valid_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "valid_password"
