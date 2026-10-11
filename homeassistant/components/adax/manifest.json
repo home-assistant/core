@@ -3,7 +3,6 @@
   "name": "Adax",
   "codeowners": ["@danielhiversen", "@lazytarget"],
   "config_flow": true,
-  "dependencies": ["dhcp"],
   "dhcp": [
       {
         "hostname": "adax-heater*"
