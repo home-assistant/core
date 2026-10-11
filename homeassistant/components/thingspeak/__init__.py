@@ -38,16 +38,16 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Thingspeak environment."""
     conf = config[DOMAIN]
     api_key = conf.get(CONF_API_KEY)
     channel_id = conf.get(CONF_ID)
     entity = conf.get(CONF_WHITELIST)
 
+    channel = thingspeak.Channel(channel_id, api_key=api_key, timeout=TIMEOUT)
     try:
-        channel = thingspeak.Channel(channel_id, api_key=api_key, timeout=TIMEOUT)
-        channel.get()
+        await hass.async_add_executor_job(channel.get)
     except RequestException:
         _LOGGER.error(
             "Error while accessing the ThingSpeak channel. "
