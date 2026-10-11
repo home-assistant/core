@@ -1,5 +1,6 @@
 """Common fixtures for the Fressnapf Tracker tests."""
 
+import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -23,14 +24,17 @@ from homeassistant.components.fressnapf_tracker.const import (
     CONF_USER_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 MOCK_PHONE_NUMBER = "+491234567890"
+MOCK_EMAIL = "test@example.com"
+MOCK_PASSWORD = "mock_password"
 MOCK_USER_ID = 12345
 MOCK_ACCESS_TOKEN = "mock_access_token"
+MOCK_CUSTOMER_ID = "mock_customer_id"
 MOCK_SERIAL_NUMBER = "ABC123456"
 MOCK_DEVICE_TOKEN = "mock_device_token"
 
@@ -118,6 +122,20 @@ def mock_auth_client(mock_device: Device) -> Generator[MagicMock]:
         ),
     ):
         client = mock_auth_client.return_value
+        magic_link_response = MagicMock()
+        magic_link_response.user.id = MOCK_USER_ID
+        magic_link_response.user_token.access_token = MOCK_ACCESS_TOKEN
+        magic_link_response.customer_id = MOCK_CUSTOMER_ID
+        client.request_magic_link = AsyncMock(return_value=magic_link_response)
+
+        async def magic_link_was_clicked(user_access_token: str) -> bool:
+            await asyncio.sleep(0)
+            return True
+
+        client.check_magic_link_was_clicked = AsyncMock(
+            side_effect=magic_link_was_clicked
+        )
+        client.complete_magic_link = AsyncMock()
         client.request_sms_code = AsyncMock(
             return_value=SmsCodeResponse(id=MOCK_USER_ID)
         )
@@ -167,6 +185,21 @@ def mock_config_entry() -> MockConfigEntry:
         title=MOCK_PHONE_NUMBER,
         data={
             CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER,
+            CONF_USER_ID: MOCK_USER_ID,
+            CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
+        },
+        unique_id=str(MOCK_USER_ID),
+    )
+
+
+@pytest.fixture
+def mock_email_config_entry() -> MockConfigEntry:
+    """Return a mock config entry authenticated by email."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_EMAIL,
+        data={
+            CONF_EMAIL: MOCK_EMAIL,
             CONF_USER_ID: MOCK_USER_ID,
             CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
         },
