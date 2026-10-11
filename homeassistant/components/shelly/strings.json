@@ -304,6 +304,14 @@
         }
       }
     },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "Infrared emitter"
+      },
+      "infrared_receiver": {
+        "name": "Infrared receiver"
+      }
+    },
     "number": {
       "current_limit": {
         "name": "Current limit"
