@@ -58,11 +58,17 @@
       "frost_protection": {
         "name": "Frost protection"
       },
+      "frost_protection_active": {
+        "name": "Frost protection active"
+      },
       "holiday_mode": {
         "name": "Holiday mode"
       },
       "overheat_protection": {
         "name": "Overheat protection"
+      },
+      "overheat_protection_active": {
+        "name": "Overheat protection active"
       },
       "standby": {
         "name": "Standby"
