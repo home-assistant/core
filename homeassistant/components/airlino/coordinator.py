@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for Airlino."""
+"""DataUpdateCoordinator for AirLino."""
 
 from typing import TYPE_CHECKING, Any, override
 

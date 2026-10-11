@@ -214,9 +214,11 @@ class AirlinoMediaPlayer(
 
     async def _async_join_players(self, group_members: list[str]) -> None:
         self._ensure_not_multiroom_receiver()
-        requested_entity_ids = [
-            entity_id for entity_id in group_members if entity_id != self.entity_id
-        ]
+        requested_entity_ids = list(
+            dict.fromkeys(
+                entity_id for entity_id in group_members if entity_id != self.entity_id
+            )
+        )
         if not requested_entity_ids:
             return
         # Grouping is purely sender enable + receiver link: a linked receiver
