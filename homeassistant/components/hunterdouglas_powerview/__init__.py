@@ -9,15 +9,17 @@ from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .model import PowerviewConfigEntry, PowerviewEntryData
-from .util import async_connect_hub
+from .util import async_connect_hub, get_shade_ids
 
 PARALLEL_UPDATES = 1
 
@@ -109,6 +111,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
     coordinator.async_set_updated_data(PowerviewShadeData())
     # populate raw shade data into the coordinator for diagnostics
     coordinator.data.store_group_data(shade_data)
+    # remove registry devices for shades no longer on the hub, without
+    # depending on the coordinator ever polling
+    coordinator.async_remove_stale_devices(
+        {str(shade_id) for shade_id in shade_data.processed}
+    )
 
     entry.runtime_data = PowerviewEntryData(
         api=pv_request,
@@ -183,3 +190,22 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
                 reg_entry.entity_id,
                 new_unique_id=f"{entry.unique_id}_{reg_entry.unique_id}",
             )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device_entry: AnyDeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+
+    if TYPE_CHECKING:
+        assert isinstance(device_entry, dr.DeviceEntry)
+    if entry.state is not ConfigEntryState.LOADED:
+        return False
+    if device_entry.via_device_id is None:
+        # the hub can only be removed by removing the integration
+        return False
+    active_ids = {
+        str(shade_id)
+        for shade_id in entry.runtime_data.coordinator.data.get_all_raw_data()
+    }
+    return not get_shade_ids(device_entry) & active_ids
