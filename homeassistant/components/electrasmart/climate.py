@@ -246,6 +246,16 @@ class ElectraClimateEntity(ClimateEntity):
         await self._async_operate_electra_ac()
 
     @override
+    async def async_turn_on(self) -> None:
+        """Turn on, keeping the mode the AC was last running in."""
+        if not self._electra_ac_device.turn_on():
+            # The unit reports no previous mode to restore, so fall back to
+            # cooling rather than leaving the AC off.
+            self._electra_ac_device.set_mode(HVAC_MODE_HASS_TO_ELECTRA[HVACMode.COOL])
+
+        await self._async_operate_electra_ac()
+
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
