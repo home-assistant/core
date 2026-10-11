@@ -46,7 +46,12 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    get_fixture_path,
+)
 from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
@@ -2210,3 +2215,118 @@ async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) 
             "state_class": SensorStateClass.MEASUREMENT,
             "unit_of_measurement": "°C",
         }
+
+
+async def test_max_age_purge_coalesces_burst(hass: HomeAssistant) -> None:
+    """Test that samples expiring close together are purged in one update."""
+    now = dt_util.utcnow()
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+
+    with freeze_time(current_time) as freezer:
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                        "max_age": {"minutes": 1},
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        # A burst of four samples within 30 ms, then one more 10 s later
+        for value in (10, 20, 30, 40):
+            hass.states.async_set("sensor.test_monitored", str(value))
+            current_time += timedelta(milliseconds=10)
+            freezer.move_to(current_time)
+        current_time += timedelta(seconds=10)
+        freezer.move_to(current_time)
+        hass.states.async_set("sensor.test_monitored", "100")
+        await hass.async_block_till_done()
+
+        writes: list[str] = []
+
+        @callback
+        def _capture(event: Event[EventStateChangedData]) -> None:
+            if new_state := event.data["new_state"]:
+                writes.append(new_state.state)
+
+        async_track_state_change_event(hass, ["sensor.test"], _capture)
+
+        # Step through the expiry of the burst in small increments, offset so a
+        # step never lands exactly on an expiry (a real timer fires just after)
+        current_time += timedelta(seconds=49, milliseconds=5)
+        for _ in range(100):
+            current_time += timedelta(milliseconds=10)
+            freezer.move_to(current_time)
+            async_fire_time_changed_exact(hass, current_time)
+            await hass.async_block_till_done()
+
+        # The whole burst expired in a single state write
+        assert writes == ["100.0"]
+
+        # The last sample still expires on its own
+        current_time += timedelta(seconds=10)
+        freezer.move_to(current_time)
+        async_fire_time_changed_exact(hass, current_time)
+        await hass.async_block_till_done()
+        assert writes == ["100.0", STATE_UNKNOWN]
+
+
+async def test_max_age_purge_coalesce_window_boundary(hass: HomeAssistant) -> None:
+    """Test that only samples within the coalesce window are purged together."""
+    now = dt_util.utcnow()
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+
+    with freeze_time(current_time) as freezer:
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                        "max_age": {"minutes": 1},
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        # Samples at 0 s, 0.9 s (inside the window) and 1.1 s (outside it),
+        # then one more 10 s later
+        for value, step in ((10, 900), (20, 200), (30, 10000)):
+            hass.states.async_set("sensor.test_monitored", str(value))
+            current_time += timedelta(milliseconds=step)
+            freezer.move_to(current_time)
+        hass.states.async_set("sensor.test_monitored", "100")
+        await hass.async_block_till_done()
+
+        writes: list[str] = []
+
+        @callback
+        def _capture(event: Event[EventStateChangedData]) -> None:
+            if new_state := event.data["new_state"]:
+                writes.append(new_state.state)
+
+        async_track_state_change_event(hass, ["sensor.test"], _capture)
+
+        # Step through the expiry of the first three samples
+        current_time += timedelta(seconds=48, milliseconds=905)
+        for _ in range(300):
+            current_time += timedelta(milliseconds=10)
+            freezer.move_to(current_time)
+            async_fire_time_changed_exact(hass, current_time)
+            await hass.async_block_till_done()
+
+        # The 0 s and 0.9 s samples went together, the 1.1 s one on its own
+        assert writes == ["65.0", "100.0"]
