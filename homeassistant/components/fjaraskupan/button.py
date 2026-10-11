@@ -7,7 +7,6 @@ from fjaraskupan import COMMAND_RESETGREASEFILTER
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -25,7 +24,7 @@ async def async_setup_entry(
 
     def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [
-            ResetGreaseFilter(coordinator, coordinator.device_info),
+            ResetGreaseFilter(coordinator),
         ]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
@@ -38,19 +37,14 @@ class ResetGreaseFilter(CoordinatorEntity[FjaraskupanCoordinator], ButtonEntity)
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "reset_grease_filter"
 
-    def __init__(
-        self,
-        coordinator: FjaraskupanCoordinator,
-        device_info: DeviceInfo,
-    ) -> None:
+    def __init__(self, coordinator: FjaraskupanCoordinator) -> None:
         """Init button entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device.address}-reset-grease-filter"
-        self._attr_device_info = device_info
+        self._attr_device_info = coordinator.device_info
 
     @override
     async def async_press(self) -> None:
         """Reset the grease filter."""
         async with self.coordinator.async_connect_and_update() as device:
             await device.send_command(COMMAND_RESETGREASEFILTER)
-            await device.update()
