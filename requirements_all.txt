@@ -457,7 +457,7 @@ aioswitcher==6.1.3
 aiosyncthing==0.7.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.5.3
+aiotankerkoenig==0.5.5
 
 # homeassistant.components.tedee
 aiotedee==0.3.0
@@ -2015,7 +2015,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.3
+py-synologydsm-api==2.11.0
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.1
@@ -3002,7 +3002,7 @@ rokuecp==0.19.5
 romy==0.0.10
 
 # homeassistant.components.roomba
-roombapy==1.9.1
+roombapy==2.0.2
 
 # homeassistant.components.roon
 roonapi==0.1.6
@@ -3190,7 +3190,7 @@ subarulink==0.7.21
 sunsynk-api-client==1.4.0
 
 # homeassistant.components.surepetcare
-surepy==0.9.0
+surepy==0.10.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0

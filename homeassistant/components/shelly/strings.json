@@ -444,6 +444,9 @@
       "lamp_life": {
         "name": "Lamp life"
       },
+      "last_seen": {
+        "name": "Last seen"
+      },
       "left_slot_level": {
         "name": "Left slot level"
       },
