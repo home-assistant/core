@@ -7,7 +7,7 @@ from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.const import CONF_IP_ADDRESS, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -79,4 +79,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and CONF_IP_ADDRESS in entry.data and entry.disabled_by is not None:
+        _async_reload_discovery_entries(hass)
+    return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    if CONF_IP_ADDRESS in entry.data:
+        _async_reload_discovery_entries(hass)
+
+
+@callback
+def _async_reload_discovery_entries(hass: HomeAssistant) -> None:
+    """Reload discovery entries so they pick up devices no longer set up by IP."""
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.runtime_data.discovery_service is not None:
+            hass.config_entries.async_schedule_reload(entry.entry_id)

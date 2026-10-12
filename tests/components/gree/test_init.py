@@ -3,9 +3,10 @@
 from unittest.mock import MagicMock, patch
 
 from greeclimate.exceptions import DeviceTimeoutError
+import pytest
 
 from homeassistant.components.gree.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -227,3 +228,35 @@ async def test_setup_static_ip_different_device(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("remove", [False, True])
+@patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
+async def test_discovery_reclaims_device_from_static_ip_entry(
+    hass: HomeAssistant, discovery: MagicMock, remove: bool
+) -> None:
+    """Test discovery takes a device back when its static IP entry goes away."""
+    discovery.side_effect = lambda *args: FakeDiscovery()
+    static_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+    )
+    static_entry.add_to_hass(hass)
+    discovery_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN)
+    discovery_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert discovery_entry.runtime_data.coordinators == []
+
+    if remove:
+        await hass.config_entries.async_remove(static_entry.entry_id)
+    else:
+        await hass.config_entries.async_set_disabled_by(
+            static_entry.entry_id, ConfigEntryDisabler.USER
+        )
+    await hass.async_block_till_done()
+
+    assert discovery_entry.state is ConfigEntryState.LOADED
+    assert len(discovery_entry.runtime_data.coordinators) == 1

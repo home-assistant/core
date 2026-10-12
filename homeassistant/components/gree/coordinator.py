@@ -166,9 +166,10 @@ class DiscoveryService(Listener):
 
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
-        if self.hass.config_entries.async_entry_for_domain_unique_id(
+        static_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, device_info.mac
-        ):
+        )
+        if static_entry is not None and static_entry.disabled_by is None:
             _LOGGER.debug(
                 "Skipping Gree device %s, it is configured by IP address",
                 device_info.mac,
