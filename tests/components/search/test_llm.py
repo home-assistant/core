@@ -57,13 +57,6 @@ async def setup_items(
                     "triggers": {"trigger": "event", "event_type": "test"},
                     "actions": [],
                 },
-                {
-                    "id": "wake_up",
-                    "alias": "Wake up",
-                    "description": "Open the curtains in the morning",
-                    "triggers": {"trigger": "event", "event_type": "test"},
-                    "actions": [],
-                },
             ]
         },
     )
@@ -72,11 +65,7 @@ async def setup_items(
         "script",
         {
             "script": {
-                "morning_news": {
-                    "alias": "Play news",
-                    "description": "Play the news in the morning",
-                    "sequence": [],
-                },
+                "morning_news": {"alias": "Play news", "sequence": []},
             }
         },
     )
@@ -98,6 +87,12 @@ async def setup_items(
         name="Kitchen sensor",
         manufacturer="Acme",
         model="Multisensor",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "sensor-speaker")},
+        parent_device_id=sensor_device.id,
+        name="Kitchen speaker",
     )
     renamed_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -127,7 +122,11 @@ async def setup_items(
     entity_registry.async_update_entity(lamp.entity_id, aliases=["Counter light"])
     hass.states.async_set(lamp.entity_id, "off", {ATTR_FRIENDLY_NAME: "Lamp"})
 
-    return {sensor_device.id: "<sensor device>", renamed_device.id: "<hub device>"}
+    return {
+        sensor_device.id: "<sensor device>",
+        child_device.id: "<child device>",
+        renamed_device.id: "<hub device>",
+    }
 
 
 def _ordered(data: JsonObjectType, device_ids: dict[str, str]) -> JsonValueType:
@@ -177,7 +176,6 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"query": "acme", "type": "device"}, id="device_manufacturer"),
         pytest.param({"query": "cooking", "type": "area"}, id="area_alias"),
         pytest.param({"query": "counter"}, id="entity_alias"),
-        pytest.param({"query": "morning"}, id="description"),
         pytest.param({"query": "kitchen_lights"}, id="entity_id"),
         pytest.param({"query": "nothing"}, id="no_match"),
     ],

@@ -1,27 +1,24 @@
 """LLM tools for the search integration."""
 
-from collections.abc import Callable, Iterable
-from dataclasses import dataclass
-from typing import Any, override
+from collections.abc import Callable, Iterable, Iterator
+from functools import partial
+import heapq
+from itertools import chain
+from typing import override
 
 import probatio
 
-from homeassistant.components.automation import (
-    DATA_COMPONENT as AUTOMATION_DATA_COMPONENT,
-    DOMAIN as AUTOMATION_DOMAIN,
-)
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.const import CONF_DESCRIPTION
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
 )
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -42,139 +39,119 @@ _INSTRUCTIONS = (
     f"and set offset to {_LIMIT}."
 )
 
-
-@dataclass(slots=True, frozen=True)
-class _Item:
-    """An item that can be found by a search."""
-
-    id: str
-    name: str | None
-    names: Iterable[str | None]
-    other: Iterable[str | None]
+type _Item = tuple[str, str | None, Iterable[str], Iterable[str]]
+"""ID, display name, names and other fields of an item that can be found."""
 
 
-def _rank(item: _Item, query: str) -> int | None:
+def _rank(query: str, names: Iterable[str], other: Iterable[str]) -> int | None:
     """Return the rank of an item for the query, or None if it does not match.
 
     Rank 0 is an exact name match, rank 1 a partial name match and rank 2 a
-    match on another field.
+    match on another field. The other fields are only read when no name matches.
     """
-    names = [name.casefold() for name in item.names if name]
-    if query in names:
-        return 0
-    if any(query in name for name in names):
-        return 1
-    if any(query in value.casefold() for value in item.other if value):
-        return 2
-    return None
+    rank = None
+    for name in names:
+        folded = name.casefold()
+        if folded == query:
+            return 0
+        if query in folded:
+            rank = 1
+    if rank is None and any(query in value.casefold() for value in other):
+        rank = 2
+    return rank
 
 
-def _entities(hass: HomeAssistant) -> list[_Item]:
-    """Return the entities that are not automations, scripts or scenes."""
+def _set(*values: str | None) -> Iterator[str]:
+    """Yield the values that are set."""
+    return (value for value in values if value)
+
+
+def _entity_other(
+    hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
+) -> Iterator[str]:
+    """Yield the other fields of an entity."""
+    yield entity_id
+    if entry := ent_reg.async_get(entity_id):
+        yield from er.async_get_entity_aliases(hass, entry)
+
+
+def _entities(hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the entities that are not automations, scripts or scenes."""
     ent_reg = er.async_get(hass)
-    items = []
     for state in hass.states.async_all():
-        if split_entity_id(state.entity_id)[0] in _OWN_TYPE_DOMAINS:
-            continue
-        aliases: list[str] = []
-        if entry := ent_reg.async_get(state.entity_id):
-            aliases = er.async_get_entity_aliases(hass, entry)
-        items.append(
-            _Item(
-                state.entity_id, state.name, [state.name], [state.entity_id, *aliases]
-            )
-        )
-    return items
-
-
-def _devices(hass: HomeAssistant) -> list[_Item]:
-    """Return the enabled devices."""
-    return [
-        _Item(
-            device.id,
-            device.name_by_user or device.name,
-            [device.name_by_user, device.name],
-            [device.model, device.manufacturer],
-        )
-        for device in dr.async_get(hass).devices
-        if not device.disabled
-    ]
-
-
-def _areas(hass: HomeAssistant) -> list[_Item]:
-    """Return the areas."""
-    return [
-        _Item(area.id, area.name, [area.name], area.aliases)
-        for area in ar.async_get(hass).async_list_areas()
-    ]
-
-
-def _labels(hass: HomeAssistant) -> list[_Item]:
-    """Return the labels."""
-    return [
-        _Item(label.label_id, label.name, [label.name], [])
-        for label in lr.async_get(hass).async_list_labels()
-    ]
-
-
-def _with_description(
-    hass: HomeAssistant, domain: str, component: EntityComponent[Any] | None
-) -> list[_Item]:
-    """Return the entities of an automation or script domain.
-
-    The description is matched as another field.
-    """
-    items = []
-    for state in hass.states.async_all(domain):
-        description = None
-        if (
-            component is not None
-            and (entity := component.get_entity(state.entity_id)) is not None
-            and entity.raw_config is not None
-            and (value := entity.raw_config.get(CONF_DESCRIPTION)) is not None
-        ):
-            # YAML allows a description that is not a string, such as a number.
-            description = str(value)
-        items.append(
-            _Item(
+        if state.domain not in _OWN_TYPE_DOMAINS:
+            yield (
                 state.entity_id,
                 state.name,
-                [state.name],
-                [state.entity_id, description],
+                (state.name,),
+                _entity_other(hass, ent_reg, state.entity_id),
             )
+
+
+def _devices(hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the enabled devices, including child devices."""
+    dev_reg = dr.async_get(hass)
+    for device in chain(dev_reg.devices, dev_reg.child_devices):
+        if device.disabled:
+            continue
+        yield (
+            device.id,
+            device.name_by_user or device.name,
+            _set(device.name_by_user, device.name),
+            # Child devices have no model or manufacturer.
+            _set(device.model, device.manufacturer)
+            if isinstance(device, dr.DeviceEntry)
+            else (),
         )
-    return items
 
 
-def _automations(hass: HomeAssistant) -> list[_Item]:
-    """Return the automations."""
-    return _with_description(
-        hass, AUTOMATION_DOMAIN, hass.data.get(AUTOMATION_DATA_COMPONENT)
-    )
+def _areas(hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the areas."""
+    for area in ar.async_get(hass).async_list_areas():
+        yield area.id, area.name, (area.name,), area.aliases
 
 
-def _scripts(hass: HomeAssistant) -> list[_Item]:
-    """Return the scripts."""
-    return _with_description(hass, SCRIPT_DOMAIN, hass.data.get(SCRIPT_DOMAIN))
+def _labels(hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the labels."""
+    for label in lr.async_get(hass).async_list_labels():
+        yield label.label_id, label.name, (label.name,), ()
 
 
-def _scenes(hass: HomeAssistant) -> list[_Item]:
-    """Return the scenes."""
-    return [
-        _Item(state.entity_id, state.name, [state.name], [state.entity_id])
-        for state in hass.states.async_all(SCENE_DOMAIN)
-    ]
+def _domain_entities(domain: str, hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the entities of a domain."""
+    for state in hass.states.async_all(domain):
+        yield state.entity_id, state.name, (state.name,), (state.entity_id,)
 
 
-_ITEMS: dict[str, Callable[[HomeAssistant], list[_Item]]] = {
+_ITEMS: dict[str, Callable[[HomeAssistant], Iterator[_Item]]] = {
     "entity": _entities,
     "device": _devices,
     "area": _areas,
     "label": _labels,
-    "automation": _automations,
-    "script": _scripts,
-    "scene": _scenes,
+    "automation": partial(_domain_entities, AUTOMATION_DOMAIN),
+    "script": partial(_domain_entities, SCRIPT_DOMAIN),
+    "scene": partial(_domain_entities, SCENE_DOMAIN),
 }
+
+
+def _search(
+    items: Iterator[_Item], query: str, offset: int
+) -> tuple[int, JsonObjectType]:
+    """Return the number of matches and the matches after the offset.
+
+    Only the best offset + limit matches are kept in memory.
+    """
+    total = 0
+
+    def matches() -> Iterator[tuple[int, str, str, str | None]]:
+        nonlocal total
+        for item_id, name, names, other in items:
+            if (rank := _rank(query, names, other)) is not None:
+                total += 1
+                yield rank, (name or "").casefold(), item_id, name
+
+    best = heapq.nsmallest(offset + _LIMIT, matches())
+    return total, {item_id: name for _, _, item_id, name in best[offset:]}
 
 
 class SearchTool(Tool):
@@ -225,24 +202,11 @@ class SearchTool(Tool):
         result: JsonObjectType = {}
         has_more = False
         for type_ in [item_type] if item_type else _ITEMS:
-            matches = sorted(
-                (
-                    (rank, (item.name or "").casefold(), item)
-                    for item in _ITEMS[type_](hass)
-                    if (rank := _rank(item, query)) is not None
-                ),
-                key=lambda match: match[:2],
-            )
-            if not matches:
+            total, results = _search(_ITEMS[type_](hass), query, offset)
+            if not total:
                 continue
-            has_more = has_more or len(matches) > _LIMIT
-            result[type_] = {
-                "total": len(matches),
-                "results": {
-                    item.id: item.name
-                    for _, _, item in matches[offset : offset + _LIMIT]
-                },
-            }
+            has_more = has_more or total > _LIMIT
+            result[type_] = {"total": total, "results": results}
 
         if item_type is None and has_more:
             result["instructions"] = _INSTRUCTIONS

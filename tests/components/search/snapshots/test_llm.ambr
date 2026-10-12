@@ -61,11 +61,15 @@
           'Kitchen sensor',
         ]),
         list([
+          '<child device>',
+          'Kitchen speaker',
+        ]),
+        list([
           '<hub device>',
           'Main hub',
         ]),
       ]),
-      'total': 2,
+      'total': 3,
     }),
     'entity': dict({
       'results': list([
@@ -126,28 +130,6 @@
     }),
   })
 # ---
-# name: test_search[description]
-  dict({
-    'automation': dict({
-      'results': list([
-        list([
-          'automation.wake_up',
-          'Wake up',
-        ]),
-      ]),
-      'total': 1,
-    }),
-    'script': dict({
-      'results': list([
-        list([
-          'script.morning_news',
-          'Play news',
-        ]),
-      ]),
-      'total': 1,
-    }),
-  })
-# ---
 # name: test_search[device_manufacturer]
   dict({
     'device': dict({
@@ -174,11 +156,15 @@
           'Kitchen sensor',
         ]),
         list([
+          '<child device>',
+          'Kitchen speaker',
+        ]),
+        list([
           '<hub device>',
           'Main hub',
         ]),
       ]),
-      'total': 2,
+      'total': 3,
     }),
   })
 # ---
