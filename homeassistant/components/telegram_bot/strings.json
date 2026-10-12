@@ -196,13 +196,13 @@
       "message": "Failed to load file {file_path}."
     },
     "failed_to_load_url": {
-      "message": "Failed to load URL: {error}"
+      "message": "Failed to load {url}: {error}"
     },
     "failed_to_load_url_empty": {
-      "message": "Failed to load URL: the server returned no data."
+      "message": "Failed to load {url}: the server returned no data."
     },
     "failed_to_load_url_status": {
-      "message": "Failed to load URL: the server responded with status code {status_code}."
+      "message": "Failed to load {url}: the server responded with status code {status_code}."
     },
     "file_not_found": {
       "message": "File {file_path} does not exist."
