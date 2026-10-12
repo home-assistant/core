@@ -68,7 +68,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: todo
