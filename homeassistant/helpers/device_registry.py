@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Iterator, Mapping, Set as AbstractSet
 import copy
-from dataclasses import KW_ONLY, Field, dataclass, fields as dataclass_fields
+from dataclasses import KW_ONLY, MISSING, Field, dataclass, fields as dataclass_fields
 from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
@@ -151,6 +151,8 @@ class _DeviceInfoMapping:
 
     # The mapping keys, in field declaration order
     _field_names: ClassVar[tuple[str, ...]]
+    __required_keys__: ClassVar[frozenset[str]]
+    __optional_keys__: ClassVar[frozenset[str]]
 
     if TYPE_CHECKING:
         # Set by the @dataclass decorator, declared for _device_info_fields
@@ -246,7 +248,15 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
     cls: type[_DeviceInfoT],
 ) -> type[_DeviceInfoT]:
     """Cache the field names a device info dataclass exposes as mapping keys."""
-    cls._field_names = tuple(field.name for field in dataclass_fields(cls))
+    fields = dataclass_fields(cls)
+    cls._field_names = tuple(field.name for field in fields)
+    # Integrations read these TypedDict attributes to check for a field
+    cls.__required_keys__ = frozenset(
+        field.name
+        for field in fields
+        if field.default is MISSING and field.default_factory is MISSING
+    )
+    cls.__optional_keys__ = frozenset(cls._field_names) - cls.__required_keys__
     return cls
 
 

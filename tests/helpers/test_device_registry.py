@@ -4654,6 +4654,19 @@ def test_device_info_membership() -> None:
         list(device_info)
 
 
+def test_device_info_typed_dict_keys() -> None:
+    """Test the TypedDict key attributes integrations read to check for a field."""
+    assert dr.DeviceInfo.__required_keys__ == frozenset()
+    assert "via_device_id" in dr.DeviceInfo.__optional_keys__
+    assert dr.ChildDeviceInfo.__required_keys__ == {"identifiers", "parent_device_id"}
+    assert dr.ChildDeviceInfo.__optional_keys__ == {
+        "name",
+        "suggested_area",
+        "translation_key",
+        "translation_placeholders",
+    }
+
+
 def test_device_info_rejects_unknown_key() -> None:
     """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")
