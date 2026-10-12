@@ -132,18 +132,20 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         self._attr_fan_mode = last_state.attributes.get(
             ClimateEntityStateAttribute.FAN_MODE, self._attr_fan_mode
         )
+        # States written before 2026.11 lack temperature_unit and are in the
+        # current system unit
+        unit = last_state.attributes.get(
+            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+            self.hass.config.units.temperature_unit,
+        )
         if (
             temperature := last_state.attributes.get(
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
-        ) is not None:
-            # The attribute was published in the unit of the system, not the one
-            # this entity reports in, so it converts back on the way in
+        ) is not None and unit in TemperatureConverter.VALID_UNITS:
             temperature = round(
                 TemperatureConverter.convert(
-                    temperature,
-                    self.hass.config.units.temperature_unit,
-                    self.native_temperature_unit,
+                    temperature, unit, self.native_temperature_unit
                 )
             )
             # A state written before that conversion was made can hold anything

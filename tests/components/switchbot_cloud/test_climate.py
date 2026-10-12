@@ -1,5 +1,6 @@
 """Test for the switchbot_cloud climate."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,13 +17,18 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import configure_integration
 
@@ -261,21 +267,70 @@ async def test_air_conditioner_restore_state(
 
 
 @pytest.mark.parametrize(
-    ("restored_temperature", "expected_temperature"),
+    ("unit_system", "restored_attributes", "expected_temperature"),
     [
-        pytest.param(75, 75, id="restored_as_published"),
-        pytest.param(19381607032619749376, 70, id="corrupted_falls_back_to_default"),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM, {ATTR_TEMPERATURE: 75}, 75, id="legacy_fahrenheit"
+        ),
+        pytest.param(METRIC_SYSTEM, {ATTR_TEMPERATURE: 25}, 25, id="legacy_celsius"),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {ATTR_TEMPERATURE: 19381607032619749376},
+            70,
+            id="corrupted_falls_back_to_default",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {
+                ATTR_TEMPERATURE: 75,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            75,
+            id="fahrenheit",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {
+                ATTR_TEMPERATURE: 25,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            },
+            77,
+            id="stored_celsius_on_fahrenheit_system",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                ATTR_TEMPERATURE: 77,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            25,
+            id="stored_fahrenheit_on_celsius_system",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                ATTR_TEMPERATURE: 25,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+            },
+            21,
+            id="invalid_unit_falls_back_to_default",
+        ),
     ],
 )
-async def test_air_conditioner_restore_state_in_fahrenheit(
+async def test_air_conditioner_restore_state_temperature(
     hass: HomeAssistant,
     mock_list_devices: AsyncMock,
     mock_get_status: AsyncMock,
-    restored_temperature: float,
+    unit_system: UnitSystem,
+    restored_attributes: dict[str, Any],
     expected_temperature: float,
 ) -> None:
-    """Test the target temperature is restored in the unit it was published in."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
+    """Test the target temperature is restored from the unit it was published in."""
+    hass.config.units = unit_system
     mock_list_devices.return_value = [
         Remote(
             deviceId="ac-device-id-1",
@@ -288,7 +343,7 @@ async def test_air_conditioner_restore_state_in_fahrenheit(
     entity_id = "climate.climate_1"
     mock_restore_cache(
         hass,
-        (State(entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}),),
+        (State(entity_id, HVACMode.COOL, restored_attributes),),
     )
 
     entry = await configure_integration(hass)
