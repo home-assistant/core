@@ -196,7 +196,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if "old_config_entry_id" in entry.options:
         await async_clean_import(hass, entry)
     await hass.config_entries.async_forward_entry_setups(
-        entry, (entry.options["group_type"],)
+        entry, (entry.options[CONF_GROUP_TYPE],)
     )
     return True
 
@@ -204,7 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(
-        entry, (entry.options["group_type"],)
+        entry, (entry.options[CONF_GROUP_TYPE],)
     )
 
 
