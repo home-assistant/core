@@ -6,8 +6,7 @@ from unittest.mock import patch
 
 import pytest
 import serial
-from serial import Serial as PlatformSerial, SerialBase, SerialException
-from serial.rfc2217 import Serial as Rfc2217Serial
+from serial import SerialBase, SerialException
 from serial.urlhandler.protocol_socket import Serial as SocketSerial
 
 from homeassistant import block_shared_serial
@@ -15,15 +14,10 @@ from homeassistant import block_shared_serial
 
 @pytest.fixture(autouse=True)
 def restore_pyserial() -> Generator[None]:
-    """Restore pyserial state after each test."""
-    original_defaults = SerialBase.__init__.__defaults__
-    try:
-        yield
-    finally:
-        SerialBase.__init__.__defaults__ = original_defaults
-        PlatformSerial.open = block_shared_serial._original_open
-        SocketSerial.open = block_shared_serial._original_socket_open
-        Rfc2217Serial.open = block_shared_serial._original_rfc2217_open
+    """Start from and return to unpatched pyserial state around each test."""
+    block_shared_serial.disable()
+    yield
+    block_shared_serial.disable()
 
 
 async def test_default_exclusive_becomes_true() -> None:
@@ -66,3 +60,12 @@ async def test_enable_is_idempotent() -> None:
     wrapped_open = SocketSerial.open
     block_shared_serial.enable()
     assert SocketSerial.open is wrapped_open
+
+
+async def test_disable_restores_pyserial() -> None:
+    """disable() undoes enable()."""
+    original_open = SocketSerial.open
+    block_shared_serial.enable()
+    block_shared_serial.disable()
+    assert SerialBase().exclusive is None
+    assert SocketSerial.open is original_open

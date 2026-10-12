@@ -47,7 +47,7 @@ from syrupy.assertion import SnapshotAssertion
 # Setup patching of JSON functions before any other Home Assistant imports
 from . import patch_json  # isort:skip
 
-from homeassistant import block_async_io
+from homeassistant import block_async_io, block_shared_serial
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
@@ -2325,6 +2325,13 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+@pytest.fixture
+def disable_block_shared_serial() -> Generator[None]:
+    """Fixture to restore pyserial after block_shared_serial patched it."""
+    yield
+    block_shared_serial.disable()
 
 
 # Ensure that incorrectly formatted mac addresses are rejected during
