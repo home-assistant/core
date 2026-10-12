@@ -304,6 +304,30 @@
         }
       }
     },
+    "light": {
+      "ledstrip": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "aurora": "Aurora",
+              "blink": "Blink",
+              "blurz": "BlurZ",
+              "colorwipe": "Color wipe",
+              "ddp": "DDP receiver",
+              "fade": "Fade",
+              "freqwave": "FreqWave",
+              "glitterwaves": "Glitter waves",
+              "meteors": "Meteors",
+              "pixeldance": "Pixel dance",
+              "rainbow": "Rainbow",
+              "snow": "Snow",
+              "solid": "Solid color",
+              "twinkle": "Twinkle"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "current_limit": {
         "name": "Current limit"
