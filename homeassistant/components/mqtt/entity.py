@@ -230,6 +230,9 @@ def async_setup_non_entity_entry_helper(
         except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
+        except dr.DeviceInfoError as err:
+            _handle_discovery_failure(hass, discovery_payload)
+            _log_device_info_error(err)
         except Exception:
             _handle_discovery_failure(hass, discovery_payload)
             raise
@@ -1004,6 +1007,10 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             )
             try:
                 await self.async_update(discovery_payload)
+            except dr.DeviceInfoError as err:
+                # Cancel the update, the current config remains active
+                _log_device_info_error(err)
+                return
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
@@ -1986,7 +1993,10 @@ def update_device(
     config_entry: ConfigEntry,
     config: ConfigType,
 ) -> str | None:
-    """Update device registry."""
+    """Update device registry.
+
+    Raises DeviceInfoError when the device can not be registered.
+    """
     if CONF_DEVICE not in config:
         return None
 
@@ -2001,12 +2011,9 @@ def update_device(
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
             device_info.via_device_id = via_device_id
-        try:
-            device = device_registry.async_get_or_create(
-                config_entry_id=config_entry_id, **device_info
-            )
-        except dr.DeviceInfoError as err:
-            _log_device_info_error(err)
+        device = device_registry.async_get_or_create(
+            config_entry_id=config_entry_id, **device_info
+        )
 
     return device.id if device else None
 
