@@ -32,8 +32,8 @@ def _browser_url(service: ServiceCall) -> None:
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Listen for browse_url events."""
 
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_BROWSE_URL,

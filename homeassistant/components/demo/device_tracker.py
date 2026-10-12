@@ -17,8 +17,6 @@ def setup_scanner(
 ) -> bool:
     """Set up the demo tracker."""
 
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     def offset() -> float:
         """Return random offset."""
         return (random.randrange(500, 2000)) / 2e5 * random.choice((-1, 1))
@@ -48,6 +46,8 @@ def setup_scanner(
         battery=53,
     )
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA, observe)
 
     return True

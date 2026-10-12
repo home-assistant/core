@@ -139,8 +139,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Flux switches."""
-    # Action names come from the configuration
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
@@ -177,6 +175,8 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
+    # Cannot be moved: action names come from the configuration
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 

@@ -1551,8 +1551,6 @@ def _async_register_service(
     service: UserService,
 ) -> None:
     """Register a service on a node."""
-    # Action names come from the device
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     service_name = build_service_name(device_info, service)
     schema = {}
     fields = {}
@@ -1580,6 +1578,8 @@ def _async_register_service(
     esphome_supports_response = service.supports_response or SupportsResponseType.NONE
     ha_supports_response = _RESPONSE_TYPE_MAPPER.from_esphome(esphome_supports_response)
 
+    # Cannot be moved: action names come from the device
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         service_name,

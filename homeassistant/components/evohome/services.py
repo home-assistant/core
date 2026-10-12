@@ -206,7 +206,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
 
 @callback
-# Temporary: should only take hass
+# Should be adjusted to only take hass
 # pylint: disable-next=home-assistant-invalid-setup-services
 def async_setup_services(
     hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator

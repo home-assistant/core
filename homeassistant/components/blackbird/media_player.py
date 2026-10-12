@@ -75,8 +75,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     if DATA_BLACKBIRD not in hass.data:
         hass.data[DATA_BLACKBIRD] = {}
 
@@ -132,6 +130,8 @@ def setup_platform(
             if service.service == SERVICE_SETALLZONES:
                 device.set_all_zones(source)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN, SERVICE_SETALLZONES, service_handle, schema=BLACKBIRD_SETALLZONES_SCHEMA
     )

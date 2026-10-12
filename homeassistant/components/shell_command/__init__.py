@@ -155,8 +155,6 @@ def _make_handler(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the shell_command component."""
-    # Action names come from the configuration
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config.get(DOMAIN, {})
 
     cache: dict[str, tuple[str, str | None, template.Template | None]] = {}
@@ -174,6 +172,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             _LOGGER.warning("Skipping shell_command entry '%s': name is reserved", name)
             continue
+        # Cannot be moved: action names come from the configuration
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             name,
@@ -216,6 +216,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "Skipping shell_command entry '%s': name is reserved", name
                 )
                 continue
+            # pylint: disable-next=home-assistant-action-registered-outside-services-module
             hass.services.async_register(
                 DOMAIN,
                 name,
@@ -223,6 +224,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 supports_response=SupportsResponse.OPTIONAL,
             )
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service_helper.async_register_admin_service(
         hass,
         DOMAIN,

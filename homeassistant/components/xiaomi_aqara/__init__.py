@@ -72,8 +72,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
 
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)
@@ -112,6 +110,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     gateway_only_schema = _add_gateway_to_schema(hass, probatio.Schema({}))
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_PLAY_RINGTONE,
@@ -119,14 +119,17 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=_add_gateway_to_schema(hass, SERVICE_SCHEMA_PLAY_RINGTONE),
     )
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN, SERVICE_STOP_RINGTONE, stop_ringtone_service, schema=gateway_only_schema
     )
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN, SERVICE_ADD_DEVICE, add_device_service, schema=gateway_only_schema
     )
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_REMOVE_DEVICE,

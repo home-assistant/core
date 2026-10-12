@@ -273,8 +273,6 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        # Actions are registered per legacy platform
-        # pylint: disable=home-assistant-action-registered-outside-services-module
         if self.targets is not None:
             stale_targets = set(self.registered_targets)
 
@@ -287,6 +285,8 @@ class BaseNotificationService:
                 ):
                     continue
                 self.registered_targets[target_name] = target
+                # Cannot be moved: actions are registered per legacy platform
+                # pylint: disable-next=home-assistant-action-registered-outside-services-module
                 self.hass.services.async_register(
                     DOMAIN,
                     target_name,
@@ -314,6 +314,7 @@ class BaseNotificationService:
         if self.hass.services.has_service(DOMAIN, self._service_name):
             return
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self.hass.services.async_register(
             DOMAIN,
             self._service_name,

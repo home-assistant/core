@@ -53,8 +53,6 @@ CONFIG_SCHEMA = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Foursquare component."""
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     config = config[DOMAIN]
 
     def checkin_user(call: ServiceCall) -> None:
@@ -72,6 +70,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.fire(EVENT_CHECKIN, {"text": response.text})
 
     # Register our service with Home Assistant.
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN, "checkin", checkin_user, schema=CHECKIN_SERVICE_SCHEMA
     )

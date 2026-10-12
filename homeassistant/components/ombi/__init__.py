@@ -91,8 +91,6 @@ CONFIG_SCHEMA = probatio.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ombi component platform."""
 
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     ombi = pyombi.Ombi(
         ssl=config[DOMAIN][CONF_SSL],
         host=config[DOMAIN][CONF_HOST],
@@ -148,18 +146,22 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             raise Warning("No music album found.")
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_MOVIE_REQUEST,
         submit_movie_request,
         schema=SUBMIT_MOVIE_REQUEST_SERVICE_SCHEMA,
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_MUSIC_REQUEST,
         submit_music_request,
         schema=SUBMIT_MUSIC_REQUEST_SERVICE_SCHEMA,
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_TV_REQUEST,

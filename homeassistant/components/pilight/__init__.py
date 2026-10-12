@@ -71,8 +71,6 @@ CONFIG_SCHEMA = probatio.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pilight component."""
 
-    # Integration is disabled
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     send_throttler = CallRateDelayThrottle(hass, config[DOMAIN][CONF_SEND_DELAY])
@@ -109,6 +107,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 
     def _register_service() -> None:
+        # Cannot be moved: the integration is disabled
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             SERVICE_NAME,

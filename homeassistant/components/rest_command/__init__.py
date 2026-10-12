@@ -85,8 +85,6 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
-    # Action names come from the configuration
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all rest_commands and load new ones from config."""
         conf = await async_integration_yaml_config(hass, DOMAIN)
@@ -276,6 +274,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ) from err
 
         # register services
+        # Cannot be moved: action names come from the configuration
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             name,
@@ -286,6 +286,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for name, command_config in config[DOMAIN].items():
         async_register_rest_command(name, command_config)
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=probatio.Schema({})
     )

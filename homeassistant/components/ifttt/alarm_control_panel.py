@@ -78,8 +78,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a control panel managed through IFTTT."""
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     if DATA_IFTTT_ALARM not in hass.data:
         hass.data[DATA_IFTTT_ALARM] = []
 
@@ -117,6 +115,8 @@ def setup_platform(
             device.push_alarm_state(state)
             device.async_schedule_update_ha_state()
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_PUSH_ALARM_STATE,

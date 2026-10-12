@@ -75,8 +75,8 @@ class EntityServiceDescription:
 
     def async_register(self, platform: entity_platform.EntityPlatform) -> None:
         """Register the service with the platform."""
-        # Temporary: use async_register_platform_entity_service in async_setup_services
-        # pylint: disable=home-assistant-action-registered-outside-services-module
+        # Should be adjusted to use async_register_platform_entity_service in async_setup_services
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         platform.async_register_entity_service(
             self.name,
             self.schema,

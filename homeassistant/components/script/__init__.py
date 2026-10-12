@@ -209,8 +209,6 @@ def blueprint_in_script(hass: HomeAssistant, entity_id: str) -> str | None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
-    # Temporary: move action registration to async_setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.data[DOMAIN] = component = EntityComponent[BaseScriptEntity](
         LOGGER, DOMAIN, hass
     )
@@ -268,15 +266,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for script_entity in script_entities:
             await script_entity.async_toggle(context=service.context, wait=False)
 
+    # Should be adjusted to register actions in async_setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service, schema=RELOAD_SERVICE_SCHEMA
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, turn_on_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, turn_off_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
@@ -771,14 +774,14 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
-        # Each script is also registered as its own action
-        # pylint: disable=home-assistant-action-registered-outside-services-module
         if TYPE_CHECKING:
             assert self.unique_id is not None
             assert self.registry_entry is not None
 
         unique_id = self.unique_id
         hass = self.hass
+        # Cannot be moved: each script is also registered as its own action
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             unique_id,

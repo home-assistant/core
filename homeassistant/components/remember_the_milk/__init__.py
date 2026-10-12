@@ -133,8 +133,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: RememberTheMilkConfigEntry
 ) -> bool:
     """Set up Remember The Milk from a config entry."""
-    # Temporary: deprecated actions, to be removed in 2027.5
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     # pylint: disable-next=home-assistant-use-runtime-data
     component: EntityComponent[RememberTheMilkEntity] = hass.data[DOMAIN][
         DATA_COMPONENT
@@ -187,12 +185,15 @@ async def async_setup_entry(
     # The services are registered here for now because they need the account name.
     # The services are deprecated in favor of the todo platform.
     # pylint: disable=home-assistant-service-registered-in-setup-entry
+    # Deprecated actions, to be removed in 2027.5
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         f"{account_name}_create_task",
         entity.create_task,
         schema=SERVICE_SCHEMA_CREATE_TASK,
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         f"{account_name}_complete_task",

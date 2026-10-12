@@ -85,8 +85,6 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MinioClient and event listeners."""
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config[DOMAIN]
 
     host = conf[CONF_HOST]
@@ -158,8 +156,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         minio_client.remove_object(bucket, key)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "put", put_file, schema=BUCKET_KEY_FILE_SCHEMA)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "get", get_file, schema=BUCKET_KEY_FILE_SCHEMA)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "remove", remove_file, schema=BUCKET_KEY_SCHEMA)
 
     return True

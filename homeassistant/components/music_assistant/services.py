@@ -95,8 +95,8 @@ PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 @callback
 def register_actions(hass: HomeAssistant) -> None:
     """Register custom actions."""
-    # Temporary: rename to async_setup_services
-    # pylint: disable=home-assistant-action-registered-outside-services-module
+    # Should be adjusted to rename register_actions to async_setup_services
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEARCH,
@@ -117,6 +117,7 @@ def register_actions(hass: HomeAssistant) -> None:
         ),
         supports_response=SupportsResponse.ONLY,
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_LIBRARY,
@@ -139,6 +140,7 @@ def register_actions(hass: HomeAssistant) -> None:
     )
 
     # Platform entity services
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -159,6 +161,7 @@ def register_actions(hass: HomeAssistant) -> None:
         },
         func="_async_handle_play_media",
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -183,6 +186,7 @@ def register_actions(hass: HomeAssistant) -> None:
         ),
         func="_async_handle_play_announcement",
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -195,6 +199,7 @@ def register_actions(hass: HomeAssistant) -> None:
         },
         func="_async_handle_transfer_queue",
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,

@@ -165,8 +165,6 @@ def parse_mapping(mapping, parents=None):
 def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
 
-    # Temporary: move action registration to setup_services in services.py
-    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.data[DOMAIN] = {}
 
     # Parse configuration into a dict of device name to physical address
@@ -319,20 +317,27 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _start_cec(callback_event):
         """Register services and start HDMI network to watch for devices."""
+        # Should be adjusted to register actions in setup_services in services.py
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(
             DOMAIN, SERVICE_SEND_COMMAND, _tx, SERVICE_SEND_COMMAND_SCHEMA
         )
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(
             DOMAIN, SERVICE_VOLUME, _volume, schema=SERVICE_VOLUME_SCHEMA
         )
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(
             DOMAIN,
             SERVICE_UPDATE_DEVICES,
             _update,
             schema=SERVICE_UPDATE_DEVICES_SCHEMA,
         )
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(DOMAIN, SERVICE_POWER_ON, _power_on)
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(DOMAIN, SERVICE_STANDBY, _standby)
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, _select_device)
 
         hdmi_network.set_new_device_callback(_new_device)

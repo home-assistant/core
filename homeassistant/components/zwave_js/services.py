@@ -330,8 +330,6 @@ class ZWaveServices:
     def async_register(self) -> None:
         """Register all our services."""
 
-        # Temporary: move action registration out of the ZWaveServices class
-        # pylint: disable=home-assistant-action-registered-outside-services-module
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
@@ -427,6 +425,8 @@ class ZWaveServices:
 
             return val
 
+        # Should be adjusted to register actions outside the ZWaveServices class
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_CONFIG_PARAMETER,
@@ -467,6 +467,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -499,6 +500,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_REFRESH_VALUE,
@@ -516,6 +518,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_VALUE,
@@ -547,6 +550,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_MULTICAST_SET_VALUE,
@@ -585,6 +589,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_PING,
@@ -599,6 +604,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_INVOKE_CC_API,
@@ -624,6 +630,7 @@ class ZWaveServices:
             },
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_REFRESH_NOTIFICATIONS,
@@ -646,6 +653,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
@@ -659,6 +667,7 @@ class ZWaveServices:
             supports_response=SupportsResponse.ONLY,
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
@@ -672,6 +681,7 @@ class ZWaveServices:
             func="async_set_lock_usercode",
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
@@ -684,6 +694,7 @@ class ZWaveServices:
             func="async_clear_lock_usercode",
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
