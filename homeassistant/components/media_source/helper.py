@@ -1,6 +1,5 @@
 """Helpers for media source."""
 
-import asyncio
 from collections.abc import Callable
 
 from homeassistant.components.media_player import (
@@ -10,7 +9,6 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
@@ -162,10 +160,4 @@ async def async_get_media_image(
     except ValueError:
         return None
 
-    try:
-        return await item.async_get_image()
-    except HomeAssistantError as err:
-        # Image fetching suppresses cancellation, restore it for the caller
-        if (task := asyncio.current_task()) and task.cancelling():
-            raise asyncio.CancelledError from err
-        raise
+    return await item.async_get_image()

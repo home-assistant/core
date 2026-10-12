@@ -1,7 +1,5 @@
 """Test media source helpers."""
 
-import asyncio
-from contextlib import suppress
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -260,34 +258,3 @@ async def test_async_get_media_image_error(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError, match="Unable to get image"):
         await media_source.async_get_media_image(hass, f"{const.URI_SCHEME}plain/item")
-
-
-async def test_async_get_media_image_cancelled(hass: HomeAssistant) -> None:
-    """Test cancellation suppressed by the source is restored."""
-    assert await async_setup_component(hass, media_source.DOMAIN, {})
-    await hass.async_block_till_done()
-    started = asyncio.Event()
-
-    async def _get_media_image(
-        item: media_source.MediaSourceItem,
-    ) -> media_source.MediaImage:
-        # Mimic camera and image suppressing the cancellation
-        with suppress(asyncio.CancelledError):
-            started.set()
-            await asyncio.Event().wait()
-        raise HomeAssistantError("Unable to get image")
-
-    source = models.MediaSource("plain")
-    source.async_get_media_image = _get_media_image
-    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform = AsyncMock(
-        return_value=source
-    )
-
-    task = hass.async_create_task(
-        media_source.async_get_media_image(hass, f"{const.URI_SCHEME}plain/item")
-    )
-    await started.wait()
-    task.cancel()
-
-    with pytest.raises(asyncio.CancelledError):
-        await task
