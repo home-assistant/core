@@ -1,14 +1,19 @@
 """LLM tools for the history integration."""
 
+import csv
 from datetime import datetime, timedelta
-from typing import cast, override
+import io
+from typing import Any, Literal, cast, override
 
 import probatio
 
 from homeassistant.components.llm import LLMTools
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder import get_instance, history, statistics
+from homeassistant.components.recorder.models import StatisticMeanType
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -22,23 +27,112 @@ from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 
+type _Period = Literal["5minute", "hour", "day", "week", "month"]
+type _StatisticType = Literal["change", "max", "mean", "min"]
+
+SOURCE_STATISTICS = "statistics"
+SOURCE_STATE_CHANGES = "state_changes"
+
 _DEFAULT_PERIOD = timedelta(days=1)
 _DEFAULT_LIMIT = 100
 _MAX_LIMIT = 1000
+_PERIODS: list[_Period] = ["5minute", "hour", "day", "week", "month"]
+# The longest time span each statistics period is picked for by default.
+_AUTO_PERIOD_MAX_SPAN: list[tuple[timedelta, _Period]] = [
+    (timedelta(hours=6), "5minute"),
+    (timedelta(days=2), "hour"),
+    (timedelta(days=62), "day"),
+    (timedelta(days=366), "week"),
+]
+_NO_STATISTICS = f"No statistics recorded. Use source '{SOURCE_STATE_CHANGES}' instead."
 
 
-def _format_state(state: State, include_attributes: bool) -> JsonObjectType:
-    """Format a single historical state for LLM consumption."""
-    entry: JsonObjectType = {
-        "state": state.state,
-        "last_changed": dt_util.as_local(state.last_changed).isoformat(),
-    }
-    if include_attributes:
-        entry["attributes"] = dict(state.attributes)
-    return entry
+def _auto_period(span: timedelta) -> _Period:
+    """Return a statistics period that gives a compact result for the span."""
+    for max_span, period in _AUTO_PERIOD_MAX_SPAN:
+        if span <= max_span:
+            return period
+    return "month"
 
 
-def _get_history(
+def _format_time(timestamp: float) -> str:
+    """Format a timestamp as local time."""
+    return dt_util.as_local(dt_util.utc_from_timestamp(timestamp)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+
+def _format_number(value: float | None) -> str:
+    """Format a statistics value compactly."""
+    return "" if value is None else str(round(value, 3))
+
+
+def _to_csv(header: list[str], rows: list[list[str]]) -> str:
+    """Return the rows as CSV."""
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(header)
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def _limit_rows(entry: dict[str, Any], rows: list[Any], limit: int) -> list[Any]:
+    """Keep the most recent rows and record the total when rows are dropped."""
+    if len(rows) > limit:
+        entry["total"] = len(rows)
+    return rows[-limit:]
+
+
+def _get_statistics(
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime,
+    entity_ids: list[str],
+    period: _Period,
+    limit: int,
+) -> dict[str, Any]:
+    """Fetch and format the long-term statistics in the recorder executor."""
+    metadata = statistics.get_metadata(hass, statistic_ids=set(entity_ids))
+    result: dict[str, Any] = {}
+    for entity_id in entity_ids:
+        if entity_id not in metadata:
+            result[entity_id] = {"error": _NO_STATISTICS}
+            continue
+        meta = metadata[entity_id][1]
+        types: list[_StatisticType] = []
+        if meta["mean_type"] is StatisticMeanType.ARITHMETIC:
+            types.extend(["mean", "min", "max"])
+        elif meta["mean_type"] is StatisticMeanType.CIRCULAR:
+            types.append("mean")
+        if meta["has_sum"]:
+            types.append("change")
+        # Request the stored unit so the reported unit is always correct.
+        units = (
+            {meta["unit_class"]: meta["unit_of_measurement"]}
+            if meta["unit_class"] and meta["unit_of_measurement"]
+            else None
+        )
+        rows = statistics.statistics_during_period(
+            hass, start_time, end_time, {entity_id}, period, units, set(types)
+        ).get(entity_id, [])
+        entry: dict[str, Any] = {}
+        if meta["unit_of_measurement"]:
+            entry["unit"] = meta["unit_of_measurement"]
+        entry["csv"] = _to_csv(
+            ["start", *types],
+            [
+                [
+                    _format_time(row["start"]),
+                    *(_format_number(row.get(stat_type)) for stat_type in types),
+                ]
+                for row in _limit_rows(entry, rows, limit)
+            ],
+        )
+        result[entity_id] = entry
+    return result
+
+
+def _get_state_changes(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime,
@@ -46,8 +140,8 @@ def _get_history(
     significant_changes_only: bool,
     include_attributes: bool,
     limit: int,
-) -> JsonObjectType:
-    """Fetch and format the history in the recorder executor."""
+) -> dict[str, Any]:
+    """Fetch and format the state changes in the recorder executor."""
     states = history.get_significant_states(
         hass,
         start_time,
@@ -56,17 +150,29 @@ def _get_history(
         significant_changes_only=significant_changes_only,
         no_attributes=not include_attributes,
     )
-    result: JsonObjectType = {}
+    header = ["last_changed", "state"]
+    if include_attributes:
+        header.append("attributes")
+    result: dict[str, Any] = {}
     for entity_id in entity_ids:
+        entry: dict[str, Any] = {}
+        if (current := hass.states.get(entity_id)) and (
+            unit := current.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        ):
+            entry["unit"] = unit
         entity_states = cast(list[State], states.get(entity_id, []))
-        result[entity_id] = {
-            "total": len(entity_states),
-            # Keep the most recent changes when the limit is exceeded.
-            "states": [
-                _format_state(state, include_attributes)
-                for state in entity_states[-limit:]
+        entry["csv"] = _to_csv(
+            header,
+            [
+                [
+                    _format_time(state.last_changed_timestamp),
+                    state.state,
+                    *([json_dumps(state.attributes)] if include_attributes else []),
+                ]
+                for state in _limit_rows(entry, entity_states, limit)
             ],
-        }
+        )
+        result[entity_id] = entry
     return result
 
 
@@ -78,17 +184,25 @@ def _parse_time(value: str) -> datetime | None:
 
 
 class GetHistoryTool(Tool):
-    """LLM Tool allowing querying the state history of entities."""
+    """LLM Tool allowing querying the recorded history of entities."""
 
     name = "history__get_history"
     title = "Get history"
     description = (
-        "Retrieve the recorded state history of one or more entities. Use this to "
-        "answer questions about past values, when something changed, or how a value "
-        "evolved over time. "
-        "The first state of each entity is its state at the start of the period. "
-        "If more state changes exist than the limit, only the most recent ones "
-        "are returned and 'total' shows how many were recorded."
+        "Retrieve the recorded history of one or more entities as CSV, with times "
+        "in local time. Use this to answer questions about past values, when "
+        "something changed, or how a value evolved over time. "
+        f"Source '{SOURCE_STATISTICS}' (default) returns aggregated values per "
+        "period, such as the mean, min and max of a temperature or the change of "
+        "an energy meter. It is only available for entities with numeric "
+        "statistics (sensors with a state class) and only covers completed "
+        "periods. "
+        f"Source '{SOURCE_STATE_CHANGES}' returns each recorded state change. Use "
+        "it for entities without statistics, to find out when something changed, "
+        "or when the exact values are needed. The first state is the state at the "
+        "start of the period. Raw state changes are usually kept for 10 days. "
+        "If there are more rows than the limit, only the most recent rows are "
+        "returned and 'total' shows how many rows there are."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -100,6 +214,15 @@ class GetHistoryTool(Tool):
                 "entity_ids",
                 description="Entity IDs to get the history for (e.g. 'sensor.outside_temperature').",
             ): probatio.All([cv.entity_id], probatio.Length(min=1)),
+            probatio.Optional(
+                "source",
+                description=(
+                    f"'{SOURCE_STATISTICS}' for aggregated values or "
+                    f"'{SOURCE_STATE_CHANGES}' for each recorded state change "
+                    f"(default: '{SOURCE_STATISTICS}')."
+                ),
+                default=SOURCE_STATISTICS,
+            ): probatio.In([SOURCE_STATISTICS, SOURCE_STATE_CHANGES]),
             probatio.Optional(
                 "start_time",
                 description=(
@@ -116,21 +239,33 @@ class GetHistoryTool(Tool):
                 ),
             ): str,
             probatio.Optional(
+                "period",
+                description=(
+                    f"Only for source '{SOURCE_STATISTICS}': the length of each "
+                    "aggregated row. 5minute rows are usually kept for 10 days "
+                    "(default: picked from the length of the requested time span)."
+                ),
+            ): probatio.In(_PERIODS),
+            probatio.Optional(
                 "significant_changes_only",
                 description=(
-                    "Only return significant state changes. Set to false to also "
-                    "include attribute-only changes (default: true)."
+                    f"Only for source '{SOURCE_STATE_CHANGES}': only return "
+                    "significant state changes. Set to false to also include "
+                    "attribute-only changes (default: true)."
                 ),
                 default=True,
             ): probatio.All(probatio.Boolean(), bool),
             probatio.Optional(
                 "include_attributes",
-                description="Whether to include the state attributes (default: false).",
+                description=(
+                    f"Only for source '{SOURCE_STATE_CHANGES}': whether to include "
+                    "the state attributes as JSON (default: false)."
+                ),
                 default=False,
             ): probatio.All(probatio.Boolean(), bool),
             probatio.Optional(
                 "limit",
-                description=f"Maximum number of states to return per entity (default: {_DEFAULT_LIMIT}, max: {_MAX_LIMIT}).",
+                description=f"Maximum number of rows to return per entity (default: {_DEFAULT_LIMIT}, max: {_MAX_LIMIT}).",
                 default=_DEFAULT_LIMIT,
             ): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=1, max=_MAX_LIMIT)
@@ -142,7 +277,7 @@ class GetHistoryTool(Tool):
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> ToolResult:
-        """Query the state history."""
+        """Query the recorded history."""
         args = self.parameters(tool_input.tool_args)
 
         end_time = (
@@ -164,16 +299,33 @@ class GetHistoryTool(Tool):
                 data={"error": "start_time must be before end_time"}, error=True
             )
 
-        result = await get_instance(hass).async_add_executor_job(
-            _get_history,
-            hass,
-            start_time,
-            end_time,
-            args["entity_ids"],
-            args["significant_changes_only"],
-            args["include_attributes"],
-            args["limit"],
-        )
+        result: JsonObjectType = {
+            "timezone": hass.config.time_zone,
+            "source": args["source"],
+        }
+        if args["source"] == SOURCE_STATISTICS:
+            period = args.get("period") or _auto_period(end_time - start_time)
+            result["period"] = period
+            result["entities"] = await get_instance(hass).async_add_executor_job(
+                _get_statistics,
+                hass,
+                start_time,
+                end_time,
+                args["entity_ids"],
+                period,
+                args["limit"],
+            )
+        else:
+            result["entities"] = await get_instance(hass).async_add_executor_job(
+                _get_state_changes,
+                hass,
+                start_time,
+                end_time,
+                args["entity_ids"],
+                args["significant_changes_only"],
+                args["include_attributes"],
+                args["limit"],
+            )
         return ToolResult(data={"result": result})
 
 

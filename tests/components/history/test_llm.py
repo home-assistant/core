@@ -9,6 +9,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import history
 from homeassistant.components.history.llm import GetHistoryTool, async_get_tools
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import async_import_statistics
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
@@ -19,6 +25,7 @@ from tests.common import MockUser
 from tests.components.recorder.common import async_wait_recording_done
 
 ENTITY_ID = "sensor.temperature"
+ENERGY_ENTITY_ID = "sensor.energy"
 OTHER_ENTITY_ID = "sensor.humidity"
 
 
@@ -46,6 +53,53 @@ async def recorded_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
         )
         await async_wait_recording_done(hass)
         freezer.tick(timedelta(hours=1))
+
+
+@pytest.fixture
+async def recorded_statistics(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Record 72 hours of statistics, ending at 2026-10-12 12:00 UTC."""
+    freezer.move_to("2026-10-12 12:00:00+00:00")
+    assert await async_setup_component(hass, history.DOMAIN, {})
+    first_start = dt_util.parse_datetime("2026-10-09 12:00:00+00:00")
+    assert first_start is not None
+    starts = [first_start + timedelta(hours=hour) for hour in range(72)]
+    temperature_metadata: StatisticMetaData = {
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "has_sum": False,
+        "name": None,
+        "source": "recorder",
+        "statistic_id": ENTITY_ID,
+        "unit_class": "temperature",
+        "unit_of_measurement": "°C",
+    }
+    async_import_statistics(
+        hass,
+        temperature_metadata,
+        [
+            StatisticData(start=start, mean=hour / 3, min=hour - 1, max=hour + 1)
+            for hour, start in enumerate(starts)
+        ],
+    )
+    energy_metadata: StatisticMetaData = {
+        "mean_type": StatisticMeanType.NONE,
+        "has_sum": True,
+        "name": None,
+        "source": "recorder",
+        "statistic_id": ENERGY_ENTITY_ID,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    async_import_statistics(
+        hass,
+        energy_metadata,
+        [
+            StatisticData(start=start, state=hour * 1.5, sum=hour * 1.5)
+            for hour, start in enumerate(starts)
+        ],
+    )
+    await async_wait_recording_done(hass)
 
 
 async def test_async_get_tools(
@@ -86,6 +140,8 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
             {"entity_ids": [ENTITY_ID], "include_attributes": "invalid"},
             id="invalid_boolean",
         ),
+        pytest.param({"entity_ids": [ENTITY_ID], "source": "raw"}, id="source"),
+        pytest.param({"entity_ids": [ENTITY_ID], "period": "year"}, id="period"),
         pytest.param({"entity_ids": [ENTITY_ID], "unknown": True}, id="unknown"),
     ],
 )
@@ -146,20 +202,21 @@ async def test_call_through_api(
         read_only=True, destructive=False, idempotent=True, open_world=False
     )
     result = await api.async_call_tool(
-        llm.ToolInput(tool.name, {"entity_ids": [OTHER_ENTITY_ID]})
+        llm.ToolInput(
+            tool.name,
+            {"entity_ids": [OTHER_ENTITY_ID], "source": "state_changes"},
+        )
     )
     assert result == llm.ToolResult(
         data={
             "result": {
-                OTHER_ENTITY_ID: {
-                    "total": 1,
-                    "states": [
-                        {
-                            "state": "45",
-                            "last_changed": "2026-10-12T01:00:00-07:00",
-                        }
-                    ],
-                }
+                "timezone": "US/Pacific",
+                "source": "state_changes",
+                "entities": {
+                    OTHER_ENTITY_ID: {
+                        "csv": "last_changed,state\n2026-10-12 01:00:00,45\n"
+                    }
+                },
             }
         }
     )
@@ -188,19 +245,64 @@ async def test_call_through_api(
         ),
     ],
 )
-async def test_get_history(
+async def test_get_state_changes(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     snapshot: SnapshotAssertion,
     tool_args: JsonObjectType,
 ) -> None:
-    """Test getting the history of entities."""
+    """Test getting the state changes of entities."""
     assert dt_util.utcnow().isoformat() == "2026-10-12T12:00:00+00:00"
     tool = GetHistoryTool()
     result = await tool.async_call(
         hass,
         llm.ToolInput(
-            tool.name, {"entity_ids": [ENTITY_ID, "sensor.unknown"], **tool_args}
+            tool.name,
+            {
+                "entity_ids": [ENTITY_ID, "sensor.unknown"],
+                "source": "state_changes",
+                **tool_args,
+            },
+        ),
+        llm_context,
+    )
+
+    assert result.error is False
+    assert result.data == snapshot
+
+
+@pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
+@pytest.mark.parametrize(
+    "tool_args",
+    [
+        pytest.param({}, id="defaults"),
+        pytest.param({"limit": 2}, id="limit"),
+        pytest.param({"start_time": "2026-10-09T12:00:00Z"}, id="auto_period_day"),
+        pytest.param(
+            {"start_time": "2026-10-12T09:00:00Z", "period": "5minute"},
+            id="no_short_term_statistics",
+        ),
+        pytest.param(
+            {"start_time": "2026-10-11T00:00:00", "period": "day"}, id="period_day"
+        ),
+    ],
+)
+async def test_get_statistics(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    snapshot: SnapshotAssertion,
+    tool_args: JsonObjectType,
+) -> None:
+    """Test getting the statistics of entities."""
+    tool = GetHistoryTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_ids": [ENTITY_ID, ENERGY_ENTITY_ID, OTHER_ENTITY_ID],
+                **tool_args,
+            },
         ),
         llm_context,
     )

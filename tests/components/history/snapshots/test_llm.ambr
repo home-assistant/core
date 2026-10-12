@@ -1,193 +1,385 @@
 # serializer version: 1
-# name: test_get_history[before_first_state]
+# name: test_get_state_changes[before_first_state]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-        ]),
-        'total': 0,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
-      }),
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
-# name: test_get_history[defaults]
+# name: test_get_state_changes[defaults]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-          dict({
-            'last_changed': '2026-10-12T01:00:00-07:00',
-            'state': '18.0',
-          }),
-          dict({
-            'last_changed': '2026-10-12T02:00:00-07:00',
-            'state': '19.5',
-          }),
-          dict({
-            'last_changed': '2026-10-12T03:00:00-07:00',
-            'state': '21.0',
-          }),
-          dict({
-            'last_changed': '2026-10-12T04:00:00-07:00',
-            'state': '20.5',
-          }),
-        ]),
-        'total': 4,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state
+            2026-10-12 01:00:00,18.0
+            2026-10-12 02:00:00,19.5
+            2026-10-12 03:00:00,21.0
+            2026-10-12 04:00:00,20.5
+  
+          ''',
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
-      }),
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
-# name: test_get_history[end_time_only]
+# name: test_get_state_changes[end_time_only]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-          dict({
-            'last_changed': '2026-10-12T01:00:00-07:00',
-            'state': '18.0',
-          }),
-          dict({
-            'last_changed': '2026-10-12T02:00:00-07:00',
-            'state': '19.5',
-          }),
-        ]),
-        'total': 2,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state
+            2026-10-12 01:00:00,18.0
+            2026-10-12 02:00:00,19.5
+  
+          ''',
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
-      }),
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
-# name: test_get_history[include_attributes]
+# name: test_get_state_changes[include_attributes]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-          dict({
-            'attributes': dict({
-              'friendly_name': 'Temp',
-              'unit_of_measurement': '°C',
-            }),
-            'last_changed': '2026-10-12T01:00:00-07:00',
-            'state': '18.0',
-          }),
-          dict({
-            'attributes': dict({
-              'friendly_name': 'Temp',
-              'unit_of_measurement': '°C',
-            }),
-            'last_changed': '2026-10-12T02:00:00-07:00',
-            'state': '19.5',
-          }),
-          dict({
-            'attributes': dict({
-              'friendly_name': 'Temp',
-              'unit_of_measurement': '°C',
-            }),
-            'last_changed': '2026-10-12T03:00:00-07:00',
-            'state': '21.0',
-          }),
-          dict({
-            'attributes': dict({
-              'friendly_name': 'Temp',
-              'unit_of_measurement': '°C',
-            }),
-            'last_changed': '2026-10-12T04:00:00-07:00',
-            'state': '20.5',
-          }),
-        ]),
-        'total': 4,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state,attributes
+            2026-10-12 01:00:00,18.0,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
+            2026-10-12 02:00:00,19.5,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
+            2026-10-12 03:00:00,21.0,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
+            2026-10-12 04:00:00,20.5,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
+  
+          ''',
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state,attributes
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
-      }),
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
-# name: test_get_history[limit]
+# name: test_get_state_changes[limit]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-          dict({
-            'last_changed': '2026-10-12T03:00:00-07:00',
-            'state': '21.0',
-          }),
-          dict({
-            'last_changed': '2026-10-12T04:00:00-07:00',
-            'state': '20.5',
-          }),
-        ]),
-        'total': 4,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state
+            2026-10-12 03:00:00,21.0
+            2026-10-12 04:00:00,20.5
+  
+          ''',
+          'total': 4,
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
-      }),
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
-# name: test_get_history[local_period]
+# name: test_get_state_changes[local_period]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-          dict({
-            'last_changed': '2026-10-12T02:30:00-07:00',
-            'state': '19.5',
-          }),
-          dict({
-            'last_changed': '2026-10-12T03:00:00-07:00',
-            'state': '21.0',
-          }),
-        ]),
-        'total': 2,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state
+            2026-10-12 02:30:00,19.5
+            2026-10-12 03:00:00,21.0
+  
+          ''',
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
-      }),
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
-# name: test_get_history[start_time_with_offset]
+# name: test_get_state_changes[start_time_with_offset]
   dict({
     'result': dict({
-      'sensor.temperature': dict({
-        'states': list([
-          dict({
-            'last_changed': '2026-10-12T03:30:00-07:00',
-            'state': '21.0',
-          }),
-          dict({
-            'last_changed': '2026-10-12T04:00:00-07:00',
-            'state': '20.5',
-          }),
-        ]),
-        'total': 2,
+      'entities': dict({
+        'sensor.temperature': dict({
+          'csv': '''
+            last_changed,state
+            2026-10-12 03:30:00,21.0
+            2026-10-12 04:00:00,20.5
+  
+          ''',
+          'unit': '°C',
+        }),
+        'sensor.unknown': dict({
+          'csv': '''
+            last_changed,state
+  
+          ''',
+        }),
       }),
-      'sensor.unknown': dict({
-        'states': list([
-        ]),
-        'total': 0,
+      'source': 'state_changes',
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_get_statistics[auto_period_day]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+            2026-10-09 00:00:00,27.0
+            2026-10-10 00:00:00,36.0
+            2026-10-11 00:00:00,36.0
+            2026-10-12 00:00:00,7.5
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': "No statistics recorded. Use source 'state_changes' instead.",
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+            2026-10-09 00:00:00,3.0,-1.0,19.0
+            2026-10-10 00:00:00,10.167,18.0,43.0
+            2026-10-11 00:00:00,18.167,42.0,67.0
+            2026-10-12 00:00:00,23.0,66.0,72.0
+  
+          ''',
+          'unit': '°C',
+        }),
       }),
+      'period': 'day',
+      'source': 'statistics',
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_get_statistics[defaults]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+            2026-10-11 05:00:00,1.5
+            2026-10-11 06:00:00,1.5
+            2026-10-11 07:00:00,1.5
+            2026-10-11 08:00:00,1.5
+            2026-10-11 09:00:00,1.5
+            2026-10-11 10:00:00,1.5
+            2026-10-11 11:00:00,1.5
+            2026-10-11 12:00:00,1.5
+            2026-10-11 13:00:00,1.5
+            2026-10-11 14:00:00,1.5
+            2026-10-11 15:00:00,1.5
+            2026-10-11 16:00:00,1.5
+            2026-10-11 17:00:00,1.5
+            2026-10-11 18:00:00,1.5
+            2026-10-11 19:00:00,1.5
+            2026-10-11 20:00:00,1.5
+            2026-10-11 21:00:00,1.5
+            2026-10-11 22:00:00,1.5
+            2026-10-11 23:00:00,1.5
+            2026-10-12 00:00:00,1.5
+            2026-10-12 01:00:00,1.5
+            2026-10-12 02:00:00,1.5
+            2026-10-12 03:00:00,1.5
+            2026-10-12 04:00:00,1.5
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': "No statistics recorded. Use source 'state_changes' instead.",
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+            2026-10-11 05:00:00,16.0,47.0,49.0
+            2026-10-11 06:00:00,16.333,48.0,50.0
+            2026-10-11 07:00:00,16.667,49.0,51.0
+            2026-10-11 08:00:00,17.0,50.0,52.0
+            2026-10-11 09:00:00,17.333,51.0,53.0
+            2026-10-11 10:00:00,17.667,52.0,54.0
+            2026-10-11 11:00:00,18.0,53.0,55.0
+            2026-10-11 12:00:00,18.333,54.0,56.0
+            2026-10-11 13:00:00,18.667,55.0,57.0
+            2026-10-11 14:00:00,19.0,56.0,58.0
+            2026-10-11 15:00:00,19.333,57.0,59.0
+            2026-10-11 16:00:00,19.667,58.0,60.0
+            2026-10-11 17:00:00,20.0,59.0,61.0
+            2026-10-11 18:00:00,20.333,60.0,62.0
+            2026-10-11 19:00:00,20.667,61.0,63.0
+            2026-10-11 20:00:00,21.0,62.0,64.0
+            2026-10-11 21:00:00,21.333,63.0,65.0
+            2026-10-11 22:00:00,21.667,64.0,66.0
+            2026-10-11 23:00:00,22.0,65.0,67.0
+            2026-10-12 00:00:00,22.333,66.0,68.0
+            2026-10-12 01:00:00,22.667,67.0,69.0
+            2026-10-12 02:00:00,23.0,68.0,70.0
+            2026-10-12 03:00:00,23.333,69.0,71.0
+            2026-10-12 04:00:00,23.667,70.0,72.0
+  
+          ''',
+          'unit': '°C',
+        }),
+      }),
+      'period': 'hour',
+      'source': 'statistics',
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_get_statistics[limit]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+            2026-10-12 03:00:00,1.5
+            2026-10-12 04:00:00,1.5
+  
+          ''',
+          'total': 24,
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': "No statistics recorded. Use source 'state_changes' instead.",
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+            2026-10-12 03:00:00,23.333,69.0,71.0
+            2026-10-12 04:00:00,23.667,70.0,72.0
+  
+          ''',
+          'total': 24,
+          'unit': '°C',
+        }),
+      }),
+      'period': 'hour',
+      'source': 'statistics',
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_get_statistics[no_short_term_statistics]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': "No statistics recorded. Use source 'state_changes' instead.",
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+  
+          ''',
+          'unit': '°C',
+        }),
+      }),
+      'period': '5minute',
+      'source': 'statistics',
+      'timezone': 'US/Pacific',
+    }),
+  })
+# ---
+# name: test_get_statistics[period_day]
+  dict({
+    'result': dict({
+      'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+            2026-10-11 00:00:00,36.0
+            2026-10-12 00:00:00,7.5
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': "No statistics recorded. Use source 'state_changes' instead.",
+        }),
+        'sensor.temperature': dict({
+          'csv': '''
+            start,mean,min,max
+            2026-10-11 00:00:00,18.167,42.0,67.0
+            2026-10-12 00:00:00,23.0,66.0,72.0
+  
+          ''',
+          'unit': '°C',
+        }),
+      }),
+      'period': 'day',
+      'source': 'statistics',
+      'timezone': 'US/Pacific',
     }),
   })
 # ---
@@ -209,20 +401,40 @@
       }),
       'include_attributes': dict({
         'default': False,
-        'description': 'Whether to include the state attributes (default: false).',
+        'description': "Only for source 'state_changes': whether to include the state attributes as JSON (default: false).",
         'type': 'boolean',
       }),
       'limit': dict({
         'default': 100,
-        'description': 'Maximum number of states to return per entity (default: 100, max: 1000).',
+        'description': 'Maximum number of rows to return per entity (default: 100, max: 1000).',
         'maximum': 1000,
         'minimum': 1,
         'type': 'integer',
       }),
+      'period': dict({
+        'description': "Only for source 'statistics': the length of each aggregated row. 5minute rows are usually kept for 10 days (default: picked from the length of the requested time span).",
+        'enum': list([
+          '5minute',
+          'hour',
+          'day',
+          'week',
+          'month',
+        ]),
+        'type': 'string',
+      }),
       'significant_changes_only': dict({
         'default': True,
-        'description': 'Only return significant state changes. Set to false to also include attribute-only changes (default: true).',
+        'description': "Only for source 'state_changes': only return significant state changes. Set to false to also include attribute-only changes (default: true).",
         'type': 'boolean',
+      }),
+      'source': dict({
+        'default': 'statistics',
+        'description': "'statistics' for aggregated values or 'state_changes' for each recorded state change (default: 'statistics').",
+        'enum': list([
+          'statistics',
+          'state_changes',
+        ]),
+        'type': 'string',
       }),
       'start_time': dict({
         'description': 'Start of the period as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 24 hours before end_time).',
