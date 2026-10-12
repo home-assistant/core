@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import client_exceptions
+from freezegun.api import FrozenDateTimeFactory
 from pyControl4.error_handling import BadCredentials, BadToken
 import pytest
 
@@ -15,11 +17,12 @@ from homeassistant.components.control4.director_utils import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -226,3 +229,101 @@ async def test_unload_tears_down_push_resources(
     cancel_refresh.assert_called_once()
     cancel_resync.assert_called_once()
     assert runtime_data.cancel_periodic_resync_callback is None
+
+
+@pytest.mark.parametrize(
+    ("client", "method", "exception", "websocket_torn_down"),
+    [
+        ("account", "get_account_bearer_token", TimeoutError, False),
+        ("account", "get_director_bearer_token", client_exceptions.ClientError, False),
+        ("websocket", "sio_connect", ConnectionError, False),
+        ("account", "get_account_controllers", TimeoutError, True),
+        ("director", "get_all_item_info", client_exceptions.ClientError, True),
+        ("director", "get_ui_configuration", TimeoutError, True),
+    ],
+)
+async def test_setup_retry_on_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_account: MagicMock,
+    mock_c4_director: MagicMock,
+    mock_c4_websocket: MagicMock,
+    client: str,
+    method: str,
+    exception: type[Exception],
+    websocket_torn_down: bool,
+) -> None:
+    """Connection failures at any setup step retry setup without leaking the WebSocket."""
+    mocks = {
+        "account": mock_c4_account,
+        "director": mock_c4_director,
+        "websocket": mock_c4_websocket,
+    }
+    getattr(mocks[client], method).side_effect = exception
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_c4_websocket.sio_disconnect.await_count == int(websocket_torn_down)
+
+
+@pytest.mark.usefixtures("mock_c4_director")
+async def test_setup_retry_reuses_websocket(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_account: MagicMock,
+    mock_c4_websocket: MagicMock,
+) -> None:
+    """A retried setup reuses the WebSocket created by the failed attempt."""
+    mock_c4_account.get_account_controllers.side_effect = TimeoutError
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_c4_account.get_account_controllers.side_effect = None
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.websocket is mock_c4_websocket
+    assert mock_c4_websocket.sio_connect.await_count == 2
+
+
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+async def test_token_refresh_retries_on_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failed background token refresh schedules a backoff retry."""
+    await setup_integration(hass, mock_config_entry)
+
+    obj = RefreshTokensObject(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.control4.refresh_tokens",
+        new=AsyncMock(side_effect=ConfigEntryNotReady),
+    ):
+        await obj.refresh_tokens(dt_util.utcnow())
+
+    assert obj.retries == 1
+    assert mock_config_entry.runtime_data.cancel_token_refresh_callback is not None
+
+
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+async def test_token_refresh_bad_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Bad credentials during a background token refresh are logged, not retried."""
+    await setup_integration(hass, mock_config_entry)
+
+    obj = RefreshTokensObject(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.control4.refresh_tokens",
+        new=AsyncMock(side_effect=ConfigEntryError),
+    ):
+        await obj.refresh_tokens(dt_util.utcnow())
+
+    assert obj.retries == 0
+    assert "Control4 credentials are no longer valid" in caplog.text
