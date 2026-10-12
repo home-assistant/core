@@ -94,13 +94,25 @@ HVAC_MODE_TO_ATW_ZONE_MODE: dict[HVACMode, ATWZoneMode] = {
     HVACMode.COOL: ATWZoneMode.COOL_ROOM_TEMPERATURE,
 }
 
+# Switching between heating and cooling keeps the room or flow temperature control;
+# HeatCurve has no cooling counterpart and falls back to room temperature
+ATW_ZONE_MODE_COUNTERPART: dict[ATWZoneMode, ATWZoneMode] = {
+    ATWZoneMode.HEAT_ROOM_TEMPERATURE: ATWZoneMode.COOL_ROOM_TEMPERATURE,
+    ATWZoneMode.HEAT_FLOW_TEMPERATURE: ATWZoneMode.COOL_FLOW_TEMPERATURE,
+    ATWZoneMode.COOL_ROOM_TEMPERATURE: ATWZoneMode.HEAT_ROOM_TEMPERATURE,
+    ATWZoneMode.COOL_FLOW_TEMPERATURE: ATWZoneMode.HEAT_FLOW_TEMPERATURE,
+}
+
 # The unit heats either the tank or the zones, so heating the tank idles the zones
 ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
     ATWOperationMode.STOP: HVACAction.IDLE,
     ATWOperationMode.HOT_WATER: HVACAction.IDLE,
     ATWOperationMode.HEAT: HVACAction.HEATING,
     ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
+    ATWOperationMode.HEATING: HVACAction.HEATING,
+    ATWOperationMode.FREEZE_STAT: HVACAction.HEATING,
     ATWOperationMode.COOL: HVACAction.COOLING,
+    ATWOperationMode.COOLING: HVACAction.COOLING,
 }
 
 
@@ -471,7 +483,13 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
                 self.coordinator.client.control_atw_unit(self._unit_id, power=False),
             )
         else:
-            zone_mode = HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+            zone_mode = self._zone_mode
+            if zone_mode is None:
+                zone_mode = HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+            elif ATW_ZONE_MODE_TO_HVAC_MODE[zone_mode] != hvac_mode:
+                zone_mode = ATW_ZONE_MODE_COUNTERPART.get(
+                    zone_mode, HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+                )
             if self.zone_number == 1:
                 await perform_action(
                     self.coordinator,

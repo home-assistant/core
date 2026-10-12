@@ -1,7 +1,7 @@
 """Sensor for Shelly."""
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Final, cast, override
 
 from aioshelly.block_device import Block
@@ -194,6 +194,73 @@ class RpcBluTrvSensor(RpcSensor):
 
         super().__init__(coordinator, key, attribute, description)
         self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
+
+
+class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
+    """Represent a RPC sleeping sensor."""
+
+    entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+        self.restored_data: SensorExtraStoredData | None = None
+
+        if coordinator.device.initialized:
+            self.configure_translation_attributes()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.restored_data = await self.async_get_last_sensor_data()
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return value of sensor."""
+        if self.coordinator.device.initialized:
+            return self.attribute_value
+
+        if self.restored_data is None:
+            return None
+
+        return cast(StateType, self.restored_data.native_value)
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        return self.entity_description.native_unit_of_measurement
+
+
+class RpcLastSeenSensor(RpcSleepingSensor):
+    """Represent a RPC last seen sensor for sleeping devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """The last contact time stays valid after the device stops reporting."""
+        return True
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return value of sensor."""
+        if (last_seen := self.coordinator.last_seen) is not None:
+            return last_seen
+
+        if self.restored_data is None:
+            return None
+
+        return cast(datetime | None, self.restored_data.native_value)
 
 
 BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -1248,6 +1315,14 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
+    "last_seen": RpcSensorDescription(
+        key="sys",
+        sub_key="wakeup_period",
+        translation_key="last_seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_class=RpcLastSeenSensor,
+    ),
     "humidity_rh": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
@@ -1892,48 +1967,3 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
             return None
 
         return self.restored_data.native_unit_of_measurement
-
-
-class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
-    """Represent a RPC sleeping sensor."""
-
-    entity_description: RpcSensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSensorDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-        self.restored_data: SensorExtraStoredData | None = None
-
-        if coordinator.device.initialized:
-            self.configure_translation_attributes()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.restored_data = await self.async_get_last_sensor_data()
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return value of sensor."""
-        if self.coordinator.device.initialized:
-            return self.attribute_value
-
-        if self.restored_data is None:
-            return None
-
-        return cast(StateType, self.restored_data.native_value)
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor, if any."""
-        return self.entity_description.native_unit_of_measurement

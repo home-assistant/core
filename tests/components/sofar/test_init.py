@@ -55,7 +55,7 @@ from tests.typing import WebSocketGenerator
 
 PV_POWER_REGISTER = 0x0586
 BATTERY_3_VOLTAGE_REGISTER = 0x0612
-SOLAR_GENERATION_REGISTER = 0x0684
+METER_ENERGY_REGISTER = 0x0688
 
 
 def _heal_after_one_failure(unit: MockModbusUnit, address: int) -> None:
@@ -470,7 +470,7 @@ async def test_settings_recover_without_a_reload(
     unit.fail_read(0x1105, None)
     freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.runtime_data.settings.last_update_success is True
 
@@ -534,7 +534,7 @@ async def test_device_versions_need_a_reload_to_recover(
         unit.fail_read(0x044D, None)
         freezer.tick(timedelta(seconds=SETTINGS_SCAN_INTERVAL))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
@@ -598,7 +598,7 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     mock_connection.for_unit(1).fail_requests(ModbusError("illegal data address"))
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     # Availability alone cannot tell a failed poll from one that reported
@@ -608,7 +608,7 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     mock_connection.for_unit(1).fail_requests(None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "2.5"
 
@@ -634,7 +634,7 @@ async def test_component_answering_the_retry_stays_available(
     _heal_after_one_failure(unit, PV_POWER_REGISTER)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "3.0"
 
@@ -648,11 +648,11 @@ async def test_link_dying_during_the_retry_marks_sensors_unavailable(
 ) -> None:
     """Test a link lost while retrying one component fails the whole poll."""
     unit = mock_connection.for_unit(1)
-    _drop_link_after_one_failure(unit, SOLAR_GENERATION_REGISTER)
+    _drop_link_after_one_failure(unit, METER_ENERGY_REGISTER)
 
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_grid_frequency"
@@ -828,7 +828,7 @@ async def test_battery_pack_appears_once_its_block_answers(
     unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # No reload: the coordinator's own listener notices the pack answering.
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
@@ -947,7 +947,7 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     unit.holding[BATTERY_3_VOLTAGE_REGISTER] = 0
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_3"), entry.entry_id
@@ -962,7 +962,7 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     unit.holding[BATTERY_3_VOLTAGE_REGISTER] = 515
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None

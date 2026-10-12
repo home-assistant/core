@@ -23,6 +23,7 @@ CONF_CLOUD_USERNAME = "cloud_username"
 CONF_CLOUD_PASSWORD = "cloud_password"
 CONF_CLOUD_COUNTRY = "cloud_country"
 CONF_MANUAL = "manual"
+CONF_SLOT = "slot"
 
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
