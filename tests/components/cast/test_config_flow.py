@@ -128,7 +128,6 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
 
     users = await hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "ignore_cec": [],
@@ -136,6 +135,7 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
         "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
@@ -149,7 +149,6 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
 
     users = await hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "ignore_cec": [],
@@ -157,6 +156,7 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
         "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @pytest.mark.parametrize(

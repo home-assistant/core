@@ -673,8 +673,8 @@ async def test_dhcp_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud")

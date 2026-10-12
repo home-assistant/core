@@ -32,13 +32,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Max Istamann"
     assert result["data"] == {
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
+    assert result["result"].unique_id == "26e93f1a-c828-11ea-87d0-0242ac130003"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

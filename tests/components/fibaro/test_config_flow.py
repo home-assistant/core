@@ -83,7 +83,6 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -92,6 +91,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_IMPORT_PLUGINS: False,
     }
+    assert result["result"].unique_id == "hc2-111111"
 
 
 async def test_config_flow_user_initiated_auth_failure(

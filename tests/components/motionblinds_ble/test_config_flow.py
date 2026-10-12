@@ -44,7 +44,6 @@ async def test_config_flow_manual_success(
         result["flow_id"],
         {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == display_name
     assert result["data"] == {
@@ -53,6 +52,7 @@ async def test_config_flow_manual_success(
         const.CONF_MAC_CODE: mac_code,
         const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
+    assert result["result"].unique_id == address
     assert result["options"] == {}
 
 
@@ -252,7 +252,6 @@ async def test_config_flow_bluetooth_success(
         {const.CONF_BLIND_TYPE: blind_type.name.lower()},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == display_name
     assert result["data"] == {
@@ -261,6 +260,7 @@ async def test_config_flow_bluetooth_success(
         const.CONF_MAC_CODE: mac_code,
         const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
+    assert result["result"].unique_id == address
     assert result["options"] == {}
 
 

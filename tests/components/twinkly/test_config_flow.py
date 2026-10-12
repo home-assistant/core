@@ -184,8 +184,8 @@ async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_HOST: "10.0.0.131"},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)

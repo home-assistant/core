@@ -134,9 +134,9 @@ async def test_oauth_create_entry_connection_error_retry(
         result["flow_id"], user_input={}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Mock Name"
+    assert result["result"].unique_id == "unique_user_id"
 
 
 async def test_data_api_requires_credentials(
@@ -200,12 +200,12 @@ async def test_full_flow_success(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     data = result["data"]
     assert data[CONF_TOKEN]["access_token"] == "mock-access-token"
     assert data[AUTH_IMPLEMENTATION] == DOMAIN
     assert result["title"] == "Mock Name"
+    assert result["result"].unique_id == "unique_user_id"
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")

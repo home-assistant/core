@@ -27,13 +27,13 @@ async def test_create_entry(hass: HomeAssistant, mock_israelrail: AsyncMock) -> 
         result["flow_id"],
         VALID_CONFIG,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "באר יעקב אשקלון"
     assert result["data"] == {
         CONF_START: "באר יעקב",
         CONF_DESTINATION: "אשקלון",
     }
+    assert result["result"].unique_id == "באר יעקב אשקלון"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

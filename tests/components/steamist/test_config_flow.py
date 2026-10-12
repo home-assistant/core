@@ -126,6 +126,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+        ),
+        patch(
+            "homeassistant.components.steamist.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
@@ -146,6 +165,25 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+        ),
+        patch(
+            "homeassistant.components.steamist.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery(hass: HomeAssistant) -> None:
@@ -191,10 +229,10 @@ async def test_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEVICE_NAME
     assert result3["data"] == DEFAULT_ENTRY_DATA
+    assert result3["result"].unique_id == FORMATTED_MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -277,9 +315,9 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["result"].unique_id == FORMATTED_MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -309,9 +347,9 @@ async def test_discovered_by_dhcp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["result"].unique_id == FORMATTED_MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 

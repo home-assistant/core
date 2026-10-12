@@ -139,6 +139,23 @@ async def test_errors(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test successful reauth flow."""
@@ -223,6 +240,24 @@ async def test_reauth_errors(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_hassio_flow(hass: HomeAssistant) -> None:
     """Test successful hassio flow."""
@@ -259,10 +294,10 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == test_data.config["name"]
         assert result2["data"] == test_data.config
+        assert result2["result"].unique_id == "hassio"
         assert len(mock_setup_entry.mock_calls) == 1
 
 

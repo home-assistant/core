@@ -58,13 +58,13 @@ async def test_state_district(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "District 2.2"
     assert result4["data"] == {
         "region": "2.2",
         "name": result4["title"],
     }
+    assert result4["result"].unique_id == "2.2"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -108,13 +108,13 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result5["type"] is FlowResultType.CREATE_ENTRY
     assert result5["title"] == "Community 3.2.1"
     assert result5["data"] == {
         "region": "3.2.1",
         "name": result5["title"],
     }
+    assert result5["result"].unique_id == "3.2.1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

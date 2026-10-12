@@ -10,6 +10,10 @@ LOGGER = logging.getLogger(__package__)
 CONF_BAUDRATE: Final = "baudrate"
 CONF_UNIT_ID: Final = "unit_id"
 
+# Blocks the inverter stayed silent about on the last attachment check, kept
+# with the entry so that setting it up again does not wait out their timeouts.
+CONF_SILENT_BLOCKS: Final = "silent_blocks"
+
 TYPE_SERIAL: Final = "serial"
 TYPE_TCP: Final = "tcp"
 
@@ -46,6 +50,12 @@ DISCOVERY_SUBSYSTEMS: Final = frozenset(
 SUBSYSTEM_ADVANCED_POWER_CONTROL: Final = "advanced_power_control"
 SUBSYSTEM_POWER_CONTROL: Final = "power_control"
 SUBSYSTEM_SITE_CONTROL: Final = "site_control"
+
+# How long a request may take once the inverter's blocks are known. Over Wi-Fi
+# a SolarEdge inverter answers some requests well past the link's default 10 s,
+# and one late answer fails the whole poll. Probing keeps the default: a block
+# the inverter never answers costs a full timeout there.
+READ_TIMEOUT: Final = 30
 
 # Local Modbus is cheap to read and PV production moves fast.
 SCAN_INTERVAL: Final = timedelta(seconds=10)

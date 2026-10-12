@@ -40,11 +40,11 @@ async def test_full_flow(hass: HomeAssistant) -> None:
             user_input=MOCK_DATA_STEP,
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "Lutron"
 
         assert result["data"] == MOCK_DATA_STEP
+        assert result["result"].unique_id == "12345678901"
 
 
 @pytest.mark.parametrize(

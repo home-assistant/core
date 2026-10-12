@@ -383,7 +383,6 @@ async def test_bluetooth_discovery(
         result["flow_id"],
         USER_INPUT,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert result["title"] == "GS012345"
@@ -393,6 +392,7 @@ async def test_bluetooth_discovery(
         CONF_TOKEN: "dummyToken",
         CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
+    assert result["result"].unique_id == "GS012345"
 
 
 async def test_bluetooth_discovery_already_configured(
@@ -482,7 +482,6 @@ async def test_dhcp_discovery(
         result["flow_id"],
         USER_INPUT,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         **USER_INPUT,
@@ -490,6 +489,7 @@ async def test_dhcp_discovery(
         CONF_TOKEN: None,
         CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
+    assert result["result"].unique_id == "GS012345"
 
 
 async def test_dhcp_discovery_abort_on_hostname_changed(

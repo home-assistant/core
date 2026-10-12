@@ -31,12 +31,12 @@ async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=USER_DATA
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == APP_ID
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_APP_ID] == APP_ID
     assert result["data"][CONF_API_KEY] == API_KEY
+    assert result["result"].unique_id == APP_ID
 
 
 @pytest.mark.parametrize(

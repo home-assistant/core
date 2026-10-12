@@ -8,7 +8,7 @@ from notifications_android_tv.notifications import ConnectError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import camera, image, media_source
+from homeassistant.components import media_source
 from homeassistant.components.nfandroidtv.const import (
     ATTR_BGCOLOR,
     ATTR_DURATION,
@@ -251,8 +251,8 @@ async def test_nfandroidtv_send_message_camera_snapshot(
     assert state.state == STATE_UNKNOWN
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+            "homeassistant.components.nfandroidtv.notify.async_get_media_image",
+            return_value=media_source.MediaImage(b"I play the sax\n", "image/jpeg"),
         ) as mock_get_image,
     ):
         await hass.services.async_call(
@@ -269,7 +269,9 @@ async def test_nfandroidtv_send_message_camera_snapshot(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
+    mock_get_image.assert_called_once_with(
+        hass, "media-source://camera/camera.demo_camera"
+    )
     mock_notifications_android_tv.send.assert_called_once_with(
         message="Hello", title="World", image_file=b"I play the sax\n"
     )
@@ -298,8 +300,8 @@ async def test_nfandroidtv_send_message_image_snapshot(
     assert state.state == STATE_UNKNOWN
 
     with patch(
-        "homeassistant.components.image.async_get_image",
-        return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
+        "homeassistant.components.nfandroidtv.notify.async_get_media_image",
+        return_value=media_source.MediaImage(b"\x89PNG", "image/png"),
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
@@ -315,7 +317,7 @@ async def test_nfandroidtv_send_message_image_snapshot(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_once_with(hass, "media-source://image/image.test")
     mock_notifications_android_tv.send.assert_called_once_with(
         message="Hello", title="World", icon=b"\x89PNG"
     )

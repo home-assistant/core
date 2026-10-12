@@ -301,8 +301,8 @@ async def test_user_flow_after_zeroconf_started(
         MOCK_TCP_STEP_INPUT,
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00:11:22:33:44:55"
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
 

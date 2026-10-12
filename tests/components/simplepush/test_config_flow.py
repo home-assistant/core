@@ -45,10 +45,10 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "simplepush"
     assert result["data"] == MOCK_CONFIG
+    assert result["result"].unique_id == "abc"
 
 
 async def test_flow_with_password(hass: HomeAssistant) -> None:
@@ -62,10 +62,10 @@ async def test_flow_with_password(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=mock_config_pass,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "simplepush"
     assert result["data"] == mock_config_pass
+    assert result["result"].unique_id == "abc"
 
 
 async def test_flow_user_device_key_already_configured(hass: HomeAssistant) -> None:
@@ -131,3 +131,9 @@ async def test_error_on_connection_failure(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
