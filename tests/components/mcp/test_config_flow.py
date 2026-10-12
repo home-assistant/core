@@ -1,5 +1,6 @@
 """Test the Model Context Protocol config flow."""
 
+import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -1534,3 +1535,42 @@ async def test_resource_metadata_keeps_a_transport_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_resource_metadata_unexpected_fetch_result(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fetch result that is not a response or an error is logged."""
+    header_url = "https://example.com/custom-discovery"
+    path_url, root_url = _resource_metadata_fallbacks()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
+        ),
+    )
+
+    def cancel(request: httpx2.Request) -> httpx2.Response:
+        raise asyncio.CancelledError
+
+    for url in (header_url, path_url, root_url):
+        respx.get(url).mock(side_effect=cancel)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert "Unexpected fetch result: CancelledError" in caplog.text

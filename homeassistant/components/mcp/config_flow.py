@@ -482,6 +482,8 @@ async def _async_fetch_any(
             _LOGGER.debug("Fetch failed: %s", result)
             if other_error is None:
                 other_error = result
+        else:
+            _LOGGER.warning("Unexpected fetch result: %s", type(result).__name__)
     if responses:
         return responses
     # A 404 is not the failure when another URL had a transport error.
@@ -489,7 +491,7 @@ async def _async_fetch_any(
         raise transport_error
     if not_found:
         raise NotFoundError("No responses received from any URL")
-    raise other_error or NotFoundError("No responses received from any URL")
+    raise other_error or CannotConnect("No responses received from any URL")
 
 
 def _resource_metadata_from_response(
@@ -535,8 +537,8 @@ async def async_discover_protected_resource(
     document for another path cannot win ahead of the header URL.
     """
     parsed_url = URL(mcp_server_url)
-    urls_to_try: list[str] = []
-    for url in (
+    # A list keeps the header URL first; dict.fromkeys drops duplicates.
+    urls_to_try = [
         auth_url,
         str(
             parsed_url.with_path(
@@ -544,11 +546,9 @@ async def async_discover_protected_resource(
             )
         ),
         str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
-    ):
-        if url not in urls_to_try:
-            urls_to_try.append(url)
+    ]
 
-    for response in await _async_fetch_any(hass, urls_to_try):
+    for response in await _async_fetch_any(hass, dict.fromkeys(urls_to_try)):
         if (
             metadata := _resource_metadata_from_response(response, mcp_server_url)
         ) is not None:
