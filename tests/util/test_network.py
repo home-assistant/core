@@ -2,6 +2,8 @@
 
 from ipaddress import ip_address
 
+import pytest
+
 from homeassistant.util import network as network_util
 
 
@@ -102,6 +104,20 @@ def test_is_valid_host() -> None:
     assert not network_util.is_host_valid("example.com:8080")
     assert not network_util.is_host_valid("verylonghostname" * 4)
     assert not network_util.is_host_valid("verydeepdomain." * 18)
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("example.com\n", id="trailing-newline"),
+        pytest.param("example\n.com", id="newline-before-label-separator"),
+        pytest.param("example.com\n.", id="newline-before-root-label"),
+        pytest.param("local\n", id="single-label-newline"),
+    ],
+)
+def test_is_valid_host_rejects_newlines(host: str) -> None:
+    """Reject newlines even at the end of a hostname label."""
+    assert not network_util.is_host_valid(host)
 
 
 def test_normalize_url() -> None:
