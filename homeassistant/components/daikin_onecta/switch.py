@@ -41,8 +41,7 @@ async def async_setup_entry(
             ) in management_point.scalar_characteristics().items():
                 values = characteristic.values or []
                 if (
-                    characteristic.value is not None
-                    and characteristic.settable
+                    characteristic.settable
                     and "on" in values
                     and "off" in values
                     and (description := SWITCH_DESCRIPTIONS.get(value)) is not None

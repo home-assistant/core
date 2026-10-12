@@ -116,7 +116,10 @@
     },
     "select": {
       "schedule": {
-        "name": "Schedule"
+        "name": "Schedule",
+        "state": {
+          "home_assistant_schedule_is_disabled": "[%key:common::state::off%]"
+        }
       }
     },
     "sensor": {

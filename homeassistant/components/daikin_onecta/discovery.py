@@ -3,7 +3,11 @@
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 
 from .const import SENSORY_DATA_SENSOR_TYPES
-from .entity_descriptions import SENSOR_DESCRIPTIONS
+from .entity_descriptions import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    SENSOR_DESCRIPTIONS,
+    SWITCH_DESCRIPTIONS,
+)
 
 _CONTROL_MANAGEMENT_POINT_TYPES = {
     "domesticHotWaterTank",
@@ -28,26 +32,20 @@ def management_point_entity_keys(point: ManagementPoint) -> set[str]:
         keys.add("fan")
     if point.schedule_state is not None:
         keys.add("schedule")
-    if (firmware := point.firmware) is not None and firmware.has_installed_version:
+    if point.firmware is not None:
         keys.add("firmware")
 
     for name, characteristic in point.scalar_characteristics().items():
         values = characteristic.values or []
-        if (
-            characteristic.value is not None
-            and characteristic.settable
-            and "on" in values
-            and "off" in values
-        ):
-            if not (
+        if characteristic.settable and "on" in values and "off" in values:
+            if name in SWITCH_DESCRIPTIONS and not (
                 name in {"onOffMode", "powerfulMode"}
                 and point.management_point_type in _CONTROL_MANAGEMENT_POINT_TYPES
             ):
                 keys.add(f"switch:{name}")
-        elif isinstance(characteristic.value, bool) and not values:
-            if characteristic.values is None:
-                keys.add(f"binary_sensor:{name}")
-        elif name in SENSOR_DESCRIPTIONS and characteristic.value is not None:
+        elif name in BINARY_SENSOR_DESCRIPTIONS and characteristic.values is None:
+            keys.add(f"binary_sensor:{name}")
+        elif name in SENSOR_DESCRIPTIONS:
             if not (
                 name == "operationMode"
                 and point.management_point_type in _CONTROL_MANAGEMENT_POINT_TYPES

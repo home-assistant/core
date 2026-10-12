@@ -36,7 +36,6 @@ async def async_setup_entry(
             ) in management_point.scalar_characteristics().items():
                 if (
                     characteristic.values is None
-                    and isinstance(characteristic.value, bool)
                     and (description := BINARY_SENSOR_DESCRIPTIONS.get(value))
                     is not None
                 ):
@@ -100,8 +99,4 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         characteristic = (
             point.scalar_characteristic(self._value) if point is not None else None
         )
-        return bool(
-            characteristic is not None
-            and characteristic.values is None
-            and isinstance(characteristic.value, bool)
-        )
+        return bool(characteristic is not None and characteristic.values is None)

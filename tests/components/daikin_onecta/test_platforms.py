@@ -23,7 +23,11 @@ from homeassistant.components.daikin_onecta.binary_sensor import (
     DaikinBinarySensor,
     async_setup_entry as async_setup_binary_sensors,
 )
-from homeassistant.components.daikin_onecta.const import DOMAIN, SENSOR_PERIOD_DAILY
+from homeassistant.components.daikin_onecta.const import (
+    DOMAIN,
+    SCHEDULE_DISABLED,
+    SENSOR_PERIOD_DAILY,
+)
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity_descriptions import (
     BINARY_SENSOR_DESCRIPTIONS,
@@ -801,6 +805,44 @@ async def test_schedule_select_updates_cached_selection(
     state = hass.states.get("select.master_schedule")
     assert state is not None
     assert state.state == "1"
+
+
+async def test_schedule_named_off_does_not_disable_schedule(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Distinguish a native schedule named off from the disabled option."""
+    await _async_setup_fixture(hass, config_entry, "schedule")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    device = next(iter(coordinator.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    assert point.schedule is not None
+    assert point.schedule.value is not None
+    point.schedule.value.modes["any"].schedules["1"].name = Characteristic(value="off")
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.master_schedule")
+    assert state is not None
+    assert "off" in state.attributes["options"]
+    assert SCHEDULE_DISABLED in state.attributes["options"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: state.entity_id, "option": "off"},
+        blocking=True,
+    )
+
+    coordinator.client.put_management_point.assert_awaited_once_with(
+        device.id,
+        point.embedded_id,
+        "schedule/any/current",
+        {"scheduleId": "1", "enabled": True},
+    )
+    updated_state = hass.states.get(state.entity_id)
+    assert updated_state is not None
+    assert updated_state.state == "off"
 
 
 async def test_schedule_select_ignores_current_option(

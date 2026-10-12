@@ -23,7 +23,7 @@ from .const import (
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
-from .entity_descriptions import SENSOR_DESCRIPTIONS
+from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS, SENSOR_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
 
@@ -128,14 +128,9 @@ def add_simple_sensors(
         if value not in SENSOR_DESCRIPTIONS:
             continue
         values = characteristic.values or []
-        if (
-            characteristic.value is not None
-            and characteristic.settable
-            and "on" in values
-            and "off" in values
-        ):
+        if characteristic.settable and "on" in values and "off" in values:
             continue
-        if not values and isinstance(characteristic.value, bool):
+        if value in BINARY_SENSOR_DESCRIPTIONS and characteristic.values is None:
             continue
         if (
             value == "operationMode"
@@ -143,19 +138,18 @@ def add_simple_sensors(
             in supported_management_point_types
         ):
             continue
-        if characteristic.value is not None:
-            sensors.append(
-                DaikinValueSensor(
-                    device,
-                    coordinator,
-                    SENSOR_DESCRIPTIONS[value],
-                    ValueSensorDetails(
-                        management_point.embedded_id,
-                        None,
-                        value,
-                    ),
-                )
+        sensors.append(
+            DaikinValueSensor(
+                device,
+                coordinator,
+                SENSOR_DESCRIPTIONS[value],
+                ValueSensorDetails(
+                    management_point.embedded_id,
+                    None,
+                    value,
+                ),
             )
+        )
 
 
 def add_sensory_sensors(

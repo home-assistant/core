@@ -719,7 +719,7 @@
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'off',
+            'home_assistant_schedule_is_disabled',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -756,7 +756,7 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'off',
+            'home_assistant_schedule_is_disabled',
           ]),
         }),
         'context': <ANY>,
@@ -764,7 +764,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'off',
+        'state': 'home_assistant_schedule_is_disabled',
       }),
     }),
     'sensor.daikin_onecta_account_ratelimit_remaining_day': dict({

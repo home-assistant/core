@@ -8,7 +8,9 @@ OAUTH2_AUTHORIZE = "https://idp.onecta.daikineurope.com/v1/oidc/authorize"
 OAUTH2_TOKEN = "https://idp.onecta.daikineurope.com/v1/oidc/token"
 DAIKIN_API_URL = ONECTA_API_URL
 
-SCHEDULE_OFF = "off"
+# Daikin schedule names are limited to 32 characters, so this integration-only
+# option cannot collide with a native schedule name.
+SCHEDULE_DISABLED = "home_assistant_schedule_is_disabled"
 
 FANMODE_FIXED = "fixed"
 

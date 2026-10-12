@@ -146,6 +146,31 @@ async def test_remove_account_device_is_rejected(
     config_entry.runtime_data.async_get_sites.assert_not_awaited()
 
 
+async def test_remove_management_point_device_is_rejected(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Sites inventory can confirm gateways only, not their child devices."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    coordinator.async_get_sites = AsyncMock(return_value=[])
+    gateway_id = next(iter(coordinator.data))
+    device_entry = next(
+        entry
+        for entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+        if any(
+            domain == DOMAIN and identifier.startswith(f"{gateway_id}_")
+            for domain, identifier in entry.identifiers
+        )
+    )
+
+    assert not await async_remove_config_entry_device(hass, config_entry, device_entry)
+    coordinator.async_get_sites.assert_not_awaited()
+
+
 async def test_remove_missing_gateway_rejects_failed_poll(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

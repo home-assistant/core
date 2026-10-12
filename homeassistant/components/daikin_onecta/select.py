@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SCHEDULE_OFF
+from .const import SCHEDULE_DISABLED
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
@@ -93,7 +93,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         if selection is None:
             return None
         if not selection.enabled and selection.enabled_settable:
-            return SCHEDULE_OFF
+            return SCHEDULE_DISABLED
         return selection.current_option or next(
             (
                 schedule.name
@@ -115,7 +115,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return
 
         schedule_id = selection.selected
-        if option != SCHEDULE_OFF:
+        if option != SCHEDULE_DISABLED:
             schedule_id = next(
                 (
                     schedule.id
@@ -126,7 +126,9 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             )
 
         enabled = (
-            option != SCHEDULE_OFF if selection.enabled_settable else selection.enabled
+            option != SCHEDULE_DISABLED
+            if selection.enabled_settable
+            else selection.enabled
         )
         await self._async_execute_command(
             lambda client: client.schedule(
@@ -156,5 +158,5 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return []
         options = [schedule.name for schedule in selection.options]
         if selection.enabled_settable:
-            options.append(SCHEDULE_OFF)
+            options.append(SCHEDULE_DISABLED)
         return options

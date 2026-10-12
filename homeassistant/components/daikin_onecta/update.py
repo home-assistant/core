@@ -35,8 +35,7 @@ async def async_setup_entry(
         )
         for device in (coordinator.data or {}).values()
         for management_point in device.device.management_points
-        if (firmware := management_point.firmware) is not None
-        and firmware.has_installed_version
+        if management_point.firmware is not None
     ]
 
     async_add_entities(entities)

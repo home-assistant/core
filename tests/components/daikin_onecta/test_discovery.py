@@ -15,6 +15,12 @@ import pytest
 
 from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.discovery import gateway_entity_keys
+from homeassistant.components.daikin_onecta.entity_descriptions import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    SENSOR_DESCRIPTIONS,
+    SWITCH_DESCRIPTIONS,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -35,6 +41,102 @@ async def _async_fire_coordinator_update(
     freezer.tick(coordinator.update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+
+async def test_missing_values_do_not_change_entity_topology(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Create advertised entities even when their current value is omitted."""
+    cloud_devices = _load_gateway_devices("altherma")
+    initial_devices = deepcopy(cloud_devices)
+    expected_entities: dict[str, str] = {}
+
+    for device in initial_devices:
+        for point in device.management_points:
+            for name, characteristic in point.scalar_characteristics().items():
+                values = characteristic.values or []
+                if (
+                    "switch" not in expected_entities
+                    and name in SWITCH_DESCRIPTIONS
+                    and characteristic.settable
+                    and {"on", "off"}.issubset(values)
+                    and name not in {"onOffMode", "powerfulMode"}
+                ):
+                    characteristic.value = None
+                    expected_entities["switch"] = (
+                        f"{device.id}_{point.embedded_id}_{name}"
+                    )
+                elif (
+                    "binary_sensor" not in expected_entities
+                    and name in BINARY_SENSOR_DESCRIPTIONS
+                    and characteristic.values is None
+                ):
+                    characteristic.value = None
+                    expected_entities["binary_sensor"] = (
+                        f"{device.id}_{point.embedded_id}_{name}"
+                    )
+                elif (
+                    "sensor" not in expected_entities
+                    and name in SENSOR_DESCRIPTIONS
+                    and name not in BINARY_SENSOR_DESCRIPTIONS
+                    and name not in SWITCH_DESCRIPTIONS
+                    and name != "operationMode"
+                ):
+                    characteristic.value = None
+                    expected_entities["sensor"] = (
+                        f"{device.id}_{point.embedded_id}_{name}"
+                    )
+
+            if "update" not in expected_entities and point.software_version is not None:
+                point.software_version.value = None
+                expected_entities["update"] = (
+                    f"{device.id}_{point.embedded_id}_firmware"
+                )
+
+    assert expected_entities.keys() == {
+        "binary_sensor",
+        "sensor",
+        "switch",
+        "update",
+    }
+    assert {
+        key for device in initial_devices for key in gateway_entity_keys(device)
+    } == {key for device in cloud_devices for key in gateway_entity_keys(device)}
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow."
+            "async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator."
+            "async_get_access_token",
+            new=AsyncMock(return_value=FAKE_ACCESS_TOKEN),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.coordinator."
+            "OnectaClient.get_gateway_devices",
+            new=AsyncMock(return_value=initial_devices),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    for domain, unique_id in expected_entities.items():
+        assert (
+            entity_registry.async_get_entity_id(domain, DOMAIN, unique_id) is not None
+        )
+
+    coordinator = config_entry.runtime_data
+    coordinator.client.get_gateway_devices = AsyncMock(return_value=cloud_devices)
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    schedule_reload.assert_not_called()
 
 
 def _add_gateway(devices: list[GatewayDevice]) -> tuple[str, str]:
