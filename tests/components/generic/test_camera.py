@@ -546,14 +546,14 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_timeout_cancelled(
+async def test_timeout(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     fakeimgbytes_jpg: bytes,
 ) -> None:
-    """Test that timeouts and cancellations return last image."""
+    """Test that timeouts return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
