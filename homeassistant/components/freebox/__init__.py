@@ -1,6 +1,6 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from aiohttp import ClientError
@@ -38,11 +38,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
         try:
             await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
             freebox_config = await api.system.get_config()
-        except HttpRequestError:
-            _LOGGER.warning(
-                "Unable to migrate Freebox entry to version 2: cannot reach the router"
-            )
-            return False
+        except HttpRequestError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": entry.data[CONF_HOST]},
+            ) from err
         finally:
             await api.close()
 
@@ -92,8 +93,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
     except (HttpRequestError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
+    update_failed = False
+
+    async def _async_update_all(now: datetime) -> None:
+        """Update the router, logging a failure once until it recovers."""
+        nonlocal update_failed
+        try:
+            await router.update_all()
+        except (HttpRequestError, ClientError, TimeoutError) as err:
+            if not update_failed:
+                _LOGGER.warning("Error updating the Freebox: %r", err)
+            update_failed = True
+            return
+
+        if update_failed:
+            _LOGGER.info("Updating the Freebox works again")
+            update_failed = False
+
     entry.async_on_unload(
-        async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
+        async_track_time_interval(hass, _async_update_all, SCAN_INTERVAL)
     )
 
     entry.runtime_data = router

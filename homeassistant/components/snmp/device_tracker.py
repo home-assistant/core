@@ -47,8 +47,8 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_BASEOID): cv.string,
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-        probatio.Inclusive(CONF_AUTH_KEY, "keys"): cv.string,
-        probatio.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_AUTH_KEY), "keys"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PRIV_KEY), "keys"): cv.string,
     }
 )
 

@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -42,6 +43,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bravia TV integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -84,12 +86,23 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_connect_device()
 
         system_info = await self.client.get_system_info()
-        cid = system_info[ATTR_CID].lower()
+        mac = system_info[ATTR_MAC]
+        formatted_mac = format_mac(mac)
 
-        self.device_config[CONF_MAC] = system_info[ATTR_MAC]
+        # Some TVs return an empty CID
+        unique_id = system_info[ATTR_CID].lower() or formatted_mac
 
-        await self.async_set_unique_id(cid)
+        self.device_config[CONF_MAC] = mac
+
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
+
+        # Disabled entries are not migrated, so they still have an empty unique ID
+        if any(
+            not entry.unique_id and format_mac(entry.data[CONF_MAC]) == formatted_mac
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
             title=f"{system_info['name']} {system_info[ATTR_MODEL]}",

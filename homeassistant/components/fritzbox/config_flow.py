@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import ipaddress
-from typing import TYPE_CHECKING, Any, Self, override
+from typing import Any, Self, override
 
 import probatio
 from pyfritzhome import Fritzhome, LoginError
@@ -38,7 +38,7 @@ DATA_SCHEMA_USER = probatio.Schema(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
@@ -48,7 +48,7 @@ DATA_SCHEMA_USER = probatio.Schema(
 DATA_SCHEMA_CONFIRM = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -58,6 +58,15 @@ RESULT_INVALID_AUTH = "invalid_auth"
 RESULT_NO_DEVICES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
+
+
+def _is_ipv6_link_local(host: str) -> bool:
+    """Return True if host is an IPv6 link-local address."""
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return ip.version == 6 and ip.is_link_local
 
 
 class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -157,22 +166,19 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        if upnp_repr_udl := discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL):
-            self._url = upnp_repr_udl
+        assert isinstance(discovery_info.ssdp_location, str)
+        host = URL(discovery_info.ssdp_location).host
+        assert isinstance(host, str)
+
+        # presentationURL may be relative according to the UPnP spec
+        presentation_url = discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+        if presentation_url and (presentation_host := URL(presentation_url).host):
+            self._url = presentation_url
         else:
-            assert isinstance(discovery_info.ssdp_location, str)
-            host = URL(discovery_info.ssdp_location).host
-            assert isinstance(host, str)
-            self._url = f"http://{host}"
-        representation_url = URL(self._url)
+            presentation_host = host
+            self._url = str(URL.build(scheme="http", host=host))
 
-        if TYPE_CHECKING:
-            assert isinstance(representation_url.host, str)
-
-        if (
-            ipaddress.ip_address(representation_url.host).version == 6
-            and ipaddress.ip_address(representation_url.host).is_link_local
-        ):
+        if _is_ipv6_link_local(host) or _is_ipv6_link_local(presentation_host):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
@@ -269,7 +275,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=self._username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"name": self._name},

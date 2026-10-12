@@ -8,6 +8,8 @@ from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -18,12 +20,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, reload_platform, setup_platform
 from .const import COMMAND_ERRORS, COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
+
+from tests.common import mock_restore_cache
 
 
 async def test_media_player(
@@ -296,3 +300,29 @@ async def test_streaming_center_display(
         )
         await hass.async_block_till_done()
         assert hass.states.get("media_player.test_media_player").state == expected
+
+
+async def test_update_streaming_restore_channel(hass: HomeAssistant) -> None:
+    """Test the streaming media player restores the station, not a playlist."""
+
+    entity_id = "media_player.test_media_player"
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                entity_id,
+                MediaPlayerState.PLAYING,
+                attributes={
+                    ATTR_MEDIA_CHANNEL: "Test Station",
+                    ATTR_MEDIA_PLAYLIST: "Stale Playlist",
+                },
+            ),
+        ),
+    )
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    state = hass.states.get(entity_id)
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes[ATTR_MEDIA_CHANNEL] == "Test Station"
+    assert ATTR_MEDIA_PLAYLIST not in state.attributes

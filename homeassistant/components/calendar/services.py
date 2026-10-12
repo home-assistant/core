@@ -50,8 +50,8 @@ if TYPE_CHECKING:
     from . import CalendarEntity
 
 CREATE_EVENT_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    probatio.AtLeastOne(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    probatio.AtMostOne(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
     cv.make_entity_service_schema(
         {
             probatio.Required(EVENT_SUMMARY): cv.string,
@@ -89,8 +89,8 @@ CREATE_EVENT_SCHEMA = probatio.All(
 
 
 SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
-    cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
-    cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
+    probatio.AtLeastOne(EVENT_END_DATETIME, EVENT_DURATION),
+    probatio.AtMostOne(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {
             probatio.Optional(EVENT_START_DATETIME): cv.datetime,

@@ -14,6 +14,8 @@ from . import ThreemaConfigEntry
 from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
 from .const import DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -41,6 +43,7 @@ class ThreemaNotifyEntity(NotifyEntity):
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the notify entity."""
+        self._entry = entry
         self._client = entry.runtime_data
         self._recipient_id: str = subentry.data[CONF_RECIPIENT]
 
@@ -59,6 +62,7 @@ class ThreemaNotifyEntity(NotifyEntity):
         try:
             await self._client.send_text_message(self._recipient_id, text)
         except ThreemaAuthError as err:
+            self._entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",

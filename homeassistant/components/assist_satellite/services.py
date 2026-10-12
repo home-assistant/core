@@ -100,7 +100,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Optional("preannounce_media_id"): _media_id_validator,
                 }
             ),
-            cv.has_at_least_one_key("message", "media_id"),
+            probatio.AtLeastOne("message", "media_id"),
         ),
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
@@ -118,7 +118,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Optional("extra_system_prompt"): str,
                 }
             ),
-            cv.has_at_least_one_key("start_message", "start_media_id"),
+            probatio.AtLeastOne("start_message", "start_media_id"),
         ),
         "async_internal_start_conversation",
         [AssistSatelliteEntityFeature.START_CONVERSATION],
@@ -194,7 +194,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     }
                 ],
             },
-            cv.has_at_least_one_key("question", "question_media_id"),
+            probatio.AtLeastOne("question", "question_media_id"),
         ),
         supports_response=SupportsResponse.ONLY,
     )

@@ -144,7 +144,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             probatio.Required(
                 CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
             ): str,
-            probatio.Optional(CONF_PASSWORD): str,
+            probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),

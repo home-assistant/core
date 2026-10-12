@@ -1983,6 +1983,7 @@ async def test_duplicate_names_different_areas(
 async def test_error_wrong_state(hass: HomeAssistant) -> None:
     """Test error message when no entities are in the correct state."""
     assert await async_setup_component(hass, media_player.DOMAIN, {})
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "media_player.test_player",
@@ -2003,6 +2004,7 @@ async def test_error_wrong_state(hass: HomeAssistant) -> None:
 async def test_error_feature_not_supported(hass: HomeAssistant) -> None:
     """Test error message when no devices support a required feature."""
     assert await async_setup_component(hass, media_player.DOMAIN, {})
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "media_player.test_player",

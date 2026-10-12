@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import (
+    MyPVAuthenticationError,
+    MyPVConnectionError,
+    MyPVTooManyRequestsError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -149,6 +153,7 @@ async def test_select_select_option_returns_false(
     [
         (MyPVConnectionError(), HomeAssistantError),
         (MyPVAuthenticationError(), ConfigEntryAuthFailed),
+        (MyPVTooManyRequestsError(), HomeAssistantError),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

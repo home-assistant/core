@@ -88,7 +88,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -119,7 +119,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Optional(probatio.Secret(CONF_PIN)): probatio.All(
-                        str, probatio.Length(min=1)
+                        str, probatio.NonEmpty()
                     )
                 }
             ),
@@ -157,7 +157,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
                     probatio.Required(
-                        CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
+                        probatio.Secret(CONF_PASSWORD),
+                        default=config_entry.data[CONF_PASSWORD],
                     ): str,
                 }
             ),
@@ -190,7 +191,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
                     probatio.Required(
-                        CONF_PASSWORD, default=config_entry.data[CONF_PASSWORD]
+                        probatio.Secret(CONF_PASSWORD),
+                        default=config_entry.data[CONF_PASSWORD],
                     ): str,
                 }
             ),

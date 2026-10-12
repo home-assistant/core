@@ -69,7 +69,7 @@ DISCOVER_INTERVAL: int = 30
 STEP_DISCOVERY_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
             probatio.Schema(
                 {
@@ -227,7 +227,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -259,7 +259,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",

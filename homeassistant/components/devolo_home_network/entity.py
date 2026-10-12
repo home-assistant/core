@@ -1,5 +1,7 @@
 """Generic platform."""
 
+from typing import override
+
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
@@ -72,3 +74,10 @@ class DevoloCoordinatorEntity[_DataT: _DataType](
         """Initialize a devolo home network device."""
         super().__init__(coordinator)
         DevoloEntity.__init__(self, entry)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if self.coordinator.expensive:
+            await self.coordinator.async_refresh()

@@ -106,7 +106,7 @@ PLATFORM_SCHEMA = probatio.Schema(
 )
 
 CREATE_SCENE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_ENTITIES, CONF_SNAPSHOT),
+    probatio.AtLeastOne(CONF_ENTITIES, CONF_SNAPSHOT),
     _ensure_no_intersection,
     probatio.Schema(
         {

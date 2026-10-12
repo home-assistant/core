@@ -35,7 +35,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             probatio.All(
-                cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES, CONF_TRV),
+                probatio.AtLeastOne(CONF_LIGHTS, CONF_SWITCHES, CONF_TRV),
                 {
                     probatio.Required(CONF_HOST): cv.string,
                     probatio.Optional(CONF_LIGHTS, default={}): {

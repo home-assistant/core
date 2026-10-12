@@ -156,3 +156,52 @@ async def test_reload_prunes_stale_template_issue(
         issue.translation_key == "shell_command_template_deprecation"
         for issue in issue_registry.issues.values()
     )
+
+
+async def test_reload_keeps_valid_template_issue_and_ignore_state(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A still-valid deprecation issue and its ignore state survive reload."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }} | cat",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"safe_value\n"):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    issue = next(
+        entry
+        for entry in issue_registry.issues.values()
+        if entry.translation_key == "shell_command_template_deprecation"
+    )
+    # The user ignores the issue; a delete-and-recreate would reset this.
+    ir.async_ignore_issue(hass, DOMAIN, issue.issue_id, True)
+    assert issue_registry.issues[(DOMAIN, issue.issue_id)].dismissed_version
+
+    # Reload with the same entity still configured.
+    yaml_path = get_fixture_path("configuration_shell_template.yaml", "command_line")
+    with (
+        patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
+        mock_asyncio_subprocess_run(b"safe_value\n"),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    kept_issue = issue_registry.issues.get((DOMAIN, issue.issue_id))
+    assert kept_issue is not None
+    assert kept_issue.dismissed_version
