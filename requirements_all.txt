@@ -1608,7 +1608,7 @@ lojack-api==0.7.2
 london-tube-status==0.7
 
 # homeassistant.components.loqed
-loqedAPI==2.1.16
+loqedAPI==2.1.18
 
 # homeassistant.components.chirpstack
 # homeassistant.components.lorawan

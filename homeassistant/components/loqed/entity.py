@@ -1,5 +1,7 @@
 """Base entity for the LOQED integration."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,3 +27,9 @@ class LoqedEntity(CoordinatorEntity[LoqedDataCoordinator]):
             model="Touch Smart Lock",
             connections={(CONNECTION_NETWORK_MAC, lock_id)},
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the lock is connected to the bridge."""
+        return super().available and self.coordinator.lock.online
