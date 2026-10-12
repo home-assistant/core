@@ -157,8 +157,9 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
 
         if "snapshots" not in entity_description.stream:
             self._attr_supported_features = CameraEntityFeature.STREAM
-            self._attr_supports_two_way_audio = self._host.api.supported(
-                self._channel, "two_way_audio"
+            self._attr_supports_two_way_audio = (
+                self._host.api.protocol == "rtsp"
+                and self._host.api.supported(self._channel, "two_way_audio")
             )
 
         if self._host.api.is_dual_lens:
