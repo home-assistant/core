@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
-from aiounifi.models.api import ApiItem
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
@@ -22,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
-from ..coordinator import UnifiDataUpdateCoordinator
+from ..coordinator import UnifiApiHandler, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
@@ -37,14 +36,53 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        self._startup_only_api_updaters = (
-            hub.api.clients_all.update,
-            hub.api.sites.update,
-            hub.api.system_information.update,
-        )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
+        self._data_coordinator_aliases: dict[int, int] = {}
 
-        self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
+        if hub.config.uses_api_key:
+            # The Integration API; its handlers are polled
+            devices = hub.api.network.devices
+            self._startup_only_api_updaters: tuple[
+                Callable[[], Coroutine[Any, Any, None]], ...
+            ] = ()
+            self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
+                id(devices): UnifiDataUpdateCoordinator(hub, devices)
+            }
+        else:
+            self._startup_only_api_updaters = (
+                hub.api.clients_all.update,
+                hub.api.sites.update,
+                hub.api.system_information.update,
+            )
+            self._data_coordinators = self._classic_data_coordinators()
+            self._data_coordinator_aliases = {
+                id(hub.api.outlets): id(hub.api.devices),
+                id(hub.api.ports): id(hub.api.devices),
+            }
+
+        for coordinator in self._data_coordinators.values():
+            self.hub.config.entry.async_on_unload(
+                coordinator.async_add_listener(async_noop)
+            )
+
+        self.platforms: list[
+            tuple[
+                AddEntitiesCallback,
+                type[UnifiEntity],
+                tuple[UnifiEntityDescription, ...],
+                bool,
+            ]
+        ] = []
+
+        self.known_objects: set[tuple[str, str]] = set()
+        """Tuples of entity description key and object ID of loaded entities."""
+
+    def _classic_data_coordinators(
+        self,
+    ) -> dict[int, UnifiDataUpdateCoordinator[Any]]:
+        """Coordinators of the classic API handlers."""
+        hub = self.hub
+        return {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
             id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
             id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
@@ -68,29 +106,13 @@ class UnifiEntityLoader:
             ),
             id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
         }
-        self._data_coordinator_aliases: dict[int, int] = {
-            id(hub.api.outlets): id(hub.api.devices),
-            id(hub.api.ports): id(hub.api.devices),
-        }
-        for coordinator in self._data_coordinators.values():
-            self.hub.config.entry.async_on_unload(
-                coordinator.async_add_listener(async_noop)
-            )
-
-        self.platforms: list[
-            tuple[
-                AddEntitiesCallback,
-                type[UnifiEntity],
-                tuple[UnifiEntityDescription, ...],
-                bool,
-            ]
-        ] = []
-
-        self.known_objects: set[tuple[str, str]] = set()
-        """Tuples of entity description key and object ID of loaded entities."""
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
+        if self.hub.config.uses_api_key:
+            await self._initialize_network_api()
+            return
+
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
@@ -102,6 +124,25 @@ class UnifiEntityLoader:
         )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
+
+    async def _initialize_network_api(self) -> None:
+        """Resolve the site on the Integration API and load its data.
+
+        The site's UUID is needed by every other request; the entry stores the
+        short site name, which the Integration API calls internalReference.
+        """
+        hub = self.hub
+        network = hub.api.network
+        info = await network.get_info()
+        hub.application_version = info["applicationVersion"]
+        await network.assign_site(hub.config.site)
+
+        await self._refresh_data(
+            [
+                coordinator.async_refresh
+                for coordinator in self._data_coordinators.values()
+            ]
+        )
 
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]
@@ -223,7 +264,7 @@ class UnifiEntityLoader:
         )
 
     @callback
-    def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
+    def get_data_update_coordinator[HandlerT: UnifiApiHandler](
         self, handler: HandlerT
     ) -> UnifiDataUpdateCoordinator[HandlerT]:
         """Return the data coordinator for a handler."""

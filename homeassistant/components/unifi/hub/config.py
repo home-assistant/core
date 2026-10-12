@@ -7,6 +7,7 @@ from typing import Literal, Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -19,6 +20,7 @@ from ..const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
+    CONF_CONNECTION_MODE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_LOCAL_MAC,
@@ -28,6 +30,8 @@ from ..const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONNECTION_MODE_API_KEY,
+    CONNECTION_MODE_LOCAL_USER,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -48,8 +52,10 @@ class UnifiConfig:
 
     host: str
     port: int
-    username: str
-    password: str
+    connection_mode: str
+    username: str | None
+    password: str | None
+    api_key: str | None
     site: str
     ssl_context: ssl.SSLContext | Literal[False]
 
@@ -87,6 +93,11 @@ class UnifiConfig:
     option_allow_uptime_sensors: bool
     """Config entry option to allow uptime sensors."""
 
+    @property
+    def uses_api_key(self) -> bool:
+        """Whether the entry uses the Network Integration API with an API key."""
+        return self.connection_mode == CONNECTION_MODE_API_KEY
+
     @classmethod
     def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
         """Create object from config entry."""
@@ -95,8 +106,12 @@ class UnifiConfig:
         return cls(
             entry=config_entry,
             host=config[CONF_HOST],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
+            connection_mode=config.get(
+                CONF_CONNECTION_MODE, CONNECTION_MODE_LOCAL_USER
+            ),
+            username=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD),
+            api_key=config.get(CONF_API_KEY),
             port=config[CONF_PORT],
             site=config[CONF_SITE_ID],
             ssl_context=config.get(CONF_VERIFY_SSL, False),

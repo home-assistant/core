@@ -11,7 +11,7 @@ from decimal import Decimal
 from functools import partial
 from typing import TYPE_CHECKING, Literal, cast, override
 
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.outlets import Outlets
@@ -21,12 +21,18 @@ from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import (
     Device,
+    DeviceState,
     TypedDeviceTemperature,
     TypedDeviceUptimeStatsWanMonitor,
 )
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
+from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
+from aiounifi.network.v1.models.device import (
+    Device as NetworkDevice,
+    DeviceState as NetworkDeviceState,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -52,6 +58,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
+from .coordinator import UnifiApiHandler
 from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
@@ -59,6 +66,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_network_device_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
     is_locally_administered_mac,
@@ -69,6 +77,21 @@ PARALLEL_UPDATES = 0
 
 # UniFi names the first WAN "WAN", not "WAN1".
 type WanName = Literal["WAN", "WAN2", "WAN3"]
+
+NETWORK_DEVICE_STATES = {
+    NetworkDeviceState.ONLINE: DEVICE_STATES[DeviceState.CONNECTED],
+    NetworkDeviceState.OFFLINE: DEVICE_STATES[DeviceState.DISCONNECTED],
+    NetworkDeviceState.PENDING_ADOPTION: DEVICE_STATES[DeviceState.PENDING],
+    NetworkDeviceState.UPDATING: DEVICE_STATES[DeviceState.UPGRADING],
+    NetworkDeviceState.GETTING_READY: DEVICE_STATES[DeviceState.PROVISIONING],
+    NetworkDeviceState.ADOPTING: DEVICE_STATES[DeviceState.ADOPTING],
+    NetworkDeviceState.DELETING: DEVICE_STATES[DeviceState.DELETING],
+    NetworkDeviceState.CONNECTION_INTERRUPTED: DEVICE_STATES[
+        DeviceState.HEARTBEAT_MISSED
+    ],
+    NetworkDeviceState.ISOLATED: DEVICE_STATES[DeviceState.ISOLATED],
+}
+"""Device states of the Integration API, as the classic state sensor's options."""
 
 
 @callback
@@ -423,7 +446,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiSensorEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     SensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi sensor entity."""
@@ -884,6 +907,21 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
 
+NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
+    UnifiSensorEntityDescription[NetworkDevices, NetworkDevice](
+        key="Device State",
+        translation_key="device_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        api_handler_fn=lambda api: api.network.devices,
+        device_info_fn=async_network_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.network.devices[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"device_state-{obj_id}",
+        value_fn=lambda hub, device: NETWORK_DEVICE_STATES.get(device.state),
+        options=list(DEVICE_STATES.values()),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -891,12 +929,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    config_entry.runtime_data.entity_loader.register_platform(
-        async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
+    hub = config_entry.runtime_data
+    hub.entity_loader.register_platform(
+        async_add_entities,
+        UnifiSensorEntity,
+        NETWORK_API_ENTITY_DESCRIPTIONS
+        if hub.config.uses_api_key
+        else ENTITY_DESCRIPTIONS,
     )
 
 
-class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiSensorEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], SensorEntity
 ):
     """Base representation of a UniFi sensor."""

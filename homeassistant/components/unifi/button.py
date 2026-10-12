@@ -138,6 +138,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
+    if config_entry.runtime_data.config.uses_api_key:
+        return  # Not available through the Network Integration API
     config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, UnifiButtonEntity, ENTITY_DESCRIPTIONS, requires_admin=True
     )
