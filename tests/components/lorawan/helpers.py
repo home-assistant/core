@@ -87,5 +87,6 @@ class ExampleSensor(LoRaWANEntity[ExampleDevice], SensorEntity):
         self._attr_name = key.capitalize()
         self._attr_unique_id = f"{coordinator.data.descriptor.network_id}:{coordinator.data.descriptor.dev_eui}:{key}"
         self._attr_device_info = {
-            "identifiers": {device_identifier("test_vendor", coordinator.data)}
+            "identifiers": {device_identifier("test_vendor", coordinator.data)},
+            "name": coordinator.data.descriptor.name,
         }

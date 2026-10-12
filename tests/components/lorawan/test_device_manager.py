@@ -73,6 +73,37 @@ async def test_multiple_connections_reconnect(
     assert model.closed
 
 
+async def test_device_registry_owned_by_integration(
+    hass: HomeAssistant,
+    registered_backend: RegisterBackend,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The manager leaves device registration and metadata to the integration."""
+    backend, _ = await registered_backend("network", [DESCRIPTOR])
+    entry = MockConfigEntry(domain="test_vendor")
+    entry.add_to_hass(hass)
+    manager = DeviceManager(
+        hass,
+        entry,
+        create_collection=ExampleDevices,
+        create_coordinator=ExampleCoordinator,
+    )
+    await manager.async_setup()
+    assert len(manager.coordinators) == 1
+    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    registered = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test_vendor", f"network:{DESCRIPTOR.dev_eui}")},
+        name="Integration device name",
+    )
+    backend.emit(inventory(replace(DESCRIPTOR, name="Updated"), EventType.UPDATED))
+    assert device_registry.async_get(registered.id).name == "Integration device name"
+    manager.close()
+    await hass.async_block_till_done()
+    assert device_registry.async_get(registered.id) is not None
+
+
 async def test_late_connections(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:

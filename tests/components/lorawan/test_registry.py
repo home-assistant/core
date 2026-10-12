@@ -49,10 +49,7 @@ async def test_registry_lifecycle(
             (domain, f"network:{descriptor.dev_eui}"), entry.entry_id
         )
         assert device is not None
-        connection.emit(
-            inventory(replace(descriptor, name="Renamed"), EventType.UPDATED)
-        )
-        assert device_registry.async_get(device.id).name == "Renamed"
+        assert device.name == descriptor.name
         # Unload is not a device deletion.
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

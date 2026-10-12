@@ -8,8 +8,7 @@ The manager:
 - Owns a device collection per connection.
 - Shares one model and coordinator per device across entity platforms, keeping
   identical DevEUIs on different connections separate.
-- Creates, updates, and removes device registry records owned by the device
-  integration's config entry.
+- Removes device registry records when devices or their providers are deleted.
 - Retains models and coordinators during temporary disconnections, marks affected
   devices unavailable, and reconciles inventory when a replacement connection
   registers.
@@ -352,30 +351,14 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
     def _device_added(self, entry_id: str, device: DeviceT) -> None:
         coordinator = self._create_coordinator(self._hass, device)
         self.coordinators[(entry_id, device.descriptor.dev_eui)] = coordinator
-        self._registry.async_get_or_create(
-            config_entry_id=self._entry.entry_id,
-            identifiers={device_identifier(self._entry.domain, device)},
-            name=device.descriptor.name,
-        )
-        device.add_update_listener(lambda: self._update_name(device))
         device.add_remove_listener(lambda: self._remove_registry_device(device))
         notify(self._listeners, coordinator)
 
-    def _registry_device(self, device: DeviceT) -> dr.DeviceEntry | None:
-        return self._registry.async_get_device_by_identifier(
-            device_identifier(self._entry.domain, device), self._entry.entry_id
-        )
-
-    @callback
-    def _update_name(self, device: DeviceT) -> None:
-        if registered := self._registry_device(device):
-            self._registry.async_update_device(
-                registered.id, name=device.descriptor.name
-            )
-
     @callback
     def _remove_registry_device(self, device: DeviceT) -> None:
-        if registered := self._registry_device(device):
+        if registered := self._registry.async_get_device_by_identifier(
+            device_identifier(self._entry.domain, device), self._entry.entry_id
+        ):
             self._registry.async_remove_device(registered.id)
 
     @callback
