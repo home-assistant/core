@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
@@ -410,7 +409,7 @@ class TeslemetryChargeOnSolarSwitchEntity(TeslemetryChargeOnSolarEntity, SwitchE
         """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
         async with self.vehicle.charge_on_solar_lock:
             await async_set_charge_on_solar(
-                partial(handle_vehicle_command, self.hass, self.config_entry),
+                handle_vehicle_command,
                 self.api,
                 enabled=enabled,
                 lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,
