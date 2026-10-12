@@ -141,6 +141,12 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             and purification.power.settable
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the purifier still exposes writable power control."""
+        return super().available and self._power_control_is_available()
+
     def _update_state(self) -> None:
         """Refresh entity state from typed purifier data."""
         purification = self._air_purification()

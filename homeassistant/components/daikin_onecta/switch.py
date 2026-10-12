@@ -112,6 +112,22 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         result = characteristic.value if characteristic is not None else None
         return result if isinstance(result, str) else None
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the characteristic still exposes writable on/off values."""
+        if not super().available:
+            return False
+        point = self._device.management_point(self._embedded_id)
+        characteristic = (
+            point.scalar_characteristic(self._value) if point is not None else None
+        )
+        return bool(
+            characteristic is not None
+            and characteristic.settable
+            and {"on", "off"}.issubset(characteristic.values or [])
+        )
+
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""

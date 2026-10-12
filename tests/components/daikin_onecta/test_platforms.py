@@ -101,13 +101,18 @@ def test_platform_availability_requires_coordinator_and_device(
         "Coordinator", (), {"last_update_success": last_update_success}
     )()
     entity._embedded_id = "point"
+    entity._value = "test"
+    point = MagicMock()
+    point.scalar_characteristic.return_value = Characteristic(
+        value="on", settable=True, values=["on", "off"]
+    )
     entity._device = type(
         "Device",
         (),
         {
             "available": device_available,
             "management_point": lambda _, __: (
-                object() if management_point_exists else None
+                point if management_point_exists else None
             ),
         },
     )()

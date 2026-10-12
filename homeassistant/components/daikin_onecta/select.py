@@ -79,6 +79,12 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return None
         return schedule.active_selection
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the management point still exposes a schedule."""
+        return super().available and self.selection() is not None
+
     def get_current_option(self) -> str | None:
         """Return the selected schedule name."""
         selection = self.selection()

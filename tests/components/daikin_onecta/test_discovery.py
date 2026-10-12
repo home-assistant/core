@@ -4,11 +4,17 @@ from collections.abc import Callable
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from daikin_onecta.models import Characteristic, GatewayDevice, Setpoint
+from daikin_onecta.models import (
+    Characteristic,
+    GatewayDevice,
+    ManagementPoint,
+    Setpoint,
+)
 import pytest
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -184,3 +190,126 @@ async def test_state_changes_do_not_reload_platforms(
         await coordinator.async_refresh()
 
     schedule_reload.assert_not_called()
+
+
+def _remove_purifier(point: ManagementPoint) -> None:
+    """Remove the characteristic that identifies air purification."""
+    point.characteristics.pop("airPurificationMode")
+
+
+def _remove_purifier_power(point: ManagementPoint) -> None:
+    """Remove the purifier's power characteristic."""
+    point.on_off_mode = None
+
+
+def _make_purifier_read_only(point: ManagementPoint) -> None:
+    """Remove the purifier's writable power capability."""
+    assert point.on_off_mode is not None
+    point.on_off_mode.settable = False
+
+
+def _remove_schedule(point: ManagementPoint) -> None:
+    """Remove all schedule data from the management point."""
+    point.schedule = None
+
+
+def _remove_switch(point: ManagementPoint) -> None:
+    """Remove an independently switchable characteristic."""
+    point.characteristics.pop("econoMode")
+
+
+def _make_switch_read_only(point: ManagementPoint) -> None:
+    """Remove a switch's writable capability."""
+    point.characteristics["econoMode"].settable = False
+
+
+@pytest.mark.parametrize(
+    ("fixture", "domain", "suffix", "remove_capability", "removal_reload_count"),
+    [
+        pytest.param(
+            "mc80z", "fan", "air_purifier", _remove_purifier, 0, id="purifier"
+        ),
+        pytest.param(
+            "mc80z",
+            "fan",
+            "air_purifier",
+            _remove_purifier_power,
+            0,
+            id="purifier_power",
+        ),
+        pytest.param(
+            "mc80z",
+            "fan",
+            "air_purifier",
+            _make_purifier_read_only,
+            1,
+            id="purifier_read_only",
+        ),
+        pytest.param(
+            "schedule", "select", "schedule", _remove_schedule, 0, id="schedule"
+        ),
+        pytest.param("altherma", "switch", "econoMode", _remove_switch, 0, id="switch"),
+        pytest.param(
+            "altherma",
+            "switch",
+            "econoMode",
+            _make_switch_read_only,
+            1,
+            id="switch_read_only",
+        ),
+    ],
+)
+async def test_removed_controls_become_unavailable_and_recover(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixture: str,
+    domain: str,
+    suffix: str,
+    remove_capability: Callable[[ManagementPoint], None],
+    removal_reload_count: int,
+) -> None:
+    """Retain an entity's identity when its control disappears and returns."""
+    await _async_setup_fixture(hass, config_entry, fixture)
+    coordinator = config_entry.runtime_data
+    devices = _load_gateway_devices(fixture)
+    gateway, point, entity_id = next(
+        (gateway, point, entity_id)
+        for gateway in devices
+        for point in gateway.management_points
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                domain, DOMAIN, f"{gateway.id}_{point.embedded_id}_{suffix}"
+            )
+        )
+        is not None
+    )
+    initial_state = hass.states.get(entity_id)
+    assert initial_state is not None
+    assert initial_state.state != STATE_UNAVAILABLE
+    registry_entry = entity_registry.async_get(entity_id)
+    restored_devices = deepcopy(devices)
+    remove_capability(point)
+    coordinator.api.get_cloud_device_details = AsyncMock(return_value=devices)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        await coordinator.async_refresh()
+
+        assert coordinator.data[gateway.id].available
+        assert (
+            coordinator.data[gateway.id].management_point(point.embedded_id) is not None
+        )
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        assert entity_registry.async_get(entity_id).id == registry_entry.id
+        assert (
+            entity_registry.async_get(entity_id).unique_id == registry_entry.unique_id
+        )
+        assert schedule_reload.call_count == removal_reload_count
+
+        coordinator.api.get_cloud_device_details.return_value = restored_devices
+        await coordinator.async_refresh()
+
+    assert hass.states.get(entity_id).state == initial_state.state
+    assert entity_registry.async_get(entity_id).id == registry_entry.id
+    assert entity_registry.async_get(entity_id).unique_id == registry_entry.unique_id
+    schedule_reload.assert_called_once_with(config_entry.entry_id)

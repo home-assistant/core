@@ -151,8 +151,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     # Platform setup is capability-driven. Reload only when the
                     # cloud reports newly supported entities, including new
                     # capabilities of existing management points.
-                    # Missing topology remains in the registry and is handled
-                    # by the availability checks above.
+                    # Missing controls remain registered but unavailable.
                     self._reload_pending = True
                     self.hass.config_entries.async_schedule_reload(
                         self.config_entry.entry_id
