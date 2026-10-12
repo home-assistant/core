@@ -60,4 +60,3 @@ jobs:
             homeassistant/components/homewizard/__init__.py \
             tests/components/homewizard/test_config_flow.py \
             tests/components/homewizard/test_init.py
-          
