@@ -1,5 +1,7 @@
 """Test the Omnilogic config flow."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException
@@ -12,6 +14,22 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 DATA = {"username": "test-username", "password": "test-password"}
+
+
+@contextmanager
+def _patch_success() -> Iterator[None]:
+    """Patch a successful connection and setup."""
+    with (
+        patch(
+            "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.omnilogic.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -78,6 +96,15 @@ async def test_with_invalid_credentials(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test if invalid response or no connection returned from Hayward."""
@@ -99,6 +126,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_with_unknown_error(hass: HomeAssistant) -> None:
     """Test with unknown error response from Hayward."""
@@ -119,6 +155,15 @@ async def test_with_unknown_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_option_flow(hass: HomeAssistant) -> None:

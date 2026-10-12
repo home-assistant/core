@@ -1,7 +1,6 @@
 """The myStrom integration."""
 
 import asyncio
-import logging
 
 import pymystrom
 from pymystrom.bulb import MyStromBulb
@@ -20,8 +19,6 @@ PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
 PLATFORMS_MOTION_SENSOR = [Platform.SENSOR]
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def _async_get_device_state(
     device: MyStromSwitch | MyStromBulb | MyStromPir, ip_address: str
@@ -34,9 +31,11 @@ async def _async_get_device_state(
         else:
             await device.get_state()
     except MyStromConnectionError as err:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("No route to myStrom plug: %s", ip_address)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": ip_address},
+        ) from err
 
 
 def _get_mystrom_bulb(host: str, mac: str) -> MyStromBulb:
@@ -57,9 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> b
     try:
         info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("No route to myStrom plug: %s", host)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from err
 
     info.setdefault("type", 101)
 

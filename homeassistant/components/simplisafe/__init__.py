@@ -205,9 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed from err
     except SimplipyError as err:
-        # pylint: disable-next=home-assistant-log-and-raise
-        LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Config entry failed: {err}") from err
 
     simplisafe = SimpliSafe(hass, entry, api)
 

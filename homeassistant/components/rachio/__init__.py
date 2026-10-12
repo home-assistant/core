@@ -85,15 +85,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
     try:
         await person.async_setup(hass)
     except ConfigEntryAuthFailed as error:
-        # Reauth is not yet implemented
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from error
     except ConnectTimeout as error:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("Could not reach the Rachio API: %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from error
 
     # Check for Rachio controller devices
     if not person.controllers and not person.base_stations:

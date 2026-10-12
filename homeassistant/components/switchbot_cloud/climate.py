@@ -137,12 +137,14 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
         ) is not None:
-            # The attribute was published in the unit of the system, not the one
-            # this entity reports in, so it converts back on the way in
+            # Legacy states lack the unit; they were saved in the system unit
             temperature = round(
                 TemperatureConverter.convert(
                     temperature,
-                    self.hass.config.units.temperature_unit,
+                    last_state.attributes.get(
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                        self.hass.config.units.temperature_unit,
+                    ),
                     self.native_temperature_unit,
                 )
             )

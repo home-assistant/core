@@ -43,10 +43,8 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
             raise ConfigEntryError("Authentication failed") from err
 
         except SimpleFinPaymentRequiredError as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            LOGGER.warning(
+            raise UpdateFailed(
                 "There is a billing issue with your SimpleFin"
                 " account, contact SimpleFin to address"
                 " this issue"
-            )
-            raise UpdateFailed from err
+            ) from err

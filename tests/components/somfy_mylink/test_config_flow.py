@@ -1,5 +1,7 @@
 """Test the Somfy MyLink config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from pysomfymylink import Shade, SomfyMyLinkApiError, SomfyMyLinkConnectionError
@@ -17,6 +19,28 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
+
+USER_INPUT = {
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 1234,
+    CONF_SYSTEM_ID: "456",
+}
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch a successful connection and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.somfy_mylink.config_flow.SomfyMyLink.status_info",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.somfy_mylink.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form_user(hass: HomeAssistant) -> None:
@@ -119,6 +143,13 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -142,6 +173,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle broad exception."""
@@ -164,6 +202,13 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_not_loaded(hass: HomeAssistant) -> None:

@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import errno
-import logging
 
 from wiffi import WiffiTcpServer
 
@@ -20,9 +19,6 @@ from .const import (
     UPDATE_ENTITY_SIGNAL,
 )
 from .entity import generate_unique_id
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -48,9 +44,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> boo
                 translation_key="start_server_failed",
                 translation_placeholders={"port": str(entry.data[CONF_PORT])},
             ) from exc
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("Port %s already in use", entry.data[CONF_PORT])
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="port_in_use",
+            translation_placeholders={"port": str(entry.data[CONF_PORT])},
+        ) from exc
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

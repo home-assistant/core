@@ -1,0 +1,8 @@
+{
+  "id": 4,
+  "label": "Channel name",
+  "thumbnail": "image://pvrchannel_tv@http%3a%2f%2fpvr.example.com%2fimagecache%2f80/",
+  "title": "Current programme",
+  "type": "channel",
+  "uniqueid": 123456789
+}

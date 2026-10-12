@@ -133,7 +133,7 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_form_exceptions(
-    hass: HomeAssistant, side_effect, error_base
+    hass: HomeAssistant, side_effect: type[Exception], error_base: str
 ) -> None:
     """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
@@ -152,6 +152,19 @@ async def test_user_form_exceptions(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
     bulb.async_close.assert_awaited_once()
+
+    with (
+        _patch_wizlight(),
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=True),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            TEST_CONNECTION,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_updates_unique_id(hass: HomeAssistant) -> None:

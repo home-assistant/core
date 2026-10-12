@@ -1,7 +1,5 @@
 """The Prosegur Alarm integration."""
 
-import logging
-
 from pyprosegur.auth import Auth
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,8 +15,6 @@ from .services import async_setup_services
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 type ProsegurConfigEntry = ConfigEntry[Auth]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -43,15 +39,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProsegurConfigEntry) -> 
         await auth.login()
 
     except ConnectionRefusedError as error:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("Configured credential are invalid, %s", error)
-
-        raise ConfigEntryAuthFailed from error
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from error
 
     except ConnectionError as error:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("Could not connect with Prosegur backend: %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from error
 
     entry.runtime_data = auth
 

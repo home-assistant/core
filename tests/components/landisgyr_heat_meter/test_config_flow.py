@@ -1,7 +1,7 @@
 """Test the Landis + Gyr Heat Meter config flow."""
 
 from dataclasses import dataclass
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import serialx
@@ -58,7 +58,7 @@ async def test_user_flow_success(mock_heat_meter, hass: HomeAssistant) -> None:
 
 @patch(API_HEAT_METER_SERVICE)
 async def test_user_flow_cannot_connect_oserror(
-    mock_heat_meter, hass: HomeAssistant
+    mock_heat_meter: MagicMock, hass: HomeAssistant
 ) -> None:
     """Test connection failure due to OSError."""
 
@@ -79,10 +79,17 @@ async def test_user_flow_cannot_connect_oserror(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_heat_meter().read.side_effect = None
+    mock_heat_meter().read.return_value = MockUltraheatRead("LUGCUH50", "123456789")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @patch(API_HEAT_METER_SERVICE)
 async def test_user_flow_cannot_connect_serial_exception(
-    mock_heat_meter, hass: HomeAssistant
+    mock_heat_meter: MagicMock, hass: HomeAssistant
 ) -> None:
     """Test connection failure due to serialx.SerialException."""
 
@@ -102,6 +109,13 @@ async def test_user_flow_cannot_connect_serial_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_heat_meter().read.side_effect = None
+    mock_heat_meter().read.return_value = MockUltraheatRead("LUGCUH50", "123456789")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @patch(API_HEAT_METER_SERVICE)

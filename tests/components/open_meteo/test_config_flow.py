@@ -33,7 +33,7 @@ async def test_full_user_flow(hass: HomeAssistant, mock_open_meteo: MagicMock) -
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "test home"
     assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}
-    assert result2["result"].unique_id == ENTITY_ID_HOME
+    assert result2["result"].unique_id is None
 
     assert len(mock_open_meteo.forecast.mock_calls) == 1
     _, _, kwargs = mock_open_meteo.forecast.mock_calls[0]
@@ -80,6 +80,13 @@ async def test_flow_zone_not_found(hass: HomeAssistant) -> None:
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_ZONE: "zone_not_found"}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")

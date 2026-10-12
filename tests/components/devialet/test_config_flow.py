@@ -54,6 +54,18 @@ async def test_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    aioclient_mock.clear_requests()
+    mock_playing(aioclient_mock)
+    with patch(
+        "homeassistant.components.devialet.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -156,3 +168,17 @@ async def test_async_step_confirm(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    mock_playing(aioclient_mock)
+    with patch(
+        "homeassistant.components.devialet.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

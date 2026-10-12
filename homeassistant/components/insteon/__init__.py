@@ -10,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
@@ -33,6 +34,8 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_get_device_config(hass, config_entry):
@@ -73,6 +76,12 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Insteon component."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
 
@@ -85,9 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await async_connect(**entry.data)
         except ConnectionError as exception:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error("Could not connect to Insteon modem")
-            raise ConfigEntryNotReady from exception
+            raise ConfigEntryNotReady(
+                "Could not connect to Insteon modem"
+            ) from exception
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
@@ -132,7 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
-    async_setup_services(hass)
 
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"

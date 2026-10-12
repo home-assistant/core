@@ -128,12 +128,8 @@ class FishAudioTTSEntity(TextToSpeechEntity):
                 format="mp3",
             )
         except RateLimitError as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error("Fish Audio TTS rate limited: %s", err)
             raise HomeAssistantError(f"Rate limited: {err}") from err
         except APIError as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error("Fish Audio TTS request failed: %s", err)
             raise HomeAssistantError(f"TTS request failed: {err}") from err
         except Exception as err:
             raise UnexpectedError(err) from err
