@@ -30,6 +30,7 @@ from .coordinator import IndiAllSkyConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 REDIRECT_TIMEOUT = ClientTimeout(total=10)
+STREAM_TIMEOUT = ClientTimeout(connect=10, sock_read=10, total=None)
 MEDIA_STREAM_CHUNK_SIZE = 64 * 1024
 
 CATEGORY_LATEST = "latest"
@@ -85,8 +86,10 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
             return web.Response(status=404)
 
         try:
-            media_path = base64.urlsafe_b64decode(path.encode("ascii")).decode("utf-8")
-        except ValueError, UnicodeDecodeError:
+            media_path = base64.b64decode(
+                path.encode("ascii"), altchars=b"-_", validate=True
+            ).decode("utf-8")
+        except ValueError, UnicodeError:
             return web.Response(status=400)
 
         media_path_obj = PurePath(media_path)
@@ -106,7 +109,7 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
             async with session.get(
                 url,
                 headers=headers,
-                timeout=REDIRECT_TIMEOUT,
+                timeout=STREAM_TIMEOUT,
                 allow_redirects=True,
             ) as upstream:
                 resp_headers: dict[str, str] = {}
@@ -358,7 +361,6 @@ class IndiAllSkyMediaSource(MediaSource):
 
     def _build_latest_media(self, entry: IndiAllSkyConfigEntry) -> BrowseMediaSource:
         """Build latest available media items."""
-        client = entry.runtime_data.client
         children: list[BrowseMediaSource] = [
             BrowseMediaSource(
                 domain=DOMAIN,
@@ -368,7 +370,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 title="Latest Snapshot",
                 can_play=True,
                 can_expand=False,
-                thumbnail=client.get_media_url("latestimage"),
+                thumbnail=_build_media_proxy_path(entry.entry_id, "latestimage"),
             ),
             BrowseMediaSource(
                 domain=DOMAIN,
@@ -378,7 +380,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 title="Latest Keogram",
                 can_play=True,
                 can_expand=False,
-                thumbnail=client.get_media_url("latestkeogram"),
+                thumbnail=_build_media_proxy_path(entry.entry_id, "latestkeogram"),
             ),
             BrowseMediaSource(
                 domain=DOMAIN,
@@ -388,7 +390,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 title="Latest Star Trail",
                 can_play=True,
                 can_expand=False,
-                thumbnail=client.get_media_url("lateststartrail"),
+                thumbnail=_build_media_proxy_path(entry.entry_id, "lateststartrail"),
             ),
             BrowseMediaSource(
                 domain=DOMAIN,
@@ -508,7 +510,7 @@ class IndiAllSkyMediaSource(MediaSource):
                         title=f"{tod_str} Keogram - {date_str}",
                         can_play=True,
                         can_expand=False,
-                        thumbnail=client.get_media_url(keo_thumb)
+                        thumbnail=_build_media_proxy_path(entry.entry_id, keo_thumb)
                         if keo_thumb
                         else None,
                     )
@@ -526,7 +528,9 @@ class IndiAllSkyMediaSource(MediaSource):
                         title=f"{tod_str} Star Trail - {date_str}",
                         can_play=True,
                         can_expand=False,
-                        thumbnail=client.get_media_url(st_thumb) if st_thumb else None,
+                        thumbnail=_build_media_proxy_path(entry.entry_id, st_thumb)
+                        if st_thumb
+                        else None,
                     )
                 )
 
@@ -670,7 +674,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 title=f"{img.time_str} ({img.width}x{img.height})",
                 can_play=True,
                 can_expand=False,
-                thumbnail=client.get_media_url(img.url),
+                thumbnail=_build_media_proxy_path(entry.entry_id, img.url),
             )
             for img in images
             if img.url

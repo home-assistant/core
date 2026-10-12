@@ -391,6 +391,18 @@ async def test_async_browse_latest_media(
     assert "Latest Keogram" in titles
     assert "Latest Star Trail" in titles
     assert "Latest Timelapse" in titles
+    assert (
+        res_latest.children[0].thumbnail
+        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
+    )
+    assert (
+        res_latest.children[1].thumbnail
+        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0a2VvZ3JhbQ=="
+    )
+    assert (
+        res_latest.children[2].thumbnail
+        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0c3RhcnRyYWls"
+    )
 
 
 async def test_async_browse_videos_hierarchy(
@@ -455,11 +467,11 @@ async def test_async_browse_videos_hierarchy(
     assert "Night Star Trail - October 11, 2026" in titles
     assert (
         res_videos.children[1].thumbnail
-        == "https://127.0.0.1/images/keogram20261011.jpg"
+        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2tlb2dyYW0yMDI2MTAxMS5qcGc="
     )
     assert (
         res_videos.children[2].thumbnail
-        == "https://127.0.0.1/images/startrail20261011.jpg"
+        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3N0YXJ0cmFpbDIwMjYxMDExLmpwZw=="
     )
 
 
@@ -523,6 +535,10 @@ async def test_async_browse_images_hierarchy(
     assert len(res_images.children) == 1
     assert "20:00:00 (4056x3140)" in res_images.children[0].title
     assert res_images.children[0].media_content_type == MediaType.IMAGE
+    assert (
+        res_images.children[0].thumbnail
+        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2ltZ18yMDAwMDAuanBn"
+    )
 
 
 async def test_async_browse_catalog_error(
@@ -680,6 +696,18 @@ async def test_proxy_view_errors(
     # 2. Invalid base64 path -> 400
     resp = await client.get(
         f"/api/indi_allsky/media/{mock_config_entry.entry_id}/!invalid_base64!"
+    )
+    assert resp.status == 400
+
+    # Invalid base64 characters with padding/symbols (e.g. c2FtcGxl$$$$) -> 400
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/c2FtcGxl$$$$"
+    )
+    assert resp.status == 400
+
+    # Non-ASCII path segment -> 400
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/%C3%A9"
     )
     assert resp.status == 400
 
