@@ -28,6 +28,7 @@ from .const import (
 from .services import async_setup_services
 from .utils import (
     add_insteon_events,
+    async_connect_device_signals,
     get_device_platforms,
     register_new_device_callback,
 )
@@ -132,6 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
+    for unsub in async_connect_device_signals(hass):
+        entry.async_on_unload(unsub)
     async_setup_services(hass)
 
     entry.async_create_background_task(

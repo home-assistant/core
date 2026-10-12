@@ -1,6 +1,8 @@
 """Utilities used by insteon component."""
 
+import asyncio
 from collections.abc import Callable
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -9,22 +11,42 @@ from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, DeviceAction
 from pyinsteon.device_types.device_base import Device
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
+from pyinsteon.x10_address import create as create_x10_address
 
 from homeassistant.components import usb
-from homeassistant.const import CONF_ADDRESS, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_ADDRESS, CONF_PLATFORM, Platform
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.singleton import singleton
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    CONF_CAT,
+    CONF_DIM_STEPS,
+    CONF_HOUSECODE,
+    CONF_SUBCAT,
+    CONF_UNITCODE,
     DOMAIN,
     EVENT_CONF_BUTTON,
     EVENT_GROUP_OFF,
     EVENT_GROUP_OFF_FAST,
     EVENT_GROUP_ON,
     EVENT_GROUP_ON_FAST,
+    SIGNAL_ADD_DEVICE_OVERRIDE,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_ADD_X10_DEVICE,
+    SIGNAL_REMOVE_DEVICE_OVERRIDE,
+    SIGNAL_REMOVE_ENTITY,
+    SIGNAL_REMOVE_HA_DEVICE,
+    SIGNAL_REMOVE_INSTEON_DEVICE,
+    SIGNAL_REMOVE_X10_DEVICE,
+    SIGNAL_SAVE_DEVICES,
 )
 from .ipdb import get_device_platform_groups, get_device_platforms
 
@@ -32,6 +54,8 @@ if TYPE_CHECKING:
     from .entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+_DATA_SAVE_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_save_lock")
 
 
 def _register_event(event: Event, listener: Callable) -> None:
@@ -202,3 +226,106 @@ async def async_device_name(
             return f"{device.description} ({device.model})"
         return ""
     return compute_device_name(ha_device)
+
+
+@singleton(_DATA_SAVE_LOCK)
+@callback
+def _async_get_save_lock(hass: HomeAssistant) -> asyncio.Lock:
+    """Return the lock serializing writes of the Insteon device configuration."""
+    return asyncio.Lock()
+
+
+async def async_save_devices(hass: HomeAssistant) -> None:
+    """Write the Insteon device configuration to file."""
+    async with _async_get_save_lock(hass):
+        _LOGGER.debug("Saving Insteon devices")
+        await devices.async_save(hass.config.config_dir)
+
+
+async def _async_add_device_override(
+    hass: HomeAssistant, override: dict[str, Any]
+) -> None:
+    """Remove an Insten device and associated entities."""
+    address = Address(override[CONF_ADDRESS])
+    await _async_remove_ha_device(hass, address)
+    devices.set_id(address, override[CONF_CAT], override[CONF_SUBCAT], 0)
+    await async_save_devices(hass)
+
+
+async def _async_remove_device_override(hass: HomeAssistant, address: str) -> None:
+    """Remove an Insten device and associated entities."""
+    insteon_address = Address(address)
+    await _async_remove_ha_device(hass, insteon_address)
+    devices.set_id(insteon_address, None, None, None)
+    await devices.async_identify_device(insteon_address)
+    await async_save_devices(hass)
+
+
+@callback
+def _async_add_x10_device(hass: HomeAssistant, x10_config: dict[str, Any]) -> None:
+    """Add X10 device."""
+    housecode = x10_config[CONF_HOUSECODE]
+    unitcode = x10_config[CONF_UNITCODE]
+    platform = x10_config[CONF_PLATFORM]
+    steps = x10_config.get(CONF_DIM_STEPS, 22)
+    x10_type = "on_off"
+    if platform == "light":
+        x10_type = "dimmable"
+    elif platform == "binary_sensor":
+        x10_type = "sensor"
+    _LOGGER.debug(
+        "Adding X10 device to Insteon: %s %d %s", housecode, unitcode, x10_type
+    )
+    # This must be run in the event loop
+    devices.add_x10_device(housecode, unitcode, x10_type, steps)
+
+
+async def _async_remove_x10_device(
+    hass: HomeAssistant, housecode: str, unitcode: int
+) -> None:
+    """Remove an X10 device and associated entities."""
+    address = create_x10_address(housecode, unitcode)
+    devices.pop(address)
+    await _async_remove_ha_device(hass, address)
+
+
+async def _async_remove_ha_device(
+    hass: HomeAssistant, address: Address, remove_all_refs: bool = False
+) -> None:
+    """Remove the device and all entities from hass."""
+    signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
+    async_dispatcher_send(hass, signal)
+    dev_registry = dr.async_get(hass)
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device = dev_registry.async_get_device_by_identifier(
+        (DOMAIN, str(address)), config_entry.entry_id
+    )
+    if device:
+        dev_registry.async_remove_device(device.id)
+
+
+async def _async_remove_insteon_device(
+    hass: HomeAssistant, address: Address, remove_all_refs: bool = False
+) -> None:
+    """Remove the underlying Insteon device from the network."""
+    await devices.async_remove_device(
+        address=address, force=False, remove_all_refs=remove_all_refs
+    )
+    await async_save_devices(hass)
+
+
+@callback
+def async_connect_device_signals(hass: HomeAssistant) -> list[CALLBACK_TYPE]:
+    """Connect the dispatcher signals used to manage Insteon devices."""
+    return [
+        async_dispatcher_connect(hass, signal, partial(target, hass))
+        for signal, target in (
+            (SIGNAL_SAVE_DEVICES, async_save_devices),
+            (SIGNAL_ADD_DEVICE_OVERRIDE, _async_add_device_override),
+            (SIGNAL_REMOVE_DEVICE_OVERRIDE, _async_remove_device_override),
+            (SIGNAL_ADD_X10_DEVICE, _async_add_x10_device),
+            (SIGNAL_REMOVE_X10_DEVICE, _async_remove_x10_device),
+            (SIGNAL_REMOVE_HA_DEVICE, _async_remove_ha_device),
+            (SIGNAL_REMOVE_INSTEON_DEVICE, _async_remove_insteon_device),
+        )
+    ]
