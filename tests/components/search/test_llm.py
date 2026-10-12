@@ -36,16 +36,16 @@ def llm_context() -> llm.LLMContext:
 @pytest.fixture
 async def setup_items(
     hass: HomeAssistant,
+    search_item_ids: dict[str, str],
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> dict[str, str]:
-    """Set up items of every type to search.
+    """Add items of every type to the shared search items.
 
     Returns a stable placeholder for each random device ID.
     """
-    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(
         hass,
         "automation",
@@ -63,11 +63,7 @@ async def setup_items(
     assert await async_setup_component(
         hass,
         "script",
-        {
-            "script": {
-                "morning_news": {"alias": "Play news", "sequence": []},
-            }
-        },
+        {"script": {"morning_news": {"alias": "Play news", "sequence": []}}},
     )
     assert await async_setup_component(
         hass,
@@ -75,25 +71,21 @@ async def setup_items(
         {"scene": [{"name": "Kitchen cooking", "entities": {"light.kitchen_1": "on"}}]},
     )
 
-    area_registry.async_create("Kitchen", aliases={"Cooking room"})
-    area_registry.async_create("Living room")
+    area_registry.async_update(search_item_ids["area"], aliases={"Cooking room"})
     label_registry.async_create("Kitchen appliances")
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    sensor_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "sensor")},
+    device_registry.async_update_device(
+        search_item_ids["device"],
         name="Kitchen sensor",
         manufacturer="Acme",
         model="Multisensor",
     )
-    child_device = device_registry.async_get_or_create_child(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("test", "sensor-speaker")},
-        parent_device_id=sensor_device.id,
-        name="Kitchen speaker",
+    device_registry.async_update_child_device(
+        search_item_ids["child_device"], name="Kitchen speaker"
     )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
     renamed_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "hub")},
@@ -123,8 +115,8 @@ async def setup_items(
     hass.states.async_set(lamp.entity_id, "off", {ATTR_FRIENDLY_NAME: "Lamp"})
 
     return {
-        sensor_device.id: "<sensor device>",
-        child_device.id: "<child device>",
+        search_item_ids["device"]: "<sensor device>",
+        search_item_ids["child_device"]: "<child device>",
         renamed_device.id: "<hub device>",
     }
 
