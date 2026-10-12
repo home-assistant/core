@@ -3109,11 +3109,12 @@ async def test_registry_hook_installed_when_readd_after_rename_aborts(
 ) -> None:
     """Test the registry cleanup hook is installed when an aborted re-add follows a rename.
 
-    Renaming an entity_id makes core remove and re-add the same entity object.
-    _added_to_hass is set on a successful add and must be reset on every add
-    attempt, otherwise an aborted re-add would see the stale value and skip
-    installing the registry hook while the registry entry still exists, leaking
-    the retained discovery topic when the entity is later removed.
+    Renaming the entity_id of an entity which has not opted in to an in-place
+    change makes core remove and re-add the same entity object. _added_to_hass is
+    set on a successful add and must be reset on every add attempt, otherwise an
+    aborted re-add would see the stale value and skip installing the registry hook
+    while the registry entry still exists, leaking the retained discovery topic
+    when the entity is later removed.
     """
     await mqtt_mock_entry()
     hooks: dict = hass.data["mqtt"].discovery_registry_hooks
@@ -3130,9 +3131,15 @@ async def test_registry_hook_installed_when_readd_after_rename_aborts(
     async def _raise_on_readd(self: MqttEntity) -> None:
         raise ValueError("Simulated re-add failure")
 
-    # Renaming the entity_id triggers a remove and re-add of the same object;
-    # the patched hook aborts the re-add.
-    with patch.object(MqttEntity, "async_added_to_hass", _raise_on_readd):
+    # MQTT entities are renamed in place, force the remove and re-add of the same
+    # object; the patched hook aborts the re-add.
+    with (
+        patch(
+            "homeassistant.helpers.entity._entity_class_requires_readd",
+            return_value=True,
+        ),
+        patch.object(MqttEntity, "async_added_to_hass", _raise_on_readd),
+    ):
         entity_registry.async_update_entity(
             "sensor.milk", new_entity_id="sensor.renamed_milk"
         )

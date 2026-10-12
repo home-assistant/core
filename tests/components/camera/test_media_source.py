@@ -146,9 +146,7 @@ async def test_resolving_errors(hass: HomeAssistant) -> None:
         await media_source.async_resolve_media(
             hass, "media-source://camera/camera.demo_camera", None
         )
-    assert (
-        str(exc_info.value) == "camera.demo_camera does not support play stream service"
-    )
+    assert str(exc_info.value) == "Camera camera.demo_camera does not support streaming"
 
 
 @pytest.mark.usefixtures("mock_camera")

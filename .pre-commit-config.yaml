@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.9
+    rev: v0.16.10
     hooks:
       - id: ruff-check
         args:
@@ -30,7 +30,12 @@ repos:
       - id: check-executables-have-shebangs
         stages: [manual]
       - id: check-json
-        exclude: (.vscode|.devcontainer)
+        exclude: |
+          (?x)^(
+            .vscode|
+            .devcontainer|
+            tests/fixtures/core/backup_restore/restore1.json
+          )
       - id: no-commit-to-branch
         args:
           - --branch=dev

@@ -1,9 +1,11 @@
 """The tests for the denonavr media player platform."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock, create_autospec, patch
 
+from denonavr import DenonAVR
 from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,7 +17,11 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ, CONF_USE_TELNET
+from homeassistant.components.denonavr.const import (
+    ATTR_DYNAMIC_EQ,
+    CONF_USE_TELNET,
+    CONF_ZONE2,
+)
 from homeassistant.components.denonavr.services import (
     ATTR_COMMAND,
     SERVICE_GET_COMMAND,
@@ -25,7 +31,7 @@ from homeassistant.components.denonavr.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -67,7 +73,9 @@ def client_fixture() -> Generator[MagicMock]:
 
 
 async def setup_denonavr(
-    hass: HomeAssistant, serial_number: str | None = TEST_SERIALNUMBER
+    hass: HomeAssistant,
+    serial_number: str | None = TEST_SERIALNUMBER,
+    options: Mapping[str, Any] | None = None,
 ) -> MockConfigEntry:
     """Initialize media_player for tests."""
     entry_data = {
@@ -82,6 +90,7 @@ async def setup_denonavr(
         domain=DOMAIN,
         unique_id=TEST_UNIQUE_ID if serial_number else None,
         data=entry_data,
+        options=options or {},
     )
 
     mock_entry.add_to_hass(hass)
@@ -224,3 +233,50 @@ async def test_malformed_response_marks_unavailable(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "unload_options",
+    [
+        pytest.param({CONF_USE_TELNET: True, CONF_ZONE2: True}, id="options_unchanged"),
+        pytest.param(
+            {CONF_USE_TELNET: False, CONF_ZONE2: True}, id="telnet_turned_off"
+        ),
+    ],
+)
+async def test_telnet_outlives_zone_entity_removal(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    unload_options: dict[str, bool],
+) -> None:
+    """Test removing one zone's entity keeps Telnet, and unloading closes it."""
+    zone2 = create_autospec(DenonAVR, instance=True)
+    zone2.name = TEST_NAME
+    zone2.zone = "Zone2"
+    zone2.input_func_list = []
+    zone2.sound_mode_list = []
+    client.zones = {"Main": client, "Zone2": zone2}
+    entry = await setup_denonavr(
+        hass, options={CONF_USE_TELNET: True, CONF_ZONE2: True}
+    )
+    zone2_entity_id = entity_registry.async_get_entity_id(
+        media_player.DOMAIN, DOMAIN, f"{TEST_UNIQUE_ID}-Zone2"
+    )
+    assert zone2_entity_id
+
+    entity_registry.async_update_entity(
+        zone2_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(zone2_entity_id) is None
+    client.async_telnet_disconnect.assert_not_awaited()
+    zone2.async_telnet_disconnect.assert_not_awaited()
+
+    # The options flow saves the new options before it reloads the entry.
+    hass.config_entries.async_update_entry(entry, options=unload_options)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client.async_telnet_disconnect.assert_awaited_once()

@@ -8,6 +8,7 @@ from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
+from homeassistant.components.imou import async_remove_config_entry_device
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import DOMAIN
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
@@ -402,3 +403,49 @@ async def test_offline_device_unavailable_at_setup(
         if entry.unique_id == "d1$mute"
     )
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device("d1", "Device 1", button_keys=(PARAM_MUTE,)),
+            create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,)),
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_config_entry_device_rejects_active_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Devices still on the account cannot be removed manually."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "d1"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert not await async_remove_config_entry_device(hass, mock_config_entry, device)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [[create_online_device("d1", "Device 1", button_keys=(PARAM_MUTE,))]],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_config_entry_device_allows_stale_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Devices no longer on the account can be removed manually."""
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "ghost")},
+        name="Removed gateway",
+        manufacturer="Imou",
+        model="Test",
+    )
+    assert await async_remove_config_entry_device(hass, mock_config_entry, stale_device)

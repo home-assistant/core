@@ -99,19 +99,17 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11,
-# but the version constraints on these requirements are quite
-# loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful
-# for us to pin all these
-# requirements so we can directly link HA versions to these library versions.
+# httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
+# version constraints on anyio and h11 are quite loose. Pin them so we can
+# directly link HA versions to these library versions.
 anyio==4.14.2
 h11==0.16.0
-httpcore==1.0.9
 
-# Ensure we have a hyperframe version that works in Python 3.10
-# 5.2.0 fixed a collections abc deprecation
-hyperframe>=5.2.0
+# Many libraries still depend on httpx/httpcore. Those imports are aliased to
+# httpx2/httpcore2 at runtime, but pin the installed packages so a dependency
+# cannot pull in an untested httpx version alongside httpx2.
+httpcore==1.0.9
+httpx==0.28.1
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
@@ -241,6 +239,11 @@ auth0-python<5.0
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
 python-backoff<2.4.0
+
+# graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
+# (used by pydrawise) still imports
+# https://github.com/home-assistant/core/issues/184918
+graphql-core<3.3
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

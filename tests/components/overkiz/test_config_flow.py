@@ -1,5 +1,7 @@
 """Tests for Overkiz config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -89,6 +91,17 @@ FAKE_ZERO_CONF_INFO_LOCAL = ZeroconfServiceInfo(
         "fw_version": "2021.5.4-29",
     },
 )
+
+
+@contextmanager
+def _patch_client_success() -> Generator[None]:
+    """Patch the Overkiz client to log in successfully."""
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        yield
 
 
 async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -224,6 +237,7 @@ async def test_form_local_happy_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -281,6 +295,13 @@ async def test_form_invalid_auth_cloud(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "description_placeholder", "server"),
@@ -326,6 +347,13 @@ async def test_form_invalid_hardware_cloud(
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
     }
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -376,6 +404,13 @@ async def test_form_invalid_hardware_cloud_local(
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
     }
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -440,6 +475,17 @@ async def test_form_invalid_auth_local(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": TEST_HOST,
+                "token": TEST_TOKEN,
+                "verify_ssl": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -479,6 +525,13 @@ async def test_form_invalid_cozytouch_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "cloud"
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_cloud_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
@@ -643,6 +696,7 @@ async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
         "password": TEST_PASSWORD,
         "hub": TEST_SERVER,
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
 
 async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
@@ -1165,6 +1219,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1242,6 +1297,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1300,6 +1356,7 @@ async def test_local_zeroconf_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
