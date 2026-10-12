@@ -417,4 +417,3 @@ async def test_update_interval_options_reload(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not original_coordinator
     assert mock_config_entry.runtime_data.update_interval == timedelta(seconds=1)
-
