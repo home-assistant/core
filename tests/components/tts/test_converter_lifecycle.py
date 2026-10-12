@@ -526,14 +526,14 @@ async def test_observed_source_error_survives_failing_close(
             self.read = False
             self.closed = False
 
-        async def asend(self, value) -> bytes:
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
             if not self.read:
                 self.read = True
                 return wav_audio[:20]
             raise ReadFailed("observed read failure")
 
         async def __anext__(self) -> bytes:
-            return await self.asend(None)
+            return await self.asend(None)  # codespell:ignore asend
 
         async def athrow(self, *args) -> bytes:
             raise NotImplementedError
@@ -646,14 +646,14 @@ class _ExhaustedSource(AsyncGenerator[bytes]):
         self.delay = delay
         self.fails = fails
 
-    async def asend(self, value) -> bytes:
+    async def asend(self, value) -> bytes:  # codespell:ignore asend
         if self.pulled:
             raise StopAsyncIteration
         self.pulled = True
         return b"R" * 100  # OS substitute, not a WAV decoding claim.
 
     async def __anext__(self) -> bytes:
-        return await self.asend(None)
+        return await self.asend(None)  # codespell:ignore asend
 
     async def athrow(self, *args) -> bytes:
         raise NotImplementedError
