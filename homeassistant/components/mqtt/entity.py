@@ -68,6 +68,7 @@ from .const import (
     CONF_AVAILABILITY_MODE,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_CHILD_DEVICE,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
     CONF_DEFAULT_ENTITY_ID,
@@ -88,7 +89,6 @@ from .const import (
     CONF_RETAIN,
     CONF_SCHEMA,
     CONF_SERIAL_NUMBER,
-    CONF_SUB_DEVICE,
     CONF_SUGGESTED_AREA,
     CONF_SW_VERSION,
     CONF_TOPIC,
@@ -118,7 +118,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import validate_sub_device_has_unique_id
+from .schemas import validate_child_device_has_unique_id
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
@@ -267,9 +267,11 @@ def async_setup_entity_entry_helper(  # noqa: C901
     platform = async_get_current_platform()
     # Validators on the whole config are lost when platforms extend
     # MQTT_ENTITY_COMMON_SCHEMA.schema
-    discovery_schema = probatio.All(discovery_schema, validate_sub_device_has_unique_id)
+    discovery_schema = probatio.All(
+        discovery_schema, validate_child_device_has_unique_id
+    )
     platform_schema_modern = probatio.All(
-        platform_schema_modern, validate_sub_device_has_unique_id
+        platform_schema_modern, validate_child_device_has_unique_id
     )
 
     async def _async_add_discovered_entity(
@@ -1523,16 +1525,16 @@ class MqttEntityDeviceInfo(Entity):
         )
 
     @property
-    def _has_sub_device(self) -> bool:
-        """Return if the device specifications include a sub device."""
+    def _has_child_device(self) -> bool:
+        """Return if the device specifications include a child device."""
         return (
             self._device_specifications is not None
-            and CONF_SUB_DEVICE in self._device_specifications
+            and CONF_CHILD_DEVICE in self._device_specifications
         )
 
     @callback
     def async_register_device(self) -> dr.AnyDeviceEntry | None:
-        """Register the device, a parent device is registered before its sub device.
+        """Register the device, a parent device is registered before its child device.
 
         Registration errors are logged and leave the entity without a device,
         instead of the entity platform not adding the entity.
@@ -1551,16 +1553,16 @@ class MqttEntityDeviceInfo(Entity):
             self._device_registration_failed = True
             _log_device_info_error(err)
             return None
-        if not self._has_sub_device:
+        if not self._has_child_device:
             return device
         try:
-            sub_device = device_registry.async_get_or_create_child(
-                config_entry_id=config_entry_id, **self._sub_device_info(device.id)
+            child_device = device_registry.async_get_or_create_child(
+                config_entry_id=config_entry_id, **self._child_device_info(device.id)
             )
         except dr.DeviceInfoError as err:
             self._device_registration_failed = True
             _log_device_info_error(err)
-            # The parent device may have been registered for this sub device only
+            # The parent device may have been registered for this child device only
             self._config_entry.async_create_task(
                 self.hass,
                 async_cleanup_device_registry(self.hass, device.id, config_entry_id),
@@ -1568,7 +1570,7 @@ class MqttEntityDeviceInfo(Entity):
             )
             return None
         self._parent_device_id = device.id
-        return sub_device
+        return child_device
 
     def _main_device_info(self) -> DeviceInfo | None:
         """Return the device info from the device specifications."""
@@ -1581,17 +1583,17 @@ class MqttEntityDeviceInfo(Entity):
             info.via_device_id = via_device_id
         return info
 
-    def _sub_device_info(self, parent_device_id: str) -> ChildDeviceInfo:
-        """Return the sub device info from the device specifications."""
+    def _child_device_info(self, parent_device_id: str) -> ChildDeviceInfo:
+        """Return the child device info from the device specifications."""
         if TYPE_CHECKING:
             assert self._device_specifications is not None
-        sub_device = self._device_specifications[CONF_SUB_DEVICE]
+        child_device = self._device_specifications[CONF_CHILD_DEVICE]
         info = ChildDeviceInfo(
-            identifiers={(DOMAIN, id_) for id_ in sub_device[CONF_IDENTIFIERS]},
+            identifiers={(DOMAIN, id_) for id_ in child_device[CONF_IDENTIFIERS]},
             parent_device_id=parent_device_id,
         )
-        if CONF_NAME in sub_device:
-            info.name = sub_device[CONF_NAME]
+        if CONF_NAME in child_device:
+            info.name = child_device[CONF_NAME]
         return info
 
     async def device_info_discovery_update(self, config: DiscoveryInfoType) -> None:
@@ -1620,7 +1622,7 @@ class MqttEntityDeviceInfo(Entity):
         if self._device_registration_failed:
             return None
         if self._parent_device_id is not None:
-            return self._sub_device_info(self._parent_device_id)
+            return self._child_device_info(self._parent_device_id)
         return self._main_device_info()
 
 
@@ -1842,7 +1844,7 @@ class MqttEntity(
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
         try:
-            config: DiscoveryInfoType = validate_sub_device_has_unique_id(
+            config: DiscoveryInfoType = validate_child_device_has_unique_id(
                 self.config_schema()(discovery_payload)
             )
         except probatio.Invalid as err:
