@@ -13,7 +13,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components.homewizard.const import DOMAIN
+from homeassistant.components.homewizard.const import (
+    CONF_UPDATE_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -898,3 +901,57 @@ async def test_discovery_with_v2_api_ask_authorization(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TOKEN] == "cool_token"
+
+@pytest.mark.parametrize("interval", [1, 5, 10, 30, 60])
+async def test_options_flow_update_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    interval: int,
+) -> None:
+    """Test configuring the HomeWizard update interval."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_UPDATE_INTERVAL: interval},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_UPDATE_INTERVAL] == interval
+    assert mock_config_entry.options[CONF_UPDATE_INTERVAL] == interval
+
+
+async def test_options_flow_default_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the default HomeWizard update interval."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {CONF_UPDATE_INTERVAL: 5}
+
+
+async def test_options_flow_existing_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an existing configured interval is displayed."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_UPDATE_INTERVAL: 30},
+    )
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {CONF_UPDATE_INTERVAL: 30}
+
