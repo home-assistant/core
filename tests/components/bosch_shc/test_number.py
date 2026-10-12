@@ -364,6 +364,27 @@ async def test_thermostat_offset_value_and_bounds(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [
+        {"thermostats": [thermostat_device(offset=1.0, step_size=0.0)]},
+        {"thermostats": [thermostat_device(offset=1.0, step_size=-1.0)]},
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_non_positive_step_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A non-positive device step size falls back to 0.5."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(OFFSET_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["step"] == 0.5
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [{"thermostats": [thermostat_device(offset=0.0)]}],
     indirect=True,
 )

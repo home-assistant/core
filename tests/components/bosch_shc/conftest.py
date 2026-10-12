@@ -424,6 +424,7 @@ def thermostat_device(
     supports_silentmode: bool = False,
     silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
     offset: float | None = None,
+    step_size: float = 0.5,
     spec: type[SHCThermostat] = SHCThermostat,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
@@ -447,7 +448,7 @@ def thermostat_device(
     device.offset = offset
     device.min_offset = -5.0
     device.max_offset = 5.0
-    device.step_size = 0.5
+    device.step_size = step_size
     return device
 
 
