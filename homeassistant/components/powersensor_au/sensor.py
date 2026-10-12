@@ -674,6 +674,10 @@ class PowersensorSensorEntity(PowersensorMeasurementEntity):
         Only read when the entity is added; a later role change renames the
         device from the platform's handle_role_update.
         """
+        # Deliberately no via_device_id.  A sensor is not tied to a plug: any
+        # plug in range can relay it, and it moves to another after repeated
+        # communication failures, so a parent plug would often be stale or
+        # point at a plug that has been removed.
         return DeviceInfo(
             identifiers={(DOMAIN, self._mac)},
             manufacturer="Powersensor",
