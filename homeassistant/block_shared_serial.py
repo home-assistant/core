@@ -13,15 +13,18 @@ from serial.urlhandler.protocol_socket import Serial as SocketSerial
 
 _LOGGER = logging.getLogger("pySerial")
 
-_original_open = PlatformSerial.open
+_original_init_defaults = SerialBase.__init__.__defaults__
+_original_platform_open = PlatformSerial.open
 _original_socket_open = SocketSerial.open
 _original_rfc2217_open = Rfc2217Serial.open
 
+_enabled = False
 
-@wraps(_original_open)
+
+@wraps(_original_platform_open)
 def _logged_platform_open(self: PlatformSerial) -> None:
     _LOGGER.debug("Opening serial port %s", self.port)
-    _original_open(self)
+    _original_platform_open(self)
     _LOGGER.debug("Opened serial port %s", self.port)
 
 
@@ -41,8 +44,10 @@ def _logged_rfc2217_open(self: Rfc2217Serial) -> None:
 
 def enable() -> None:
     """Default `exclusive` to True and log every pyserial port open."""
-    if SocketSerial.open is _logged_socket_open:
+    global _enabled  # noqa: PLW0603  # pylint: disable=global-statement
+    if _enabled:
         return
+    _enabled = True
 
     defaults = {
         name: param.default
@@ -55,3 +60,14 @@ def enable() -> None:
     PlatformSerial.open = _logged_platform_open  # type:ignore[method-assign]
     SocketSerial.open = _logged_socket_open  # type:ignore[method-assign]
     Rfc2217Serial.open = _logged_rfc2217_open  # type:ignore[method-assign]
+
+
+def disable() -> None:
+    """Restore pyserial to its unpatched state."""
+    global _enabled  # noqa: PLW0603  # pylint: disable=global-statement
+    _enabled = False
+
+    SerialBase.__init__.__defaults__ = _original_init_defaults
+    PlatformSerial.open = _original_platform_open  # type:ignore[method-assign]
+    SocketSerial.open = _original_socket_open  # type:ignore[method-assign]
+    Rfc2217Serial.open = _original_rfc2217_open  # type:ignore[method-assign]
