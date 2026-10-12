@@ -780,7 +780,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
@@ -805,18 +805,7 @@
         'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
+      'state': None,
     }),
     'sensor.johnny_maaike_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -1421,7 +1410,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.johnny_maaike_ip_address',
@@ -1446,17 +1435,7 @@
         'unique_id': '32db6075-b739-4026-b661-127009254b42_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.johnny_maaike_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.1.193',
-      }),
+      'state': None,
     }),
     'sensor.johnny_maaike_outdoor_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -1581,7 +1560,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.johnny_maaike_ssid',
@@ -1606,17 +1585,7 @@
         'unique_id': '32db6075-b739-4026-b661-127009254b42_gateway_ssid',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.johnny_maaike_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'DaikinAP83731',
-      }),
+      'state': None,
     }),
     'sensor.johnny_maaike_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -1629,7 +1598,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.johnny_maaike_time_zone',
@@ -1654,17 +1623,7 @@
         'unique_id': '32db6075-b739-4026-b661-127009254b42_gateway_timeZone',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Time zone',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.johnny_maaike_time_zone',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'Europe/Amsterdam',
-      }),
+      'state': None,
     }),
     'update.johnny_maaike_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({

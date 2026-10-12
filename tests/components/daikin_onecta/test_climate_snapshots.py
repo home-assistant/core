@@ -144,7 +144,7 @@ async def test_all_platform_entities(
         entity_registry, config_entry.entry_id
     ):
         state = hass.states.get(entry.entity_id)
-        assert state is not None
+        assert (state is None) == (entry.disabled_by is not None)
         entities[entry.entity_id] = {"entry": entry, "state": state}
 
     assert entities == snapshot(

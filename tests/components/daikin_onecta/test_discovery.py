@@ -101,16 +101,16 @@ def _add_firmware(devices: list[GatewayDevice]) -> tuple[str, str]:
 
 
 @pytest.mark.parametrize(
-    "add_capability",
+    ("add_capability", "disabled_by_default"),
     [
-        _add_gateway,
-        _add_management_point,
-        _add_setpoint,
-        _add_boolean,
-        _add_scalar,
-        _add_sensory,
-        _add_schedule,
-        _add_firmware,
+        (_add_gateway, False),
+        (_add_management_point, False),
+        (_add_setpoint, False),
+        (_add_boolean, False),
+        (_add_scalar, True),
+        (_add_sensory, False),
+        (_add_schedule, False),
+        (_add_firmware, False),
     ],
 )
 async def test_poll_discovers_new_entities_through_reload(
@@ -118,6 +118,7 @@ async def test_poll_discovers_new_entities_through_reload(
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     add_capability: Callable[[list[GatewayDevice]], tuple[str, str]],
+    disabled_by_default: bool,
 ) -> None:
     """Poll, reload, and actually create a newly exposed platform entity."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -147,7 +148,10 @@ async def test_poll_discovers_new_entities_through_reload(
     assert config_entry.runtime_data is not coordinator
     entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     assert entity_id is not None
-    assert hass.states.get(entity_id) is not None
+    assert (hass.states.get(entity_id) is None) == disabled_by_default
+    assert (
+        entity_registry.async_get(entity_id).disabled_by is not None
+    ) == disabled_by_default
     assert get_gateways.await_count == 2
 
 

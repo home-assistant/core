@@ -4250,7 +4250,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.bedroom_1_ip_address',
@@ -4275,17 +4275,7 @@
         'unique_id': '7bd36d96-73b3-44a1-8642-f3650e9cc732_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 1 IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.bedroom_1_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.57',
-      }),
+      'state': None,
     }),
     'sensor.bedroom_1_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4498,7 +4488,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.bedroom_2_ip_address',
@@ -4523,17 +4513,7 @@
         'unique_id': 'df4648e9-d40b-4242-b9fe-e5d0f6451a6b_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 2 IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.bedroom_2_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.58',
-      }),
+      'state': None,
     }),
     'sensor.bedroom_2_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4746,7 +4726,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.bedroom_3_ip_address',
@@ -4771,17 +4751,7 @@
         'unique_id': '4c60a395-f659-47d6-9a4b-be9aae836761_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 3 IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.bedroom_3_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.62',
-      }),
+      'state': None,
     }),
     'sensor.bedroom_3_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4852,7 +4822,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
@@ -4877,18 +4847,7 @@
         'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
+      'state': None,
     }),
     'sensor.kitchen_error_code': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -5045,7 +5004,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.kitchen_ip_address',
@@ -5070,17 +5029,7 @@
         'unique_id': '72b407b4-4e6f-47e2-814f-ee36d1548858_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.kitchen_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.55',
-      }),
+      'state': None,
     }),
     'sensor.kitchen_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -5293,7 +5242,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.lounge_ip_address',
@@ -5318,17 +5267,7 @@
         'unique_id': '1bcc6300-47e8-46c8-9ca8-79b4e649e145_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.lounge_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.56',
-      }),
+      'state': None,
     }),
     'sensor.lounge_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -5541,7 +5480,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.master_bathroom_ip_address',
@@ -5566,17 +5505,7 @@
         'unique_id': '1b4e05a4-466d-41d8-b90e-19dded548684_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bathroom IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.master_bathroom_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.61',
-      }),
+      'state': None,
     }),
     'sensor.master_bathroom_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -5789,7 +5718,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.master_bedroom_ip_address',
@@ -5814,17 +5743,7 @@
         'unique_id': 'c7d4957f-2b0a-468f-adbc-06d150d9af39_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.master_bedroom_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.87.59',
-      }),
+      'state': None,
     }),
     'sensor.master_bedroom_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({

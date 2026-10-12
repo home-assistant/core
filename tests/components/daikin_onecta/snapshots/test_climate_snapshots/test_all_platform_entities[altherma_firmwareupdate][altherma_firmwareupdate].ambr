@@ -1522,7 +1522,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.climate_control_getr422_ip_address',
@@ -1547,17 +1547,7 @@
         'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422 IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.climate_control_getr422_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '192.168.1.104',
-      }),
+      'state': None,
     }),
     'sensor.climate_control_getr422_leaving_water_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -1874,9 +1864,9 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
-        'entity_category': None,
+        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.climate_control_getr422_sgtin',
         'has_entity_name': True,
         'hidden_by': None,
@@ -1899,17 +1889,7 @@
         'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_userInterface_sgtin',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422 SGTIN',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.climate_control_getr422_sgtin',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '30F54A78620000BA77FA6750',
-      }),
+      'state': None,
     }),
     'sensor.climate_control_getr422_tank_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -1980,7 +1960,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
@@ -2005,18 +1985,7 @@
         'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
+      'state': None,
     }),
     'update.climate_control_getr422_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({

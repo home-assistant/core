@@ -16,7 +16,11 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE as CLIMATE_SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
+from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.components.daikin_onecta.entity_descriptions import (
+    SENSOR_DESCRIPTIONS,
+)
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
 from homeassistant.components.daikin_onecta.sensor import (
@@ -56,7 +60,12 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -141,6 +150,84 @@ async def test_account_entities_are_not_duplicated_for_multiple_gateways(
 
     assert [entry.unique_id for entry in refresh_entries] == ["account-id_refresh"]
     assert len(rate_limit_entries) == 1
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "sgtin",
+        "wifiConnectionSSID",
+        "wifiConnectionStrength",
+        "ssid",
+        "ipAddress",
+        "dateTime",
+        "regionCode",
+        "timeZone",
+        "RatelimitRemainingDay",
+    ],
+)
+def test_diagnostic_sensor_descriptions_are_disabled_by_default(key: str) -> None:
+    """Keep identifiers and diagnostic-only values out of normal entity lists."""
+    description = SENSOR_DESCRIPTIONS[key]
+    assert description.entity_category is EntityCategory.DIAGNOSTIC
+    assert description.entity_registry_enabled_default is False
+
+
+async def test_diagnostic_entities_are_registered_but_disabled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Create diagnostic registry entries without enabling their states."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    keys = {
+        "sgtin",
+        "wifiConnectionSSID",
+        "wifiConnectionStrength",
+        "ssid",
+        "ipAddress",
+        "dateTime",
+        "regionCode",
+        "timeZone",
+        "RatelimitRemainingDay",
+    }
+    translations = {SENSOR_DESCRIPTIONS[key].translation_key for key in keys}
+    entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == SENSOR_DOMAIN and entry.translation_key in translations
+    ]
+    assert len(entries) > 1
+    assert f"{config_entry.unique_id}_rate_limit_remaining_day" in {
+        entry.unique_id for entry in entries
+    }
+    for entry in entries:
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert hass.states.get(entry.entity_id) is None
+
+
+@pytest.mark.parametrize("disabled_by", [None, er.RegistryEntryDisabler.USER])
+async def test_existing_diagnostic_entity_preferences_are_preserved(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Do not replace users' existing enable/disable choices with defaults."""
+    registered = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{config_entry.unique_id}_rate_limit_remaining_day",
+        config_entry=config_entry,
+        disabled_by=disabled_by,
+    )
+
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+
+    assert entity_registry.async_get(registered.entity_id).disabled_by is disabled_by
+    assert (hass.states.get(registered.entity_id) is None) == (disabled_by is not None)
 
 
 def test_unsupported_energy_aggregate_is_skipped() -> None:

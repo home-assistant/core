@@ -62,7 +62,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
@@ -87,18 +87,7 @@
         'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
+      'state': None,
     }),
     'update.homehub_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({

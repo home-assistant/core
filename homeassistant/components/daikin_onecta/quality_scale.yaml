@@ -59,11 +59,14 @@ rules:
     comment: >-
       New gateways, management points, and entity-producing capabilities trigger
       a single pending reload. Ordinary state changes and removals do not.
+      Removed controls remain registered but become unavailable.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
-    status: exempt
-    comment: All exposed entities are useful during normal operation.
+    status: done
+    comment: >-
+      Diagnostic identifiers, network information, clock settings, and the
+      account rate-limit counter are disabled by default.
   entity-translations: done
   exception-translations: done
   icon-translations:

@@ -1550,7 +1550,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
@@ -1575,18 +1575,7 @@
         'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
+      'state': None,
     }),
     'sensor.gostinaia_woonkamer_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2207,7 +2196,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.gostinaia_woonkamer_ip_address',
@@ -2232,17 +2221,7 @@
         'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.gostinaia_woonkamer_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '10.20.26.51',
-      }),
+      'state': None,
     }),
     'sensor.gostinaia_woonkamer_outdoor_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2311,7 +2290,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.gostinaia_woonkamer_region_code',
@@ -2336,17 +2315,7 @@
         'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_regionCode',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer Region code',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.gostinaia_woonkamer_region_code',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'eu',
-      }),
+      'state': None,
     }),
     'sensor.gostinaia_woonkamer_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2415,7 +2384,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.gostinaia_woonkamer_ssid',
@@ -2440,17 +2409,7 @@
         'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_ssid',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.gostinaia_woonkamer_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '**REDACTED**',
-      }),
+      'state': None,
     }),
     'sensor.gostinaia_woonkamer_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2463,7 +2422,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.gostinaia_woonkamer_time_zone',
@@ -2488,17 +2447,7 @@
         'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_timeZone',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer Time zone',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.gostinaia_woonkamer_time_zone',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'Europe/Kiev',
-      }),
+      'state': None,
     }),
     'sensor.gostinaia_woonkamer_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2511,7 +2460,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.gostinaia_woonkamer_wifi_connection_ssid',
@@ -2536,17 +2485,7 @@
         'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer WiFi connection SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.gostinaia_woonkamer_wifi_connection_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '**REDACTED**',
-      }),
+      'state': None,
     }),
     'sensor.gostinaia_woonkamer_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2561,7 +2500,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.gostinaia_woonkamer_wifi_connection_strength',
@@ -2586,20 +2525,7 @@
         'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer WiFi connection strength',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-          <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.gostinaia_woonkamer_wifi_connection_strength',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '-37',
-      }),
+      'state': None,
     }),
     'sensor.slaapkamer_andre_olha_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3220,7 +3146,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.slaapkamer_andre_olha_ip_address',
@@ -3245,17 +3171,7 @@
         'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.slaapkamer_andre_olha_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '10.20.26.52',
-      }),
+      'state': None,
     }),
     'sensor.slaapkamer_andre_olha_region_code': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3268,7 +3184,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.slaapkamer_andre_olha_region_code',
@@ -3293,17 +3209,7 @@
         'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_regionCode',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha Region code',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.slaapkamer_andre_olha_region_code',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'eu',
-      }),
+      'state': None,
     }),
     'sensor.slaapkamer_andre_olha_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3372,7 +3278,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.slaapkamer_andre_olha_ssid',
@@ -3397,17 +3303,7 @@
         'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_ssid',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.slaapkamer_andre_olha_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '**REDACTED**',
-      }),
+      'state': None,
     }),
     'sensor.slaapkamer_andre_olha_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3420,7 +3316,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.slaapkamer_andre_olha_time_zone',
@@ -3445,17 +3341,7 @@
         'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_timeZone',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha Time zone',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.slaapkamer_andre_olha_time_zone',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'Europe/Kiev',
-      }),
+      'state': None,
     }),
     'sensor.slaapkamer_andre_olha_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3468,7 +3354,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.slaapkamer_andre_olha_wifi_connection_ssid',
@@ -3493,17 +3379,7 @@
         'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha WiFi connection SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.slaapkamer_andre_olha_wifi_connection_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '**REDACTED**',
-      }),
+      'state': None,
     }),
     'sensor.slaapkamer_andre_olha_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3518,7 +3394,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.slaapkamer_andre_olha_wifi_connection_strength',
@@ -3543,20 +3419,7 @@
         'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha WiFi connection strength',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-          <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.slaapkamer_andre_olha_wifi_connection_strength',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '-56',
-      }),
+      'state': None,
     }),
     'sensor.tretii_blok_spalnia_vtoroi_etazh_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4177,7 +4040,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_ip_address',
@@ -4202,17 +4065,7 @@
         'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж IP address',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_ip_address',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '10.20.26.53',
-      }),
+      'state': None,
     }),
     'sensor.tretii_blok_spalnia_vtoroi_etazh_region_code': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4225,7 +4078,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_region_code',
@@ -4250,17 +4103,7 @@
         'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_regionCode',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж Region code',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_region_code',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'eu',
-      }),
+      'state': None,
     }),
     'sensor.tretii_blok_spalnia_vtoroi_etazh_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4329,7 +4172,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_ssid',
@@ -4354,17 +4197,7 @@
         'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_ssid',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '**REDACTED**',
-      }),
+      'state': None,
     }),
     'sensor.tretii_blok_spalnia_vtoroi_etazh_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4377,7 +4210,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_time_zone',
@@ -4402,17 +4235,7 @@
         'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_timeZone',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж Time zone',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_time_zone',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'Europe/Kiev',
-      }),
+      'state': None,
     }),
     'sensor.tretii_blok_spalnia_vtoroi_etazh_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4425,7 +4248,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_wifi_connection_ssid',
@@ -4450,17 +4273,7 @@
         'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж WiFi connection SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_wifi_connection_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '**REDACTED**',
-      }),
+      'state': None,
     }),
     'sensor.tretii_blok_spalnia_vtoroi_etazh_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -4475,7 +4288,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_wifi_connection_strength',
@@ -4500,20 +4313,7 @@
         'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж WiFi connection strength',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-          <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.tretii_blok_spalnia_vtoroi_etazh_wifi_connection_strength',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '-54',
-      }),
+      'state': None,
     }),
     'update.gostinaia_woonkamer_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({

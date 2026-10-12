@@ -1740,7 +1740,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
@@ -1765,18 +1765,7 @@
         'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
+      'state': None,
     }),
     'sensor.laurens_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2485,7 +2474,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.laurens_region_code',
@@ -2510,17 +2499,7 @@
         'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_regionCode',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Region code',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.laurens_region_code',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'eu',
-      }),
+      'state': None,
     }),
     'sensor.laurens_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2589,7 +2568,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.laurens_ssid',
@@ -2614,17 +2593,7 @@
         'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_ssid',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.laurens_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'DaikinAP31731',
-      }),
+      'state': None,
     }),
     'sensor.laurens_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2637,7 +2606,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.laurens_time_zone',
@@ -2662,17 +2631,7 @@
         'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_timeZone',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Time zone',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.laurens_time_zone',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'Europe/Amsterdam',
-      }),
+      'state': None,
     }),
     'sensor.laurens_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2685,7 +2644,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.laurens_wifi_connection_ssid',
@@ -2710,17 +2669,7 @@
         'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens WiFi connection SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.laurens_wifi_connection_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'SSIDPLOEG24',
-      }),
+      'state': None,
     }),
     'sensor.laurens_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -2735,7 +2684,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.laurens_wifi_connection_strength',
@@ -2760,20 +2709,7 @@
         'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens WiFi connection strength',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-          <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.laurens_wifi_connection_strength',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '-50',
-      }),
+      'state': None,
     }),
     'sensor.woonkamer_airco_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3482,7 +3418,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.woonkamer_airco_region_code',
@@ -3507,17 +3443,7 @@
         'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_regionCode',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Region code',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_region_code',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'eu',
-      }),
+      'state': None,
     }),
     'sensor.woonkamer_airco_room_humidity': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3639,7 +3565,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.woonkamer_airco_ssid',
@@ -3664,17 +3590,7 @@
         'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_ssid',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'DaikinAP79283',
-      }),
+      'state': None,
     }),
     'sensor.woonkamer_airco_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3687,7 +3603,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.woonkamer_airco_time_zone',
@@ -3712,17 +3628,7 @@
         'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_timeZone',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Time zone',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_time_zone',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'Europe/Amsterdam',
-      }),
+      'state': None,
     }),
     'sensor.woonkamer_airco_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3735,7 +3641,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.woonkamer_airco_wifi_connection_ssid',
@@ -3760,17 +3666,7 @@
         'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco WiFi connection SSID',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_wifi_connection_ssid',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'SSIDPLOEG24',
-      }),
+      'state': None,
     }),
     'sensor.woonkamer_airco_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
@@ -3785,7 +3681,7 @@
         'config_subentry_id': <ANY>,
         'device_class': None,
         'device_id': <ANY>,
-        'disabled_by': None,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
         'entity_id': 'sensor.woonkamer_airco_wifi_connection_strength',
@@ -3810,20 +3706,7 @@
         'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco WiFi connection strength',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-          <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_wifi_connection_strength',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': '-54',
-      }),
+      'state': None,
     }),
     'switch.laurens_econo_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
