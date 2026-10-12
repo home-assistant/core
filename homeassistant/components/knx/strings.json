@@ -1243,7 +1243,8 @@
           "text": "{name} ({address}) restarts and does not react to telegrams for a short time. Its parameters and application program are kept.",
           "title": "Restart device?"
         },
-        "title": "Devices"
+        "title": "Devices",
+        "view_telegrams": "View telegrams"
       },
       "group_addresses": {
         "title": "[%key:component::knx::config_panel::common::group_addresses%]"
