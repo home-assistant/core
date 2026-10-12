@@ -200,3 +200,29 @@ async def test_setup_bad_credentials(
         "Error authenticating with the Control4 account API, incorrect username or"
         " password"
     )
+
+
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
+async def test_unload_tears_down_push_resources(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_websocket: MagicMock,
+) -> None:
+    """Unloading disconnects the WebSocket and cancels both scheduled callbacks."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    runtime_data = mock_config_entry.runtime_data
+    cancel_refresh = MagicMock(side_effect=runtime_data.cancel_token_refresh_callback)
+    cancel_resync = MagicMock(side_effect=runtime_data.cancel_periodic_resync_callback)
+    runtime_data.cancel_token_refresh_callback = cancel_refresh
+    runtime_data.cancel_periodic_resync_callback = cancel_resync
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_c4_websocket.sio_disconnect.assert_awaited_once()
+    cancel_refresh.assert_called_once()
+    cancel_resync.assert_called_once()
+    assert runtime_data.cancel_periodic_resync_callback is None
