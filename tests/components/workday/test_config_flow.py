@@ -431,6 +431,21 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
 
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0.0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": ["2023-03-29"],
+            "remove_holidays": [],
+            "province": "FR",
+            "category": [OPTIONAL],
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:

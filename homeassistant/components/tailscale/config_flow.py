@@ -9,11 +9,6 @@ from tailscale import Tailscale, TailscaleAuthenticationError, TailscaleError
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 
 from .const import CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, CONF_TAILNET, DOMAIN
 
@@ -21,9 +16,7 @@ OAUTH_URL = "https://login.tailscale.com/admin/settings/oauth"
 
 OAUTH_SCHEMA = {
     probatio.Required(CONF_OAUTH_CLIENT_ID): str,
-    probatio.Required(CONF_OAUTH_CLIENT_SECRET): TextSelector(
-        config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
-    ),
+    probatio.Required(probatio.Secret(CONF_OAUTH_CLIENT_SECRET)): str,
 }
 
 STEP_USER_SCHEMA = probatio.Schema(

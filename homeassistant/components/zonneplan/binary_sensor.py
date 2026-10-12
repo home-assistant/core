@@ -28,6 +28,7 @@ class ZonneplanBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Zonneplan binary sensor."""
 
     is_on_fn: Callable[[ZonneplanCoordinator], bool | None]
+    supported_fn: Callable[[ZonneplanCoordinator], bool]
 
 
 BINARY_SENSORS: tuple[ZonneplanBinarySensorEntityDescription, ...] = (
@@ -46,6 +47,7 @@ BINARY_SENSORS: tuple[ZonneplanBinarySensorEntityDescription, ...] = (
             )
             else None
         ),
+        supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
 )
 
@@ -95,6 +97,7 @@ async def async_setup_entry(
             *(
                 ZonneplanBinarySensor(coordinator, description)
                 for description in BINARY_SENSORS
+                if description.supported_fn(coordinator)
             ),
             *(
                 ZonneplanBatteryBinarySensor(

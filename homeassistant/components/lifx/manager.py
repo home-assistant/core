@@ -15,6 +15,7 @@ from lifx import (
     LifxError,
     Light,
     MatrixLight,
+    MirrorLight,
     MultiZoneEffect,
     MultiZoneLight,
     Theme,
@@ -37,6 +38,7 @@ from .const import (
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_CYCLES,
     ATTR_DIRECTION,
+    ATTR_DURATION,
     ATTR_PALETTE,
     ATTR_PERIOD,
     ATTR_POWER_ON,
@@ -48,6 +50,7 @@ from .const import (
     ATTR_THEME,
     DOMAIN,
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
@@ -65,6 +68,11 @@ from .util import (
     replace_hsbk,
 )
 
+EFFECT_COLORSWEEP_DEFAULT_SPEED = 0
+EFFECT_COLORSWEEP_DEFAULT_DURATION = 30
+# Sweeps through the color temperature range, as the Mirror's own button does
+EFFECT_COLORSWEEP_DEFAULT_PALETTE = [(0, 0, 100, 1500), (0, 0, 100, 6500)]
+
 EFFECT_FLAME_DEFAULT_SPEED = 3
 
 EFFECT_MORPH_DEFAULT_SPEED = 3
@@ -80,6 +88,7 @@ EFFECT_MOVE_DIRECTION = {
 EFFECT_PULSE_DEFAULT_MODE = "blink"
 
 EFFECT_SKY_DEFAULT_SPEED = 50
+EFFECT_SKY_DEFAULT_DURATION = 0
 EFFECT_SKY_DEFAULT_SKY_TYPE = "Clouds"
 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN = 50
 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX = 180
@@ -178,17 +187,46 @@ class LIFXManager:
         devices: list[Light],
         service: ServiceCall,
         effect: FirmwareEffect,
+        device_type: type[MatrixLight] = MatrixLight,
         **kwargs: Any,
     ) -> None:
-        """Start a firmware effect on every matrix device in the target set."""
+        """Start a firmware effect on every device of a type in the target set."""
         compatible_devices = [
-            device for device in devices if isinstance(device, MatrixLight)
+            device for device in devices if isinstance(device, device_type)
         ]
         await self._async_power_on(
             compatible_devices, service.data.get(ATTR_POWER_ON, True)
         )
         await asyncio.gather(
             *(device.set_effect(effect, **kwargs) for device in compatible_devices)
+        )
+
+    async def _start_effect_colorsweep(
+        self,
+        devices: list[Light],
+        service: ServiceCall,
+    ) -> None:
+        """Start the firmware-based Color Sweep effect."""
+        speed = service.data.get(ATTR_SPEED, EFFECT_COLORSWEEP_DEFAULT_SPEED)
+        duration = service.data.get(ATTR_DURATION, EFFECT_COLORSWEEP_DEFAULT_DURATION)
+        # Speed 0 sweeps once across the duration, so it needs one: the
+        # library would otherwise quietly run at its default speed instead
+        if speed == 0 and duration == 0:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="colorsweep_speed_needs_duration",
+            )
+        await self._start_matrix_effect(
+            devices,
+            service,
+            FirmwareEffect.COLOR_SWEEP,
+            MirrorLight,
+            speed=speed,
+            # The library takes the duration in nanoseconds
+            duration=duration * 1_000_000_000,
+            palette=self._build_palette(
+                service.data.get(ATTR_PALETTE, EFFECT_COLORSWEEP_DEFAULT_PALETTE)
+            ),
         )
 
     async def _start_effect_flame(
@@ -334,11 +372,22 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Sky effect."""
+        speed = service.data.get(ATTR_SPEED, EFFECT_SKY_DEFAULT_SPEED)
+        duration = service.data.get(ATTR_DURATION, EFFECT_SKY_DEFAULT_DURATION)
+        # Speed 0 plays the sky once across the duration, so it needs one: the
+        # library would otherwise quietly run at its default speed instead
+        if speed == 0 and duration == 0:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="sky_speed_needs_duration",
+            )
         await self._start_matrix_effect(
             devices,
             service,
             FirmwareEffect.SKY,
-            speed=service.data.get(ATTR_SPEED, EFFECT_SKY_DEFAULT_SPEED),
+            speed=speed,
+            # The library takes the duration in nanoseconds
+            duration=duration * 1_000_000_000,
             sky_type=EFFECT_SKY_TYPE[
                 service.data.get(ATTR_SKY_TYPE, EFFECT_SKY_DEFAULT_SKY_TYPE)
             ],
@@ -375,6 +424,7 @@ class LIFXManager:
         )
 
     _effect_dispatch = {
+        SERVICE_EFFECT_COLORSWEEP: _start_effect_colorsweep,
         SERVICE_EFFECT_COLORLOOP: _start_effect_colorloop,
         SERVICE_EFFECT_FLAME: _start_effect_flame,
         SERVICE_EFFECT_MORPH: _start_effect_morph,
@@ -388,6 +438,7 @@ class LIFXManager:
     # A firmware effect only runs on the devices that implement it, so a target
     # set holding none of them can do nothing at all
     _effect_requires: dict[str, tuple[type[Light], str]] = {
+        SERVICE_EFFECT_COLORSWEEP: (MirrorLight, "no_mirror_target"),
         SERVICE_EFFECT_FLAME: (MatrixLight, "no_matrix_target"),
         SERVICE_EFFECT_MORPH: (MatrixLight, "no_matrix_target"),
         SERVICE_EFFECT_MOVE: (MultiZoneLight, "no_multizone_target"),

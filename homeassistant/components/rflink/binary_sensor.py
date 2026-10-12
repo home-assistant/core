@@ -98,6 +98,17 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink BinarySensor state."""

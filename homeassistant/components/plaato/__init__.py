@@ -1,6 +1,5 @@
 """Support for Plaato devices."""
 
-from datetime import timedelta
 import logging
 
 from aiohttp import web
@@ -24,7 +23,6 @@ from pyplaato.plaato import (
 from homeassistant.components import webhook
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
     UnitOfTemperature,
@@ -38,7 +36,6 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
 )
@@ -116,14 +113,7 @@ async def async_setup_coordinator(
     auth_token = entry.data[CONF_TOKEN]
     device_type = entry.data[CONF_DEVICE_TYPE]
 
-    if entry.options.get(CONF_SCAN_INTERVAL):
-        update_interval = timedelta(minutes=entry.options[CONF_SCAN_INTERVAL])
-    else:
-        update_interval = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-
-    coordinator = PlaatoCoordinator(
-        hass, entry, auth_token, device_type, update_interval
-    )
+    coordinator = PlaatoCoordinator(hass, entry, auth_token, device_type)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = PlaatoData(

@@ -2,18 +2,30 @@
 
 from unittest.mock import MagicMock
 
-from boschshcpy.services_impl import OutdoorSirenService
+from boschshcpy.services_impl import (
+    OutdoorSirenService,
+    PirSensorConfigurationService,
+    VibrationSensorService,
+)
 import pytest
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 
-from .conftest import outdoor_siren_device, setup_integration
+from .conftest import (
+    motion_detector2_device,
+    outdoor_siren_device,
+    setup_integration,
+    shutter_contact2_device,
+    shutter_contact2_plus_device,
+)
 
 from tests.common import MockConfigEntry
 
 SOUND_LEVEL_ENTITY_ID = "select.outdoor_siren_siren_volume"
+MOTION_SENSITIVITY_ENTITY_ID = "select.motion_detector_motion_sensitivity"
+VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
 
 
 @pytest.mark.parametrize(
@@ -61,7 +73,7 @@ async def test_outdoor_siren_sound_level_select_option(
         {ATTR_ENTITY_ID: SOUND_LEVEL_ENTITY_ID, "option": "high"},
         blocking=True,
     )
-    device.siren.async_set_configuration.assert_awaited_once_with(
+    device.siren.set_configuration.assert_called_once_with(
         sound_level=OutdoorSirenService.SoundLevel.HIGH
     )
 
@@ -82,3 +94,138 @@ async def test_outdoor_siren_no_siren_service(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(SOUND_LEVEL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    motion_sensitivity=PirSensorConfigurationService.MotionSensitivity.LOW
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_sensitivity_current_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Motion Detector II's current motion sensitivity is reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(MOTION_SENSITIVITY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "low"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_sensitivity_select_option(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting a motion sensitivity writes it to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: MOTION_SENSITIVITY_ENTITY_ID, "option": "high"},
+        blocking=True,
+    )
+    assert (
+        device.motion_sensitivity
+        == PirSensorConfigurationService.MotionSensitivity.HIGH
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(motion_sensitivity=None)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_sensitivity_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No select entity is created without the motion sensitivity service."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(MOTION_SENSITIVITY_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "shutter_contacts2": [
+                shutter_contact2_plus_device(
+                    sensitivity=VibrationSensorService.SensitivityState.VERY_LOW
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_vibration_sensitivity_current_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The contact's current vibration sensitivity is reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(VIBRATION_SENSITIVITY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "very_low"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_plus_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_vibration_sensitivity_select_option(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting a vibration sensitivity writes it to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.shutter_contacts2[0]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: VIBRATION_SENSITIVITY_ENTITY_ID, "option": "very_high"},
+        blocking=True,
+    )
+    assert device.sensitivity == VibrationSensorService.SensitivityState.VERY_HIGH
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_vibration_sensitivity_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No select entity is created for a contact without a vibration sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(VIBRATION_SENSITIVITY_ENTITY_ID) is None

@@ -1,8 +1,9 @@
 """Test event metadata and coordinator lifecycle."""
 
+from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioaxlevpp import (
     AxleAuthenticationError,
@@ -16,12 +17,19 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.axle_energy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def sensor_platform_only() -> Generator[None]:
+    """Limit these tests to the sensor platform."""
+    with patch("homeassistant.components.axle_energy.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:

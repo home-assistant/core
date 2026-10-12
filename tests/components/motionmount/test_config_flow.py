@@ -155,6 +155,7 @@ async def test_user_response_error_single_device_new_ce_old_pro(
         user_input=user_input,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ZEROCONF_NAME
 

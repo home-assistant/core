@@ -170,6 +170,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the MELCloud Home API"
+    },
     "cannot_connect": {
       "message": "Error communicating with MELCloud Home API"
     },

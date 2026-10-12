@@ -63,7 +63,7 @@ rules:
   devices:
     status: exempt
     comment: Adding a device adds no benefit for a single entity config entry.
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Nothing to discover.
