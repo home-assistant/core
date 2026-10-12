@@ -190,8 +190,7 @@ async def async_handle_webhook(
         )
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-    # Requests over the Supervisor Unix socket carry no remote IP; they come
-    # from the Supervisor on the same host and are always local.
+    # Requests over the Supervisor Unix socket are always local
     if webhook.local_only and not is_supervisor_request:
         is_local = not (is_cloud_connection(hass) or request.remote is None)
 
