@@ -61,7 +61,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> OptionsFlow:
         """Return the options flow for HomeWizard."""
         return HomeWizardOptionsFlow()
-    
+
     ip_address: str | None = None
     product_name: str | None = None
     product_type: str | None = None
