@@ -32,6 +32,7 @@ class YaleXSBLEData:
     master_code_name: str | None = None
     last_activity: LockActivity | None = None
     last_activity_context: Context | None = None
+    main_lock_entity_id: str | None = None
     expected_operation: ExpectedOperation | None = None
     credential_operations: dict[
         tuple[str, str, tuple[tuple[str, Any], ...]], asyncio.Task[Any]

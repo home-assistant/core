@@ -30,6 +30,7 @@ from yalexs_ble.const import (
     LockState,
     OperationError,
 )
+from yalexs_ble.session import ResponseError
 
 from homeassistant.components.yalexs_ble.const import (
     ACTIVITY_HOLD_SECONDS,
@@ -50,7 +51,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -419,6 +420,16 @@ async def test_failed_set_credential_name_handling(
         pytest.param(EOFError("eof"), "communication_error", id="eof"),
         pytest.param(BrokenPipeError("pipe"), "communication_error", id="broken_pipe"),
         pytest.param(RuntimeError("not running"), "lock_not_running", id="not_running"),
+        pytest.param(
+            ValueError("Malformed PIN field: 1234ffffff"),
+            "invalid_response",
+            id="malformed_pin",
+        ),
+        pytest.param(
+            ResponseError("bad frame 1234ffffff"),
+            "communication_error",
+            id="response_error",
+        ),
     ],
 )
 async def test_credential_services_translate_library_errors(
@@ -436,6 +447,43 @@ async def test_credential_services_translate_library_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await _call(hass, service, data, **extra)
     assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders in (None, {})
+    assert "1234" not in str(exc_info.value)
+
+
+@pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            ValueError("Malformed PIN field: 1234ffffff"),
+            "invalid_response",
+            id="malformed_pin",
+        ),
+        pytest.param(
+            ResponseError("frame 1234ffffff"), "communication_error", id="response"
+        ),
+    ],
+)
+async def test_credential_errors_do_not_expose_pin_data(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    error: Exception,
+    translation_key: str,
+) -> None:
+    """Test PIN bytes in library errors never reach the raised error."""
+    mock_lock.push_lock.get_keycode.side_effect = error
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call(
+            hass,
+            "get_lock_credential_status",
+            {"credential_index": 3},
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders is None
+    assert exc_info.value.__cause__ is None
+    assert "1234" not in str(exc_info.value)
 
 
 @pytest.mark.usefixtures("entry")
@@ -1225,6 +1273,52 @@ async def test_door_activity_ignored(hass: HomeAssistant, mock_lock: MockLock) -
     mock_lock.fire(DoorActivity(dt_util.utcnow(), DoorStatus.OPENED))
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes.get("changed_by") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_event_entity_is_main_lock_regardless_of_listener_order(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the event names the main lock even when the alias handles it first."""
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    listeners = sorted(
+        entry.runtime_data.activity_listeners,
+        key=lambda listener: not listener.__self__._secure_mode,
+    )
+    mock_lock.push(LockStatus.UNLOCKED)
+    activity = _activity(LockStatus.UNLOCKED, LockOperationSource.MANUAL)
+    for listener in listeners:
+        listener(activity)
+    await _settle(hass, freezer)
+    assert len(activity_events) == 1
+    assert activity_events[0].data["entity_id"] == ENTITY_ID
+
+
+@pytest.mark.usefixtures("entry")
+async def test_event_entity_falls_back_to_alias_without_main_lock(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the alias owns the event when the main lock is not added."""
+    entity_registry.async_update_entity(SECURE_ENTITY_ID, disabled_by=None)
+    entity_registry.async_update_entity(
+        ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.config_entries.async_reload(
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    await hass.async_block_till_done()
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.MANUAL))
+    await _settle(hass, freezer)
+    assert len(activity_events) == 1
+    assert activity_events[0].data["entity_id"] == SECURE_ENTITY_ID
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")

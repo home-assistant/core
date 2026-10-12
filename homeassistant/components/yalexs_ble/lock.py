@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from datetime import datetime
+import logging
 import re
 import time
 from typing import Any, override
@@ -45,6 +46,8 @@ from .const import (
 )
 from .entity import YALEXSBLEEntity
 from .models import ExpectedOperation, YaleXSBLEData
+
+_LOGGER = logging.getLogger(__name__)
 
 PIN_PATTERN = re.compile(r"[0-9]{4,8}")
 
@@ -90,12 +93,17 @@ def _translate_keycode_errors() -> Generator[None]:
             translation_key="keycode_error",
             translation_placeholders={"error": str(err)},
         ) from err
-    except (YaleXSBLEError, BleakError, EOFError, OSError, TimeoutError) as err:
+    except ValueError:
+        # The library's message carries the raw PIN bytes of a malformed read.
         raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+            translation_domain=DOMAIN, translation_key="invalid_response"
+        ) from None
+    except (YaleXSBLEError, BleakError, EOFError, OSError, TimeoutError) as err:
+        # Library messages can include decrypted frames, which hold the PIN.
+        _LOGGER.debug("Keycode operation failed: %s", type(err).__name__)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="communication_error"
+        ) from None
     except RuntimeError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -331,7 +339,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             EVENT_LOCK_ACTIVITY,
             {
                 ATTR_DEVICE_ID: self.registry_entry.device_id,
-                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_ENTITY_ID: data.main_lock_entity_id or self.entity_id,
                 ATTR_SOURCE: activity.source.name.lower(),
                 ATTR_SLOT: None if is_master_code else activity.slot,
                 ATTR_MASTER_CODE: is_master_code,
@@ -453,6 +461,18 @@ class YaleXSBLELock(YaleXSBLEBaseLock, LockEntity):
     """A yale xs ble lock not in secure mode."""
 
     _attr_name = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Publish this entity as the owner of activity events."""
+        self._data.main_lock_entity_id = self.entity_id
+        await super().async_added_to_hass()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop owning activity events."""
+        self._data.main_lock_entity_id = None
+        await super().async_will_remove_from_hass()
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:

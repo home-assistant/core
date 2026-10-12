@@ -54,13 +54,16 @@
   },
   "exceptions": {
     "communication_error": {
-      "message": "Failed to communicate with the lock: {error}"
+      "message": "Failed to communicate with the lock."
     },
     "device_not_advertising": {
       "message": "{local_name} ({address}) is not advertising yet: {reason}"
     },
     "invalid_pin": {
       "message": "The PIN must be 4 to 8 digits."
+    },
+    "invalid_response": {
+      "message": "The lock returned an invalid response."
     },
     "keycode_error": {
       "message": "The lock rejected the keypad request: {error}"
