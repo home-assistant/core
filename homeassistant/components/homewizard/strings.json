@@ -52,20 +52,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "HomeWizard settings",
-        "description": "Configure how often data is retrieved from the device.",
-        "data": {
-          "update_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "update_interval": "Time between updates, from 1 to 60 seconds."
-        }
-      }
-    }
-  },
   "entity": {
     "number": {
       "status_light_brightness": {
@@ -229,6 +215,20 @@
         }
       },
       "title": "Update the authentication method for {title}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "update_interval": "Time between updates, from 1 to 60 seconds."
+        },
+        "description": "Configure how often data is retrieved from the device.",
+        "title": "HomeWizard settings"
+      }
     }
   }
 }
