@@ -1,7 +1,7 @@
 """Support for Netatmo Smart thermostats."""
 
-import logging
 from datetime import UTC, datetime
+import logging
 from typing import Any, cast, override
 
 from pyatmo.modules import NATherm1
@@ -446,7 +446,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_extra_state_attributes[ATTR_ANTICIPATING] = getattr(
             self.device, "anticipating", None
         )
-        if (end_time := getattr(self.device, "therm_setpoint_end_time", None)) is not None:
+        if (
+            end_time := getattr(self.device, "therm_setpoint_end_time", None)
+        ) is not None:
             self._attr_extra_state_attributes[ATTR_SETPOINT_END_TIME] = (
                 datetime.fromtimestamp(end_time, tz=UTC).isoformat()
             )
@@ -484,7 +486,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if schedule is None or not schedule.timetable:
             return None
 
-        now = datetime.now(UTC)
+        now = dt_util.utcnow()
         minute_of_week = now.weekday() * 1440 + now.hour * 60 + now.minute
 
         active_zone_id = schedule.timetable[0].zone_id
