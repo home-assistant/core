@@ -8,7 +8,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import NVR, Bootstrap, CloudAccount, Light, Version
+from uiprotect.data import (
+    NVR,
+    Bootstrap,
+    CloudAccount,
+    Light,
+    NvrArmModeStatus,
+    Version,
+)
 from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
@@ -30,6 +37,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntry
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
@@ -910,17 +918,24 @@ async def test_public_only_manual_refresh(
 ) -> None:
     """A manual refresh (update_entity action) runs publicly and stays healthy."""
     await setup_public_only()
-    ufp_public_only.api.update_public.reset_mock()
+    api = ufp_public_only.api
+    api.update_public.reset_mock()
 
-    await ufp_public_only.entry.runtime_data.async_refresh()
+    async def _arm_on_refresh() -> None:
+        api.public_bootstrap.arm_mode.status = NvrArmModeStatus.ARMED
+
+    api.update_public.side_effect = _arm_on_refresh
+
+    await async_update_entity(hass, PUBLIC_ONLY_ALARM_ENTITY_ID)
     await hass.async_block_till_done()
 
-    ufp_public_only.api.update_public.assert_awaited_once()
+    api.update_public.assert_awaited_once()
     # The private update path must not run (it would poison the health flag).
     assert ufp_public_only.entry.runtime_data.last_update_success is True
+    # The entity update swallows errors, so check the refresh reached the entity.
     assert (
         hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state
-        == AlarmControlPanelState.DISARMED
+        == AlarmControlPanelState.ARMED_AWAY
     )
 
 
@@ -934,10 +949,10 @@ async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
     ufp_public_only.api.update_public = AsyncMock(side_effect=NotAuthorized)
 
     for _ in range(AUTH_RETRIES):
-        await ufp_public_only.entry.runtime_data.async_refresh()
+        await async_update_entity(hass, PUBLIC_ONLY_ALARM_ENTITY_ID)
         assert not _reauth_flow_started(hass)
 
-    await ufp_public_only.entry.runtime_data.async_refresh()
+    await async_update_entity(hass, PUBLIC_ONLY_ALARM_ENTITY_ID)
     await hass.async_block_till_done()
 
     assert _reauth_flow_started(hass)

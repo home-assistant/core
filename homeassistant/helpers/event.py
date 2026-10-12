@@ -31,6 +31,7 @@ from homeassistant.core import (
     HassJobType,
     HomeAssistant,
     State,
+    async_noop,
     callback,
     split_entity_id,
 )
@@ -323,7 +324,7 @@ def async_track_state_change_event(
     and changed, opposite of EVENT_STATE_REPORTED.
     """
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
-        return _remove_empty_listener
+        return async_noop
     return _async_track_state_change_event(hass, entity_ids, action, job_type)
 
 
@@ -405,11 +406,6 @@ def async_track_state_report_event(
 
 
 @callback
-def _remove_empty_listener() -> None:
-    """Remove a listener that does nothing."""
-
-
-@callback
 def _remove_listener(
     hass: HomeAssistant,
     tracker: _KeyedEventTracker[_TypedDictT],
@@ -441,7 +437,7 @@ def _async_track_event(
     This function is intended for internal use only.
     """
     if not keys:
-        return _remove_empty_listener
+        return async_noop
 
     hass_data = hass.data
     tracker_key = tracker.key
@@ -636,7 +632,7 @@ def async_track_state_added_domain(
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is added to domains."""
     if not (domains := _async_string_to_lower_list(domains)):
-        return _remove_empty_listener
+        return async_noop
     return _async_track_state_added_domain(hass, domains, action, job_type)
 
 

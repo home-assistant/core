@@ -74,7 +74,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
 
         # Calculate supported color modes
         modes: set[ColorMode] = {ColorMode.ONOFF}
-        if self._device_data.supports_hsb_xy_color:
+        if self._supports_hs_color:
             modes.add(ColorMode.HS)
         if self._device_data.supports_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
@@ -90,6 +90,12 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
             self._device_control.max_mireds
         )
+
+    @property
+    def _supports_hs_color(self) -> bool:
+        """Return if the light supports setting a hue and saturation."""
+        # supports_hsb_xy_color is False for color bulbs that also report mireds
+        return self._device_data.raw.color_hue is not None
 
     @override
     def _refresh(self) -> None:
@@ -148,7 +154,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # to 1 for the next set_state(True) command
         transition_time = None
         if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
+            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
 
             await self._api(
                 self._device_control.set_dimmer(
@@ -163,7 +169,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         """Instruct the light to turn on."""
         transition_time = None
         if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
+            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
 
         dimmer_command = None
         if ATTR_BRIGHTNESS in kwargs:
@@ -179,7 +185,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             dimmer_command = self._device_control.set_state(True)
 
         color_command = None
-        if ATTR_HS_COLOR in kwargs and self._device_data.supports_hsb_xy_color:
+        if ATTR_HS_COLOR in kwargs and self._supports_hs_color:
             hue = int(kwargs[ATTR_HS_COLOR][0] * (self._device_control.max_hue / 360))
             sat = int(
                 kwargs[ATTR_HS_COLOR][1] * (self._device_control.max_saturation / 100)
@@ -191,8 +197,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
 
         temp_command = None
         if ATTR_COLOR_TEMP_KELVIN in kwargs and (
-            self._device_data.supports_color_temp
-            or self._device_data.supports_hsb_xy_color
+            self._device_data.supports_color_temp or self._supports_hs_color
         ):
             temp_k = kwargs[ATTR_COLOR_TEMP_KELVIN]
             # White Spectrum bulb
@@ -208,7 +213,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 transition_time = None
             # Color bulb (CWS)
             # color_temp needs to be set with hue/saturation
-            elif self._device_data.supports_hsb_xy_color:
+            elif self._supports_hs_color:
                 hs_color = color_util.color_temperature_to_hs(temp_k)
                 hue = int(hs_color[0] * (self._device_control.max_hue / 360))
                 sat = int(hs_color[1] * (self._device_control.max_saturation / 100))

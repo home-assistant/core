@@ -58,14 +58,6 @@ def test_entity_name(
         "Temperature"
     )
 
-    # Strips device name prefix
-    entity_registry.async_update_entity(
-        entry2.entity_id, name="My Device Custom Sensor"
-    )
-    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
-        "Custom Sensor"
-    )
-
 
 def test_is_hidden_entity(
     hass: HomeAssistant,

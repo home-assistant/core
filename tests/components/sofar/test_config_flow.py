@@ -21,7 +21,11 @@ from homeassistant.components.sofar.const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -34,6 +38,8 @@ from . import (
     MOCK_SERIAL_ENTRY_DATA,
     MOCK_SERIAL_INPUT,
     MOCK_TCP_INPUT,
+    MOCK_UNRECOGNIZED_SERIAL,
+    declare_pv_in_masks,
     seed_pv_inverter,
 )
 
@@ -136,14 +142,39 @@ async def test_user_step_success(
     assert result["data"] == expected_data
     assert result["result"].unique_id == MOCK_SERIAL
     assert len(mock_setup_entry.mock_calls) == 1
+    # The probe must read only the identity, never poll the inverter.
+    assert len(mock_conn.for_unit(1).read_events) == 2
 
 
+def _seed_unmodeled(unit: MockModbusUnit) -> None:
+    seed_pv_inverter(unit, serial=_UNMODELED_SERIAL)
+
+
+def _seed_detected_from_masks(unit: MockModbusUnit) -> None:
+    seed_pv_inverter(unit, serial=MOCK_UNRECOGNIZED_SERIAL)
+    declare_pv_in_masks(unit)
+
+
+@pytest.mark.parametrize(
+    ("seed", "serial"),
+    [
+        pytest.param(_seed_unmodeled, _UNMODELED_SERIAL, id="unmodeled_prefix"),
+        pytest.param(
+            _seed_detected_from_masks,
+            MOCK_UNRECOGNIZED_SERIAL,
+            id="detected_from_masks",
+        ),
+    ],
+)
 async def test_user_step_success_without_model(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    seed: Callable[[MockModbusUnit], None],
+    serial: str,
 ) -> None:
     """Test the flow falls back to the default title for an unknown model."""
     mock_conn = MockModbusConnection()
-    seed_pv_inverter(mock_conn.for_unit(1), serial=_UNMODELED_SERIAL)
+    seed(mock_conn.for_unit(1))
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(mock_conn):
@@ -152,7 +183,7 @@ async def test_user_step_success_without_model(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == MOCK_ENTRY_DATA
-    assert result["result"].unique_id == _UNMODELED_SERIAL
+    assert result["result"].unique_id == serial
 
 
 def _seed_unreachable(unit: MockModbusUnit) -> None:
@@ -160,7 +191,7 @@ def _seed_unreachable(unit: MockModbusUnit) -> None:
 
 
 def _seed_unrecognized(unit: MockModbusUnit) -> None:
-    """No-op: unseeded registers already decode to an unrecognized serial."""
+    """No-op: unseeded registers give no known serial and no usable mask."""
 
 
 @pytest.mark.parametrize(
@@ -228,6 +259,14 @@ async def test_user_step_link_settings_conflict(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["description_placeholders"] == {"error": str(error)}
+
+    working_conn = MockModbusConnection()
+    seed_pv_inverter(working_conn.for_unit(1))
+
+    with _patch_temporary_unit(working_conn):
+        result = await hass.config_entries.flow.async_configure(flow_id, MOCK_TCP_INPUT)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:
@@ -417,3 +456,123 @@ def _serial_entry() -> MockConfigEntry:
         title=MOCK_MODEL,
         minor_version=2,
     )
+
+
+@pytest.mark.parametrize(
+    ("setup_error", "setup_state"),
+    [
+        pytest.param(None, ConfigEntryState.LOADED, id="loaded"),
+        pytest.param(
+            ModbusTimeoutError("stuck"),
+            ConfigEntryState.LOADED,
+            id="asleep",
+        ),
+        pytest.param(ValueError("bug"), ConfigEntryState.SETUP_RETRY, id="setup_retry"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_reconfigure_new_line_settings(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    setup_error: Exception | None,
+    setup_state: ConfigEntryState,
+) -> None:
+    """Test new line settings take the entry off the bus before probing."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+    states: list[ConfigEntryState] = []
+
+    @asynccontextmanager
+    async def _probe_watching_the_entry(
+        hass: HomeAssistant,
+        params: ModbusSerialParams | ModbusTcpParams,
+        unit_id: int,
+    ) -> AsyncIterator[MockModbusUnit]:
+        states.append(entry.state)
+        yield mock_connection.for_unit(unit_id)
+
+    mock_connection.for_unit(1).fail_requests(setup_error)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is setup_state
+    mock_connection.for_unit(1).fail_requests(None)
+
+    result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+    with patch(
+        "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
+        side_effect=_probe_watching_the_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert states == [ConfigEntryState.NOT_LOADED]
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_BAUDRATE] == 19200
+    assert entry.unique_id == MOCK_SERIAL
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_reconfigure_new_line_settings_cannot_connect(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test a failed probe puts the entry back on the bus it was taken off."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("stuck"))
+
+    result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+    with _patch_temporary_unit(mock_connection):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.unique_id == MOCK_SERIAL
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_connection.for_unit(1).fail_requests(None)
+    with _patch_temporary_unit(mock_connection):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -> None:
+    """Test a different inverter on the new settings restores the entry."""
+    entry = _serial_entry()
+    entry.add_to_hass(hass)
+
+    other_conn = MockModbusConnection()
+    seed_pv_inverter(other_conn.for_unit(1), serial=_UNMODELED_SERIAL)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_SERIAL)
+    with _patch_temporary_unit(other_conn):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200}
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.unique_id == MOCK_SERIAL
+    assert entry.state is ConfigEntryState.LOADED

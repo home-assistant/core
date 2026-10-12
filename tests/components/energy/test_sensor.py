@@ -1439,6 +1439,52 @@ async def test_inherit_source_unique_id(
     assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
 
+async def test_cost_sensor_rename(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test energy/info reports the new cost sensor entity_id after a rename."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    entity_registry.async_get_or_create(
+        "sensor", "test", "123456", suggested_object_id="gas_consumption"
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        100,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+    )
+    await setup_integration(hass)
+
+    entity_registry.async_update_entity(
+        "sensor.gas_consumption_cost", new_entity_id="sensor.renamed_cost"
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "energy/info"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["cost_sensors"] == {
+        "sensor.gas_consumption": "sensor.renamed_cost"
+    }
+
+
 async def test_needs_power_sensor_standard(hass: HomeAssistant) -> None:
     """Test _needs_power_sensor returns False for standard stat_rate."""
     assert SensorManager._needs_power_sensor({"stat_rate": "sensor.power"}) is False
@@ -2525,6 +2571,96 @@ async def test_power_sensor_combined_invalid_value(
     )
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("invalid_source", "value"),
+    [
+        pytest.param("sensor.battery_discharge", "150.0", id="discharge"),
+        pytest.param("sensor.battery_charge", "50.0", id="charge"),
+    ],
+)
+async def test_power_sensor_combined_invalid_unit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    invalid_source: str,
+    value: str,
+) -> None:
+    """Test combined power sensor with a source in a non-power unit."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # The sensor is still added when a source has a non-power unit at setup
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert (
+        "Unable to combine sensor.battery_discharge and sensor.battery_charge: "
+        "kWh is not a recognized power unit" in caplog.text
+    )
+
+    hass.states.async_set(
+        invalid_source, value, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "100.0"
+
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert caplog.text.count("kWh is not a recognized power unit") == 1
 
 
 async def test_power_sensor_naming_fallback(

@@ -124,7 +124,7 @@ class EvoChild(EvoEntity):
         self._setpoints: dict[str, Any] = {}
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
