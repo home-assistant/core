@@ -272,4 +272,13 @@ async def test_debug_mode_log_filter(
     gateway_proxy.async_disable_debug_mode()
     assert relayed == ["test filtered", "test marker"]
 
+    # Ending the filtered session removes its filter while another one is open
+    relayed.clear()
+    gateway_proxy.async_enable_debug_mode(drop_filtered)
+    gateway_proxy.async_enable_debug_mode()
+    gateway_proxy.async_disable_debug_mode(drop_filtered)
+    await log_and_wait("test filtered")
+    gateway_proxy.async_disable_debug_mode()
+    assert relayed == ["test filtered", "test marker"]
+
     unsub()
