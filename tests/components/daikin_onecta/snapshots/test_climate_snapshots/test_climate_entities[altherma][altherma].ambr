@@ -36,12 +36,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving Water Offset',
+        'object_id_base': 'Leaving water offset',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving Water Offset',
+        'original_name': 'Leaving water offset',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -53,7 +53,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving Water Offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -114,12 +114,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving Water Temperature',
+        'object_id_base': 'Leaving water temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving Water Temperature',
+        'original_name': 'Leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -131,7 +131,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving Water Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -194,12 +194,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -211,7 +211,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -271,12 +271,12 @@
             'eco',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -296,12 +296,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -323,7 +323,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -342,15 +342,15 @@
             'eco',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
-          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
-          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -398,12 +398,12 @@
             'eco',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -423,12 +423,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -450,7 +450,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -469,15 +469,15 @@
             'eco',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
-          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
-          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -525,12 +525,12 @@
             'eco',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -550,12 +550,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -577,7 +577,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -596,15 +596,15 @@
             'eco',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
-          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
-          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -652,12 +652,12 @@
             'eco',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -677,12 +677,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -704,7 +704,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -723,15 +723,15 @@
             'eco',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
-          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
           ]),
-          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'stop',
+          <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'stop',
-            'swing',
+            'off',
+            'on',
             'windnice',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,

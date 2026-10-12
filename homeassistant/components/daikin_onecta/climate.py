@@ -19,6 +19,8 @@ from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    SWING_OFF,
+    SWING_ON,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -35,6 +37,8 @@ from .device import DaikinOnectaDevice
 from .entity import DaikinOnectaEntity
 
 PARALLEL_UPDATES = 1
+
+_DAIKIN_SWING_TO_HA = {"stop": SWING_OFF, "swing": SWING_ON}
 
 PRESET_MODES = (PRESET_BOOST, PRESET_AWAY, PRESET_COMFORT, PRESET_ECO)
 
@@ -552,7 +556,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         axis = cast(
             "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
         )
-        return axis.current_mode.value.lower() if axis is not None else ""
+        if axis is None:
+            return ""
+        mode = axis.current_mode.value.lower()
+        return _DAIKIN_SWING_TO_HA.get(mode, mode)
 
     def _get_swing_mode(self) -> str:
         """Return the vertical swing mode."""
@@ -574,7 +581,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         )
         if axis is None:
             return []
-        return [mode.lower() for mode in axis.current_mode.values or []]
+        # Daikin also exposes comfort and floor-heating airflow direction modes.
+        return [
+            _DAIKIN_SWING_TO_HA.get(mode.lower(), mode.lower())
+            for mode in axis.current_mode.values or []
+        ]
 
     def _get_swing_modes(self) -> list[str]:
         """Return the supported vertical swing modes."""
@@ -606,7 +617,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             (
                 mode
                 for mode in axis.current_mode.values or []
-                if swing_mode == mode.lower()
+                if swing_mode == _DAIKIN_SWING_TO_HA.get(mode.lower(), mode.lower())
             ),
             None,
         )
