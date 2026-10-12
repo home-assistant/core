@@ -123,6 +123,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
         for event in self._door_station.door_station_events:
-            # If the clear api was called, the events may not be in the dict
-            event_to_entity_id.pop(event, None)
+            # The event may be missing or owned by another camera
+            if event_to_entity_id.get(event) == self.entity_id:
+                del event_to_entity_id[event]
         await super().async_will_remove_from_hass()
