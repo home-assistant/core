@@ -19,6 +19,10 @@ USER_INPUT = {
     "email": "test-email@example.com",
     "password": "test-password",
 }
+NEW_USER_INPUT = {
+    "email": "test-email@example.com",
+    "password": "new-password",
+}
 
 
 @contextmanager
@@ -229,12 +233,13 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            USER_INPUT,
+            NEW_USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+    assert old_entry.data == NEW_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -399,14 +404,20 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     assert result3["reason"] == "reauth_successful"
 
 
-async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -> None:
-    """Test Tractive reauthentication with no existing entry."""
+async def test_reauthentication_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test Tractive reauthentication with credentials of a different account."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
     old_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=NEW_USER_INPUT,
+        unique_id="USERID_DIFFERENT",
+    )
+    other_entry.add_to_hass(hass)
 
     result = await old_entry.start_reauth_flow(hass)
 
@@ -414,12 +425,20 @@ async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"):
+    with (
+        patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            USER_INPUT,
+            NEW_USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_failed_existing"
+    assert result2["reason"] == "unique_id_mismatch"
+    assert old_entry.data == USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 0
