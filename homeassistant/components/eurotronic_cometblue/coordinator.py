@@ -147,7 +147,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                     translation_placeholders={
-                            "error": f"({type(ex).__name__}) {ex}",
+                        "error": f"({type(ex).__name__}) {ex}",
                     },
                     retry_after=30,
                 ) from ex
