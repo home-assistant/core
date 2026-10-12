@@ -1,7 +1,6 @@
 """The surepetcare integration."""
 
 from datetime import timedelta
-import logging
 
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
@@ -14,8 +13,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .coordinator import SurePetcareConfigEntry, SurePetcareDataCoordinator
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=3)
@@ -34,8 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
     try:
         coordinator = SurePetcareDataCoordinator(hass, entry)
     except SurePetcareAuthenticationError as error:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
-        raise ConfigEntryAuthFailed from error
+        raise ConfigEntryAuthFailed("Invalid username/password") from error
     except SurePetcareError as error:
         raise ConfigEntryNotReady from error
 

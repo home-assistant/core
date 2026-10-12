@@ -491,6 +491,14 @@ async def test_reconfigure_flow_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_pooldose_client.connect.return_value = RequestStatus.SUCCESS
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.0.200"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_wrong_device(

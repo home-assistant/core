@@ -79,6 +79,6 @@ class AxleSensor(AxleEntity, SensorEntity):
     @override
     def native_value(self) -> str | datetime | None:
         """Return unknown when a healthy feed has no participating event."""
-        if (event := self.coordinator.data) is None:
+        if (event := self.coordinator.event) is None:
             return None
         return self.entity_description.value_fn(event)

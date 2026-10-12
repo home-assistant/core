@@ -42,6 +42,7 @@ from .const import (
 )
 from .device import YeelightDevice, async_format_id
 from .scanner import YeelightScanner
+from .services import async_setup_services
 
 type YeelightConfigEntry = ConfigEntry[YeelightDevice]
 
@@ -85,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
     hass.data[DATA_CUSTOM_EFFECTS_KEY] = conf.get(CONF_CUSTOM_EFFECTS, [])
+    async_setup_services(hass)
     # Make sure the scanner is always started in case we are
     # going to retry via ConfigEntryNotReady and the bulb has changed
     # ip
