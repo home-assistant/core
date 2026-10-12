@@ -1,6 +1,6 @@
 """Tests for init platform of Remote Calendar."""
 
-from httpx import HTTPError, InvalidURL, Response, TimeoutException
+from httpx2 import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
 import respx
 

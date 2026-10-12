@@ -7,7 +7,7 @@ from egauge_async.exceptions import (
     EgaugeParsingException,
     EgaugePermissionError,
 )
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState

@@ -30,6 +30,7 @@ from zwave_js_server.util.node import (
 )
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -41,10 +42,12 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
+from homeassistant.helpers.typing import VolDictType
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
+    DriverNotReadyError,
     async_get_node_from_device_id,
     async_get_node_from_entity_id,
     async_get_nodes_from_area_id,
@@ -59,9 +62,9 @@ type _NodeOrEndpointType = ZwaveNode | Endpoint
 
 UNIT16_SCHEMA = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=65535))
 
-TARGET_VALIDATORS = {
-    probatio.Optional(ATTR_AREA_ID): probatio.All(cv.ensure_list, [cv.string]),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+TARGET_VALIDATORS: VolDictType = {
+    probatio.Optional(ATTR_AREA_ID): probatio.All(probatio.EnsureList(), [cv.string]),
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 }
 
@@ -70,6 +73,17 @@ TARGET_VALIDATORS = {
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
     _async_register_credential_services(hass)
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_RESET_METER,
+        entity_domain=SENSOR_DOMAIN,
+        schema={
+            probatio.Optional(const.ATTR_METER_TYPE): probatio.Coerce(int),
+            probatio.Optional(const.ATTR_VALUE): probatio.Coerce(int),
+        },
+        func="async_reset_meter",
+    )
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
 
@@ -319,9 +333,21 @@ class ZWaveServices:
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
-            val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
-            )
+            try:
+                val[const.ATTR_NODES] = async_get_nodes_from_targets(
+                    self._hass,
+                    val,
+                    self._ent_reg,
+                    self._dev_reg,
+                    _LOGGER,
+                    raise_on_driver_not_ready=True,
+                )
+            except DriverNotReadyError as err:
+                # Not a validation error, so continue_on_error can tolerate it
+                raise HomeAssistantError(
+                    translation_domain=const.DOMAIN,
+                    translation_key="driver_not_ready",
+                ) from err
             return val
 
         @callback
@@ -428,10 +454,8 @@ class ZWaveServices:
                             const.ATTR_VALUE_FORMAT, "raw"
                         ): probatio.Coerce(ConfigurationValueFormat),
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
-                    cv.has_at_most_one_key(
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                    probatio.AtMostOne(
                         const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
                     ),
                     parameter_name_does_not_need_bitmask,
@@ -466,9 +490,7 @@ class ZWaveServices:
                             },
                         ),
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -516,9 +538,7 @@ class ZWaveServices:
                             cv.string: VALUE_SCHEMA
                         },
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -552,7 +572,7 @@ class ZWaveServices:
                         },
                     },
                     probatio.Any(
-                        cv.has_at_least_one_key(
+                        probatio.AtLeastOne(
                             ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                         ),
                         broadcast_command,
@@ -570,9 +590,7 @@ class ZWaveServices:
             schema=probatio.Schema(
                 probatio.All(
                     TARGET_VALIDATORS,
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -594,9 +612,7 @@ class ZWaveServices:
                         probatio.Required(const.ATTR_METHOD_NAME): cv.string,
                         probatio.Required(const.ATTR_PARAMETERS): list,
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -621,9 +637,7 @@ class ZWaveServices:
                             const.ATTR_NOTIFICATION_EVENT
                         ): probatio.Coerce(int),
                     },
-                    cv.has_at_least_one_key(
-                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                    ),
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),

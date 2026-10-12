@@ -258,11 +258,6 @@ class AiohttpClientMockResponse:
         return self._url
 
     @property
-    def request_info(self):
-        """Return request info."""
-        return mock.Mock(method=self.method, url=self._url, real_url=self._url)
-
-    @property
     def content_type(self):
         """Return yarl of URL."""
         return self._headers.get("content-type")
@@ -341,6 +336,7 @@ class AiohttpClientMockResponse:
         exc_tb: TracebackType | None,
     ) -> None:
         """Exit the context manager."""
+        self.release()
 
 
 @contextmanager

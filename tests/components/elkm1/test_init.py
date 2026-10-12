@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.elkm1.const import DOMAIN
+from homeassistant.components.elkm1.const import CONF_AUTO_CONFIGURE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PREFIX, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -90,3 +90,65 @@ async def test_light_via_device_links_to_system_device(
     )
     assert light_device is not None
     assert light_device.via_device_id == system_device.id
+
+
+async def test_login_failed(hass: HomeAssistant) -> None:
+    """Test setup fails when login to the panel fails."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "elks://1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PREFIX: "",
+            CONF_AUTO_CONFIGURE: True,
+        },
+        unique_id=MOCK_MAC,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        _patch_discovery(),
+        patch(
+            "homeassistant.components.elkm1.Elk",
+            return_value=mock_elk(invalid_auth=True),
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "ElkM1 login failed for elks://1.2.3.4"
+
+
+async def test_invalid_config_item(hass: HomeAssistant) -> None:
+    """Test setup fails when a configured range is invalid."""
+    disabled = {"enabled": False, "exclude": [], "include": []}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "elks://1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PREFIX: "",
+            CONF_AUTO_CONFIGURE: False,
+            "area": {"enabled": True, "exclude": [], "include": [[1, 99]]},
+            "counter": disabled,
+            "keypad": disabled,
+            "output": disabled,
+            "plc": disabled,
+            "setting": disabled,
+            "task": disabled,
+            "thermostat": disabled,
+            "zone": disabled,
+        },
+        unique_id=MOCK_MAC,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery():
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Invalid configuration for area"

@@ -19,7 +19,6 @@ from typing import (
     override,
 )
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,15 +30,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ABCCachedProperties, Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -74,11 +65,13 @@ from .const import (  # noqa: F401
     DATA_COMPONENT,
     DOMAIN,
     INTENT_GET_WEATHER,
+    SERVICE_GET_FORECASTS,
     UNIT_CONVERSIONS,
     VALID_UNITS,
     WeatherEntityFeature,
     WeatherEntityStateAttribute,
 )
+from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,7 +124,6 @@ ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 
 ROUNDING_PRECISION = 2
 
-SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT",
@@ -210,17 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DATA_COMPONENT] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-    component.async_register_entity_service(
-        SERVICE_GET_FORECASTS,
-        {probatio.Required("type"): probatio.In(("daily", "hourly", "twice_daily"))},
-        async_get_forecasts_service,
-        required_features=[
-            WeatherEntityFeature.FORECAST_DAILY,
-            WeatherEntityFeature.FORECAST_HOURLY,
-            WeatherEntityFeature.FORECAST_TWICE_DAILY,
-        ],
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
     async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
@@ -1007,40 +989,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 listener(converted_forecast_list)
 
 
-def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
-    """Raise error on attempt to get an unsupported forecast."""
-    raise HomeAssistantError(
-        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
-    )
-
-
-async def async_get_forecasts_service(
-    weather: WeatherEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """Get weather forecast."""
-    forecast_type = service_call.data["type"]
-    supported_features = weather.supported_features or 0
-    if forecast_type == "daily":
-        if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
-            raise_unsupported_forecast(weather.entity_id, forecast_type)
-        native_forecast_list = await weather.async_forecast_daily()
-    elif forecast_type == "hourly":
-        if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
-            raise_unsupported_forecast(weather.entity_id, forecast_type)
-        native_forecast_list = await weather.async_forecast_hourly()
-    else:
-        if (supported_features & WeatherEntityFeature.FORECAST_TWICE_DAILY) == 0:
-            raise_unsupported_forecast(weather.entity_id, forecast_type)
-        native_forecast_list = await weather.async_forecast_twice_daily()
-    if native_forecast_list is None:
-        converted_forecast_list = []
-    else:
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # noqa: SLF001
-    return {
-        "forecast": converted_forecast_list,
-    }
-
-
 class CoordinatorWeatherEntity(
     CoordinatorEntity[_ObservationUpdateCoordinatorT],
     WeatherEntity,
@@ -1082,6 +1030,15 @@ class CoordinatorWeatherEntity(
             "hourly": None,
             "twice_daily": None,
         }
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

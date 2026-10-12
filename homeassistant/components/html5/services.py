@@ -44,7 +44,7 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
         probatio.Optional(ATTR_IMAGE): cv.string,
         probatio.Optional(ATTR_TAG): cv.string,
         probatio.Exclusive(ATTR_VIBRATE, "silent_xor_vibrate"): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.All(probatio.Coerce(int), probatio.Range(min=0))],
         ),
         probatio.Optional(ATTR_TIMESTAMP): cv.datetime,
@@ -57,7 +57,7 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
             cv.time_period, cv.positive_timedelta
         ),
         probatio.Optional(ATTR_ACTIONS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(ATTR_ACTION): cv.string,

@@ -20,6 +20,7 @@ from homeassistant.util.async_ import gather_with_limited_concurrency
 from .const import DOMAIN
 from .coordinator import DeviceCoordinator, async_register_device
 from .models import DATA_WEMO, WemoConfigEntryData, WemoData
+from .services import async_setup_services
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.
@@ -56,7 +57,7 @@ def coerce_host_port(value: str) -> HostPortTuple:
     if not host:
         raise probatio.Invalid("host cannot be empty")
 
-    port = cv.port(port_str) if port_str else None
+    port = probatio.Port()(port_str) if port_str else None
 
     return host, port
 
@@ -84,6 +85,7 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for WeMo devices."""
+    async_setup_services(hass)
     # Keep track of WeMo device subscriptions for push updates
     registry = pywemo.SubscriptionRegistry()
     await hass.async_add_executor_job(registry.start)

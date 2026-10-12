@@ -48,5 +48,10 @@
       "bypass": { "name": "Treatment bypass" },
       "water": { "name": "Water supply" }
     }
+  },
+  "exceptions": {
+    "mqtt_not_available": {
+      "message": "MQTT integration is not available"
+    }
   }
 }

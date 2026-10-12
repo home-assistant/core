@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from datetime import datetime
-from enum import StrEnum
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +11,10 @@ from renault_api.kamereon.models import ChargeSchedule, HvacSchedule
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.renault.const import DOMAIN
-from homeassistant.components.renault.services import RenaultServiceArgument
+from homeassistant.components.renault.services import (
+    RenaultService,
+    RenaultServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -21,16 +23,6 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
-
-
-class RenaultService(StrEnum):
-    """Renault service names."""
-
-    AC_CANCEL = "ac_cancel"
-    AC_SET_SCHEDULES = "ac_set_schedules"
-    AC_START = "ac_start"
-    CHARGE_SET_SCHEDULES = "charge_set_schedules"
-    CHARGE_START = "charge_start"
 
 
 @pytest.fixture(autouse=True)

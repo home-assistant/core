@@ -122,7 +122,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         # CONF_AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
         probatio.Inclusive(
             CONF_AVAILABLE_MODES_LIST, "available_modes", default=[]
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Inclusive(
             CONF_MODE_COMMAND_TOPIC, "available_modes"
         ): valid_publish_topic,

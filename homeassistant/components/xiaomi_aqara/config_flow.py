@@ -39,7 +39,9 @@ CONFIG_HOST = {
 GATEWAY_CONFIG_HOST = GATEWAY_CONFIG.extend(CONFIG_HOST)
 GATEWAY_SETTINGS = probatio.Schema(
     {
-        probatio.Optional(CONF_KEY): probatio.All(str, probatio.Length(min=16, max=16)),
+        probatio.Optional(probatio.Secret(CONF_KEY)): probatio.All(
+            str, probatio.Length(min=16, max=16)
+        ),
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
         probatio.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,

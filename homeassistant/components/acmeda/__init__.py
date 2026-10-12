@@ -23,8 +23,7 @@ async def async_setup_entry(
 
     hub = PulseHub(hass, config_entry)
 
-    if not await hub.async_setup():
-        return False
+    await hub.async_setup()
 
     config_entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

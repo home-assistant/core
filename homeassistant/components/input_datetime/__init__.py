@@ -1,5 +1,6 @@
 """Support to select a date and/or a time."""
 
+from dataclasses import dataclass
 import datetime as py_datetime
 import logging
 from typing import Any, Self, override
@@ -15,23 +16,26 @@ from homeassistant.const import (  # noqa: F401
     CONF_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .const import (  # noqa: F401
+    ATTR_DATETIME,
+    ATTR_TIMESTAMP,
+    DATA_INPUT_DATETIME,
+    DOMAIN,
     InputDatetimeEntityCapabilityAttribute,
     InputDatetimeEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_datetime"
 
 CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
@@ -39,30 +43,17 @@ CONF_INITIAL = "initial"
 
 DEFAULT_TIME = py_datetime.time(0, 0, 0)
 
-ATTR_DATETIME = "datetime"
-ATTR_TIMESTAMP = "timestamp"
 
 FMT_DATE = "%Y-%m-%d"
 FMT_TIME = "%H:%M:%S"
 FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 
 
-def validate_set_datetime_attrs(config):
-    """Validate set_datetime service attributes."""
-    has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
-    if (
-        sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
-        > 1
-    ):
-        raise probatio.Invalid(f"Cannot use together: {', '.join(config.keys())}")
-    return config
-
-
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
     probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
     probatio.Optional(CONF_ICON): cv.icon,
@@ -127,7 +118,14 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
+
+
+@dataclass(slots=True)
+class InputDatetimeData:
+    """Runtime data for the input_datetime integration."""
+
+    component: EntityComponent[InputDatetime]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -160,40 +158,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_DATETIME] = InputDatetimeData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        "set_datetime",
-        probatio.All(
-            cv.make_entity_service_schema(
-                {
-                    probatio.Optional(ATTR_DATE): cv.date,
-                    probatio.Optional(ATTR_TIME): cv.time,
-                    probatio.Optional(ATTR_DATETIME): cv.datetime,
-                    probatio.Optional(ATTR_TIMESTAMP): probatio.Coerce(float),
-                },
-            ),
-            cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
-            ),
-            validate_set_datetime_attrs,
-        ),
-        "async_set_datetime",
-    )
-
+    async_setup_services(hass)
     return True
 
 

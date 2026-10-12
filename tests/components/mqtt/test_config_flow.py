@@ -37,7 +37,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    selector,
+)
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
@@ -60,12 +65,14 @@ from .common import (
     MOCK_NOTIFY_SUBENTRY_DATA,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
+    MOCK_NUMBER_SUBENTRY_DATA_AQI_UNIT_NONE,
     MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT,
     MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT,
     MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT,
     MOCK_NUMBER_SUBENTRY_DATA_NONE_UNIT,
     MOCK_SELECT_SUBENTRY_DATA,
     MOCK_SENSOR_SUBENTRY_DATA,
+    MOCK_SENSOR_SUBENTRY_DATA_AQI_UNIT_NONE,
     MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
     MOCK_SENSOR_SUBENTRY_DATA_UOM_NONE,
@@ -294,6 +301,13 @@ def mock_try_connection_time_out() -> Generator[MagicMock]:
         yield mock_client()
 
 
+def _connect_on_loop_start(mock_client: MagicMock) -> None:
+    """Let a timed out mock client connect when its loop starts."""
+    mock_client.loop_start = lambda: mock_client.on_connect(
+        mock_client, None, None, MockMqttReasonCode(), None
+    )
+
+
 @pytest.fixture
 def mock_ca_cert() -> bytes:
     """Mock the CA certificate."""
@@ -498,6 +512,13 @@ async def test_user_connection_fails(
     # Check config entry did not setup
     assert len(mock_finish_setup.mock_calls) == 0
 
+    _connect_on_loop_start(mock_try_connection_time_out)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_BROKER_FORM_DATA
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize("hass_config", [{"mqtt": {"sensor": {"state_topic": "test"}}}])
 async def test_manual_config_set(
@@ -664,6 +685,11 @@ async def test_hassio_cannot_connect(
     assert len(mock_try_connection_time_out.mock_calls)
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 0
+
+    _connect_on_loop_start(mock_try_connection_time_out)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures(
@@ -1137,7 +1163,7 @@ async def test_option_flow(
     assert yaml_mock.await_count
 
 
-@pytest.mark.usefixtures("mock_ca_cert", "mock_try_connection_success")
+@pytest.mark.usefixtures("mock_ca_cert", "mock_try_connection")
 @pytest.mark.parametrize(
     ("mock_ca_cert", "mock_client_cert", "mock_client_key", "client_key_password"),
     [
@@ -1258,6 +1284,21 @@ async def test_bad_certificate_validation(
         user_input=test_input,
     )
     assert result["errors"]["base"] == test_error
+
+    mock_ssl_context["context"]().load_verify_locations.side_effect = None
+    mock_ssl_context["context"]().load_cert_chain.side_effect = None
+    mock_ssl_context["load_der_private_key"].side_effect = None
+    mock_ssl_context["load_der_x509_certificate"].side_effect = None
+    mock_ssl_context["load_pem_private_key"].side_effect = None
+    mock_ssl_context["load_pem_x509_certificate"].side_effect = None
+    test_input[OTHER_SETTINGS][mqtt.CONF_CLIENT_KEY] = file_id[mqtt.CONF_CLIENT_KEY]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=test_input,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
@@ -1427,6 +1468,15 @@ async def test_invalid_discovery_prefix(
     await hass.async_block_till_done()
     # assert that the entry was not reloaded with the new config
     assert mock_reload_after_entry_update.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_DISCOVERY: True,
+            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 def get_default(schema: probatio.Schema, key: str) -> Any | None:
@@ -1823,6 +1873,16 @@ async def test_reconfigure_user_connection_fails(
     # Check config entry did not update
     assert config_entry.data == MOCK_BROKER_ENTRY_DATA
 
+    _connect_on_loop_start(mock_try_connection_time_out)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_BROKER_FORM_DATA
+        | {mqtt.CONF_BROKER: "another-broker", CONF_PORT: 2345},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_options_bad_birth_message_fails(
     hass: HomeAssistant, mock_try_connection: MqttMockPahoClient
@@ -1861,6 +1921,12 @@ async def test_options_bad_birth_message_fails(
         CONF_PORT: 1234,
     }
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"birth_topic": "ha_state/online"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_bad_will_message_fails(
     hass: HomeAssistant, mock_try_connection: MagicMock
@@ -1898,6 +1964,12 @@ async def test_options_bad_will_message_fails(
         mqtt.CONF_BROKER: "test-broker",
         CONF_PORT: 1234,
     }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"will_topic": "ha_state/offline"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -3565,6 +3637,27 @@ async def test_migrate_config_entry(
             id="number_None_unit",
         ),
         pytest.param(
+            MOCK_NUMBER_SUBENTRY_DATA_AQI_UNIT_NONE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Purifier"},
+            {"device_class": "aqi", "unit_of_measurement": None},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "min": 0,
+                "max": 10,
+                "step": 2,
+                "mode": "auto",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (),
+            "Milk notifier Purifier",
+            id="number_aqi_unit_none",
+        ),
+        pytest.param(
             MOCK_SELECT_SUBENTRY_DATA,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Mode"},
@@ -3655,6 +3748,23 @@ async def test_migrate_config_entry(
             (),
             "Milk notifier Air quality",
             id="sensor_aqi",
+        ),
+        pytest.param(
+            MOCK_SENSOR_SUBENTRY_DATA_AQI_UNIT_NONE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Air quality"},
+            {
+                "state_class": "measurement",
+                "device_class": "aqi",
+                "unit_of_measurement": None,
+            },
+            (),
+            {
+                "state_topic": "test-topic",
+            },
+            (),
+            "Milk notifier Air quality",
+            id="sensor_aqi_unit_none",
         ),
         pytest.param(
             MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
@@ -4131,6 +4241,70 @@ async def test_subentry_configflow(
 
     # Assert the entry is reloaded to set up the entity
     assert len(mock_reload_after_entry_update.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected_context"),
+    [
+        pytest.param(
+            "number",
+            {"filter_device_class": "device_class"},
+            id="number",
+        ),
+        pytest.param(
+            "sensor",
+            {
+                "filter_device_class": "device_class",
+                "filter_state_class": "state_class",
+            },
+            id="sensor",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
+async def test_subentry_configflow_unit_of_measurement_context(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    platform: str,
+    expected_context: dict[str, str],
+) -> None:
+    """Test the unit of measurement field context refers to fields in the form."""
+    await mqtt_mock_entry()
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"platform": platform, "name": "Milk"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            result["data_schema"], custom_serializer=cv.custom_serializer
+        )
+    }
+    assert (
+        fields["unit_of_measurement"]["selector"]["unit_of_measurement"]["context"]
+        == expected_context
+    )
+    # The frontend reads the context values from sibling fields in the same form
+    allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
+    for context_key, field_name in expected_context.items():
+        assert (
+            next(iter(fields[field_name]["selector"]))
+            in allowed_context_keys[context_key]
+        )
 
 
 @pytest.mark.parametrize(
