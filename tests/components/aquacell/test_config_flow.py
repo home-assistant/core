@@ -75,6 +75,7 @@ async def test_full_flow(
     assert result2["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
     assert result2["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
     assert result2["data"][CONF_BRAND] == TEST_CONFIG_ENTRY[CONF_BRAND]
+    assert result2["result"].unique_id == TEST_USER_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -36,7 +36,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -327,18 +331,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
                 )
         else:
             await hass.async_add_executor_job(router.cleanup)
-            msg = (
-                "Could not resolve serial number to use as unique id for router at %s"
-                ", setup failed"
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "serial_number_not_found"
+                    if entry.data.get(CONF_PASSWORD)
+                    else "serial_number_not_found_unauthenticated"
+                ),
+                translation_placeholders={"url": url},
             )
-            if not entry.data.get(CONF_PASSWORD):
-                msg += (
-                    ". Try setting up credentials for the router for one startup, "
-                    "unauthenticated mode can be enabled after that in integration "
-                    "settings"
-                )
-            _LOGGER.error(msg, url)
-            return False
 
     # Store reference to router
     entry.runtime_data = router

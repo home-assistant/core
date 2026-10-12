@@ -269,6 +269,39 @@ async def test_hmip_reset_energy_counter_services(
     assert len(hmip_device._connection.mock_calls) == 2
 
 
+async def test_hmip_reset_energy_counter_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test reset_energy_counter targets the new entity_id after a rename."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["Pc"])
+    hmip_device = mock_hap.hmip_device_by_entity_id["switch.pc"]
+
+    entity_registry.async_update_entity("switch.pc", new_entity_id="switch.renamed")
+    await hass.async_block_till_done()
+
+    assert "switch.pc" not in mock_hap.hmip_device_by_entity_id
+    assert mock_hap.hmip_device_by_entity_id["switch.renamed"] is hmip_device
+
+    await hass.services.async_call(
+        "homematicip_cloud",
+        "reset_energy_counter",
+        {"entity_id": "switch.pc"},
+        blocking=True,
+    )
+    assert len(hmip_device._connection.mock_calls) == 0
+
+    await hass.services.async_call(
+        "homematicip_cloud",
+        "reset_energy_counter",
+        {"entity_id": "switch.renamed"},
+        blocking=True,
+    )
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter_async"
+    assert len(hmip_device._connection.mock_calls) == 1
+
+
 async def test_hmip_multi_area_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

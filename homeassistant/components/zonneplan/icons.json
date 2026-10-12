@@ -31,6 +31,13 @@
       }
     },
     "sensor": {
+      "battery_state": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down"
+        }
+      },
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
       },
@@ -43,6 +50,12 @@
       },
       "current_sustainability_score": {
         "default": "mdi:leaf"
+      },
+      "cycle_count": {
+        "default": "mdi:battery-sync"
+      },
+      "earned_today": {
+        "default": "mdi:cash"
       },
       "electricity_cost_this_month": {
         "default": "mdi:cash"
@@ -72,6 +85,12 @@
       "electricity_produced_this_month": {
         "default": "mdi:transmission-tower-export"
       },
+      "energy_charged_today": {
+        "default": "mdi:battery-plus-variant"
+      },
+      "energy_discharged_today": {
+        "default": "mdi:battery-minus-variant"
+      },
       "gas_cost_this_month": {
         "default": "mdi:cash"
       },
@@ -87,6 +106,9 @@
       "highest_electricity_price_tomorrow": {
         "default": "mdi:cash-multiple"
       },
+      "inverter_state": {
+        "default": "mdi:current-ac"
+      },
       "lowest_electricity_price_today": {
         "default": "mdi:cash-multiple"
       },
@@ -95,6 +117,9 @@
       },
       "next_hour_electricity_price": {
         "default": "mdi:cash-multiple"
+      },
+      "total_earned": {
+        "default": "mdi:cash"
       }
     }
   }

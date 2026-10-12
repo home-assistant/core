@@ -126,6 +126,9 @@
   "exceptions": {
     "login_error": {
       "message": "Error during login: {error}"
+    },
+    "unsupported_utility": {
+      "message": "The utility {utility} is no longer supported"
     }
   },
   "issues": {

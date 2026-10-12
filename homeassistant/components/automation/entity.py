@@ -23,6 +23,7 @@ from homeassistant.core import (
     Context,
     CoreState,
     HassJob,
+    async_noop,
     callback,
     split_entity_id,
 )
@@ -147,6 +148,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         automation_id: str | None,
         name: str,
         raw_config: ConfigType | None,
+        raw_blueprint_inputs: ConfigType | None,
         validation_error: str,
         validation_status: ValidationStatus,
     ) -> None:
@@ -154,6 +156,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
+        self._raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -179,6 +182,15 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
+        # The config is invalid, but it can still point at its blueprint. Once
+        # the blueprint was applied, only its inputs hold that reference.
+        for config in (self._raw_blueprint_inputs, self.raw_config):
+            if (
+                config is not None
+                and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
+                and isinstance(path := blueprint.get(CONF_PATH), str)
+            ):
+                return path
         return None
 
     @cached_property
@@ -193,14 +205,17 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return a set of referenced entities."""
         return set()
 
-    @override
-    async def async_added_to_hass(self) -> None:
+    def _issue_id(self, entity_id: str) -> str:
+        """Return the repair issue id for the entity_id."""
+        return f"{entity_id}_validation_{self._validation_status}"
+
+    @callback
+    def _async_create_issue(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
-        await super().async_added_to_hass()
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"{self.entity_id}_validation_{self._validation_status}",
+            self._issue_id(self.entity_id),
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"validation_{self._validation_status}",
@@ -213,12 +228,24 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         )
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the automation has errors."""
+        await super().async_added_to_hass()
+        self._async_create_issue()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the repair issue, its id and placeholders use the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(old_entity_id))
+        self._async_create_issue()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(
-            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
-        )
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
 
     @override
     async def async_trigger(
@@ -377,10 +404,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
-        self._logger = logging.getLogger(
-            f"{LOGGER.name}.{split_entity_id(self.entity_id)[1]}"
-        )
-        self.action_script.update_logger(self._logger)
+        self._async_update_logger()
 
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
@@ -577,15 +601,61 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script or conditions as they will
-            # be reused.
-            await self._async_disable()
-            return
         await self._async_disable(stop_actions=False)
         await self.action_script.async_unload()
         if self._condition is not None:
             self._condition.async_unload()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the logger and re-attach the triggers, they captured `this`.
+
+        Running actions continue.
+        """
+        super().async_entity_id_changed(old_entity_id)
+        self._async_update_logger()
+        if (detach_triggers := self._async_detach_triggers) is None:
+            # Not attached, or an attach in progress retries with the new entity_id
+            return
+        self._async_detach_triggers = None
+        detach_triggers()
+        # The triggers render `this`, it must exist under the new entity_id
+        self.async_write_ha_state()
+        self.hass.async_create_task(
+            self._async_attach_triggers_for_entity_id(),
+            f"automation {self.entity_id} reattach",
+        )
+
+    async def _async_attach_triggers_for_entity_id(self) -> None:
+        """Attach the triggers, retrying if the entity_id changes while attaching.
+
+        Not cancelled on removal, the checks after each attach detach what is no
+        longer wanted.
+        """
+        while True:
+            entity_id = self.entity_id
+            detach = await self._async_attach_triggers()
+            # Disabled, removed or attached by enabling again while attaching
+            if not self._is_enabled or self._async_detach_triggers is not None:
+                if detach is not None:
+                    detach()
+                return
+            if self.entity_id == entity_id:
+                # Not None when nothing was attached, so a rename still re-attaches
+                self._async_detach_triggers = detach or async_noop
+                return
+            # Changed again while attaching, `this` is stale
+            if detach is not None:
+                detach()
+
+    @callback
+    def _async_update_logger(self) -> None:
+        """Set the logger, which is named after the entity_id."""
+        self._logger = logging.getLogger(
+            f"{LOGGER.name}.{split_entity_id(self.entity_id)[1]}"
+        )
+        self.action_script.update_logger(self._logger)
 
     async def _async_enable_automation(self) -> None:
         """Arm the automation's triggers on startup."""
@@ -593,7 +663,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
-        self._async_detach_triggers = await self._async_attach_triggers()
+        await self._async_attach_triggers_for_entity_id()
         self.async_write_ha_state()
 
     async def _async_enable(self) -> None:
@@ -608,7 +678,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
         # HomeAssistant is starting up
         if self.hass.state is not CoreState.not_running:
-            self._async_detach_triggers = await self._async_attach_triggers()
+            await self._async_attach_triggers_for_entity_id()
             return
 
         # Arm the triggers in a startup job, which runs after all listeners to
