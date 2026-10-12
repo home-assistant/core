@@ -33,6 +33,7 @@ from homeassistant.helpers.event import async_call_later
 from . import YALEXSBLEConfigEntry
 from .const import (
     ACTIVITY_HOLD_SECONDS,
+    ACTIVITY_SETTLE_SECONDS,
     ATTR_CREDENTIAL_DATA,
     ATTR_CREDENTIAL_INDEX,
     ATTR_MASTER_CODE,
@@ -116,6 +117,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     _lock_status: LockStatus = LockStatus.UNKNOWN
     _pending: tuple[LockState, LockInfo, ConnectionInfo] | None = None
     _hold_cancel: CALLBACK_TYPE | None = None
+    _candidate: LockActivity | None = None
+    _settle_cancel: CALLBACK_TYPE | None = None
 
     @callback
     @override
@@ -155,6 +158,12 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         """Hold externally caused lock transitions until the cause is known."""
         if self._should_hold(new_state):
             self._pending = (new_state, lock_info, connection_info)
+            if (
+                self._candidate is not None
+                and MATCH_STATUS[new_state.lock]
+                is not MATCH_STATUS[self._candidate.status]
+            ):
+                self._async_cancel_candidate()
             if self._hold_cancel is None:
                 self._hold_cancel = async_call_later(
                     self.hass, ACTIVITY_HOLD_SECONDS, self._async_hold_expired
@@ -199,7 +208,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         )
         try:
             yield
-        except Exception:
+        except BaseException:
+            # Includes cancellation, which would otherwise leave the expectation active.
             data.expected_operation = None
             raise
 
@@ -207,9 +217,42 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     def _async_cancel_hold(self) -> None:
         """Cancel the hold timer and drop any pending state."""
         self._pending = None
+        self._async_cancel_candidate()
         if self._hold_cancel is not None:
             self._hold_cancel()
             self._hold_cancel = None
+
+    @callback
+    def _async_cancel_candidate(self) -> None:
+        """Drop the candidate activity and its settle timer."""
+        self._candidate = None
+        if self._settle_cancel is not None:
+            self._settle_cancel()
+            self._settle_cancel = None
+
+    @callback
+    def _async_arm_settle(self) -> None:
+        """Wait for the activity backlog to stop arriving before attributing."""
+        if self._settle_cancel is not None:
+            self._settle_cancel()
+        self._settle_cancel = async_call_later(
+            self.hass, ACTIVITY_SETTLE_SECONDS, self._async_settled
+        )
+
+    @callback
+    def _async_settled(self, _now: datetime) -> None:
+        """Attribute the held state once no newer activity has arrived."""
+        self._settle_cancel = None
+        self._async_attribute_candidate()
+
+    @callback
+    def _async_attribute_candidate(self) -> None:
+        """Write the held state with the candidate activity as its cause."""
+        activity = self._candidate
+        assert activity is not None
+        self.async_set_context(self._activity_context_for(activity))
+        self._attr_changed_by = self._changed_by_for(activity)
+        self._async_flush_hold()
 
     @callback
     @override
@@ -233,6 +276,9 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     def _async_hold_expired(self, _now: datetime) -> None:
         """Write the held state without a known cause."""
         self._hold_cancel = None
+        if self._candidate is not None:
+            self._async_attribute_candidate()
+            return
         self._attr_changed_by = None
         self._context = None
         self._context_set = None
@@ -296,6 +342,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     @callback
     def _async_activity(self, activity: LockActivity | DoorActivity) -> None:
         """Attribute a lock activity to the held or current lock state."""
+        if self._candidate is not None:
+            self._async_arm_settle()
         if not isinstance(activity, LockActivity):
             return
         if (changed_by := self._changed_by_for(activity)) is None:
@@ -306,10 +354,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         if self._pending is not None:
             if activity_status is not MATCH_STATUS[self._pending[0].lock]:
                 return
-            context = self._activity_context_for(activity)
-            self.async_set_context(context)
-            self._attr_changed_by = changed_by
-            self._async_flush_hold()
+            self._candidate = activity
+            self._async_arm_settle()
             return
         if activity_status != MATCH_STATUS.get(self._lock_status):
             return
