@@ -34,11 +34,11 @@
     }
   },
   "exceptions": {
-    "authentication_failed": {
-      "message": "Authentication error connecting to the Shark IQ API"
-    },
     "invalid_room": {
       "message": "The room {room} is unavailable to your vacuum. Make sure all rooms match the SharkClean app, including capitalization."
+    },
+    "sign_in_failed": {
+      "message": "Error signing in to the Shark IQ API"
     }
   },
   "selector": {

@@ -85,7 +85,7 @@ async def async_setup_entry(
         if not await async_connect_or_timeout(ayla_api):
             raise exceptions.ConfigEntryError(
                 translation_domain=DOMAIN,
-                translation_key="authentication_failed",
+                translation_key="sign_in_failed",
             )
     except CannotConnect as exc:
         raise exceptions.ConfigEntryNotReady from exc
