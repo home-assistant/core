@@ -69,6 +69,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -357,12 +358,18 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if (old_state := await self.async_get_last_state()) is not None:
             # If we have no initial temperature, restore
             if self._target_temp is None:
-                # If we have a previously saved temperature
+                target_temp = old_state.attributes.get(
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                )
+                # States written before the unit attribute existed are in the
+                # current system unit
+                old_unit = old_state.attributes.get(
+                    ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                    self.hass.config.units.temperature_unit,
+                )
                 if (
-                    old_state.attributes.get(
-                        ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                    )
-                    is None
+                    target_temp is None
+                    or old_unit not in TemperatureConverter.VALID_UNITS
                 ):
                     if self.ac_mode:
                         self._target_temp = self.max_temp
@@ -373,10 +380,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self._target_temp,
                     )
                 else:
-                    self._target_temp = float(
-                        old_state.attributes[
-                            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                        ]
+                    self._target_temp = TemperatureConverter.convert(
+                        float(target_temp), old_unit, self.native_temperature_unit
                     )
             if (
                 self.preset_modes
