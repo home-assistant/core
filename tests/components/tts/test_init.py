@@ -1904,6 +1904,7 @@ async def test_async_convert_audio_probe_size(
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
     mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.stderr.read = AsyncMock(return_value=b"")
     mock_process.wait = AsyncMock(return_value=0)
 
     with patch(
@@ -1957,6 +1958,7 @@ async def test_async_convert_audio_mp3_bitrate(
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
     mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.stderr.read = AsyncMock(return_value=b"")
     mock_process.wait = AsyncMock(return_value=0)
 
     with patch(
