@@ -131,6 +131,7 @@
         "name": "Operation status",
         "state": {
           "cooling": "Cooling",
+          "frost_protection": "Frost protection",
           "heating_water": "Heating water",
           "heating_zones": "Heating zones",
           "idle": "[%key:common::state::idle%]"
