@@ -1,6 +1,6 @@
 """Tests for the Gree Integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from greeclimate.exceptions import DeviceTimeoutError
 
@@ -10,7 +10,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .common import build_device_mock
+from .common import FakeDiscovery, build_device_mock
 
 from tests.common import MockConfigEntry
 
@@ -103,7 +103,7 @@ async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
 
 
 async def test_setup_static_ip_unexpected_bind_error(hass: HomeAssistant) -> None:
-    """Test static IP entry retries on unexpected bind errors."""
+    """Test static IP entry retries on network errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "192.168.1.100"},
@@ -115,3 +115,62 @@ async def test_setup_static_ip_unexpected_bind_error(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
+async def test_setup_static_ip_probes_device(hass: HomeAssistant) -> None:
+    """Test static IP entry probes the device address before binding."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(entry.runtime_data.coordinators) == 1
+    assert entry.runtime_data.coordinators[0].device.device_info.mac == "aabbcc112233"
+
+
+@patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
+async def test_setup_static_ip_device_not_found(hass: HomeAssistant) -> None:
+    """Test static IP entry retries when the device does not answer the probe."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
+async def test_discovery_skips_static_ip_device(
+    hass: HomeAssistant, discovery: MagicMock
+) -> None:
+    """Test discovery does not add a device that is configured by IP address."""
+    discovery.side_effect = lambda *args: FakeDiscovery()
+    static_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+    )
+    static_entry.add_to_hass(hass)
+    discovery_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN)
+    discovery_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert static_entry.state is ConfigEntryState.LOADED
+    assert discovery_entry.state is ConfigEntryState.LOADED
+    assert len(static_entry.runtime_data.coordinators) == 1
+    assert discovery_entry.runtime_data.coordinators == []
+    assert len(hass.states.async_entity_ids("climate")) == 1

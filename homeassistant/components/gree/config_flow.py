@@ -83,9 +83,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = "unknown"
                 else:
-                    mac = device.device_info.mac
-                    unique_id = mac or ip_address
-                    await self.async_set_unique_id(unique_id)
+                    await self.async_set_unique_id(device.device_info.mac)
                     self._abort_if_unique_id_configured()
 
                     title = device.device_info.name or ip_address

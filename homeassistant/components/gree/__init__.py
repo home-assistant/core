@@ -28,17 +28,12 @@ PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
     """Set up Gree Climate from a config entry."""
     if CONF_IP_ADDRESS in entry.data:
-        # Static IP mode: bind directly, no scanning
         ip_address = entry.data[CONF_IP_ADDRESS]
         try:
             device = await async_create_and_bind_device(ip_address)
-        except (DeviceNotBoundError, DeviceTimeoutError) as err:
+        except (DeviceNotBoundError, DeviceTimeoutError, OSError) as err:
             raise ConfigEntryNotReady(
                 f"Unable to connect to Gree device at {ip_address}"
-            ) from err
-        except Exception as err:
-            raise ConfigEntryNotReady(
-                f"Unexpected error connecting to Gree device at {ip_address}"
             ) from err
         coordinator = DeviceDataUpdateCoordinator(hass, entry, device)
         await coordinator.async_config_entry_first_refresh()
@@ -46,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
             discovery_service=None, coordinators=[coordinator]
         )
     else:
-        # Discovery mode: scan network for devices
         gree_discovery = DiscoveryService(hass, entry)
         entry.runtime_data = GreeRuntimeData(
             discovery_service=gree_discovery, coordinators=[]

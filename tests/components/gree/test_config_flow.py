@@ -191,34 +191,6 @@ async def test_manual_step_already_configured(
         assert result["reason"] == "already_configured"
 
 
-async def test_manual_step_no_mac_uses_ip_as_unique_id(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test manual step uses IP as unique ID when MAC is unavailable."""
-    mock_device = build_device_mock(
-        name="test-device", ipAddress="192.168.1.100", mac=None
-    )
-
-    with patch(_PATCH_BIND, return_value=mock_device):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "manual"}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
-        assert result["result"].unique_id == "192.168.1.100"
-
-        await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_scan_single_instance_allowed(
     hass: HomeAssistant, mock_setup_entry: AsyncMock

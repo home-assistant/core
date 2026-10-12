@@ -3,6 +3,7 @@
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from ipaddress import IPv4Address
 import logging
 from typing import Any, override
 
@@ -19,7 +20,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DEFAULT_PORT,
     DISCOVERY_TIMEOUT,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
@@ -34,8 +34,17 @@ type GreeConfigEntry = ConfigEntry[GreeRuntimeData]
 
 
 async def async_create_and_bind_device(ip_address: str) -> Device:
-    """Create a Gree device at the given IP address and bind to it."""
-    device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
+    """Probe the Gree device at the given IP address and bind to it."""
+    discovery = Discovery(DISCOVERY_TIMEOUT)
+    devices = await discovery.scan(
+        wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=[IPv4Address(ip_address)]
+    )
+    device_info = next(
+        (info for info in devices if info.ip == ip_address and info.mac), None
+    )
+    if device_info is None:
+        raise DeviceTimeoutError
+
     device = Device(device_info)
     await device.bind()
     return device
@@ -157,6 +166,14 @@ class DiscoveryService(Listener):
 
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
+        if self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, device_info.mac
+        ):
+            _LOGGER.debug(
+                "Skipping Gree device %s, it is configured by IP address",
+                device_info.mac,
+            )
+            return
 
         device = Device(device_info)
         try:
@@ -176,7 +193,9 @@ class DiscoveryService(Listener):
         self.entry.runtime_data.coordinators.append(coordo)
         await coordo.async_refresh()
 
-        async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, coordo)
+        async_dispatcher_send(
+            self.hass, f"{DISPATCH_DEVICE_DISCOVERED}_{self.entry.entry_id}", coordo
+        )
 
     async def device_update(self, device_info: DeviceInfo) -> None:
         """Handle updates in device information, update if ip has changed."""
