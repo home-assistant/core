@@ -140,11 +140,57 @@ async def test_multiple_channels_create_separate_devices(
         device_key, entity_type = entry.unique_id.split("$", 1)
         assert entry.device_id == device_ids_by_key[device_key]
         assert entry.translation_key == EXPECTED_TRANSLATION_KEYS[entity_type]
-        if entry.disabled:
-            continue
-        state = hass.states.get(entry.entity_id)
-        assert state is not None
-        assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        "dev-1_ch9$mute",
+        "dev-1_ch10$mute",
+        "dev-1_ch9$camera_sd",
+        "dev-1_ch10$camera_sd",
+        "dev-1_ch9$status",
+        "dev-1_ch10$status",
+    ],
+)
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "dev-1",
+                "Cam",
+                channel_id="ch9",
+                button_keys=(PARAM_MUTE,),
+            ),
+            create_online_device(
+                "dev-1",
+                "Cam",
+                channel_id="ch10",
+                button_keys=(PARAM_MUTE,),
+            ),
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_multiple_channels_enabled_entities_have_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    unique_id: str,
+) -> None:
+    """Enabled entities on multi-channel devices report a live state."""
+    entry = next(
+        registry_entry
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if registry_entry.unique_id == unique_id
+    )
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("imou_mock_devices", [[]], indirect=True)
