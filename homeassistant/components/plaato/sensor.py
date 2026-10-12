@@ -58,7 +58,9 @@ async def async_setup_entry(
                 async_dispatcher_send(hass, SENSOR_SIGNAL % (device_id, sensor_type))
 
     if entry.data[CONF_USE_WEBHOOK]:
-        async_dispatcher_connect(hass, SENSOR_UPDATE, _async_update_from_webhook)
+        entry.async_on_unload(
+            async_dispatcher_connect(hass, SENSOR_UPDATE, _async_update_from_webhook)
+        )
     else:
         coordinator = entry_data.coordinator
         assert coordinator is not None

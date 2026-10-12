@@ -27,7 +27,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST, default="@"): cv.string,
         probatio.Required(CONF_DOMAIN): cv.string,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
@@ -37,7 +37,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )

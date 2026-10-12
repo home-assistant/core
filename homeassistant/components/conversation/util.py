@@ -1,12 +1,15 @@
 """Utility functions for conversation integration."""
 
 import logging
+from typing import Any
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
+from homeassistant.helpers.typing import ConfigType
 
 from .chat_log import AssistantContent, ChatLog, ToolResultContent
+from .const import DOMAIN, METADATA_CUSTOM_FILE, METADATA_CUSTOM_SENTENCE
 from .models import ConversationInput, ConversationResult
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +33,7 @@ def async_get_result_from_chat_log(
         intent_response = intent.IntentResponse(language=user_input.language)
 
     if not isinstance((last_content := chat_log.content[-1]), AssistantContent):
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "Last content in chat log is not an AssistantContent: %s."
             " This could be due to the model not returning a valid response",
@@ -44,3 +48,22 @@ def async_get_result_from_chat_log(
         conversation_id=chat_log.conversation_id,
         continue_conversation=chat_log.continue_conversation,
     )
+
+
+def get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, Any]:
+    """Return config intents."""
+    intents = config.get(DOMAIN, {}).get("intents", {})
+    return {
+        intent_name: {
+            "data": [
+                {
+                    "sentences": sentences,
+                    "metadata": {
+                        METADATA_CUSTOM_SENTENCE: True,
+                        METADATA_CUSTOM_FILE: hass_config_path,
+                    },
+                }
+            ]
+        }
+        for intent_name, sentences in intents.items()
+    }

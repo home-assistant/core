@@ -79,7 +79,7 @@ PLATFORM_SCHEMA = probatio.Schema(
             probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
         probatio.Optional(CONF_BRIGHTNESS): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=255)
+            probatio.Coerce(int), probatio.Byte()
         ),
         probatio.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
         probatio.Optional(CONF_MODE, default=DEFAULT_MODE): probatio.Any(

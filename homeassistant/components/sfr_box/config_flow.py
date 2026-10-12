@@ -32,7 +32,7 @@ AUTH_SCHEMA = probatio.Schema(
         probatio.Required(
             CONF_USERNAME, default=DEFAULT_USERNAME
         ): selector.TextSelector(),
-        probatio.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }

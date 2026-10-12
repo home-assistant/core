@@ -484,6 +484,16 @@ async def test_alexa_entity_registry_sync(
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": entry.entity_id, "changes": ["area_id"]},
+        )
+        await hass.async_block_till_done()
+
+    assert to_update == [entry.entity_id]
+    assert to_remove == []
+
+    with patch_sync_helper() as (to_update, to_remove):
+        hass.bus.async_fire(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "update", "entity_id": entry.entity_id, "changes": ["icon"]},
         )
         await hass.async_block_till_done()

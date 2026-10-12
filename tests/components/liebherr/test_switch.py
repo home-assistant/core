@@ -23,6 +23,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -110,6 +111,26 @@ async def test_switch_service_calls(
     )
 
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_switch_updates_optimistically(hass: HomeAssistant) -> None:
+    """Test switch state updates before an SSE event arrives."""
+    entity_id = "switch.test_fridge_partymode"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(

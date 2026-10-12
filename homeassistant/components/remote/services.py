@@ -53,7 +53,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
         {
-            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(ATTR_COMMAND): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(ATTR_DEVICE): cv.string,
             probatio.Optional(
                 ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
@@ -70,7 +72,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_LEARN_COMMAND,
         {
             probatio.Optional(ATTR_DEVICE): cv.string,
-            probatio.Optional(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_COMMAND): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(ATTR_COMMAND_TYPE): cv.string,
             probatio.Optional(ATTR_ALTERNATIVE): cv.boolean,
             probatio.Optional(ATTR_TIMEOUT): cv.positive_int,
@@ -81,7 +85,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component.async_register_entity_service(
         SERVICE_DELETE_COMMAND,
         {
-            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(ATTR_COMMAND): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(ATTR_DEVICE): cv.string,
         },
         "async_delete_command",

@@ -1,10 +1,14 @@
 """Tests for the Lupusec integration setup."""
 
+from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
 
 import lupupy.constants as CONST
+from lupupy.exceptions import LupusecException
+import pytest
 
 from homeassistant.components.lupusec.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -83,3 +87,25 @@ async def test_child_device_links_to_parent(
     )
     assert child is not None
     assert child.via_device_id == parent.id
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(LupusecException("Test lupusec exception"), id="lupusec"),
+        pytest.param(JSONDecodeError("Test", "", 0), id="json_decode"),
+    ],
+)
+async def test_setup_cannot_connect(hass: HomeAssistant, exception: Exception) -> None:
+    """Test setup fails when connecting to the device fails."""
+    entry = MockConfigEntry(domain=DOMAIN, title=MOCK_DATA[CONF_HOST], data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.lupusec.lupupy.Lupusec", side_effect=exception
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to connect to Lupusec device at test-host.lan"

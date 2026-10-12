@@ -181,7 +181,7 @@ async def set_schedule(
     LOGGER.info(
         "Setting schedule for %s (%s) on days: %s",
         entity.entity_id,
-        entity.coordinator.device.device.address,
+        entity.coordinator.address,
         ", ".join(
             day for day in ATTR_ALL_DAYS if service_call.data.get(day) is not None
         ),
@@ -220,7 +220,7 @@ async def set_holiday(
     LOGGER.info(
         "Setting holiday for %s (%s) until %s with temperature %s",
         entity.entity_id,
-        entity.coordinator.device.device.address,
+        entity.coordinator.address,
         service_call.data[ATTR_TO],
         service_call.data[ATTR_TEMPERATURE],
     )

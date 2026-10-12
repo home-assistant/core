@@ -52,6 +52,7 @@ async def test_config_flow_manual_success(
         const.CONF_MAC_CODE: mac_code,
         const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
+    assert result["result"].unique_id == address
     assert result["options"] == {}
 
 
@@ -259,6 +260,7 @@ async def test_config_flow_bluetooth_success(
         const.CONF_MAC_CODE: mac_code,
         const.CONF_BLIND_TYPE: blind_type.name.lower(),
     }
+    assert result["result"].unique_id == address
     assert result["options"] == {}
 
 
