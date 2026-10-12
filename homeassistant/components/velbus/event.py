@@ -49,7 +49,7 @@ class VelbusButtonEvent(VelbusEntity, EventEntity):
 
     def _is_long_pressed(self) -> bool:
         """Return if Velbus has reported a long press."""
-        return bool(self._channel.get_channel_info().get("long", False))
+        return self._channel.is_long_pressed()
 
     @override
     async def _on_update(self) -> None:
@@ -57,14 +57,12 @@ class VelbusButtonEvent(VelbusEntity, EventEntity):
         closed = self._channel.is_closed()
         long_pressed = self._is_long_pressed()
 
-        if not self._was_closed and closed:
-            self._long_seen = long_pressed
-        elif closed and long_pressed:
+        if closed and long_pressed and not self._long_seen:
+            self._trigger_event(EVENT_LONG_PRESS)
             self._long_seen = True
         elif self._was_closed and not closed:
-            self._trigger_event(
-                EVENT_LONG_PRESS if self._long_seen else EVENT_SHORT_PRESS
-            )
+            if not self._long_seen:
+                self._trigger_event(EVENT_SHORT_PRESS)
             self._long_seen = False
         elif not closed:
             self._long_seen = False

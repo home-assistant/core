@@ -54,7 +54,7 @@ async def _setup_event_entity(
 ) -> StatusUpdateCallback:
     """Set up only the Velbus event platform."""
     mock_button.is_closed.return_value = False
-    mock_button.get_channel_info.return_value = {"long": False}
+    mock_button.is_long_pressed.return_value = False
     with patch("homeassistant.components.velbus.PLATFORMS", [Platform.EVENT]):
         await init_integration(hass, config_entry)
     return _get_event_callback(mock_button)
@@ -70,7 +70,7 @@ async def _update_button(
 ) -> None:
     """Update the mocked button state and invoke its callback."""
     mock_button.is_closed.return_value = closed
-    mock_button.get_channel_info.return_value = {"long": long_pressed}
+    mock_button.is_long_pressed.return_value = long_pressed
     await callback()
     await hass.async_block_till_done()
 
@@ -146,7 +146,7 @@ async def test_long_press(
     mock_button: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a long press emits a long press event on release."""
+    """Test a long press emits a long press event immediately."""
     callback = await _setup_event_entity(hass, config_entry, mock_button)
 
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=False)
@@ -154,12 +154,15 @@ async def test_long_press(
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
-    _assert_no_completed_event(hass)
+    state = _event_state(hass)
+    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    event_state = state.state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
     assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.state == event_state
 
 
 async def test_repeated_long_status(
@@ -168,27 +171,34 @@ async def test_repeated_long_status(
     mock_button: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test repeated long status callbacks emit only on release."""
+    """Test repeated long status callbacks emit a single event."""
     callback = await _setup_event_entity(hass, config_entry, mock_button)
 
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=False)
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
-    _assert_no_completed_event(hass)
+    state = _event_state(hass)
+    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    event_state = state.state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
-    _assert_no_completed_event(hass)
+    state = _event_state(hass)
+    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.state == event_state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
-    _assert_no_completed_event(hass)
+    state = _event_state(hass)
+    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.state == event_state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
     assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.state == event_state
 
 
 async def test_repeated_release_idle_updates(
