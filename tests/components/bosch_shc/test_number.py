@@ -18,10 +18,12 @@ from .conftest import (
     shutter_contact2_device,
     smart_plug_compact_device,
     smart_plug_device,
+    thermostat_device,
 )
 
 from tests.common import MockConfigEntry
 
+OFFSET_ENTITY_ID = "number.thermostat_temperature_offset"
 IMPULSE_LENGTH_ENTITY_ID = "number.relay_pulse_length"
 BYPASS_TIMEOUT_ENTITY_ID = "number.shutter_contact_break_function_timeout"
 POWER_THRESHOLD_ENTITY_ID = "number.smart_plug_energy_saving_power_threshold"
@@ -336,3 +338,64 @@ async def test_smart_plug_no_enter_duration_support(
 
     assert hass.states.get(ENTER_DURATION_ENTITY_ID) is None
     assert hass.states.get(ENTER_DURATION_COMPACT_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(offset=1.5)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_value_and_bounds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The offset and the bounds reported by the device are exposed."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(OFFSET_ENTITY_ID)
+    assert state is not None
+    assert state.state == "1.5"
+    assert state.attributes["min"] == -5.0
+    assert state.attributes["max"] == 5.0
+    assert state.attributes["step"] == 0.5
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(offset=0.0)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes it to the thermostat."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: OFFSET_ENTITY_ID, ATTR_VALUE: -2.5},
+        blocking=True,
+    )
+    assert device.offset == -2.5
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No number is created without temperature offset support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(OFFSET_ENTITY_ID) is None

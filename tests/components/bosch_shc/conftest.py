@@ -423,6 +423,7 @@ def thermostat_device(
     valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
     supports_silentmode: bool = False,
     silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
+    offset: float | None = None,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
     device = create_autospec(SHCThermostat, instance=True, spec_set=True)
@@ -440,6 +441,11 @@ def thermostat_device(
     device.valvestate = valvestate
     device.supports_silentmode = supports_silentmode
     device.silentmode = silentmode
+    device.supports_temperature_offset = offset is not None
+    device.offset = offset
+    device.min_offset = -5.0
+    device.max_offset = 5.0
+    device.step_size = 0.5
     return device
 
 
