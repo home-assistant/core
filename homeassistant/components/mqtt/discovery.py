@@ -37,10 +37,10 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
+    CONF_CHILD_DEVICE,
     CONF_COMPONENTS,
     CONF_DISCOVERY_QOS,
     CONF_ORIGIN,
-    CONF_SUB_DEVICE,
     CONF_TOPIC,
     DOMAIN,
     SUPPORTED_COMPONENTS,
@@ -202,9 +202,9 @@ def _replace_all_abbreviations(
             _replace_abbreviations(availability_conf, ABBREVIATIONS, ABBREVIATIONS_SET)
 
     # Set per component in device based discovery
-    if CONF_SUB_DEVICE in discovery_payload:
+    if CONF_CHILD_DEVICE in discovery_payload:
         _replace_abbreviations(
-            discovery_payload[CONF_SUB_DEVICE],
+            discovery_payload[CONF_CHILD_DEVICE],
             DEVICE_ABBREVIATIONS,
             DEVICE_ABBREVIATIONS_SET,
         )
@@ -222,9 +222,9 @@ def _replace_all_abbreviations(
     if CONF_DEVICE in discovery_payload:
         device = discovery_payload[CONF_DEVICE]
         _replace_abbreviations(device, DEVICE_ABBREVIATIONS, DEVICE_ABBREVIATIONS_SET)
-        if isinstance(device, dict) and CONF_SUB_DEVICE in device:
+        if isinstance(device, dict) and CONF_CHILD_DEVICE in device:
             _replace_abbreviations(
-                device[CONF_SUB_DEVICE],
+                device[CONF_CHILD_DEVICE],
                 DEVICE_ABBREVIATIONS,
                 DEVICE_ABBREVIATIONS_SET,
             )
@@ -618,11 +618,11 @@ async def async_start(  # noqa: C901
                 # assumed to remove the existing config and we do not want to add
                 # device or orig or shared availability attributes.
                 if discovery_payload := MQTTDiscoveryPayload(config):
-                    if CONF_SUB_DEVICE in discovery_payload:
+                    if CONF_CHILD_DEVICE in discovery_payload:
                         # Copy, as the device config is shared by all components
                         discovery_payload[CONF_DEVICE] = {
                             **device_config,
-                            CONF_SUB_DEVICE: discovery_payload.pop(CONF_SUB_DEVICE),
+                            CONF_CHILD_DEVICE: discovery_payload.pop(CONF_CHILD_DEVICE),
                         }
                     else:
                         discovery_payload[CONF_DEVICE] = device_config
