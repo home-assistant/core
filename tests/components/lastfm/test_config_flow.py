@@ -329,13 +329,28 @@ async def test_reauth_flow(
         patch(
             SESSION_KEY_GENERATOR_PATH,
             return_value=MockSessionKeyGenerator(session_key=NEW_SESSION_KEY),
-        ),
+        ) as session_key_generator,
         patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await authenticated_config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] is None
+        session_key_generator.assert_not_called()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] is None
+        session_key_generator.assert_not_called()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
+        session_key_generator.assert_called_once()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
@@ -365,6 +380,9 @@ async def test_reauth_flow_wrong_account(
         patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await authenticated_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
@@ -391,6 +409,9 @@ async def test_reauth_flow_session_key_error(
         patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await authenticated_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
@@ -414,6 +435,9 @@ async def test_reauth_flow_start_error(
         ),
     ):
         result = await authenticated_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_failed"
@@ -436,6 +460,9 @@ async def test_reauth_flow_start_retry(
         patch_setup_entry(),
     ):
         result = await authenticated_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "cannot_connect"}

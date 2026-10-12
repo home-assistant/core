@@ -1001,10 +1001,14 @@ async def test_reconfigure_rejects_credentials_changed_during_validation(
 
 
 @pytest.mark.parametrize(
-    "source",
+    ("source", "user_input"),
     [
-        pytest.param(SOURCE_REAUTH, id="reauth"),
-        pytest.param(SOURCE_RECONFIGURE, id="reconfigure"),
+        pytest.param(SOURCE_REAUTH, {}, id="reauth"),
+        pytest.param(
+            SOURCE_RECONFIGURE,
+            {**RECONFIGURE_DATA, CONF_API_SECRET: NEW_API_SECRET},
+            id="reconfigure",
+        ),
     ],
 )
 async def test_authorization_rejects_credentials_changed_before_finish(
@@ -1012,6 +1016,7 @@ async def test_authorization_rejects_credentials_changed_before_finish(
     authenticated_config_entry: MockConfigEntry,
     default_user: MockUser,
     source: str,
+    user_input: dict[str, str | bool],
 ) -> None:
     """An authorization result must not replace credentials changed during the flow."""
     authenticated_config_entry.add_to_hass(hass)
@@ -1027,7 +1032,9 @@ async def test_authorization_rejects_credentials_changed_before_finish(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source, "entry_id": authenticated_config_entry.entry_id},
-            data={**RECONFIGURE_DATA, CONF_API_SECRET: NEW_API_SECRET},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

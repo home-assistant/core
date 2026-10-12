@@ -25,7 +25,7 @@
         "description": "Fill in other users you want to add."
       },
       "reauth_confirm": {
-        "description": "Select Submit to retry connecting to Last.fm.",
+        "description": "Your Last.fm account needs to be authorized again. Select Submit to start authorization.",
         "title": "Reconnect to Last.fm"
       },
       "reconfigure": {

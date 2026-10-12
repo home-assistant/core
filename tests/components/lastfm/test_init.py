@@ -10,20 +10,13 @@ from homeassistant.components.lastfm.const import (
     CONF_SESSION_KEY,
     DOMAIN,
     ERROR_CODE_INVALID_SESSION_KEY,
-    ERROR_CODE_TOKEN_UNAUTHORIZED,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from . import (
-    API_KEY,
-    API_SECRET,
-    SESSION_KEY,
-    MockSessionKeyGenerator,
-    MockUser,
-    get_session_key_polling_task,
-)
+from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -105,7 +98,7 @@ async def test_invalid_session_key_starts_reauth(
     authenticated_config_entry: MockConfigEntry,
     user: MockUser,
 ) -> None:
-    """Test an invalid stored session key starts reauthentication."""
+    """Test an invalid session requests confirmation without starting authorization."""
     authenticated_config_entry.add_to_hass(hass)
     with (
         patch(
@@ -114,27 +107,23 @@ async def test_invalid_session_key_starts_reauth(
         ),
         patch(
             "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",
-            return_value=MockSessionKeyGenerator(
-                session_key_error=WSError(
-                    "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Unauthorized token"
-                )
-            ),
-        ),
-        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
+        ) as session_key_generator,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
         flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
         assert len(flows) == 1
-        polling_task = get_session_key_polling_task(hass, flows[0]["flow_id"])
+        assert flows[0]["step_id"] == "reauth_confirm"
+        assert flows[0]["context"]["source"] == SOURCE_REAUTH
+        session_key_generator.assert_not_called()
+
+        result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        session_key_generator.assert_not_called()
+
+        hass.config_entries.flow.async_abort(flows[0]["flow_id"])
         await hass.async_block_till_done()
 
-    assert not polling_task.done()
     assert authenticated_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "auth_url"
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-
-    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
-    await hass.async_block_till_done()
-    assert polling_task.cancelled()
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)

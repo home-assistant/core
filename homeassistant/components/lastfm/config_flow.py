@@ -353,12 +353,16 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_API_SECRET: options[CONF_API_SECRET],
             CONF_MAIN_USER: options[CONF_MAIN_USER],
         }
-        return await self._async_start_reauth()
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Retry starting Last.fm reauthentication."""
+        """Ask for confirmation before starting Last.fm reauthentication."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=probatio.Schema({})
+            )
         return await self._async_start_reauth()
 
     async def async_step_reconfigure(
