@@ -116,6 +116,9 @@ class _CollectionConnection:
         notify(self._disconnect, None)
 
     async def attach(self, registration: RegisteredConnection) -> None:
+        if self._unsubscribe is not None:
+            self._unsubscribe()
+            self._unsubscribe = None
         self.registration = registration
         previous = dict(self._devices)
         seen: set[str] = set()

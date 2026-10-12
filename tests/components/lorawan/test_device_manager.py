@@ -498,7 +498,7 @@ async def test_reconnect_during_initial_setup(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
     """Initial setup and a replacement connection cannot attach concurrently."""
-    _, unregister = await registered_backend("network", [DESCRIPTOR])
+    original_backend, unregister = await registered_backend("network", [DESCRIPTOR])
     entry = MockConfigEntry(domain="test_vendor")
     entry.add_to_hass(hass)
     started = asyncio.Event()
@@ -514,7 +514,7 @@ async def test_reconnect_during_initial_setup(
         task = hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
         await started.wait()
         unregister()
-        backend, _ = await registered_backend(
+        backend, unregister_replacement = await registered_backend(
             "network", [replace(DESCRIPTOR, name="Replacement")]
         )
         await asyncio.sleep(0)
@@ -522,9 +522,12 @@ async def test_reconnect_during_initial_setup(
         assert await task
         await hass.async_block_till_done()
 
+    assert not original_backend._subscribers
     coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
     assert coordinator.data.descriptor.name == "Replacement"
     assert coordinator.last_update_success
     backend.emit(inventory(replace(DESCRIPTOR, name="Updated"), EventType.UPDATED))
     assert coordinator.data.descriptor.name == "Updated"
     await hass.config_entries.async_unload(entry.entry_id)
+    unregister_replacement()
+    assert not backend._subscribers
