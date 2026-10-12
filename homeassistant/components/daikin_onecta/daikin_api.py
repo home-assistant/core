@@ -95,14 +95,14 @@ class DaikinApi:
     async def async_execute_command(
         self, command: Callable[[OnectaClient], Awaitable[None]]
     ) -> bool:
-        """Run a cloud command and log contextual expected failures."""
+        """Run a cloud command and retain failure context in debug logging."""
         async with self._cloud_lock:
             try:
                 await command(self._client)
             except OnectaAuthenticationError:
                 return False
             except OnectaRateLimitError as err:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Daikin request %s %s was rate limited; retry after %s seconds",
                     err.method,
                     err.path,
@@ -110,7 +110,7 @@ class DaikinApi:
                 )
                 return False
             except OnectaConnectionError as err:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Daikin request %s %s failed to connect: %s",
                     err.method,
                     err.path,
@@ -118,7 +118,7 @@ class DaikinApi:
                 )
                 return False
             except OnectaApiError as err:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Daikin request %s %s failed with HTTP %s",
                     err.method,
                     err.path,
@@ -126,7 +126,7 @@ class DaikinApi:
                 )
                 return False
             except TimeoutError:
-                _LOGGER.warning("Daikin request timed out")
+                _LOGGER.debug("Daikin request timed out")
                 return False
             self._last_patch_call = dt_util.utcnow()
             return True

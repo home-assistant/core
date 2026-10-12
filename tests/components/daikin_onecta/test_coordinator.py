@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import UTC, datetime, time, timedelta
+import logging
 from math import ceil
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -201,6 +202,35 @@ async def test_poll_refreshes_changed_metadata_once(
     assert entry is not None
     assert entry.name == "Renamed Daikin"
     assert entry.sw_version == "new-firmware"
+
+
+async def test_poll_failure_logged_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Leave failure/recovery logging to the coordinator, without duplicate warnings."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    caplog.clear()
+    with patch.object(
+        coordinator.api,
+        "get_cloud_device_details",
+        side_effect=OnectaRateLimitError(
+            RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
+        ),
+    ):
+        await coordinator.async_refresh()
+        await coordinator.async_refresh()
+
+    failures = [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.components.daikin_onecta.coordinator"
+        and record.levelno >= logging.WARNING
+    ]
+    assert len(failures) == 1
+    assert "Daikin API rate limit exceeded" in failures[0].getMessage()
 
 
 def _patch_polling_schedule(
@@ -429,8 +459,8 @@ class TestOnectaDataUpdateCoordinator:
             mock_random.randint.assert_called_once_with(594, 1782)
 
     async def test_rate_limit_uses_update_failed_retry_after(
-        self, caplog, coordinator, mock_config_entry
-    ):
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """A Daikin rate limit should use the coordinator retry-after mechanism."""
         daikin_api = coordinator.api
         daikin_api.last_patch_call = None
@@ -450,9 +480,6 @@ class TestOnectaDataUpdateCoordinator:
         assert exc_info.value.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
         assert exc_info.value.translation_key == "rate_limit_exceeded"
         assert coordinator.update_interval == initial_interval
-        assert (
-            "Daikin API rate limit reached; retrying after 3060 seconds" in caplog.text
-        )
 
     async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
         """Turn a Daikin HTTP error into a translatable polling failure."""

@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-import logging
 from typing import Any, Literal, cast, override
 
 from daikin_onecta import ClimateControl, ClimateControlClient
@@ -34,8 +33,6 @@ from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinOnectaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
