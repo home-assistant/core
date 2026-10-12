@@ -4809,7 +4809,7 @@
         'state': '19.2',
       }),
     }),
-    'sensor.daikin_onecta_account_ratelimit_remaining_day': dict({
+    'sensor.daikin_onecta_account_rate_limit_remaining_day': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -4825,7 +4825,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
+        'entity_id': 'sensor.daikin_onecta_account_rate_limit_remaining_day',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -4833,12 +4833,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Ratelimit remaining day',
+        'object_id_base': 'Rate limit remaining day',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Ratelimit remaining day',
+        'original_name': 'Rate limit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
