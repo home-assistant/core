@@ -49,6 +49,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 EYECARE_MODEL = "philips.light.sread1"
 POWER_STRIP_MODEL = "qmi.powerstrip.v1"
 AIR_PURIFIER_MODEL = "zhimi.airpurifier.m1"
+AIR_FRESH_MODEL = "zhimi.airfresh.va2"
 EYECARE_ENTITY_ID = "light.test_device"
 AMBIENT_ENTITY_ID = "light.test_device_ambient_light"
 POWER_STRIP_ENTITY_ID = "switch.test_device"
@@ -133,11 +134,14 @@ def mock_switch_fixture() -> Generator[MagicMock]:
 
 @pytest.fixture(name="mock_fan")
 def mock_fan_fixture() -> Generator[MagicMock]:
-    """Mock an air purifier, which implements every fan service."""
+    """Mock an air purifier or air fresh, which implement every fan service."""
     mock_fan = MagicMock()
     mock_fan.status = Mock(return_value=Mock(is_on=True, mode=OperationMode.Auto))
-    with patch(
-        "homeassistant.components.xiaomi_miio.AirPurifier", return_value=mock_fan
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.AirPurifier", return_value=mock_fan
+        ),
+        patch("homeassistant.components.xiaomi_miio.AirFresh", return_value=mock_fan),
     ):
         yield mock_fan
 
@@ -287,17 +291,25 @@ async def test_service_skips_entities_without_the_method(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param(AIR_PURIFIER_MODEL, id="air_purifier"),
+        pytest.param(AIR_FRESH_MODEL, id="air_fresh"),
+    ],
+)
 @pytest.mark.usefixtures("mock_fan")
 async def test_fan_services(
     hass: HomeAssistant,
     mock_fan: MagicMock,
+    model: str,
     service: str,
     service_data: dict[str, Any],
     device_method: str,
     device_args: tuple[Any, ...],
 ) -> None:
     """Test the fan services reach the device."""
-    await setup_device(hass, AIR_PURIFIER_MODEL, Platform.FAN)
+    await setup_device(hass, model, Platform.FAN)
 
     await hass.services.async_call(
         DOMAIN,

@@ -125,6 +125,7 @@ async def test_invalid_credentials(hass: HomeAssistant, subaru_config_entry) -> 
     check_entry = hass.config_entries.async_get_entry(subaru_config_entry.entry_id)
     assert check_entry
     assert check_entry.state is ConfigEntryState.SETUP_ERROR
+    assert check_entry.reason == "Invalid MySubaru account credentials"
 
 
 async def test_update_skip_unsubscribed(

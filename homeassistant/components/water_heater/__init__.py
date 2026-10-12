@@ -475,6 +475,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the unit of measurement the entity reports temperatures in."""
         return self._attr_native_temperature_unit
 
+    @final
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement the entity reports temperatures in.
@@ -490,6 +491,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return cast(str, _read_authored_native(authored[0], self))
         return cast(str, _read_deprecated_attr(self, "temperature_unit"))
 
+    @final  # type: ignore[misc]
     @property
     def _attr_temperature_unit(self) -> str:
         """Return the native unit of measurement.
@@ -531,6 +533,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the current temperature in the native unit."""
         return self._attr_native_current_temperature
 
+    @final
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature in the native unit.
@@ -546,6 +549,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(float | None, _read_deprecated_attr(self, "current_temperature"))
 
+    @final  # type: ignore[misc]
     @property
     def _attr_current_temperature(self) -> float | None:
         """Return the current temperature in the native unit.
@@ -577,6 +581,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the temperature we try to reach, in the native unit."""
         return self._attr_native_target_temperature
 
+    @final
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach, in the native unit.
@@ -592,6 +597,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(float | None, _read_deprecated_attr(self, "target_temperature"))
 
+    @final  # type: ignore[misc]
     @property
     def _attr_target_temperature(self) -> float | None:
         """Return the temperature we try to reach, in the native unit.
@@ -626,6 +632,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_native_target_temperature_high
 
+    @final
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach.
@@ -643,6 +650,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             float | None, _read_deprecated_attr(self, "target_temperature_high")
         )
 
+    @final  # type: ignore[misc]
     @property
     def _attr_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach.
@@ -677,6 +685,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_native_target_temperature_low
 
+    @final
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach.
@@ -692,6 +701,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return cast(float | None, _read_authored_native(authored[0], self))
         return cast(float | None, _read_deprecated_attr(self, "target_temperature_low"))
 
+    @final  # type: ignore[misc]
     @property
     def _attr_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach.
