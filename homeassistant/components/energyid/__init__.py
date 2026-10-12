@@ -99,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         ) from err
     except Exception as err:
         # Unknown errors - log and retry (safer than forcing reauth)
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Unexpected error during EnergyID authentication")
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

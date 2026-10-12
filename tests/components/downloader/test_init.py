@@ -60,9 +60,11 @@ async def test_config_entry_setup_relative_directory(
 async def test_config_entry_setup_not_existing_directory(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    download_dir: Path,
 ) -> None:
     """Test config entry setup without existing download directory."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert not hass.services.has_service(DOMAIN, DownloaderService.DOWNLOAD_FILE)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == f"Download path {download_dir} does not exist"

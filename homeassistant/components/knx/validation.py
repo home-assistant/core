@@ -72,7 +72,11 @@ def parse_entity_category(value: Any) -> EntityCategory | None:
     try:
         return EntityCategory(value)
     except ValueError:
-        raise probatio.Invalid(f"'{value}' is not a valid entity category") from None
+        raise probatio.Invalid(
+            f"'{value}' is not a valid entity category",
+            translation_key="invalid_entity_category",
+            placeholders={"value": str(value)},
+        ) from None
 
 
 def entity_category_supported(
@@ -89,7 +93,13 @@ def entity_category_supported(
             _options = ", ".join(sorted(valid_categories))
             raise probatio.Invalid(
                 f"Entity category '{entity_category}' is not supported by the"
-                f" {platform} platform. Valid options are: {_options}"
+                f" {platform} platform. Valid options are: {_options}",
+                translation_key="entity_category_not_supported",
+                placeholders={
+                    "entity_category": str(entity_category),
+                    "platform": str(platform),
+                    "options": _options,
+                },
             )
         return entity_category
 
@@ -109,13 +119,17 @@ def ga_validator(value: Any) -> str | int:
     if not isinstance(value, (str, int)):
         raise probatio.Invalid(
             f"'{value}' is not a valid KNX group address:"
-            f" Invalid type '{type(value).__name__}'"
+            f" Invalid type '{type(value).__name__}'",
+            translation_key="invalid_group_address",
+            placeholders={"value": str(value)},
         )
     try:
         parse_device_group_address(value)
     except CouldNotParseAddress as exc:
         raise probatio.Invalid(
-            f"'{value}' is not a valid KNX group address: {exc.message}"
+            f"'{value}' is not a valid KNX group address: {exc.message}",
+            translation_key="invalid_group_address",
+            placeholders={"value": str(value)},
         ) from exc
     return value
 
@@ -239,6 +253,10 @@ def validate_number_attributes(
     Works for both, UI and YAML configuration schema. `None` means not configured.
     """
     _dpt_error_str = f"DPT {transcoder.dpt_number_str()} '{transcoder.value_type}'"
+    dpt_placeholders = {
+        "dpt": transcoder.dpt_number_str(),
+        "value_type": str(transcoder.value_type),
+    }
 
     # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if xknx DPTNumeric subclass defines it as limit.
@@ -246,29 +264,51 @@ def validate_number_attributes(
         raise probatio.Invalid(
             f"'min' key required for {_dpt_error_str}",
             path=[NumberConf.MIN],
+            translation_key="number_min_required",
+            placeholders=dpt_placeholders,
         )
     if min_config is not None and min_config < transcoder.value_min:
         raise probatio.Invalid(
             f"'min: {min_config}' undercuts possible minimum"
             f" of {_dpt_error_str}: {transcoder.value_min}",
             path=[NumberConf.MIN],
+            translation_key="number_min_below_dpt_min",
+            placeholders={
+                **dpt_placeholders,
+                "min": min_config,
+                "dpt_min": transcoder.value_min,
+            },
         )
     if max_config is None and transcoder.value_max == math.inf:
         raise probatio.Invalid(
             f"'max' key required for {_dpt_error_str}",
             path=[NumberConf.MAX],
+            translation_key="number_max_required",
+            placeholders=dpt_placeholders,
         )
     if max_config is not None and max_config > transcoder.value_max:
         raise probatio.Invalid(
             f"'max: {max_config}' exceeds possible maximum"
             f" of {_dpt_error_str}: {transcoder.value_max}",
             path=[NumberConf.MAX],
+            translation_key="number_max_above_dpt_max",
+            placeholders={
+                **dpt_placeholders,
+                "max": max_config,
+                "dpt_max": transcoder.value_max,
+            },
         )
     if step_config is not None and step_config < transcoder.resolution:
         raise probatio.Invalid(
             f"'step: {step_config}' undercuts possible minimum step"
             f" of {_dpt_error_str}: {transcoder.resolution}",
             path=[NumberConf.STEP],
+            translation_key="number_step_below_dpt_resolution",
+            placeholders={
+                **dpt_placeholders,
+                "step": step_config,
+                "resolution": transcoder.resolution,
+            },
         )
 
     # Validate device class and unit of measurement compatibility
@@ -298,6 +338,12 @@ def validate_number_attributes(
                 if device_class is not None
                 else [CONF_UNIT_OF_MEASUREMENT]
             ),
+            translation_key="unit_invalid_for_device_class",
+            placeholders={
+                "unit_of_measurement": str(effective_unit),
+                "device_class": str(effective_device_class),
+                "options": _options,
+            },
         )
 
 
@@ -338,6 +384,12 @@ def validate_sensor_attributes(
             f" for device class '{effective_device_class}'."
             f" Valid options are: {_options}",
             path=[CONF_SENSOR_STATE_CLASS],
+            translation_key="state_class_invalid_for_device_class",
+            placeholders={
+                "state_class": str(effective_state_class),
+                "device_class": str(effective_device_class),
+                "options": _options,
+            },
         )
     if (
         effective_device_class
@@ -356,6 +408,12 @@ def validate_sensor_attributes(
                 if device_class is not None
                 else [CONF_UNIT_OF_MEASUREMENT]
             ),
+            translation_key="unit_invalid_for_device_class",
+            placeholders={
+                "unit_of_measurement": str(effective_unit),
+                "device_class": str(effective_device_class),
+                "options": _options,
+            },
         )
     if (
         effective_state_class
@@ -374,4 +432,10 @@ def validate_sensor_attributes(
                 if state_class is not None
                 else [CONF_UNIT_OF_MEASUREMENT]
             ),
+            translation_key="unit_invalid_for_state_class",
+            placeholders={
+                "unit_of_measurement": str(effective_unit),
+                "state_class": str(effective_state_class),
+                "options": _options,
+            },
         )

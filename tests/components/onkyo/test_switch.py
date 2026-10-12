@@ -2,9 +2,11 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioonkyo import Code, Instruction, Kind, Zone, command, query, status
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,7 +14,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.onkyo.coordinator import Channel
+from homeassistant.components.onkyo.coordinator import POWER_ON_QUERY_DELAY, Channel
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,9 +30,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import DISCONNECT, receive_messages, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "switch.tx_nr7100_mute_front_left"
 
@@ -51,6 +53,7 @@ def _channel_muting_status(
 @pytest.fixture(autouse=True)
 async def auto_setup_integration(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_receiver: AsyncMock,
     read_queue: asyncio.Queue,
@@ -64,14 +67,14 @@ async def auto_setup_integration(
         )
     )
 
-    with (
-        patch(
-            "homeassistant.components.onkyo.coordinator.POWER_ON_QUERY_DELAY",
-            0,
-        ),
-        patch("homeassistant.components.onkyo.PLATFORMS", [Platform.SWITCH]),
-    ):
+    with patch("homeassistant.components.onkyo.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
+
+        # Let the delayed queries triggered by the initial messages run
+        freezer.tick(timedelta(seconds=POWER_ON_QUERY_DELAY))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
         writes.clear()
         yield
 
@@ -91,22 +94,21 @@ async def test_state_changes(hass: HomeAssistant, read_queue: asyncio.Queue) -> 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state == STATE_OFF
 
-    read_queue.put_nowait(
-        _channel_muting_status(front_left=status.ChannelMuting.Param.ON)
+    await receive_messages(
+        read_queue, _channel_muting_status(front_left=status.ChannelMuting.Param.ON)
     )
-    await asyncio.sleep(0)
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state == STATE_ON
 
-    read_queue.put_nowait(
+    await receive_messages(
+        read_queue,
         status.NotAvailable(
             Code.from_kind_zone(Kind.CHANNEL_MUTING, Zone.MAIN),
             None,
             Kind.CHANNEL_MUTING,
-        )
+        ),
     )
-    await asyncio.sleep(0)
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state == STATE_UNKNOWN
@@ -117,18 +119,15 @@ async def test_availability(hass: HomeAssistant, read_queue: asyncio.Queue) -> N
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state != STATE_UNAVAILABLE
 
-    # Simulate a disconnect
-    read_queue.put_nowait(None)
-    await asyncio.sleep(0)
+    await receive_messages(read_queue, DISCONNECT)
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate first status update after reconnect
-    read_queue.put_nowait(
-        _channel_muting_status(front_left=status.ChannelMuting.Param.ON)
+    await receive_messages(
+        read_queue, _channel_muting_status(front_left=status.ChannelMuting.Param.ON)
     )
-    await asyncio.sleep(0)
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state != STATE_UNAVAILABLE
@@ -170,32 +169,36 @@ async def test_actions(
     assert writes[0] == message
 
 
-async def test_query_state_task(
-    read_queue: asyncio.Queue, writes: list[Instruction]
+async def test_query_state_delayed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
 ) -> None:
-    """Test query state task."""
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
-        )
-    )
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
-        )
-    )
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
-        )
-    )
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
-        )
+    """Test state query."""
+    power_on = status.Power(
+        Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
     )
 
-    await asyncio.sleep(0.1)
+    await receive_messages(read_queue, power_on)
+
+    freezer.tick(timedelta(seconds=POWER_ON_QUERY_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Powering on again restarts the delay
+    await receive_messages(read_queue, power_on)
+
+    freezer.tick(timedelta(seconds=POWER_ON_QUERY_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    queries = [w for w in writes if isinstance(w, query.ChannelMuting)]
+    assert not queries
+
+    freezer.tick(timedelta(seconds=POWER_ON_QUERY_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     queries = [w for w in writes if isinstance(w, query.ChannelMuting)]
     assert len(queries) == 1
@@ -214,7 +217,6 @@ async def test_update_entity(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    await asyncio.sleep(0)
 
     queries = [w for w in writes if isinstance(w, query.ChannelMuting)]
     assert len(queries) == 1

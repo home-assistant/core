@@ -46,8 +46,6 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                         await client.password(user_input[CONF_PASSWORD])
                     # MPD greets before authenticating, so only a read proves access.
                     await client.status()
-                    with suppress(mpd.ConnectionError):
-                        client.disconnect()
             except (
                 TimeoutError,
                 gaierror,
@@ -65,6 +63,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Music Player Daemon",
                     data=user_input,
                 )
+            finally:
+                with suppress(mpd.ConnectionError):
+                    client.disconnect()
 
         return self.async_show_form(
             step_id="user",
