@@ -938,7 +938,8 @@ Detects services registered inside `async_setup_entry` rather than
 Services should be registered in `async_setup` so they are available for
 automation validation even when no config entry is loaded. Registrations
 inside helper functions that are called from `async_setup_entry` are
-caught too.
+caught too, as are calls to the conventional `async_setup_services` helper
+from `services.py`.
 
 See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
 

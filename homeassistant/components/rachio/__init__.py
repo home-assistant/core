@@ -85,8 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
     try:
         await person.async_setup(hass)
     except ConfigEntryAuthFailed as error:
-        # Reauth is not yet implemented
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from error

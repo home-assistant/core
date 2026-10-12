@@ -1,5 +1,6 @@
 """The tests for the camera component."""
 
+import asyncio
 from collections.abc import Callable
 import errno
 from http import HTTPStatus
@@ -183,6 +184,30 @@ async def test_get_image_without_exists_camera(hass: HomeAssistant) -> None:
         pytest.raises(HomeAssistantError),
     ):
         await camera.async_get_image(hass, "camera.demo_camera")
+
+
+@pytest.mark.usefixtures("image_mock_url")
+async def test_get_image_cancelled(hass: HomeAssistant) -> None:
+    """Test cancelling fetching an image propagates the cancellation."""
+    started = asyncio.Event()
+
+    async def _camera_image(*args: Any, **kwargs: Any) -> bytes:
+        started.set()
+        await asyncio.Event().wait()
+        return b"Test"
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+        side_effect=_camera_image,
+    ):
+        task = hass.async_create_task(
+            camera.async_get_image(hass, "camera.demo_camera")
+        )
+        await started.wait()
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
 
 
 @pytest.mark.usefixtures("image_mock_url")

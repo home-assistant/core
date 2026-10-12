@@ -172,6 +172,9 @@
       }
     },
     "binary_sensor": {
+      "alarm_hub_zone": {
+        "name": "Zone {zone}"
+      },
       "animal_detected": {
         "name": "Animal detected"
       },
@@ -563,6 +566,12 @@
       }
     },
     "sensor": {
+      "alarm_hub_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "alarm_hub_last_event": {
+        "name": "Last event"
+      },
       "alarm_sound_detected": {
         "name": "Alarm sound detected"
       },

@@ -176,6 +176,9 @@
     "alarm_arm_disarm_failed": {
       "message": "Imou rejected the arming change"
     },
+    "fetch_devices_failed": {
+      "message": "Could not list devices from Imou"
+    },
     "get_image_failed": {
       "message": "Could not get a snapshot from Imou"
     },
@@ -193,6 +196,12 @@
     },
     "switch_operation_failed": {
       "message": "Imou rejected the switch change"
+    },
+    "update_devices_failed": {
+      "message": "Could not refresh device status from Imou"
+    },
+    "update_timeout": {
+      "message": "Timed out while contacting Imou"
     }
   },
   "selector": {

@@ -458,7 +458,7 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
         pytest.param(
             mcp.types.ClientRequest(
                 mcp.types.GetPromptRequest(
-                    params=mcp.types.GetPromptRequestParams(name="Assist")
+                    params=mcp.types.GetPromptRequestParams(name="Device control")
                 )
             ),
             mcp.types.GetPromptResult,
@@ -722,7 +722,7 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "device-control__homeassistant__GetLiveContext" in tool_names
     assert "test-api__test_tool" in tool_names
 
 
@@ -882,8 +882,8 @@ async def test_prompt_list(
 
     assert len(result.prompts) == 1
     prompt = result.prompts[0]
-    assert prompt.name == "Assist"
-    assert prompt.description == "Default prompt for Home Assistant Assist API"
+    assert prompt.name == "Device control"
+    assert prompt.description == "Default prompt for Home Assistant Device control API"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
@@ -897,9 +897,9 @@ async def test_prompt_get(
     """Test the get prompt endpoint."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.get_prompt(name="Assist")
+        result = await session.get_prompt(name="Device control")
 
-    assert result.description == "Default prompt for Home Assistant Assist API"
+    assert result.description == "Default prompt for Home Assistant Device control API"
     assert len(result.messages) == 1
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
