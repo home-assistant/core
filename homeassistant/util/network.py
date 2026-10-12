@@ -98,7 +98,7 @@ def is_host_valid(host: str) -> bool:
         return False
     host = host.removesuffix(".")
     allowed = re.compile(r"(?!-)[A-Z\d\-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in host.split("."))
+    return all(allowed.fullmatch(x) for x in host.split("."))
 
 
 def normalize_url(address: str) -> str:
