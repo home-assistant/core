@@ -73,7 +73,7 @@ def disable_block_async_io(disable_block_async_io):
 
 
 @pytest.fixture(autouse=True)
-def disable_block_shared_serial(disable_block_shared_serial):
+def disable_block_shared_serial(disable_block_shared_serial: None) -> None:
     """Restore pyserial after each test."""
 
 
