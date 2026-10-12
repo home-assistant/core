@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_get_device_info",
-            translation_placeholders={"address": cometblue_device.device.address},
+            translation_placeholders={"address": address},
         ) from ex
 
     device_registry = dr.async_get(hass)
