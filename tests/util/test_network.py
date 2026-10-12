@@ -120,6 +120,23 @@ def test_is_valid_host_rejects_newlines(host: str) -> None:
     assert not network_util.is_host_valid(host)
 
 
+@pytest.mark.parametrize(
+    ("last_label_length", "valid"),
+    [
+        pytest.param(61, True, id="253-characters"),
+        pytest.param(62, False, id="254-characters"),
+        pytest.param(63, False, id="255-characters"),
+    ],
+)
+@pytest.mark.parametrize("trailing_dot", ["", "."], ids=["no-root-dot", "root-dot"])
+def test_is_valid_host_length(
+    last_label_length: int, valid: bool, trailing_dot: str
+) -> None:
+    """Check the total length using labels within the 63-character limit."""
+    host = ".".join(["a" * 63] * 3 + ["b" * last_label_length]) + trailing_dot
+    assert network_util.is_host_valid(host) is valid
+
+
 def test_normalize_url() -> None:
     """Test the normalizing of URLs."""
     assert network_util.normalize_url("http://example.com") == "http://example.com"

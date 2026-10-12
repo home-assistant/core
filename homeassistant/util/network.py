@@ -92,11 +92,11 @@ def is_host_valid(host: str) -> bool:
     """Check if a given string is an IP address or valid hostname."""
     if is_ip_address(host):
         return True
-    if len(host) > 255:
+    host = host.removesuffix(".")
+    if len(host) > 253:
         return False
     if re.match(r"^[0-9\.]+$", host):  # reject invalid IPv4
         return False
-    host = host.removesuffix(".")
     allowed = re.compile(r"(?!-)[A-Z\d\-]{1,63}(?<!-)$", re.IGNORECASE)
     return all(allowed.fullmatch(x) for x in host.split("."))
 

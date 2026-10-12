@@ -4,6 +4,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.dunehd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
@@ -28,7 +30,17 @@ def _patch_success() -> Generator[None]:
         yield
 
 
-async def test_user_invalid_host(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("invalid/host", id="slash"),
+        pytest.param("example.com\n", id="trailing-newline"),
+        pytest.param("example\n.com", id="newline-before-label-separator"),
+        pytest.param("example.com\n.", id="newline-before-root-label"),
+        pytest.param("local\n", id="single-label-newline"),
+    ],
+)
+async def test_user_invalid_host(hass: HomeAssistant, host: str) -> None:
     """Test that errors are shown when the host is invalid."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -37,10 +49,13 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "invalid/host"},
-    )
+    with patch("pdunehd.DuneHDPlayer.update_state", return_value={}) as mock_update:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: host},
+        )
+
+    mock_update.assert_not_called()
 
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
@@ -53,14 +68,13 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_very_long_host(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("last_label_length", [62, 63])
+@pytest.mark.parametrize("trailing_dot", ["", "."], ids=["no-root-dot", "root-dot"])
+async def test_user_very_long_host(
+    hass: HomeAssistant, last_label_length: int, trailing_dot: str
+) -> None:
     """Test that errors are shown when the host is longer than 253 chars."""
-    long_host = (
-        "very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
-        "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
-        "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
-        "host_very_long_host_very_long_host"
-    )
+    long_host = ".".join(["a" * 63] * 3 + ["b" * last_label_length]) + trailing_dot
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -68,10 +82,13 @@ async def test_user_very_long_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: long_host},
-    )
+    with patch("pdunehd.DuneHDPlayer.update_state", return_value={}) as mock_update:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: long_host},
+        )
+
+    mock_update.assert_not_called()
 
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
@@ -143,7 +160,17 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("dunehd-host", id="single-label"),
+        pytest.param(".".join(["a" * 63] * 3 + ["b" * 61]), id="maximum-length"),
+        pytest.param(
+            ".".join(["a" * 63] * 3 + ["b" * 61]) + ".", id="maximum-length-root-dot"
+        ),
+    ],
+)
+async def test_create_entry(hass: HomeAssistant, host: str) -> None:
     """Test that the user step works."""
     with (
         patch("homeassistant.components.dunehd.async_setup_entry"),
@@ -158,12 +185,12 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONFIG_HOSTNAME,
+            user_input={CONF_HOST: host},
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "dunehd-host"
-        assert result["data"] == {CONF_HOST: "dunehd-host"}
+        assert result["title"] == host
+        assert result["data"] == {CONF_HOST: host}
 
 
 async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
