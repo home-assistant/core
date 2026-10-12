@@ -155,20 +155,43 @@ async def test_sensor_missing_icon(
     assert state.attributes["icon"] == "mdi:clock"
 
 
+@pytest.mark.parametrize(
+    ("station_config", "entity_id", "expected_name"),
+    [
+        pytest.param(
+            {"station": "Hauptbahnhof"},
+            "sensor.hauptbahnhof",
+            "Hauptbahnhof",
+            id="canonical_name",
+        ),
+        pytest.param({"station": "Hbf"}, "sensor.hbf", "Hbf", id="station_alias"),
+        pytest.param(
+            {"station": "Hbf", "name": "My station"},
+            "sensor.my_station",
+            "My station",
+            id="custom_name",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mvg_api")
 async def test_yaml_import(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    station_config: dict[str, str],
+    entity_id: str,
+    expected_name: str,
 ) -> None:
     """Test YAML import creates a sensor and an idempotent repair."""
-    config = PLATFORM_SCHEMA(
-        {"platform": DOMAIN, "nextdeparture": [{"station": "Hauptbahnhof"}]}
-    )
+    config = PLATFORM_SCHEMA({"platform": DOMAIN, "nextdeparture": [station_config]})
     assert await async_setup_component(hass, "sensor", {"sensor": [config]})
     await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert hass.states.get("sensor.hauptbahnhof") is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["friendly_name"] == expected_name
+    assert entries[0].title == expected_name
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.5.0"

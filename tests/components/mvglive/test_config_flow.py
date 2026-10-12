@@ -222,14 +222,31 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("station_config", "expected_title"),
+    [
+        pytest.param(
+            {CONF_STATION: "Hauptbahnhof"}, "Hauptbahnhof", id="canonical_name"
+        ),
+        pytest.param({CONF_STATION: "Hbf"}, "Hbf", id="station_alias"),
+        pytest.param(
+            {CONF_STATION: "Hbf", CONF_NAME: "My station"},
+            "My station",
+            id="custom_name",
+        ),
+        pytest.param({CONF_STATION: "Hbf", CONF_NAME: ""}, "Hbf", id="empty_name"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
-async def test_import_flow(hass: HomeAssistant) -> None:
+async def test_import_flow(
+    hass: HomeAssistant, station_config: dict[str, str], expected_title: str
+) -> None:
     """Test importing a legacy YAML `nextdeparture` entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_STATION: "Hauptbahnhof",
+            **station_config,
             CONF_DESTINATIONS: ["Feldmoching"],
             CONF_LINES: ["U2"],
             CONF_TIMEOFFSET: 5,
@@ -239,7 +256,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_STATION["name"]
+    assert result["title"] == expected_title
     assert result["result"].unique_id.startswith(TEST_STATION["id"])
     assert result["data"] == {
         CONF_STATION_ID: TEST_STATION["id"],

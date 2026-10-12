@@ -206,7 +206,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=name or station["name"],
+            title=name or import_data[CONF_STATION],
             data={
                 CONF_STATION_ID: station["id"],
                 CONF_STATION_NAME: station["name"],
