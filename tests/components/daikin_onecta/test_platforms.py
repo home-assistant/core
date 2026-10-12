@@ -1,13 +1,15 @@
 """Tests for Daikin Onecta platforms other than climate."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
+from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaConnectionError
-from daikin_onecta.models import Characteristic
+from daikin_onecta.models import Characteristic, GatewayDevice
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -960,6 +962,79 @@ async def test_firmware_install_executes_command(
         hass.states.get(state.entity_id).attributes["installed_version"]
         == "new-version"
     )
+
+
+async def test_firmware_install_records_pending_state_before_waiting_poll(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A queued poll cannot replace firmware state before install bookkeeping."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    entity_id = "update.johnny_maaike_firmware_update"
+    entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+    requested_sequence = coordinator.cloud_update_sequence
+    installed_version = entity.installed_version
+    gateways = _load_gateway_devices("dx4_firmwareavailable")
+    point = gateways[0].management_point(gateways[0].gateway_embedded_id)
+    assert point is not None
+    point.firmware_version = Characteristic(value="new-version")
+    point.software_version = Characteristic(value="new-version")
+    point.firmware_update_status = None
+    install_started = asyncio.Event()
+    finish_install = asyncio.Event()
+    poll_started = asyncio.Event()
+    pending_at_poll: list[tuple[int, str | None] | None] = []
+
+    async def install(
+        _gateway_id: str, _management_point_id: str, _resource: str
+    ) -> None:
+        install_started.set()
+        await finish_install.wait()
+
+    async def read_gateways() -> list[GatewayDevice]:
+        pending_at_poll.append(entity._pending_install)
+        return gateways
+
+    async def refresh() -> None:
+        poll_started.set()
+        await coordinator.async_refresh()
+
+    with (
+        patch.object(
+            coordinator.api.client, "put_management_point", side_effect=install
+        ),
+        patch.object(
+            coordinator.api.client, "get_gateway_devices", side_effect=read_gateways
+        ),
+        # Exercise the waiting poll without relying on the post-write cooldown.
+        patch(
+            "homeassistant.components.daikin_onecta.coordinator._POST_WRITE_COOLDOWN",
+            timedelta(0),
+        ),
+    ):
+        install_task = hass.async_create_task(
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+        )
+        await install_started.wait()
+        poll_task = hass.async_create_task(refresh())
+        await poll_started.wait()
+        finish_install.set()
+        await install_task
+        await poll_task
+
+    assert pending_at_poll == [(requested_sequence, installed_version)]
+    assert coordinator.cloud_update_sequence == requested_sequence + 1
+    assert entity._pending_install is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["installed_version"] == "new-version"
+    assert state.attributes["in_progress"] is False
 
 
 @pytest.mark.parametrize("update_supported", [False, True])
