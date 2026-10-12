@@ -1987,7 +1987,10 @@ def test_deserialize_entity_description(
 
 
 def test_restore_data_device_info_round_trip() -> None:
-    """Test device infos are stored with their set fields only, and restored."""
+    """Test device infos are stored with their set fields only, and restored.
+
+    A stored key which is not a device info field is dropped on restore.
+    """
     devices = {
         None: DeviceInfo(name="Main", manufacturer="Test Manufacturer"),
         "sub": DeviceInfo(name="Sub"),
@@ -2000,6 +2003,7 @@ def test_restore_data_device_info_round_trip() -> None:
         "sub": {"name": "Sub"},
     }
 
+    stored["devices"]["sub"]["unknown"] = "value"
     restored = PassiveBluetoothDataUpdate()
     restored.async_set_restore_data(stored, EntityDescription)
     assert restored.devices == devices

@@ -38,6 +38,8 @@ if TYPE_CHECKING:
 STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1
 STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
+# Restore data is a cache, so stored keys which are no longer fields are dropped
+_DEVICE_INFO_FIELDS = frozenset(field.name for field in dataclasses.fields(DeviceInfo))
 PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 
 
@@ -197,7 +199,9 @@ class PassiveBluetoothDataUpdate[_T]:
         """Set the restored data from storage."""
         self.devices.update(
             {
-                key or None: DeviceInfo(**device_info)
+                key or None: DeviceInfo(
+                    **{k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS}
+                )
                 for key, device_info in restore_data["devices"].items()
             }
         )
