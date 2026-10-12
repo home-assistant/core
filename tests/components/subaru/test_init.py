@@ -31,6 +31,8 @@ from .conftest import (
     setup_subaru_config_entry,
 )
 
+from tests.common import MockConfigEntry
+
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test the action is registered at integration setup, before any entry loads."""
@@ -188,6 +190,26 @@ async def test_fetch_failed(hass: HomeAssistant, subaru_config_entry) -> None:
     )
 
     assert subaru_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_fetch_invalid_credentials(
+    hass: HomeAssistant, subaru_config_entry: MockConfigEntry
+) -> None:
+    """Test invalid credentials when fetching data start a reauth flow."""
+    await setup_subaru_config_entry(
+        hass,
+        subaru_config_entry,
+        vehicle_list=[TEST_VIN_2_EV],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
+        vehicle_status=VEHICLE_STATUS_EV,
+        fetch_effect=InvalidCredentials("Invalid Credentials"),
+    )
+
+    assert subaru_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == subaru_config_entry.entry_id
 
 
 async def test_unload_entry(hass: HomeAssistant, ev_entry) -> None:
