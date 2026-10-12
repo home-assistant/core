@@ -54,39 +54,53 @@ class OpowerData:
     account: Account
     forecast: Forecast | None
     last_bill_electricity_rate: float | None
+    last_bill_received: bool
     last_changed: datetime | None
     last_updated: datetime
 
 
-def _last_bill_electricity_rates(bills: list[Bill]) -> dict[str, float]:
-    """Return the latest safely attributable electricity rate per account."""
-    rates: dict[str, float] = {}
+_EXPORT_QUANTITY_IDENTIFIERS = {"EXPORTED", "GENERATED", "RECEIVED"}
+
+
+def _bill_electricity_rate(bill: Bill) -> float | None:
+    """Return the billed electricity rate, if attributable to net usage."""
+    if (
+        bill.usage_charges is None
+        or len({segment.account.uuid for segment in bill.segments}) != 1
+    ):
+        return None
+    if bill.segments[0].account.meter_type is not MeterType.ELEC:
+        return None
+
+    net_usage = 0.0
+    for quantity in (
+        quantity for segment in bill.segments for quantity in segment.service_quantities
+    ):
+        if quantity.unit_of_measure is not UnitOfMeasure.KWH or not quantity.value:
+            continue
+        # A tiny positive net usage after export would produce a meaningless rate.
+        if quantity.service_quantity_identifier in _EXPORT_QUANTITY_IDENTIFIERS:
+            return None
+        if quantity.service_quantity_identifier == "NET_USAGE":
+            net_usage += quantity.value
+    return bill.usage_charges / net_usage if net_usage > 0 else None
+
+
+def _last_bill_electricity_rates(bills: list[Bill]) -> dict[str, float | None]:
+    """Return the electricity rate from each account's newest bill.
+
+    Accounts without a bill in the response are omitted.
+    """
+    rates: dict[str, float | None] = {}
     for bill in bills:
-        if bill.usage_charges is None:
+        account_ids = {
+            segment.account.utility_account_id for segment in bill.segments
+        } - rates.keys()
+        if not account_ids:
             continue
-
-        account_uuids = {segment.account.uuid for segment in bill.segments}
-        if len(account_uuids) != 1:
-            continue
-        account = bill.segments[0].account
-        if (
-            account.meter_type is not MeterType.ELEC
-            or account.utility_account_id in rates
-        ):
-            continue
-
-        usage = sum(
-            quantity.value
-            for segment in bill.segments
-            for quantity in segment.service_quantities
-            if quantity.unit_of_measure is UnitOfMeasure.KWH
-            and quantity.service_quantity_identifier is not None
-            and "NET_USAGE"
-            in quantity.service_quantity_identifier.strip().upper().split(":")
-            and quantity.value is not None
-        )
-        if usage > 0:
-            rates[account.utility_account_id] = bill.usage_charges / usage
+        rate = _bill_electricity_rate(bill)
+        for account_id in account_ids:
+            rates[account_id] = rate
     return rates
 
 
@@ -183,14 +197,30 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             account.utility_account_id: OpowerData(
                 account=account,
                 forecast=forecasts.get(account.utility_account_id),
-                last_bill_electricity_rate=last_bill_electricity_rates.get(
-                    account.utility_account_id
+                last_bill_electricity_rate=self._last_bill_electricity_rate(
+                    account.utility_account_id, last_bill_electricity_rates
+                ),
+                last_bill_received=(
+                    account.utility_account_id in last_bill_electricity_rates
                 ),
                 last_changed=last_changed_per_account.get(account.utility_account_id),
                 last_updated=dt_util.utcnow(),
             )
             for account in accounts
         }
+
+    def _last_bill_electricity_rate(
+        self, utility_account_id: str, rates: dict[str, float | None]
+    ) -> float | None:
+        """Return the account's rate, or the previous one if no bill was received.
+
+        The bills request is best effort and drops customers it fails to fetch.
+        """
+        if utility_account_id in rates:
+            return rates[utility_account_id]
+        if self.data and (previous := self.data.get(utility_account_id)):
+            return previous.last_bill_electricity_rate
+        return None
 
     async def _insert_statistics(self, accounts: list[Account]) -> dict[str, datetime]:
         """Insert Opower statistics."""
