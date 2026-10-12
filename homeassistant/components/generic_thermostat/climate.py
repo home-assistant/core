@@ -69,6 +69,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -373,10 +374,17 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self._target_temp,
                     )
                 else:
-                    self._target_temp = float(
-                        old_state.attributes[
-                            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                        ]
+                    self._target_temp = TemperatureConverter.convert(
+                        float(
+                            old_state.attributes[
+                                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                            ]
+                        ),
+                        old_state.attributes.get(
+                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                            self.hass.config.units.temperature_unit,
+                        ),
+                        self.native_temperature_unit,
                     )
             if (
                 self.preset_modes

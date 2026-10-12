@@ -35,14 +35,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EVOHOME_DATA, RESET_BREAKS_IN_HA_VERSION, EvoService
+from .const import DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
-from .helpers import async_create_deprecation_issue_once
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_RESET = "Reset"  # reset all child zones to EvoZoneMode.FOLLOW_SCHEDULE
 PRESET_CUSTOM = "Custom"
 
 TCS_PRESET_TO_HA = {
@@ -50,7 +48,6 @@ TCS_PRESET_TO_HA = {
     EvoSystemMode.CUSTOM: PRESET_CUSTOM,
     EvoSystemMode.AUTO_WITH_ECO: PRESET_ECO,
     EvoSystemMode.DAY_OFF: PRESET_HOME,
-    EvoSystemMode.AUTO_WITH_RESET: PRESET_RESET,
 }  # EvoSystemMode.AUTO: None,
 
 HA_PRESET_TO_TCS = {v: k for k, v in TCS_PRESET_TO_HA.items()}
@@ -124,14 +121,6 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
-    async def async_clear_zone_override(self) -> None:
-        """Clear the zone override; only supported by zones."""
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="zone_only_service",
-            translation_placeholders={"service": EvoService.CLEAR_ZONE_OVERRIDE},
-        )
-
     async def async_set_zone_override(
         self, setpoint: float, duration: timedelta | None = None
     ) -> None:
@@ -174,16 +163,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-
-    @override
-    async def async_clear_zone_override(self) -> None:
-        """Clear the zone override (if any) and return to following its schedule."""
-        async_create_deprecation_issue_once(
-            self.hass,
-            "deprecated_clear_zone_override_service",
-            RESET_BREAKS_IN_HA_VERSION,
-        )
-        await self.coordinator.call_client_api(self._evo_device.reset())
 
     @override
     async def async_set_zone_override(
@@ -383,11 +362,7 @@ class EvoController(EvoClimateEntity):
         dispatcher call, so a ServiceValidationError can be seen, if raised.
         """
 
-        if service == EvoService.RESET_SYSTEM:
-            await self.coordinator.call_client_api(self._evo_device.reset())
-            return
-
-        mode = data[SZ_MODE]  # otherwise it is EvoService.SET_SYSTEM_MODE
+        mode = data[SZ_MODE]  # service is EvoService.SET_SYSTEM_MODE
 
         if SZ_PERIOD in data:
             until = dt_util.start_of_local_day()
@@ -476,13 +451,6 @@ class EvoController(EvoClimateEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
-        if preset_mode == PRESET_RESET:
-            async_create_deprecation_issue_once(
-                self.hass,
-                "deprecated_preset_reset",
-                RESET_BREAKS_IN_HA_VERSION,
-            )
-
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO))
 
     @callback
