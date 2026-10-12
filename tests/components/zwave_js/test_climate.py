@@ -758,8 +758,8 @@ async def test_thermostat_heatit_z_trm3(
         HVACMode.OFF,
         HVACMode.HEAT,
     ]
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.9
-    assert state.attributes[ATTR_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21
+    assert state.attributes[ATTR_TEMPERATURE] == 21
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -784,7 +784,7 @@ async def test_thermostat_heatit_z_trm3(
                 "property": 2,
                 "propertyName": "Sensor mode",
                 "newValue": 4,
-                "prevValue": 2,
+                "prevValue": 0,
             },
         },
     )
@@ -814,7 +814,7 @@ async def test_thermostat_heatit_z_trm3(
     node.receive_event(event)
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
     assert state
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21
 
 
 async def test_thermostat_heatit_z_trm2fx(
