@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ClientTimeout
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -368,6 +368,69 @@ async def test_yaml_migration_multiple_blocks_import_failure(
             ]
         },
     )
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert hass.config_entries.flow.async_progress() == []
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml_import_issue"
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
+
+    assert hass.states.get("sensor.merton") is None
+    assert hass.states.get("sensor.city_of_london") is None
+
+
+async def test_yaml_migration_multiple_blocks_import_deadline(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the follower aborts with cannot_connect when the creator hangs past the deadline."""
+    # Shrink the deadline to ~5s so the test does not wait the full 25s.
+    monkeypatch.setattr(
+        "homeassistant.components.london_air.config_flow.REQUEST_TIMEOUT",
+        ClientTimeout(total=0.01),
+    )
+    release = asyncio.Event()
+
+    async def _get(*args: Any, **kwargs: Any) -> Any:
+        # Hang until released so the creator flow stays in progress past the deadline.
+        await release.wait()
+        raise ClientConnectorError(Mock(), OSError("test"))
+
+    mock_session.get.side_effect = _get
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": "london_air", "locations": ["Merton"]},
+                {"platform": "london_air", "locations": ["City of London"]},
+            ]
+        },
+    )
+
+    # The follower gives up once the deadline elapses; the creator is still hanging.
+    while (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
+        is None
+    ):
+        await asyncio.sleep(0.1)
+
+    release.set()
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries(DOMAIN) == []
