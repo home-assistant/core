@@ -19,7 +19,7 @@ async def test_diagnostics(
 ) -> None:
     """Test cached cloud data is provided with identifying data redacted."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
-    config_entry.runtime_data.api.client.get_gateway_devices = AsyncMock()
+    config_entry.runtime_data.client.get_gateway_devices = AsyncMock()
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -34,7 +34,7 @@ async def test_diagnostics(
         if point["management_point_type"] == "gateway"
     )
     assert gateway["characteristics"]["ipAddress"] == REDACTED
-    config_entry.runtime_data.api.client.get_gateway_devices.assert_not_awaited()
+    config_entry.runtime_data.client.get_gateway_devices.assert_not_awaited()
 
 
 async def test_diagnostics_redacts_serialized_product_identifiers(
@@ -44,7 +44,7 @@ async def test_diagnostics_redacts_serialized_product_identifiers(
 ) -> None:
     """Redact Altherma product identifiers without requesting cloud data."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
-    api = config_entry.runtime_data.api
+    api = config_entry.runtime_data
     api.client.get_gateway_devices = AsyncMock()
     api.client.get_sites = AsyncMock()
 
@@ -70,7 +70,7 @@ async def test_diagnostics_redacts_gateway_ssids(
 ) -> None:
     """Redact gateway Wi-Fi names from cached cloud data."""
     await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
-    config_entry.runtime_data.api.client.get_gateway_devices = AsyncMock()
+    config_entry.runtime_data.client.get_gateway_devices = AsyncMock()
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

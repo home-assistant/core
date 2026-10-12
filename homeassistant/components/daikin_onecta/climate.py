@@ -174,7 +174,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         self, command: Callable[[ClimateControlClient], Awaitable[None]]
     ) -> bool:
         """Execute a bound climate command through the serialized gateway."""
-        return await self.coordinator.api.async_execute_command(
+        return await self.coordinator.async_execute_command(
             lambda client: command(
                 client.climate_control(self._device.id, self._embedded_id)
             )

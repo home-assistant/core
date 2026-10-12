@@ -189,7 +189,7 @@ async def test_poll_refreshes_changed_metadata_once(
             wraps=device.async_update_device_registry,
         ) as update_registry,
         patch.object(
-            coordinator.api, "get_cloud_device_details", return_value=[replacement]
+            coordinator, "_async_get_cloud_devices", return_value=[replacement]
         ),
     ):
         assert coordinator.update_interval is not None
@@ -222,8 +222,8 @@ async def test_poll_failure_logged_once(
     coordinator = config_entry.runtime_data
     caplog.clear()
     with patch.object(
-        coordinator.api,
-        "get_cloud_device_details",
+        coordinator,
+        "_async_get_cloud_devices",
         side_effect=OnectaRateLimitError(
             RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
         ),
@@ -264,12 +264,6 @@ def _patch_polling_schedule(
 
 
 @pytest.fixture
-def mock_hass():
-    """Return a mocked HomeAssistant instance."""
-    return MagicMock(spec=HomeAssistant)
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a config entry."""
     return MockConfigEntry(
@@ -281,10 +275,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def coordinator(mock_hass, mock_config_entry):
+async def coordinator(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> OnectaDataUpdateCoordinator:
     """Return a coordinator."""
-    mock_config_entry.add_to_hass(mock_hass)
-    return OnectaDataUpdateCoordinator(mock_hass, mock_config_entry, MagicMock())
+    mock_config_entry.add_to_hass(hass)
+    return OnectaDataUpdateCoordinator(hass, mock_config_entry, MagicMock())
 
 
 class TestOnectaDataUpdateCoordinator:
@@ -331,7 +327,7 @@ class TestOnectaDataUpdateCoordinator:
 
     def test_polling_intervals_use_default_daily_limit(self, coordinator):
         """Use no more than 55% of the conservative default daily limit."""
-        coordinator.api.rate_limits = {"day": None}
+        coordinator.client.rate_limit = RateLimit(day_limit=None)
 
         high_interval, low_interval = coordinator._polling_intervals()
 
@@ -341,7 +337,7 @@ class TestOnectaDataUpdateCoordinator:
 
     def test_polling_intervals_use_reported_daily_limit(self, coordinator):
         """Adapt the polling budget when Daikin reports a different limit."""
-        coordinator.api.rate_limits = {"day": 400}
+        coordinator.client.rate_limit = RateLimit(day_limit=400)
 
         assert coordinator._polling_intervals() == (
             timedelta(seconds=296),
@@ -350,7 +346,7 @@ class TestOnectaDataUpdateCoordinator:
 
     def test_polling_intervals_cap_a_1000_daily_limit(self, coordinator):
         """Keep a 1000-call daily limit at the three-minute polling floor."""
-        coordinator.api.rate_limits = {"day": 1000}
+        coordinator.client.rate_limit = RateLimit(day_limit=1000)
 
         assert coordinator._polling_intervals() == (
             timedelta(minutes=3),
@@ -363,9 +359,9 @@ class TestOnectaDataUpdateCoordinator:
     ):
         """Apply Daikin's reported daily limit after a cloud refresh."""
         mock_now.return_value = datetime(2023, 1, 1, 10, 0)
-        coordinator.api.last_patch_call = None
-        coordinator.api.rate_limits = {"day": 400}
-        coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+        coordinator._last_patch_call = None
+        coordinator.client.rate_limit = RateLimit(day_limit=400)
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
         await coordinator._async_update_data_from_cloud()
 
@@ -475,9 +471,9 @@ class TestOnectaDataUpdateCoordinator:
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """A Daikin rate limit should use the coordinator retry-after mechanism."""
-        daikin_api = coordinator.api
-        daikin_api.last_patch_call = None
-        daikin_api.get_cloud_device_details = AsyncMock(
+        daikin_api = coordinator
+        daikin_api._last_patch_call = None
+        daikin_api._async_get_cloud_devices = AsyncMock(
             side_effect=OnectaRateLimitError(
                 RateLimit(retry_after=3060),
                 method="GET",
@@ -496,8 +492,8 @@ class TestOnectaDataUpdateCoordinator:
 
     async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
         """Turn a Daikin HTTP error into a translatable polling failure."""
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(
             side_effect=OnectaApiError(
                 500,
                 "Internal Server Error",
@@ -517,8 +513,8 @@ class TestOnectaDataUpdateCoordinator:
         self, coordinator: OnectaDataUpdateCoordinator, status: int
     ) -> None:
         """A rejected cloud token must not become a polling retry."""
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(
             side_effect=OnectaAuthenticationError(
                 status=status,
                 method="GET",
@@ -533,14 +529,14 @@ class TestOnectaDataUpdateCoordinator:
 
     async def test_token_refresh_reauth_error_propagates(self, coordinator):
         """Preserve OAuth refresh failures for Home Assistant reauthentication."""
-        coordinator.api.last_patch_call = None
+        coordinator._last_patch_call = None
         token_error = OAuth2TokenRequestReauthError(
             domain=DOMAIN,
             request_info=MagicMock(),
             status=401,
             message="invalid_grant",
         )
-        coordinator.api.get_cloud_device_details = AsyncMock(side_effect=token_error)
+        coordinator._async_get_cloud_devices = AsyncMock(side_effect=token_error)
 
         with pytest.raises(OAuth2TokenRequestReauthError) as exc_info:
             await coordinator._async_update_data_from_cloud()
@@ -549,11 +545,11 @@ class TestOnectaDataUpdateCoordinator:
 
     async def test_post_write_cooldown_is_checked_under_cloud_lock(self, coordinator):
         """Keep cached data when a write completes while polling waits for the lock."""
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(return_value=None)
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=None)
 
         assert await coordinator._async_update_data_from_cloud() == {}
-        coordinator.api.get_cloud_device_details.assert_awaited_once_with(
+        coordinator._async_get_cloud_devices.assert_awaited_once_with(
             cooldown=timedelta(seconds=30)
         )
         assert coordinator.update_interval == timedelta(seconds=30)
@@ -562,14 +558,12 @@ class TestOnectaDataUpdateCoordinator:
     async def test_recent_write_skips_cloud_polling(self, mock_utcnow, coordinator):
         """Use the configured cooldown before polling after a recent write."""
         mock_utcnow.return_value = datetime(2023, 1, 1, 12, 0)
-        coordinator.api.last_patch_call = mock_utcnow.return_value - timedelta(
-            seconds=1
-        )
-        coordinator.api.get_cloud_device_details = AsyncMock()
+        coordinator._last_patch_call = mock_utcnow.return_value - timedelta(seconds=1)
+        coordinator._async_get_cloud_devices = AsyncMock()
 
         assert await coordinator._async_update_data_from_cloud() == {}
         assert coordinator.update_interval == timedelta(seconds=30)
-        coordinator.api.get_cloud_device_details.assert_not_awaited()
+        coordinator._async_get_cloud_devices.assert_not_awaited()
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_post_write_cooldown_uses_utc_across_dst_rollback(
@@ -577,19 +571,19 @@ class TestOnectaDataUpdateCoordinator:
     ):
         """Do not extend cooldown when local time moves backward."""
         # In Amsterdam, local time moves from 02:59 CEST back to 02:01 CET here.
-        coordinator.api.last_patch_call = datetime(2026, 10, 25, 0, 59, tzinfo=UTC)
+        coordinator._last_patch_call = datetime(2026, 10, 25, 0, 59, tzinfo=UTC)
         mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
-        coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
         assert await coordinator._async_update_data_from_cloud() == {}
-        coordinator.api.get_cloud_device_details.assert_awaited_once_with(
+        coordinator._async_get_cloud_devices.assert_awaited_once_with(
             cooldown=timedelta(seconds=30)
         )
 
     async def test_connection_error_uses_update_failed(self, coordinator):
         """A connection error should mark the coordinator update as failed."""
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(
             side_effect=OnectaConnectionError(
                 EXPECTED_CONNECTION_ERROR,
                 method="GET",
@@ -605,10 +599,10 @@ class TestOnectaDataUpdateCoordinator:
 
     async def test_cooldown_fetch_failure_restores_regular_interval(self, coordinator):
         """Do not retain the cooldown polling interval after a failed fetch."""
-        coordinator.api.last_patch_call = None
+        coordinator._last_patch_call = None
         coordinator.update_interval = timedelta(seconds=30)
         expected_interval = coordinator._determine_update_interval()
-        coordinator.api.get_cloud_device_details = AsyncMock(
+        coordinator._async_get_cloud_devices = AsyncMock(
             side_effect=OnectaConnectionError(
                 EXPECTED_CONNECTION_ERROR,
                 method="GET",
@@ -625,8 +619,8 @@ class TestOnectaDataUpdateCoordinator:
         """Mark cached gateways unavailable when the cloud no longer returns them."""
         missing_device = MagicMock()
         coordinator.data = {"missing": missing_device}
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
         await coordinator._async_update_data_from_cloud()
 
@@ -638,10 +632,8 @@ class TestOnectaDataUpdateCoordinator:
         existing_device.set_device_data.return_value = False
         cloud_device = MagicMock(id="gateway")
         coordinator.data = {"gateway": existing_device}
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(
-            return_value=[cloud_device]
-        )
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
 
         await coordinator._async_update_data_from_cloud()
 
@@ -656,10 +648,8 @@ class TestOnectaDataUpdateCoordinator:
         existing_device.set_device_data.return_value = True
         cloud_device = MagicMock(id="gateway")
         coordinator.data = {"gateway": existing_device}
-        coordinator.api.last_patch_call = None
-        coordinator.api.get_cloud_device_details = AsyncMock(
-            return_value=[cloud_device]
-        )
+        coordinator._last_patch_call = None
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
 
         await coordinator._async_update_data_from_cloud()
 

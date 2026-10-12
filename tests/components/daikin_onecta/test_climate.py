@@ -203,7 +203,7 @@ async def test_async_climate_command_uses_bound_library_client() -> None:
     device.id = "gateway"
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
-    entity.coordinator = MagicMock(api=api)
+    entity.coordinator = api
 
     assert await _ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND(
         entity,
@@ -491,7 +491,7 @@ async def test_enable_and_disable_away_preset_updates_cache(
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.HEAT)
-    entity.coordinator = MagicMock(api=api)
+    entity.coordinator = api
     entity._preset_characteristic = MagicMock(return_value=holiday_mode)
     monkeypatch.setattr(
         DaikinClimate,
@@ -1272,6 +1272,7 @@ async def test_climate_service_updates_entity_state(
     coordinator.data = {device.id: device}
     coordinator.last_update_success = True
     coordinator.async_config_entry_first_refresh = AsyncMock()
+    coordinator.async_get_access_token = AsyncMock()
 
     with (
         patch(
@@ -1279,7 +1280,7 @@ async def test_climate_service_updates_entity_state(
             "config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             AsyncMock(),
         ),
         patch(
@@ -1377,7 +1378,7 @@ async def test_climate_service_rejects_unavailable_power(
 
     assert err.value.translation_key == "climate_power_unavailable"
     command.assert_not_awaited()
-    assert coordinator.api.last_patch_call is None
+    assert coordinator.last_patch_call is None
 
 
 async def test_climate_platform_services_and_management_points(
@@ -1454,7 +1455,7 @@ async def test_climate_platform_services_and_management_points(
             "config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             AsyncMock(),
         ),
         patch(
@@ -1518,6 +1519,7 @@ async def test_setup_creates_entities_per_management_point(
     second_zone.climate_control.setpoint_types = ["roomTemperature"]
     gateway.management_points_by_type.return_value = (first_zone, second_zone)
     coordinator.async_config_entry_first_refresh = AsyncMock()
+    coordinator.async_get_access_token = AsyncMock()
 
     class TestClimateEntity(ClimateEntity):
         """Minimal climate entity used to observe platform setup."""
@@ -1542,7 +1544,7 @@ async def test_setup_creates_entities_per_management_point(
             "config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             AsyncMock(),
         ),
         patch(

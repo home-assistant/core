@@ -39,7 +39,7 @@ async def async_get_config_entry_diagnostics(
             "config_entry": entry.as_dict(),
             "coordinator": {
                 "last_update_success": coordinator.last_update_success,
-                "rate_limits": coordinator.api.rate_limits,
+                "rate_limits": coordinator.rate_limits,
             },
             "devices": [
                 device.device.to_dict() for device in (coordinator.data or {}).values()

@@ -38,11 +38,11 @@ async def test_setup_rejected_cloud_token_requires_authentication(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             return_value="token",
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
             side_effect=OnectaAuthenticationError(
                 status=status, method="GET", path="/v1/gateway-devices"
             ),
@@ -65,7 +65,7 @@ async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     with patch(
-        "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
         side_effect=OnectaAuthenticationError(
             status=status, method="GET", path="/v1/gateway-devices"
         ),
@@ -117,7 +117,7 @@ async def test_setup_entry_rejected_token_requires_authentication(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             side_effect=_reauth_error(),
         ),
     ):
@@ -137,7 +137,7 @@ async def test_setup_entry_retries_token_error(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             side_effect=_token_error(),
         ),
     ):
@@ -157,7 +157,7 @@ async def test_setup_entry_retries_token_timeout(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             side_effect=TimeoutError("timeout"),
         ),
     ):
