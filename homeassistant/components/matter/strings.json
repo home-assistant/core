@@ -743,6 +743,9 @@
     "addon_not_running": {
       "message": "The Matter Server app is not running yet."
     },
+    "bitmap_write_failed": {
+      "message": "Failed to change {name}: the device returned status {status}."
+    },
     "bitmap_write_not_supported": {
       "message": "The device does not support changing {name}."
     },

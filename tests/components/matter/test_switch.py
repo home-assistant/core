@@ -1,6 +1,7 @@
 """Test Matter switches."""
 
 import asyncio
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -564,21 +565,71 @@ async def test_window_covering_reverse_motor_direction_write(
     )
 
 
+def _write_response(status: int) -> list[dict[str, Any]]:
+    """Build a write response as the Matter Server reports it."""
+    return [
+        {
+            "Path": {"EndpointId": 1, "ClusterId": 258, "AttributeId": 23},
+            "Status": status,
+        }
+    ]
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
-async def test_window_covering_reverse_motor_direction_not_supported(
+@pytest.mark.parametrize(
+    ("status", "expected_error"),
+    [
+        pytest.param(
+            clusters.Globals.Enums.status.kConstraintError,
+            "does not support changing",
+            id="constraint_error",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kUnsupportedWrite,
+            "returned status",
+            id="unsupported_write",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kBusy,
+            "returned status",
+            id="busy",
+        ),
+    ],
+)
+async def test_window_covering_reverse_motor_direction_rejected(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    status: int,
+    expected_error: str,
 ) -> None:
-    """Test a device rejecting an unsupported mode bit raises a meaningful error."""
-    matter_client.write_attribute.return_value = {
-        "status": clusters.Globals.Enums.status.kConstraintError
-    }
+    """Test a device rejecting the write raises a meaningful error."""
+    matter_client.write_attribute.return_value = _write_response(status)
 
-    with pytest.raises(HomeAssistantError, match="does not support"):
+    with pytest.raises(HomeAssistantError, match=expected_error):
         await hass.services.async_call(
             "switch",
             "turn_on",
             {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction_accepted(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a successful write response does not raise."""
+    matter_client.write_attribute.return_value = _write_response(
+        clusters.Globals.Enums.status.kSuccess
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1

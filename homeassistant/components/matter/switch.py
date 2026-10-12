@@ -181,11 +181,19 @@ class MatterBitmapSwitchEntityDescription(MatterSwitchEntityDescription):
     bitmask: int
 
 
-def _write_status(result: Any) -> int | None:
-    """Return the Matter status of a write response, if the server reported one."""
-    if isinstance(result, dict):
-        return result.get("status")
-    return getattr(result, "status", None)
+def _write_error_status(result: Any) -> int | None:
+    """Return the first unsuccessful Matter status of a write response, if any.
+
+    A write is answered with a list of per-path results rather than an error, so
+    a device rejecting the write otherwise looks like a successful service call.
+    """
+    if not isinstance(result, list):
+        return None
+    for item in result:
+        status: int | None = item.get("Status") if isinstance(item, dict) else None
+        if status:
+            return status
+    return None
 
 
 class MatterBitmapSwitch(MatterSwitch):
@@ -203,12 +211,20 @@ class MatterBitmapSwitch(MatterSwitch):
         bitmask = int(self.entity_description.bitmask)
         new_value = current_value | bitmask if value else current_value & ~bitmask
         result = await self.write_attribute(value=new_value)
-        # a rejected write reports its status in the response instead of raising
-        if _write_status(result) == clusters.Globals.Enums.status.kConstraintError:
+        if status := _write_error_status(result):
+            # the spec answers an unsupported mode bit with CONSTRAINT_ERROR
+            unsupported = status == clusters.Globals.Enums.status.kConstraintError
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="bitmap_write_not_supported",
-                translation_placeholders={"name": str(self.name)},
+                translation_key=(
+                    "bitmap_write_not_supported"
+                    if unsupported
+                    else "bitmap_write_failed"
+                ),
+                translation_placeholders={
+                    "name": str(self.name),
+                    "status": str(status),
+                },
             )
 
     @override
