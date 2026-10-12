@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_SUBDOMAIN, TEST_TOKEN
@@ -28,16 +27,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_set_txt(hass: HomeAssistant, txt: str | None) -> None:
-    """Set the txt record. Pass in None to remove it.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    await hass.services.async_call(
-        DOMAIN, SERVICE_SET_TXT, {ATTR_TXT: txt}, blocking=True
-    )
 
 
 @pytest.fixture
@@ -121,7 +110,6 @@ async def test_setup_backoff(
 async def test_service_set_txt(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test set txt service call."""
     # Empty the fixture mock requests
@@ -138,15 +126,13 @@ async def test_service_set_txt(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TXT,
-        {ATTR_TXT: "some-txt"},
+        {
+            ATTR_CONFIG_ENTRY: "12345",
+            ATTR_TXT: "some-txt",
+        },
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_call_without_config_entry",
-    )
 
 
 @pytest.mark.usefixtures("setup_duckdns")
@@ -172,43 +158,26 @@ async def test_service_clear_txt(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TXT,
+        {ATTR_CONFIG_ENTRY: "12345"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
 
 
-@pytest.mark.parametrize(
-    ("payload", "exception_msg"),
-    [
-        ({ATTR_CONFIG_ENTRY: "1234"}, "service_config_entry_not_found"),
-        (None, "entry_not_selected"),
-    ],
-)
 @pytest.mark.usefixtures("setup_duckdns")
-async def test_service_exceptions(
+async def test_service_config_entry_not_found(
     hass: HomeAssistant,
-    payload: dict[str, str] | None,
-    exception_msg: str,
 ) -> None:
     """Test config entry select exceptions."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        title=f"{TEST_SUBDOMAIN}.duckdns.org",
-        data={
-            CONF_DOMAIN: TEST_SUBDOMAIN,
-            CONF_ACCESS_TOKEN: TEST_TOKEN,
-        },
-        entry_id="67890",
-    ).add_to_hass(hass)
 
     with pytest.raises(ServiceValidationError) as e:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_TXT,
-            payload,
+            {ATTR_CONFIG_ENTRY: "1234"},
             blocking=True,
         )
-    assert e.value.translation_key == exception_msg
+    assert e.value.translation_key == "service_config_entry_not_found"
 
 
 @pytest.mark.parametrize(

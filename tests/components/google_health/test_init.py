@@ -54,7 +54,9 @@ async def test_setup_api_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error retry handling when API fails."""
-    mock_google_health_client.steps.today.side_effect = GoogleHealthApiError
+    mock_google_health_client.steps.today.side_effect = GoogleHealthApiError(
+        "API error"
+    )
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -67,7 +69,9 @@ async def test_setup_auth_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error when API returns auth or forbidden errors."""
-    mock_google_health_client.steps.today.side_effect = HealthApiForbiddenException
+    mock_google_health_client.steps.today.side_effect = HealthApiForbiddenException(
+        "Forbidden"
+    )
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR

@@ -19,11 +19,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import GeolocationEntityStateAttribute
+from .const import DOMAIN, GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "geo_location"
 DATA_COMPONENT: HassKey[EntityComponent[GeolocationEvent]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA

@@ -158,7 +158,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         value_fn=lambda api: api.status.mop_route_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
-            [mode.value for mode in api.status.mop_route_options]
+            [mode.display_name for mode in api.status.mop_route_options]
             if api.status.mop_route_options
             else None
         ),
@@ -180,7 +180,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
             else None
         ),
         parameter_lambda=lambda key, _: [
-            RoborockDockDustCollectionModeCode.as_dict().get(key)
+            RoborockDockDustCollectionModeCode.as_dict()[key]
         ],
         is_dock_entity=True,
     ),

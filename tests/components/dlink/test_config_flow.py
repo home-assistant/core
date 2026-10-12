@@ -14,6 +14,7 @@ from .conftest import (
     CONF_DHCP_DATA,
     CONF_DHCP_FLOW,
     CONF_DHCP_FLOW_NEW_IP,
+    DHCP_FORMATTED_MAC,
     patch_config_flow,
 )
 
@@ -35,6 +36,7 @@ async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
@@ -45,7 +47,15 @@ async def test_flow_user_already_configured(
 ) -> None:
     """Test user initialized flow with duplicate server."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -60,7 +70,15 @@ async def test_flow_user_cannot_connect(
     """Test user initialized flow with unreachable server."""
     with patch_config_flow(mocked_plug_legacy_no_auth):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -83,7 +101,15 @@ async def test_flow_user_unknown_error(
     with patch_config_flow(mocked_plug) as mock:
         mock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -114,6 +140,7 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == DHCP_FORMATTED_MAC
 
 
 async def test_dhcp_failed_legacy_auth(

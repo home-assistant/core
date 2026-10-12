@@ -44,6 +44,18 @@ def test_deprecated_constant(
     )
 
 
+def test_deprecated_attr_via_device(caplog: pytest.LogCaptureFixture) -> None:
+    """Test ATTR_VIA_DEVICE deprecation in favor of via_device_id."""
+    import_and_test_deprecated_constant(
+        caplog,
+        const,
+        "ATTR_VIA_DEVICE",
+        "via_device_id",
+        "via_device",
+        "2027.8",
+    )
+
+
 @pytest.mark.parametrize(
     "replacement",
     [

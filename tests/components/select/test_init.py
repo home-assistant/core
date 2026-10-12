@@ -31,6 +31,13 @@ class MockSelectEntity(SelectEntity):
     _attr_options = ["option_one", "option_two", "option_three"]
 
 
+class MockSelectEntityWithoutOptions(MockSelectEntity):
+    """Mock SelectEntity without any options to use in tests."""
+
+    _attr_name = "select without options"
+    _attr_options: list[str] = []
+
+
 async def test_select(hass: HomeAssistant) -> None:
     """Test getting data from the mocked select entity."""
     select = MockSelectEntity()
@@ -202,3 +209,59 @@ async def test_custom_integration_and_validation(
         blocking=True,
     )
     assert hass.states.get("select.select_2").state == "option 3"
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(SERVICE_SELECT_FIRST, {}, id="first"),
+        pytest.param(SERVICE_SELECT_LAST, {}, id="last"),
+        pytest.param(SERVICE_SELECT_NEXT, {}, id="next_cycle"),
+        pytest.param(SERVICE_SELECT_NEXT, {ATTR_CYCLE: False}, id="next_no_cycle"),
+        pytest.param(SERVICE_SELECT_PREVIOUS, {}, id="previous_cycle"),
+        pytest.param(
+            SERVICE_SELECT_PREVIOUS, {ATTR_CYCLE: False}, id="previous_no_cycle"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "current_option",
+    [None, "option_one"],
+    ids=["without_current_option", "with_stale_current_option"],
+)
+async def test_navigation_services_without_options(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, bool],
+    current_option: str | None,
+) -> None:
+    """Test the navigation actions on an entity which has no options."""
+    entity = MockSelectEntityWithoutOptions()
+    entity._attr_current_option = current_option
+    entity.select_option = MagicMock()
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.select_without_options").state == STATE_UNKNOWN
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "select.select_without_options"} | service_data,
+            blocking=True,
+        )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "no_options"
+    assert exc.value.translation_placeholders == {
+        "entity_id": "select.select_without_options"
+    }
+    assert (
+        str(exc.value)
+        == "Entity select.select_without_options has no options to select from"
+    )
+
+    entity.select_option.assert_not_called()
+    assert hass.states.get("select.select_without_options").state == STATE_UNKNOWN

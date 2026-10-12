@@ -12,9 +12,9 @@ from kiosker import (
     ScreensaverState,
     TLSVerificationError,
 )
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.kiosker.const import (
     ATTR_BACKGROUND,
@@ -197,7 +197,7 @@ async def test_schema_rejects_invalid_input(
     )
     assert device is not None
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -262,7 +262,9 @@ async def test_service_non_kiosker_device(
         identifiers={("other_domain", "other_device")},
     )
 
-    with pytest.raises(ServiceValidationError, match=f"No {DOMAIN} devices"):
+    with pytest.raises(
+        ServiceValidationError, match=f"does not belong to integration {DOMAIN}"
+    ):
         await hass.services.async_call(
             DOMAIN,
             "navigate_url",

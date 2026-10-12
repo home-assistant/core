@@ -112,9 +112,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: NetgearConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: NetgearConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a device from a config entry."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     router = config_entry.runtime_data.router
 
     device_mac = None

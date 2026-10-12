@@ -17,11 +17,11 @@ from homeassistant.core import Context, CoreState, Event, HomeAssistant, callbac
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PLATFORMS
+from .validators import check_conditions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -153,21 +153,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         self._execute_update(run_variables, context)
-
-    def _check_condition(self, run_variables: TemplateVarsType) -> bool:
-        if not self._cond_func:
-            return True
-        condition_result = self._cond_func.async_check(variables=run_variables)
-        if condition_result is False:
-            _LOGGER.debug(
-                "Conditions not met, aborting template"
-                " trigger update. Condition summary: %s",
-                trace_get(clear=False),
-            )
-        return condition_result
 
     @callback
     def _execute_update(

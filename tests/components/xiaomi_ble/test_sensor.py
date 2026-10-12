@@ -19,6 +19,8 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     HHCCJCY10_SERVICE_INFO,
+    MISCALE_S400_PACKET2_SERVICE_INFO,
+    MISCALE_S400_SERVICE_INFO,
     MISCALE_V1_SERVICE_INFO,
     MISCALE_V2_SERVICE_INFO,
     MMC_T201_1_SERVICE_INFO,
@@ -692,7 +694,7 @@ async def test_miscale_v1_uuid(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
@@ -734,7 +736,7 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_body_composition_scale_b5dc_weight_non_stabilized"
@@ -769,6 +771,106 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     )
     assert impedance_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
     assert impedance_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_s400_packet1(hass: HomeAssistant) -> None:
+    """Test MiScale S400 first packet: mass + impedance_low + heart_rate + profile_id + stabilized."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8C:D0:B2:F6:BE:EF",
+        data={"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_S400_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 5
+
+    impedance_low_sensor = hass.states.get(
+        "sensor.body_composition_scale_beef_impedance_low"
+    )
+    impedance_low_sensor_attr = impedance_low_sensor.attributes
+    assert impedance_low_sensor.state == "543.2"
+    assert (
+        impedance_low_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Impedance Low"
+    )
+    assert impedance_low_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
+    assert impedance_low_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    mass_sensor = hass.states.get("sensor.body_composition_scale_beef_weight")
+    mass_sensor_attr = mass_sensor.attributes
+    assert mass_sensor.state == "69.9"
+    assert mass_sensor_attr[ATTR_FRIENDLY_NAME] == "Body Composition Scale BEEF Weight"
+    assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    heart_rate_sensor = hass.states.get("sensor.body_composition_scale_beef_heart_rate")
+    heart_rate_sensor_attr = heart_rate_sensor.attributes
+    assert heart_rate_sensor.state == "92"
+    assert (
+        heart_rate_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Heart Rate"
+    )
+    assert heart_rate_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "bpm"
+
+    profile_id_sensor = hass.states.get("sensor.body_composition_scale_beef_profile_id")
+    profile_id_sensor_attr = profile_id_sensor.attributes
+    assert profile_id_sensor.state == "1"
+    assert (
+        profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Profile ID"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_s400_packet2(hass: HomeAssistant) -> None:
+    """Test MiScale S400 second packet: impedance_high + profile_id + stabilized."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8C:D0:B2:F6:BE:EF",
+        data={"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_S400_PACKET2_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    impedance_high_sensor = hass.states.get(
+        "sensor.body_composition_scale_beef_impedance_high"
+    )
+    impedance_high_sensor_attr = impedance_high_sensor.attributes
+    assert impedance_high_sensor.state == "497.6"
+    assert (
+        impedance_high_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Impedance High"
+    )
+    assert impedance_high_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
+    assert impedance_high_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    profile_id_sensor = hass.states.get("sensor.body_composition_scale_beef_profile_id")
+    profile_id_sensor_attr = profile_id_sensor.attributes
+    assert profile_id_sensor.state == "1"
+    assert (
+        profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Profile ID"
+    )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -844,7 +946,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
@@ -895,7 +997,7 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"

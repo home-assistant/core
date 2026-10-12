@@ -5,14 +5,17 @@ from typing import Any
 import pytest
 
 from homeassistant.components.lock import DOMAIN, LockState
+from homeassistant.components.lock.trigger import TRIGGERS
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -24,6 +27,14 @@ from tests.components.common import (
 async def target_locks(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple lock entities associated with different targets."""
     return await target_entities(hass, DOMAIN)
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "jammed": TargetSupport.STANDARD,
+    "locked": TargetSupport.STANDARD,
+    "opened": TargetSupport.STANDARD,
+    "unlocked": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -50,6 +61,11 @@ async def test_lock_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

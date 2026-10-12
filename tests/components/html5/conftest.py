@@ -26,6 +26,15 @@ MOCK_CONF_PUB_KEY = (
 )
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.html5.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Mock ntfy configuration entry."""
@@ -46,23 +55,13 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_load_config() -> Generator[MagicMock]:
     """Mock load config."""
 
-    with patch(
-        "homeassistant.components.html5.notify._load_config", return_value={}
-    ) as mock_load_config:
+    with (
+        patch(
+            "homeassistant.components.html5.notify._load_config", return_value={}
+        ) as mock_load_config,
+        patch("homeassistant.components.html5._load_config", new=mock_load_config),
+    ):
         yield mock_load_config
-
-
-@pytest.fixture
-def mock_wp() -> Generator[AsyncMock]:
-    """Mock WebPusher."""
-
-    with patch(
-        "homeassistant.components.html5.notify.WebPusher", autospec=True
-    ) as mock_client:
-        client = mock_client.return_value
-        client.cls = mock_client
-        client.send_async.return_value = AsyncMock(spec=ClientResponse, status=201)
-        yield client
 
 
 @pytest.fixture(name="webpush_async")
@@ -82,6 +81,7 @@ def mock_jwt() -> Generator[MagicMock]:
 
     with (
         patch("homeassistant.components.html5.notify.jwt") as mock_client,
+        patch("homeassistant.components.html5.http.jwt", new=mock_client),
     ):
         mock_client.encode.return_value = "JWT"
         mock_client.decode.return_value = {"target": "device"}
@@ -100,17 +100,11 @@ def mock_uuid() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_vapid() -> Generator[MagicMock]:
-    """Mock VAPID headers."""
+def mock_save() -> Generator[MagicMock]:
+    """Mock save_json."""
 
     with (
-        patch(
-            "homeassistant.components.html5.notify.Vapid", autospec=True
-        ) as mock_client,
+        patch("homeassistant.components.html5.http.save_json") as mock_client,
+        patch("homeassistant.components.html5.notify.save_json", new=mock_client),
     ):
-        mock_client.from_string.return_value.sign.return_value = {
-            "Authorization": "vapid t=signed!!!",
-            "urgency": "normal",
-            "priority": "normal",
-        }
         yield mock_client

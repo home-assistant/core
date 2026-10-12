@@ -1,0 +1,72 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "troubleshoot": {
+        "description": "Home Assistant could not communicate with the Samsung TV over the serial port.\n\nThe most common cause is that ExLink control is not enabled. On TVs that use the USB-to-ExLink dongle, **EXT Link Support** and **USB Serial** must be enabled in the hidden service menu (on the remote, press **Mute → 1 → 8 → 2 → Power**); the exact path varies by model, so check your TV's documentation.\n\nAlso make sure that:\n- The TV is powered on. A TV in standby does not answer status queries.\n- The cable is connected to the TV's 3.5 mm ExLink jack (or the Samsung USB-to-ExLink dongle) and is fully seated.\n- The correct serial port was selected.\n\nSelect **Submit** to try again.",
+        "title": "Connection failed"
+      },
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::port%]",
+          "model": "TV generation"
+        },
+        "data_description": {
+          "device": "Serial port path to connect to.",
+          "model": "Select your TV's generation to translate the active input back into a named source. Leave empty if your model is not listed; you can still switch sources."
+        },
+        "description": "Make sure the TV is powered on before continuing. Home Assistant queries the TV during setup to confirm the connection, and a TV in standby will not respond."
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "tv": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "av1": "AV 1",
+              "av2": "AV 2",
+              "av3": "AV 3",
+              "component1": "Component 1",
+              "component2": "Component 2",
+              "component3": "Component 3",
+              "dvi1": "DVI 1",
+              "dvi2": "DVI 2",
+              "dvi3": "DVI 3",
+              "hdmi1": "HDMI 1",
+              "hdmi2": "HDMI 2",
+              "hdmi3": "HDMI 3",
+              "hdmi4": "HDMI 4",
+              "pc1": "PC 1",
+              "pc2": "PC 2",
+              "pc3": "PC 3",
+              "rvu": "RVU",
+              "s_video1": "S-Video 1",
+              "s_video2": "S-Video 2",
+              "s_video3": "S-Video 3",
+              "tv": "TV"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting to the Samsung TV: {error}"
+    },
+    "command_failed": {
+      "message": "Failed to send the command to the TV: {error}"
+    },
+    "command_rejected": {
+      "message": "The TV rejected the command: {error}"
+    }
+  }
+}

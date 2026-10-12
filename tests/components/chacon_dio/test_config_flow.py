@@ -28,9 +28,15 @@ async def test_full_flow(
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "dummylogin",
             CONF_PASSWORD: "dummypass",
         },
@@ -64,9 +70,15 @@ async def test_errors(
     mock_dio_chacon_client.get_user_id.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "nada",
             CONF_PASSWORD: "nadap",
         },

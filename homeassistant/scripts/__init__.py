@@ -1,18 +1,12 @@
 """Home Assistant command line scripts."""
 
-import argparse
-import asyncio
-from collections.abc import Sequence
 import importlib
 import logging
 import os
 import sys
 
-from homeassistant import runner
-from homeassistant.bootstrap import async_mount_local_lib_path
-from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
-from homeassistant.util.package import install_package, is_installed, is_virtual_env
+from homeassistant.util.package import install_package, is_installed
 
 # mypy: allow-untyped-defs, disallow-any-generics, no-warn-return-any
 
@@ -42,12 +36,7 @@ def run(args: list[str]) -> int:
 
     script = importlib.import_module(f"homeassistant.scripts.{args[0]}")
 
-    config_dir = extract_config_dir()
-
-    if not is_virtual_env():
-        asyncio.run(async_mount_local_lib_path(config_dir))
-
-    _pip_kwargs = pip_kwargs(config_dir)
+    _pip_kwargs = pip_kwargs()
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -59,18 +48,4 @@ def run(args: list[str]) -> int:
             print("Aborting script, could not install dependency", req)
             return 1
 
-    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))  # type: ignore[deprecated]
-
     return script.run(args[1:])
-
-
-def extract_config_dir(args: Sequence[str] | None = None) -> str:
-    """Extract the config dir from the arguments or get the default."""
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("-c", "--config", default=None)
-    parsed_args = parser.parse_known_args(args)[0]
-    return (
-        os.path.join(os.getcwd(), parsed_args.config)
-        if parsed_args.config
-        else get_default_config_dir()
-    )

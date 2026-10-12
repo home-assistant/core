@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 import jwt
+import probatio
 from triggercmd import TRIGGERcmdConnectionError, client
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({(CONF_TOKEN): str})
+DATA_SCHEMA = probatio.Schema({(CONF_TOKEN): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> str:

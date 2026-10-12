@@ -1,19 +1,16 @@
 """Support for NuHeat thermostats."""
 
 from http import HTTPStatus
-import logging
 
 import nuheat
 import requests
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import CONF_SERIAL_NUMBER, PLATFORMS
+from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _get_thermostat(api: nuheat.NuHeat, serial_number: str) -> nuheat.NuHeatThermostat:
@@ -41,15 +38,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bo
         raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTPStatus.BAD_REQUEST
-            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            HTTPStatus.BAD_REQUEST
+            < ex.response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
-            _LOGGER.error("Failed to login to nuheat: %s", ex)
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+            ) from ex
         raise ConfigEntryNotReady from ex
-    except Exception as ex:  # noqa: BLE001
-        _LOGGER.error("Failed to login to nuheat: %s", ex)
-        return False
+    except Exception as ex:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+        ) from ex
 
     entry.runtime_data = NuHeatCoordinator(hass, entry, thermostat)
 

@@ -30,6 +30,7 @@ from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.FAN,
     Platform.LIGHT,
     Platform.NUMBER,
@@ -154,7 +155,7 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: FjaraskupanConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     for service_info in async_discovered_service_info(hass, False):

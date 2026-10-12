@@ -2,6 +2,7 @@
   "domain": "tank_utility",
   "name": "Tank Utility",
   "codeowners": [],
+  "disabled": "Tank Utility relies on setuptools.pkg_resources, which is no longer available in setuptools 82.0.0 and later.",
   "documentation": "https://www.home-assistant.io/integrations/tank_utility",
   "iot_class": "cloud_polling",
   "loggers": ["tank_utility"],
