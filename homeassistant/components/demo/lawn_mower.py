@@ -43,7 +43,6 @@ class StateDemoLawnMower(LawnMowerEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
-    _attr_translation_key = "model_s"
     _cancel_dock: CALLBACK_TYPE | None = None
 
     def __init__(
