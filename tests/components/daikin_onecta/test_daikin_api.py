@@ -217,18 +217,13 @@ async def test_write_timeout(
     assert "Daikin request timed out" in caplog.text
 
 
-async def test_rate_limits_preserve_unknown_values(
+async def test_unknown_rate_limit_uses_default_polling_budget(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Keep rate-limit values unavailable when Daikin did not send them."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    api.client.rate_limit = RateLimit()
-
-    assert api.rate_limits == {
-        "minute": None,
-        "day": None,
-        "remaining_minutes": None,
-        "remaining_day": None,
-        "retry_after": None,
-        "ratelimit_reset": None,
-    }
+    """Use the conservative polling budget when response headers are absent."""
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    coordinator.client.rate_limit = RateLimit()
+    assert coordinator._polling_intervals() == (
+        timedelta(seconds=594),
+        timedelta(seconds=1782),
+    )

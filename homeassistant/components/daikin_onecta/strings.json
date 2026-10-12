@@ -135,18 +135,5 @@
     "turn_on_failed": {
       "message": "Failed to turn on {device}"
     }
-  },
-  "system_health": {
-    "info": {
-      "api_status": "API server",
-      "max_day": "Maximum day",
-      "max_minute": "Maximum minute",
-      "oauth2_status": "OAuth2 server",
-      "oauth2_token_valid": "OAuth2 token valid",
-      "ratelimit_reset": "Rate limit reset",
-      "remaining_day": "Remaining day",
-      "remaining_minute": "Remaining minute",
-      "retry_after": "Retry after"
-    }
   }
 }

@@ -73,19 +73,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         )
 
     @property
-    def rate_limits(self) -> dict[str, int | None]:
-        """Return rate limits using the existing diagnostics field names."""
-        rate_limit = self._client.rate_limit
-        return {
-            "minute": rate_limit.minute_limit,
-            "day": rate_limit.day_limit,
-            "remaining_minutes": rate_limit.minute_remaining,
-            "remaining_day": rate_limit.day_remaining,
-            "retry_after": rate_limit.retry_after,
-            "ratelimit_reset": rate_limit.reset,
-        }
-
-    @property
     def client(self) -> OnectaClient:
         """Return the underlying Onecta client."""
         return self._client
@@ -336,7 +323,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     def _polling_intervals(self) -> tuple[timedelta, timedelta]:
         """Return polling intervals within the available daily API-call budget."""
-        rate_limit = self.rate_limits.get("day")
+        rate_limit = self.client.rate_limit.day_limit
         daily_limit = (
             rate_limit
             if isinstance(rate_limit, int) and rate_limit > 0

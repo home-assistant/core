@@ -40,7 +40,7 @@ rules:
   reauthentication-flow: todo
   test-coverage: done
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery: done
   discovery-update-info:
     status: exempt
