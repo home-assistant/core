@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/elecway",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["aioelecway==0.1.0"],
+  "requirements": ["aioelecway==0.1.1"],
   "zeroconf": [
     {
       "name": "ewayenergystorage-*",

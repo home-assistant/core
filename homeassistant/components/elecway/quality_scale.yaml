@@ -16,8 +16,8 @@ rules:
   dependency-transparency:
     status: done
     comment: >-
-      aioelecway 0.1.0 is published on PyPI under Apache-2.0.
-      The public v0.1.0 tag and publish.yml workflow are available at
+      aioelecway 0.1.1 is published on PyPI under Apache-2.0.
+      The public v0.1.1 tag and publish.yml workflow are available at
       https://github.com/Elecway001/aioelecway-ha.
   docs-actions:
     status: exempt
