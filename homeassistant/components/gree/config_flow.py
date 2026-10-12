@@ -44,7 +44,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle network scan step."""
-        # DOMAIN as unique ID limits discovery to one entry; manual entries use MAC/IP.
+        # DOMAIN as unique ID limits discovery to one entry; manual entries use the MAC.
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
 
@@ -72,7 +72,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     device = await async_create_and_bind_device(ip_address)
-                except (DeviceNotBoundError, DeviceTimeoutError) as err:
+                except (DeviceNotBoundError, DeviceTimeoutError, OSError) as err:
                     _LOGGER.debug(
                         "Failed to connect to Gree device at %s: %s", ip_address, err
                     )

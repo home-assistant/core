@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_SCAN_INTERVAL
+from .const import DISCOVERY_SCAN_INTERVAL, DOMAIN
 from .coordinator import (
     DeviceDataUpdateCoordinator,
     DiscoveryService,
@@ -37,6 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
             ) from err
         coordinator = DeviceDataUpdateCoordinator(hass, entry, device)
         await coordinator.async_config_entry_first_refresh()
+
+        # Reload a discovery entry that already owns this device, so it drops it.
+        for other_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            if other_entry.runtime_data.discovery_service is not None and any(
+                other.device.device_info.mac == device.device_info.mac
+                for other in other_entry.runtime_data.coordinators
+            ):
+                await hass.config_entries.async_reload(other_entry.entry_id)
         entry.runtime_data = GreeRuntimeData(
             discovery_service=None, coordinators=[coordinator]
         )

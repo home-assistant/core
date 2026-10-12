@@ -8,6 +8,7 @@ from homeassistant.components.gree.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import FakeDiscovery, build_device_mock
@@ -174,3 +175,36 @@ async def test_discovery_skips_static_ip_device(
     assert len(static_entry.runtime_data.coordinators) == 1
     assert discovery_entry.runtime_data.coordinators == []
     assert len(hass.states.async_entity_ids("climate")) == 1
+
+
+@patch("homeassistant.components.gree.coordinator.DISCOVERY_TIMEOUT", 0)
+async def test_static_ip_entry_takes_over_discovered_device(
+    hass: HomeAssistant, discovery: MagicMock, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a new static IP entry takes the device over from discovery."""
+    discovery.side_effect = lambda *args: FakeDiscovery()
+    discovery_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN)
+    discovery_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert len(discovery_entry.runtime_data.coordinators) == 1
+
+    static_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
+    )
+    static_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(static_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert discovery_entry.state is ConfigEntryState.LOADED
+    assert discovery_entry.runtime_data.coordinators == []
+    assert len(static_entry.runtime_data.coordinators) == 1
+
+    entity_ids = hass.states.async_entity_ids("climate")
+    assert len(entity_ids) == 1
+    entity = entity_registry.async_get(entity_ids[0])
+    assert entity is not None
+    assert entity.config_entry_id == static_entry.entry_id

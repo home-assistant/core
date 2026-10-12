@@ -117,6 +117,7 @@ async def test_manual_step_success(
     ("side_effect", "error"),
     [
         (DeviceTimeoutError(), "cannot_connect"),
+        (OSError("Network unreachable"), "cannot_connect"),
         (Exception("unexpected"), "unknown"),
     ],
 )
