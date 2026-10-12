@@ -6,11 +6,12 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, Mock, patch
 
 from lorawan_connection import (
+    AddedEvent,
     ConnectionUnavailable,
     DeviceEvent,
     Downlink,
     DownlinkError,
-    EventType,
+    UpdatedEvent,
     UplinkEvent,
 )
 import pytest
@@ -28,7 +29,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
-from .helpers import DESCRIPTOR, ExampleCoordinator, ExampleDevices, inventory
+from .helpers import DESCRIPTOR, ExampleCoordinator, ExampleDevices
 
 from tests.common import MockConfigEntry
 
@@ -97,7 +98,11 @@ async def test_device_registry_owned_by_integration(
         identifiers={("test_vendor", f"network:{DESCRIPTOR.dev_eui}")},
         name="Integration device name",
     )
-    backend.emit(inventory(replace(DESCRIPTOR, name="Updated"), EventType.UPDATED))
+    backend.emit(
+        UpdatedEvent(
+            descriptor=replace(DESCRIPTOR, name="Updated"), received_at=dt_util.utcnow()
+        )
+    )
     assert device_registry.async_get(registered.id).name == "Integration device name"
     manager.close()
     await hass.async_block_till_done()
@@ -206,7 +211,12 @@ async def test_coordinator_listener_cleanup(
     assert delivered[0].data.descriptor == DESCRIPTOR
     unsubscribe()
     unsubscribe()
-    backend.emit(inventory(replace(DESCRIPTOR, dev_eui="0201010101010102")))
+    backend.emit(
+        AddedEvent(
+            descriptor=replace(DESCRIPTOR, dev_eui="0201010101010102"),
+            received_at=dt_util.utcnow(),
+        )
+    )
     assert len(delivered) == 1
     manager = entry.runtime_data
     await hass.config_entries.async_unload(entry.entry_id)
@@ -328,7 +338,12 @@ async def test_listener_replay_failure_unsubscribes(
     listener = Mock(side_effect=RuntimeError("observer failed"))
     with pytest.raises(RuntimeError, match="observer failed"):
         entry.runtime_data.subscribe_coordinator_added(listener)
-    backend.emit(inventory(replace(DESCRIPTOR, dev_eui="0201010101010102")))
+    backend.emit(
+        AddedEvent(
+            descriptor=replace(DESCRIPTOR, dev_eui="0201010101010102"),
+            received_at=dt_util.utcnow(),
+        )
+    )
     listener.assert_called_once()
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -364,7 +379,7 @@ async def test_collection_connection_filter_and_disconnect() -> None:
     """The retained transport filters replay and rejects commands while detached."""
 
     connection = _CollectionConnection("example")
-    # Ignore activity without a descriptor until inventory identifies the device.
+    # Ignore activity without a descriptor until an added event identifies the device.
     connection.emit(
         UplinkEvent(
             network_id="network",
@@ -373,7 +388,7 @@ async def test_collection_connection_filter_and_disconnect() -> None:
             data=b"unknown",
         )
     )
-    connection.emit(inventory(DESCRIPTOR))
+    connection.emit(AddedEvent(descriptor=DESCRIPTOR, received_at=dt_util.utcnow()))
     listener = Mock()
     unsubscribe = await connection.async_subscribe(
         brands=frozenset({("tts", "test_vendor")}), listener=listener
@@ -400,9 +415,14 @@ async def test_disconnect_while_vendor_subscribes() -> None:
         brands: frozenset[tuple[str, int | str]] | None,
         listener: Callable[[DeviceEvent], None],
     ) -> Mock:
-        listener(inventory(DESCRIPTOR))
+        listener(AddedEvent(descriptor=DESCRIPTOR, received_at=dt_util.utcnow()))
         connection.detach()
-        listener(inventory(replace(DESCRIPTOR, name="Stale"), EventType.UPDATED))
+        listener(
+            UpdatedEvent(
+                descriptor=replace(DESCRIPTOR, name="Stale"),
+                received_at=dt_util.utcnow(),
+            )
+        )
         return stop_events
 
     backend = Mock(async_subscribe=AsyncMock(side_effect=replay))
@@ -479,7 +499,12 @@ async def test_reconnect_waits_for_cancelled_attach(
     coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
     assert not coordinator.data.closed
     assert coordinator.last_update_success
-    backend.emit(inventory(replace(DESCRIPTOR, name="Replacement"), EventType.UPDATED))
+    backend.emit(
+        UpdatedEvent(
+            descriptor=replace(DESCRIPTOR, name="Replacement"),
+            received_at=dt_util.utcnow(),
+        )
+    )
     assert coordinator.data.descriptor.name == "Replacement"
     with patch.object(
         backend, "async_send_downlink", new=AsyncMock(return_value="replacement")
@@ -557,7 +582,11 @@ async def test_reconnect_during_initial_setup(
     coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
     assert coordinator.data.descriptor.name == "Replacement"
     assert coordinator.last_update_success
-    backend.emit(inventory(replace(DESCRIPTOR, name="Updated"), EventType.UPDATED))
+    backend.emit(
+        UpdatedEvent(
+            descriptor=replace(DESCRIPTOR, name="Updated"), received_at=dt_util.utcnow()
+        )
+    )
     assert coordinator.data.descriptor.name == "Updated"
     await hass.config_entries.async_unload(entry.entry_id)
     unregister_replacement()

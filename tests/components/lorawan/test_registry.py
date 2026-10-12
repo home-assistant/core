@@ -3,13 +3,14 @@
 from dataclasses import replace
 from unittest.mock import patch
 
-from lorawan_connection import EventType
+from lorawan_connection import AddedEvent, RemovedEvent, UpdatedEvent
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
-from .helpers import DESCRIPTOR, inventory
+from .helpers import DESCRIPTOR
 
 from tests.common import MockConfigEntry
 
@@ -55,12 +56,14 @@ async def test_registry_lifecycle(
         await hass.async_block_till_done()
         assert device_registry.async_get(device.id) is not None
         # The device disappeared while HA was offline.
-        connection.emit(inventory(descriptor, EventType.REMOVED))
+        connection.emit(
+            RemovedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
+        )
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert device_registry.async_get(device.id) is None
         assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        connection.emit(inventory(descriptor))
+        connection.emit(AddedEvent(descriptor=descriptor, received_at=dt_util.utcnow()))
         await hass.async_block_till_done()
         device = device_registry.async_get_device_by_identifier(
             (domain, f"network:{descriptor.dev_eui}"), entry.entry_id
@@ -68,7 +71,10 @@ async def test_registry_lifecycle(
         assert device is not None
         # A profile change to an unsupported model removes all its entities too.
         connection.emit(
-            inventory(replace(descriptor, model_id="unsupported"), EventType.UPDATED)
+            UpdatedEvent(
+                descriptor=replace(descriptor, model_id="unsupported"),
+                received_at=dt_util.utcnow(),
+            )
         )
         await hass.async_block_till_done()
         assert device_registry.async_get(device.id) is None

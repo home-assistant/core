@@ -3,22 +3,12 @@
 import logging
 from typing import override
 
-from lorawan_connection import (
-    AddedEvent,
-    Device,
-    DeviceCollection,
-    DeviceDescriptor,
-    DeviceEvent,
-    EventType,
-    RemovedEvent,
-    UpdatedEvent,
-)
+from lorawan_connection import Device, DeviceCollection, DeviceDescriptor
 
 from homeassistant.components.lorawan import LoRaWANEntity, device_identifier
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
 
 
 class ExampleDevice(Device):
@@ -43,17 +33,6 @@ DESCRIPTOR = DeviceDescriptor(
     brand_id=123,
     model_id="sensor",
 )
-
-
-def inventory(
-    descriptor: DeviceDescriptor = DESCRIPTOR, kind: EventType = EventType.ADDED
-) -> DeviceEvent:
-    """Describe an inventory transition."""
-    return {
-        EventType.ADDED: AddedEvent,
-        EventType.UPDATED: UpdatedEvent,
-        EventType.REMOVED: RemovedEvent,
-    }[kind](descriptor=descriptor, received_at=dt_util.utcnow())
 
 
 class ExampleCoordinator(DataUpdateCoordinator[ExampleDevice]):
