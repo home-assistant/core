@@ -694,6 +694,67 @@ async def test_restore_temperature_unit(
     )
 
 
+@pytest.mark.parametrize(
+    ("units", "restored_attributes", "expected_native", "expected_displayed"),
+    [
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {"temperature": 167, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            MIN_TEMP,
+            61,
+            id="out_of_range_falls_back_to_default",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {"temperature": 24, "temperature_unit": "invalid"},
+            MIN_TEMP,
+            MIN_TEMP,
+            id="invalid_unit_falls_back_to_default",
+        ),
+    ],
+)
+async def test_restore_temperature_falls_back_to_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    units: UnitSystem,
+    restored_attributes: dict[str, Any],
+    expected_native: int,
+    expected_displayed: float,
+) -> None:
+    """Test an out-of-range or unconvertible restored temperature keeps the default."""
+    hass.config.units = units
+    mock_restore_cache(
+        hass, [State(_CLIMATE_ENTITY_ID, HVACMode.OFF, restored_attributes)]
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.lg_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == expected_displayed
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=expected_native, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_with_hvac_mode(
     hass: HomeAssistant,

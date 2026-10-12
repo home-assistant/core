@@ -214,19 +214,24 @@ class LgAcClimateEntity(
             self._attr_hvac_mode = HVACMode(last_state.state)
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
-        if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_native_target_temperature = float(
+        # States written before the unit attribute was added are in the system unit.
+        if (
+            temperature := last_state.attributes.get(ATTR_TEMPERATURE)
+        ) is not None and (
+            unit := last_state.attributes.get(
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                self.hass.config.units.temperature_unit,
+            )
+        ) in TemperatureConverter.VALID_UNITS:
+            native_temperature = float(
                 round(
                     TemperatureConverter.convert(
-                        float(temperature),
-                        last_state.attributes.get(
-                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
-                            self.hass.config.units.temperature_unit,
-                        ),
-                        self.native_temperature_unit,
+                        float(temperature), unit, self.native_temperature_unit
                     )
                 )
             )
+            if self.min_temp <= native_temperature <= self.max_temp:
+                self._attr_native_target_temperature = native_temperature
         if (swing := last_state.attributes.get(ATTR_SWING_MODE)) in _HA_SWING_TO_LIB:
             self._attr_swing_mode = swing
         if (
