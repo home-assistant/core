@@ -31,6 +31,7 @@ WEBHOOK_POWER_SUPPLY_CHANGED_TYPE = "power-supply-changed"
 WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.EVENT,
     Platform.NUMBER,
     Platform.SENSOR,
