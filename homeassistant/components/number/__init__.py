@@ -8,7 +8,6 @@ import logging
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Self, final, override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,20 +16,13 @@ from homeassistant.const import (  # noqa: F401
     CONF_UNIT_OF_MEASUREMENT,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    async_get_hass_or_none,
-    callback,
-)
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, async_get_hass_or_none, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     AMBIGUOUS_UNITS,
@@ -38,6 +30,7 @@ from .const import (  # noqa: F401
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
+    DATA_COMPONENT,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
@@ -50,11 +43,11 @@ from .const import (  # noqa: F401
     NumberEntityCapabilityAttribute,
     NumberMode,
 )
+from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -94,39 +87,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_ws_api(hass)
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {probatio.Required(ATTR_VALUE): probatio.Coerce(float)},
-        async_set_value,
-    )
+    async_setup_services(hass)
 
     return True
-
-
-async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to set a new value."""
-    value = service_call.data["value"]
-    if value < entity.min_value or value > entity.max_value:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="out_of_range",
-            translation_placeholders={
-                "value": value,
-                "entity_id": entity.entity_id,
-                "min_value": str(entity.min_value),
-                "max_value": str(entity.max_value),
-            },
-        )
-
-    try:
-        native_value = entity.convert_to_native_value(value)
-        # Clamp to the native range
-        native_value = min(
-            max(native_value, entity.native_min_value), entity.native_max_value
-        )
-        await entity.async_set_native_value(native_value)
-    except NotImplementedError:
-        await entity.async_set_value(value)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

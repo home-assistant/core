@@ -11,7 +11,11 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 )
 from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -49,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
-    except GetBorderAgentIdNotSupported:
+    except GetBorderAgentIdNotSupported as err:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -59,7 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
             severity=ir.IssueSeverity.WARNING,
             translation_key="get_get_border_agent_id_unsupported",
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="border_agent_id_unsupported",
+        ) from err
     except (
         HomeAssistantError,
         aiohttp.ClientError,

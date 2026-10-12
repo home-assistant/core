@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -72,6 +72,17 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
             self._attr_max_color_temp_kelvin = config.get(
                 CONF_MAX_TEMP, LIGHT_DEFAULT_MAX_KELVIN
             )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

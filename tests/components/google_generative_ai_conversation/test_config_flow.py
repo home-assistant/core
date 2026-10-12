@@ -675,6 +675,7 @@ async def test_subentry_options_switching(
 
     else:
         assert options["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert options.get("errors", None) == errors
 
 
@@ -696,7 +697,9 @@ async def test_subentry_options_switching(
         (Exception, "unknown"),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
+async def test_form_errors(
+    hass: HomeAssistant, side_effect: Exception | type[Exception], error: str
+) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -712,6 +715,23 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+    with (
+        patch(
+            "google.genai.models.AsyncModels.list",
+        ),
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "api_key": "bla",
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
@@ -768,11 +788,17 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        ("assist", ["assist"], ["assist"]),
-        (["assist"], ["assist"], ["assist"]),
-        ("non-existent", [], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        ("assist", ["assist"], ["assist", "homeassistant"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        ("non-existent", [], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(

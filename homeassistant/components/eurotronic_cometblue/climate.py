@@ -59,7 +59,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: CometBlueDataUpdateCoordinator) -> None:
         """Initialize CometBlueClimateEntity."""
@@ -69,13 +69,13 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data.temperatures["currentTemp"]
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         return self.coordinator.data.temperatures["manualTemp"]
 
@@ -99,9 +99,9 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation mode."""
-        if self.target_temperature == MIN_TEMP:
+        if self.native_target_temperature == MIN_TEMP:
             return HVACMode.OFF
-        if self.target_temperature == MAX_TEMP:
+        if self.native_target_temperature == MAX_TEMP:
             return HVACMode.HEAT
         return HVACMode.AUTO
 
@@ -114,15 +114,15 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         if (
             self.coordinator.data.holiday.get("start") is None
             and self.coordinator.data.holiday.get("end") is not None
-            and self.target_temperature
+            and self.native_target_temperature
             == self.coordinator.data.holiday.get("temperature")
         ):
             return PRESET_AWAY
-        if self.target_temperature == MAX_TEMP:
+        if self.native_target_temperature == MAX_TEMP:
             return PRESET_BOOST
-        if self.target_temperature == self._device_comfort_setpoint:
+        if self.native_target_temperature == self._device_comfort_setpoint:
             return PRESET_COMFORT
-        if self.target_temperature == self._device_eco_setpoint:
+        if self.native_target_temperature == self._device_eco_setpoint:
             return PRESET_ECO
         return PRESET_NONE
 
@@ -143,7 +143,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
                     # manual temperature always needs to be set,
                     # otherwise TRV will turn OFF
                     "manualTemp": kwargs.get(ATTR_TEMPERATURE)
-                    or self.target_temperature,
+                    or self.native_target_temperature,
                     # other temperatures can be left unchanged by setting them to None
                     "targetTempLow": kwargs.get(ATTR_TARGET_TEMP_LOW),
                     "targetTempHigh": kwargs.get(ATTR_TARGET_TEMP_HIGH),

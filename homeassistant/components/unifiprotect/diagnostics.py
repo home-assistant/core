@@ -33,8 +33,22 @@ async def async_get_config_entry_diagnostics(
                 )
                 for camera in pb.cameras.values()
             ],
+            "alarm_hubs": [
+                anonymize_data(hub.unifi_dict()) for hub in pb.alarm_hubs.values()
+            ],
             "arm_mode": pb.arm_mode is not None,
         }
         return {"public_bootstrap": public, "options": dict(config_entry.options)}
     bootstrap = cast(dict[str, Any], anonymize_data(api.bootstrap.unifi_dict()))
-    return {"bootstrap": bootstrap, "options": dict(config_entry.options)}
+    diagnostics: dict[str, Any] = {
+        "bootstrap": bootstrap,
+        "options": dict(config_entry.options),
+    }
+    # Alarm hubs live in the public bootstrap (not the private one above) and
+    # are absent on firmware/configs without the public Integration API.
+    if api.has_public_bootstrap:
+        diagnostics["alarm_hubs"] = [
+            anonymize_data(hub.unifi_dict())
+            for hub in api.public_bootstrap.alarm_hubs.values()
+        ]
+    return diagnostics

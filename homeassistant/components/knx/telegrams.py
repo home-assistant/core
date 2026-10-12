@@ -142,6 +142,11 @@ class Telegrams:
                 retention_days=self.retention_days,
                 flush_interval=FLUSH_INTERVAL_SECONDS_SQLITE,
                 max_buffer_size=MAX_BUFFER_TELEGRAMS_SQLITE,
+                # Databases written before knx-telegram-store 0.14 hold local
+                # wall-clock times with no offset. Only we know which zone wrote
+                # them - it is ours, not necessarily the host's - so the store
+                # is told once and converts them on this start.
+                legacy_timestamp_timezone=dt_util.get_default_time_zone(),
             )
 
         self._xknx_telegram_cb_handle = (
@@ -486,7 +491,7 @@ class Telegrams:
 
         dpt_name, unit = self._resolve_dpt(m.dpt_main, m.dpt_sub)
         return TelegramDict(
-            timestamp=m.timestamp.isoformat(),
+            timestamp=dt_util.as_local(m.timestamp).isoformat(),
             source=m.source,
             destination=m.destination,
             direction=m.direction,

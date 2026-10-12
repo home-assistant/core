@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.mcp_server.const import CONF_REQUIRE_ADMIN, DOMAIN
+from homeassistant.components.mcp_server.const import (
+    CONF_ALL_LLM_APIS,
+    CONF_REQUIRE_ADMIN,
+    DOMAIN,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
@@ -56,6 +60,12 @@ def llm_hass_api_fixture() -> list[str]:
     return [llm.LLM_API_ASSIST]
 
 
+@pytest.fixture(name="all_llm_apis")
+def all_llm_apis_fixture() -> bool:
+    """Fixture for the config entry option to expose all LLM APIs."""
+    return False
+
+
 @pytest.fixture(name="require_admin")
 def require_admin_fixture() -> bool:
     """Fixture for the config entry require admin option."""
@@ -64,16 +74,20 @@ def require_admin_fixture() -> bool:
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry(
-    hass: HomeAssistant, llm_hass_api: str | list[str], require_admin: bool
+    hass: HomeAssistant,
+    llm_hass_api: str | list[str],
+    all_llm_apis: bool,
+    require_admin: bool,
 ) -> MockConfigEntry:
     """Fixture to load the integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
+            CONF_ALL_LLM_APIS: all_llm_apis,
             CONF_LLM_HASS_API: llm_hass_api,
             CONF_REQUIRE_ADMIN: require_admin,
         },
-        minor_version=2,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
     return config_entry

@@ -70,7 +70,7 @@ CONTROLLER_EDIT = {
         )
     ),
     probatio.Optional(CONF_USERNAME): selector.TextSelector(),
-    probatio.Optional(CONF_PASSWORD): selector.TextSelector(
+    probatio.Optional(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
         selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
     ),
 }
@@ -171,7 +171,7 @@ async def _try_connection(user_input: dict[str, Any]) -> None:
         _LOGGER.debug("Caught HomeworksNoCredentialsProvided")
         raise SchemaFlowError("credentials_needed") from err
     except Exception as err:
-        _LOGGER.exception("Caught unexpected exception %s")
+        _LOGGER.exception("Caught unexpected exception")
         raise SchemaFlowError("unknown_error") from err
 
 

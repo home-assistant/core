@@ -54,7 +54,6 @@ from homeassistant.components.hassio import (
     hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.const import (
-    DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DEFAULT_UPDATE_OPTIONS,
     ENTRY_DATA_USER,
@@ -68,6 +67,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
@@ -368,7 +368,7 @@ async def test_setup_api_push_api_data_default(
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=80, refresh_token=None)
     )
-    hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    hassio_user = hass.data[DATA_SUPERVISOR_USER]
     assert hassio_user.system_generated
     assert len(hassio_user.groups) == 1
     assert hassio_user.groups[0].id == GROUP_ID_ADMIN

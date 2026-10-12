@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
-from tests.common import MockConfigEntry, MockEntity
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
@@ -54,14 +54,6 @@ def patch_airthings_ble(return_value=AirthingsDevice, side_effect=None):
         "update_device",
         return_value=return_value,
         side_effect=side_effect,
-    )
-
-
-def patch_airthings_device_update():
-    """Patch airthings-ble device."""
-    return patch(
-        "homeassistant.components.airthings_ble.coordinator.AirthingsBluetoothDeviceData.update_device",
-        return_value=WAVE_DEVICE_INFO,
     )
 
 
@@ -301,41 +293,6 @@ CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
         "radon_1day_level": "low",
     },
     address="cc:cc:cc:cc:cc:cc",
-)
-
-TEMPERATURE_V1 = MockEntity(
-    unique_id="Airthings Wave Plus 123456_temperature",
-    name="Airthings Wave Plus 123456 Temperature",
-)
-
-HUMIDITY_V2 = MockEntity(
-    unique_id="Airthings Wave Plus (123456)_humidity",
-    name="Airthings Wave Plus (123456) Humidity",
-)
-
-CO2_V1 = MockEntity(
-    unique_id="Airthings Wave Plus 123456_co2",
-    name="Airthings Wave Plus 123456 CO2",
-)
-
-CO2_V2 = MockEntity(
-    unique_id="Airthings Wave Plus (123456)_co2",
-    name="Airthings Wave Plus (123456) CO2",
-)
-
-VOC_V1 = MockEntity(
-    unique_id="Airthings Wave Plus 123456_voc",
-    name="Airthings Wave Plus 123456 CO2",
-)
-
-VOC_V2 = MockEntity(
-    unique_id="Airthings Wave Plus (123456)_voc",
-    name="Airthings Wave Plus (123456) VOC",
-)
-
-VOC_V3 = MockEntity(
-    unique_id="cc:cc:cc:cc:cc:cc_voc",
-    name="Airthings Wave Plus (123456) VOC",
 )
 
 
