@@ -72,7 +72,7 @@
       "message": "The lock connection is not running."
     },
     "pin_already_in_use": {
-      "message": "This PIN is already in use in another slot."
+      "message": "This PIN is already used in another slot. The target slot was cleared and is now empty."
     }
   },
   "options": {

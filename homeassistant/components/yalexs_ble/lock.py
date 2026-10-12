@@ -1,7 +1,7 @@
 """Support for Yale Access Bluetooth locks."""
 
-from collections.abc import Callable, Coroutine, Generator
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
 import logging
 import re
@@ -211,19 +211,28 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         operation.matched_state = new_state
         return True
 
-    @contextmanager
-    def _expect_operation(self, statuses: frozenset[LockStatus]) -> Generator[None]:
-        """Expect a lock operation for the duration of the library call."""
+    @asynccontextmanager
+    async def _expect_operation(
+        self, statuses: frozenset[LockStatus]
+    ) -> AsyncGenerator[None]:
+        """Expect a lock operation for the duration of the library call.
+
+        Commands for one physical lock run one at a time so they cannot
+        overwrite each other's expectation.
+        """
         data = self._data
-        data.expected_operation = ExpectedOperation(
-            statuses, time.monotonic() + HA_OPERATION_TIMEOUT_SECONDS
-        )
-        try:
-            yield
-        except BaseException:
-            # Includes cancellation, which would otherwise leave the expectation active.
-            data.expected_operation = None
-            raise
+        async with data.operation_lock:
+            expected = ExpectedOperation(
+                statuses, time.monotonic() + HA_OPERATION_TIMEOUT_SECONDS
+            )
+            data.expected_operation = expected
+            try:
+                yield
+            except BaseException:
+                # Includes cancellation, which would otherwise leave the expectation active.
+                if data.expected_operation is expected:
+                    data.expected_operation = None
+                raise
 
     @callback
     def _async_cancel_hold(self) -> None:
@@ -375,7 +384,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        with self._expect_operation(UNLOCK_STATUSES):
+        async with self._expect_operation(UNLOCK_STATUSES):
             await self._device.unlock()
 
     async def _async_run_once[T](
@@ -477,7 +486,7 @@ class YaleXSBLELock(YaleXSBLEBaseLock, LockEntity):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        with self._expect_operation(LOCK_STATUSES):
+        async with self._expect_operation(LOCK_STATUSES):
             await self._device.lock()
 
 
@@ -496,5 +505,5 @@ class YaleXSBLESecureModeLock(YaleXSBLEBaseLock):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        with self._expect_operation(SECURE_MODE_STATUSES):
+        async with self._expect_operation(SECURE_MODE_STATUSES):
             await self._device.securemode()

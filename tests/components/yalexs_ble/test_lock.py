@@ -42,6 +42,7 @@ from homeassistant.components.yalexs_ble.const import (
     EVENT_LOCK_ACTIVITY,
     HA_OPERATION_TIMEOUT_SECONDS,
 )
+from homeassistant.components.yalexs_ble.models import YaleXSBLEData
 from homeassistant.components.yalexs_ble.store import CredentialNames
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, EVENT_STATE_CHANGED
@@ -294,7 +295,7 @@ async def test_set_credential_schema_rejects(
         pytest.param(
             KeycodeError("set", OperationError.KEYCODE_EXISTING_KEY),
             ServiceValidationError,
-            "already in use",
+            "already used in another slot",
             id="existing_key",
         ),
         pytest.param(
@@ -884,6 +885,112 @@ async def test_opposite_change_during_ha_operation_held(
     mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.MANUAL))
     await _settle(hass, freezer)
     assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Manual"
+
+
+@pytest.mark.usefixtures("entry")
+async def test_concurrent_ha_operations_run_sequentially(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test overlapping HA commands run one at a time and both are HA initiated."""
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    release_unlock = asyncio.Event()
+    order: list[str] = []
+
+    async def _unlock() -> None:
+        order.append("unlock start")
+        await release_unlock.wait()
+        order.append("unlock end")
+
+    async def _lock() -> None:
+        order.append("lock start")
+
+    mock_lock.push_lock.unlock.side_effect = _unlock
+    mock_lock.push_lock.lock.side_effect = _lock
+
+    unlock_task = hass.async_create_task(
+        hass.services.async_call(
+            "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    lock_task = hass.async_create_task(
+        hass.services.async_call(
+            "lock", "lock", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    assert order == ["unlock start"]
+
+    mock_lock.push(LockStatus.UNLOCKED)
+    release_unlock.set()
+    await asyncio.gather(unlock_task, lock_task)
+    assert order == ["unlock start", "unlock end", "lock start"]
+    assert hass.states.get(ENTITY_ID).state == "unlocked"
+
+    mock_lock.push(LockStatus.LOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    assert not activity_events
+
+
+@pytest.mark.usefixtures("entry")
+async def test_failed_ha_operation_keeps_next_expectation(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test a failing command does not clear the next command's expectation."""
+    release_unlock = asyncio.Event()
+    seen: list[bool] = []
+
+    async def _unlock() -> None:
+        await release_unlock.wait()
+        raise BleakError("gone")
+
+    async def _lock() -> None:
+        seen.append(mock_lock_data().expected_operation is not None)
+
+    def mock_lock_data() -> YaleXSBLEData:
+        return hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+    mock_lock.push_lock.unlock.side_effect = _unlock
+    mock_lock.push_lock.lock.side_effect = _lock
+
+    unlock_task = hass.async_create_task(
+        hass.services.async_call(
+            "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    lock_task = hass.async_create_task(
+        hass.services.async_call(
+            "lock", "lock", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    release_unlock.set()
+    results = await asyncio.gather(unlock_task, lock_task, return_exceptions=True)
+    assert isinstance(results[0], BleakError)
+    assert results[1] is None
+    assert seen == [True]
+    assert mock_lock_data().expected_operation is not None
+
+
+@pytest.mark.usefixtures("entry")
+async def test_failed_ha_operation_after_expectation_consumed(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test a failure after the expectation was already dropped is a no-op."""
+
+    async def _unlock() -> None:
+        mock_lock.push(LockStatus.SECUREMODE)
+        raise BleakError("gone")
+
+    mock_lock.push_lock.unlock.side_effect = _unlock
+    with pytest.raises(BleakError):
+        await hass.services.async_call(
+            "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+        )
+    data = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    assert data.expected_operation is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")
