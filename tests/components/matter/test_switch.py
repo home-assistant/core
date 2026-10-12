@@ -22,6 +22,10 @@ from .common import (
     trigger_subscription_callback,
 )
 
+REVERSE_MOTOR_DIRECTION_ENTITY_ID = (
+    "switch.mock_full_window_covering_reverse_motor_direction"
+)
+
 
 @pytest.mark.usefixtures("matter_devices")
 async def test_switches(
@@ -504,52 +508,77 @@ async def test_window_covering_reverse_motor_direction(
     matter_node: MatterNode,
 ) -> None:
     """Test switch entity for the WindowCovering MotorDirectionReversed mode bit."""
-    entity_id = "switch.mock_full_window_covering_reverse_motor_direction"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
     assert state
     assert state.state == "off"
 
     set_node_attribute(matter_node, 1, 258, 23, 1)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
     assert state.state == "on"
 
-    # set an unrelated mode bit (LedFeedback) to check it is preserved on write
+    # only the MotorDirectionReversed bit drives the state
     set_node_attribute(matter_node, 1, 258, 23, 8)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+@pytest.mark.parametrize(
+    ("mode", "service", "written_value"),
+    [
+        pytest.param(8, "turn_on", 9, id="set_keeps_led_feedback"),
+        pytest.param(9, "turn_off", 8, id="clear_keeps_led_feedback"),
+        # bits outside the Mode bitmap must survive the read-modify-write too
+        pytest.param(0x10, "turn_on", 0x11, id="set_keeps_undeclared_bit"),
+        pytest.param(0x11, "turn_off", 0x10, id="clear_keeps_undeclared_bit"),
+    ],
+)
+async def test_window_covering_reverse_motor_direction_write(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    mode: int,
+    service: str,
+    written_value: int,
+) -> None:
+    """Test writing the mode bit preserves the other bits of the Mode bitmap."""
+    set_node_attribute(matter_node, 1, 258, 23, mode)
+    await trigger_subscription_callback(hass, matter_client)
 
     await hass.services.async_call(
         "switch",
-        "turn_on",
-        {"entity_id": entity_id},
+        service,
+        {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
-    assert matter_client.write_attribute.call_args_list[0] == call(
+    assert matter_client.write_attribute.call_args == call(
         node_id=matter_node.node_id,
         attribute_path=create_attribute_path_from_attribute(
             endpoint_id=1,
             attribute=clusters.WindowCovering.Attributes.Mode,
         ),
-        value=9,
+        value=written_value,
     )
 
-    set_node_attribute(matter_node, 1, 258, 23, 9)
-    await trigger_subscription_callback(hass, matter_client)
-    await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-    assert matter_client.write_attribute.call_count == 2
-    assert matter_client.write_attribute.call_args_list[1] == call(
-        node_id=matter_node.node_id,
-        attribute_path=create_attribute_path_from_attribute(
-            endpoint_id=1,
-            attribute=clusters.WindowCovering.Attributes.Mode,
-        ),
-        value=8,
-    )
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction_not_supported(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a device rejecting an unsupported mode bit raises a meaningful error."""
+    matter_client.write_attribute.return_value = {
+        "status": clusters.Globals.Enums.status.kConstraintError
+    }
+
+    with pytest.raises(HomeAssistantError, match="does not support"):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+            blocking=True,
+        )

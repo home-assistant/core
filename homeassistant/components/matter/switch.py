@@ -18,8 +18,10 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -179,6 +181,13 @@ class MatterBitmapSwitchEntityDescription(MatterSwitchEntityDescription):
     bitmask: int
 
 
+def _write_status(result: Any) -> int | None:
+    """Return the Matter status of a write response, if the server reported one."""
+    if isinstance(result, dict):
+        return result.get("status")
+    return getattr(result, "status", None)
+
+
 class MatterBitmapSwitch(MatterSwitch):
     """Representation of a single bit of a Matter bitmap attribute as a Switch entity."""
 
@@ -189,9 +198,18 @@ class MatterBitmapSwitch(MatterSwitch):
         current_value: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
-        bitmask = self.entity_description.bitmask
+        # inverting an IntFlag is bounded by the flags the cluster declares, so
+        # mask as a plain int to preserve bits outside of those
+        bitmask = int(self.entity_description.bitmask)
         new_value = current_value | bitmask if value else current_value & ~bitmask
-        await self.write_attribute(value=new_value)
+        result = await self.write_attribute(value=new_value)
+        # a rejected write reports its status in the response instead of raising
+        if _write_status(result) == clusters.Globals.Enums.status.kConstraintError:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="bitmap_write_not_supported",
+                translation_placeholders={"name": str(self.name)},
+            )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
