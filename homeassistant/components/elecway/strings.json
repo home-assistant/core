@@ -1,0 +1,39 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "No unconfigured Elecway storage devices were found. Check that the device is on the same network and supports local WebSocket communication.",
+      "not_supported": "This discovery is not a supported Elecway storage device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "Elecway {serial_number}",
+    "step": {
+      "confirm": {
+        "description": "Set up Elecway storage {serial_number}?"
+      },
+      "user": {
+        "data": { "device": "Device" },
+        "data_description": {
+          "device": "The storage device to add to Home Assistant."
+        },
+        "description": "Select an Elecway energy storage device on your local network."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_daily_charge": { "name": "Battery daily charge" },
+      "battery_daily_discharge": { "name": "Battery daily discharge" },
+      "battery_power": { "name": "Battery power" },
+      "battery_total_charge": { "name": "Battery total charge" },
+      "battery_total_discharge": { "name": "Battery total discharge" },
+      "output_power": { "name": "Output power" },
+      "pv_daily_generation": { "name": "PV daily generation" },
+      "pv_power": { "name": "PV power" },
+      "pv_total_generation": { "name": "PV total generation" }
+    }
+  }
+}
