@@ -332,12 +332,6 @@
     "category": "Config",
     "choices": ["Off", "Preset 1", "Preset 2"]
   },
-  "ptz_preset": {
-    "value": "Door",
-    "type": "Choice",
-    "category": "Config",
-    "choices": ["Door", "Garden"]
-  },
   "alarm_sound": {
     "value": "Phone Ring",
     "type": "Choice",
