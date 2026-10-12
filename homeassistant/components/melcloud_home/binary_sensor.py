@@ -73,6 +73,24 @@ def _common_sensor_descriptions[_UnitT: ATAUnit | ATWUnit](
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="frost_protection_active",
+            translation_key="frost_protection_active",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            state_fn=lambda unit: (
+                unit.frost_protection.active if unit.frost_protection else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="overheat_protection_active",
+            translation_key="overheat_protection_active",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            state_fn=lambda unit: (
+                unit.overheat_protection.active if unit.overheat_protection else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     )
 
 

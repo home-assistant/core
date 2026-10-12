@@ -46,6 +46,34 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
+    ("frost_protection", "expected_state"),
+    [
+        pytest.param({}, STATE_OFF, id="no_zone"),
+        pytest.param({"zone1Active": True}, STATE_ON, id="zone1"),
+        pytest.param({"zone2Active": True}, STATE_ON, id="zone2"),
+    ],
+)
+async def test_atw_frost_protection_active(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    frost_protection: dict[str, bool],
+    expected_state: str,
+) -> None:
+    """Test ATW frost protection is active when it runs in either zone."""
+    context = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    context["buildings"][0]["airToWaterUnits"][0]["frostProtection"].update(
+        frost_protection
+    )
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("binary_sensor.heat_pump_frost_protection_active"))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
     ("holiday_mode", "expected_state"),
     [
         pytest.param({"enabled": True, "active": False}, STATE_OFF, id="scheduled"),
