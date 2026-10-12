@@ -895,7 +895,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tplink_lte",
     "traccar",
     "traccar_server",
-    "tractive",
     "tradfri",
     "trafikverket_camera",
     "trafikverket_ferry",
