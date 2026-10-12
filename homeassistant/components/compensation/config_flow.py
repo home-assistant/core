@@ -1,11 +1,9 @@
 """Config flow for Compensation integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -50,16 +48,16 @@ from .const import (
 )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Get options schema."""
     entity_id = handler.options[CONF_ENTITY_ID]
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_POLYNOMIAL_CONFIG): section(
-                vol.Schema(
+            probatio.Required(CONF_POLYNOMIAL_CONFIG): section(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_DATAPOINTS): ObjectSelector(
+                        probatio.Optional(CONF_DATAPOINTS): ObjectSelector(
                             ObjectSelectorConfig(
                                 label_field="uncompensated_value",
                                 description_field="compensated_value",
@@ -86,7 +84,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                                 },
                             )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_DEGREE, default=DEFAULT_DEGREE
                         ): NumberSelector(
                             NumberSelectorConfig(
@@ -97,15 +95,17 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                 ),
                 SectionConfig(collapsed=False),
             ),
-            vol.Optional(CONF_ATTRIBUTE): AttributeSelector(
+            probatio.Optional(CONF_ATTRIBUTE): AttributeSelector(
                 AttributeSelectorConfig(entity_id=entity_id)
             ),
-            vol.Optional(CONF_UPPER_LIMIT, default=False): BooleanSelector(),
-            vol.Optional(CONF_LOWER_LIMIT, default=False): BooleanSelector(),
-            vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
+            probatio.Optional(CONF_UPPER_LIMIT, default=False): BooleanSelector(),
+            probatio.Optional(CONF_LOWER_LIMIT, default=False): BooleanSelector(),
+            probatio.Optional(
+                CONF_PRECISION, default=DEFAULT_PRECISION
+            ): NumberSelector(
                 NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
             ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
         }
     )
 
@@ -134,10 +134,10 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
+DATA_SCHEMA_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_ENTITY_ID): EntitySelector(),
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_ENTITY_ID): EntitySelector(),
     }
 )
 
@@ -166,6 +166,7 @@ class CompensationConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
