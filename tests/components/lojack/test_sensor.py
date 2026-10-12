@@ -60,7 +60,7 @@ async def test_sensor_values(
     """Test sensor values from the coordinator data."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(f"{ENTITY_ID_BASE}_distance")
+    state = hass.states.get(f"{ENTITY_ID_BASE}_odometer")
     assert state is not None
     # Native unit is miles; HA converts to the metric test unit system (km)
     assert float(state.state) == pytest.approx(TEST_ODOMETER * 1.609344)
@@ -70,7 +70,7 @@ async def test_sensor_values(
     # Native unit is mph; HA converts to the metric test unit system (km/h)
     assert float(state.state) == pytest.approx(TEST_SPEED * 1.609344)
 
-    state = hass.states.get(f"{ENTITY_ID_BASE}_voltage")
+    state = hass.states.get(f"{ENTITY_ID_BASE}_battery_voltage")
     assert state is not None
     assert float(state.state) == pytest.approx(TEST_BATTERY_VOLTAGE)
 
@@ -83,7 +83,7 @@ async def test_last_reported_sensor(
     """Test the location timestamp sensor."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(f"{ENTITY_ID_BASE}_timestamp")
+    state = hass.states.get(f"{ENTITY_ID_BASE}_location_last_reported")
     assert state is not None
     assert state.state == TEST_TIMESTAMP.isoformat()
 
@@ -98,7 +98,7 @@ async def test_sensor_becomes_unavailable_on_api_error(
     """Test sensors become unavailable when the coordinator update fails."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(f"{ENTITY_ID_BASE}_distance")
+    state = hass.states.get(f"{ENTITY_ID_BASE}_odometer")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -108,6 +108,6 @@ async def test_sensor_becomes_unavailable_on_api_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{ENTITY_ID_BASE}_distance")
+    state = hass.states.get(f"{ENTITY_ID_BASE}_odometer")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

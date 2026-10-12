@@ -39,6 +39,7 @@ class LoJackSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[LoJackSensorEntityDescription, ...] = (
     LoJackSensorEntityDescription(
         key="odometer",
+        translation_key="odometer",
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -55,6 +56,7 @@ SENSORS: tuple[LoJackSensorEntityDescription, ...] = (
     ),
     LoJackSensorEntityDescription(
         key="battery_voltage",
+        translation_key="battery_voltage",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -64,6 +66,7 @@ SENSORS: tuple[LoJackSensorEntityDescription, ...] = (
     ),
     LoJackSensorEntityDescription(
         key="location_last_reported",
+        translation_key="location_last_reported",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.timestamp,
