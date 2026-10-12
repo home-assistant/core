@@ -26,10 +26,6 @@
     }
   },
   "issues": {
-    "deprecated_controller_service": {
-      "description": "The `{service}` action without `entity_id` is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Update any automation or script to include `entity_id`, targeting the controller's climate entity.",
-      "title": "Untargeted Evohome controller action is deprecated"
-    },
     "deprecated_refresh_system_service": {
       "description": "The `refresh_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Instead, use the `homeassistant.update_entity` action, targeting the controller's climate entity.",
       "title": "Evohome 'Refresh system' action is deprecated"

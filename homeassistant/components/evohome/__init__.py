@@ -75,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "deprecated_clear_zone_override_service",
         "deprecated_preset_reset",
         "deprecated_reset_system_service",
+        "deprecated_set_system_mode_service",
     ):
         ir.async_delete_issue(hass, DOMAIN, issue_id)
 
