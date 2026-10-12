@@ -61,9 +61,9 @@ async def test_full_flow(
             id="CommandError-unknown",
         ),
         pytest.param(
-            mpd.CommandError("unparseable error"),
+            mpd.CommandError("unparsable error"),
             "unknown",
-            id="CommandError-unparseable",
+            id="CommandError-unparsable",
         ),
         (Exception, "unknown"),
     ],
