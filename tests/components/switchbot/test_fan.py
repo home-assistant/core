@@ -87,6 +87,7 @@ async def test_circulator_fan_controlling(
     with patch.multiple(
         "homeassistant.components.switchbot.fan.switchbot.SwitchbotFan",
         get_basic_info=mcoked_none_instance,
+        update=mcoked_none_instance,
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -322,6 +323,7 @@ async def test_standing_fan_controlling(
     with patch.multiple(
         "homeassistant.components.switchbot.fan.switchbot.SwitchbotStandingFan",
         get_basic_info=mocked_none,
+        update=mocked_none,
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -365,6 +367,7 @@ async def test_exception_handling_standing_fan_service(
     with patch.multiple(
         "homeassistant.components.switchbot.fan.switchbot.SwitchbotStandingFan",
         get_basic_info=mocked_none,
+        update=mocked_none,
         **{
             mock_method: AsyncMock(
                 side_effect=SwitchbotOperationError("Operation failed")
@@ -414,6 +417,7 @@ async def test_standing_fan_command_failure(
     with patch.multiple(
         "homeassistant.components.switchbot.fan.switchbot.SwitchbotStandingFan",
         get_basic_info=mocked_none,
+        update=mocked_none,
         **{mock_method: AsyncMock(return_value=False)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
