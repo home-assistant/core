@@ -5,6 +5,7 @@ import logging
 import mimetypes
 from pathlib import PurePath
 from typing import override
+from urllib.parse import unquote
 
 from aiohttp import ClientError, ClientTimeout, web
 from aioindiallsky import IndiAllSkyError
@@ -120,11 +121,13 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         except ValueError, UnicodeError:
             return web.Response(status=400)
 
-        media_path_obj = PurePath(media_path)
+        unquoted_media_path = unquote(media_path)
+        media_path_obj = PurePath(unquoted_media_path)
         if (
             media_path_obj.is_absolute()
             or ".." in media_path_obj.parts
             or not _is_valid_media_path(media_path)
+            or not _is_valid_media_path(unquoted_media_path)
         ):
             return web.Response(status=400)
 
@@ -146,6 +149,7 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
                     headers=headers,
                     timeout=STREAM_TIMEOUT,
                     allow_redirects=False,
+                    auto_decompress=False,
                 ) as upstream:
                     if upstream.status in (301, 302, 303, 307, 308):
                         location = upstream.headers.get("Location")
@@ -163,6 +167,7 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
                     resp_headers: dict[str, str] = {}
                     for header in (
                         "Accept-Ranges",
+                        "Content-Encoding",
                         "Content-Length",
                         "Content-Range",
                         "Content-Type",
@@ -735,7 +740,6 @@ class IndiAllSkyMediaSource(MediaSource):
                 title=f"{img.time_str} ({img.width}x{img.height})",
                 can_play=True,
                 can_expand=False,
-                thumbnail=_build_media_proxy_path(entry.entry_id, img.url),
             )
             for img in images
             if img.url

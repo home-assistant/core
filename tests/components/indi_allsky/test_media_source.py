@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import gzip
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -319,15 +320,15 @@ async def test_async_resolve_media_mime_types(
 
     # Unknown extension falls back to image/jpeg
     mock_indi_allsky_client.get_media_url.return_value = (
-        "https://127.0.0.1:443/indi-allsky/unknown.unknownext"
+        "https://127.0.0.1:443/indi-allsky/public/unknown.unknownext"
     )
     res_fallback = await async_resolve_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#unknown.unknownext",
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#public/unknown.unknownext",
         None,
     )
     assert res_fallback == PlayMedia(
-        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/dW5rbm93bi51bmtub3duZXh0",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/cHVibGljL3Vua25vd24udW5rbm93bmV4dA==",
         "image/jpeg",
     )
 
@@ -586,10 +587,7 @@ async def test_async_browse_images_hierarchy(
     assert len(res_images.children) == 1
     assert "20:00:00 (4056x3140)" in res_images.children[0].title
     assert res_images.children[0].media_content_type == MediaType.IMAGE
-    assert (
-        res_images.children[0].thumbnail
-        == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2ltZ18yMDAwMDAuanBn"
-    )
+    assert res_images.children[0].thumbnail is None
 
 
 async def test_async_browse_catalog_error(
@@ -635,13 +633,16 @@ async def test_proxy_view_success_and_headers(
     )
 
     client = await hass_client()
+    raw_data = b"image-bytes-data"
+    compressed_data = gzip.compress(raw_data)
     aioclient_mock.get(
         upstream_url,
-        content=b"image-bytes-data",
+        content=compressed_data,
         headers={
             "Accept-Ranges": "bytes",
-            "Content-Length": "16",
-            "Content-Range": "bytes 0-15/16",
+            "Content-Encoding": "gzip",
+            "Content-Length": str(len(compressed_data)),
+            "Content-Range": f"bytes 0-{len(compressed_data) - 1}/{len(compressed_data)}",
             "Content-Type": "image/jpeg",
         },
     )
@@ -649,14 +650,17 @@ async def test_proxy_view_success_and_headers(
     # b64 for "images/sample.jpg" is "aW1hZ2VzL3NhbXBsZS5qcGc="
     resp = await client.get(
         f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3NhbXBsZS5qcGc=",
-        headers={"Range": "bytes=0-15"},
+        headers={"Range": f"bytes=0-{len(compressed_data) - 1}"},
     )
     assert resp.status == 200
     assert resp.headers.get("Content-Type") == "image/jpeg"
+    assert resp.headers.get("Content-Encoding") == "gzip"
     assert resp.headers.get("Accept-Ranges") == "bytes"
-    assert resp.headers.get("Content-Length") == "16"
-    assert resp.headers.get("Content-Range") == "bytes 0-15/16"
-    assert await resp.read() == b"image-bytes-data"
+    assert resp.headers.get("Content-Length") == str(len(compressed_data))
+    assert resp.headers.get("Content-Range") == (
+        f"bytes 0-{len(compressed_data) - 1}/{len(compressed_data)}"
+    )
+    assert await resp.read() == raw_data
 
 
 async def test_proxy_view_content_type_inference(
@@ -672,11 +676,11 @@ async def test_proxy_view_content_type_inference(
     await hass.async_block_till_done()
 
     mock_indi_allsky_client.get_media_url.return_value = (
-        "https://127.0.0.1:443/indi-allsky/sample.jpg"
+        "https://127.0.0.1:443/indi-allsky/images/sample.jpg"
     )
     await async_resolve_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/sample.jpg",
         None,
     )
 
@@ -770,6 +774,13 @@ async def test_proxy_view_errors(
     # b64 for "images/../secret" is "aW1hZ2VzLy4uL3NlY3JldA=="
     resp = await client.get(
         f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzLy4uL3NlY3JldA=="
+    )
+    assert resp.status == 400
+
+    # Percent-encoded path traversal (e.g. images/%2e%2e/%2e%2e/api/admin) -> 400
+    # b64 for "images/%2e%2e/%2e%2e/api/admin" is "aW1hZ2VzLyUyZSUyZS8lMmUlMmUvYXBpL2FkbWlu"
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzLyUyZSUyZS8lMmUlMmUvYXBpL2FkbWlu"
     )
     assert resp.status == 400
 
