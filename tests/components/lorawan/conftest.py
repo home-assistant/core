@@ -38,13 +38,13 @@ def example_integrations(
 ) -> Generator[None]:
     """Exercise real config-entry/entity lifecycle with synthetic integrations."""
 
-    async def setup_provider(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def setup_integration(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(
             await async_register_connection(hass, entry, connection=mock_connection)
         )
         return True
 
-    async def unload_provider(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def unload_integration(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
     async def setup_vendor(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,8 +82,8 @@ def example_integrations(
         MockModule(
             "test_provider",
             dependencies=["lorawan"],
-            async_setup_entry=setup_provider,
-            async_unload_entry=unload_provider,
+            async_setup_entry=setup_integration,
+            async_unload_entry=unload_integration,
         ),
     )
     mock_integration(
