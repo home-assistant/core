@@ -48,6 +48,7 @@ from boschshcpy.services_impl import (
     OutdoorSirenService,
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
+    SmokeSensitivityService,
     ValveTappetService,
     VibrationSensorService,
 )
@@ -724,6 +725,7 @@ def smoke_detector_device(
     supports_intrusion_alarm: bool = True,
     intrusion_alarm: bool = False,
     alarmstate: AlarmService.State = AlarmService.State.IDLE_OFF,
+    smoke_sensitivity: SmokeSensitivityService.SmokeSensitivityLevel | None = None,
 ) -> SHCSmokeDetector:
     """Build a minimal device double for the smoke_detectors bucket."""
     device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
@@ -739,6 +741,7 @@ def smoke_detector_device(
     device.supports_intrusion_alarm = supports_intrusion_alarm
     device.intrusion_alarm = intrusion_alarm
     device.alarmstate = alarmstate
+    device.smoke_sensitivity = smoke_sensitivity
     return device
 
 

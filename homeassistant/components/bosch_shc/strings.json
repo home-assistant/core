@@ -100,6 +100,14 @@
           "medium": "Medium"
         }
       },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "middle": "Medium"
+        }
+      },
       "vibration_sensitivity": {
         "name": "Vibration sensitivity",
         "state": {
