@@ -1,4 +1,3 @@
-
 """The Homewizard integration."""
 
 from homewizard_energy import (
