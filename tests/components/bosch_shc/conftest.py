@@ -50,6 +50,7 @@ from boschshcpy.services_impl import (
     OutdoorSirenService,
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
+    SmokeSensitivityService,
     ValveTappetService,
     VibrationSensorService,
 )
@@ -327,6 +328,7 @@ def smart_plug_device(
     supports_energy_saving_mode: bool = False,
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
+    enter_duration_seconds: int | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -344,6 +346,7 @@ def smart_plug_device(
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
+    device.enter_duration_seconds = enter_duration_seconds
     return device
 
 
@@ -353,6 +356,7 @@ def smart_plug_compact_device(
     supports_energy_saving_mode: bool = False,
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
+    enter_duration_seconds: int | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -369,6 +373,7 @@ def smart_plug_compact_device(
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
+    device.enter_duration_seconds = enter_duration_seconds
     return device
 
 
@@ -765,6 +770,7 @@ def smoke_detector_device(
     supports_intrusion_alarm: bool = True,
     intrusion_alarm: bool = False,
     alarmstate: AlarmService.State = AlarmService.State.IDLE_OFF,
+    smoke_sensitivity: SmokeSensitivityService.SmokeSensitivityLevel | None = None,
 ) -> SHCSmokeDetector:
     """Build a minimal device double for the smoke_detectors bucket."""
     device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
@@ -780,6 +786,7 @@ def smoke_detector_device(
     device.supports_intrusion_alarm = supports_intrusion_alarm
     device.intrusion_alarm = intrusion_alarm
     device.alarmstate = alarmstate
+    device.smoke_sensitivity = smoke_sensitivity
     return device
 
 
