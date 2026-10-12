@@ -97,7 +97,7 @@ async def test_validation(
 async def test_validation_heat_external_statistics(
     hass: HomeAssistant, mock_energy_manager
 ) -> None:
-    """Test validating district heat with external energy and cost statistics."""
+    """Test validating heat with external energy and cost statistics."""
     await mock_energy_manager.async_update(
         {
             "energy_sources": [

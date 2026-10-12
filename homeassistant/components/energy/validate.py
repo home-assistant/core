@@ -670,7 +670,7 @@ def _validate_heat_source(
     source_result: ValidationIssues,
     validate_calls: list[functools.partial[None]],
 ) -> None:
-    """Validate district heat energy source."""
+    """Validate heat energy source."""
     stat_energy_from = source["stat_energy_from"]
     wanted_statistics_metadata.add(stat_energy_from)
     validate_calls.append(

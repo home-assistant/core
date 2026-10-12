@@ -209,7 +209,7 @@ class GasSourceType(TypedDict):
 
 
 class HeatSourceType(TypedDict):
-    """Dictionary holding the source of district heat consumption."""
+    """Dictionary holding the source of heat consumption."""
 
     type: Literal["heat"]
 
