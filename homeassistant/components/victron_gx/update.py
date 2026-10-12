@@ -70,6 +70,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     def _on_firmware_update(self, info: FirmwareUpdateInfo) -> None:
         """Handle updated firmware information."""
         self._firmware_info = info
+        # Install callbacks can update progress before the next firmware snapshot.
         self._attr_in_progress = info.in_progress
         self._attr_update_percentage = info.progress if info.in_progress else None
         self.async_write_ha_state()
