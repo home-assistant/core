@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, override
 
-from daikin_onecta.models import ManagementPoint
+from daikin_onecta.models import EnergyAggregate, ManagementPoint
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant, callback
@@ -261,6 +261,39 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         """Refresh the state from the current device data."""
         self._attr_native_value = self.sensor_value()
 
+    def _api_period(self) -> str:
+        """Return the Daikin API period for this entity."""
+        return {
+            SENSOR_PERIOD_DAILY: "day",
+            SENSOR_PERIOD_WEEKLY: "week",
+            SENSOR_PERIOD_YEARLY: "year",
+            SENSOR_PERIOD_MONTHLY: "month",
+        }[self._period]
+
+    def _energy_aggregate(self) -> EnergyAggregate | None:
+        """Return the matching energy aggregate from the current model."""
+        point = self._device.management_point(self._embedded_id)
+        if point is None:
+            return None
+        period = self._api_period()
+        return next(
+            (
+                aggregate
+                for aggregate in point.energy_aggregates
+                if aggregate.data_type == self._datatype
+                and aggregate.source == self._sensor_type
+                and aggregate.operation_mode == self._operation_mode
+                and aggregate.period == period
+            ),
+            None,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the matching energy aggregate is still available."""
+        return super().available and self._energy_aggregate() is not None
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -281,26 +314,8 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         that a time slot is not available yet and contributes no consumption
         until a later update supplies its value.
         """
-        point = self._device.management_point(self._embedded_id)
-        if point is None:
-            return None
-        period = {
-            SENSOR_PERIOD_DAILY: "day",
-            SENSOR_PERIOD_WEEKLY: "week",
-            SENSOR_PERIOD_YEARLY: "year",
-            SENSOR_PERIOD_MONTHLY: "month",
-        }[self._period]
-        aggregate = next(
-            (
-                aggregate
-                for aggregate in point.energy_aggregates
-                if aggregate.data_type == self._datatype
-                and aggregate.source == self._sensor_type
-                and aggregate.operation_mode == self._operation_mode
-                and aggregate.period == period
-            ),
-            None,
-        )
+        period = self._api_period()
+        aggregate = self._energy_aggregate()
         if aggregate is None:
             return None
         return aggregate.current_total(
@@ -352,6 +367,22 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             characteristic = point.scalar_characteristic(self._value)
         result = characteristic.value if characteristic is not None else None
         return result if isinstance(result, str | int | float) else None
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the source characteristic is still available."""
+        if not super().available:
+            return False
+        point = self._device.management_point(self._embedded_id)
+        if point is None:
+            return False
+        characteristic = (
+            point.sensory_characteristic(self._value)
+            if self._sub_type == "sensoryData"
+            else point.scalar_characteristic(self._value)
+        )
+        return characteristic is not None
 
 
 class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):

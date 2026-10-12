@@ -181,11 +181,20 @@ def test_climate_availability(
     entity.coordinator = MagicMock(last_update_success=last_update_success)
     entity._device = MagicMock(available=device_available)
     entity._device.management_point.return_value = (
-        MagicMock() if management_point_exists else None
+        SimpleNamespace(
+            climate_control=SimpleNamespace(setpoint_types=["roomTemperature"])
+        )
+        if management_point_exists
+        else None
     )
     entity._embedded_id = "zone"
+    entity._setpoint = "roomTemperature"
 
     assert entity.available is expected
+
+    if expected:
+        entity._setpoint = "leavingWaterTemperature"
+        assert not entity.available
 
 
 async def test_async_climate_command_uses_bound_library_client() -> None:

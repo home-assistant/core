@@ -85,6 +85,17 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_operation_list = self.get_operation_list()
         self._attr_current_operation = self.get_current_operation()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether domestic-hot-water data is still available."""
+        point = self.hot_water_management_point
+        return (
+            super().available
+            and point is not None
+            and point.domestic_hot_water is not None
+        )
+
     async def _async_execute_hot_water_command(
         self,
         command: Callable[[DomesticHotWaterClient], Awaitable[None]],

@@ -101,8 +101,10 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether the switch is on."""
+        if self._switch_state is None:
+            return None
         return self._switch_state == "on"
 
     def sensor_value(self) -> str | None:

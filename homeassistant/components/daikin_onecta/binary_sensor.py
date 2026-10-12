@@ -88,3 +88,19 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         )
         result = characteristic.value if characteristic is not None else None
         return result if isinstance(result, bool) else None
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the source characteristic is still available."""
+        if not super().available:
+            return False
+        point = self._device.management_point(self._embedded_id)
+        characteristic = (
+            point.scalar_characteristic(self._value) if point is not None else None
+        )
+        return bool(
+            characteristic is not None
+            and characteristic.values is None
+            and isinstance(characteristic.value, bool)
+        )

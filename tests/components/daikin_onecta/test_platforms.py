@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE as CLIMATE_SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
-from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.const import DOMAIN, SENSOR_PERIOD_DAILY
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity_descriptions import (
     SENSOR_DESCRIPTIONS,
@@ -52,7 +52,11 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF as SWITCH_SERVICE_TURN_OFF,
     SERVICE_TURN_ON as SWITCH_SERVICE_TURN_ON,
 )
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
+from homeassistant.components.update import (
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+    UpdateEntityFeature,
+)
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_TEMPERATURE as WATER_HEATER_SERVICE_SET_TEMPERATURE,
@@ -114,10 +118,33 @@ def test_platform_availability_requires_coordinator_and_device(
     )()
     entity._embedded_id = "point"
     entity._value = "test"
+    entity._sub_type = None
+    entity._period = SENSOR_PERIOD_DAILY
+    entity._datatype = "consumed"
+    entity._sensor_type = "electricity"
+    entity._operation_mode = "heating"
     point = MagicMock()
-    point.scalar_characteristic.return_value = Characteristic(
-        value="on", settable=True, values=["on", "off"]
+    point.air_purification = SimpleNamespace(
+        power=Characteristic(value="on", settable=True)
     )
+    point.domestic_hot_water = object()
+    point.energy_aggregates = [
+        SimpleNamespace(
+            data_type="consumed",
+            source="electricity",
+            operation_mode="heating",
+            period="day",
+        )
+    ]
+    point.firmware = SimpleNamespace(has_installed_version=True)
+    point.schedule_state = SimpleNamespace(active_selection=object())
+    characteristic = Characteristic(value="test")
+    if entity_class is DaikinBinarySensor:
+        characteristic = Characteristic(value=True)
+    elif entity_class is DaikinSwitch:
+        characteristic = Characteristic(value="on", settable=True, values=["on", "off"])
+    point.scalar_characteristic.return_value = characteristic
+    point.sensory_characteristic.return_value = characteristic
     entity._device = type(
         "Device",
         (),
@@ -127,9 +154,47 @@ def test_platform_availability_requires_coordinator_and_device(
                 point if management_point_exists else None
             ),
         },
-    )()
+    )
+    entity._device = entity._device()
 
     assert entity.available is expected
+
+
+@pytest.mark.parametrize(
+    "entity_class",
+    [
+        DaikinAirPurifier,
+        DaikinBinarySensor,
+        DaikinEnergySensor,
+        DaikinFirmwareUpdateEntity,
+        DaikinScheduleSelect,
+        DaikinValueSensor,
+        DaikinSwitch,
+        DaikinWaterTank,
+    ],
+)
+def test_removed_entity_capability_becomes_unavailable(entity_class: type) -> None:
+    """Entities become unavailable when their source capability disappears."""
+    entity = object.__new__(entity_class)
+    entity.coordinator = SimpleNamespace(last_update_success=True)
+    entity._embedded_id = "point"
+    entity._value = "test"
+    entity._sub_type = None
+    entity._period = SENSOR_PERIOD_DAILY
+    entity._datatype = "consumed"
+    entity._sensor_type = "electricity"
+    entity._operation_mode = "heating"
+    point = MagicMock()
+    point.air_purification = None
+    point.domestic_hot_water = None
+    point.energy_aggregates = []
+    point.firmware = None
+    point.schedule_state = None
+    point.scalar_characteristic.return_value = None
+    point.sensory_characteristic.return_value = None
+    entity._device = SimpleNamespace(available=True, management_point=lambda _: point)
+
+    assert not entity.available
 
 
 async def test_account_entities_are_not_duplicated_for_multiple_gateways(
@@ -943,11 +1008,15 @@ async def test_firmware_install_executes_command(
     )
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
 
-    # Even a fresh poll without status or version evidence may still be stale.
+    # A few fresh polls without status or version evidence may still be stale.
     gateways = _load_gateway_devices("dx4_firmwareavailable")
     coordinator._async_get_cloud_devices = AsyncMock(return_value=gateways)
     await coordinator.async_refresh()
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
+    await coordinator.async_refresh()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is True
+    await coordinator.async_refresh()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is False
 
     gateway_point = gateways[0].management_point(gateways[0].gateway_embedded_id)
     gateway_point.firmware_update_status = Characteristic(value="in-progress")
@@ -985,7 +1054,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     install_started = asyncio.Event()
     finish_install = asyncio.Event()
     poll_started = asyncio.Event()
-    pending_at_poll: list[tuple[int, str | None] | None] = []
+    pending_at_poll: list[tuple[int, str | None, int] | None] = []
 
     async def install(
         _gateway_id: str, _management_point_id: str, _resource: str
@@ -1027,13 +1096,36 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         await install_task
         await poll_task
 
-    assert pending_at_poll == [(requested_sequence, installed_version)]
+    assert pending_at_poll == [
+        (requested_sequence, installed_version, requested_sequence + 3)
+    ]
     assert coordinator.cloud_update_sequence == requested_sequence + 1
     assert entity._pending_install is None
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["installed_version"] == "new-version"
     assert state.attributes["in_progress"] is False
+
+
+async def test_failed_firmware_install_clears_pending_state() -> None:
+    """A rejected install does not leave optimistic progress behind."""
+    entity = object.__new__(DaikinFirmwareUpdateEntity)
+    entity._device = SimpleNamespace(id="gateway")
+    entity._embedded_id = "gateway"
+    entity._is_update_supported = True
+    entity._firmware_id = "firmware-id"
+    entity._attr_installed_version = "1.0"
+    entity._attr_supported_features = UpdateEntityFeature.INSTALL
+    entity._pending_install = None
+    entity.coordinator = SimpleNamespace(cloud_update_sequence=2)
+    entity._async_execute_command = AsyncMock(side_effect=HomeAssistantError)
+    entity.async_write_ha_state = MagicMock()
+
+    with pytest.raises(HomeAssistantError):
+        await entity.async_install(None, False)
+
+    assert entity._pending_install is None
+    assert entity.supported_features is UpdateEntityFeature.INSTALL
 
 
 @pytest.mark.parametrize("update_supported", [False, True])
@@ -1096,6 +1188,58 @@ async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
     assert state.attributes["preset_mode"] is None
     assert "manualFan" not in state.attributes["preset_modes"]
     assert state.attributes["percentage"] == 100
+
+
+async def test_air_purifier_uses_discrete_speed_percentages(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Map purifier percentages to the finite native speed list."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 100},
+        blocking=True,
+    )
+    coordinator.client.patch_characteristic.reset_mock()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 25},
+        blocking=True,
+    )
+
+    coordinator.client.patch_characteristic.assert_awaited_once()
+    assert coordinator.client.patch_characteristic.await_args.args[3] == 1
+    assert hass.states.get("fan.air_purifier").attributes["percentage"] == 25
+
+
+def test_air_purifier_preserves_unknown_power_state() -> None:
+    """Do not interpret an omitted purifier power value as off."""
+    entity = object.__new__(DaikinAirPurifier)
+    purification = SimpleNamespace(
+        power=Characteristic(value=None, settable=True),
+        mode=None,
+        modes=[],
+        fan_operation=MagicMock(return_value=None),
+    )
+    entity._air_purification = MagicMock(return_value=purification)
+
+    entity._update_state()
+
+    assert entity.is_on is None
+    assert entity.percentage is None
+
+
+def test_switch_preserves_unknown_state() -> None:
+    """Do not interpret an omitted switch value as off."""
+    entity = object.__new__(DaikinSwitch)
+    entity._switch_state = None
+
+    assert entity.is_on is None
 
 
 async def test_air_purifier_turn_off_then_on_updates_cached_state(

@@ -197,7 +197,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         return (
             super().available
             and self._device.available
-            and self._climate_control() is not None
+            and (climate_control := self._climate_control()) is not None
+            and self._setpoint in climate_control.setpoint_types
         )
 
     def _climate_control(self) -> ClimateControl | None:

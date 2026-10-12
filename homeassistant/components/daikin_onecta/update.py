@@ -6,6 +6,7 @@ from daikin_onecta.models import ManagementPoint
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
@@ -14,6 +15,8 @@ from .entity import DaikinManagementPointEntity
 from .entity_descriptions import UPDATE_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
+
+_INSTALL_CONFIRMATION_POLLS = 3
 
 
 async def async_setup_entry(
@@ -53,7 +56,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         """Initialise the update entity."""
         super().__init__(device, coordinator, gateway_mp.embedded_id)
         self._coordinator = coordinator
-        self._pending_install: tuple[int, str | None] | None = None
+        self._pending_install: tuple[int, str | None, int] | None = None
 
         self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"
 
@@ -69,19 +72,26 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         if not self._is_update_supported or firmware_id is None:
             self._raise_service_validation_error("firmware_install_unavailable")
 
-        await self._async_execute_command(
-            lambda client: client.firmware(self._device.id, self._embedded_id).install(
-                firmware_id
-            ),
-            "firmware_install_failed",
-        )
+        requested_sequence = self.coordinator.cloud_update_sequence
         self._pending_install = (
-            self.coordinator.cloud_update_sequence,
+            requested_sequence,
             self._attr_installed_version,
+            requested_sequence + _INSTALL_CONFIRMATION_POLLS,
         )
         self._attr_supported_features |= UpdateEntityFeature.PROGRESS
-
         self.async_write_ha_state()
+        try:
+            await self._async_execute_command(
+                lambda client: client.firmware(
+                    self._device.id, self._embedded_id
+                ).install(firmware_id),
+                "firmware_install_failed",
+            )
+        except HomeAssistantError:
+            self._pending_install = None
+            self._attr_supported_features &= ~UpdateEntityFeature.PROGRESS
+            self.async_write_ha_state()
+            raise
 
     @property
     @override
@@ -134,10 +144,13 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
         if self._pending_install is not None:
-            requested_sequence, installed_version = self._pending_install
+            requested_sequence, installed_version, expiry_sequence = (
+                self._pending_install
+            )
             if self.coordinator.cloud_update_sequence > requested_sequence and (
                 firmware.has_update_status
                 or self._attr_installed_version != installed_version
+                or self.coordinator.cloud_update_sequence >= expiry_sequence
             ):
                 self._pending_install = None
             else:
@@ -156,4 +169,11 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     @override
     def available(self) -> bool:
         """Return whether the source device is available."""
-        return super().available and self._device.available
+        management_point = self._device.management_point(self._embedded_id)
+        return (
+            super().available
+            and self._device.available
+            and management_point is not None
+            and management_point.firmware is not None
+            and management_point.firmware.has_installed_version
+        )
