@@ -22,16 +22,16 @@ def restore_pyserial() -> Generator[None]:
 
 async def test_default_exclusive_becomes_true() -> None:
     """When `exclusive` is omitted, it defaults to True after enable()."""
-    assert SerialBase()._exclusive is None
+    assert SerialBase().exclusive is None
     block_shared_serial.enable()
-    assert SerialBase()._exclusive is True
+    assert SerialBase().exclusive is True
 
 
 @pytest.mark.parametrize("value", [None, False, True])
 async def test_explicit_exclusive_is_preserved(value: bool | None) -> None:
     """Explicit `exclusive` arguments are honored after enable()."""
     block_shared_serial.enable()
-    assert SerialBase(exclusive=value)._exclusive is value
+    assert SerialBase(exclusive=value).exclusive is value
 
 
 @pytest.mark.parametrize(
@@ -43,13 +43,13 @@ async def test_serial_open_logs(caplog: pytest.LogCaptureFixture, uri: str) -> N
     block_shared_serial.enable()
     caplog.set_level(logging.DEBUG, logger="pySerial")
 
-    with (  # noqa: SIM117
+    # We bypass `HASocketBlockedError` checks on purpose
+    with (
         pytest.raises(SerialException),
-        # We bypass `HASocketBlockedError` checks on purpose
         patch("socket.socket", side_effect=RuntimeError("Cannot open socket")),
+        serial.serial_for_url(uri),
     ):
-        with serial.serial_for_url(uri):
-            pass
+        pass
 
     assert f"Opening serial port {uri}" in caplog.text
 

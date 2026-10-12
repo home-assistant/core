@@ -1,6 +1,6 @@
 """Block shared access to serial ports by forcing pyserial exclusivity.
 
-Also wires up a `serial` logger around port opens, since pyserial itself is silent.
+Also wires up the `pySerial` logger around port opens, since pyserial itself is silent.
 """
 
 from functools import wraps
