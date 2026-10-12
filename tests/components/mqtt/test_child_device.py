@@ -2,11 +2,13 @@
 
 import json
 from typing import Any
+from unittest.mock import AsyncMock
 
 import probatio
 import pytest
 
 from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.models import DATA_MQTT
 from homeassistant.components.mqtt.schemas import (
     MQTT_DEVICE_INFO_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
@@ -24,6 +26,14 @@ SWITCH_TOPIC = "homeassistant/switch/sw1/config"
 DEVICE_TOPIC = "homeassistant/device/parent/config"
 REGISTRATION_WARNING = "Unable to register MQTT device"
 UNIQUE_ID_REQUIRED = "'unique_id' is required when a 'child_device' is configured"
+TRIGGER_TOPIC = "homeassistant/device_automation/trigger1/config"
+TRIGGER_CONFIG = {
+    "automation_type": "trigger",
+    "topic": "button1",
+    "type": "button_short_press",
+    "subtype": "button_1",
+}
+TAG_TOPIC = "homeassistant/tag/tag1/config"
 
 
 def _entry_id(hass: HomeAssistant) -> str:
@@ -691,35 +701,32 @@ async def test_via_device_referencing_child_device(
 
 
 @pytest.mark.parametrize(
-    ("topic", "payload"),
+    ("topic", "payload", "discovery_hash"),
     [
         pytest.param(
-            "homeassistant/device_automation/trigger1/config",
-            {
-                "automation_type": "trigger",
-                "topic": "button1",
-                "type": "button_short_press",
-                "subtype": "button_1",
-                "device": {"identifiers": ["sub"]},
-            },
+            TRIGGER_TOPIC,
+            {**TRIGGER_CONFIG, "device": {"identifiers": ["sub"]}},
+            ("device_automation", "trigger1"),
             id="device_trigger",
         ),
         pytest.param(
-            "homeassistant/tag/tag1/config",
+            TAG_TOPIC,
             {"topic": "tag1", "device": {"identifiers": ["sub"]}},
+            ("tag", "tag1"),
             id="tag",
         ),
     ],
 )
-@pytest.mark.usefixtures("tag_mock")
 async def test_device_trigger_and_tag_registration_error(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     topic: str,
     payload: dict[str, Any],
+    discovery_hash: tuple[str, str],
 ) -> None:
-    """Test a device trigger or tag device using the identifiers of a child device."""
+    """Test the discovery is cancelled when the device can not be registered."""
     await mqtt_mock_entry()
     await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
 
@@ -727,3 +734,69 @@ async def test_device_trigger_and_tag_registration_error(
     await hass.async_block_till_done()
     assert REGISTRATION_WARNING in caplog.text
     assert not [record for record in caplog.records if record.exc_info]
+    mqtt_data = hass.data[DATA_MQTT]
+    assert discovery_hash not in mqtt_data.discovery_already_discovered
+    assert not mqtt_data.device_triggers
+
+    # No tag scanner was set up
+    async_fire_mqtt_message(hass, "tag1", "12345")
+    await hass.async_block_till_done()
+    tag_mock.assert_not_called()
+
+
+async def test_device_trigger_update_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device trigger update is cancelled when the device can't be registered."""
+    await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+    payload = {**TRIGGER_CONFIG, "device": {"identifiers": ["trigger_device"]}}
+    async_fire_mqtt_message(hass, TRIGGER_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    device = _get_device(hass, device_registry, "trigger_device")
+    assert device is not None
+
+    payload = {
+        **TRIGGER_CONFIG,
+        "subtype": "button_2",
+        "device": {"identifiers": ["sub"]},
+    }
+    async_fire_mqtt_message(hass, TRIGGER_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    assert not [record for record in caplog.records if record.exc_info]
+    # The trigger keeps its current config
+    assert list(hass.data[DATA_MQTT].device_triggers) == [
+        f"{device.id}_button_short_press_button_1"
+    ]
+
+
+async def test_tag_update_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a tag update is cancelled when the device can't be registered."""
+    await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+    payload = {"topic": "tag1", "device": {"identifiers": ["tag_device"]}}
+    async_fire_mqtt_message(hass, TAG_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+
+    payload = {"topic": "tag2", "device": {"identifiers": ["sub"]}}
+    async_fire_mqtt_message(hass, TAG_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    assert not [record for record in caplog.records if record.exc_info]
+
+    # The tag scanner keeps its current config
+    async_fire_mqtt_message(hass, "tag2", "12345")
+    await hass.async_block_till_done()
+    tag_mock.assert_not_called()
+    async_fire_mqtt_message(hass, "tag1", "12345")
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once()
