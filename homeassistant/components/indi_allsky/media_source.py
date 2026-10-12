@@ -59,6 +59,17 @@ VALID_PROXY_MEDIA_PREFIXES = (
 )
 
 
+def _canonicalize_media_path(media_path: str) -> str | None:
+    """Decode a media path to a stable canonical form, or None if cyclic/invalid."""
+    current = media_path
+    for _ in range(10):
+        unquoted = unquote(current)
+        if unquoted == current:
+            return current
+        current = unquoted
+    return None
+
+
 def _is_valid_media_path(media_path: str) -> bool:
     """Validate that the media path targets an allowed INDI Allsky media route."""
     if media_path in VALID_PROXY_MEDIA_EXACT_PATHS:
@@ -121,13 +132,16 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         except ValueError, UnicodeError:
             return web.Response(status=400)
 
-        unquoted_media_path = unquote(media_path)
-        media_path_obj = PurePath(unquoted_media_path)
+        canonical_media_path = _canonicalize_media_path(media_path)
+        if canonical_media_path is None:
+            return web.Response(status=400)
+
+        media_path_obj = PurePath(canonical_media_path)
         if (
             media_path_obj.is_absolute()
             or ".." in media_path_obj.parts
             or not _is_valid_media_path(media_path)
-            or not _is_valid_media_path(unquoted_media_path)
+            or not _is_valid_media_path(canonical_media_path)
         ):
             return web.Response(status=400)
 

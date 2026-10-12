@@ -784,6 +784,20 @@ async def test_proxy_view_errors(
     )
     assert resp.status == 400
 
+    # Multiply encoded path traversal (e.g. images/%252e%252e/api/admin) -> 400
+    # b64 for "images/%252e%252e/api/admin" is "aW1hZ2VzLyUyNTJlJTI1MmUvYXBpL2FkbWlu"
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzLyUyNTJlJTI1MmUvYXBpL2FkbWlu"
+    )
+    assert resp.status == 400
+
+    # Excessively multiply-encoded path that exceeds canonicalization iteration limit -> 400
+    # b64 for "%252525252525252525252525" is "JTI1MjUyNTI1MjUyNTI1MjUyNTI1MjUyNQ=="
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/JTI1MjUyNTI1MjUyNTI1MjUyNTI1MjUyNQ=="
+    )
+    assert resp.status == 400
+
     # 4. Absolute path -> 400
     # b64 for "/etc/passwd" is "L2V0Yy9wYXNzd2Q="
     resp = await client.get(
