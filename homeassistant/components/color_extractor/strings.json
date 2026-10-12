@@ -37,6 +37,10 @@
         "color_extract_url": {
           "description": "The URL of the image we want to extract RGB values from. Must be allowed in allowlist_external_urls.",
           "name": "[%key:common::config_flow::data::url%]"
+        },
+        "min_brightness": {
+          "description": "Optional minimum HSV brightness (0-100%). Dark pixels are excluded before finding the predominant color. If no pixels qualify, turn_on leaves lights unchanged and get_color returns null. Omitting this field preserves the original behavior.",
+          "name": "Minimum brightness"
         }
       },
       "name": "Get predominant color"
@@ -51,6 +55,10 @@
         "color_extract_url": {
           "description": "The URL of the image we want to extract RGB values from. Must be allowed in allowlist_external_urls.",
           "name": "[%key:common::config_flow::data::url%]"
+        },
+        "min_brightness": {
+          "description": "Optional minimum HSV brightness (0-100%). Dark pixels are excluded before finding the predominant color. If no pixels qualify, turn_on leaves lights unchanged and get_color returns null. Omitting this field preserves the original behavior.",
+          "name": "Minimum brightness"
         }
       },
       "name": "[%key:common::action::turn_on%]"
