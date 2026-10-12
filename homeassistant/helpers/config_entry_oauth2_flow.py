@@ -299,7 +299,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             self.token_url,
             body,
             domain=self.service_domain,
-            headers=headers or None,
+            headers=headers,
         )
 
 
