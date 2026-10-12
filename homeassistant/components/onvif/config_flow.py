@@ -7,7 +7,7 @@ from typing import Any, override
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
-import voluptuous as vol
+import probatio
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
@@ -51,7 +51,7 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
-from .device import get_device
+from .device import get_device, get_mac_address
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -120,7 +120,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the ONVIF config flow."""
-        self.device_id = None
+        self.device_id: str | None = None
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
@@ -136,7 +136,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
+            data_schema=probatio.Schema(
+                {probatio.Required("auto", default=True): bool}
+            ),
         )
 
     async def async_step_reauth(
@@ -167,10 +169,10 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=username): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -186,14 +188,16 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.macaddress
         registry = dr.async_get(self.hass)
         if not (
-            device := registry.async_get_device(
+            devices := registry.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         ):
             return self.async_abort(reason="no_devices_found")
-        for entry_id in device.config_entries:
+        for device in devices:
             if (
-                not (entry := hass.config_entries.async_get_entry(entry_id))
+                not (
+                    entry := hass.config_entries.async_get_entry(device.config_entry_id)
+                )
                 or entry.domain != DOMAIN
                 or entry.state is ConfigEntryState.LOADED
             ):
@@ -201,7 +205,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if hass.config_entries.async_update_entry(
                 entry, data=entry.data | {CONF_HOST: discovery_info.ip}
             ):
-                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
+                hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
         return self.async_abort(reason="already_configured")
 
     async def async_step_device(
@@ -249,7 +255,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="device",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(devices)}),
+                data_schema=probatio.Schema(
+                    {probatio.Optional(CONF_HOST): probatio.In(devices)}
+                ),
             )
 
         return await self.async_step_configure()
@@ -276,15 +284,21 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="configure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
-                    vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
-                    vol.Required(CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)): int,
-                    vol.Optional(CONF_USERNAME, default=conf(CONF_USERNAME, "")): str,
-                    vol.Optional(CONF_PASSWORD, default=conf(CONF_PASSWORD, "")): str,
+                    probatio.Required(CONF_NAME, default=conf(CONF_NAME)): str,
+                    probatio.Required(CONF_HOST, default=conf(CONF_HOST)): str,
+                    probatio.Required(
+                        CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                    probatio.Optional(
+                        CONF_USERNAME, default=conf(CONF_USERNAME, "")
+                    ): str,
+                    probatio.Optional(
+                        probatio.Secret(CONF_PASSWORD), default=conf(CONF_PASSWORD, "")
+                    ): str,
                 }
             ),
             errors=errors,
@@ -315,12 +329,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    interface = next(
-                        filter(lambda interface: interface.Enabled, network_interfaces),
-                        None,
-                    )
-                    if interface:
-                        self.device_id = interface.Info.HwAddress
+                    self.device_id = get_mac_address(network_interfaces)
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise
@@ -425,30 +434,30 @@ class OnvifOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="onvif_devices",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EXTRA_ARGUMENTS,
                         default=self.config_entry.options.get(
                             CONF_EXTRA_ARGUMENTS, DEFAULT_ARGUMENTS
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RTSP_TRANSPORT,
                         default=self.config_entry.options.get(
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
-                    ): vol.In(RTSP_TRANSPORTS),
-                    vol.Optional(
+                    ): probatio.In(RTSP_TRANSPORTS),
+                    probatio.Optional(
                         CONF_ENABLE_WEBHOOKS,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                         ),
                     ): bool,
-                    vol.Required(CONF_MORE_OPTIONS): section(
-                        vol.Schema(
+                    probatio.Required(CONF_MORE_OPTIONS): section(
+                        probatio.Schema(
                             {
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                                     default=self.config_entry.options.get(
                                         CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False

@@ -104,16 +104,19 @@ async def test_remove_stale_device(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "123456789_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789_1"), config_entry.entry_id
     )
 
     config_entry.runtime_data.data.pop(1)
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"]
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "123456789_1")}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "123456789_1"), config_entry.entry_id
+        )
+        is None
     )
 
 
@@ -134,14 +137,16 @@ async def test_remove_current_device(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "123456789_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789_1"), config_entry.entry_id
     )
 
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"] is False
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456789_1")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789_1"), config_entry.entry_id
+    )
 
 
 @pytest.mark.usefixtures("mock_pythonkuma")
@@ -161,9 +166,13 @@ async def test_remove_entry_device(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "123456789")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789"), config_entry.entry_id
+    )
 
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"] is False
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456789")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456789"), config_entry.entry_id
+    )

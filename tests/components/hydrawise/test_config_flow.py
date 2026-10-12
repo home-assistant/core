@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
+from pydrawise import APIError
 from pydrawise.exceptions import NotAuthorizedError
 from pydrawise.schema import User
 import pytest
@@ -56,11 +57,24 @@ async def test_form(
     mock_pydrawise.get_user.assert_awaited_once_with(fetch_zones=False)
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ClientError("XXX"), "cannot_connect"),
+        (APIError("unavailable"), "cannot_connect"),
+        (NotAuthorizedError("HTTP 401"), "invalid_auth"),
+    ],
+)
 async def test_form_api_error(
-    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock, user: User
+    hass: HomeAssistant,
+    mock_auth: AsyncMock,
+    mock_pydrawise: AsyncMock,
+    user: User,
+    side_effect: Exception,
+    error: str,
 ) -> None:
     """Test we handle API errors."""
-    mock_pydrawise.get_user.side_effect = ClientError("XXX")
+    mock_pydrawise.get_user.side_effect = side_effect
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,7 +88,7 @@ async def test_form_api_error(
         init_result["flow_id"], data
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     mock_pydrawise.get_user.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user

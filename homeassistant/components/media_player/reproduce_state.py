@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
@@ -34,7 +34,18 @@ from .const import (
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
 )
+
+# Maps a state attribute to the service call argument used to restore it.
+_STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[MediaPlayerEntityStateAttribute, str] = {
+    MediaPlayerEntityStateAttribute.INPUT_SOURCE: ATTR_INPUT_SOURCE,
+    MediaPlayerEntityStateAttribute.SOUND_MODE: ATTR_SOUND_MODE,
+    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: ATTR_MEDIA_VOLUME_LEVEL,
+    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: ATTR_MEDIA_VOLUME_MUTED,
+    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: ATTR_MEDIA_CONTENT_TYPE,
+    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: ATTR_MEDIA_CONTENT_ID,
+}
 
 
 async def _async_reproduce_states(
@@ -46,14 +57,22 @@ async def _async_reproduce_states(
 ) -> None:
     """Reproduce component states."""
     cur_state = hass.states.get(state.entity_id)
-    features = cur_state.attributes[ATTR_SUPPORTED_FEATURES] if cur_state else 0
+    features = (
+        cur_state.attributes[EntityStateAttribute.SUPPORTED_FEATURES]
+        if cur_state
+        else 0
+    )
 
-    async def call_service(service: str, keys: Iterable[str]) -> None:
-        """Call service with set of attributes given."""
+    async def call_service(
+        service: str, attributes: Iterable[MediaPlayerEntityStateAttribute]
+    ) -> None:
+        """Call service with the given state attributes."""
         data = {"entity_id": state.entity_id}
-        for key in keys:
-            if key in state.attributes:
-                data[key] = state.attributes[key]
+        for attribute in attributes:
+            if attribute in state.attributes:
+                data[_STATE_ATTRIBUTE_TO_SERVICE_ARG[attribute]] = state.attributes[
+                    attribute
+                ]
 
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context
@@ -79,42 +98,57 @@ async def _async_reproduce_states(
         await call_service(SERVICE_TURN_ON, [])
 
     cur_state = hass.states.get(state.entity_id)
-    features = cur_state.attributes[ATTR_SUPPORTED_FEATURES] if cur_state else 0
+    features = (
+        cur_state.attributes[EntityStateAttribute.SUPPORTED_FEATURES]
+        if cur_state
+        else 0
+    )
 
     # First set source & sound mode to match the saved supported features
     if (
-        ATTR_INPUT_SOURCE in state.attributes
+        MediaPlayerEntityStateAttribute.INPUT_SOURCE in state.attributes
         and features & MediaPlayerEntityFeature.SELECT_SOURCE
     ):
-        await call_service(SERVICE_SELECT_SOURCE, [ATTR_INPUT_SOURCE])
+        await call_service(
+            SERVICE_SELECT_SOURCE, [MediaPlayerEntityStateAttribute.INPUT_SOURCE]
+        )
 
     if (
-        ATTR_SOUND_MODE in state.attributes
+        MediaPlayerEntityStateAttribute.SOUND_MODE in state.attributes
         and features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     ):
-        await call_service(SERVICE_SELECT_SOUND_MODE, [ATTR_SOUND_MODE])
+        await call_service(
+            SERVICE_SELECT_SOUND_MODE, [MediaPlayerEntityStateAttribute.SOUND_MODE]
+        )
 
     if (
-        ATTR_MEDIA_VOLUME_LEVEL in state.attributes
+        MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL in state.attributes
         and features & MediaPlayerEntityFeature.VOLUME_SET
     ):
-        await call_service(SERVICE_VOLUME_SET, [ATTR_MEDIA_VOLUME_LEVEL])
+        await call_service(
+            SERVICE_VOLUME_SET, [MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL]
+        )
 
     if (
-        ATTR_MEDIA_VOLUME_MUTED in state.attributes
+        MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED in state.attributes
         and features & MediaPlayerEntityFeature.VOLUME_MUTE
     ):
-        await call_service(SERVICE_VOLUME_MUTE, [ATTR_MEDIA_VOLUME_MUTED])
+        await call_service(
+            SERVICE_VOLUME_MUTE, [MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED]
+        )
 
     already_playing = False
 
-    if (ATTR_MEDIA_CONTENT_TYPE in state.attributes) and (
-        ATTR_MEDIA_CONTENT_ID in state.attributes
+    if (MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE in state.attributes) and (
+        MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID in state.attributes
     ):
         if features & MediaPlayerEntityFeature.PLAY_MEDIA:
             await call_service(
                 SERVICE_PLAY_MEDIA,
-                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID],
+                [
+                    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
+                    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
+                ],
             )
         already_playing = True
 

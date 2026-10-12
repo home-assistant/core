@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, UOM_PERCENTAGE
+from .const import CONF_RESTORE_LIGHT_STATE, LOGGER, UOM_PERCENTAGE
 from .entity import ISYNodeEntity
 from .models import IsyConfigEntry
 
@@ -78,7 +78,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         """Send the turn off command to the ISY light device."""
         self._last_brightness = self.brightness
         if not await self._node.turn_off():
-            _LOGGER.debug("Unable to turn off light")
+            LOGGER.debug("Unable to turn off light")
 
     @callback
     @override
@@ -100,7 +100,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         if brightness is not None and self._node.uom == UOM_PERCENTAGE:
             brightness = round(brightness * 100.0 / 255.0)
         if not await self._node.turn_on(val=brightness):
-            _LOGGER.debug("Unable to turn on light")
+            LOGGER.debug("Unable to turn on light")
 
     @property
     @override

@@ -12,8 +12,8 @@ from airos.exceptions import (
     AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.airos.const import (
     CONF_LEGACY_SSL,
@@ -661,7 +661,9 @@ async def test_discover_flow_multiple_devices_found(
             f"{MOCK_DISC_DEV2[HOSTNAME]} ({MOCK_DISC_DEV2[IP_ADDRESS]})"
         ),
     }
-    actual_options = result["data_schema"].schema[vol.Required(MAC_ADDRESS)].container
+    actual_options = (
+        result["data_schema"].schema[probatio.Required(MAC_ADDRESS)].container
+    )
     assert actual_options == expected_options
 
     # Select one of the devices

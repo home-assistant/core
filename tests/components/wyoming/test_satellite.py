@@ -455,6 +455,97 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
+async def test_satellite_pipeline_error_no_restart(hass: HomeAssistant) -> None:
+    """Test that a pipeline error does not auto-restart an "always on" satellite."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE,
+            end_stage=PipelineStage.TTS,
+            restart_on_end=True,
+        ).event(),
+    ]
+
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
+    run_pipeline_called = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        nonlocal pipeline_event_callback
+        pipeline_event_callback = event_callback
+        run_pipeline_called.set()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            async_pipeline_from_audio_stream,
+        ),
+        patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
+    ):
+        entry = await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+            await run_pipeline_called.wait()
+
+        assert pipeline_event_callback is not None
+
+        # Reset so we can detect an (unwanted) restart below
+        run_pipeline_called.clear()
+
+        # Pipeline fails, then ends
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.ERROR,
+                {"code": "test-code", "message": "test-message"},
+            )
+        )
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
+        )
+
+        # A ping/pong round trip guarantees the loop has processed the run end
+        mock_client.inject_event(Ping("test-ping").event())
+        async with asyncio.timeout(1):
+            await mock_client.pong_event.wait()
+
+        # Pipeline must not have automatically restarted after the error
+        assert not run_pipeline_called.is_set()
+
+        # A new run request from the satellite clears the error and runs again
+        mock_client.inject_event(
+            RunPipeline(
+                start_stage=PipelineStage.WAKE,
+                end_stage=PipelineStage.TTS,
+                restart_on_end=True,
+            ).event()
+        )
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
 async def test_satellite_muted(hass: HomeAssistant) -> None:
     """Test callback for a satellite that has been muted."""
     on_muted_event = asyncio.Event()

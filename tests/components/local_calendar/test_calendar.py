@@ -1,13 +1,18 @@
 """Tests for calendar platform of local calendar."""
 
 import datetime
+from datetime import timedelta
 import textwrap
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.local_calendar.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -18,7 +23,7 @@ from .conftest import (
     event_fields,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_empty_calendar(
@@ -1157,4 +1162,179 @@ async def test_invalid_event_duration(
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T11:30:00-06:00"},
         }
+    ]
+
+
+ADJACENT_EVENTS_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260729T014500
+DTEND:20260729T020000
+SUMMARY:First
+UID:first
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260729T020000
+DTEND:20260729T021500
+SUMMARY:Second
+UID:second
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [ADJACENT_EVENTS_ICS])
+async def test_adjacent_events_stay_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the state stays on when one event ends as the next one begins.
+
+    The scan interval is widened so the platform poll cannot reach the boundary
+    first: what is under test is the alarm scheduled for the end of the current
+    event, which has to be able to pick up the next one on its own.
+    """
+    freezer.move_to("2026-07-29 07:50:20+00:00")  # 01:50:20 in America/Regina
+
+    config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.calendar.SCAN_INTERVAL", timedelta(hours=1)):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY)
+        assert state.state == STATE_ON
+        assert state.attributes["message"] == "First"
+
+        # 02:00:00 in America/Regina, the moment the first event ends and the
+        # second begins.
+        freezer.move_to("2026-07-29 08:00:00+00:00")
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY)
+        assert state.state == STATE_ON
+        assert state.attributes["message"] == "Second"
+
+
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Bastille Day Party
+DTSTART:19970714
+DTEND:19970715
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_status"),
+    [
+        pytest.param(
+            ICS_WITH_STATUS.format(status="TENTATIVE"), "tentative", id="tentative"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_event_status(
+    get_events: GetEventsFn,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status
+
+
+@pytest.mark.parametrize("ics_content", [ICS_WITH_STATUS.format(status="CANCELLED")])
+@pytest.mark.usefixtures("setup_integration")
+async def test_cancelled_event_is_not_returned(get_events: GetEventsFn) -> None:
+    """Test that an event called off is not returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+
+    assert events == []
+
+
+ONGOING_CANCELLED_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:20260729T014500
+DTEND:20260729T021500
+SUMMARY:Called off
+UID:called-off
+STATUS:CANCELLED
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [ONGOING_CANCELLED_ICS])
+async def test_cancelled_event_does_not_turn_the_entity_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an event called off is not picked up as the current event.
+
+    The event would be ongoing at this time were it not cancelled, so this
+    covers the state path rather than the API one.
+    """
+    freezer.move_to("2026-07-29 07:50:20+00:00")  # 01:50:20 in America/Regina
+
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
+CANCELLED_OCCURRENCE_ICS = """BEGIN:VCALENDAR
+PRODID:-//homeassistant.io//local_calendar 1.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261002
+DTEND;VALUE=DATE:20261003
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Daily series
+UID:daily-series
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261003
+DTEND;VALUE=DATE:20261004
+RECURRENCE-ID;VALUE=DATE:20261003
+SUMMARY:Daily series
+UID:daily-series
+STATUS:CANCELLED
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("ics_content", [CANCELLED_OCCURRENCE_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_cancelled_occurrence_of_a_series_is_not_returned(
+    get_events: GetEventsFn,
+) -> None:
+    """Test that only the cancelled occurrence of a recurring series is dropped.
+
+    The filtering has to happen after the series is expanded: dropping the
+    cancelled VEVENT before expansion would remove the override, and the RRULE
+    would then produce that day as an ordinary event again.
+    """
+    events = await get_events("2026-10-01T00:00:00", "2026-10-08T00:00:00")
+
+    assert [event["start"] for event in events] == [
+        {"date": "2026-10-02"},
+        {"date": "2026-10-04"},
+        {"date": "2026-10-05"},
+        {"date": "2026-10-06"},
     ]

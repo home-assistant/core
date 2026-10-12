@@ -1,7 +1,7 @@
 """Config flow tests for the Actron Air Integration."""
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from actron_neo_api import ActronAirAuthError
 from actron_neo_api.models.auth import ActronAirUserInfo
@@ -12,8 +12,26 @@ from homeassistant.components.actron_air.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_actron_api")
+async def test_user_flow_uses_shared_session(
+    hass: HomeAssistant, mock_actron_api_class: MagicMock
+) -> None:
+    """Test the API is created with Home Assistant's shared client session."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert mock_actron_api_class.call_args.kwargs["session"] is async_get_clientsession(
+        hass
+    )
+
+    await hass.async_block_till_done()
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

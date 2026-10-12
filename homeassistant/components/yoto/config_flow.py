@@ -9,7 +9,7 @@ from yoto_api import YotoError, get_account_id
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import _LOGGER, DOMAIN, YOTO_AUDIENCE, YOTO_SCOPES
+from .const import DOMAIN, LOGGER, YOTO_AUDIENCE, YOTO_SCOPES
 
 
 class YotoOAuth2FlowHandler(
@@ -23,7 +23,7 @@ class YotoOAuth2FlowHandler(
     @override
     def logger(self) -> logging.Logger:
         """Return the logger used for the OAuth2 flow."""
-        return _LOGGER
+        return LOGGER
 
     @property
     @override

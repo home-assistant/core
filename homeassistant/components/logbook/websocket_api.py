@@ -7,7 +7,7 @@ from datetime import datetime as dt, timedelta
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
@@ -245,11 +245,11 @@ async def _async_events_consumer(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logbook/event_stream",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
-        vol.Optional("device_ids"): [str],
+        probatio.Required("type"): "logbook/event_stream",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Optional("entity_ids"): [str],
+        probatio.Optional("device_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -451,12 +451,12 @@ def _ws_formatted_get_events(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logbook/get_events",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
-        vol.Optional("device_ids"): [str],
-        vol.Optional("context_id"): str,
+        probatio.Required("type"): "logbook/get_events",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+        probatio.Optional("entity_ids"): [str],
+        probatio.Optional("device_ids"): [str],
+        probatio.Optional("context_id"): str,
     }
 )
 @websocket_api.async_response

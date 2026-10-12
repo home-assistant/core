@@ -1647,7 +1647,7 @@
         {
           "type": 1,
           "name": "core:TargetClosureState",
-          "value": 0
+          "value": 100
         },
         {
           "type": 6,

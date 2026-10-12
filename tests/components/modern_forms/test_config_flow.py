@@ -1,5 +1,6 @@
 """Tests for the Modern Forms config flow."""
 
+from functools import partial
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import init_integration
+from . import init_integration, modern_forms_gen4_call_mock
 
 from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -233,3 +234,36 @@ async def test_zeroconf_with_mac_device_exists_abort(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_full_user_flow_gen4(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the user flow successfully adds a Gen4 fan."""
+    aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=404)
+    aioclient_mock.post(
+        "http://192.168.1.123:80/device",
+        side_effect=partial(modern_forms_gen4_call_mock, hass),
+    )
+    aioclient_mock.post(
+        "http://192.168.1.123:80/fixture",
+        side_effect=partial(modern_forms_gen4_call_mock, hass),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with patch(
+        "homeassistant.components.modern_forms.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
+        )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == "ModernFormsFan"
+    assert result2["data"][CONF_HOST] == "192.168.1.123"
+    assert result2["data"][CONF_MAC] == "AA:BB:CC:00:11:22"

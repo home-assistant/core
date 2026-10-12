@@ -72,7 +72,17 @@
         "name": "Display"
       }
     },
-
+    "select": {
+      "night_light_control": {
+        "name": "Night light",
+        "state": {
+          "bright": "Bright",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "soft": "Soft"
+        }
+      }
+    },
     "sensor": {
       "light_level": {
         "name": "Light level"

@@ -2,8 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from adguardhome import AdGuardHomeError
-from adguardhome.update import AdGuardHomeAvailableUpdate
+from adguardhome import AdGuardHomeError, AvailableUpdate
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -38,7 +37,7 @@ async def test_update_disabled(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the adguard update is disabled."""
-    mock_adguard.update.update_available.return_value = AdGuardHomeAvailableUpdate(
+    mock_adguard.update.get.return_value = AvailableUpdate(
         disabled=True,
     )
 
@@ -63,7 +62,7 @@ async def test_update_install(
         blocking=True,
     )
 
-    mock_adguard.update.begin_update.assert_called_once()
+    mock_adguard.update.install.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -72,7 +71,7 @@ async def test_update_install_failed(
     mock_adguard: AsyncMock,
 ) -> None:
     """Test the adguard update install failed."""
-    mock_adguard.update.begin_update.side_effect = AdGuardHomeError("boom")
+    mock_adguard.update.install.side_effect = AdGuardHomeError("boom")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

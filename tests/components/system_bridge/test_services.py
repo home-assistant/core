@@ -86,8 +86,8 @@ async def test_services(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, FIXTURE_UUID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -136,8 +136,8 @@ async def test_get_process_services(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, FIXTURE_UUID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
     )
     assert device_entry
 

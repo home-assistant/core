@@ -1,8 +1,10 @@
 """Support for Apple TV media player."""
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime
+from functools import wraps
 import logging
-from typing import Any, override
+from typing import Any, Concatenate, override
 
 from pyatv import exceptions
 from pyatv.const import (
@@ -110,6 +112,31 @@ async def async_setup_entry(
     async_add_entities([AppleTvMediaPlayer(name, config_entry.unique_id, manager)])
 
 
+def _catch_command_errors[_T: AppleTvMediaPlayer, **_P](
+    func: Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Raise a HomeAssistantError when a command can't be sent to the Apple TV."""
+
+    @wraps(func)
+    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except (
+            TimeoutError,
+            exceptions.BlockedStateError,
+            exceptions.ConnectionLostError,
+            exceptions.InvalidStateError,
+            exceptions.OperationTimeoutError,
+            exceptions.ProtocolError,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+            ) from ex
+
+    return wrapper
+
+
 class AppleTvMediaPlayer(
     AppleTVEntity, MediaPlayerEntity, PowerListener, AudioListener, PushListener
 ):
@@ -204,7 +231,7 @@ class AppleTvMediaPlayer(
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
-            return MediaPlayerState.IDLE  # Bad or unknown state?
+            return MediaPlayerState.IDLE  # type: ignore[unreachable]  # Bad or unknown state?
         return None
 
     @callback
@@ -574,60 +601,70 @@ class AppleTvMediaPlayer(
             await self.atv.power.turn_off()
 
     @override
+    @_catch_command_errors
     async def async_media_play_pause(self) -> None:
         """Pause media on media player."""
         if self.atv and self._playing:
             await self.atv.remote_control.play_pause()
 
     @override
+    @_catch_command_errors
     async def async_media_play(self) -> None:
         """Play media."""
         if self.atv:
             await self.atv.remote_control.play()
 
     @override
+    @_catch_command_errors
     async def async_media_stop(self) -> None:
         """Stop the media player."""
         if self.atv:
             await self.atv.remote_control.stop()
 
     @override
+    @_catch_command_errors
     async def async_media_pause(self) -> None:
         """Pause the media player."""
         if self.atv:
             await self.atv.remote_control.pause()
 
     @override
+    @_catch_command_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         if self.atv:
             await self.atv.remote_control.next()
 
     @override
+    @_catch_command_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         if self.atv:
             await self.atv.remote_control.previous()
 
     @override
+    @_catch_command_errors
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         if self.atv:
             await self.atv.remote_control.set_position(round(position))
 
     @override
+    @_catch_command_errors
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         if self.atv:
             await self.atv.audio.volume_up()
 
     @override
+    @_catch_command_errors
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         if self.atv:
             await self.atv.audio.volume_down()
 
     @override
+    @_catch_command_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         if self.atv:
@@ -635,6 +672,7 @@ class AppleTvMediaPlayer(
             await self.atv.audio.set_volume(volume * 100.0)
 
     @override
+    @_catch_command_errors
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if self.atv:
@@ -645,6 +683,7 @@ class AppleTvMediaPlayer(
             await self.atv.remote_control.set_repeat(mode)
 
     @override
+    @_catch_command_errors
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         if self.atv:

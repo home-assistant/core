@@ -5,9 +5,9 @@ import logging
 from typing import Any, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -154,11 +154,14 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     duration = int(
                         data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
                     )
-                # pylint: disable-next=home-assistant-action-swallowed-exception
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid duration-value: %s", data.get(ATTR_DURATION)
-                    )
+                except (OverflowError, TypeError, ValueError) as err:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_duration",
+                        translation_placeholders={
+                            "duration": str(data.get(ATTR_DURATION))
+                        },
+                    ) from err
             if ATTR_FONTSIZE in data:
                 if data.get(ATTR_FONTSIZE) in Notifications.FONTSIZES:
                     fontsize = data.get(ATTR_FONTSIZE)
@@ -189,10 +192,14 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if ATTR_INTERRUPT in data:
                 try:
                     interrupt = cv.boolean(data.get(ATTR_INTERRUPT))
-                except vol.Invalid:
-                    _LOGGER.warning(
-                        "Invalid interrupt-value: %s", data.get(ATTR_INTERRUPT)
-                    )
+                except probatio.Invalid as err:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_interrupt",
+                        translation_placeholders={
+                            "interrupt": str(data.get(ATTR_INTERRUPT))
+                        },
+                    ) from err
             if imagedata := data.get(ATTR_IMAGE):
                 if isinstance(imagedata, str):
                     image_file = (

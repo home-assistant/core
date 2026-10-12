@@ -8,6 +8,8 @@ from holidays import DateLike, HolidayBase
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -16,9 +18,11 @@ from .const import (
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
+    DOMAIN,
     LOGGER,
     PLATFORMS,
 )
+from .services import async_setup_services
 from .util import (
     add_remove_custom_holidays,
     async_validate_country_and_province,
@@ -27,6 +31,15 @@ from .util import (
 )
 
 type WorkdayConfigEntry = ConfigEntry[HolidayBase]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Workday integration."""
+
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:

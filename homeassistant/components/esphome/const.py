@@ -2,15 +2,19 @@
 
 from typing import TYPE_CHECKING, Final
 
+from aioesphomeapi import TemperatureUnit
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.const import UnitOfTemperature, __version__ as ha_version
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .domain_data import DomainData
 
 DOMAIN = "esphome"
+
+CLIENT_INFO = f"Home Assistant {ha_version}"
 
 ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
@@ -40,3 +44,9 @@ NO_WAKE_WORD: Final[str] = "no_wake_word"
 
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
+
+TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
+    TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}

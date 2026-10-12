@@ -21,4 +21,4 @@ async def test_diagnostics(
     assert isinstance(result, dict)
     assert result["config_entry"]["domain"] == "derivative"
     assert result["config_entry"]["options"]["name"] == "My derivative"
-    assert result["entity"][0]["entity_id"] == "sensor.my_derivative"
+    assert result["entity"][0]["entity_id"] == "sensor.mock_title_my_derivative"

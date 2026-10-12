@@ -4,10 +4,10 @@ import asyncio
 from functools import partial
 from typing import Any, override
 
+import probatio
 from roombapy import RoombaFactory, RoombaInfo
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
@@ -114,11 +114,21 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         self._async_abort_entries_match({CONF_HOST: ip_address})
 
-        if not hostname.startswith(("irobot-", "roomba-")):
+        self.host = ip_address
+
+        # Actively probe the device at this IP for its real blid. This is
+        # authoritative and handles two cases where the hostname can't be
+        # trusted: some routers substitute a user-assigned friendly name
+        # for the DHCP/mDNS hostname instead of irobot-<blid>/roomba-<blid>,
+        # and even a well-formed hostname's blid may be truncated if the
+        # hostname exceeds length limits somewhere in the chain.
+        if devices := await _async_discover_roombas(self.hass, self.host):
+            self.blid = devices[0].blid
+        elif hostname.startswith(("irobot-", "roomba-")):
+            self.blid = _async_blid_from_hostname(hostname)
+        else:
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = ip_address
-        self.blid = _async_blid_from_hostname(hostname)
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
 
@@ -200,7 +210,9 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional("host"): vol.In(hosts)}),
+            data_schema=probatio.Schema(
+                {probatio.Optional("host"): probatio.In(hosts)}
+            ),
         )
 
     async def async_step_manual(
@@ -211,8 +223,8 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="manual",
                 description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_HOST, default=self.host): str}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_HOST, default=self.host): str}
                 ),
             )
 
@@ -294,7 +306,9 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="link_manual",
             description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
         )
 
@@ -312,13 +326,13 @@ class RoombaOptionsFlowHandler(OptionsFlow):
         options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CONTINUOUS,
                         default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DELAY,
                         default=options.get(CONF_DELAY, DEFAULT_DELAY),
                     ): int,

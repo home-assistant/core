@@ -98,7 +98,7 @@ async def test_diagnostics(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
         await hass.async_block_till_done()

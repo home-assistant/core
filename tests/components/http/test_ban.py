@@ -4,6 +4,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+from typing import NoReturn
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
@@ -83,18 +84,19 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test accessing to server from banned IP. Both trusted and not.
-
-    We inject some garbage into the yaml file to make sure it can
-    still load the bans.
-    """
+    """Test loading IP bans from a partially broken YAML file."""
     app = web.Application()
     app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
-    data = {banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS}
-    data["5.3.3.3"] = {"banned_at": "garbage"}
+    data = {
+        BANNED_IPS[0]: {"banned_at": "2016-11-16T19:20:03"},
+        "5.3.3.3": {"banned_at": "garbage"},
+        "5.3.3.4": {},
+        "5.3.3.5": None,
+        BANNED_IPS[1]: {"banned_at": "2016-11-16T19:20:03"},
+    }
 
     with patch(
         "homeassistant.components.http.ban.load_yaml_config_file",
@@ -102,17 +104,18 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     ):
         client = await aiohttp_client(app)
 
-    for remote_addr in BANNED_IPS:
+    for remote_addr in (*BANNED_IPS, "5.3.3.4"):
         set_real_ip(remote_addr)
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
 
-    # Ensure garbage data is ignored
-    set_real_ip("5.3.3.3")
-    resp = await client.get("/")
-    assert resp.status == HTTPStatus.NOT_FOUND
+    # Ensure malformed data is ignored
+    for remote_addr in ("5.3.3.3", "5.3.3.5"):
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.NOT_FOUND
 
-    assert "Failed to load IP ban" in caplog.text
+    assert caplog.text.count("Failed to load IP ban") == 2
 
 
 async def test_access_from_banned_ip_with_invalid_ip_entry(
@@ -253,6 +256,7 @@ async def test_ip_ban_manager_never_started(
     "os_info",
     "store_info",
     "supervisor_info",
+    "supervisor_root_info",
     "homeassistant_info",
     "host_info",
     "network_info",
@@ -310,7 +314,7 @@ async def test_access_from_supervisor_ip(
 
 async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
         await async_setup_component(
             hass, DOMAIN, {"http": {http.CONF_IP_BAN_ENABLED: False}}
         )
@@ -320,7 +324,7 @@ async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
 
 async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
         await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -457,6 +461,33 @@ async def test_failed_login_attempts_counter(
     resp = await client.get("/auth_false")
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a wrong login still gets a 401 if the reverse DNS lookup fails to decode."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 5)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)("200.201.202.204")
+
+    with patch(
+        "homeassistant.components.http.ban.gethostbyaddr",
+        side_effect=UnicodeDecodeError("utf-8", b"\x8a", 0, 1, "invalid start byte"),
+    ):
+        client = await aiohttp_client(app)
+        resp = await client.get("/example")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
 
 async def test_single_ban_file_entry(

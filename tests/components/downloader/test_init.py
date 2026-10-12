@@ -4,11 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from homeassistant.components.downloader.const import (
-    CONF_DOWNLOAD_DIR,
-    DOMAIN,
-    SERVICE_DOWNLOAD_FILE,
-)
+from homeassistant.components.downloader.const import CONF_DOWNLOAD_DIR, DOMAIN
+from homeassistant.components.downloader.services import DownloaderService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -29,7 +26,7 @@ async def test_config_entry_setup(
     """Test config entry setup."""
     config_entry = setup_integration
 
-    assert hass.services.has_service(DOMAIN, SERVICE_DOWNLOAD_FILE)
+    assert hass.services.has_service(DOMAIN, DownloaderService.DOWNLOAD_FILE)
     assert config_entry.state is ConfigEntryState.LOADED
 
 
@@ -67,5 +64,5 @@ async def test_config_entry_setup_not_existing_directory(
     """Test config entry setup without existing download directory."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert not hass.services.has_service(DOMAIN, SERVICE_DOWNLOAD_FILE)
+    assert not hass.services.has_service(DOMAIN, DownloaderService.DOWNLOAD_FILE)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

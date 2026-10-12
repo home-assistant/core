@@ -174,6 +174,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._change_handler.unsubscribe)
 
     @callback
     @override

@@ -30,9 +30,9 @@ from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 from paho.mqtt.client import MQTTMessage
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
 from homeassistant.auth import (
@@ -292,6 +292,7 @@ async def async_test_home_assistant(
             )
         },
     )
+    hass.config_entries._initialized.set()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
@@ -375,7 +376,7 @@ def async_mock_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    schema: vol.Schema | None = None,
+    schema: probatio.Schema | None = None,
     response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
     raise_exception: Exception | None = None,
@@ -677,7 +678,8 @@ def mock_registry(
     if mock_entries is None:
         mock_entries = {}
     registry.deleted_entities = {}
-    registry.entities = er.EntityRegistryItems()
+    registry.entities = er.EntityRegistryItems(hass)
+    registry.settings = er.EntityRegistrySettings()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
@@ -744,6 +746,7 @@ def mock_area_registry(
 def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, dr.DeviceEntry] | None = None,
+    mock_child_entries: dict[str, dr.ChildDeviceEntry] | None = None,
 ) -> dr.DeviceRegistry:
     """Mock the Device Registry.
 
@@ -757,13 +760,21 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.ActiveDeviceRegistryItems()
-    registry._device_data = registry.devices.data
+    registry._devices = dr.ActiveDeviceRegistryItems()
+    registry.devices = registry._devices.values()
+    registry._device_data = registry._devices.data
+    registry._child_devices = dr.ChildDeviceRegistryItems()
+    registry.child_devices = registry._child_devices.values()
+    registry._child_device_data = registry._child_devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
-        registry.devices[key] = entry
-    registry.deleted_devices = dr.DeviceRegistryItems()
+        registry._devices[key] = entry
+    if mock_child_entries is None:
+        mock_child_entries = {}
+    for key, child_entry in mock_child_entries.items():
+        registry._child_devices[key] = child_entry
+    registry._deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
     return registry
@@ -867,9 +878,9 @@ class MockModule:
         dependencies: list[str] | None = None,
         setup: Callable[[HomeAssistant, ConfigType], bool] | None = None,
         requirements: list[str] | None = None,
-        config_schema: vol.Schema | None = None,
-        platform_schema: vol.Schema | None = None,
-        platform_schema_base: vol.Schema | None = None,
+        config_schema: probatio.Schema | None = None,
+        platform_schema: probatio.Schema | None = None,
+        platform_schema_base: probatio.Schema | None = None,
         async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
         | None = None,
         async_setup_entry: Callable[
@@ -962,7 +973,7 @@ class MockPlatform:
         ]
         | None = None,
         dependencies: list[str] | None = None,
-        platform_schema: vol.Schema | None = None,
+        platform_schema: probatio.Schema | None = None,
         async_setup_platform: Callable[
             [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
             Coroutine[Any, Any, None],
@@ -1091,6 +1102,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def __init__(
         self,
         *,
+        created_at=None,
         data=None,
         disabled_by=None,
         discovery_keys=None,
@@ -1111,6 +1123,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         """Initialize a mock config entry."""
         discovery_keys = discovery_keys or {}
         kwargs = {
+            "created_at": created_at,
             "data": data or {},
             "disabled_by": disabled_by,
             "discovery_keys": discovery_keys,
@@ -1323,41 +1336,14 @@ def assert_setup_component(count, domain=None):
     )
 
 
-def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
-    """Mock the DATA_RESTORE_CACHE."""
-    key = rs.DATA_RESTORE_STATE
-    data = rs.RestoreStateData(hass)
-    now = dt_util.utcnow()
-
-    last_states = {}
-    for state in states:
-        restored_state = state.as_dict()
-        restored_state = {
-            **restored_state,
-            "attributes": json.loads(
-                json.dumps(restored_state["attributes"], cls=JSONEncoder)
-            ),
-        }
-        last_states[state.entity_id] = rs.StoredState.from_dict(
-            {"state": restored_state, "last_seen": now}
-        )
-    data.last_states = last_states
-    _LOGGER.debug("Restore cache: %s", data.last_states)
-    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
-
-    rs.async_get.cache_clear()
-    hass.data[key] = data
-
-
-def mock_restore_cache_with_extra_data(
-    hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
+def _mock_restore_cache(
+    hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any] | None]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = rs.DATA_RESTORE_STATE
-    data = rs.RestoreStateData(hass)
+    data = rs.async_get(hass)
     now = dt_util.utcnow()
 
-    last_states = {}
+    stored_states = []
     for state, extra_data in states:
         restored_state = state.as_dict()
         restored_state = {
@@ -1366,15 +1352,30 @@ def mock_restore_cache_with_extra_data(
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = rs.StoredState.from_dict(
+        stored_states.append(
             {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
-    data.last_states = last_states
-    _LOGGER.debug("Restore cache: %s", data.last_states)
-    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
+    data._async_load_stored_states(stored_states)
+    _LOGGER.debug(
+        "Restore cache: %s and %s",
+        data.last_states_by_entity_id,
+        data.last_states_by_entity_registry_id,
+    )
+    assert len(data.last_states_by_entity_id) + len(
+        data.last_states_by_entity_registry_id
+    ) == len(states), f"Duplicate entity_id? {states}"
 
-    rs.async_get.cache_clear()
-    hass.data[key] = data
+
+def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
+    """Mock the DATA_RESTORE_CACHE."""
+    _mock_restore_cache(hass, [(state, None) for state in states])
+
+
+def mock_restore_cache_with_extra_data(
+    hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
+) -> None:
+    """Mock the DATA_RESTORE_CACHE."""
+    _mock_restore_cache(hass, states)
 
 
 async def async_mock_restore_state_shutdown_restart(
@@ -1997,8 +1998,8 @@ def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
     }
 
 
-def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
-    """Get suggested value for key in voluptuous schema."""
+def get_schema_suggested_value(schema: probatio.Schema, key: str) -> Any | None:
+    """Get suggested value for key in probatio schema."""
     for schema_key in schema:
         if schema_key == key:
             if (

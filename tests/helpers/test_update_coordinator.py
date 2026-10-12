@@ -57,6 +57,11 @@ KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
         update_coordinator.UpdateFailed,
         "Error fetching test data",
     ),
+    (
+        ConfigEntryNotReady(),
+        ConfigEntryNotReady,
+        "Error fetching test data",
+    ),
 ]
 
 
@@ -706,6 +711,24 @@ async def test_stop_refresh_on_ha_stop(
     assert crd.data == 2
 
 
+async def test_no_refresh_after_ha_close(
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
+) -> None:
+    """Test a pending refresh does not fire once Home Assistant has closed."""
+    crd.async_add_listener(Mock())
+
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 1
+
+    await hass.async_stop()
+
+    # Shared resources like the aiohttp session are closed at this point
+    async_fire_time_changed(hass, utcnow() + crd.update_interval * 2)
+    await hass.async_block_till_done()
+    assert crd.data == 1
+
+
 @pytest.mark.parametrize(
     "err_msg",
     [
@@ -780,6 +803,88 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_not_ready(
+    hass: HomeAssistant,
+    method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ConfigEntryNotReady is treated as a recoverable error."""
+
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=ConfigEntryNotReady("Not ready")))
+
+    with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, ConfigEntryNotReady)
+    assert "Unexpected error fetching test data" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "cause",
+        "expected_translation_domain",
+        "expected_translation_key",
+        "expected_translation_placeholders",
+    ),
+    [
+        pytest.param(
+            update_coordinator.UpdateFailed(
+                translation_domain="test",
+                translation_key="update_failed_key",
+                translation_placeholders={"key": "value"},
+            ),
+            "test",
+            "update_failed_key",
+            {"key": "value"},
+            id="update_failed_with_translation_attrs",
+        ),
+        pytest.param(
+            Exception("boom"),
+            None,
+            None,
+            None,
+            id="plain_exception_no_translation_attrs",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_translation_key_propagation(
+    hass: HomeAssistant,
+    cause: Exception,
+    expected_translation_domain: str | None,
+    expected_translation_key: str | None,
+    expected_translation_placeholders: dict[str, str] | None,
+    method: str,
+) -> None:
+    """Test that translation attributes from the cause are propagated to ConfigEntryNotReady."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=cause))
+
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await crd.async_config_entry_first_refresh()
+
+    assert exc_info.value.translation_domain == expected_translation_domain
+    assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_placeholders == expected_translation_placeholders
 
 
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:
@@ -1097,25 +1202,32 @@ async def test_config_entry(
         not in caplog.text
     )
 
-    # Default without context should log a warning
+    # Default without context should raise
     caplog.clear()
-    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-    assert crd.config_entry is None
-    assert (
-        "Detected that integration 'my_integration' relies on ContextVar, "
-        "but should pass the config entry explicitly."
-    ) in caplog.text
+    crd = None
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'my_integration' relies on ContextVar, "
+            "but should pass the config entry explicitly."
+        ),
+    ):
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd is None
 
-    # Default with context should log a warning
+    # Default with context should raise
     caplog.clear()
     frame._REPORTED_INTEGRATIONS.clear()
     config_entries.current_entry.set(entry)
-    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-    assert (
-        "Detected that integration 'my_integration' relies on ContextVar, "
-        "but should pass the config entry explicitly."
-    ) in caplog.text
-    assert crd.config_entry is entry
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'my_integration' relies on ContextVar, "
+            "but should pass the config entry explicitly."
+        ),
+    ):
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd is None
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])

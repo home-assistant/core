@@ -12,8 +12,8 @@ from homeassistant.components.plaato.const import (
     CONF_USE_WEBHOOK,
     DOMAIN,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
@@ -54,9 +54,15 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
             CONF_DEVICE_NAME: "device_name",
         },
@@ -71,9 +77,18 @@ async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None
 async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_DEVICE_TYPE: PlaatoDeviceType.Keg, CONF_DEVICE_NAME: "device_name"},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+            CONF_DEVICE_NAME: "device_name",
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -176,6 +191,7 @@ async def test_show_config_form_validate_webhook_not_connected(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
@@ -305,33 +321,22 @@ async def test_options(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="NAME",
-        data={},
-        options={CONF_SCAN_INTERVAL: 5},
+        data={
+            CONF_USE_WEBHOOK: False,
+            CONF_TOKEN: "valid_token",
+            CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+            CONF_DEVICE_NAME: "device_name",
+        },
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.plaato.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_SCAN_INTERVAL: 10},
-        )
-
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_SCAN_INTERVAL] == 10
-
-        assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_options"
 
 
 async def test_options_webhook(hass: HomeAssistant, webhook_id) -> None:
@@ -340,7 +345,6 @@ async def test_options_webhook(hass: HomeAssistant, webhook_id) -> None:
         domain=DOMAIN,
         title="NAME",
         data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
-        options={CONF_SCAN_INTERVAL: 5},
     )
     config_entry.add_to_hass(hass)
 

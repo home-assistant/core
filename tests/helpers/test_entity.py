@@ -10,11 +10,11 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 from propcache.api import cached_property
 import pytest
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
@@ -614,6 +614,25 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
+async def test_async_remove_reports_the_original_error(hass: HomeAssistant) -> None:
+    """Test a failing removal surfaces its own exception."""
+
+    class MockEntityFailingRemoval(entity.Entity):
+        """Entity that cannot be removed cleanly."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Fail while being removed."""
+            raise ValueError("Boom")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntityFailingRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    with pytest.raises(ValueError, match="Boom"):
+        await ent.async_remove()
+
+
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
     """Test in flight polling is ignored after removing."""
     result = []
@@ -664,6 +683,38 @@ async def test_async_remove_twice(hass: HomeAssistant) -> None:
     assert len(result) == 1
     assert len(ent.remove_calls) == 1
     assert ent._platform_state is entity.EntityPlatformState.REMOVED
+
+
+async def test_async_remove_cancel_concurrent_waiter(hass: HomeAssistant) -> None:
+    """Test cancelling a concurrent remove does not break the in-progress remove."""
+    release = asyncio.Event()
+
+    class MockEntitySlowRemoval(entity.Entity):
+        """Entity that blocks while being removed."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Block until released."""
+            await release.wait()
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntitySlowRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    owner = hass.async_create_task(ent.async_remove())
+    await asyncio.sleep(0)
+    waiter = hass.async_create_task(ent.async_remove())
+    other_waiter = hass.async_create_task(ent.async_remove())
+    await asyncio.sleep(0)
+
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+
+    release.set()
+    await owner
+    await other_waiter
+    assert hass.states.get("test.test") is None
 
 
 async def test_set_context(hass: HomeAssistant) -> None:
@@ -960,7 +1011,7 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 )
 def test_entity_category_schema(value, expected) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
     assert isinstance(result, EntityCategory)
@@ -969,9 +1020,9 @@ def test_entity_category_schema(value, expected) -> None:
 @pytest.mark.parametrize("value", [None, "non_existing"])
 def test_entity_category_schema_error(value) -> None:
     """Test entity category schema."""
-    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    schema = probatio.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
-        vol.Invalid,
+        probatio.Invalid,
         match=r"expected EntityCategory or one of 'config', 'diagnostic'",
     ):
         schema(value)
@@ -1023,6 +1074,44 @@ async def _test_friendly_name(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
 
 
+@pytest.mark.parametrize("has_entity_name", [False, True])
+async def test_friendly_name_empty_override_uses_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    has_entity_name: bool,
+) -> None:
+    """Test an empty name follows the device until the override is reset."""
+    ent = MockEntity(
+        unique_id="empty_name",
+        device_info={
+            "identifiers": {("test", "device")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name="Temperature",
+    )
+    await _test_friendly_name(hass, ent, "Device Bla Temperature")
+
+    entry = entity_registry.async_update_entity(ent.entity_id, name="")
+    await hass.async_block_till_done()
+    assert hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Device Bla"
+
+    assert entry.device_id is not None
+    device_registry.async_update_device(entry.device_id, name_by_user="Living room")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Living room"
+    )
+
+    entity_registry.async_update_entity(ent.entity_id, name=None)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Living room Temperature"
+    )
+
+
 @pytest.mark.parametrize(
     (
         "has_entity_name",
@@ -1036,7 +1125,7 @@ async def _test_friendly_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Entity Blu"),
+        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
@@ -1044,7 +1133,7 @@ async def test_friendly_name_attr(
     hass: HomeAssistant,
     has_entity_name: bool,
     entity_name: str | None,
-    device_name: str | None | UndefinedType,
+    device_name: str | UndefinedType | None,
     expected_friendly_name: str | None,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
@@ -1630,7 +1719,9 @@ async def test_friendly_name_updated(
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name1
 
-    device = device_registry.async_get_device(identifiers={("hue", "1234")})
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
     device_registry.async_update_device(device.id, name_by_user="Device Bla2")
     await hass.async_block_till_done()
 
@@ -1647,6 +1738,213 @@ async def test_friendly_name_updated(
 
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_kwargs",
+        "new_device_identifier",
+        "expected_device_identifier",
+        "expected_friendly_name_after_move",
+        "expected_friendly_name_final",
+    ),
+    [
+        pytest.param(
+            {},
+            ("test", "new"),
+            ("test", "new"),
+            "New Device Entity",
+            "New renamed Entity",
+            id="no_device_to_device",
+        ),
+        pytest.param(
+            {"device_info": {"identifiers": {("test", "old")}}},
+            ("test", "new"),
+            ("test", "new"),
+            "New Device Entity",
+            "New renamed Entity",
+            id="device_to_other_device",
+        ),
+        pytest.param(
+            {"device_info": {"identifiers": {("test", "old")}}},
+            None,
+            None,
+            "Entity",
+            "Entity",
+            id="device_to_no_device",
+        ),
+    ],
+)
+async def test_device_updates_follow_device_id_change(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_kwargs: dict[str, Any],
+    new_device_identifier: tuple[str, str] | None,
+    expected_device_identifier: tuple[str, str] | None,
+    expected_friendly_name_after_move: str,
+    expected_friendly_name_final: str,
+) -> None:
+    """Test device registry updates track the entity's current device.
+
+    After a device_id change, updates of the new device must be applied, and
+    updates of the previous device must not be.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "old")},
+        name="Old Device",
+    )
+    new_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "new")},
+        name="New Device",
+    )
+    devices = {("test", "old"): old_device, ("test", "new"): new_device, None: None}
+    device_ids = {("test", "old"): old_device.id, ("test", "new"): new_device.id}
+
+    ent = MockEntity(
+        unique_id="qwer", has_entity_name=True, name="Entity", **entity_kwargs
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        ent.entity_id, device_id=device_ids.get(new_device_identifier)
+    )
+    await hass.async_block_till_done()
+    expected_device = devices[expected_device_identifier]
+    assert ent.device_entry == expected_device
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+
+    # Renaming the previous device must not affect the entity
+    device_registry.async_update_device(old_device.id, name_by_user="Old renamed")
+    await hass.async_block_till_done()
+    assert ent.device_entry == expected_device
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+
+    # Renaming the new device must update the entity
+    device_registry.async_update_device(new_device.id, name_by_user="New renamed")
+    await hass.async_block_till_done()
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_final
+
+
+async def test_device_entry_cleared_when_detached_from_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device_entry of an entity attached to another entry's device.
+
+    When the device is removed, the entity registry detaches the cross-entry
+    entity (a device_id=None update) instead of removing it; the detach must
+    clear the cached device_entry.
+    """
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("other", "dev1")}
+    )
+
+    ent = MockEntity(unique_id="qwer")
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    # Attach the entity to the other config entry's device, as e.g. a
+    # ScannerEntity attaches to the tracked device by MAC
+    entity_registry.async_update_entity(ent.entity_id, device_id=device.id)
+    await hass.async_block_till_done()
+    assert ent.device_entry is not None
+
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+
+    # The registry entry was detached from the removed device, clearing the
+    # cached device entry
+    registry_entry = entity_registry.async_get(ent.entity_id)
+    assert registry_entry is not None
+    assert registry_entry.device_id is None
+    assert ent.device_entry is None
+
+
+async def test_device_entry_cleared_on_registry_detach(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the cached device entry is cleared when the entity is detached.
+
+    A registry update setting device_id to None must clear the cached
+    device_entry, even while the device itself still exists.
+    """
+    ent = MockEntity(unique_id="qwer")
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "dev1")}
+    )
+    entity_registry.async_update_entity(ent.entity_id, device_id=device.id)
+    await hass.async_block_till_done()
+    assert ent.device_entry is not None
+    assert ent.device_entry.id == device.id
+
+    # Detach the entity while the device remains; the cache must still clear
+    entity_registry.async_update_entity(ent.entity_id, device_id=None)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device.id) is not None
+    assert ent.device_entry is None
 
 
 async def test_translation_key(hass: HomeAssistant) -> None:
@@ -2862,7 +3160,10 @@ async def test_platform_state_no_platform(hass: HomeAssistant) -> None:
 async def test_platform_state_fail_to_add(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test platform state when raising from async_added_to_hass."""
+    """Test platform state when raising from async_added_to_hass.
+
+    The entity must be aborted instead of being left stuck in the ADDING state.
+    """
 
     entry = entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
@@ -2880,14 +3181,218 @@ async def test_platform_state_fail_to_add(
     assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test") is None
-    assert ent._platform_state is entity.EntityPlatformState.ADDING
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    # The partial registration is rolled back: the reserved state id is released
+    # and no internal source data leaks.
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
 
-    entry = entity_registry.async_remove(entry.entity_id)
+    # Removing the registry entry of the aborted entity is a clean no-op
+    entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
 
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
-
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
     assert hass.states.get("test.test") is None
+
+
+async def test_platform_state_cancelled_during_add(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the entity is cleaned up if adding it is cancelled.
+
+    Cancellation, e.g. by the surrounding add timeout, raises CancelledError
+    which derives from BaseException; the entity must still be aborted and its
+    partial registration rolled back.
+    """
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    adding = asyncio.Event()
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self) -> None:
+            adding.set()
+            await asyncio.Event().wait()
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    task = asyncio.create_task(
+        platform._async_add_entity(ent, False, entity_registry, None)
+    )
+    # Wait until the entity is committed and blocked inside async_added_to_hass
+    await adding.wait()
+
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert "test.test" not in platform.entities
+    # The partial registration is rolled back: the reserved state id is released
+    # and no internal source data leaks.
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
+
+
+async def test_platform_state_fail_to_add_rollback_raises(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the entity is aborted even if the finish-failure rollback raises.
+
+    add_to_platform_abort must still run if async_internal_will_remove_from_hass
+    raises during rollback, e.g. because a concurrent registry-driven removal
+    already cleared entity_sources. The rollback failure is logged separately
+    while the original add failure is surfaced.
+    """
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self) -> None:
+            # Simulate a concurrent removal clearing entity_sources, then fail;
+            # the rollback's async_internal_will_remove_from_hass will KeyError.
+            del entity.entity_sources(self.hass)[self.entity_id]
+            raise ValueError("Failed to add entity")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert "test.test" not in platform.entities
+    # The reserved state id is released even though the rollback raised.
+    assert hass.states.async_available("test.test")
+    # The rollback failure is logged separately, and the original add failure
+    # (not the synthetic rollback KeyError) is surfaced as the reason.
+    assert "Error cleaning up entity test.test" in caplog.text
+    assert "Failed to add entity" in caplog.text
+
+
+async def test_async_prepare_to_add_to_hass_runs_before_registration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test async_prepare_to_add_to_hass runs before registration and the state write.
+
+    It is awaited during the add, before async_added_to_hass, before the entity is
+    registered in the entity registry and before it is written to the state machine.
+    """
+    events: list[str] = []
+    observed: dict[str, Any] = {}
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_prepare_to_add_to_hass(self) -> None:
+            await super().async_prepare_to_add_to_hass()
+            events.append("before")
+            observed["registry_entry"] = self.registry_entry
+            observed["registered"] = entity_registry.async_get_entity_id(
+                "test", "test_platform", "5678"
+            )
+            observed["states_before"] = len(hass.states.async_all())
+
+        async def async_added_to_hass(self) -> None:
+            await super().async_added_to_hass()
+            events.append("added")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert events == ["before", "added"]
+    # During the hook the entity was not yet registered nor written to the state machine
+    assert observed["registry_entry"] is None
+    assert observed["registered"] is None
+    assert len(hass.states.async_all()) == observed["states_before"] + 1
+    # After the add it is registered, added and has a state
+    assert entity_registry.async_get_entity_id("test", "test_platform", "5678")
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
+    assert hass.states.get(ent.entity_id) is not None
+
+
+async def test_async_prepare_to_add_to_hass_runs_for_disabled_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test async_prepare_to_add_to_hass runs even for a disabled, aborted entity."""
+    events: list[str] = []
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+        _attr_entity_registry_enabled_default = False
+
+        async def async_prepare_to_add_to_hass(self) -> None:
+            await super().async_prepare_to_add_to_hass()
+            events.append("before")
+
+        async def async_added_to_hass(self) -> None:
+            await super().async_added_to_hass()
+            events.append("added")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    # The entity is aborted for being disabled: async_added_to_hass never runs,
+    # but async_prepare_to_add_to_hass still does.
+    assert events == ["before"]
+    entity_id = entity_registry.async_get_entity_id("test", "test_platform", "5678")
+    assert entity_id is not None
+    assert (
+        entity_registry.async_get(entity_id).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+    )
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert hass.states.get(entity_id) is None
+
+
+async def test_async_prepare_to_add_to_hass_raising_aborts_add(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a raising async_prepare_to_add_to_hass aborts the add cleanly.
+
+    The entity must be aborted instead of being left stuck in the ADDING state,
+    and it must never be registered or written to the state machine.
+    """
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_prepare_to_add_to_hass(self) -> None:
+            raise ValueError("Failed before add")
+
+        async def async_added_to_hass(self) -> None:
+            raise AssertionError("async_added_to_hass must not run")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert entity_registry.async_get_entity_id("test", "test_platform", "5678") is None
+    assert hass.states.async_all() == []
+    assert "Failed before add" in caplog.text
 
 
 async def test_platform_state_write_from_init(

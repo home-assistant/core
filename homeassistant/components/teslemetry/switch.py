@@ -4,7 +4,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import AutoSeat, Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
@@ -36,8 +38,8 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
     polling: bool = False
-    on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
-    off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
+    on_func: Callable[[Vehicle | VehicleRouter], Awaitable[dict[str, Any]]]
+    off_func: Callable[[Vehicle | VehicleRouter], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
@@ -162,7 +164,9 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
-            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling:
                     entities.append(
                         TeslemetryVehiclePollingVehicleSwitchEntity(
@@ -197,7 +201,7 @@ async def async_setup_entry(
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     """Base class for all Teslemetry switch entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 

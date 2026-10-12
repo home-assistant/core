@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from httpx import RequestError
+from httpx2 import RequestError
 from pysenz import MODE_AUTO, Thermostat
 
 from homeassistant.components.climate import (

@@ -2,23 +2,17 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "invalid_discovery_info": "Invalid discovery information received",
       "link_local_address": "Link local addresses are not supported",
       "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
       "no_devices": "The authorized user has no LaMetric devices",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The device at this address is not the LaMetric device you are reconfiguring.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -55,6 +49,16 @@
           "implementation": "[%key:common::config_flow::description::implementation%]"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::lametric::config::step::manual_entry::data_description::api_key%]",
+          "host": "[%key:component::lametric::config::step::manual_entry::data_description::host%]"
+        }
       }
     }
   },
@@ -71,6 +75,11 @@
       },
       "dismiss_current": {
         "name": "Dismiss current notification"
+      }
+    },
+    "notify": {
+      "message": {
+        "name": "Message"
       }
     },
     "number": {
@@ -99,6 +108,31 @@
       "bluetooth": {
         "name": "Bluetooth"
       }
+    },
+    "time": {
+      "screensaver_end_time": {
+        "name": "Screensaver end time"
+      },
+      "screensaver_start_time": {
+        "name": "Screensaver start time"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with the LaMetric device"
+    },
+    "invalid_response": {
+      "message": "Invalid response from the LaMetric device"
+    },
+    "notification_failed": {
+      "message": "Could not send the notification to the LaMetric device: {error}"
+    },
+    "unknown_sound": {
+      "message": "Unknown sound: {sound}"
+    },
+    "update_failed": {
+      "message": "Could not fetch the state of the LaMetric device: {error}"
     }
   },
   "selector": {

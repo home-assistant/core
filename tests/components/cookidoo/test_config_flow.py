@@ -1,21 +1,32 @@
 """Test the Cookidoo config flow."""
 
+from collections.abc import Callable
+from dataclasses import asdict
+from typing import Any
 from unittest.mock import AsyncMock
 
+from cookidoo_api import CookidooAuthData
 from cookidoo_api.exceptions import (
     CookidooAuthException,
     CookidooException,
+    CookidooParseException,
     CookidooRequestException,
 )
 import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD
+from .conftest import AUTH_DATA, COUNTRY, EMAIL, LANGUAGE, PASSWORD
 from .test_init import setup_integration
 
 from tests.common import MockConfigEntry
@@ -30,11 +41,45 @@ MOCK_DATA_LANGUAGE_STEP = {
     CONF_LANGUAGE: LANGUAGE,
 }
 
+MOCK_TOKEN = asdict(AUTH_DATA)
+ROTATED_AUTH_DATA = CookidooAuthData(
+    access_token="rotated-access-token",
+    refresh_token="rotated-refresh-token",
+    expires_at=1763000000.0,
+)
 
+
+@pytest.mark.parametrize(
+    ("login_tokens", "rotated_tokens", "expected_token"),
+    [
+        pytest.param(AUTH_DATA, None, MOCK_TOKEN, id="tokens_from_the_login"),
+        pytest.param(
+            AUTH_DATA,
+            ROTATED_AUTH_DATA,
+            asdict(ROTATED_AUTH_DATA),
+            id="tokens_rotated_during_validation",
+        ),
+        pytest.param(None, None, {}, id="no_tokens_from_the_login"),
+    ],
+)
 async def test_flow_user_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    arrange_validation_tokens: Callable[
+        [CookidooAuthData | None, CookidooAuthData | None], None
+    ],
+    login_tokens: CookidooAuthData | None,
+    rotated_tokens: CookidooAuthData | None,
+    expected_token: dict[str, Any],
 ) -> None:
-    """Test we get the user flow and create entry with success."""
+    """Test we get the user flow and create entry with success.
+
+    The entry is created with whatever tokens the validation ended up holding:
+    the ones the login handed over, the ones a later request rotated them into,
+    or none at all.
+    """
+    arrange_validation_tokens(login_tokens, rotated_tokens)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -57,14 +102,57 @@ async def test_flow_user_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cookidoo"
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_TOKEN: expected_token,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_reauth_drops_tokens_of_a_failed_attempt(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test a retried reauth does not persist the tokens of an earlier attempt.
+
+    The first attempt logs in -- which hands us its tokens -- and only then
+    fails, and the retry logs in without any. Those tokens belong to the
+    credentials that were rejected, so they must not reach the entry.
+    """
+    await setup_integration(hass, cookidoo_config_entry)
+    mock_cookidoo_client.reset_mock()
+
+    result = await cookidoo_config_entry.start_reauth_flow(hass)
+
+    user_info = mock_cookidoo_client.get_user_info.return_value
+    mock_cookidoo_client.get_user_info.side_effect = [
+        CookidooRequestException(),
+        user_info,
+    ]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "wrong-email", CONF_PASSWORD: "wrong-password"},
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # The retried login yields no tokens, so nothing overwrites the stale pair
+    mock_cookidoo_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["reason"] == "reauth_successful"
+    assert cookidoo_config_entry.data[CONF_TOKEN] == {}
 
 
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooAuthException(), "invalid_auth"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
@@ -73,6 +161,7 @@ async def test_flow_user_success(
 async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
+    login_success: Callable[[], None],
     raise_error: Exception,
     text_error: str,
 ) -> None:
@@ -91,7 +180,7 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     assert result["errors"]["base"] == text_error
 
     # Recover
-    mock_cookidoo_client.login.side_effect = None
+    mock_cookidoo_client.login.side_effect = login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_DATA_USER_STEP,
@@ -108,13 +197,18 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == "Cookidoo"
 
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_TOKEN: MOCK_TOKEN,
+    }
 
 
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooAuthException(), "invalid_auth"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
@@ -158,7 +252,11 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_2(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == "Cookidoo"
 
-    assert result["data"] == {**MOCK_DATA_USER_STEP, **MOCK_DATA_LANGUAGE_STEP}
+    assert result["data"] == {
+        **MOCK_DATA_USER_STEP,
+        **MOCK_DATA_LANGUAGE_STEP,
+        CONF_TOKEN: MOCK_TOKEN,
+    }
 
 
 async def test_flow_user_init_data_already_configured(
@@ -224,6 +322,7 @@ async def test_flow_reconfigure_success(
         CONF_PASSWORD: "new-password",
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -232,6 +331,7 @@ async def test_flow_reconfigure_success(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
     ],
@@ -240,6 +340,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     hass: HomeAssistant,
     cookidoo_config_entry: AsyncMock,
     mock_cookidoo_client: AsyncMock,
+    login_success: Callable[[], None],
     raise_error: Exception,
     text_error: str,
 ) -> None:
@@ -263,7 +364,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     assert result["errors"]["base"] == text_error
 
     # Recover
-    mock_cookidoo_client.login.side_effect = None
+    mock_cookidoo_client.login.side_effect = login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
@@ -283,6 +384,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
         **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -291,6 +393,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
     ],
@@ -343,6 +446,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
         **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -401,6 +505,7 @@ async def test_flow_reauth(
         CONF_PASSWORD: "new-password",
         CONF_COUNTRY: COUNTRY,
         CONF_LANGUAGE: LANGUAGE,
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -409,6 +514,7 @@ async def test_flow_reauth(
     ("raise_error", "text_error"),
     [
         (CookidooRequestException(), "cannot_connect"),
+        (CookidooParseException(), "cannot_connect"),
         (CookidooAuthException(), "invalid_auth"),
         (CookidooException(), "unknown"),
         (IndexError(), "unknown"),
@@ -418,6 +524,7 @@ async def test_flow_reauth_error_and_recover(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry: MockConfigEntry,
+    login_success: Callable[[], None],
     raise_error,
     text_error,
 ) -> None:
@@ -438,7 +545,7 @@ async def test_flow_reauth_error_and_recover(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    mock_cookidoo_client.login.side_effect = None
+    mock_cookidoo_client.login.side_effect = login_success
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
@@ -451,6 +558,7 @@ async def test_flow_reauth_error_and_recover(
         CONF_PASSWORD: "new-password",
         CONF_COUNTRY: COUNTRY,
         CONF_LANGUAGE: LANGUAGE,
+        CONF_TOKEN: MOCK_TOKEN,
     }
     assert len(hass.config_entries.async_entries()) == 1
 

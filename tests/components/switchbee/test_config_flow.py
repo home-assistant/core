@@ -1,6 +1,5 @@
 """Test the SwitchBee Smart Home config flow."""
 
-import json
 from unittest.mock import patch
 
 import pytest
@@ -14,15 +13,15 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_INVALID_TOKEN_MGS
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.parametrize("test_cucode_in_coordinator_data", [False, True])
 async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> None:
     """Test we get the form."""
 
-    coordinator_data = json.loads(
-        await async_load_fixture(hass, "switchbee.json", DOMAIN)
+    coordinator_data = await async_load_json_object_fixture(
+        hass, "switchbee.json", DOMAIN
     )
 
     if test_cucode_in_coordinator_data:
@@ -140,8 +139,8 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 async def test_form_entry_exists(hass: HomeAssistant) -> None:
     """Test we handle an already existing entry."""
 
-    coordinator_data = json.loads(
-        await async_load_fixture(hass, "switchbee.json", DOMAIN)
+    coordinator_data = await async_load_json_object_fixture(
+        hass, "switchbee.json", DOMAIN
     )
     MockConfigEntry(
         unique_id="a8:21:08:e7:67:b6",

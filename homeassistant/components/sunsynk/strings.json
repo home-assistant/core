@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of your Sunsynk Connect account.",
+          "username": "The email address of your Sunsynk Connect account."
+        },
+        "description": "Connect to your Sunsynk Connect account to get data from your inverters."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charge_today": {
+        "name": "Charge today"
+      },
+      "charge_total": {
+        "name": "Charge total"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "discharge_today": {
+        "name": "Discharge today"
+      },
+      "discharge_total": {
+        "name": "Discharge total"
+      },
+      "grid_export_today": {
+        "name": "Grid export today"
+      },
+      "grid_export_total": {
+        "name": "Grid export total"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "grid_import_today": {
+        "name": "Grid import today"
+      },
+      "grid_import_total": {
+        "name": "Grid import total"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "load_energy_today": {
+        "name": "Load energy today"
+      },
+      "load_energy_total": {
+        "name": "Load energy total"
+      },
+      "load_power": {
+        "name": "Load power"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "solar_energy_today": {
+        "name": "Solar energy today"
+      },
+      "solar_energy_total": {
+        "name": "Solar energy total"
+      },
+      "solar_power": {
+        "name": "Solar power"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "voltage": {
+        "name": "Voltage"
+      }
+    }
+  }
+}

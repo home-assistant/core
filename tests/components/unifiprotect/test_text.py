@@ -1,23 +1,31 @@
 """Test the UniFi Protect text platform."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Callable, Coroutine
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from uiprotect.data import Camera, DoorbellMessageType, LCDMessage
+from uiprotect.data.public_devices import PublicLcdMessage
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.text import CAMERA
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import patch_ufp_method
 from .utils import (
     MockUFPFixture,
     adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_camera,
+    make_streamless_public_camera,
+    public_device_ws_message,
     remove_entities,
+    setup_public_camera,
 )
 
 
@@ -43,9 +51,6 @@ async def test_text_camera_setup(
 ) -> None:
     """Test text entity setup for camera devices."""
 
-    doorbell.lcd_message = LCDMessage(
-        type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
-    )
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
@@ -60,7 +65,7 @@ async def test_text_camera_setup(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "Test"
+    assert state.state == "Welcome"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -69,6 +74,7 @@ async def test_text_camera_set(
 ) -> None:
     """Test text entity setting value camera devices."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
 
@@ -77,9 +83,11 @@ async def test_text_camera_set(
         hass, Platform.TEXT, doorbell, description
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_camera(doorbell)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_lcd_message", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "text",
             "set_value",
@@ -88,5 +96,83 @@ async def test_text_camera_set(
         )
 
         mock_method.assert_called_once_with(
-            DoorbellMessageType.CUSTOM_MESSAGE, text="Test test"
+            DoorbellMessageType.CUSTOM_MESSAGE, text="Test test", reset_at=None
         )
+
+
+@pytest.mark.parametrize(
+    ("lcd_message", "expected"),
+    [
+        pytest.param(None, "Welcome", id="no_message"),
+        pytest.param(
+            PublicLcdMessage(type=DoorbellMessageType.CUSTOM_MESSAGE, text="Hi"),
+            "Hi",
+            id="custom",
+        ),
+        pytest.param(
+            PublicLcdMessage(type=DoorbellMessageType.DO_NOT_DISTURB),
+            "DO NOT DISTURB",
+            id="unifi_message",
+        ),
+        pytest.param(PublicLcdMessage(), "Welcome", id="no_type"),
+    ],
+)
+async def test_text_camera_reads_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    lcd_message: PublicLcdMessage | None,
+    expected: str,
+) -> None:
+    """Test the doorbell text reads the public LCD message, not the private one."""
+
+    doorbell.lcd_message = LCDMessage(
+        type=DoorbellMessageType.CUSTOM_MESSAGE, text="Private"
+    )
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.TEXT, doorbell, CAMERA[0]
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Welcome"
+
+    for message, value in (
+        (
+            PublicLcdMessage(type=DoorbellMessageType.CUSTOM_MESSAGE, text="Start"),
+            "Start",
+        ),
+        (lcd_message, expected),
+    ):
+        public = make_public_camera(doorbell, lcd_message=message)
+        ufp.devices_ws_subscription(public_device_ws_message(public))
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == value
+
+
+async def test_text_public_only_no_doorbell_text(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    doorbell: Camera,
+) -> None:
+    """API-key-only mode builds no doorbell text, which needs the private NVR."""
+    ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = (
+        make_streamless_public_camera(doorbell)
+    )
+
+    await setup_public_only()
+
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.TEXT, DOMAIN, f"{doorbell.mac}_doorbell"
+        )
+        is None
+    )

@@ -88,6 +88,11 @@ query ($owner: String!, $repository: String!) {
       name
       url
       tag: tagName
+      assets: releaseAssets(first: 100) {
+        nodes {
+          download_count: downloadCount
+        }
+      }
     }
     refs(
       first: 1

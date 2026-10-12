@@ -15,6 +15,9 @@
         "title": "Select station"
       },
       "user": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
+        },
         "description": "Choose the region you want to survey in order to locate Ambient personal weather stations.",
         "title": "Select region"
       }

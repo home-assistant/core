@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.tankerkoenig import DOMAIN
+from homeassistant.components.tankerkoenig.const import DOMAIN
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

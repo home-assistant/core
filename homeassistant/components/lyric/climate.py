@@ -3,12 +3,10 @@
 import asyncio
 import enum
 import logging
-from time import localtime, strftime, time
 from typing import Any, override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -30,9 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     DOMAIN,
@@ -104,17 +100,6 @@ HVAC_ACTIONS = {
     LYRIC_HVAC_ACTION_COOL: HVACAction.COOLING,
 }
 
-SERVICE_HOLD_TIME = "set_hold_time"
-ATTR_TIME_PERIOD = "time_period"
-
-SCHEMA_HOLD_TIME: VolDictType = {
-    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
-        cv.time_period,
-        cv.positive_timedelta,
-        lambda td: strftime("%H:%M:%S", localtime(time() + td.total_seconds())),
-    )
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -139,14 +124,6 @@ async def async_setup_entry(
             for device in location.devices
         ),
         True,
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_HOLD_TIME,
-        SCHEMA_HOLD_TIME,
-        "async_set_hold_time",
     )
 
 

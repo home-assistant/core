@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     DEGREE,
@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
@@ -62,6 +63,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -238,7 +240,7 @@ class SensorDeviceClass(StrEnum):
     electric energy consumption.
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     ENERGY_DISTANCE = "energy_distance"
@@ -260,7 +262,7 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     FREQUENCY = "frequency"
@@ -402,6 +404,14 @@ class SensorDeviceClass(StrEnum):
     - `inHg`
     - `psi`
     - `inH₂O`
+    """
+
+    RADON = "radon"
+    """Radon.
+
+    Unit of measurement: UnitOfRadiationConcentration
+    - SI / metric: `Bq/m³`
+    - USCS / imperial: `pCi/L`
     """
 
     REACTIVE_ENERGY = "reactive_energy"
@@ -550,7 +560,9 @@ NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.UPTIME,
 }
 
-DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
+DEVICE_CLASSES_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(SensorDeviceClass)
+)
 
 # DEVICE_CLASSES is deprecated as of 2021.12
 # use the SensorDeviceClass enum instead.
@@ -580,7 +592,9 @@ class SensorStateClass(StrEnum):
     For example: an amount of consumed gas"""
 
 
-STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
+STATE_CLASSES_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(SensorStateClass)
+)
 
 
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
@@ -611,6 +625,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.RADON: RadiationConcentrationConverter,
     SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     SensorDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
     SensorDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,
@@ -706,6 +721,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.RADON: set(UnitOfRadiationConcentration),
     SensorDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     SensorDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     SensorDeviceClass.SIGNAL_STRENGTH: {
@@ -780,6 +796,7 @@ UNITS_PRECISION = {
         0,
     ),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.PA, 0),
+    SensorDeviceClass.RADON: (UnitOfRadiationConcentration.PICOCURIES_PER_LITER, 1),
     SensorDeviceClass.REACTIVE_POWER: (UnitOfReactivePower.VOLT_AMPERE_REACTIVE, 0),
     SensorDeviceClass.SOUND_PRESSURE: (UnitOfSoundPressure.DECIBEL, 0),
     SensorDeviceClass.SPEED: (UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
@@ -839,6 +856,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.RADON: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_ENERGY: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,

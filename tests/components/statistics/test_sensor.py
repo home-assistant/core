@@ -494,6 +494,37 @@ async def test_sampling_size_1(hass: HomeAssistant) -> None:
     assert state.attributes.get("buffer_usage_ratio") == round(1 / 1, 2)
 
 
+async def test_scheduled_update_cancelled_on_remove(hass: HomeAssistant) -> None:
+    """Test the scheduled purge update is cancelled when the sensor is removed."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "max_age": {"minutes": 4},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_monitored", "10")
+    await hass.async_block_till_done()
+
+    entity = hass.data["sensor"].get_entity("sensor.test")
+    await entity.async_remove()
+
+    with patch.object(entity, "_async_purge_update_and_schedule") as mock_purge:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+    mock_purge.assert_not_called()
+
+
 async def test_age_limit_expiry(hass: HomeAssistant) -> None:
     """Test that values are removed with given max age."""
     now = dt_util.utcnow()
@@ -1694,14 +1725,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     statistics_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Statistics",
-            "entity_id": "sensor.test_source",
+            "entity_id": "sensor.mock_title",
             "state_characteristic": "mean",
             "keep_last_sample": False,
             "percentile": 50.0,
@@ -1715,9 +1746,54 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(statistics_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    statistics_entity = entity_registry.async_get("sensor.statistics")
+    statistics_entity = entity_registry.async_get("sensor.mock_title_statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Statistics."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "statistics",
+                "name": "Statistics",
+                "entity_id": "sensor.test_source",
+                "state_characteristic": "mean",
+                "sampling_size": 20,
+                "unique_id": "statistics_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    statistics_entity = entity_registry.async_get("sensor.statistics")
+    assert statistics_entity is not None
+    assert statistics_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) -> None:

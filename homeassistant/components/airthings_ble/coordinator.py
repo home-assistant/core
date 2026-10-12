@@ -13,8 +13,8 @@ from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -36,9 +36,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
     def __init__(self, hass: HomeAssistant, entry: AirthingsBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.airthings = AirthingsBluetoothDeviceData(
-            _LOGGER, hass.config.units is METRIC_SYSTEM
-        )
+        self.airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric=True)
 
         device_model = entry.data.get(DEVICE_MODEL)
         interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
@@ -105,4 +103,22 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+        if not data.address:
+            # The device did not report its address, which means the read did not
+            # complete. Building entities from this would create a duplicate device
+            # and entities with an empty unique id prefix.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="incomplete_read",
+            )
+
+        device_registry = dr.async_get(self.hass)
+        if (
+            device := device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
+            )
+        ) and device.sw_version != data.sw_version:
+            device_registry.async_update_device(device.id, sw_version=data.sw_version)
+
         return data

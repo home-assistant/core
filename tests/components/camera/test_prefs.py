@@ -11,6 +11,7 @@ from homeassistant.components.camera.prefs import (
 from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_get_dynamic_camera_stream_settings_missing_prefs(
@@ -74,3 +75,26 @@ async def test_get_dynamic_camera_stream_settings_with_preload_stream(
     settings = await get_dynamic_camera_stream_settings(hass, "camera.test")
     assert settings.orientation == Orientation.NO_TRANSFORM
     assert settings.preload_stream is True
+
+
+@pytest.mark.parametrize(
+    "orientation", [Orientation.NO_TRANSFORM, Orientation.ROTATE_LEFT]
+)
+async def test_get_dynamic_camera_stream_settings_stored_orientation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    orientation: Orientation,
+) -> None:
+    """Test a stored orientation is loaded as an Orientation."""
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    hass.data[DATA_CAMERA_PREFS] = prefs
+
+    entry = entity_registry.async_get_or_create("camera", "test", "unique_id")
+    # Entity registry options are loaded from JSON as a plain int
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "camera", {"orientation": int(orientation)}
+    )
+
+    settings = await get_dynamic_camera_stream_settings(hass, entry.entity_id)
+    assert settings.orientation is orientation

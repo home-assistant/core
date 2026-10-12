@@ -5,6 +5,7 @@ import logging
 import uuid
 
 from aiohttp import ClientSession
+from bleak.backends.device import BLEDevice
 from packaging import version
 from pylamarzocco import (
     LaMarzoccoBluetoothClient,
@@ -33,7 +34,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import (
+    BT_MODEL_PREFIXES,
+    CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from .coordinator import (
     LaMarzoccoBluetoothUpdateCoordinator,
     LaMarzoccoConfigEntry,
@@ -54,8 +61,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,12 +101,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     )
 
         if CONF_MAC in entry.data:
-            ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
-            if ble_device:
+            mac = entry.data[CONF_MAC]
+            if ble_device := async_ble_device_from_address(hass, mac):
                 _LOGGER.info("Setting up lamarzocco with Bluetooth")
+                latest_ble_device: BLEDevice = ble_device
+
+                def ble_device_callback() -> BLEDevice:
+                    """Return the current BLE device, or the last one seen."""
+                    nonlocal latest_ble_device
+                    latest_ble_device = (
+                        async_ble_device_from_address(hass, mac) or latest_ble_device
+                    )
+                    return latest_ble_device
+
                 bluetooth_client = LaMarzoccoBluetoothClient(
                     ble_device=ble_device,
                     ble_token=token,
+                    ble_device_callback=ble_device_callback,
                 )
 
                 async def disconnect_bluetooth(_: Event) -> None:
@@ -196,7 +212,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # to fetch only if the others failed
     if bluetooth_client:
         bluetooth_coordinator = LaMarzoccoBluetoothUpdateCoordinator(
-            hass, entry, device
+            hass, entry, device, coordinators.config_coordinator
         )
         await bluetooth_coordinator.async_config_entry_first_refresh()
         coordinators.bluetooth_coordinator = bluetooth_coordinator

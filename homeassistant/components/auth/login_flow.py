@@ -22,14 +22,18 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
-And optional parameter 'type' has to set as 'link_user' if login flow used for
-link credential to exist user. Default 'type' is 'authorize'.
+Pass in optional parameters 'code_challenge' and 'code_challenge_method' for
+PKCE (RFC 7636). The only supported method is 'S256'.
+
+The default 'type' is 'authorize'.
 
 {
     "client_id": "https://hassbian.local:8123/",
     "handler": ["local_provider", null],
     "redirect_url": "https://hassbian.local:8123/",
-    "type': "authorize"
+    "type': "authorize",
+    "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+    "code_challenge_method": "S256"
 }
 
 Return value will be a step in a data entry flow. See the docs for data entry
@@ -54,9 +58,6 @@ Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
 have type FlowResultType.CREATE_ENTRY and "result" key will contain
 an authorization code.
-The authorization code associated with an authorized user by default, it will
-associate with an credential if "type" set to "link_user" in
-"/auth/login_flow"
 
 {
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
@@ -68,18 +69,16 @@ associate with an credential if "type" set to "link_user" in
 }
 """
 
-from collections.abc import Callable
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
-import voluptuous as vol
-import voluptuous_serialize
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
-from homeassistant.auth.models import AuthFlowContext, AuthFlowResult, Credentials
+from homeassistant.auth.models import AuthFlowContext, AuthFlowResult
 from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
@@ -109,9 +108,7 @@ if TYPE_CHECKING:
 
 
 @callback
-def async_setup(
-    hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
-) -> None:
+def async_setup(hass: HomeAssistant, store_result: StoreResultType) -> None:
     """Component to allow users to login."""
     hass.http.register_view(WellKnownOAuthInfoView)
     hass.http.register_view(WellKnownProtectedResourceView)
@@ -124,6 +121,7 @@ class WellKnownOAuthInfoView(HomeAssistantView):
     """View to host the OAuth2 information."""
 
     requires_auth = False
+    cors_allowed = True
     url = "/.well-known/oauth-authorization-server"
     name = "well-known/oauth-authorization-server"
 
@@ -141,13 +139,16 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
-            # Home Assistant already accepts URL-based client_ids via
-            # IndieAuth without prior registration, which is compatible with
-            # draft-ietf-oauth-client-id-metadata-document. This flag
-            # advertises that support to encourage clients to use it. The
-            # metadata document is not actually fetched as IndieAuth doesn't
-            # require it.
+            "grant_types_supported": ["authorization_code", "refresh_token"],
+            "token_endpoint_auth_methods_supported": ["none"],
+            "revocation_endpoint_auth_methods_supported": ["none"],
+            # Home Assistant accepts URL-based client_ids via IndieAuth without
+            # prior registration, and discovers allowed redirect URIs from link
+            # tags or a Client ID Metadata Document served at the client_id URL.
+            # This flag advertises that support
+            # (draft-ietf-oauth-client-id-metadata-document).
             "client_id_metadata_document_supported": True,
+            "code_challenge_methods_supported": ["S256"],
             "response_types_supported": ["code"],
             "service_documentation": (
                 "https://developers.home-assistant.io/docs/auth_api"
@@ -165,6 +166,7 @@ class WellKnownProtectedResourceView(HomeAssistantView):
     """View to host the OAuth2 Protected Resource Metadata per RFC9728."""
 
     requires_auth = False
+    cors_allowed = True
     url = "/.well-known/oauth-protected-resource"
     name = "well-known/oauth-protected-resource"
 
@@ -263,7 +265,7 @@ def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = probatio.to_field_list(schema)
 
     return data
 
@@ -312,7 +314,7 @@ class LoginFlowBaseView(HomeAssistantView):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
         result.pop("data")
-        result.pop("context")
+        context = result.pop("context")
 
         result_obj = result.pop("result")
 
@@ -328,7 +330,12 @@ class LoginFlowBaseView(HomeAssistantView):
 
         process_success_login(request)
         # We overwrite the Credentials object with the string code to retrieve it.
-        result["result"] = self._store_result(client_id, result_obj)  # type: ignore[typeddict-item]
+        result["result"] = self._store_result(
+            client_id,
+            result_obj,
+            code_challenge=context.get("code_challenge"),
+            code_challenge_method=context.get("code_challenge_method"),
+        )  # type: ignore[typeddict-item]
 
         return self.json(result)
 
@@ -344,14 +351,24 @@ class LoginFlowIndexView(LoginFlowBaseView):
         return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("client_id"): str,
-                vol.Required("handler"): vol.All(
-                    [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
+                probatio.Required("client_id"): str,
+                probatio.Required("handler"): probatio.All(
+                    [probatio.Any(str, None)],
+                    probatio.Length(2, 2),
+                    probatio.Coerce(tuple),
                 ),
-                vol.Required("redirect_uri"): str,
-                vol.Optional("type", default="authorize"): str,
+                probatio.Required("redirect_uri"): str,
+                # S256 challenges are always 43 unpadded base64url characters.
+                probatio.Optional("code_challenge"): probatio.Match(
+                    r"^[A-Za-z0-9_-]{43}\Z"
+                ),
+                probatio.Optional("code_challenge_method"): str,
+                probatio.Optional("response_type"): str,
+                probatio.Optional(
+                    "type", default="authorize"
+                ): str,  # not used, kept for backwards compatibility
             }
         )
     )
@@ -364,16 +381,38 @@ class LoginFlowIndexView(LoginFlowBaseView):
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
+        if data.get("response_type", "code") != "code":
+            return self.json_message(
+                "Response type not supported", HTTPStatus.BAD_REQUEST
+            )
+
+        code_challenge = data.get("code_challenge")
+        code_challenge_method = data.get("code_challenge_method")
+        if code_challenge_method is not None and not code_challenge:
+            return self.json_message(
+                "code_challenge required when code_challenge_method is provided",
+                HTTPStatus.BAD_REQUEST,
+            )
+        # RFC 7636 4.3: the method defaults to "plain", which is not supported.
+        if code_challenge is not None and code_challenge_method != "S256":
+            return self.json_message(
+                "Transform algorithm not supported", HTTPStatus.BAD_REQUEST
+            )
+
         handler: tuple[str, str] = tuple(data["handler"])
+
+        flow_context = AuthFlowContext(
+            ip_address=ip_address(request.remote),  # type: ignore[arg-type]
+            redirect_uri=redirect_uri,
+        )
+        if code_challenge and code_challenge_method:
+            flow_context["code_challenge"] = code_challenge
+            flow_context["code_challenge_method"] = code_challenge_method
 
         try:
             result = await self._flow_mgr.async_init(
                 handler,
-                context=AuthFlowContext(
-                    ip_address=ip_address(request.remote),  # type: ignore[arg-type]
-                    credential_only=data.get("type") == "link_user",
-                    redirect_uri=redirect_uri,
-                ),
+                context=flow_context,
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
@@ -396,9 +435,9 @@ class LoginFlowResourceView(LoginFlowBaseView):
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
     @RequestDataValidator(
-        vol.Schema(
-            {vol.Required("client_id"): str},
-            extra=vol.ALLOW_EXTRA,
+        probatio.Schema(
+            {probatio.Required("client_id"): str},
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     @log_invalid_auth
@@ -419,7 +458,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
         return await self._async_flow_result_to_response(request, client_id, result)

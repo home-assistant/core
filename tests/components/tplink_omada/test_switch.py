@@ -1,9 +1,11 @@
 """Tests for TP-Link Omada switch entities."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client import SwitchPortSettings
 from tplink_omada_client.definitions import PoEMode
@@ -11,15 +13,18 @@ from tplink_omada_client.devices import (
     OmadaGateway,
     OmadaGatewayPortConfig,
     OmadaGatewayPortStatus,
+    OmadaListDevice,
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.exceptions import InvalidDevice
+from tplink_omada_client.exceptions import InvalidDevice, OmadaClientException
 
 from homeassistant.components import switch
+from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -27,6 +32,54 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPDATE_INTERVAL = timedelta(seconds=10)
 POLL_INTERVAL = timedelta(seconds=POLL_GATEWAY + 10)
+
+
+@pytest.mark.usefixtures("mock_omada_client")
+async def test_switch_port_setup_does_not_depend_on_debounced_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test switch port setup waits for coordinator data."""
+    mock_config_entry.add_to_hass(hass)
+    switch_setup_started = asyncio.Event()
+    original_get_switch = mock_omada_site_client.get_switch.return_value
+    original_get_switch_ports = mock_omada_site_client.get_switch_ports.return_value
+    sensor_port_refresh_started = asyncio.Event()
+    get_switch_calls = 0
+    get_switch_ports_calls = 0
+
+    async def get_switch(device: OmadaListDevice) -> OmadaSwitch:
+        nonlocal get_switch_calls
+        get_switch_calls += 1
+        if get_switch_calls == 2:
+            switch_setup_started.set()
+            await sensor_port_refresh_started.wait()
+        return original_get_switch
+
+    async def get_switch_ports(
+        network_switch: OmadaSwitch,
+    ) -> list[OmadaSwitchPortDetails]:
+        nonlocal get_switch_ports_calls
+        get_switch_ports_calls += 1
+        if get_switch_ports_calls == 1:
+            sensor_port_refresh_started.set()
+            await switch_setup_started.wait()
+            await asyncio.sleep(0.1)
+        return original_get_switch_ports
+
+    mock_omada_site_client.get_switch.side_effect = get_switch
+    mock_omada_site_client.get_switch_ports.side_effect = get_switch_ports
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "switch", DOMAIN, "54-AF-97-00-00-01_000000000000000000000001_poe"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
 
 
 async def test_poe_switches(
@@ -162,6 +215,38 @@ async def test_gateway_port_poe_switch(
 
     entity = hass.states.get(entity_id)
     assert entity and entity.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "api_method"),
+    [
+        ("switch.test_poe_switch_port_1_poe", "turn_off", "update_switch_port"),
+        (
+            "switch.test_router_port_4_internet_connected",
+            "turn_on",
+            "set_gateway_wan_port_connect_state",
+        ),
+        ("switch.test_router_port_5_poe", "turn_off", "set_gateway_port_settings"),
+    ],
+)
+async def test_switch_action_failure_is_translated(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+    entity_id: str,
+    service: str,
+    api_method: str,
+) -> None:
+    """Test switch action failures raise a translated HomeAssistantError."""
+    getattr(mock_omada_site_client, api_method).side_effect = OmadaClientException(
+        "mock failure"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await call_service(hass, service, entity_id)
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "switch_action_failed"
 
 
 async def test_gateway_wan_port_has_no_poe_switch(

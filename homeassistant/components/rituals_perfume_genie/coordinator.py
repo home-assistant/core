@@ -1,11 +1,19 @@
 """The Rituals Perfume Genie data update coordinator."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
-from aiohttp import ClientError, ClientResponseError
-from pyrituals import Account, AuthenticationException, Diffuser
+from ritualsgenie import (
+    RitualsGenie,
+    RitualsGenieAuthenticationError,
+    RitualsGenieError,
+    RitualsGenieHub,
+    RitualsGenieRateLimitError,
+    RitualsGenieSensors,
+    Sensor,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,10 +24,21 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Only the sensors the entities use; every sensor is a request of its own.
+SENSORS = (Sensor.BATTERY, Sensor.FILL, Sensor.PERFUME, Sensor.WIFI)
+
 type RitualsConfigEntry = ConfigEntry[dict[str, RitualsDataUpdateCoordinator]]
 
 
-class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
+@dataclass
+class RitualsData:
+    """State and sensor readings of a diffuser."""
+
+    hub: RitualsGenieHub
+    sensors: RitualsGenieSensors
+
+
+class RitualsDataUpdateCoordinator(DataUpdateCoordinator[RitualsData]):
     """Manage fetching Rituals Perfume Genie device data."""
 
     config_entry: RitualsConfigEntry
@@ -27,56 +46,34 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        account: Account,
-        diffuser: Diffuser,
+        config_entry: RitualsConfigEntry,
+        client: RitualsGenie,
+        hub: RitualsGenieHub,
         update_interval: timedelta,
     ) -> None:
         """Initialize global Rituals Perfume Genie data updater."""
-        self.account = account
-        self.diffuser = diffuser
+        self.client = client
+        self.hub_hash = hub.hash
+        self.hublot = hub.hublot
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN}-{diffuser.hublot}",
+            name=f"{DOMAIN}-{hub.hublot}",
             update_interval=update_interval,
         )
 
     @override
-    async def _async_update_data(self) -> None:
-        """Fetch data from Rituals, with one silent re-auth on 401.
-
-        If silent re-auth also fails, raise ConfigEntryAuthFailed
-        to trigger reauth flow.
-        Other HTTP/network errors are wrapped in UpdateFailed so HA can retry.
-        """
+    async def _async_update_data(self) -> RitualsData:
+        """Fetch data from Rituals."""
         try:
-            await self.diffuser.update_data()
-        except (AuthenticationException, ClientResponseError) as err:
-            # Treat 401/403 like AuthenticationException:
-            # one silent re-auth, single retry
-            if isinstance(err, ClientResponseError) and (status := err.status) not in (
-                401,
-                403,
-            ):
-                # Non-auth HTTP error → let HA retry
-                raise UpdateFailed(f"HTTP {status}") from err
+            hub = await self.client.hub(self.hub_hash)
+            sensors = await self.client.sensors(hub, only=SENSORS)
+        except RitualsGenieAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
+        except RitualsGenieRateLimitError as err:
+            raise UpdateFailed(str(err), retry_after=err.retry_after) from err
+        except RitualsGenieError as err:
+            raise UpdateFailed(str(err)) from err
 
-            self.logger.debug(
-                "Auth issue detected (%r). Attempting silent re-auth.", err
-            )
-            try:
-                await self.account.authenticate()
-                await self.diffuser.update_data()
-            except AuthenticationException as err2:
-                # Credentials invalid → trigger HA reauth
-                raise ConfigEntryAuthFailed from err2
-            except ClientResponseError as err2:
-                # Still HTTP auth errors after refresh → trigger HA reauth
-                if err2.status in (401, 403):
-                    raise ConfigEntryAuthFailed from err2
-                raise UpdateFailed(f"HTTP {err2.status}") from err2
-        except ClientError as err:
-            # Network issues (timeouts, DNS, etc.)
-            raise UpdateFailed(f"Network error: {err!r}") from err
+        return RitualsData(hub=hub, sensors=sensors)

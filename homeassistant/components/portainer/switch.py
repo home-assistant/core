@@ -5,11 +5,6 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from pyportainer import DockerContainerState, Portainer, StackStatus
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -17,11 +12,9 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
@@ -60,25 +53,8 @@ async def _perform_action(
     coroutine: Coroutine[Any, Any, Any],
 ) -> None:
     """Perform a Portainer action with error handling and coordinator refresh."""
-    try:
-        await coroutine
-    except PortainerAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
-        ) from err
-    except PortainerConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
-        ) from err
-    except PortainerTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect_no_details",
-        ) from err
-    else:
-        await coordinator.async_request_refresh()
+    await coordinator.async_call_portainer(coroutine)
+    await coordinator.async_request_refresh()
 
 
 CONTAINER_SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (

@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 import functools
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -65,8 +65,8 @@ def _ws_with_blueprint_domain(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "blueprint/list",
-        vol.Required("domain"): cv.string,
+        probatio.Required("type"): "blueprint/list",
+        probatio.Required("domain"): cv.string,
     }
 )
 @websocket_api.async_response
@@ -99,8 +99,8 @@ async def ws_list_blueprints(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "blueprint/import",
-        vol.Required("url"): cv.url,
+        probatio.Required("type"): "blueprint/import",
+        probatio.Required("url"): cv.url,
     }
 )
 @websocket_api.async_response
@@ -153,12 +153,12 @@ async def ws_import_blueprint(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "blueprint/save",
-        vol.Required("domain"): cv.string,
-        vol.Required("path"): cv.path,
-        vol.Required("yaml"): cv.string,
-        vol.Optional("source_url"): cv.url,
-        vol.Optional("allow_override"): bool,
+        probatio.Required("type"): "blueprint/save",
+        probatio.Required("domain"): cv.string,
+        probatio.Required("path"): cv.path,
+        probatio.Required("yaml"): cv.string,
+        probatio.Optional("source_url"): cv.url,
+        probatio.Optional("allow_override"): bool,
     }
 )
 @websocket_api.async_response
@@ -210,9 +210,9 @@ async def ws_save_blueprint(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "blueprint/delete",
-        vol.Required("domain"): cv.string,
-        vol.Required("path"): cv.path,
+        probatio.Required("type"): "blueprint/delete",
+        probatio.Required("domain"): cv.string,
+        probatio.Required("path"): cv.path,
     }
 )
 @websocket_api.async_response
@@ -238,10 +238,10 @@ async def ws_delete_blueprint(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "blueprint/substitute",
-        vol.Required("domain"): cv.string,
-        vol.Required("path"): cv.path,
-        vol.Required("input"): dict,
+        probatio.Required("type"): "blueprint/substitute",
+        probatio.Required("domain"): cv.string,
+        probatio.Required("path"): cv.path,
+        probatio.Required("input"): dict,
     }
 )
 @websocket_api.async_response

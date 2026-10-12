@@ -3,17 +3,13 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONST_HVAC_HEAT,
@@ -48,16 +44,6 @@ WATER_HEATER_MAP_TADO = {
     CONST_MODE_OFF: MODE_OFF,
 }
 
-SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
-ATTR_TIME_PERIOD = "time_period"
-
-WATER_HEATER_TIMER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
-        cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
-    ),
-    vol.Optional(ATTR_TEMPERATURE): vol.Coerce(float),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -68,14 +54,6 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     entities = await _generate_entities(coordinator)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_WATER_HEATER_TIMER,
-        WATER_HEATER_TIMER_SCHEMA,
-        "set_timer",
-    )
 
     async_add_entities(entities, True)
 

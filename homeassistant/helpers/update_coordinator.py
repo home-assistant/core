@@ -17,7 +17,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -75,7 +82,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | UndefinedType | None = UNDEFINED,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -101,8 +108,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             frame.report_usage(
                 "relies on ContextVar, but should pass the config entry explicitly.",
                 core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
                 custom_integration_behavior=frame.ReportBehavior.IGNORE,
-                breaks_in_ha_version="2026.8",
             )
 
             self.config_entry = config_entries.current_entry.get()
@@ -274,12 +281,20 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._retry_after = None
 
         next_refresh = int(loop.time()) + self._microsecond + update_interval
+        # Cancelled when Home Assistant stops so a refresh can't fire during
+        # the close stage, after shared resources like aiohttp sessions are closed
+        refresh_job = HassJob(
+            self.__wrap_handle_refresh_interval,
+            f"{self.name} refresh interval",
+            job_type=HassJobType.Callback,
+            cancel_on_shutdown=True,
+        )
         self._unsub_refresh = loop.call_at(
-            next_refresh, self.__wrap_handle_refresh_interval
+            next_refresh, self.__wrap_handle_refresh_interval, refresh_job
         ).cancel
 
     @callback
-    def __wrap_handle_refresh_interval(self) -> None:
+    def __wrap_handle_refresh_interval(self, _: HassJob) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
             self.config_entry.async_create_background_task(
@@ -355,8 +370,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             )
             if self.last_update_success:
                 return
-        ex = ConfigEntryNotReady()
-        ex.__cause__ = self.last_exception
+        cause = self.last_exception
+        ex = ConfigEntryNotReady(
+            translation_domain=getattr(cause, "translation_domain", None),
+            translation_key=getattr(cause, "translation_key", None),
+            translation_placeholders=getattr(cause, "translation_placeholders", None),
+        )
+        ex.__cause__ = cause
         raise ex
 
     async def __wrap_async_setup(self) -> bool:
@@ -378,6 +398,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             requests.exceptions.RequestException,
             urllib.error.URLError,
             UpdateFailed,
+            ConfigEntryNotReady,
         ) as err:
             self.last_exception = err
 
@@ -501,6 +522,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     err.retry_after,
                 )
 
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
+                self.last_update_success = False
+
+        except ConfigEntryNotReady as err:
+            self.last_exception = err
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)

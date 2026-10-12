@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, override
 # _frozen_importlib._DeadlockError: deadlock detected by
 # _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
-import voluptuous as vol
+import probatio
 import yarl
 
 from . import (
@@ -47,7 +47,7 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     group as group_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
-    http,  # not named pre_import since it has requirements
+    http as http_import,  # noqa: F401 - not named pre_import since it has requirements
     image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
@@ -108,7 +108,7 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
-from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.package import is_docker_env
 from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
@@ -116,7 +116,7 @@ with contextlib.suppress(ImportError):
     from anyio._backends import _asyncio  # noqa: F401
 
 with contextlib.suppress(ImportError):
-    # httpx will import trio if it is installed which does
+    # httpcore2 will import trio if it is installed which does
     # blocking I/O in the event loop. We want to avoid that.
     import trio  # noqa: F401
 
@@ -224,6 +224,7 @@ DEFAULT_INTEGRATIONS = {
     "hardware",
     "labs",
     "logger",
+    "marketplace",
     "network",
     "system_health",
     #
@@ -264,6 +265,7 @@ DEFAULT_INTEGRATIONS = {
     "occupancy",
     "power",
     "temperature",
+    "vibration",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
@@ -362,9 +364,6 @@ async def async_setup_hass(
                 err,
             )
         else:
-            if not is_virtual_env():
-                await async_mount_local_lib_path(runtime_config.config_dir)
-
             if hass.config.safe_mode:
                 _LOGGER.info("Starting in safe mode")
 
@@ -414,12 +413,7 @@ async def async_setup_hass(
         _LOGGER.info("Starting in recovery mode")
         hass.config.recovery_mode = True
 
-        http_conf = (await http.async_get_last_config(hass)) or {}
-
-        await async_from_config_dict(
-            {"recovery_mode": {}, "http": http_conf},
-            hass,
-        )
+        await async_from_config_dict({"recovery_mode": {}}, hass)
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -480,25 +474,29 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
+    load_tasks: list[asyncio.Future[Any]] = [
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
+        create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+        create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
+    ]
     try:
-        await asyncio.gather(
-            create_eager_task(get_internal_store_manager(hass).async_initialize()),
-            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
-            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-            create_eager_task(template.async_load_custom_templates(hass)),
-            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
-            create_eager_task(hass.config_entries.async_initialize()),
-            create_eager_task(async_get_system_info(hass)),
-            create_eager_task(condition.async_setup(hass)),
-            create_eager_task(trigger.async_setup(hass)),
-        )
+        await asyncio.gather(*load_tasks)
     except UnsupportedStorageVersionError as err:
+        for task in load_tasks:
+            task.cancel()
+
         # If we're already in recovery mode, we don't want to handle the exception
         # and activate recovery mode again, as that would lead to an infinite loop.
         if recovery:
@@ -559,7 +557,7 @@ async def async_from_config_dict(
 
     try:
         await async_process_ha_core_config(hass, core_config)
-    except vol.Invalid as config_err:
+    except probatio.Invalid as config_err:
         conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
         async_notify_setup_error(hass, core.DOMAIN)
         return None
@@ -630,7 +628,7 @@ async def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args
@@ -696,7 +694,7 @@ def _log_file_disabled_reason() -> str | None:
     try:
         if cv.boolean(disable_log_file):
             return LOG_FILE_DISABLED_REASON_ENVIRONMENT
-    except vol.Invalid:
+    except probatio.Invalid:
         _LOGGER.warning(
             "Ignoring invalid %s value: %s. Expected a boolean value: "
             "1/0, true/false, yes/no, on/off, or enable/disable",
@@ -739,17 +737,6 @@ class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
         the result of this check is always False.
         """
         return False
-
-
-async def async_mount_local_lib_path(config_dir: str) -> str:
-    """Add local library to Python Path.
-
-    This function is a coroutine.
-    """
-    deps_dir = os.path.join(config_dir, "deps")
-    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
-        sys.path.insert(0, lib_dir)
-    return deps_dir
 
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:

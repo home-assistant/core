@@ -3,6 +3,7 @@
 from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.models import Command
 
 from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
@@ -98,13 +99,22 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
             )
             return
 
-        # Turn water heater on, when off
+        commands: list[Command] = []
+
+        # Start the water heater ('run') when off
         if self.current_operation == OverkizCommandParam.OFF:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CONTROL_DHW, OverkizCommandParam.ON
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_CONTROL_DHW,
+                    parameters=[OverkizCommandParam.RUN],
+                )
             )
 
-        # Change operation mode
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DHW_MODE, OPERATION_MODE_TO_OVERKIZ[operation_mode]
+        commands.append(
+            Command(
+                name=OverkizCommand.SET_DHW_MODE,
+                parameters=[OPERATION_MODE_TO_OVERKIZ[operation_mode]],
+            )
         )
+
+        await self.executor.async_execute_commands(commands)

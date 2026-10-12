@@ -9,7 +9,7 @@ from aiomealie import (
     MealplanEntryType,
 )
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
@@ -28,6 +28,7 @@ from .const import (
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_MEALPLAN_ID,
     ATTR_NOTE_TEXT,
     ATTR_NOTE_TITLE,
     ATTR_RECIPE_ID,
@@ -40,72 +41,107 @@ from .const import (
 from .coordinator import MealieConfigEntry
 
 SERVICE_GET_MEALPLAN = "get_mealplan"
-SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
+SERVICE_GET_MEALPLAN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_START_DATE): cv.date,
-        vol.Optional(ATTR_END_DATE): cv.date,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_START_DATE): cv.date,
+        probatio.Optional(ATTR_END_DATE): cv.date,
     }
 )
 
 SERVICE_GET_RECIPE = "get_recipe"
-SERVICE_GET_RECIPE_SCHEMA = vol.Schema(
+SERVICE_GET_RECIPE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_RECIPE_ID): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_RECIPE_ID): str,
     }
 )
 
 SERVICE_GET_RECIPES = "get_recipes"
-SERVICE_GET_RECIPES_SCHEMA = vol.Schema(
+SERVICE_GET_RECIPES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_SEARCH_TERMS): str,
-        vol.Optional(ATTR_RESULT_LIMIT): int,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_SEARCH_TERMS): str,
+        probatio.Optional(ATTR_RESULT_LIMIT): int,
     }
 )
 
 SERVICE_GET_SHOPPING_LIST_ITEMS = "get_shopping_list_items"
 
 SERVICE_IMPORT_RECIPE = "import_recipe"
-SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
+SERVICE_IMPORT_RECIPE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_URL): str,
-        vol.Optional(ATTR_INCLUDE_TAGS): bool,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_URL): str,
+        probatio.Optional(ATTR_INCLUDE_TAGS): bool,
     }
 )
 
 SERVICE_SET_RANDOM_MEALPLAN = "set_random_mealplan"
-SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = vol.Schema(
+SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_DATE): cv.date,
-        vol.Required(ATTR_ENTRY_TYPE): vol.In([x.lower() for x in MealplanEntryType]),
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_DATE): cv.date,
+        probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
+            [x.lower() for x in MealplanEntryType]
+        ),
     }
 )
 
 SERVICE_SET_MEALPLAN = "set_mealplan"
-SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
-    vol.Schema(
+SERVICE_SET_MEALPLAN_SCHEMA = probatio.Any(
+    probatio.Schema(
         {
-            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-            vol.Required(ATTR_DATE): cv.date,
-            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
             ),
-            vol.Required(ATTR_RECIPE_ID): str,
+            probatio.Required(ATTR_RECIPE_ID): str,
         }
     ),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-            vol.Required(ATTR_DATE): cv.date,
-            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
             ),
-            vol.Required(ATTR_NOTE_TITLE): str,
-            vol.Optional(ATTR_NOTE_TEXT): str,
+            probatio.Required(ATTR_NOTE_TITLE): str,
+            probatio.Optional(ATTR_NOTE_TEXT): str,
+        }
+    ),
+)
+SERVICE_DELETE_MEALPLAN = "delete_mealplan"
+SERVICE_DELETE_MEALPLAN_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_MEALPLAN_ID): probatio.Any(str, int),
+    }
+)
+SERVICE_UPDATE_MEALPLAN = "update_mealplan"
+SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
+    probatio.Schema(
+        {
+            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(ATTR_MEALPLAN_ID): probatio.Any(str, int),
+            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            probatio.Required(ATTR_RECIPE_ID): str,
+        }
+    ),
+    probatio.Schema(
+        {
+            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(ATTR_MEALPLAN_ID): probatio.Any(str, int),
+            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(ATTR_ENTRY_TYPE): probatio.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            probatio.Required(ATTR_NOTE_TITLE): str,
+            probatio.Optional(ATTR_NOTE_TEXT): str,
         }
     ),
 )
@@ -278,6 +314,69 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     return None
 
 
+async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
+    """Delete a mealplan."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    mealplan_id = int(call.data[ATTR_MEALPLAN_ID])
+    client = entry.runtime_data.client
+
+    try:
+        await client.delete_mealplan(
+            mealplan_id,
+        )
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    except MealieNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mealplan_not_found",
+            translation_placeholders={"mealplan_id": str(mealplan_id)},
+        ) from err
+    return None
+
+
+async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
+    """Update a mealplan."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    mealplan_id = int(call.data[ATTR_MEALPLAN_ID])
+    mealplan_date = call.data[ATTR_DATE]
+    entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
+    client = entry.runtime_data.client
+
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
+
+    try:
+        mealplan = await client.update_mealplan(
+            mealplan_id,
+            mealplan_date,
+            entry_type,
+            recipe_id=call.data.get(ATTR_RECIPE_ID),
+            note_title=call.data.get(ATTR_NOTE_TITLE),
+            note_text=call.data.get(ATTR_NOTE_TEXT),
+        )
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    except MealieNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mealplan_not_found",
+            translation_placeholders={"mealplan_id": str(mealplan_id)},
+        ) from err
+    if call.return_response:
+        return {"mealplan": asdict(mealplan)}
+    return None
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mealie integration."""
@@ -322,6 +421,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_MEALPLAN,
         _async_set_mealplan,
         schema=SERVICE_SET_MEALPLAN_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DELETE_MEALPLAN,
+        _async_delete_mealplan,
+        schema=SERVICE_DELETE_MEALPLAN_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_MEALPLAN,
+        _async_update_mealplan,
+        schema=SERVICE_UPDATE_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     service.async_register_platform_entity_service(

@@ -4,7 +4,7 @@ from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Final
 
-_LOGGER: Logger = getLogger(__package__)
+LOGGER: Logger = getLogger(__package__)
 
 SCAN_INTERVAL: timedelta = timedelta(minutes=5)
 
@@ -14,6 +14,20 @@ NO_MATCH_REGEX: str = "/(?!)/"
 ALL_MATCH_REGEX: str = ".*"
 
 SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
+
+SERVICE_GET_DETAILS: str = "get_details"
+
+SERVICE_DATA_HEADLINE: str = "headline"
+SERVICE_DATA_DESCRIPTION: str = "description"
+SERVICE_DATA_SENDER: str = "sender"
+SERVICE_DATA_SEVERITY: str = "severity"
+SERVICE_DATA_RECOMMENDED_ACTIONS: str = "recommended_actions"
+SERVICE_DATA_AFFECTED_AREAS: str = "affected_areas"
+SERVICE_DATA_WEB: str = "web"
+SERVICE_DATA_ID: str = "id"
+SERVICE_DATA_SENT: str = "sent"
+SERVICE_DATA_START: str = "start"
+SERVICE_DATA_EXPIRES: str = "expires"
 
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"

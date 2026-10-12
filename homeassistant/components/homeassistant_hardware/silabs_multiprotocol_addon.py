@@ -8,7 +8,7 @@ from typing import Any, Protocol
 
 from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.components.hassio import (
@@ -43,9 +43,11 @@ from homeassistant.helpers.storage import Store
 from .const import DOMAIN, LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
 from .util import (
     ApplicationType,
+    FlasherType,
     WaitingAddonManager,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -296,8 +298,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
     @property
     @abstractmethod
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
 
     @property
     def flow_manager(self) -> OptionsFlowManager:
@@ -354,8 +356,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         if user_input is None:
             return self.async_show_form(
                 step_id="addon_not_installed",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
                 ),
                 description_placeholders={"hardware_name": self._hardware_name()},
             )
@@ -591,9 +593,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
             suggested_channel = DEFAULT_CHANNEL
             if (channel := multipan_manager.async_get_channel()) is not None:
                 suggested_channel = channel
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "channel",
                         description={"suggested_value": str(suggested_channel)},
                     ): SelectSelector(
@@ -633,8 +635,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         if user_input is None:
             return self.async_show_form(
                 step_id="uninstall_addon",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_DISABLE_MULTI_PAN, default=False): bool}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_DISABLE_MULTI_PAN, default=False): bool}
                 ),
                 description_placeholders={"hardware_name": self._hardware_name()},
             )
@@ -757,7 +759,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                         hass=self.hass,
                         device=device,
                         fw_data=fw_data,
-                        flasher_cls=self._flasher_cls,
+                        flasher_cls=await async_get_flasher_cls(
+                            self.hass, self._flasher_type
+                        ),
                         expected_installed_firmware_type=ApplicationType.EZSP,
                         progress_callback=lambda offset, total: (
                             self.async_update_progress(offset / total)

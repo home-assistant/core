@@ -9,17 +9,17 @@ from peco import (
     PecoOutageApi,
     UnresponsiveMeterError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COUNTY): vol.In(COUNTY_LIST),
-        vol.Optional(CONF_PHONE_NUMBER): cv.string,
+        probatio.Required(CONF_COUNTY): probatio.In(COUNTY_LIST),
+        probatio.Optional(CONF_PHONE_NUMBER): cv.string,
     }
 )
 

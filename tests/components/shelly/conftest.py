@@ -466,6 +466,25 @@ MOCK_STATUS_RPC = {
     "wifi": {"rssi": -63},
 }
 
+MOCK_CAMERA_CONFIG = {
+    "camera:0": {
+        "id": 0,
+        "rtsp": {"enable": True},
+    }
+}
+
+MOCK_CAMERA_STATUS = {
+    "camera:0": {
+        "id": 0,
+        "privacy": False,
+        "arm": True,
+        "streamer": "running",
+        "motion": False,
+        "streams": 0,
+        "recordings": None,
+    }
+}
+
 MOCK_SCRIPTS = [
     """"
 function eventHandler(event, userdata) {
@@ -584,6 +603,7 @@ def _mock_rpc_device(version: str | None = None):
         zigbee_firmware=False,
         ip_address="10.10.10.10",
         wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
     )
@@ -611,6 +631,7 @@ def _mock_blu_rtv_device(version: str | None = None):
         ),
         xmod_info={},
         wifi_setconfig=AsyncMock(return_value={}),
+        ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={}),
     )
     type(device).name = PropertyMock(return_value="Test name")
@@ -821,3 +842,14 @@ def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
         "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
     ):
         yield
+
+
+@pytest.fixture
+def mock_camera_rpc_device(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
+) -> Mock:
+    """Set up mock RPC device with camera component data."""
+    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CAMERA_CONFIG)
+    monkeypatch.setattr(mock_rpc_device, "status", MOCK_CAMERA_STATUS)
+
+    return mock_rpc_device

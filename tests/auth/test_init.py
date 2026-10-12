@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import jwt
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -32,6 +32,8 @@ from tests.common import (
     flush_store,
 )
 
+INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
+
 
 @pytest.fixture
 def mock_hass(hass: HomeAssistant) -> HomeAssistant:
@@ -41,7 +43,7 @@ def mock_hass(hass: HomeAssistant) -> HomeAssistant:
 
 async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
     """Test get auth providers."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -82,7 +84,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
 
 async def test_auth_manager_from_config_auth_modules(mock_hass) -> None:
     """Test get auth modules."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -285,9 +287,7 @@ async def test_linking_user_to_two_auth_providers(
     user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
-    step = await manager.login_flow.async_init(
-        ("insecure_example", "another-provider"), context={"credential_only": True}
-    )
+    step = await manager.login_flow.async_init(("insecure_example", "another-provider"))
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "another-user", "password": "another-password"}
     )
@@ -576,6 +576,17 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
 
     with pytest.raises(ValueError):
         await manager.async_deactivate_user(owner)
+
+
+async def test_cannot_remove_owner(mock_hass: HomeAssistant) -> None:
+    """Test that we cannot remove the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    owner = MockUser(is_owner=True).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_remove_user(owner)
+
+    assert await manager.async_get_user(owner.id) is owner
 
 
 async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:
@@ -1340,7 +1351,7 @@ async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with invalid json payload."""
     jws = jwt.PyJWS()
     token_with_invalid_json = jws.encode(
-        b"invalid", b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b"invalid", INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_with_invalid_json) is None
@@ -1350,7 +1361,7 @@ async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with not a dict json payload."""
     jws = jwt.PyJWS()
     token_not_a_dict_json = jws.encode(
-        b'["invalid"]', b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b'["invalid"]', INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_not_a_dict_json) is None

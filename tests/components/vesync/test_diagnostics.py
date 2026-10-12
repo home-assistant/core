@@ -72,8 +72,8 @@ async def test_async_get_device_diagnostics__single_fan(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "fan")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "fan"), config_entry.entry_id
     )
     assert device is not None
 

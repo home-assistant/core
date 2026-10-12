@@ -1,0 +1,398 @@
+{
+  "config": {
+    "abort": {
+      "activation_failed": "GitHub did not complete the connection. Try connecting again.",
+      "could_not_register": "Could not connect to GitHub. Try again later.",
+      "single_instance_allowed": "Only a single configuration of the Marketplace is allowed."
+    },
+    "progress": {
+      "wait_for_device": "1. Open {url}\n2. Enter this code to connect the Marketplace to your GitHub account:\n```\n{code}\n```\nThis continues on its own once GitHub confirms the connection."
+    },
+    "step": {
+      "device": {
+        "title": "Connect GitHub"
+      },
+      "reauth_confirm": {
+        "description": "The GitHub connection of the Marketplace no longer works. Connect GitHub again to keep using it.",
+        "title": "Reconnect GitHub"
+      },
+      "reconfigure": {
+        "description": "Browsing and installing from the catalog work without GitHub. A connection is needed to add custom repositories and keep them up to date, and it raises the limit GitHub puts on requests from your network.\n\nNext, you get a code to enter on GitHub. You never enter your GitHub password in Home Assistant. The connection only reads public information, the same as anyone without an account, and you can revoke it at any time in your GitHub settings.",
+        "submit": "Continue",
+        "title": "Connect GitHub"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "pre-release": {
+        "name": "Pre-release",
+        "state": {
+          "off": "No pre-releases",
+          "on": "Pre-releases preferred"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "add_failed": {
+      "message": "Adding {repository} failed: {error}"
+    },
+    "app_repository": {
+      "message": "{repository} holds apps, the Marketplace does not install apps."
+    },
+    "archive_download_failed": {
+      "message": "Could not download the archive of {repository}."
+    },
+    "archive_not_zip": {
+      "message": "The download is not a ZIP archive: {error}"
+    },
+    "archive_too_large": {
+      "message": "The archive expands to {size} bytes, the limit is {limit} bytes."
+    },
+    "archive_too_many_files": {
+      "message": "The archive holds {count} files, the limit is {limit}."
+    },
+    "archive_without_content": {
+      "message": "The archive holds nothing to install."
+    },
+    "backup_cleanup_failed": {
+      "message": "Installed, but could not remove the backup of the previous version, a restart would put it back: {error}"
+    },
+    "backup_failed": {
+      "message": "Could not back up {path}: {error}"
+    },
+    "backup_protected": {
+      "message": "Could not back up {path}, it is protected."
+    },
+    "catalog_content_unresolved": {
+      "message": "The archive of the catalog version can not be installed as is: {error}"
+    },
+    "catalog_invalid_json": {
+      "message": "The catalog returned invalid JSON for {endpoint}: {error}"
+    },
+    "catalog_manifest_unusable": {
+      "message": "There is no usable {path} in the catalog version."
+    },
+    "catalog_not_a_list": {
+      "message": "The catalog of {section} is not a list."
+    },
+    "catalog_not_an_object": {
+      "message": "The catalog of {section} is not an object."
+    },
+    "catalog_nothing_valid": {
+      "message": "The catalog of {section} has entries, but none of them are valid."
+    },
+    "catalog_timeout": {
+      "message": "The catalog did not answer within 60 seconds."
+    },
+    "catalog_unreachable": {
+      "message": "Could not reach the catalog: {error}"
+    },
+    "catalog_version_without_assets": {
+      "message": "Version {version} lists no assets."
+    },
+    "catalog_version_without_manifest": {
+      "message": "Version {version} has no readable hacs.json."
+    },
+    "catalog_without_domain": {
+      "message": "The catalog names no domain."
+    },
+    "catalog_zip_release": {
+      "message": "A ZIP release can not be installed from the catalog."
+    },
+    "content_empty": {
+      "message": "There is no content to download."
+    },
+    "content_file_missing": {
+      "message": "The content has no {file}."
+    },
+    "content_location_unknown": {
+      "message": "It is not known where the content goes."
+    },
+    "content_over_limit": {
+      "message": "{file} was not written, the content is over the limit of {limit} bytes."
+    },
+    "content_too_many_files": {
+      "message": "The content holds {count} files, the limit is {limit}."
+    },
+    "content_write_failed": {
+      "message": "Could not write the downloaded content: {error}"
+    },
+    "core_repository": {
+      "message": "The integrations of Home Assistant itself come with Home Assistant, there is nothing to add."
+    },
+    "device_of_the_marketplace": {
+      "message": "Cannot remove the service of the Marketplace itself."
+    },
+    "device_without_a_repository": {
+      "message": "Cannot remove service {device_id}, it does not belong to a repository in the Marketplace."
+    },
+    "disabled_rate_limit": {
+      "message": "GitHub limits how often the Marketplace can reach it. The Marketplace starts again once the limit resets."
+    },
+    "disabled_removed": {
+      "message": "The Marketplace is being removed."
+    },
+    "domain_changed": {
+      "message": "{repository} changed its domain from {old_domain} to {domain}, uninstall it and install it again."
+    },
+    "download_incomplete": {
+      "message": "The download did not complete: {error}"
+    },
+    "download_too_large": {
+      "message": "{url} is larger than the {limit} byte limit."
+    },
+    "file_not_downloaded": {
+      "message": "{file} was not downloaded."
+    },
+    "github_failed": {
+      "message": "GitHub answered with an error: {error}"
+    },
+    "github_not_connected": {
+      "message": "Connect a GitHub account to the Marketplace first."
+    },
+    "github_rate_limited": {
+      "message": "GitHub limits how often the Marketplace can reach it without a GitHub connection. Try again later, or connect GitHub in the Marketplace for a higher limit."
+    },
+    "install_checks_failed": {
+      "message": "Could not install {repository}. Check the Home Assistant logs for details."
+    },
+    "install_failed": {
+      "message": "Installing {repository} failed: {error}"
+    },
+    "install_version_failed": {
+      "message": "Installing version {version} of {repository} failed: {error}"
+    },
+    "installed_manifest_other_domain": {
+      "message": "The manifest.json of the installed content is for {found}, not {domain}."
+    },
+    "installed_manifest_unusable": {
+      "message": "The installed content has no usable manifest.json where Home Assistant looks for it: {error}"
+    },
+    "installed_manifest_without_version": {
+      "message": "The manifest.json of the installed content has no valid version, Home Assistant would not load it."
+    },
+    "installed_resource_missing": {
+      "message": "The installed content has no {file}."
+    },
+    "integration_manifest_key_missing": {
+      "message": "The manifest.json has no {key}."
+    },
+    "integration_manifest_missing": {
+      "message": "There is no manifest.json at {path}."
+    },
+    "integration_owned": {
+      "message": "The {domain} directory belongs to {owner}."
+    },
+    "invalid_category": {
+      "message": "Repositories cannot be added to the {category} category."
+    },
+    "invalid_domain": {
+      "message": "{domain} is not a valid integration domain."
+    },
+    "invalid_repository": {
+      "message": "Could not read a GitHub repository from {repository}."
+    },
+    "invalid_token": {
+      "message": "The GitHub token of the Marketplace is no longer valid. Connect GitHub again."
+    },
+    "invalid_version": {
+      "message": "{version} is not a version the Marketplace can install."
+    },
+    "not_installable": {
+      "message": "{repository} is not available to install."
+    },
+    "not_loaded": {
+      "message": "The Marketplace is not loaded."
+    },
+    "not_modified": {
+      "message": "Nothing changed since the last check."
+    },
+    "path_outside_directory": {
+      "message": "{path} is not inside {directory}."
+    },
+    "persistent_directory_invalid": {
+      "message": "The persistent_directory of hacs.json has to be a directory inside the installed content."
+    },
+    "plugin_owned": {
+      "message": "The {directory} directory belongs to {owner}."
+    },
+    "post_install_failed": {
+      "message": "Installed, but a step after writing the files failed: {error}"
+    },
+    "rate_limited": {
+      "message": "GitHub limits how often the Marketplace can reach it. Try again later."
+    },
+    "refresh_failed": {
+      "message": "Could not update the information of {repository}: {error}"
+    },
+    "release_too_large": {
+      "message": "The release assets of {version} are larger than the {limit} byte limit."
+    },
+    "releases_failed": {
+      "message": "Could not get the releases of {repository}: {error}"
+    },
+    "replaces_built_in_not_confirmed": {
+      "message": "{repository} replaces the built-in {domain} integration, confirm that before installing it."
+    },
+    "repository_archived": {
+      "message": "{repository} is archived."
+    },
+    "repository_busy": {
+      "message": "{repository} is being installed, try again once that is done."
+    },
+    "repository_exists": {
+      "message": "{repository} is already in the Marketplace."
+    },
+    "repository_in_use": {
+      "message": "{repository} is still set up, and without its files that setup would fail to load. Delete it under Settings > Devices & services before uninstalling it."
+    },
+    "repository_installed": {
+      "message": "Uninstall {repository} first."
+    },
+    "repository_manifest_not_in_root": {
+      "message": "{repository} has no hacs.json in its root, the Marketplace needs one to install it."
+    },
+    "repository_not_found": {
+      "message": "The Marketplace does not know the repository with ID {repository}."
+    },
+    "repository_not_installed": {
+      "message": "{repository} is not installed."
+    },
+    "repository_removed": {
+      "message": "{repository} was removed from the catalog."
+    },
+    "repository_skipped": {
+      "message": "{repository} is skipped."
+    },
+    "repository_still_installed": {
+      "message": "Cannot remove the service for {repository}, it is still installed."
+    },
+    "requires_newer_home_assistant": {
+      "message": "This version requires Home Assistant {version} or newer."
+    },
+    "restore_failed": {
+      "message": "Could not read the stored data of the Marketplace."
+    },
+    "setup_failed": {
+      "message": "Could not set up the Marketplace: {error}"
+    },
+    "structure_not_compliant": {
+      "message": "{repository} has no content the Marketplace can install in version {version}."
+    },
+    "template_from_zip": {
+      "message": "{repository} is a template, which is one file and can not come from a ZIP release."
+    },
+    "template_not_utf8": {
+      "message": "{file} is not UTF-8 encoded."
+    },
+    "template_owned": {
+      "message": "The {file} template belongs to {owner}."
+    },
+    "template_too_large": {
+      "message": "{file} is larger than the {limit} bytes Home Assistant reads."
+    },
+    "theme_invalid": {
+      "message": "{file} is not a valid theme: {error}"
+    },
+    "theme_invalid_yaml": {
+      "message": "{file} is not valid YAML: {error}"
+    },
+    "theme_owned": {
+      "message": "The {directory} theme folder belongs to {owner}."
+    },
+    "uninstall_failed": {
+      "message": "Could not uninstall {repository}. Check the Home Assistant logs for details."
+    },
+    "validation_failed": {
+      "message": "Checking {repository} failed: {error}"
+    },
+    "version_already_installed": {
+      "message": "Version {version} of {repository} is already installed."
+    },
+    "version_unknown": {
+      "message": "It is not known which version to install."
+    },
+    "version_without_files": {
+      "message": "Version {version} has no files."
+    },
+    "version_without_repository_manifest": {
+      "message": "Version {version} of {repository} is missing the hacs.json file required for installation."
+    },
+    "warning_not_accepted": {
+      "message": "Open the Marketplace and read the warning first, installing and updating work once it is accepted."
+    }
+  },
+  "issues": {
+    "appdaemon_not_supported": {
+      "description": "The Marketplace no longer manages AppDaemon apps. The apps it installed stay in place and AppDaemon keeps running them: {apps}.\n\nUpdates for these apps no longer come from the Marketplace. Keep them up to date yourself, outside of the Marketplace.",
+      "title": "AppDaemon apps are no longer managed by the Marketplace"
+    },
+    "critical_repository": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Marketplace uninstalled {repository} and restarted Home Assistant, because the Marketplace catalog marks it as critical.\n\nThe reason given: {reason}\n\nCheck whether anything that depended on {repository} needs your attention. Select **Submit** once you have read this.",
+            "title": "{repository} was removed"
+          }
+        }
+      },
+      "title": "{repository} was removed because it is marked as critical"
+    },
+    "legacy_dashboard_resources": {
+      "description": "Your dashboard resources in YAML still load from `/hacsfiles`, the path HACS used. The Marketplace keeps serving it for compatibility, but installed resources use `/local/community`. Change these resources in your YAML configuration:\n\n{resources}",
+      "title": "Dashboard resources use an old path"
+    },
+    "python_scripts_not_supported": {
+      "description": "The Marketplace no longer manages Python scripts. The scripts it installed stay in place and the Python scripts integration keeps running them: {scripts}.\n\nUpdates for these scripts no longer come from the Marketplace. Keep them up to date yourself, outside of the Marketplace.",
+      "title": "Python scripts are no longer managed by the Marketplace"
+    },
+    "removed": {
+      "description": "`{name}` was removed from the catalog. It stays installed, but no longer gets updates.\n\nThe reason given: {reason}\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
+      "title": "Repository removed from the catalog"
+    },
+    "removed_without_reason": {
+      "description": "`{name}` was removed from the catalog. It stays installed, but no longer gets updates.\n\nUninstall it from its [page in the Marketplace](/marketplace/repository/{repository_id}).",
+      "title": "Repository removed from the catalog"
+    },
+    "restart_required": {
+      "fix_flow": {
+        "step": {
+          "confirm_restart": {
+            "description": "Restart Home Assistant to finish the installation or update of {name}. Select **Submit** to restart now.",
+            "title": "Restart required"
+          }
+        }
+      },
+      "title": "Restart required"
+    },
+    "restart_required_uninstall": {
+      "fix_flow": {
+        "step": {
+          "confirm_restart": {
+            "description": "Restart Home Assistant to finish uninstalling {name}, its code keeps running until then. Select **Submit** to restart now.",
+            "title": "Restart required"
+          }
+        }
+      },
+      "title": "Restart required"
+    }
+  },
+  "system_health": {
+    "info": {
+      "available_repositories": "Available repositories",
+      "catalog_data": "Catalog reachable",
+      "disabled": "Disabled",
+      "github_api": "GitHub API reachable",
+      "github_api_calls_remaining": "GitHub API calls remaining",
+      "github_connected": "GitHub connected",
+      "github_content": "GitHub content reachable",
+      "github_web": "GitHub website reachable",
+      "installed_repositories": "Installed repositories",
+      "installed_version": "Version",
+      "stage": "Stage"
+    }
+  },
+  "title": "Marketplace"
+}

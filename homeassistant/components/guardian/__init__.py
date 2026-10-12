@@ -115,6 +115,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> 
         paired_sensor_manager=paired_sensor_manager,
     )
 
+    # Register the valve controller device up front so paired sensors can resolve
+    # it as their via device when they are added:
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_UID])},
+        manufacturer="Elexa",
+        name=f"Guardian valve controller {entry.data[CONF_UID]}",
+        sw_version=valve_controller_coordinators[API_SYSTEM_DIAGNOSTICS].data[
+            "firmware"
+        ],
+    )
+
     # Set up all of the Guardian entity platforms:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

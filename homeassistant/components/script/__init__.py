@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -77,11 +77,11 @@ from .const import (
 from .helpers import async_get_blueprints
 from .trace import trace_script
 
-SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
+SCRIPT_SERVICE_SCHEMA = probatio.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): {str: cv.match_all}}
+    {probatio.Optional(ATTR_VARIABLES): {str: cv.match_all}}
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -249,6 +249,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if not script_entities:
             return
+
+        for script_entity in script_entities:
+            script_entity.async_set_context(service.context)
 
         await asyncio.wait(
             [
@@ -779,6 +782,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

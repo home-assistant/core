@@ -10,7 +10,7 @@ from pylamarzocco.const import (
     SmartStandByType,
     WidgetType,
 )
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -230,11 +230,20 @@ async def test_prebrew_off(
     )
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(RequestNotSuccessful("Boom"), id="request_not_successful"),
+        pytest.param(AuthFail("Boom"), id="auth_fail"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_error(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test number entities raise error on service call."""
     await async_init_integration(hass, mock_config_entry)
@@ -243,9 +252,7 @@ async def test_number_error(
     state = hass.states.get(f"number.{serial_number}_coffee_target_temperature")
     assert state
 
-    mock_lamarzocco.set_coffee_target_temperature.side_effect = RequestNotSuccessful(
-        "Boom"
-    )
+    mock_lamarzocco.set_coffee_target_temperature.side_effect = side_effect
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,

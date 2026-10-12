@@ -4,12 +4,13 @@ from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, override
 
+from aiohttp import ClientError
 from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
 from thinqconnect.integration import PropertyState
 
 from homeassistant.core import callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -112,3 +113,10 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             if on_fail_method:
                 on_fail_method()
             raise ServiceValidationError(exc) from exc
+        except (TimeoutError, ClientError) as exc:
+            if on_fail_method:
+                on_fail_method()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from exc

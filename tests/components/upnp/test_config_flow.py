@@ -491,10 +491,13 @@ async def test_options_flow(
     user_input = {
         CONFIG_ENTRY_FORCE_POLL: True,
     }
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input,
-    )
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input,
+        )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -503,3 +506,4 @@ async def test_options_flow(
     assert mock_config_entry.options == {
         CONFIG_ENTRY_FORCE_POLL: True,
     }
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)

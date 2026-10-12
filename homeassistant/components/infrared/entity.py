@@ -49,6 +49,14 @@ class InfraredEmitterEntity(RestoreEntity):
 
     __last_command_sent: str | None = None
 
+    @override
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For infrared emitters this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
     @final
     @override
@@ -100,6 +108,14 @@ class InfraredReceiverEntity(RestoreEntity):
     _attr_state: None = None
 
     __last_signal_received: str | None = None
+
+    @override
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For infrared receivers this is True if the entity has a device class.
+        """
+        return self.device_class is not None
 
     @cached_property
     def __signal_callbacks(self) -> set[Callable[[InfraredReceivedSignal], None]]:

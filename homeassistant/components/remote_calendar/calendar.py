@@ -4,11 +4,15 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from ical.event import Event
+from ical.event import Event, EventStatus
 from ical.timeline import Timeline, materialize_timeline
 
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.core import HomeAssistant
+from homeassistant.components.calendar import (
+    CalendarEntity,
+    CalendarEvent,
+    CalendarEventStatus,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -39,7 +43,7 @@ async def async_setup_entry(
     """Set up the remote calendar platform."""
     coordinator = entry.runtime_data
     entity = RemoteCalendarEntity(coordinator, entry)
-    async_add_entities([entity], True)
+    async_add_entities([entity])
 
 
 class RemoteCalendarEntity(
@@ -67,7 +71,11 @@ class RemoteCalendarEntity(
         if self._timeline is None:
             return None
         now = dt_util.now()
-        events = self._timeline.active_after(now)
+        events = (
+            event
+            for event in self._timeline.active_after(now)
+            if not _is_cancelled(event)
+        )
         if event := next(events, None):
             return _get_calendar_event(event)
         return None
@@ -84,19 +92,21 @@ class RemoteCalendarEntity(
                 start_date,
                 end_date,
             )
-            return [_get_calendar_event(event) for event in events]
+            return [
+                _get_calendar_event(event)
+                for event in events
+                if not _is_cancelled(event)
+            ]
 
         return await self.hass.async_add_executor_job(events_in_range)
 
-    @override
-    async def async_update(self) -> None:
-        """Refresh the timeline.
+    async def _async_update_timeline(self) -> None:
+        """Refresh the timeline and write state.
 
         This is called when the coordinator updates. Creating the timeline may
         require walking through the entire calendar and handling recurring
         events, so it is done as a separate task without blocking the event loop.
         """
-        await super().async_update()
 
         def _get_timeline() -> Timeline | None:
             """Return a materialized timeline with upcoming events."""
@@ -110,6 +120,38 @@ class RemoteCalendarEntity(
             )
 
         self._timeline = await self.hass.async_add_executor_job(_get_timeline)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._async_update_timeline()
+        self.async_write_ha_state()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.coordinator.config_entry.async_create_task(
+            self.hass,
+            self._async_handle_coordinator_update(),
+            name="remote calendar timeline update",
+        )
+
+    async def _async_handle_coordinator_update(self) -> None:
+        """Refresh the timeline and write state."""
+        await self._async_update_timeline()
+        self.async_write_ha_state()
+
+
+def _is_cancelled(event: Event) -> bool:
+    """Return whether an event has been called off.
+
+    rfc5545 keeps a cancelled event in the calendar rather than deleting it, so
+    a remote calendar can serve one. A calendar entity does not return such
+    events.
+    """
+    return event.status == EventStatus.CANCELLED
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
@@ -132,4 +174,10 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
+        # Callers drop cancelled events, the one status CalendarEventStatus lacks.
+        status=(
+            CalendarEventStatus(event.status.value.lower())
+            if event.status is not None
+            else None
+        ),
     )

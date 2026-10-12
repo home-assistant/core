@@ -103,9 +103,15 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         return_value=TEST_USER_EMAIL,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
                 CONF_API_KEY: SUBSCRIPTION_KEY,
             },
         )

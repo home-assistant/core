@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components.diagnostics import async_redact_data
@@ -15,6 +15,7 @@ from .const import (
     CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     DOMAIN,
     KNX_MODULE_KEY,
 )
@@ -24,6 +25,7 @@ TO_REDACT = {
     CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
 }
 
 
@@ -52,7 +54,7 @@ async def async_get_config_entry_diagnostics(
     diag["configuration_yaml"] = raw_config.get(DOMAIN)
     try:
         CONFIG_SCHEMA(raw_config)
-    except vol.Invalid as ex:
+    except probatio.Invalid as ex:
         diag["yaml_configuration_error"] = str(ex)
     else:
         diag["yaml_configuration_error"] = None

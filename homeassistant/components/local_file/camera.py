@@ -4,17 +4,13 @@ import logging
 import mimetypes
 from typing import override
 
-import voluptuous as vol
-
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_UPDATE_FILE_PATH
 from .util import check_file_path_access
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,15 +22,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Camera for local file from a config entry."""
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_FILE_PATH,
-        {
-            vol.Required(CONF_FILE_PATH): cv.string,
-        },
-        "update_file_path",
-    )
 
     async_add_entities(
         [

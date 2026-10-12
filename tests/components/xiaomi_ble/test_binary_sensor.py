@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import make_advertisement
+from . import MISCALE_V2_SERVICE_INFO, make_advertisement
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
@@ -175,6 +175,35 @@ async def test_opening(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_miscale_v2_stabilized_binary_sensor(hass: HomeAssistant) -> None:
+    """Test MiScale V2 stabilized binary sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.mi_body_composition_scale_b5dc_stabilized"
+    )
+    assert stabilized_sensor.state == STATE_ON
+    assert (
+        stabilized_sensor.attributes[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale (B5DC) Stabilized"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_opening_problem_sensors(hass: HomeAssistant) -> None:
     """Test setting up a opening binary sensor with additional problem sensors."""
     entry = MockConfigEntry(
@@ -299,8 +328,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="A4:C1:38:66:E5:67",
-        data={"bindkey": "0fdcc30fe9289254876b5ef7c11ef1f0"},
+        unique_id="58:2D:34:35:93:21",
     )
     entry.add_to_hass(hass)
 
@@ -311,16 +339,16 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(
         hass,
         make_advertisement(
-            "A4:C1:38:66:E5:67",
-            b"XY\x89\x18\x9ag\xe5f8\xc1\xa4\x9d\xd9z\xf3&\x00\x00\xc8\xa6\x0b\xd5",
+            "58:2D:34:35:93:21",
+            b"P \xf6\x07\xda!\x9354-X\x0f\x00\x03\x01\x00\x00",
         ),
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
 
-    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+    motion_sensor = hass.states.get("binary_sensor.nightlight_9321_motion")
 
-    assert opening_sensor.state == STATE_ON
+    assert motion_sensor.state == STATE_ON
 
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
@@ -338,10 +366,10 @@ async def test_unavailable(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+    motion_sensor = hass.states.get("binary_sensor.nightlight_9321_motion")
 
     # Normal devices should go to unavailable
-    assert opening_sensor.state == STATE_UNAVAILABLE
+    assert motion_sensor.state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

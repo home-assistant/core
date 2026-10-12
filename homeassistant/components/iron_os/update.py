@@ -3,11 +3,11 @@
 from typing import override
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -97,7 +97,9 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity, RestoreEntity):
         Register extra update listener for the firmware update coordinator.
         """
         if state := await self.async_get_last_state():
-            self._attr_installed_version = state.attributes.get(ATTR_INSTALLED_VERSION)
+            self._attr_installed_version = state.attributes.get(
+                UpdateEntityStateAttribute.INSTALLED_VERSION
+            )
 
         await super().async_added_to_hass()
         self.async_on_remove(

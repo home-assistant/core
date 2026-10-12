@@ -173,6 +173,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 },
             )
 
+        # Firmware from another repository changes which updates can be offered,
+        # like after flashing a fork; set the integration up again for it.
+        if self.data is not None and device.info.repo != self.data.info.repo:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
         # If the device supports a WebSocket, try activating it.
         if (
             device.info.websocket is not None
@@ -187,9 +192,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
     """Class to manage fetching WLED releases."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize global WLED releases updater."""
-        self.wled = WLEDReleases(session=async_get_clientsession(hass))
+    def __init__(self, hass: HomeAssistant, repo: str) -> None:
+        """Initialize the WLED releases updater for a firmware repository."""
+        self.repo = repo
+        self.wled = WLEDReleases(session=async_get_clientsession(hass), repo=repo)
         super().__init__(
             hass,
             LOGGER,

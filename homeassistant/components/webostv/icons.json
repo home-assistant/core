@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "switch": {
+      "screen": {
+        "default": "mdi:television"
+      }
+    }
+  },
   "services": {
     "button": {
       "service": "mdi:button-pointer"

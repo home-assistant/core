@@ -27,11 +27,11 @@ async def async_setup_entry(
     bridge = data.bridge
     switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
     entities: list[LutronCasetaLight | LutronCasetaSmartAwaySwitch] = [
-        LutronCasetaLight(switch_device, data) for switch_device in switch_devices
+        LutronCasetaLight(hass, switch_device, data) for switch_device in switch_devices
     ]
 
     if bridge.smart_away_state != "":
-        entities.append(LutronCasetaSmartAwaySwitch(data))
+        entities.append(LutronCasetaSmartAwaySwitch(hass, data))
 
     async_add_entities(entities)
 
@@ -39,10 +39,12 @@ async def async_setup_entry(
 class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
     """Representation of a Lutron Caseta switch."""
 
-    def __init__(self, device, data):
+    def __init__(
+        self, hass: HomeAssistant, device: dict[str, Any], data: LutronCasetaData
+    ) -> None:
         """Init a button entity."""
 
-        super().__init__(device, data)
+        super().__init__(hass, device, data)
         self._enabled_default = True
 
         if "parent_device" not in device:
@@ -78,7 +80,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
 class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
     """Representation of Lutron Caseta Smart Away."""
 
-    def __init__(self, data: LutronCasetaData) -> None:
+    def __init__(self, hass: HomeAssistant, data: LutronCasetaData) -> None:
         """Init a switch entity."""
         device = {
             "device_id": "smart_away",
@@ -88,7 +90,7 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
             "area": data.bridge_device["area"],
             "serial": data.bridge_device["serial"],
         }
-        super().__init__(device, data)
+        super().__init__(hass, device, data)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.bridge_device["serial"])},
         )

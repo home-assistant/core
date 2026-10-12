@@ -5,8 +5,15 @@ control of Rflink switch devices.
 
 """
 
+from typing import Any
+
 import pytest
 
+from homeassistant.components.rflink import (
+    DATA_ENTITY_GROUP_LOOKUP,
+    DATA_ENTITY_LOOKUP,
+    EVENT_KEY_COMMAND,
+)
 from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,6 +23,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import CoreState, HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
 
 from .test_init import mock_rflink
 
@@ -599,3 +607,66 @@ async def test_restore_state(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes["assumed_state"]
+
+
+@pytest.mark.parametrize(
+    "device_config",
+    [
+        pytest.param({}, id="device_id"),
+        pytest.param({"group": False}, id="nogroup_device_id"),
+        pytest.param({"aliases": ["test_alias_0_0"]}, id="alias"),
+        pytest.param({"group_aliases": ["test_group_0_0"]}, id="group_alias"),
+        pytest.param({"nogroup_aliases": ["test_nogroup_0_0"]}, id="nogroup_alias"),
+    ],
+)
+async def test_removed_switch_unregisters_lookups(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: er.EntityRegistry,
+    device_config: dict[str, Any],
+) -> None:
+    """Test a removed switch is dropped from the event lookups."""
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "protocol_0_0": {"name": "test", **device_config},
+                    # Shares every alias id the removed switch may use
+                    "protocol_0_1": {
+                        "name": "other",
+                        "aliases": ["test_alias_0_0"],
+                        "group_aliases": ["test_group_0_0"],
+                        "nogroup_aliases": ["test_nogroup_0_0"],
+                    },
+                },
+            },
+        },
+    }
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    lookup = hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND]
+    group_lookup = hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND]
+    assert "switch.test" in lookup["protocol_0_0"]
+
+    entity_registry.async_remove("switch.test")
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.test") is None
+
+    assert lookup == {
+        "protocol_0_1": ["switch.other"],
+        "test_alias_0_0": ["switch.other"],
+        "test_nogroup_0_0": ["switch.other"],
+    }
+    assert group_lookup == {
+        "protocol_0_1": ["switch.other"],
+        "test_alias_0_0": ["switch.other"],
+        "test_group_0_0": ["switch.other"],
+    }
+
+    for event_id in ("protocol_0_0", "test_alias_0_0", "test_nogroup_0_0"):
+        event_callback({"id": event_id, "command": "on"})
+    event_callback({"id": "test_group_0_0", "command": "allon"})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test") is None
+    assert hass.states.get("switch.other").state == STATE_ON

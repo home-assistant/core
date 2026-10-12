@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from switchbot_api import Device, Remote, SwitchBotAPI
+from switchbot_api import Device, Remote, SwitchBotAPI, SwitchbotCloudDeviceLockState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,7 +25,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry
-from .const import DOMAIN, SwitchbotCloudDeviceLockState
+from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -185,6 +185,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
     "Standing Fan": (BATTERY_DESCRIPTION,),
+    "Battery Circulator Fan 2 Pro": (BATTERY_DESCRIPTION,),
     "Meter": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -244,6 +245,10 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         BATTERY_DESCRIPTION,
         LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION,
     ),
+    "Smart Lock Ultra Max": (
+        BATTERY_DESCRIPTION,
+        LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION,
+    ),
     "Smart Lock Vision": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
     "Lock Vision": (BATTERY_DESCRIPTION,),
@@ -257,6 +262,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Curtain": (BATTERY_DESCRIPTION,),
     "Curtain3": (BATTERY_DESCRIPTION,),
+    "Curtain4": (BATTERY_DESCRIPTION,),
     "Roller Shade": (BATTERY_DESCRIPTION,),
     "Blind Tilt": (BATTERY_DESCRIPTION,),
     "Hub 3": (

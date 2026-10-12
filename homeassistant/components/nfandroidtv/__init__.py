@@ -30,6 +30,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: NFAndroidTVConfigEntry) -> bool:
     """Set up NFAndroidTV from a config entry."""
 
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: entry.title, **entry.data},
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
+
     try:
         client = await hass.async_add_executor_job(Notifications, entry.data[CONF_HOST])
     except ConnectError as e:
@@ -41,16 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NFAndroidTVConfigEntry) 
         ) from e
 
     entry.runtime_data = client
-
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {CONF_NAME: entry.title, **entry.data},
-            hass.data[DATA_HASS_CONFIG],
-        )
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

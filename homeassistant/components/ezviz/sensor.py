@@ -37,11 +37,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         translation_key="seconds_last_trigger",
         entity_registry_enabled_default=False,
     ),
-    "last_alarm_pic": SensorEntityDescription(
-        key="last_alarm_pic",
-        translation_key="last_alarm_pic",
-        entity_registry_enabled_default=False,
-    ),
     "supported_channels": SensorEntityDescription(
         key="supported_channels",
         translation_key="supported_channels",

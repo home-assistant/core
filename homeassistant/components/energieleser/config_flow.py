@@ -8,7 +8,7 @@ from energieleser import (
     EnergieleserError,
     EnergieleserUnknownDeviceError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
@@ -18,9 +18,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_SW_VERSION, DOMAIN, device_model_name
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_HOST): TextSelector(),
     }
 )
 
@@ -139,6 +139,43 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
                 "device_type": self._discovered_device_type,
                 "host": self._discovered_host,
             },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            client = EnergieleserClient(
+                host=host, session=async_get_clientsession(self.hass)
+            )
+            try:
+                device = await client.get_device()
+            except EnergieleserConnectionError:
+                errors["base"] = "cannot_connect"
+            except EnergieleserUnknownDeviceError:
+                errors["base"] = "unknown_device_type"
+            except EnergieleserError:
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(device.device_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: host},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_SCHEMA,
+                suggested_values=entry.data | (user_input or {}),
+            ),
+            errors=errors,
         )
 
     def _create_entry(

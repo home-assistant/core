@@ -7,6 +7,7 @@ import logging
 from typing import Any, Concatenate, TypeGuard
 
 from homematicip.base.enums import FunctionalChannelType
+from homematicip.base.functionalChannels import AccessAuthorizationChannel
 from homematicip.device import Device
 
 from homeassistant.exceptions import HomeAssistantError
@@ -52,6 +53,19 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
     return inner
 
 
+def get_door_opener_authorization_channel(
+    device: Device,
+) -> AccessAuthorizationChannel | None:
+    """Return the AccessAuthorizationChannel routed to the door opener."""
+    for channel in getattr(device, "functionalChannels", []):
+        if (
+            isinstance(channel, AccessAuthorizationChannel)
+            and getattr(channel, "channelRole", None) == "DOOR_OPENER_ACTUATOR"
+        ):
+            return channel
+    return None
+
+
 def get_channels_from_device(device: Device, channel_type: FunctionalChannelType):
     """Get all channels matching with channel_type from device."""
     return [
@@ -59,6 +73,14 @@ def get_channels_from_device(device: Device, channel_type: FunctionalChannelType
         for ch in device.functionalChannels
         if ch.functionalChannelType == channel_type
     ]
+
+
+def get_channel_index_by_type(
+    device: Device, channel_type: FunctionalChannelType
+) -> int | None:
+    """Return the index of the device's first channel of the given type."""
+    channels = get_channels_from_device(device, channel_type)
+    return channels[0].index if channels else None
 
 
 def smoke_detector_channel_data_exists(device: Device, field: str) -> bool:

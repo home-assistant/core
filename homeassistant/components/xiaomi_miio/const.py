@@ -88,6 +88,7 @@ MODEL_FAN_1C = "dmaker.fan.1c"
 MODEL_FAN_P10 = "dmaker.fan.p10"
 MODEL_FAN_P11 = "dmaker.fan.p11"
 MODEL_FAN_P18 = "dmaker.fan.p18"
+MODEL_FAN_P33 = "dmaker.fan.p33"
 MODEL_FAN_P5 = "dmaker.fan.p5"
 MODEL_FAN_P9 = "dmaker.fan.p9"
 MODEL_FAN_SA1 = "zhimi.fan.sa1"
@@ -113,6 +114,7 @@ MODELS_FAN_MIOT = [
     MODEL_FAN_P10,
     MODEL_FAN_P11,
     MODEL_FAN_P18,
+    MODEL_FAN_P33,
     MODEL_FAN_P9,
     MODEL_FAN_ZA5,
 ]
@@ -275,6 +277,16 @@ SERVICE_RESET_FILTER = "fan_reset_filter"
 SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
 SERVICE_SET_DRY = "set_dry"
 SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
+
+# Fan/Humidifier data
+FAN_DATA_KEY = "fan.xiaomi_miio"
+
+# Light data
+LIGHT_DATA_KEY = "light.xiaomi_miio"
+ATTR_SCENE = "scene"
+
+# Switch data
+SWITCH_DATA_KEY = "switch.xiaomi_miio"
 
 # Light Services
 SERVICE_SET_SCENE = "light_set_scene"

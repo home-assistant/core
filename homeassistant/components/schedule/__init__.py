@@ -1,13 +1,14 @@
 """Support for schedules in Home Assistant."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import itertools
 from typing import Any, Literal, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -16,13 +17,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
     CollectionEntity,
@@ -35,22 +30,25 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
     CONF_FROM,
     CONF_TO,
+    DATA_SCHEDULE,
     DOMAIN,
     LOGGER,
     SERVICE_GET,
     WEEKDAY_TO_CONF,
+    ScheduleEntityCapabilityAttribute,
+    ScheduleEntityStateAttribute,
 )
+from .services import async_setup_services
 
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 1
@@ -73,14 +71,14 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     previous_to = None
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Invalid time range, from {time_range[CONF_FROM]} is after"
                 f" {time_range[CONF_TO]}"
             )
 
         # Check if the from time of the event is after the to time of the previous event
         if previous_to is not None and previous_to > time_range[CONF_FROM]:
-            raise vol.Invalid("Overlapping times found in schedule")
+            raise probatio.Invalid("Overlapping times found in schedule")
 
         previous_to = time_range[CONF_TO]
 
@@ -108,58 +106,69 @@ def serialize_to_time(value: Any) -> Any:
     """Convert time.max to 24:00:00."""
     if value == time.max:
         return "24:00:00"
-    return vol.Coerce(str)(value)
+    return probatio.Coerce(str)(value)
 
 
 BASE_SCHEMA: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 # Extra data that the user can set on each time range
-CUSTOM_DATA_SCHEMA = vol.Schema({str: vol.Any(bool, str, int, float)})
+CUSTOM_DATA_SCHEMA = probatio.Schema({str: probatio.Any(bool, str, int, float)})
 
 TIME_RANGE_SCHEMA: VolDictType = {
-    vol.Required(CONF_FROM): cv.time,
-    vol.Required(CONF_TO): deserialize_to_time,
-    vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
+    probatio.Required(CONF_FROM): cv.time,
+    probatio.Required(CONF_TO): deserialize_to_time,
+    probatio.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
 }
 
 # Serialize time in validated config
-STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
+STORAGE_TIME_RANGE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FROM): vol.Coerce(str),
-        vol.Required(CONF_TO): serialize_to_time,
-        vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
+        probatio.Required(CONF_FROM): probatio.Coerce(str),
+        probatio.Required(CONF_TO): serialize_to_time,
+        probatio.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
     }
 )
 
 SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day, default=[]): vol.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
+    probatio.Optional(day, default=[]): probatio.All(
+        probatio.EnsureList(), [TIME_RANGE_SCHEMA], valid_schedule
     )
     for day in CONF_ALL_DAYS
 }
 STORAGE_SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day, default=[]): vol.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
+    probatio.Optional(day, default=[]): probatio.All(
+        probatio.EnsureList(),
+        [TIME_RANGE_SCHEMA],
+        valid_schedule,
+        [STORAGE_TIME_RANGE_SCHEMA],
     )
     for day in CONF_ALL_DAYS
 }
 
 # Validate YAML config
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(vol.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: cv.schema_with_slug_keys(probatio.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
+    extra=probatio.ALLOW_EXTRA,
 )
 # Validate storage config
-STORAGE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
+STORAGE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
 )
 # Validate + transform entity config
-ENTITY_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
+ENTITY_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
 )
+
+
+@dataclass(slots=True)
+class ScheduleData:
+    """Runtime data for the schedule integration."""
+
+    component: EntityComponent[Schedule]
+    yaml_collection: YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -195,26 +204,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA,
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_SCHEDULE] = ScheduleData(component, yaml_collection)
 
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-    )
+    async_setup_services(hass)
 
-    component.async_register_entity_service(
-        SERVICE_GET,
-        {},
-        async_get_schedule_service,
-        supports_response=SupportsResponse.ONLY,
-    )
     await component.async_setup(config)
 
     return True
@@ -223,7 +216,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ScheduleStorageCollection(DictStorageCollection):
     """Schedules stored in storage."""
 
-    SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
+    SCHEMA = probatio.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
@@ -256,7 +249,10 @@ class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+        {
+            ScheduleEntityCapabilityAttribute.EDITABLE,
+            ScheduleEntityStateAttribute.NEXT_EVENT,
+        }
     )
 
     _attr_has_entity_name = True
@@ -269,7 +265,9 @@ class Schedule(CollectionEntity):
     def __init__(self, config: ConfigType, editable: bool) -> None:
         """Initialize a schedule."""
         self._config = ENTITY_SCHEMA(config)
-        self._attr_capability_attributes = {ATTR_EDITABLE: editable}
+        self._attr_capability_attributes = {
+            ScheduleEntityCapabilityAttribute.EDITABLE: editable
+        }
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
@@ -380,7 +378,7 @@ class Schedule(CollectionEntity):
                 break
 
         self._attr_extra_state_attributes = {
-            ATTR_NEXT_EVENT: next_event,
+            ScheduleEntityStateAttribute.NEXT_EVENT: next_event,
         }
 
         if current_data:
@@ -415,10 +413,3 @@ class Schedule(CollectionEntity):
                 data_keys.update(time_range_custom_data.keys())
 
         return frozenset(data_keys)
-
-
-async def async_get_schedule_service(
-    schedule: Schedule, service_call: ServiceCall
-) -> ServiceResponse:
-    """Return the schedule configuration."""
-    return schedule.get_schedule()

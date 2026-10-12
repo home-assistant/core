@@ -36,6 +36,14 @@
       "bluetooth": {
         "default": "mdi:bluetooth"
       }
+    },
+    "time": {
+      "screensaver_end_time": {
+        "default": "mdi:clock-end"
+      },
+      "screensaver_start_time": {
+        "default": "mdi:clock-start"
+      }
     }
   },
   "services": {

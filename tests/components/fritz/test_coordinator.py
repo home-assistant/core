@@ -11,11 +11,13 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzSecurityError,
 )
+from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
+    CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_SSL,
     DOMAIN,
@@ -204,8 +206,8 @@ async def test_no_software_version(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     assert device.sw_version == "string_version_not_number"
@@ -254,6 +256,43 @@ async def test_async_get_wan_access_success(
 
     fritz_tools.connection.call_action = MagicMock(return_value={"NewDisallow": False})
     assert await fritz_tools._async_get_wan_access("192.168.1.2") is True
+
+
+async def test_setup_ignores_wan_enabled_action_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    patch_fritzconnectioncached_globally: FritzConnectionMock,
+) -> None:
+    """Test WAN capability check falls back when the router reports a call error."""
+
+    mock_config_entry.add_to_hass(hass)
+    coordinator = FritzBoxTools(
+        hass=hass,
+        config_entry=mock_config_entry,
+        password=mock_config_entry.data["password"],
+        port=mock_config_entry.data["port"],
+    )
+    hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
+
+    with (
+        patch.object(
+            FritzStatus,
+            "has_wan_enabled",
+            new_callable=PropertyMock,
+            side_effect=FritzActionError("401 Invalid Action."),
+        ),
+        patch.object(
+            FritzStatus,
+            "has_wan_support",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+    ):
+        await coordinator.async_setup()
+
+    assert coordinator.device_is_router is False
+    assert "assume that device has no wan enabled" in caplog.text
 
 
 async def test_async_update_hosts_info_attributes_branches(
@@ -349,19 +388,6 @@ async def test_async_update_call_deflections_empty_paths(
         return_value={"NewDeflectionList": "<List><Foo>Bar</Foo></List>"}
     )
     assert await fritz_tools.async_update_call_deflections() == {}
-
-
-async def test_async_scan_devices_stopping_returns(
-    hass: HomeAssistant,
-    fritz_tools,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test scan devices exits when Home Assistant is stopping."""
-
-    with patch.object(hass, "is_stopping", True):
-        await fritz_tools.async_scan_devices()
-
-    assert "Cannot execute scan devices: HomeAssistant is shutting down" in caplog.text
 
 
 async def test_async_scan_devices_old_discovery_branch(
@@ -526,6 +552,17 @@ async def test_trigger_methods(
     fritz_tools.fritz_call.hangup.assert_called_once()
 
 
+async def test_trigger_reconnect_reraises_unexpected_error(
+    fritz_tools,
+) -> None:
+    """Test async_trigger_reconnect re-raises errors other than DisconnectInProgress."""
+    fritz_tools.connection.call_action = MagicMock(
+        side_effect=FritzConnectionException("some other error")
+    )
+    with pytest.raises(FritzConnectionException):
+        await fritz_tools.async_trigger_reconnect()
+
+
 async def test_avmwrapper_service_call_branches(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -615,8 +652,8 @@ async def test_async_trigger_cleanup(
     assert entry.state is ConfigEntryState.LOADED
 
     # Verify the printer is registered as tracked device
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert entity_registry.async_get("device_tracker.printer")
     assert entity_registry.async_get("switch.printer_internet_access")
@@ -630,8 +667,8 @@ async def test_async_trigger_cleanup(
 
     # Verify the printer was removed from tracked devices
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
         )
         is None
     )
@@ -649,8 +686,8 @@ async def test_async_trigger_cleanup(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the printer is registered again as tracked device
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert entity_registry.async_get("device_tracker.printer")
     assert entity_registry.async_get("switch.printer_internet_access")
@@ -673,8 +710,8 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
     wrapper: AvmWrapper = entry.runtime_data
 
     # Verify the fritz box device was registered
-    fritz_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    fritz_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert fritz_device is not None
 
@@ -690,8 +727,46 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
         await wrapper.async_trigger_cleanup()
 
     # The fritz box device must still be present in the registry
-    fritz_device_after = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    fritz_device_after = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert fritz_device_after is not None
     assert fritz_device_after.id == fritz_device.id
+
+
+async def test_old_discovery_does_not_self_reference_box(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test old discovery does not link the box as its own via device.
+
+    The Hosts table lists the box's own LAN MAC (MOCK_HOST_FRITZBOX). Its MAC
+    connection matches the router device, so tracking it would merge it into the
+    router and resolve via_device_id to itself, which the device registry rejects.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        options={CONF_OLD_DISCOVERY: True},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    router = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
+    )
+    assert router is not None
+    assert router.via_device_id is None
+
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert devices
+    for device in devices:
+        assert device.via_device_id != device.id

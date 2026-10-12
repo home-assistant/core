@@ -192,10 +192,16 @@ async def test_user_exist(hass: HomeAssistant) -> None:
     """Test user adding existed device."""
     mocked_device = _create_mocked_device()
     _create_mock_config_entry(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     with _patch_config_flow_device(mocked_device):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENDPOINT: ENDPOINT}
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
@@ -224,10 +230,16 @@ async def test_user_invalid(hass: HomeAssistant) -> None:
     """Test using adding invalid config."""
     mocked_device = _create_mocked_device(True)
     _create_mock_config_entry(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     with _patch_config_flow_device(mocked_device):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENDPOINT: ENDPOINT}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"

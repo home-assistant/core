@@ -56,3 +56,12 @@ DEFAULT = {
 TOOL_SEARCH_UNSUPPORTED_MODELS = [
     "claude-haiku",
 ]
+
+THINKING_EFFORT_NONE_SUPPORTED_MODELS = {
+    "claude-opus-4-6",
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-opus-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5",
+}

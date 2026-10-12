@@ -167,13 +167,16 @@ async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
 
 
 async def async_get_image(
-    hass: HomeAssistant, width: int | None = None, height: int | None = None
+    hass: HomeAssistant,
+    width: int | None = None,
+    height: int | None = None,
+    expected_content_type: str = "image/jpeg",
 ) -> bytes:
     """Get the camera image."""
     image = await camera.async_get_image(
         hass, "camera.my_camera", width=width, height=height
     )
-    assert image.content_type == "image/jpeg"
+    assert image.content_type == expected_content_type
     return image.content
 
 
@@ -693,9 +696,12 @@ async def test_camera_web_rtc(
         "answer": "v=0\r\ns=-\r\n",
     }
 
-    # Nest WebRTC cameras return a placeholder
-    await async_get_image(hass)
-    await async_get_image(hass, width=1024, height=768)
+    # The WebRTC placeholder is a PNG, served as image/png not the default jpeg.
+    png_bytes = await async_get_image(hass, expected_content_type="image/png")
+    assert png_bytes.startswith(b"\x89PNG")
+    await async_get_image(
+        hass, width=1024, height=768, expected_content_type="image/png"
+    )
 
 
 @pytest.mark.usefixtures("auth", "camera_device")
@@ -963,3 +969,66 @@ async def test_webrtc_refresh_expired_stream(
         auth.captured_requests[1][2].get("command")
         == "sdm.devices.commands.CameraLiveStream.ExtendWebRtcStream"
     )
+
+
+@pytest.mark.usefixtures("webrtc_camera_device")
+async def test_webrtc_refresh_failed_precondition(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    hass_ws_client: WebSocketGenerator,
+    auth: FakeAuth,
+) -> None:
+    """Test a WebRTC stream that can't be extended is not refreshed again."""
+    now = utcnow()
+    auth.responses = [
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "answerSdp": "v=0\r\ns=-\r\n",
+                    "mediaSessionId": "yP2grqz0Y1V_wgiX9KEbMWHoLd...",
+                    "expiresAt": (now + datetime.timedelta(seconds=90)).isoformat(
+                        timespec="seconds"
+                    ),
+                },
+            }
+        ),
+        aiohttp.web.json_response(
+            {
+                "error": {
+                    "code": 400,
+                    "message": (
+                        "WebRtc error caused by invalid session or user id mismatch."
+                    ),
+                    "status": "FAILED_PRECONDITION",
+                }
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        ),
+    ]
+    await setup_platform()
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/offer",
+            "entity_id": "camera.my_camera",
+            "offer": "a=recvonly",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # The stream extension fails because the session is no longer valid
+    await fire_alarm(hass, now + datetime.timedelta(seconds=60))
+    # Retrying the extension can't succeed, so it is not attempted again
+    await fire_alarm(hass, now + datetime.timedelta(minutes=10))
+    await fire_alarm(hass, now + datetime.timedelta(hours=1))
+
+    extend_requests = [
+        request
+        for request in auth.captured_requests
+        if request[2].get("command")
+        == "sdm.devices.commands.CameraLiveStream.ExtendWebRtcStream"
+    ]
+    assert len(extend_requests) == 1

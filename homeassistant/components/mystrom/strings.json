@@ -34,5 +34,10 @@
         "name": "Last restart"
       }
     }
+  },
+  "exceptions": {
+    "switch_action_failed": {
+      "message": "Failed to perform the action on the myStrom plug."
+    }
   }
 }

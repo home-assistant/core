@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[button.edifier_r1700bt_bluetooth-entry]
+# name: test_entities[button.edifier_r1700bts_bluetooth-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.edifier_r1700bt_bluetooth',
+    'entity_id': 'button.edifier_r1700bts_bluetooth',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_bluetooth-state]
+# name: test_entities[button.edifier_r1700bts_bluetooth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT Bluetooth',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BTs Bluetooth',
     }),
     'context': <ANY>,
-    'entity_id': 'button.edifier_r1700bt_bluetooth',
+    'entity_id': 'button.edifier_r1700bts_bluetooth',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_fx_off-entry]
+# name: test_entities[button.edifier_r1700bts_fx_off-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.edifier_r1700bt_fx_off',
+    'entity_id': 'button.edifier_r1700bts_fx_off',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_fx_off-state]
+# name: test_entities[button.edifier_r1700bts_fx_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT FX off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BTs FX off',
     }),
     'context': <ANY>,
-    'entity_id': 'button.edifier_r1700bt_fx_off',
+    'entity_id': 'button.edifier_r1700bts_fx_off',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_fx_on-entry]
+# name: test_entities[button.edifier_r1700bts_fx_on-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.edifier_r1700bt_fx_on',
+    'entity_id': 'button.edifier_r1700bts_fx_on',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,20 +136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_fx_on-state]
+# name: test_entities[button.edifier_r1700bts_fx_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT FX on',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BTs FX on',
     }),
     'context': <ANY>,
-    'entity_id': 'button.edifier_r1700bt_fx_on',
+    'entity_id': 'button.edifier_r1700bts_fx_on',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_line_1-entry]
+# name: test_entities[button.edifier_r1700bts_line_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -163,7 +163,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.edifier_r1700bt_line_1',
+    'entity_id': 'button.edifier_r1700bts_line_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -186,20 +186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_line_1-state]
+# name: test_entities[button.edifier_r1700bts_line_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT Line 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BTs Line 1',
     }),
     'context': <ANY>,
-    'entity_id': 'button.edifier_r1700bt_line_1',
+    'entity_id': 'button.edifier_r1700bts_line_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_line_2-entry]
+# name: test_entities[button.edifier_r1700bts_line_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -213,7 +213,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.edifier_r1700bt_line_2',
+    'entity_id': 'button.edifier_r1700bts_line_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -236,13 +236,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.edifier_r1700bt_line_2-state]
+# name: test_entities[button.edifier_r1700bts_line_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT Line 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BTs Line 2',
     }),
     'context': <ANY>,
-    'entity_id': 'button.edifier_r1700bt_line_2',
+    'entity_id': 'button.edifier_r1700bts_line_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -71,8 +71,8 @@ async def test_setup_camera_without_webhook(
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device = device_registry.async_get_device(
-        identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
+    device = device_registry.async_get_device_by_identifier(
+        TEST_CAMERA_DEVICE_IDENTIFIER, config_entry.entry_id
     )
     assert device
 
@@ -126,8 +126,8 @@ async def test_setup_camera_with_wrong_webhook(
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
+    device = device_registry.async_get_device_by_identifier(
+        TEST_CAMERA_DEVICE_IDENTIFIER, config_entry.entry_id
     )
     assert device
 
@@ -179,8 +179,8 @@ async def test_setup_camera_with_old_webhook(
     )
     assert client.async_set_camera.called
 
-    device = device_registry.async_get_device(
-        identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
+    device = device_registry.async_get_device_by_identifier(
+        TEST_CAMERA_DEVICE_IDENTIFIER, config_entry.entry_id
     )
     assert device
 

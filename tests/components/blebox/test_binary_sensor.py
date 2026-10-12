@@ -28,6 +28,7 @@ def airsensor_fixture() -> tuple[AsyncMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My rain sensor")
     type(product).model = PropertyMock(return_value="rainSensor")
+    type(product).product = PropertyMock(return_value="rainSensor")
     return feature, "binary_sensor.my_rain_sensor_moisture"
 
 
@@ -45,6 +46,7 @@ def open_sensor_fixture() -> tuple[AsyncMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My open sensor")
     type(product).model = PropertyMock(return_value="openSensor")
+    type(product).product = PropertyMock(return_value="openSensor")
     return feature, "binary_sensor.my_open_sensor_window"
 
 
@@ -62,7 +64,8 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My input sensor")
     type(product).model = PropertyMock(return_value="inputSensorD")
-    return feature, "binary_sensor.my_input_sensor"
+    type(product).product = PropertyMock(return_value="inputSensorD")
+    return feature, "binary_sensor.my_input_sensor_input"
 
 
 @pytest.mark.parametrize(
@@ -87,7 +90,7 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
         pytest.param(
             "inputsensor",
             "BleBox-inputSensorD-aa11bb22cc33-0.input",
-            "My input sensor",
+            "My input sensor Input",
             None,
             STATE_ON,
             "My input sensor",
@@ -134,6 +137,7 @@ async def test_binary_sensor_with_name(hass: HomeAssistant) -> None:
     product = feature.product
     type(product).name = PropertyMock(return_value="My rain sensor")
     type(product).model = PropertyMock(return_value="rainSensor")
+    type(product).product = PropertyMock(return_value="rainSensor")
 
     await async_setup_entity(hass, "binary_sensor.my_rain_sensor_front_yard")
     state = hass.states.get("binary_sensor.my_rain_sensor_front_yard")

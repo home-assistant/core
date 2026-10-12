@@ -8,24 +8,22 @@ import logging
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    Platform,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import debounce, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    debounce,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import Coordinates, get_state_coordinates
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -43,6 +41,7 @@ from .const import (
     RETRY_STOP,
 )
 from .coordinator import NWSObservationDataUpdateCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +75,15 @@ class NWSData:
     location_entity_id: str | None
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the National Weather Service (NWS) integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     """Set up a National Weather Service entry."""
     api_key = entry.data[CONF_API_KEY]
@@ -96,14 +104,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             )
         location_entity_id = entity_entry.entity_id
         state = hass.states.get(location_entity_id)
-        if state is None or not has_location(state):
+        if state is None or (coordinates := get_state_coordinates(state)) is None:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="entity_unavailable",
                 translation_placeholders={"entity_id": location_entity_id},
             )
-        latitude = state.attributes[ATTR_LATITUDE]
-        longitude = state.attributes[ATTR_LONGITUDE]
+        latitude = coordinates.latitude
+        longitude = coordinates.longitude
         station = None
     else:
         latitude = entry.data[CONF_LATITUDE]
@@ -157,7 +165,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         entry,
         nws_data,
         location_entity_id=location_entity_id,
-        initial_position=(latitude, longitude) if location_entity_id else None,
+        initial_coordinates=Coordinates(latitude, longitude)
+        if location_entity_id
+        else None,
     )
 
     # Don't use retries in setup
@@ -215,20 +225,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         ) -> None:
             """Request coordinator refresh when the location entity moves."""
             new_state = event.data["new_state"]
-            if new_state is None or not has_location(new_state):
-                return
-            new_lat = new_state.attributes[ATTR_LATITUDE]
-            new_lon = new_state.attributes[ATTR_LONGITUDE]
             if (
-                new_lat == entry.runtime_data.latitude
-                and new_lon == entry.runtime_data.longitude
+                new_state is None
+                or (coordinates := get_state_coordinates(new_state)) is None
+            ):
+                return
+            if (
+                coordinates.latitude == entry.runtime_data.latitude
+                and coordinates.longitude == entry.runtime_data.longitude
             ):
                 return
             dist = location_util.distance(
                 entry.runtime_data.latitude,
                 entry.runtime_data.longitude,
-                new_lat,
-                new_lon,
+                coordinates.latitude,
+                coordinates.longitude,
             )
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return

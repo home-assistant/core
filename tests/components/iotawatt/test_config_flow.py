@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-import httpx
+import httpx2
 
 from homeassistant import config_entries
 from homeassistant.components.iotawatt.const import DOMAIN
@@ -119,7 +119,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
-        side_effect=httpx.HTTPError("any"),
+        side_effect=httpx2.HTTPError("any"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

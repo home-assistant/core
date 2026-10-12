@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -33,6 +32,12 @@
   "exceptions": {
     "connection_failed": {
       "message": "Failed to connect to host: {host}"
+    },
+    "invalid_duration": {
+      "message": "Invalid duration value: {duration}"
+    },
+    "invalid_interrupt": {
+      "message": "Invalid interrupt value: {interrupt}"
     },
     "invalid_notification_icon": {
       "message": "Invalid icon data provided. Got {type}"

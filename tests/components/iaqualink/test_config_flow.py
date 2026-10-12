@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-import httpx
+import httpx2
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
@@ -118,7 +118,7 @@ async def test_with_invalid_credentials(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_cannot_connect_exception(
@@ -293,7 +293,7 @@ async def test_reauth_invalid_auth(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_reauth_cannot_connect(

@@ -7,7 +7,12 @@ import pytest
 from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
-from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS, Platform
+from homeassistant.components.knx.const import (
+    CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
+    KNX_ADDRESS,
+    Platform,
+)
 from homeassistant.components.knx.schema import LightSchema
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -151,6 +156,7 @@ async def test_light_color_temp_absolute(hass: HomeAssistant, knx: KNXTestKit) -
                     LightSchema.CONF_COLOR_TEMP_ADDRESS: test_ct,
                     LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS: test_ct_state,
                     LightSchema.CONF_COLOR_TEMP_MODE: "absolute",
+                    CONF_SYNC_STATE: "init",
                 },
             ]
         }

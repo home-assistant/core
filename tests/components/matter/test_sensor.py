@@ -8,7 +8,13 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
+from homeassistant.components.matter.sensor import AIR_QUALITY_MAP
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -310,6 +316,33 @@ async def test_eve_weather_sensor_custom_cluster(
     state = hass.states.get("sensor.eve_weather_pressure")
     assert state
     assert state.state == "800.0"
+
+
+def test_air_quality_map_complete() -> None:
+    """Test every Matter air quality value is mapped."""
+    assert set(AIR_QUALITY_MAP) == set(clusters.AirQuality.Enums.AirQualityEnum)
+
+
+@pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+async def test_air_quality_out_of_range(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test an out of spec AirQuality value reports unknown."""
+    set_node_attribute(matter_node, 1, 91, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_air_quality")
+    assert state
+    assert state.state == "good"
+
+    set_node_attribute(matter_node, 1, 91, 0, 255)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_air_quality")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])

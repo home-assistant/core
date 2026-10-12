@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -29,7 +28,7 @@
           "host": "The hostname or IP address of your Rain Bird device.",
           "password": "The password used to authenticate with the Rain Bird device."
         },
-        "description": "Please enter the LNK WiFi module information for your Rain Bird device.",
+        "description": "Please enter the LNK Wi-Fi module information for your Rain Bird device.",
         "title": "Configure Rain Bird"
       }
     }
@@ -40,12 +39,20 @@
         "name": "Rainsensor"
       }
     },
+    "button": {
+      "run_program": {
+        "name": "Run {program}"
+      }
+    },
     "number": {
       "rain_delay": {
         "name": "Rain delay"
       }
     },
     "sensor": {
+      "program_next_run": {
+        "name": "{program} next run"
+      },
       "raindelay": {
         "name": "Raindelay"
       }

@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import override
 
 from pydrawise import Controller, Zone
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,11 +13,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
-from .const import SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
@@ -70,13 +66,6 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
     ),
 )
 
-SCHEMA_START_WATERING: VolDictType = {
-    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1440)),
-}
-SCHEMA_SUSPEND: VolDictType = {
-    vol.Required("until"): cv.datetime,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -124,26 +113,6 @@ async def async_setup_entry(
     )
     coordinators.main.new_controllers_callbacks.append(_add_new_controllers)
     coordinators.main.new_zones_callbacks.append(_add_new_zones)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_RESUME,
-        None,
-        "resume",
-        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
-    )
-    platform.async_register_entity_service(
-        SERVICE_START_WATERING,
-        SCHEMA_START_WATERING,
-        "start_watering",
-        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
-    )
-    platform.async_register_entity_service(
-        SERVICE_SUSPEND,
-        SCHEMA_SUSPEND,
-        "suspend",
-        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
-    )
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):

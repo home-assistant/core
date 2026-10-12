@@ -11,7 +11,6 @@ from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -27,20 +26,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ViCareEntity
 from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
-from .utils import get_burners, get_circuits, get_compressors, get_device_serial
+from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_VICARE_MODE = "set_vicare_mode"
-SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
 VICARE_MODE_DHW = "dhw"
+VICARE_MODE_COOLING = "cooling"
 VICARE_MODE_HEATING = "heating"
 VICARE_MODE_HEATINGCOOLING = "heatingCooling"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
@@ -64,6 +61,7 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
     VICARE_MODE_HEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_HEATING: HVACMode.AUTO,
+    VICARE_MODE_COOLING: HVACMode.COOL,
     VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
 }
 
@@ -80,7 +78,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
             circuit,
@@ -96,13 +94,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_VICARE_MODE,
-        {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
-        "set_vicare_mode",
-    )
 
     async_add_entities(
         await hass.async_add_executor_job(
@@ -218,12 +209,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                     phase = None
                     with suppress(PyViCareNotSupportedFeatureError):
                         phase = compressor.getPhase()
+                    # Devices do not agree on how to spell the phase, and
+                    # some do not expose one at all, so a running compressor
+                    # heats unless it says it is cooling.
                     if phase == "cooling":
                         cooling_active = True
-                    elif phase == "heating" or phase is None:
-                        # Phase is unset on hybrid devices that do not
-                        # expose it: fall back to HEATING to match the
-                        # pre-cooling-support behaviour.
+                    else:
                         heating_active = True
 
             if cooling_active:

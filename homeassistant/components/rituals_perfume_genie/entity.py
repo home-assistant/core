@@ -1,6 +1,6 @@
 """Base class for Rituals Perfume Genie diffuser entity."""
 
-from typing import Any, override
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -12,12 +12,6 @@ from .coordinator import RitualsDataUpdateCoordinator
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
-
-
-def _version_string(version: Any) -> str:
-    if isinstance(version, dict):
-        return str(version.get("title", version))
-    return str(version)
 
 
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
@@ -33,17 +27,21 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
         """Init from config, hookup diffuser and coordinator."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
+
+        hub = coordinator.data.hub
+        firmware = hub.firmware.current if hub.firmware else None
+
+        self._attr_unique_id = f"{coordinator.hublot}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.diffuser.hublot)},
+            identifiers={(DOMAIN, coordinator.hublot)},
             manufacturer=MANUFACTURER,
-            model=MODEL if coordinator.diffuser.has_battery else MODEL2,
-            name=coordinator.diffuser.name,
-            sw_version=_version_string(coordinator.diffuser.version),
+            model=MODEL if hub.has_battery else MODEL2,
+            name=hub.name,
+            sw_version=str(firmware) if firmware else None,
         )
 
     @property
     @override
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and self.coordinator.diffuser.is_online
+        return super().available and self.coordinator.data.hub.is_online is not False

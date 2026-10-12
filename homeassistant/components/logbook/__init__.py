@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN
@@ -44,17 +44,17 @@ from .const import (  # noqa: F401
 )
 from .models import LazyEventPartialState, LogbookConfig
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
 
 
-LOG_MESSAGE_SCHEMA = vol.Schema(
+LOG_MESSAGE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_NAME): cv.string,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DOMAIN): cv.slug,
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_DOMAIN): cv.slug,
+        probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
 

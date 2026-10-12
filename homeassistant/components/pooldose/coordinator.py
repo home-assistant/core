@@ -62,7 +62,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
                 translation_key="update_connect_failed",
             ) from err
 
-        if status != RequestStatus.SUCCESS:
+        if status is not RequestStatus.SUCCESS:
             raise UpdateFailed(
                 translation_domain=self.config_entry.domain,
                 translation_key="api_status_error",

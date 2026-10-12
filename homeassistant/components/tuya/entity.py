@@ -1,15 +1,24 @@
 """Tuya Home Assistant Base Device Model."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
+import requests
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
+from tuya_sharing.exceptions import TuyaSDKException
 
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
-from .util import get_device_info
+from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+
+@dataclass(frozen=True)
+class TuyaEntityDescription(EntityDescription):
+    """Describes a Tuya entity."""
 
 
 class TuyaEntity(Entity):
@@ -22,10 +31,11 @@ class TuyaEntity(Entity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EntityDescription,
+        description: TuyaEntityDescription,
     ) -> None:
         """Init TuyaEntity."""
-        self._attr_device_info = get_device_info(device)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.id)})
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
@@ -88,9 +98,18 @@ class TuyaEntity(Entity):
         LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         if not commands:
             return
-        await self.hass.async_add_executor_job(
-            self.device_manager.send_commands, self.device.id, commands
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.device_manager.send_commands, self.device.id, commands
+            )
+        except TuyaSDKException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_rejected"
+            ) from err
+        except requests.RequestException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="send_command_failed"
+            ) from err
 
     def _read_wrapper[T](self, wrapper: DeviceWrapper[T] | None) -> T | None:
         """Read the wrapper device status."""

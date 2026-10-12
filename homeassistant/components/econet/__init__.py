@@ -53,7 +53,7 @@ async def async_setup_entry(
     except InvalidCredentialsError:
         _LOGGER.error("Invalid credentials provided")
         return False
-    except PyeconetError as err:
+    except (ClientError, PyeconetError) as err:
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 

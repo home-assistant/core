@@ -18,8 +18,8 @@
         "mode": ["r", "w"],
         "type": "enum",
         "value": {
-          "r": ["LOW", "HIGH", "MID"],
-          "w": ["LOW", "HIGH", "MID"]
+          "r": ["LOW", "MID", "HIGH", "AUTO"],
+          "w": ["LOW", "MID", "HIGH", "AUTO"]
         }
       }
     },

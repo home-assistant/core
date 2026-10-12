@@ -41,8 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bo
         raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTPStatus.BAD_REQUEST
-            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            HTTPStatus.BAD_REQUEST
+            < ex.response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.error("Failed to login to nuheat: %s", ex)
             return False

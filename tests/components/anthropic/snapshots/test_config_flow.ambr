@@ -2,6 +2,22 @@
 # name: test_model_list
   list([
     dict({
+      'label': 'Claude Opus 5.5',
+      'value': 'claude-opus-5-5',
+    }),
+    dict({
+      'label': 'Claude Fable 5.1',
+      'value': 'claude-fable-5-1',
+    }),
+    dict({
+      'label': 'Claude Opus 5',
+      'value': 'claude-opus-5',
+    }),
+    dict({
+      'label': 'Claude Sonnet 5',
+      'value': 'claude-sonnet-5',
+    }),
+    dict({
       'label': 'Claude Fable 5',
       'value': 'claude-fable-5',
     }),
@@ -32,18 +48,6 @@
     dict({
       'label': 'Claude Sonnet 4.5',
       'value': 'claude-sonnet-4-5',
-    }),
-    dict({
-      'label': 'Claude Opus 4.1',
-      'value': 'claude-opus-4-1',
-    }),
-    dict({
-      'label': 'Claude Opus 4',
-      'value': 'claude-opus-4-0',
-    }),
-    dict({
-      'label': 'Claude Sonnet 4',
-      'value': 'claude-sonnet-4-0',
     }),
   ])
 # ---

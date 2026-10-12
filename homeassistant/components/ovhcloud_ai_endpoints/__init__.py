@@ -1,5 +1,7 @@
 """The OVHcloud AI Endpoints integration."""
 
+from typing import Any, cast
+
 from openai import (
     AsyncOpenAI,
     AuthenticationError,
@@ -27,7 +29,8 @@ def _create_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAI:
     return AsyncOpenAI(
         base_url=BASE_URL,
         api_key=api_key,
-        http_client=get_async_client(hass),
+        # Legacy HTTPX clients are supported at runtime only.
+        http_client=cast(Any, get_async_client(hass)),
     )
 
 

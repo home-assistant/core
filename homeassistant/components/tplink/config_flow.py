@@ -14,7 +14,7 @@ from kasa import (
     Module,
     TimeoutError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ffmpeg, stream
 from homeassistant.config_entries import (
@@ -36,7 +36,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -62,17 +62,20 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
-STEP_CAMERA_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_CAMERA_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LIVE_VIEW): bool,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
+        probatio.Required(CONF_LIVE_VIEW): bool,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -368,7 +371,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
             description_placeholders=placeholders,
         )
@@ -568,7 +573,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     async def _async_reload_requires_auth_entries(self) -> None:
@@ -789,7 +796,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.async_create_task(
                         self._async_reload_requires_auth_entries(), eager_start=False
                     )
-                    return self.async_abort(reason="reauth_successful")
+                    return self.async_abort(
+                        reason="reauth_successful",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
         # Old config entries will not have these values.
         alias = entry_data.get(CONF_ALIAS) or "unknown"

@@ -24,6 +24,23 @@ from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
 
 
+def gateway_device_info(gateway: MotionGateway) -> DeviceInfo:
+    """Return the device info of a Motionblinds gateway."""
+    if gateway.firmware is not None:
+        sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
+    else:
+        sw_version = f"Protocol: {gateway.protocol}"
+
+    return DeviceInfo(
+        connections={(dr.CONNECTION_NETWORK_MAC, gateway.mac)},
+        identifiers={(DOMAIN, gateway.mac)},
+        manufacturer=MANUFACTURER,
+        name=DEFAULT_GATEWAY_NAME,
+        model="Wi-Fi bridge",
+        sw_version=sw_version,
+    )
+
+
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):
     """Representation of a Motionblind entity."""
 
@@ -50,42 +67,37 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._update_interval_moving = UPDATE_INTERVAL_MOVING
 
         if blind.device_type in DEVICE_TYPES_GATEWAY:
-            gateway = blind
+            self._attr_device_info = gateway_device_info(blind)
         else:
             gateway = blind._gateway  # noqa: SLF001
-        if gateway.firmware is not None:
-            sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
-        else:
-            sw_version = f"Protocol: {gateway.protocol}"
+            if gateway.firmware is not None:
+                sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
+            else:
+                sw_version = f"Protocol: {gateway.protocol}"
 
-        if blind.device_type in DEVICE_TYPES_GATEWAY:
-            self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
-                identifiers={(DOMAIN, blind.mac)},
-                manufacturer=MANUFACTURER,
-                name=DEFAULT_GATEWAY_NAME,
-                model="Wi-Fi bridge",
-                sw_version=sw_version,
-            )
-        elif blind.device_type in DEVICE_TYPES_WIFI:
-            self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
-                identifiers={(DOMAIN, blind.mac)},
-                manufacturer=MANUFACTURER,
-                model=blind.blind_type,
-                name=device_name(blind),
-                sw_version=sw_version,
-                hw_version=blind.wireless_name,
-            )
-        else:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, blind.mac)},
-                manufacturer=MANUFACTURER,
-                model=blind.blind_type,
-                name=device_name(blind),
-                via_device=(DOMAIN, blind._gateway.mac),  # noqa: SLF001
-                hw_version=blind.wireless_name,
-            )
+            if blind.device_type in DEVICE_TYPES_WIFI:
+                self._attr_device_info = DeviceInfo(
+                    connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
+                    identifiers={(DOMAIN, blind.mac)},
+                    manufacturer=MANUFACTURER,
+                    model=blind.blind_type,
+                    name=device_name(blind),
+                    sw_version=sw_version,
+                    hw_version=blind.wireless_name,
+                )
+            else:
+                self._attr_device_info = DeviceInfo(
+                    identifiers={(DOMAIN, blind.mac)},
+                    manufacturer=MANUFACTURER,
+                    model=blind.blind_type,
+                    name=device_name(blind),
+                    via_device_id=dr.async_get_device_id_by_identifier(
+                        coordinator.hass,
+                        (DOMAIN, gateway.mac),
+                        config_entry_id=coordinator.config_entry.entry_id,
+                    ),
+                    hw_version=blind.wireless_name,
+                )
 
     @property
     @override

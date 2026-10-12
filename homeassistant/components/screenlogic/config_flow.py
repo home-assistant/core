@@ -3,24 +3,17 @@
 import logging
 from typing import Any, override
 
+import probatio
 from screenlogicpy import ScreenLogicError, discovery
 from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
 from screenlogicpy.requests import login
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,15 +65,6 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize ScreenLogic ConfigFlow."""
         self.discovered_gateways: dict[str, dict[str, Any]] = {}
         self.discovered_ip: str | None = None
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> ScreenLogicOptionsFlowHandler:
-        """Get the options flow for ScreenLogic."""
-        return ScreenLogicOptionsFlowHandler()
 
     @override
     async def async_step_user(
@@ -135,9 +119,9 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gateway_select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(GATEWAY_SELECT_KEY): vol.In(
+                    probatio.Required(GATEWAY_SELECT_KEY): probatio.In(
                         {
                             **unconfigured_gateways,
                             GATEWAY_MANUAL_ENTRY: (
@@ -179,41 +163,12 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="gateway_entry",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_IP_ADDRESS, default=ip_address): str,
-                    vol.Required(CONF_PORT, default=port): int,
+                    probatio.Required(CONF_IP_ADDRESS, default=ip_address): str,
+                    probatio.Required(CONF_PORT, default=port): int,
                 }
             ),
             errors=errors,
             description_placeholders={},
-        )
-
-
-class ScreenLogicOptionsFlowHandler(OptionsFlow):
-    """Handles the options for the ScreenLogic integration."""
-
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.config_entry.title, data=user_input
-            )
-
-        current_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=home-assistant-config-flow-polling-field
-                    vol.Required(
-                        CONF_SCAN_INTERVAL,
-                        default=current_interval,
-                    ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL))
-                }
-            ),
-            description_placeholders={"gateway_name": self.config_entry.title},
         )

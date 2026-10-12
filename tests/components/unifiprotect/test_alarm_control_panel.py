@@ -1,9 +1,11 @@
 """Test the UniFi Protect alarm control panel platform."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import NVR, NvrArmMode, NvrArmModeStatus, PublicBootstrap
+from uiprotect.data import NVR, NvrArmMode, NvrArmModeStatus
 from uiprotect.exceptions import GlobalAlarmManagerError
 from uiprotect.websocket import WebsocketState
 
@@ -24,7 +26,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockUFPFixture, assert_entity_counts, init_entry
+from .conftest import PUBLIC_ONLY_ALARM_ENTITY_ID
+from .utils import (
+    MockUFPFixture,
+    assert_entity_counts,
+    init_entry,
+    make_public_bootstrap,
+)
 
 ALARM_ENTITY_ID = "alarm_control_panel.unifiprotect_alarm_manager"
 
@@ -38,12 +46,7 @@ def _make_arm_mode(status: NvrArmModeStatus) -> Mock:
 
 def _make_public_bootstrap(arm_mode: Mock | None) -> Mock:
     """Create a PublicBootstrap with the given arm_mode."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.arm_mode = arm_mode
-    pb.arm_profiles = {}
-    pb.relays = {}
-    pb.sirens = {}
-    return pb
+    return make_public_bootstrap(arm_mode=arm_mode)
 
 
 async def test_alarm_panel_not_created_without_public_bootstrap(
@@ -342,3 +345,45 @@ async def test_alarm_panel_availability_decoupled_from_private_websocket(
     state = hass.states.get(ALARM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_public_only_nvr_websocket_updates_alarm(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """An NVR devices-websocket frame re-renders the alarm from the public arm mode."""
+    await setup_public_only()
+
+    # Flip the public arm mode, then deliver an NVR frame over the devices WS.
+    ufp_public_only.api.public_bootstrap.arm_mode.status = NvrArmModeStatus.ARMED
+    msg = Mock()
+    msg.new_obj = ufp_public_only.api.public_bootstrap.nvr  # model == NVR
+    msg.old_obj = None
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
+
+
+async def test_public_only_ws_state_refreshes_alarm(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public devices-websocket reconnect re-signals the NVR alarm panel."""
+    await setup_public_only()
+
+    # Drop then restore: the restore re-signals the NVR (public branch).
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state
+        == AlarmControlPanelState.DISARMED
+    )

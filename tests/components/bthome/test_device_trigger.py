@@ -111,7 +111,9 @@ async def test_get_triggers_button(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -149,7 +151,9 @@ async def test_get_triggers_multiple_buttons(
     await hass.async_block_till_done()
     assert len(events) == 2
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger1 = {
         CONF_PLATFORM: "device",
@@ -208,7 +212,9 @@ async def test_validate_trigger_config(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
 
     assert await async_setup_component(
         hass,
@@ -259,7 +265,9 @@ async def test_get_triggers_dimmer(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -358,7 +366,9 @@ async def test_if_fires_on_motion_detected(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     device_id = device.id
 
     assert await async_setup_component(
