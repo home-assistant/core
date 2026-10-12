@@ -14,6 +14,7 @@ from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -71,15 +72,17 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._async_observed_poll()
+            if not report.failed and not report.updated:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="unrecognized_inverter_model",
+                )
             if not report.updated:
-                errors = list(report.failed.values())
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                ) from (
-                    ExceptionGroup("all components failed to refresh", errors)
-                    if errors
-                    else None
+                ) from ExceptionGroup(
+                    "all components failed to refresh", list(report.failed.values())
                 )
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
