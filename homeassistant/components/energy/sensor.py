@@ -83,7 +83,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas", "water"]
+    source_type: Literal["grid", "gas", "heat", "water"]
     flow_type: Literal["flow_from", "flow_to"] | None
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -103,6 +103,14 @@ SOURCE_ADAPTERS: Final = (
     ),
     SourceAdapter(
         "gas",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
+    SourceAdapter(
+        "heat",
         None,
         "stat_energy_from",
         "stat_cost",
@@ -419,7 +427,7 @@ class EnergyCostSensor(SensorEntity):
     @callback
     def _update_cost(self) -> None:
         """Update incurred costs."""
-        if self._adapter.source_type == "grid":
+        if self._adapter.source_type in ("grid", "heat"):
             valid_units = VALID_ENERGY_UNITS
             default_price_unit: str | None = UnitOfEnergy.KILO_WATT_HOUR
 

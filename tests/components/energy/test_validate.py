@@ -55,7 +55,13 @@ async def test_validation(
     extra,
 ) -> None:
     """Test validating success."""
-    for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
+    for key in (
+        "device_cons",
+        "battery_import",
+        "battery_export",
+        "solar_production",
+        "heat_consumption",
+    ):
         hass.states.async_set(
             f"sensor.{key}",
             "123",
@@ -76,13 +82,48 @@ async def test_validation(
                     "stat_energy_to": "sensor.battery_export",
                 },
                 {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+                {"type": "heat", "stat_energy_from": "sensor.heat_consumption"},
             ],
             "device_consumption": [{"stat_consumption": "sensor.device_cons"}],
         }
     )
     assert (await validate.async_validate(hass)).as_dict() == {
-        "energy_sources": [[], []],
+        "energy_sources": [[], [], []],
         "device_consumption": [[]],
+        "device_consumption_water": [],
+    }
+
+
+async def test_validation_heat_external_statistics(
+    hass: HomeAssistant, mock_energy_manager
+) -> None:
+    """Test validating district heat with external energy and cost statistics."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "heat",
+                    "stat_energy_from": "external:heat_consumption",
+                    "stat_cost": "external:heat_cost",
+                }
+            ]
+        }
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "statistics_not_defined",
+                    "affected_entities": {
+                        ("external:heat_consumption", None),
+                        ("external:heat_cost", None),
+                    },
+                    "translation_placeholders": None,
+                }
+            ]
+        ],
+        "device_consumption": [],
         "device_consumption_water": [],
     }
 

@@ -1082,6 +1082,23 @@ async def test_gas_rejects_entity_price_for_external_stat() -> None:
         )
 
 
+async def test_heat_source_validates_energy_and_price() -> None:
+    """Test that district heat accepts an energy statistic and fixed price."""
+    result = ENERGY_SOURCE_SCHEMA(
+        [
+            {
+                "type": "heat",
+                "stat_energy_from": "sensor.district_heat_energy",
+                "number_energy_price": 0.12,
+            }
+        ]
+    )
+
+    assert result[0]["type"] == "heat"
+    assert result[0]["stat_energy_from"] == "sensor.district_heat_energy"
+    assert result[0]["number_energy_price"] == 0.12
+
+
 async def test_gas_rejects_number_price_for_external_stat() -> None:
     """Test that gas schema rejects number price for external statistics."""
     with pytest.raises(probatio.Invalid, match="not supported for external statistics"):

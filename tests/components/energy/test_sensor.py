@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 import copy
 from datetime import timedelta
-from typing import Any
+from typing import Any, Literal
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1078,10 +1078,14 @@ async def test_cost_sensor_handle_gas(
     assert state.state == "50.0"
 
 
-async def test_cost_sensor_handle_gas_kwh(
-    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
+@pytest.mark.parametrize("source_type", ["gas", "heat"])
+async def test_cost_sensor_handle_energy_source_kwh(
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    source_type: Literal["gas", "heat"],
 ) -> None:
-    """Test gas cost price from sensor entity."""
+    """Test energy-based consumption cost from a fixed price."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
@@ -1089,7 +1093,7 @@ async def test_cost_sensor_handle_gas_kwh(
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
-            "type": "gas",
+            "type": source_type,
             "stat_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,

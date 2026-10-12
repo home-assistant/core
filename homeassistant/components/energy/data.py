@@ -208,6 +208,18 @@ class GasSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class HeatSourceType(TypedDict):
+    """Dictionary holding the source of district heat consumption."""
+
+    type: Literal["heat"]
+
+    stat_energy_from: str
+    stat_cost: str | None
+    entity_energy_price: str | None
+    number_energy_price: float | None
+    name: NotRequired[str]
+
+
 class WaterSourceType(TypedDict):
     """Dictionary holding the source of water consumption."""
 
@@ -236,6 +248,7 @@ type SourceType = (
     | SolarSourceType
     | BatterySourceType
     | GasSourceType
+    | HeatSourceType
     | WaterSourceType
 )
 
@@ -557,6 +570,21 @@ GAS_SOURCE_SCHEMA = probatio.All(
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
 )
+HEAT_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required("type"): "heat",
+            probatio.Required("stat_energy_from"): str,
+            probatio.Optional("stat_cost"): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price"): probatio.Any(str, None),
+            probatio.Optional("number_energy_price"): probatio.Any(
+                probatio.Coerce(float), None
+            ),
+            probatio.Optional("name"): str,
+        }
+    ),
+    _reject_price_for_external_stat(stat_key="stat_energy_from"),
+)
 WATER_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         {
@@ -631,6 +659,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
                     "solar": SOLAR_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
+                    "heat": HEAT_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
                 },
             )
