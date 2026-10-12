@@ -130,6 +130,7 @@ async def test_water_heater_set_temperature(
             name="My Boiler",
             min_temperature=10.0,
             max_temperature=85.0,
+            supported_features=WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE,
         )
     ]
     states = [
@@ -520,6 +521,7 @@ async def test_water_heater_fahrenheit_unit(
             min_temperature=32.0,
             max_temperature=212.0,
             temperature_unit=TemperatureUnit.FAHRENHEIT,
+            supported_features=WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE,
         )
     ]
     states = [WaterHeaterState(key=1, target_temperature=32.0)]
@@ -563,6 +565,7 @@ async def test_water_heater_fahrenheit_unit_fahrenheit_system(
             min_temperature=32.0,
             max_temperature=212.0,
             temperature_unit=TemperatureUnit.FAHRENHEIT,
+            supported_features=WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE,
         )
     ]
     states = [WaterHeaterState(key=1, target_temperature=72.0)]
