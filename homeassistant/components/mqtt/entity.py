@@ -1490,6 +1490,7 @@ class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
     _parent_device_id: str | None = None
+    _registered_device_id: str | None = None
     _device_registration_failed = False
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
@@ -1519,6 +1520,7 @@ class MqttEntityDeviceInfo(Entity):
         instead of the entity platform not adding the entity.
         """
         self._parent_device_id = None
+        self._registered_device_id = None
         self._device_registration_failed = False
         if (device_info := self._main_device_info()) is None:
             return None
@@ -1533,6 +1535,7 @@ class MqttEntityDeviceInfo(Entity):
             _log_device_info_error(err)
             return None
         if not self._has_child_device:
+            self._registered_device_id = device.id
             return device
         try:
             child_device = device_registry.async_get_or_create_child(
@@ -1544,12 +1547,38 @@ class MqttEntityDeviceInfo(Entity):
             # The parent device may have been registered for this child device only
             self._config_entry.async_create_task(
                 self.hass,
-                async_cleanup_device_registry(self.hass, device.id, config_entry_id),
+                async_cleanup_device_registry(
+                    self.hass,
+                    device.id,
+                    config_entry_id,
+                    include_disabled_entities=True,
+                ),
                 "mqtt cleanup parent device",
             )
             return None
         self._parent_device_id = device.id
+        self._registered_device_id = child_device.id
         return child_device
+
+    @callback
+    @override
+    def add_to_platform_abort(self) -> None:
+        """Abort adding the entity and clean up a device registered only for it."""
+        hass = self.hass
+        super().add_to_platform_abort()
+        # With a registry entry, the entity is still linked to its device
+        if self.registry_entry is not None or self._registered_device_id is None:
+            return
+        self._config_entry.async_create_task(
+            hass,
+            async_cleanup_device_registry(
+                hass,
+                self._registered_device_id,
+                self._config_entry.entry_id,
+                include_disabled_entities=True,
+            ),
+            "mqtt cleanup device of aborted entity",
+        )
 
     def _main_device_info(self) -> DeviceInfo | None:
         """Return the device info from the device specifications."""
