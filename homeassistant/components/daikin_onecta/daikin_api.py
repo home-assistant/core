@@ -9,6 +9,7 @@ from typing import cast
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import (
     OnectaApiError,
+    OnectaAuthenticationError,
     OnectaConnectionError,
     OnectaRateLimitError,
 )
@@ -98,6 +99,8 @@ class DaikinApi:
         async with self._cloud_lock:
             try:
                 await command(self._client)
+            except OnectaAuthenticationError:
+                return False
             except OnectaRateLimitError as err:
                 _LOGGER.warning(
                     "Daikin request %s %s was rate limited; retry after %s seconds",

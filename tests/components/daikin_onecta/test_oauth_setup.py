@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from aiohttp import RequestInfo
+from daikin_onecta import OnectaAuthenticationError
 import pytest
 from yarl import URL
 
@@ -10,6 +11,7 @@ from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -17,7 +19,63 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
+from .test_climate_snapshots import _async_setup_fixture
+
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_setup_rejected_cloud_token_requires_authentication(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    status: int,
+) -> None:
+    """Classify rejected API tokens as authentication failures, not retries."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            return_value="token",
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+            side_effect=OnectaAuthenticationError(
+                status=status, method="GET", path="/v1/gateway-devices"
+            ),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    status: int,
+) -> None:
+    """Report authentication failure without adding a reauthentication flow."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    with patch(
+        "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+        side_effect=OnectaAuthenticationError(
+            status=status, method="GET", path="/v1/gateway-devices"
+        ),
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
+    assert coordinator.last_exception.translation_key == "authentication_failed"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 def _token_request_info() -> RequestInfo:
