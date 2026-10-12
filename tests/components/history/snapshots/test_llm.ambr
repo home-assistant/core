@@ -74,7 +74,7 @@
     }),
   })
 # ---
-# name: test_get_state_changes[include_attributes]
+# name: test_get_state_changes[include_full_attributes]
   dict({
     'result': dict({
       'entities': dict({
@@ -399,9 +399,9 @@
         'minItems': 1,
         'type': 'array',
       }),
-      'include_attributes': dict({
+      'include_full_attributes': dict({
         'default': False,
-        'description': "Only for source 'state_changes': whether to include the state attributes as JSON (default: false).",
+        'description': "Only for source 'state_changes': whether to include all state attributes as JSON, for example the media details of a media player (default: false).",
         'type': 'boolean',
       }),
       'limit': dict({

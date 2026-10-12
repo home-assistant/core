@@ -52,6 +52,8 @@ _UNIT_MISMATCH = (
     "Statistics are recorded in {unit}, which cannot be converted to the unit "
     f"of the entity. Use source '{SOURCE_STATE_CHANGES}' instead."
 )
+# Media player attributes change during playback, which adds many rows.
+_SKIP_SIGNIFICANT_ATTRIBUTES_DOMAINS = {"media_player"}
 _NO_STATISTICS = f"No statistics recorded. Use source '{SOURCE_STATE_CHANGES}' instead."
 
 
@@ -158,7 +160,7 @@ def _get_state_changes(
     end_time: datetime,
     entity_ids: list[str],
     significant_attributes: dict[str, set[str]],
-    include_attributes: bool,
+    include_full_attributes: bool,
     limit: int,
 ) -> dict[str, Any]:
     """Fetch and format the state changes in the recorder executor."""
@@ -178,7 +180,7 @@ def _get_state_changes(
                     end_time,
                     query_ids,
                     significant_changes_only=not attribute_changes,
-                    no_attributes=not (attribute_changes or include_attributes),
+                    no_attributes=not (attribute_changes or include_full_attributes),
                 )
             )
     result: dict[str, Any] = {}
@@ -213,7 +215,11 @@ def _get_state_changes(
                 [
                     _format_time(state.last_updated_timestamp),
                     *values,
-                    *([json_dumps(state.attributes)] if include_attributes else []),
+                    *(
+                        [json_dumps(state.attributes)]
+                        if include_full_attributes
+                        else []
+                    ),
                 ]
             )
         entry["csv"] = _to_csv(
@@ -221,7 +227,7 @@ def _get_state_changes(
                 "time",
                 "state",
                 *columns,
-                *(["attributes"] if include_attributes else []),
+                *(["attributes"] if include_full_attributes else []),
             ],
             _limit_rows(entry, rows, limit),
         )
@@ -233,7 +239,9 @@ async def _async_get_significant_attributes(
     hass: HomeAssistant, entity_ids: list[str]
 ) -> dict[str, set[str]]:
     """Return the significant attributes declared by the entities' domains."""
-    domains = {split_entity_id(entity_id)[0] for entity_id in entity_ids}
+    domains = {
+        split_entity_id(entity_id)[0] for entity_id in entity_ids
+    } - _SKIP_SIGNIFICANT_ATTRIBUTES_DOMAINS
     result: dict[str, set[str]] = {}
     for domain, integration in (await async_get_integrations(hass, domains)).items():
         if isinstance(integration, Exception) or not integration.platforms_exists(
@@ -269,8 +277,8 @@ class GetHistoryTool(Tool):
         "periods. "
         f"Source '{SOURCE_STATE_CHANGES}' returns each recorded state change. Use "
         "it for entities without statistics, to find out when something changed, "
-        "or when the exact values are needed. For some domains, such as climate, "
-        "cover and media_player, it also returns the important attributes as "
+        "or when the exact values are needed. For some domains, such as climate "
+        "and cover, it also returns the important attributes as "
         "columns, with a row for each change of them. The first row is the state "
         "at the start of the period. Raw state changes are usually kept for 10 "
         "days. "
@@ -320,10 +328,11 @@ class GetHistoryTool(Tool):
                 ),
             ): probatio.In(_PERIODS),
             probatio.Optional(
-                "include_attributes",
+                "include_full_attributes",
                 description=(
                     f"Only for source '{SOURCE_STATE_CHANGES}': whether to include "
-                    "the state attributes as JSON (default: false)."
+                    "all state attributes as JSON, for example the media details "
+                    "of a media player (default: false)."
                 ),
                 default=False,
             ): probatio.All(probatio.Boolean(), bool),
@@ -387,7 +396,7 @@ class GetHistoryTool(Tool):
                 end_time,
                 args["entity_ids"],
                 await _async_get_significant_attributes(hass, args["entity_ids"]),
-                args["include_attributes"],
+                args["include_full_attributes"],
                 args["limit"],
             )
         return ToolResult(data={"result": result})

@@ -137,7 +137,7 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"entity_ids": [ENTITY_ID], "limit": 0}, id="limit_too_low"),
         pytest.param({"entity_ids": [ENTITY_ID], "limit": 1001}, id="limit_too_high"),
         pytest.param(
-            {"entity_ids": [ENTITY_ID], "include_attributes": "invalid"},
+            {"entity_ids": [ENTITY_ID], "include_full_attributes": "invalid"},
             id="invalid_boolean",
         ),
         pytest.param({"entity_ids": [ENTITY_ID], "source": "raw"}, id="source"),
@@ -226,7 +226,7 @@ async def test_call_through_api(
     [
         pytest.param({}, id="defaults"),
         pytest.param({"limit": 2}, id="limit"),
-        pytest.param({"include_attributes": True}, id="include_attributes"),
+        pytest.param({"include_full_attributes": True}, id="include_full_attributes"),
         pytest.param(
             {
                 "start_time": "2026-10-12T02:30:00",
@@ -367,7 +367,7 @@ async def test_statistics_state_unit(
 
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
-    ("include_attributes", "expected_csv"),
+    ("include_full_attributes", "expected_csv"),
     [
         pytest.param(
             False,
@@ -383,7 +383,7 @@ async def test_statistics_state_unit(
             '2026-10-12 01:00:00,open,30,"{""current_position"":30}"\n'
             '2026-10-12 02:00:00,open,80,"{""current_position"":80}"\n'
             '2026-10-12 04:00:00,closed,0,"{""current_position"":0,""friendly_name"":""Garage""}"\n',
-            id="include_attributes",
+            id="include_full_attributes",
         ),
     ],
 )
@@ -391,7 +391,7 @@ async def test_state_changes_significant_attributes(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     llm_context: llm.LLMContext,
-    include_attributes: bool,
+    include_full_attributes: bool,
     expected_csv: str,
 ) -> None:
     """Test significant attributes are returned as columns for state changes."""
@@ -417,7 +417,7 @@ async def test_state_changes_significant_attributes(
             {
                 "entity_ids": ["cover.garage"],
                 "source": "state_changes",
-                "include_attributes": include_attributes,
+                "include_full_attributes": include_full_attributes,
             },
         ),
         llm_context,
@@ -432,3 +432,59 @@ async def test_state_changes_significant_attributes(
             }
         }
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("include_full_attributes", "expected_csv"),
+    [
+        pytest.param(
+            False,
+            "time,state\n2026-10-12 01:00:00,playing\n2026-10-12 03:00:00,paused\n",
+            id="state_only",
+        ),
+        pytest.param(
+            True,
+            "time,state,attributes\n"
+            '2026-10-12 01:00:00,playing,"{""media_title"":""Song 1""}"\n'
+            '2026-10-12 03:00:00,paused,"{""media_title"":""Song 2""}"\n',
+            id="include_full_attributes",
+        ),
+    ],
+)
+async def test_state_changes_media_player(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    llm_context: llm.LLMContext,
+    include_full_attributes: bool,
+    expected_csv: str,
+) -> None:
+    """Test media player attributes are only returned when requested."""
+    freezer.move_to("2026-10-12 08:00:00+00:00")
+    assert await async_setup_component(hass, history.DOMAIN, {})
+    for state, title in (
+        ("playing", "Song 1"),
+        ("playing", "Song 2"),
+        ("paused", "Song 2"),
+    ):
+        hass.states.async_set("media_player.speaker", state, {"media_title": title})
+        await async_wait_recording_done(hass)
+        freezer.tick(timedelta(hours=1))
+
+    tool = GetHistoryTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_ids": ["media_player.speaker"],
+                "source": "state_changes",
+                "include_full_attributes": include_full_attributes,
+            },
+        ),
+        llm_context,
+    )
+
+    assert result.data["result"]["entities"] == {
+        "media_player.speaker": {"csv": expected_csv}
+    }
