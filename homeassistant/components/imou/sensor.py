@@ -113,7 +113,6 @@ SENSOR_DESCRIPTIONS: dict[str, ImouSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "use_time": ImouSensorEntityDescription(
         key="use_time",

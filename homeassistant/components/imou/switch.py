@@ -111,7 +111,6 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_WHITE_LIGHT,
         translation_key=PARAM_WHITE_LIGHT,
-        entity_category=EntityCategory.CONFIG,
     ),
 )
 
