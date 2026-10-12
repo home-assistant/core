@@ -206,6 +206,7 @@ class IndiAllSkyMediaSource(MediaSource):
 
         # Endpoints like latestimage, latestkeogram, lateststartrail, latesttimelapse
         # return a 302 redirect with Location header pointing to the actual media asset file.
+        content_type: str | None = None
         if path.startswith("latest"):
             verify_ssl: bool = entry.data.get(CONF_VERIFY_SSL, True)
             session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
@@ -217,6 +218,8 @@ class IndiAllSkyMediaSource(MediaSource):
                         location = resp.headers.get("Location")
                         if location:
                             url = str(yarl.URL(url).join(yarl.URL(location)))
+                    elif resp.status == 200:
+                        content_type = resp.headers.get("Content-Type")
             except (ClientError, TimeoutError) as err:
                 _LOGGER.debug(
                     "Could not resolve redirect location for %s: %s", url, err
@@ -225,6 +228,8 @@ class IndiAllSkyMediaSource(MediaSource):
         clean_url = url.split("?", maxsplit=1)[0].lower()
         if mime := mimetypes.guess_type(clean_url)[0]:
             mime_type = mime
+        elif content_type:
+            mime_type = content_type.split(";")[0].strip()
         elif path == "latesttimelapse":
             mime_type = "video/mp4"
         else:

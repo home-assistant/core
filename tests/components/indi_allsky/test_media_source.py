@@ -170,6 +170,23 @@ async def test_async_resolve_media_redirect_resolution(
         "video/mp4",
     )
 
+    # Extensionless latest endpoint returning 200 preserves direct Content-Type (e.g. video/webm)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        status=200,
+        headers={"Content-Type": "video/webm; charset=utf-8"},
+    )
+    resolved_tl_direct_ct = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latesttimelapse",
+        None,
+    )
+    assert resolved_tl_direct_ct == PlayMedia(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0dGltZWxhcHNl",
+        "video/webm",
+    )
+
     # Latest timelapse redirecting to .webm uses detected video/webm
     mock_indi_allsky_client.get_media_url.return_value = (
         "https://127.0.0.1:443/indi-allsky/latesttimelapse"
