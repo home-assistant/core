@@ -616,6 +616,19 @@ async def test_user_offline_device_reports_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
+    # device becomes reachable again; the flow must finish, not just error
+    mock_gds_api.is_online = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    _assert_created_entry(hass, result)
+
 
 async def test_zeroconf_adopts_host_port_fallback_entry(
     hass: HomeAssistant,

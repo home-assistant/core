@@ -2,14 +2,18 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.grandstream_home.const import DOMAIN
+from homeassistant.components.grandstream_home.const import (
+    COORDINATOR_UPDATE_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_gds_api")
@@ -152,14 +156,17 @@ async def test_setup_api_invalid_auth_error(
 
 
 async def test_coordinator_update_failed_exception(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handles exception during update."""
     with patch(
         "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
         side_effect=RuntimeError("Connection error"),
     ):
-        await init_integration.runtime_data.coordinator.async_request_refresh()
+        freezer.tick(COORDINATOR_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert init_integration.runtime_data.coordinator.last_update_success is False
@@ -169,13 +176,15 @@ async def test_coordinator_firmware_update(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     device_registry: DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator updates firmware version in device registry."""
     with patch(
         "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
         return_value={"phone_status": "available", "version": "1.0.0"},
     ):
-        await init_integration.runtime_data.coordinator.async_request_refresh()
+        freezer.tick(COORDINATOR_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
@@ -186,14 +195,17 @@ async def test_coordinator_firmware_update(
 
 
 async def test_coordinator_null_result(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handles None result from fetch."""
     with patch(
         "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
         return_value=None,
     ):
-        await init_integration.runtime_data.coordinator.async_request_refresh()
+        freezer.tick(COORDINATOR_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert init_integration.runtime_data.coordinator.last_update_success is False
