@@ -934,6 +934,53 @@ async def test_total_survives_a_torn_first_poll_after_reload(
     assert hass.states.get(entity_id).state == "1000.0"
 
 
+async def test_restored_total_does_not_lower_the_first_poll_mark(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a torn read stays held after the first poll passed the restore."""
+    mock_config_entry.add_to_hass(hass)
+    entity_id = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL}_load_consumption_total",
+        config_entry=mock_config_entry,
+    ).entity_id
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(entity_id, "990.0"),
+                {"native_value": 990.0, "native_unit_of_measurement": "kWh"},
+            )
+        ],
+    )
+    unit = mock_connection.for_unit(1)
+    unit.holding[0x068A] = 0
+    unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert hass.states.get(entity_id).state == "1000.0"
+
+        # Torn: inside the 1% dip band of 1000.0, but above the restore.
+        unit.holding[0x068B] = 9950
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "1000.0"
+
+
 async def test_battery_pack_appears_once_its_block_answers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
