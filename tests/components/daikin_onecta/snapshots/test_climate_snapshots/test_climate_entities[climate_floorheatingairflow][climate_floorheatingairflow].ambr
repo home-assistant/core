@@ -28,10 +28,10 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
             'stop',
@@ -99,10 +99,10 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
           <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
@@ -155,10 +155,10 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
             'stop',
@@ -222,10 +222,10 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
           <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'stop',

@@ -1137,6 +1137,22 @@ def test_supported_features_require_writable_controls(power_settable: bool) -> N
     assert bool(features & ClimateEntityFeature.TURN_OFF) is power_settable
 
 
+def test_preset_modes_start_with_none() -> None:
+    """Keep the neutral preset before alphabetically ordered supported presets."""
+    entity = object.__new__(DaikinClimate)
+    entity._preset_characteristic = MagicMock(
+        return_value=SimpleNamespace(settable=True)
+    )
+
+    assert entity._get_preset_modes() == [
+        PRESET_NONE,
+        PRESET_AWAY,
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_ECO,
+    ]
+
+
 def test_preset_modes_require_writable_characteristics() -> None:
     """Do not advertise a read-only Daikin preset control."""
     entity = object.__new__(DaikinClimate)
