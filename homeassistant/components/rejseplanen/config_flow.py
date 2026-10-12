@@ -138,6 +138,8 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 entry = self._get_reauth_entry()
                 if entry.update_listeners:
+                    if entry.data[CONF_API_KEY] == auth_key:
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
                     return self.async_update_and_abort(
                         entry,
                         data_updates={CONF_API_KEY: auth_key},
