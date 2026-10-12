@@ -960,6 +960,92 @@ async def test_stdin_transport_failure_keeps_child_diagnostic(
             await asyncio.gather(owner, return_exceptions=True)
 
 
+@pytest.mark.parametrize("exit_code", [None, 7], ids=["live-child", "slow-failure"])
+async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
+    ffmpeg_ready: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    exit_code: int | None,
+) -> None:
+    """Observe an OS pipe failure without waiting for the writer's held close."""
+    release_finalizer = asyncio.Event()
+    finalizer_entered = asyncio.Event()
+    transport_failed = asyncio.Event()
+    processes = []
+    spawn_os = asyncio.create_subprocess_exec
+    script = (
+        "import os,time,sys;os.close(0);time.sleep(0.05);"
+        "os.write(2,b'held-finalizer child failure\\n');sys.exit(7)"
+        if exit_code is not None
+        else "import os,time;os.close(0);time.sleep(30)"
+    )
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(sys.executable, "-c", script, **kwargs)
+        processes.append(process)
+        assert process.stdin is not None
+        drain = process.stdin.drain
+
+        async def observe_drain():
+            try:
+                await drain()
+            except BrokenPipeError:
+                transport_failed.set()
+                raise
+
+        process.stdin.drain = observe_drain
+        return process
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"R" * (8 * 1024 * 1024)  # Force real OS pipe pressure.
+        finally:
+            finalizer_entered.set()
+            try:
+                await release_finalizer.wait()
+            except asyncio.CancelledError:
+                # A slow close can continue under bounded supervision.
+                await release_finalizer.wait()
+
+    owner = None
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        ):
+            owner = asyncio.create_task(
+                _collect(tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav"))
+            )
+            await asyncio.wait_for(finalizer_entered.wait(), 3)
+            assert transport_failed.is_set()  # Real StreamWriter.drain raised.
+            # Observation never cancels the owner, child or source. These
+            # assertions happen before any harness release/kill/cancellation.
+            if exit_code is None:
+                with pytest.raises(BrokenPipeError):
+                    await _observe(owner, 3)
+                assert processes[0].returncode is not None
+            else:
+                with pytest.raises(
+                    HomeAssistantError, match="Unexpected error while running ffmpeg"
+                ):
+                    await _observe(owner, 3)
+                assert processes[0].returncode == 7
+                assert any(
+                    "held-finalizer child failure" in record.message
+                    for record in caplog.records
+                )
+            assert not release_finalizer.is_set()
+    finally:
+        # Harness cleanup only after the observable outcome and reaping checks.
+        if owner is not None and not owner.done():
+            owner.cancel()
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        release_finalizer.set()
+        if owner is not None:
+            await asyncio.wait_for(asyncio.gather(owner, return_exceptions=True), 5)
+
+
 @pytest.mark.parametrize("paused", [False, True], ids=["eager", "paused-yield"])
 async def test_completed_writer_source_error_interrupts_held_child(
     ffmpeg_ready: HomeAssistant,

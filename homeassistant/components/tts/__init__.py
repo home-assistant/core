@@ -414,6 +414,7 @@ async def _async_convert_audio(  # noqa: C901
     input_exhausted = False
     source_read_error: BaseException | None = None
     stdin_error: OSError | None = None
+    stdin_failed = asyncio.Event()
 
     if is_input_gen:
         # Input is a generator, so we must manually feed in chunks
@@ -439,6 +440,7 @@ async def _async_convert_audio(  # noqa: C901
                         await process.stdin.drain()
                     except (BrokenPipeError, ConnectionResetError) as err:
                         stdin_error = err
+                        stdin_failed.set()
                         raise
             except BaseException as err:
                 primary = err
@@ -474,21 +476,34 @@ async def _async_convert_audio(  # noqa: C901
         _async_ffmpeg_stderr(process.stderr, diagnostic), "tts_ffmpeg_stderr"
     )
     wait_task = hass.async_create_background_task(process.wait(), "tts_ffmpeg_wait")
+    stdin_failure_task = (
+        hass.async_create_background_task(
+            stdin_failed.wait(), "tts_ffmpeg_stdin_failure"
+        )
+        if is_input_gen
+        else None
+    )
     read_task: asyncio.Task | None = None
     complete = False
     try:
         while True:
             if source_read_error is not None:
                 raise source_read_error
-            if writer_task is not None and writer_task.done() and not input_exhausted:
+            if (
+                writer_task is not None
+                and not input_exhausted
+                and (stdin_error is not None or writer_task.done())
+            ):
                 if stdin_error is not None:
-                    # A broken stdin is a child transport failure, not a
-                    # provider error. Give its exit task a bounded chance to
-                    # expose a nonzero status and the concurrently drained stderr.
+                    # Transport failure can precede a held source finalizer.
+                    # Give an exiting child bounded time for its diagnostic.
                     if not wait_task.done():
                         await asyncio.wait({wait_task}, timeout=0.1)
+                    if source_read_error is not None:
+                        raise source_read_error
                     if wait_task.done() and wait_task.result() != 0:
                         break
+                    raise stdin_error
                 writer_task.result()
             read_task = hass.async_create_background_task(
                 process.stdout.read(FFMPEG_CHUNK_SIZE), "tts_ffmpeg_stdout"
@@ -498,20 +513,29 @@ async def _async_convert_audio(  # noqa: C901
                 pending.add(wait_task)
             if writer_task is not None and not writer_task.done():
                 pending.add(writer_task)
+            if stdin_failure_task is not None and not stdin_failure_task.done():
+                pending.add(stdin_failure_task)
             done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
             if source_read_error is not None:
                 # Do not let a later source close or child failure replace an
                 # error already observed while reading input.
                 raise source_read_error
-            if writer_task is not None and writer_task.done() and not input_exhausted:
+            if (
+                writer_task is not None
+                and not input_exhausted
+                and (stdin_error is not None or writer_task.done())
+            ):
                 if stdin_error is not None:
                     if not wait_task.done():
                         await asyncio.wait({wait_task}, timeout=0.1)
+                    if source_read_error is not None:
+                        raise source_read_error
                     if wait_task.done() and wait_task.result() != 0:
                         read_task.cancel()
                         await _async_ffmpeg_join(read_task)
                         read_task = None
                         break
+                    raise stdin_error
                 writer_task.result()
             if read_task in done:
                 chunk = read_task.result()
@@ -562,6 +586,9 @@ async def _async_convert_audio(  # noqa: C901
         await stderr_task
         complete = True
     finally:
+        if stdin_failure_task is not None:
+            stdin_failure_task.cancel()
+            await _async_ffmpeg_join(stdin_failure_task)
         if not complete:
             if writer_task is not None and not writer_task.done():
                 writer_task.cancel()
