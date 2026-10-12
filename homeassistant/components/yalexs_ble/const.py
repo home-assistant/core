@@ -50,8 +50,3 @@ def changed_by_for_source(
             return "Keypad"
         return name or f"Keypad slot {slot}"
     return CHANGED_BY_BY_SOURCE.get(source)
-
-
-def activity_signal(address: str) -> str:
-    """Return the dispatcher signal for lock activities of a lock."""
-    return f"{DOMAIN}_activity_{address}"

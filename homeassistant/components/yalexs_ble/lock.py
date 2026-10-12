@@ -26,7 +26,6 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -42,7 +41,6 @@ from .const import (
     DOMAIN,
     EVENT_LOCK_ACTIVITY,
     HA_OPERATION_TIMEOUT_SECONDS,
-    activity_signal,
     changed_by_for_source,
 )
 from .entity import YALEXSBLEEntity
@@ -67,8 +65,14 @@ UNLOCK_STATUSES = frozenset({LockStatus.UNLOCKED})
 
 
 def _keycode_slot_unchanged(err: BaseException | None) -> bool:
-    """Return if a failed set left the slot as it was, as only the clear step failed."""
-    return isinstance(err, KeycodeError) and err.command == "clear_keycode"
+    """Return if a failed set left the slot as it was.
+
+    That is when only the clear step failed, or the lock was not running so
+    nothing was sent.
+    """
+    return isinstance(err, RuntimeError) or (
+        isinstance(err, KeycodeError) and err.command == "clear_keycode"
+    )
 
 
 @contextmanager
@@ -288,9 +292,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     async def async_added_to_hass(self) -> None:
         """Register the activity listener."""
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, activity_signal(self._device.address), self._async_activity
-            )
+            self._data.async_add_activity_listener(self._async_activity)
         )
         await super().async_added_to_hass()
 

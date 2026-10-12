@@ -137,9 +137,17 @@ class MockLock:
 
 
 @pytest.fixture
-def mock_lock() -> MockLock:
+def lock_address() -> str:
+    """Return the address the mocked PushLock reports at runtime."""
+    return YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+
+
+@pytest.fixture
+def mock_lock(lock_address: str) -> MockLock:
     """Return a mocked lock."""
-    return MockLock()
+    lock = MockLock()
+    lock.push_lock.address = lock_address
+    return lock
 
 
 @pytest.fixture
@@ -341,6 +349,7 @@ async def test_set_credential_errors(
             None,
             id="commit_failed",
         ),
+        pytest.param(RuntimeError("not running"), "Guest", id="not_running"),
         pytest.param(BleakError("gone"), None, id="bleak"),
     ],
 )
@@ -936,6 +945,23 @@ async def test_credential_action_does_not_suppress_attribution(
 
 
 @pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    "lock_address", [pytest.param("11:22:33:44:55:66", id="runtime_address_differs")]
+)
+async def test_activity_reaches_entity_with_different_runtime_address(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test attribution does not depend on the runtime address matching the entry."""
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await _settle(hass, freezer)
+    assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Keypad slot 3"
+
+
+@pytest.mark.usefixtures("entry")
 async def test_changed_by_cleared_on_ha_initiated_change(
     hass: HomeAssistant,
     mock_lock: MockLock,
@@ -1293,8 +1319,12 @@ async def test_unload_unregisters_and_remove_deletes_store(
     key = STORAGE_KEY.format(entry.entry_id)
     assert key in hass_storage
 
+    listeners = entry.runtime_data.activity_listeners
+    assert listeners
+
     await hass.config_entries.async_unload(entry.entry_id)
     mock_lock.unregister_activity.assert_called_once_with()
+    assert not listeners
 
     await hass.config_entries.async_remove(entry.entry_id)
     assert key not in hass_storage

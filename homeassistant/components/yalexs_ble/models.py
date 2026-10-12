@@ -1,12 +1,13 @@
 """The yalexs_ble integration models."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from yalexs_ble import LockActivity, LockState, LockStatus, PushLock
+from yalexs_ble import DoorActivity, LockActivity, LockState, LockStatus, PushLock
 
-from homeassistant.core import Context
+from homeassistant.core import CALLBACK_TYPE, Context, callback
 
 from .store import CredentialNames
 
@@ -35,3 +36,14 @@ class YaleXSBLEData:
     credential_operations: dict[
         tuple[str, str, tuple[tuple[str, Any], ...]], asyncio.Task[Any]
     ] = field(default_factory=dict)
+    activity_listeners: set[Callable[[LockActivity | DoorActivity], None]] = field(
+        default_factory=set
+    )
+
+    @callback
+    def async_add_activity_listener(
+        self, listener: Callable[[LockActivity | DoorActivity], None]
+    ) -> CALLBACK_TYPE:
+        """Add a lock activity listener and return a function to remove it."""
+        self.activity_listeners.add(listener)
+        return lambda: self.activity_listeners.discard(listener)

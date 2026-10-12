@@ -1,5 +1,7 @@
 """The Yale Access Bluetooth integration."""
 
+from collections.abc import Callable
+
 from yalexs_ble import (
     AuthError,
     ConnectionInfo,
@@ -20,7 +22,6 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .config_cache import async_get_validated_config
@@ -32,7 +33,6 @@ from .const import (
     CONF_SLOT,
     DEVICE_TIMEOUT,
     DOMAIN,
-    activity_signal,
 )
 from .models import YaleXSBLEData
 from .services import async_setup_services
@@ -84,10 +84,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
 
+    activity_listeners: set[Callable[[LockActivity | DoorActivity], None]] = set()
+
     @callback
     def _async_activity(activity: LockActivity | DoorActivity) -> None:
         """Fan a lock activity out to the lock entities."""
-        async_dispatcher_send(hass, activity_signal(address), activity)
+        for listener in tuple(activity_listeners):
+            listener(activity)
 
     # Registered before start so the library's first activity read is primed.
     entry.async_on_unload(push_lock.register_activity_callback(_async_activity))
@@ -167,6 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         always_connected,
         credential_names,
         entry.options.get(CONF_MASTER_CODE_NAME) or None,
+        activity_listeners=activity_listeners,
     )
 
     @callback
