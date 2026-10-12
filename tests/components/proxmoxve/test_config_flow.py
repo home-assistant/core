@@ -160,6 +160,10 @@ async def test_form(
             "connect_timeout",
         ),
         (
+            ProxmoxAPIError(401, "status_message", "cluster/resources"),
+            "invalid_auth",
+        ),
+        (
             ProxmoxAPIError(500, "status_message", "cluster/resources"),
             "api_error_no_details",
         ),
@@ -219,6 +223,10 @@ async def test_form_exceptions(
         (
             aiohttp.ClientConnectionError("Connection error"),
             "cannot_connect",
+        ),
+        (
+            TimeoutError("Connection timed out"),
+            "connect_timeout",
         ),
     ],
 )

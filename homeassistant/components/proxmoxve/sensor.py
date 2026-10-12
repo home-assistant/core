@@ -72,7 +72,9 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
         key="node_cpu",
         translation_key="node_cpu",
-        value_fn=lambda data: data.node.cpu * 100,
+        value_fn=lambda data: (
+            data.node.cpu * 100 if data.node.cpu is not None else None
+        ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
@@ -136,7 +138,11 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
         key="node_memory_percentage",
         translation_key="node_memory_percentage",
-        value_fn=lambda data: data.node.mem / data.node.maxmem * 100,
+        value_fn=lambda data: (
+            data.node.mem / data.node.maxmem * 100
+            if data.node.mem is not None and data.node.maxmem
+            else None
+        ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
@@ -169,7 +175,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         translation_key="node_backup_last_backup",
         value_fn=lambda data: (
             dt_util.utc_from_timestamp(data.backups[0].endtime)
-            if data.backups
+            if data.backups and data.backups[0].endtime is not None
             else None
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -181,7 +187,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         translation_key="node_backup_duration",
         value_fn=lambda data: (
             data.backups[0].endtime - data.backups[0].starttime
-            if data.backups
+            if data.backups and data.backups[0].endtime is not None
             else None
         ),
         device_class=SensorDeviceClass.DURATION,
