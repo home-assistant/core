@@ -1148,6 +1148,34 @@ async def test_streamable_api_id_exposes_registered_api(
     assert result.prompts[0].name == "Test API"
 
 
+@pytest.mark.parametrize("read_only", [True])
+async def test_streamable_api_id_ignores_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the keyed endpoint keeps write controls when the read-only option is on."""
+    client = await hass_client()
+    mcp_url = str(client.make_url(f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}"))
+
+    async with mcp_streamable_session(
+        hass, mcp_url, hass_supervisor_access_token
+    ) as session:
+        result = await session.list_tools()
+        assert "intent__HassTurnOn" in {tool.name for tool in result.tools}
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert not result.isError
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+
+
 async def test_streamable_api_id_requires_admin(
     hass: HomeAssistant,
     setup_integration: None,
