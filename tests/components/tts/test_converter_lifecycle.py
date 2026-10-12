@@ -1175,12 +1175,20 @@ async def test_manager_converted_wrapper_forwards_close(
 class _ExhaustedSource(AsyncGenerator[bytes]):
     """Separate input exhaustion from an independently delayed source close."""
 
-    def __init__(self, delay: float, fails: bool = False) -> None:
+    def __init__(
+        self,
+        delay: float,
+        fails: bool = False,
+        exit_before_failure: asyncio.Event | None = None,
+    ) -> None:
         self.pulled = False
         self.close_entered = asyncio.Event()
         self.closed = asyncio.Event()
+        self.close_failed = asyncio.Event()
+        self.failure = RuntimeError("secondary close failure")
         self.delay = delay
         self.fails = fails
+        self.exit_before_failure = exit_before_failure
 
     async def asend(self, value) -> bytes:  # codespell:ignore asend
         if self.pulled:
@@ -1199,7 +1207,10 @@ class _ExhaustedSource(AsyncGenerator[bytes]):
         try:
             await asyncio.sleep(self.delay)
             if self.fails:
-                raise RuntimeError("secondary close failure")
+                if self.exit_before_failure is not None:
+                    await self.exit_before_failure.wait()
+                self.close_failed.set()
+                raise self.failure
         finally:
             self.closed.set()
 
@@ -1212,30 +1223,68 @@ async def test_failed_child_during_exhausted_source_close_is_primary(
     fails: bool,
 ) -> None:
     """Known nonzero child failure must not await or inherit source finalization."""
-    source = _ExhaustedSource(delayed_close, fails)
+    # The failed-close variant cannot use a 50 ms race against OS startup.
+    # Only actual process exit releases its source error; the child first reads
+    # stdin to EOF so input exhaustion and close entry precede its exit.
+    child_exited = asyncio.Event()
+    source = _ExhaustedSource(delayed_close, fails, child_exited if fails else None)
     original = asyncio.create_subprocess_exec
     processes = []
+    writer_tasks: list[asyncio.Task] = []
+    create_background = ffmpeg_ready.async_create_background_task
+
+    def background(coro, name, eager_start=True):
+        task = create_background(coro, name, eager_start=eager_start)
+        if name == "tts_ffmpeg_conversion":
+            writer_tasks.append(task)
+        return task
 
     async def spawn(*args, **kwargs):
         process = await original(
             sys.executable,
             "-c",
-            "import os,sys;os.write(2,b'failure detail\\n');sys.exit(7)",
+            "import os,sys;sys.stdin.buffer.read();os.write(2,b'failure detail\\n');sys.exit(7)",
             **kwargs,
         )
+        real_wait = process.wait
+
+        async def observed_wait():
+            result = await real_wait()
+            current = asyncio.current_task()
+            if (
+                fails
+                and current is not None
+                and current.get_name() == "tts_ffmpeg_wait"
+            ):
+                assert result == 7  # Actual exit, not a patched status.
+                child_exited.set()
+                # Do not wake the converter with the child result before its
+                # writer has raised the source's exact close exception.
+                await source.closed.wait()
+            return result
+
+        process.wait = observed_wait
         processes.append(process)
         return process
 
     owner = None
     try:
-        with patch(
-            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        with (
+            patch.object(ffmpeg_ready, "async_create_background_task", background),
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
         ):
             owner = asyncio.create_task(
                 _collect(tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav"))
             )
             await asyncio.wait_for(source.close_entered.wait(), 3)
+            assert source.pulled
             assert await asyncio.wait_for(processes[0].wait(), 3) == 7
+            if fails:
+                await asyncio.wait_for(source.close_failed.wait(), 3)
+                assert child_exited.is_set()
+                done, _ = await asyncio.wait({writer_tasks[0]}, timeout=3)
+                assert writer_tasks[0] in done
+                assert writer_tasks[0].exception() is source.failure
             with pytest.raises(
                 HomeAssistantError, match="Unexpected error while running ffmpeg"
             ):
