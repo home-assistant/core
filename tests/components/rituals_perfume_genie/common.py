@@ -1,5 +1,6 @@
 """Common methods used across tests for Rituals Perfume Genie."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import AsyncMock, create_autospec, patch
@@ -9,6 +10,7 @@ from ritualsgenie import (
     RitualsGenieHub,
     RitualsGenieSensor,
     RitualsGenieSensors,
+    Sensor,
 )
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
@@ -19,6 +21,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 ROOM_SIZES = {15: "1", 30: "2", 60: "3", 100: "4"}
+SENSOR_FIELDS = {
+    "battery": Sensor.BATTERY,
+    "fill": Sensor.FILL,
+    "perfume": Sensor.PERFUME,
+    "wifi": Sensor.WIFI,
+}
 WIFI_ICONS = {
     100: "icon-signal.png",
     75: "icon-signal-75.png",
@@ -94,21 +102,36 @@ class MockDiffuser:
             }
         )
 
-    def sensors(self) -> RitualsGenieSensors:
+    def sensors(self, only: Iterable[Sensor] | None = None) -> RitualsGenieSensors:
         """Return the sensor readings, as the API would send them."""
-        return RitualsGenieSensors(
-            battery=(
+        wanted = set(Sensor) if only is None else set(only)
+        readings = {
+            "battery": (
                 RitualsGenieSensor(
                     icon="battery-full.png", id=21 if self.charging else 1
                 )
                 if self.has_battery
                 else None
             ),
-            fill=RitualsGenieSensor(title=self.fill, raw="1000") if self.fill else None,
-            perfume=RitualsGenieSensor(
-                title=self.perfume, raw="048616d0" if self.has_cartridge else "0"
-            ),
-            wifi=RitualsGenieSensor(icon=WIFI_ICONS[self.wifi_percentage]),
+            "fill": self.sensor(Sensor.FILL) if self.fill else None,
+            "perfume": self.sensor(Sensor.PERFUME),
+            "wifi": RitualsGenieSensor(icon=WIFI_ICONS[self.wifi_percentage]),
+        }
+        return RitualsGenieSensors(
+            **{
+                field: reading
+                for field, reading in readings.items()
+                if SENSOR_FIELDS[field] in wanted
+            }
+        )
+
+    def sensor(self, sensor: Sensor) -> RitualsGenieSensor:
+        """Return a single sensor reading, as the API would send it."""
+        if sensor is Sensor.FILL:
+            return RitualsGenieSensor(title=self.fill, raw="1000")
+
+        return RitualsGenieSensor(
+            title=self.perfume, raw="048616d0" if self.has_cartridge else "0"
         )
 
 
@@ -154,7 +177,10 @@ def mock_client(diffusers: list[MockDiffuser]) -> AsyncMock:
     client = create_autospec(RitualsGenie, instance=True)
     client.hubs.side_effect = lambda: [diffuser.hub() for diffuser in diffusers]
     client.hub.side_effect = lambda hub_hash: by_hash[hub_hash].hub()
-    client.sensors.side_effect = lambda hub, only=None: by_hash[hub.hash].sensors()
+    client.sensors.side_effect = lambda hub, only=None: by_hash[hub.hash].sensors(only)
+    client.sensor.side_effect = lambda hub_hash, sensor: by_hash[hub_hash].sensor(
+        sensor
+    )
 
     return client
 
