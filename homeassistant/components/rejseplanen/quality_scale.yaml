@@ -36,15 +36,11 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: Due to high availability REST API
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: Integration does not use authentication requiring reauth
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -54,8 +50,7 @@ rules:
       ensure devices are owned by subentries (not yet implemented)
   diagnostics:
     status: todo
-    comment: Coordinator exposes diagnostics_attributes but integration-level
-      diagnostics collection (async_get_config_entry_diagnostics) is not added
+    comment: Integration does not implement diagnostics platform
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
