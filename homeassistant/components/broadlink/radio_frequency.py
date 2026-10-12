@@ -64,7 +64,7 @@ def encode_rf_packet(
                          0x00 followed by a 2-byte big-endian tick count
 
     Each pulse is expressed as multiples of the Broadlink timing unit
-    (about 30.45 µs, ``broadlink.remote.TICK``), which is the timing
+    (about 30.45 µs, ``broadlink_async.remote.TICK``), which is the timing
     resolution of the RF front-end.
     """
     buf = bytearray([type_byte, repeat_count, 0, 0])
