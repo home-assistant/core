@@ -90,7 +90,7 @@
       "display_direction": {
         "name": "Display orientation",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "reversed": "Rotated by 180°"
         }
       },
