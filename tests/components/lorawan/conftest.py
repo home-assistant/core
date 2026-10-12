@@ -33,10 +33,10 @@ def mock_connection() -> MockConnection:
 
 
 @pytest.fixture(autouse=True)
-def provider_integration(
+def connection_integration(
     hass: HomeAssistant, mock_connection: MockConnection
 ) -> Generator[None]:
-    """Mock a connection provider integration."""
+    """Mock a connection integration."""
 
     async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(
@@ -62,7 +62,7 @@ def provider_integration(
 
 
 @pytest.fixture(autouse=True)
-def vendor_integration(hass: HomeAssistant) -> Generator[None]:
+def device_integration(hass: HomeAssistant) -> Generator[None]:
     """Mock a device integration with a sensor platform."""
 
     async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
