@@ -1,5 +1,6 @@
 """Tests for Victron GX firmware updates."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -120,10 +121,19 @@ async def test_install_firmware_update_service(
         if entry.domain == UPDATE_DOMAIN
     )
 
+    async def install_firmware_update(
+        progress_callback: Callable[[int], None],
+    ) -> None:
+        progress_callback(42)
+        state = hass.states.get(update_entry.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+        assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 42
+
     with patch.object(
         config_entry.runtime_data,
         "install_firmware_update",
-        new=AsyncMock(),
+        new=AsyncMock(side_effect=install_firmware_update),
     ) as install:
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -133,8 +143,10 @@ async def test_install_firmware_update_service(
         )
 
     install.assert_awaited_once()
-    assert install.await_args is not None
-    assert callable(install.await_args.args[0])
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
 async def test_install_propagates_translated_failure_and_clears_progress(
