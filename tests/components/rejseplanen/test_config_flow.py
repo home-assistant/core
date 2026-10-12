@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from py_rejseplan import enums
+from py_rejseplan.exceptions import ConnectionError as RejseplanenConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -55,15 +56,26 @@ async def test_form_user_step(
 
 
 @pytest.mark.parametrize(
-    ("return_value", "expected_errors"),
+    ("side_effect", "return_value", "expected_errors"),
     [
-        # Invalid authentication
-        (False, {"base": "invalid_auth"}),
+        pytest.param(
+            None,
+            False,
+            {"base": "invalid_auth"},
+            id="invalid_auth",
+        ),
+        pytest.param(
+            RejseplanenConnectionError("Connection refused"),
+            None,
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
     ],
 )
 async def test_config_flow_error_cases(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    side_effect: Exception | None,
     return_value: bool,
     expected_errors: dict[str, str],
 ) -> None:
@@ -77,7 +89,7 @@ async def test_config_flow_error_cases(
         "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
     ) as mock_client:
         mock_client.return_value.validate_auth_key_async = AsyncMock(
-            return_value=return_value
+            side_effect=side_effect, return_value=return_value
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
