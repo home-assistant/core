@@ -125,6 +125,14 @@
           "middle": "[%key:common::state::medium%]"
         }
       },
+      "state_after_power_outage": {
+        "name": "State after power outage",
+        "state": {
+          "last_state": "Last state",
+          "off": "Off",
+          "on": "On"
+        }
+      },
       "vibration_sensitivity": {
         "name": "Vibration sensitivity",
         "state": {
