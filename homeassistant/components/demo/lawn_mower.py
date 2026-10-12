@@ -9,7 +9,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,6 +44,7 @@ class StateDemoLawnMower(LawnMowerEntity):
     _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "model_s"
+    _cancel_dock: CALLBACK_TYPE | None = None
 
     def __init__(
         self, unique_id: str, name: str, supported_features: LawnMowerEntityFeature
@@ -60,31 +61,49 @@ class StateDemoLawnMower(LawnMowerEntity):
     @override
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
+        self._async_cancel_dock()
         self._attr_activity = LawnMowerActivity.MOWING
         self.async_write_ha_state()
 
     @override
     async def async_dock(self) -> None:
         """Dock the mower."""
+        self._async_cancel_dock()
         self._attr_activity = LawnMowerActivity.RETURNING
         self.async_write_ha_state()
-        self.async_on_remove(
-            event.async_call_later(self.hass, 5, self.__set_state_to_dock)
+        self._cancel_dock = event.async_call_later(
+            self.hass, 5, self.__set_state_to_dock
         )
 
     @override
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
+        self._async_cancel_dock()
         self._attr_activity = LawnMowerActivity.PAUSED
         self.async_write_ha_state()
 
     @override
     async def async_stop(self) -> None:
         """Stop the lawn mower."""
+        self._async_cancel_dock()
         self._attr_activity = LawnMowerActivity.IDLE
         self.async_write_ha_state()
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel a pending dock when the entity is removed."""
+        self._async_cancel_dock()
+
+    @callback
+    def _async_cancel_dock(self) -> None:
+        """Cancel a pending dock."""
+        if self._cancel_dock:
+            self._cancel_dock()
+            self._cancel_dock = None
+
+    @callback
     def __set_state_to_dock(self, _: datetime) -> None:
         """Called later to set the state to docked."""
+        self._cancel_dock = None
         self._attr_activity = LawnMowerActivity.DOCKED
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
