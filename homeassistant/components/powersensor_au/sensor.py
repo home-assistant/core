@@ -57,11 +57,7 @@ from .const import (
     UPDATE_VHH_SIGNAL,
 )
 from .entity import PowersensorEntity
-from .models import (
-    PowersensorConfigEntry,
-    PowersensorRuntimeData,
-    PowersensorVirtualHouseholdState,
-)
+from .models import PowersensorConfigEntry, PowersensorRuntimeData
 from .powersensor_message_dispatcher import PowersensorMessageDispatcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -397,6 +393,26 @@ PRODUCTION_DESCRIPTIONS: tuple[
 )
 
 
+@dataclass
+class PowersensorVirtualHouseholdState:
+    """Tracks which Virtual Household entity groups have been added to HA.
+
+    Both flags are one-way within a session: a group is never removed once
+    added.  Household figures are only correct while every contributing sensor
+    is reporting, so a solar sensor that stops reporting must still count as
+    part of the household — its entities stay and withhold data rather than
+    disappearing and taking their recorded energy history with them.  A
+    household that has genuinely lost its solar array needs the integration
+    set up again.
+
+    Owned by async_setup_entry's closure and reset on every reload so that a
+    fresh load always starts clean.
+    """
+
+    mains_added: bool = False
+    solar_added: bool = False
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowersensorConfigEntry,
@@ -715,6 +731,7 @@ class PowersensorHouseholdEntity(SensorEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to VirtualHousehold events."""
+        await super().async_added_to_hass()
         desc = self.entity_description
         self.async_on_remove(lambda: self._vhh.unsubscribe(desc.event, self._on_event))
         self._vhh.subscribe(desc.event, self._on_event)

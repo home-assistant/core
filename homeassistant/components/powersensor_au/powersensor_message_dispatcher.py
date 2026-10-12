@@ -257,7 +257,7 @@ class PowersensorMessageDispatcher:
         mac = event.get("mac")
         if mac is None:
             return
-        _LOGGER.info("Device lost: %s", mac)
+        _LOGGER.debug("Device lost: %s", mac)
 
     async def _handle_measurement(
         self, event_type: str, message: dict[str, Any]

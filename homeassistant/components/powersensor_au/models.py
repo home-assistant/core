@@ -11,27 +11,6 @@ from .powersensor_message_dispatcher import PowersensorMessageDispatcher
 
 
 @dataclass
-class PowersensorVirtualHouseholdState:
-    """Tracks which Virtual Household entity groups have been added to HA.
-
-    Both flags are one-way within a session: a group is never removed once
-    added.  Household figures are only correct while every contributing sensor
-    is reporting, so a solar sensor that stops reporting must still count as
-    part of the household — its entities stay and withhold data rather than
-    disappearing and taking their recorded energy history with them.  A
-    household that has genuinely lost its solar array needs the integration
-    set up again.
-
-    Owned by sensor.py's async_setup_entry closure and reset on every reload
-    so that a fresh load always starts clean.  Held in models.py so it can be
-    imported and constructed directly in tests without going through setup.
-    """
-
-    mains_added: bool = False
-    solar_added: bool = False
-
-
-@dataclass
 class PowersensorRuntimeData:
     """Typed container for data stored on a Powersensor config entry.
 
