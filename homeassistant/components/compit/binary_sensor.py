@@ -79,7 +79,7 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
     ),
     CompitParameter.VENTILATION_FILTER: BinarySensorEntityDescription(
         key=CompitParameter.VENTILATION_FILTER.value,
-        translation_key="ventilation_filter",
+        translation_key="ventilation_filter_dirty",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

@@ -152,7 +152,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[binary_sensor.nano_color_2_ventilation_filter-entry]
+# name: test_binary_sensor_entities_snapshot[binary_sensor.nano_color_2_ventilation_filter_dirty-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.nano_color_2_ventilation_filter',
+    'entity_id': 'binary_sensor.nano_color_2_ventilation_filter_dirty',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,29 +174,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Ventilation filter',
+    'object_id_base': 'Ventilation filter dirty',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Ventilation filter',
+    'original_name': 'Ventilation filter dirty',
     'platform': 'compit',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ventilation_filter',
+    'translation_key': 'ventilation_filter_dirty',
     'unique_id': '2_VENTILATION_FILTER',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[binary_sensor.nano_color_2_ventilation_filter-state]
+# name: test_binary_sensor_entities_snapshot[binary_sensor.nano_color_2_ventilation_filter_dirty-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2 Ventilation filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2 Ventilation filter dirty',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nano_color_2_ventilation_filter',
+    'entity_id': 'binary_sensor.nano_color_2_ventilation_filter_dirty',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -55,12 +55,8 @@
       "temperature_alert": {
         "name": "Temperature alert"
       },
-      "ventilation_filter": {
-        "name": "Ventilation filter",
-        "state": {
-          "off": "Clean",
-          "on": "Dirty"
-        }
+      "ventilation_filter_dirty": {
+        "name": "Ventilation filter dirty"
       }
     },
     "fan": {
