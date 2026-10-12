@@ -359,6 +359,7 @@ async def test_main_device_registered_before_platform_forwarding(
     assert gas_meter_device is not None
     assert gas_meter_device.via_device_id == main_device.id
 
+
 @pytest.mark.parametrize(
     ("configured_interval", "expected_interval"),
     [
