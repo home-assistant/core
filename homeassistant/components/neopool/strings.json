@@ -7,7 +7,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check unit ID and framer settings."
+      "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check the unit ID and the connection settings."
     },
     "step": {
       "reconfigure": {
