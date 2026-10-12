@@ -1,6 +1,8 @@
 """The yalexs_ble integration models."""
 
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field
+from typing import Any
 
 from yalexs_ble import LockActivity, LockState, LockStatus, PushLock
 
@@ -30,3 +32,6 @@ class YaleXSBLEData:
     last_activity: LockActivity | None = None
     last_activity_context: Context | None = None
     expected_operation: ExpectedOperation | None = None
+    credential_operations: dict[tuple[str, str], asyncio.Task[Any]] = field(
+        default_factory=dict
+    )

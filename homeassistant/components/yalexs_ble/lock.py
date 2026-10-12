@@ -1,6 +1,6 @@
 """Support for Yale Access Bluetooth locks."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from datetime import datetime
 import re
@@ -115,7 +115,6 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     _lock_status: LockStatus = LockStatus.UNKNOWN
     _pending: tuple[LockState, LockInfo, ConnectionInfo] | None = None
     _hold_cancel: CALLBACK_TYPE | None = None
-    _activity_context: Context | None = None
 
     @callback
     @override
@@ -225,9 +224,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         """Write the held state without a known cause."""
         self._hold_cancel = None
         self._attr_changed_by = None
-        if self._context is not None and self._context is self._activity_context:
-            self._context = None
-            self._context_set = None
+        self._context = None
+        self._context_set = None
         self._async_flush_hold()
 
     @override
@@ -299,7 +297,6 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             if activity_status is not MATCH_STATUS[self._pending[0].lock]:
                 return
             context = self._activity_context_for(activity)
-            self._activity_context = context
             self.async_set_context(context)
             self._attr_changed_by = changed_by
             self._async_flush_hold()
@@ -315,8 +312,32 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         with self._expect_operation(UNLOCK_STATUSES):
             await self._device.unlock()
 
+    async def _async_run_once[T](
+        self, name: str, operation: Callable[[], Coroutine[Any, Any, T]]
+    ) -> T:
+        """Run a credential operation once per service call across sibling entities."""
+        assert self._context is not None
+        context = self._context
+        key = (name, context.id)
+        operations = self._data.credential_operations
+        if (task := operations.get(key)) is None:
+            task = self.hass.async_create_task(operation())
+            operations[key] = task
+            task.add_done_callback(lambda _: operations.pop(key, None))
+        try:
+            result: T = await task
+        finally:
+            # The action never changes state, so keep its context off later writes.
+            self._context = None
+            self._context_set = None
+        return result
+
     async def async_set_lock_credential(self, **kwargs: Any) -> None:
         """Set a keypad PIN."""
+        await self._async_run_once("set", lambda: self._set_credential(**kwargs))
+
+    async def _set_credential(self, **kwargs: Any) -> None:
+        """Set a keypad PIN on the lock."""
         pin: str = kwargs[ATTR_CREDENTIAL_DATA]
         if not PIN_PATTERN.fullmatch(pin):
             raise ServiceValidationError(
@@ -335,6 +356,10 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     async def async_clear_lock_credential(self, **kwargs: Any) -> None:
         """Clear a keypad PIN."""
+        await self._async_run_once("clear", lambda: self._clear_credential(**kwargs))
+
+    async def _clear_credential(self, **kwargs: Any) -> None:
+        """Clear a keypad PIN on the lock."""
         slot: int = kwargs[ATTR_CREDENTIAL_INDEX]
         with _translate_keycode_errors():
             await self._device.clear_keycode(slot)
@@ -344,6 +369,12 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         self, **kwargs: Any
     ) -> dict[str, bool | str | None]:
         """Return whether a keypad PIN slot is in use, never the PIN itself."""
+        return await self._async_run_once(
+            "status", lambda: self._credential_status(**kwargs)
+        )
+
+    async def _credential_status(self, **kwargs: Any) -> dict[str, bool | str | None]:
+        """Read a keypad PIN slot from the lock."""
         slot: int = kwargs[ATTR_CREDENTIAL_INDEX]
         with _translate_keycode_errors():
             exists = await self._device.get_keycode(slot) is not None

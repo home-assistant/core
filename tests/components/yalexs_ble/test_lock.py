@@ -39,6 +39,7 @@ from homeassistant.components.yalexs_ble.const import (
     EVENT_LOCK_ACTIVITY,
     HA_OPERATION_TIMEOUT_SECONDS,
 )
+from homeassistant.components.yalexs_ble.store import CredentialNames
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, EVENT_STATE_CHANGED
 from homeassistant.core import Context, HomeAssistant
@@ -1327,3 +1328,207 @@ async def test_lock_service(
         "lock", "lock", {"entity_id": entity_id}, blocking=True
     )
     getattr(mock_lock.push_lock, method).assert_awaited_once_with()
+
+
+def _call_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entry: MockConfigEntry,
+    service: str,
+    data: dict[str, Any],
+    **kwargs: Any,
+) -> Any:
+    """Call a yalexs_ble lock service targeting the whole device."""
+    device = device_registry.async_get_device_by_connection(
+        ("bluetooth", YALE_ACCESS_LOCK_DISCOVERY_INFO.address), entry.entry_id
+    )
+    return hass.services.async_call(
+        DOMAIN,
+        service,
+        {"device_id": device.id, "credential_type": "pin", **data},
+        blocking=True,
+        **kwargs,
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_target_set_credential_runs_once(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+) -> None:
+    """Test targeting both lock entities sets the PIN and name once."""
+    with patch.object(
+        CredentialNames,
+        "async_set",
+        autospec=True,
+        side_effect=CredentialNames.async_set,
+    ) as name_set:
+        await _call_device(
+            hass,
+            device_registry,
+            entry,
+            "set_lock_credential",
+            {"credential_data": "1234", "credential_index": 5, "name": "Jesse"},
+        )
+
+    mock_lock.push_lock.set_keycode.assert_awaited_once_with(5, "1234")
+    assert name_set.await_count == 1
+    assert entry.runtime_data.credential_names.get(5) == "Jesse"
+    assert not entry.runtime_data.credential_operations
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_target_clear_credential_runs_once(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+) -> None:
+    """Test targeting both lock entities clears the PIN and name once."""
+    with patch.object(
+        CredentialNames,
+        "async_remove",
+        autospec=True,
+        side_effect=CredentialNames.async_remove,
+    ) as name_remove:
+        await _call_device(
+            hass,
+            device_registry,
+            entry,
+            "clear_lock_credential",
+            {"credential_index": 5},
+        )
+
+    mock_lock.push_lock.clear_keycode.assert_awaited_once_with(5)
+    assert name_remove.await_count == 1
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_target_status_shared(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+) -> None:
+    """Test both lock entities report the same single status read."""
+    mock_lock.push_lock.get_keycode.return_value = "4321"
+    response = await _call_device(
+        hass,
+        device_registry,
+        entry,
+        "get_lock_credential_status",
+        {"credential_index": 9},
+        return_response=True,
+    )
+
+    mock_lock.push_lock.get_keycode.assert_awaited_once_with(9)
+    expected = {"credential_exists": True, "name": None}
+    assert response == {ENTITY_ID: expected, SECURE_ENTITY_ID: expected}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("service", "data", "method", "message"),
+    [
+        pytest.param(
+            "set_lock_credential",
+            {"credential_data": "1234", "credential_index": 5},
+            "set_keycode",
+            "Failed to communicate",
+            id="set",
+        ),
+        pytest.param(
+            "clear_lock_credential",
+            {"credential_index": 5},
+            "clear_keycode",
+            "Failed to communicate",
+            id="clear",
+        ),
+    ],
+)
+async def test_device_target_failure_runs_once(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    service: str,
+    data: dict[str, Any],
+    method: str,
+    message: str,
+) -> None:
+    """Test a failure is raised once, translated, and not retried per entity."""
+    getattr(mock_lock.push_lock, method).side_effect = YaleXSBLEError("boom")
+    with pytest.raises(HomeAssistantError, match=message):
+        await _call_device(hass, device_registry, entry, service, data)
+
+    getattr(mock_lock.push_lock, method).assert_awaited_once()
+    assert not entry.runtime_data.credential_operations
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_target_invalid_pin(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+) -> None:
+    """Test PIN validation still raises when both entities are targeted."""
+    with pytest.raises(ServiceValidationError, match="PIN"):
+        await _call_device(
+            hass,
+            device_registry,
+            entry,
+            "set_lock_credential",
+            {"credential_data": "12", "credential_index": 5},
+        )
+    mock_lock.push_lock.set_keycode.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("entry")
+async def test_hold_timeout_drops_credential_action_context(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_lock: MockLock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an unattributed change does not carry a recent credential action context."""
+    context = Context(user_id=hass_admin_user.id, parent_id="parent-id")
+    await _call(
+        hass,
+        "clear_lock_credential",
+        {"credential_index": 3},
+        context=context,
+    )
+
+    mock_lock.push(LockStatus.UNLOCKED)
+    await _expire_hold(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.context.id != context.id
+    assert state.context.parent_id is None
+    assert state.context.user_id is None
+
+
+@pytest.mark.usefixtures("entry")
+async def test_transitional_state_drops_credential_action_context(
+    hass: HomeAssistant, hass_admin_user: MockUser, mock_lock: MockLock
+) -> None:
+    """Test an unheld write after a credential action does not carry its context."""
+    context = Context(user_id=hass_admin_user.id)
+    await _call(
+        hass,
+        "clear_lock_credential",
+        {"credential_index": 3},
+        context=context,
+    )
+
+    mock_lock.push(LockStatus.UNLOCKING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocking"
+    assert state.context.id != context.id
+    assert state.context.user_id is None
