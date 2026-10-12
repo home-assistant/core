@@ -744,6 +744,7 @@ FLOWS = {
         "shopping_list",
         "sia",
         "silla_prism",
+        "silvercrest_infrared",
         "simplefin",
         "simplepush",
         "simplisafe",
