@@ -454,7 +454,14 @@ async def test_option_flow(hass: HomeAssistant, options_form) -> None:
     }
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "connect_result",
+    [
+        pytest.param(True, id="vehicles"),
+        pytest.param(False, id="no_vehicles"),
+    ],
+)
+async def test_reauth(hass: HomeAssistant, connect_result: bool) -> None:
     """Test reauth updates the password and keeps the device registration."""
     entry = MockConfigEntry(domain=DOMAIN, title=TEST_USERNAME, data=TEST_CONFIG)
     entry.add_to_hass(hass)
@@ -464,7 +471,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
 
     with (
-        patch(MOCK_API_CONNECT, return_value=True) as mock_connect,
+        patch(MOCK_API_CONNECT, return_value=connect_result) as mock_connect,
         patch(MOCK_API_DEVICE_REGISTERED, new_callable=PropertyMock, return_value=True),
         patch(ASYNC_SETUP_ENTRY, return_value=True),
     ):

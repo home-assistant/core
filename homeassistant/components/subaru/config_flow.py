@@ -237,8 +237,10 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
+            # connect() returns False without raising when no vehicles are found
+            self.config_data = {**reauth_entry.data, **user_input}
             try:
-                await self.validate_login_creds({**reauth_entry.data, **user_input})
+                await self.validate_login_creds(self.config_data)
             except InvalidCredentials:
                 errors["base"] = "invalid_auth"
             except SubaruException as ex:
