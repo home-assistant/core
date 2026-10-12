@@ -613,7 +613,13 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_error_translations": {},
+        "agent_error_translations": {
+            TEST_AGENT_ID: {
+                "translation_domain": "google_drive",
+                "translation_key": "delete_failed",
+                "translation_placeholders": {"error": "some error"},
+            }
+        },
         "agent_errors": {TEST_AGENT_ID: "Failed to delete backup: some error"},
     }
 
