@@ -56,12 +56,11 @@ class ImouSiren(ImouEntity, SirenEntity):
     """Manual siren control for an Imou device.
 
     The cloud API does not report whether the siren is currently sounding, so
-    the entity state stays unknown. Turn on and turn off still send the start
-    and stop commands.
+    the entity state stays unknown. Supported turn on and turn off features
+    follow whichever siren start or stop commands the device exposes.
     """
 
     entity_description = SIREN_DESCRIPTION
-    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
     def __init__(
         self,
@@ -70,6 +69,12 @@ class ImouSiren(ImouEntity, SirenEntity):
     ) -> None:
         """Initialize the siren entity."""
         super().__init__(coordinator, SIREN_DESCRIPTION, device)
+        features = SirenEntityFeature(0)
+        if PARAM_SIREN_START in device.buttons:
+            features |= SirenEntityFeature.TURN_ON
+        if PARAM_SIREN_STOP in device.buttons:
+            features |= SirenEntityFeature.TURN_OFF
+        self._attr_supported_features = features
 
     @override
     @async_wrap_imou_command("siren_operation_failed")

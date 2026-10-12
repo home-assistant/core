@@ -7,7 +7,11 @@ from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenEntityFeature,
+)
+from homeassistant.const import EntityStateAttribute
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -123,6 +127,53 @@ async def test_siren_invalid_auth_starts_reauth(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SIREN]], indirect=True)
+@pytest.mark.parametrize(
+    ("imou_mock_devices", "expected_features", "service", "button_type"),
+    [
+        (
+            [create_online_device("d1", "Device 1", button_keys=(PARAM_SIREN_START,))],
+            SirenEntityFeature.TURN_ON,
+            SERVICE_TURN_ON,
+            PARAM_SIREN_START,
+        ),
+        (
+            [create_online_device("d1", "Device 1", button_keys=(PARAM_SIREN_STOP,))],
+            SirenEntityFeature.TURN_OFF,
+            SERVICE_TURN_OFF,
+            PARAM_SIREN_STOP,
+        ),
+    ],
+    indirect=["imou_mock_devices"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_siren_partial_controls(
+    hass: HomeAssistant,
+    mock_imou_ha_device_manager: MagicMock,
+    expected_features: SirenEntityFeature,
+    service: str,
+    button_type: str,
+) -> None:
+    """Devices with only start or only stop expose matching siren features."""
+    state = hass.states.get("siren.device_1_siren")
+    assert state is not None
+    assert (
+        state.attributes[EntityStateAttribute.SUPPORTED_FEATURES] == expected_features
+    )
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: state.entity_id},
+        blocking=True,
+    )
+
+    mock_imou_ha_device_manager.async_press_button.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_press_button.await_args
+    assert call is not None
+    assert call.args[1] == button_type
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SIREN]], indirect=True)
