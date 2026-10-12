@@ -144,6 +144,7 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
 SENSOR_IMPORT_SCHEMA = probatio.Schema(
     {
         probatio.Required("old_config_entry_id"): selector.TextSelector(),
+        probatio.Required(CONF_IGNORE_NON_NUMERIC): selector.BooleanSelector(),
     }
 ).extend(SENSOR_CONFIG_SCHEMA.schema)
 

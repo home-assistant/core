@@ -15,6 +15,7 @@
       ]),
       'group_type': 'sensor',
       'hide_members': False,
+      'ignore_non_numeric': True,
       'name': 'My min_max',
       'type': 'max',
     }),

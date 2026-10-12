@@ -3,11 +3,13 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -106,6 +108,55 @@ async def test_setup_migrates_to_groups(
     await hass.async_block_till_done()
     state = hass.states.get(min_max_entity_id)
     assert state.state == "30.0"
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "expected_state"),
+    [
+        pytest.param("max", "10.0", id="max"),
+        pytest.param("min", "10.0", id="min"),
+        pytest.param("mean", "10.0", id="mean"),
+        pytest.param("median", "10.0", id="median"),
+        pytest.param("range", "0.0", id="range"),
+        pytest.param("sum", STATE_UNKNOWN, id="sum"),
+    ],
+)
+async def test_migration_keeps_unavailable_input_behavior(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    sensor_type: str,
+    expected_state: str,
+) -> None:
+    """Test the migrated group sensor handles unavailable inputs like Min/Max."""
+    assert await async_setup_component(hass, "repairs", {})
+    hass.states.async_set("sensor.input_one", "10")
+    hass.states.async_set("sensor.input_two", STATE_UNAVAILABLE)
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_ids": ["sensor.input_one", "sensor.input_two"],
+            "name": "My min_max",
+            "round_digits": 2.0,
+            "type": sensor_type,
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_min_max")
+    assert state.state == expected_state
 
 
 async def test_migrate_helper_is_manually_removed(

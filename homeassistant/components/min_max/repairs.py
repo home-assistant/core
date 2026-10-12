@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
-from homeassistant.components.group import CONF_HIDE_MEMBERS, DOMAIN as GROUP_DOMAIN
+from homeassistant.components.group import (
+    CONF_HIDE_MEMBERS,
+    CONF_IGNORE_NON_NUMERIC,
+    DOMAIN as GROUP_DOMAIN,
+)
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -13,7 +17,7 @@ from homeassistant.components.repairs import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
-from homeassistant.const import CONF_ENTITIES
+from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -55,6 +59,8 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             config[CONF_ENTITIES] = config.pop(CONF_ENTITY_IDS)
             config.pop(CONF_ROUND_DIGITS)
             config[CONF_HIDE_MEMBERS] = False
+            # Min/Max sum is unknown if any input is unavailable, other types skip it
+            config[CONF_IGNORE_NON_NUMERIC] = config[CONF_TYPE] != "sum"
             config["old_config_entry_id"] = entry.entry_id
 
             import_result = await self.hass.config_entries.flow.async_init(
