@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[climate_floorheatingairflow][climate_floorheatingairflow]
   dict({
-    'climate.laurens_room_temperature': dict({
+    'climate.test_room_a_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -51,7 +51,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.laurens_room_temperature',
+        'entity_id': 'climate.test_room_a_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -70,7 +70,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 953>,
         'translation_key': 'room_temperature',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_roomTemperature',
+        'unique_id': 'test-gateway-2_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -86,7 +86,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -121,14 +121,14 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.laurens_room_temperature',
+        'entity_id': 'climate.test_room_a_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.woonkamer_airco_room_temperature': dict({
+    'climate.test_room_b_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -174,7 +174,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.woonkamer_airco_room_temperature',
+        'entity_id': 'climate.test_room_b_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -193,7 +193,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 441>,
         'translation_key': 'room_temperature',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_roomTemperature',
+        'unique_id': 'test-gateway-1_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -209,7 +209,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -239,7 +239,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.woonkamer_airco_room_temperature',
+        'entity_id': 'climate.test_room_b_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

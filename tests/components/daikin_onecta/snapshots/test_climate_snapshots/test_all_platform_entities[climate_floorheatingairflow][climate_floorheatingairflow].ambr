@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_all_platform_entities[climate_floorheatingairflow][climate_floorheatingairflow]
   dict({
-    'binary_sensor.laurens_daylight_saving_time_enabled': dict({
+    'binary_sensor.test_room_a_daylight_saving_time_enabled': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -15,7 +15,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_daylight_saving_time_enabled',
+        'entity_id': 'binary_sensor.test_room_a_daylight_saving_time_enabled',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -34,22 +34,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'daylightsavingtimeenabled',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_daylightSavingTimeEnabled',
+        'unique_id': 'test-gateway-2_gateway_daylightSavingTimeEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Daylight saving time enabled',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Daylight saving time enabled',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_daylight_saving_time_enabled',
+        'entity_id': 'binary_sensor.test_room_a_daylight_saving_time_enabled',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'binary_sensor.laurens_is_cool_heat_master': dict({
+    'binary_sensor.test_room_a_is_cool_heat_master': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -63,7 +63,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_cool_heat_master',
+        'entity_id': 'binary_sensor.test_room_a_is_cool_heat_master',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -82,22 +82,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'iscoolheatmaster',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isCoolHeatMaster',
+        'unique_id': 'test-gateway-2_climateControl_isCoolHeatMaster',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is cool/heat master',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is cool/heat master',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_cool_heat_master',
+        'entity_id': 'binary_sensor.test_room_a_is_cool_heat_master',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'binary_sensor.laurens_is_holiday_mode_active': dict({
+    'binary_sensor.test_room_a_is_holiday_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -111,7 +111,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.test_room_a_is_holiday_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -130,22 +130,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isHolidayModeActive',
+        'unique_id': 'test-gateway-2_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is holiday mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is holiday mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.test_room_a_is_holiday_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_caution_state': dict({
+    'binary_sensor.test_room_a_is_in_caution_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -159,7 +159,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_caution_state',
+        'entity_id': 'binary_sensor.test_room_a_is_in_caution_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -178,23 +178,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isincautionstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isInCautionState',
+        'unique_id': 'test-gateway-2_climateControl_isInCautionState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in caution state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in caution state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_caution_state',
+        'entity_id': 'binary_sensor.test_room_a_is_in_caution_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_caution_state_2': dict({
+    'binary_sensor.test_room_a_is_in_caution_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -208,7 +208,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_caution_state_2',
+        'entity_id': 'binary_sensor.test_room_a_is_in_caution_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -227,23 +227,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isincautionstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_outdoorUnit_isInCautionState',
+        'unique_id': 'test-gateway-2_outdoorUnit_isInCautionState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in caution state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in caution state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_caution_state_2',
+        'entity_id': 'binary_sensor.test_room_a_is_in_caution_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_error_state': dict({
+    'binary_sensor.test_room_a_is_in_error_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -257,7 +257,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_error_state',
+        'entity_id': 'binary_sensor.test_room_a_is_in_error_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -276,23 +276,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_isInErrorState',
+        'unique_id': 'test-gateway-2_gateway_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_error_state',
+        'entity_id': 'binary_sensor.test_room_a_is_in_error_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_error_state_2': dict({
+    'binary_sensor.test_room_a_is_in_error_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -306,7 +306,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_error_state_2',
+        'entity_id': 'binary_sensor.test_room_a_is_in_error_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -325,23 +325,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isInErrorState',
+        'unique_id': 'test-gateway-2_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_error_state_2',
+        'entity_id': 'binary_sensor.test_room_a_is_in_error_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_error_state_3': dict({
+    'binary_sensor.test_room_a_is_in_error_state_3': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -355,7 +355,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_error_state_3',
+        'entity_id': 'binary_sensor.test_room_a_is_in_error_state_3',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -374,23 +374,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_outdoorUnit_isInErrorState',
+        'unique_id': 'test-gateway-2_outdoorUnit_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_error_state_3',
+        'entity_id': 'binary_sensor.test_room_a_is_in_error_state_3',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_mode_conflict': dict({
+    'binary_sensor.test_room_a_is_in_mode_conflict': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -404,7 +404,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_mode_conflict',
+        'entity_id': 'binary_sensor.test_room_a_is_in_mode_conflict',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -423,23 +423,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinmodeconflict',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isInModeConflict',
+        'unique_id': 'test-gateway-2_climateControl_isInModeConflict',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in mode conflict',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in mode conflict',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_mode_conflict',
+        'entity_id': 'binary_sensor.test_room_a_is_in_mode_conflict',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_warning_state': dict({
+    'binary_sensor.test_room_a_is_in_warning_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -453,7 +453,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_warning_state',
+        'entity_id': 'binary_sensor.test_room_a_is_in_warning_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -472,23 +472,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isInWarningState',
+        'unique_id': 'test-gateway-2_climateControl_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in warning state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in warning state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_warning_state',
+        'entity_id': 'binary_sensor.test_room_a_is_in_warning_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_in_warning_state_2': dict({
+    'binary_sensor.test_room_a_is_in_warning_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -502,7 +502,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_in_warning_state_2',
+        'entity_id': 'binary_sensor.test_room_a_is_in_warning_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -521,23 +521,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_outdoorUnit_isInWarningState',
+        'unique_id': 'test-gateway-2_outdoorUnit_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is in warning state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is in warning state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_in_warning_state_2',
+        'entity_id': 'binary_sensor.test_room_a_is_in_warning_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_lock_function_enabled': dict({
+    'binary_sensor.test_room_a_is_lock_function_enabled': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -551,7 +551,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_lock_function_enabled',
+        'entity_id': 'binary_sensor.test_room_a_is_lock_function_enabled',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -570,22 +570,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'islockfunctionenabled',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isLockFunctionEnabled',
+        'unique_id': 'test-gateway-2_climateControl_isLockFunctionEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is lock function enabled',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is lock function enabled',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_lock_function_enabled',
+        'entity_id': 'binary_sensor.test_room_a_is_lock_function_enabled',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_is_powerful_mode_active': dict({
+    'binary_sensor.test_room_a_is_powerful_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -599,7 +599,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.test_room_a_is_powerful_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -618,22 +618,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_isPowerfulModeActive',
+        'unique_id': 'test-gateway-2_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Is powerful mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Is powerful mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.test_room_a_is_powerful_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.laurens_led_enabled': dict({
+    'binary_sensor.test_room_a_led_enabled': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -647,7 +647,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.laurens_led_enabled',
+        'entity_id': 'binary_sensor.test_room_a_led_enabled',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -666,22 +666,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ledenabled',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_ledEnabled',
+        'unique_id': 'test-gateway-2_gateway_ledEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens LED enabled',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A LED enabled',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.laurens_led_enabled',
+        'entity_id': 'binary_sensor.test_room_a_led_enabled',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_daylight_saving_time_enabled': dict({
+    'binary_sensor.test_room_b_daylight_saving_time_enabled': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -695,7 +695,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_daylight_saving_time_enabled',
+        'entity_id': 'binary_sensor.test_room_b_daylight_saving_time_enabled',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -714,22 +714,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'daylightsavingtimeenabled',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_daylightSavingTimeEnabled',
+        'unique_id': 'test-gateway-1_gateway_daylightSavingTimeEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Daylight saving time enabled',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Daylight saving time enabled',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_daylight_saving_time_enabled',
+        'entity_id': 'binary_sensor.test_room_b_daylight_saving_time_enabled',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_cool_heat_master': dict({
+    'binary_sensor.test_room_b_is_cool_heat_master': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -743,7 +743,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_cool_heat_master',
+        'entity_id': 'binary_sensor.test_room_b_is_cool_heat_master',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -762,22 +762,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'iscoolheatmaster',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isCoolHeatMaster',
+        'unique_id': 'test-gateway-1_climateControl_isCoolHeatMaster',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is cool/heat master',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is cool/heat master',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_cool_heat_master',
+        'entity_id': 'binary_sensor.test_room_b_is_cool_heat_master',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_holiday_mode_active': dict({
+    'binary_sensor.test_room_b_is_holiday_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -791,7 +791,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.test_room_b_is_holiday_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -810,22 +810,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isHolidayModeActive',
+        'unique_id': 'test-gateway-1_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is holiday mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is holiday mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.test_room_b_is_holiday_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_caution_state': dict({
+    'binary_sensor.test_room_b_is_in_caution_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -839,7 +839,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_caution_state',
+        'entity_id': 'binary_sensor.test_room_b_is_in_caution_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -858,23 +858,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isincautionstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isInCautionState',
+        'unique_id': 'test-gateway-1_climateControl_isInCautionState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in caution state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in caution state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_caution_state',
+        'entity_id': 'binary_sensor.test_room_b_is_in_caution_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_caution_state_2': dict({
+    'binary_sensor.test_room_b_is_in_caution_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -888,7 +888,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_caution_state_2',
+        'entity_id': 'binary_sensor.test_room_b_is_in_caution_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -907,23 +907,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isincautionstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_outdoorUnit_isInCautionState',
+        'unique_id': 'test-gateway-1_outdoorUnit_isInCautionState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in caution state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in caution state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_caution_state_2',
+        'entity_id': 'binary_sensor.test_room_b_is_in_caution_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_error_state': dict({
+    'binary_sensor.test_room_b_is_in_error_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -937,7 +937,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_error_state',
+        'entity_id': 'binary_sensor.test_room_b_is_in_error_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -956,23 +956,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_isInErrorState',
+        'unique_id': 'test-gateway-1_gateway_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_error_state',
+        'entity_id': 'binary_sensor.test_room_b_is_in_error_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_error_state_2': dict({
+    'binary_sensor.test_room_b_is_in_error_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -986,7 +986,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_error_state_2',
+        'entity_id': 'binary_sensor.test_room_b_is_in_error_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1005,23 +1005,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isInErrorState',
+        'unique_id': 'test-gateway-1_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_error_state_2',
+        'entity_id': 'binary_sensor.test_room_b_is_in_error_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_error_state_3': dict({
+    'binary_sensor.test_room_b_is_in_error_state_3': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1035,7 +1035,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_error_state_3',
+        'entity_id': 'binary_sensor.test_room_b_is_in_error_state_3',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1054,23 +1054,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_outdoorUnit_isInErrorState',
+        'unique_id': 'test-gateway-1_outdoorUnit_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_error_state_3',
+        'entity_id': 'binary_sensor.test_room_b_is_in_error_state_3',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_warning_state': dict({
+    'binary_sensor.test_room_b_is_in_warning_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1084,7 +1084,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_warning_state',
+        'entity_id': 'binary_sensor.test_room_b_is_in_warning_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1103,23 +1103,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isInWarningState',
+        'unique_id': 'test-gateway-1_climateControl_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in warning state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in warning state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_warning_state',
+        'entity_id': 'binary_sensor.test_room_b_is_in_warning_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_in_warning_state_2': dict({
+    'binary_sensor.test_room_b_is_in_warning_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1133,7 +1133,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_warning_state_2',
+        'entity_id': 'binary_sensor.test_room_b_is_in_warning_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1152,23 +1152,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_outdoorUnit_isInWarningState',
+        'unique_id': 'test-gateway-1_outdoorUnit_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is in warning state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is in warning state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_in_warning_state_2',
+        'entity_id': 'binary_sensor.test_room_b_is_in_warning_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_lock_function_enabled': dict({
+    'binary_sensor.test_room_b_is_lock_function_enabled': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1182,7 +1182,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_lock_function_enabled',
+        'entity_id': 'binary_sensor.test_room_b_is_lock_function_enabled',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1201,22 +1201,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'islockfunctionenabled',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isLockFunctionEnabled',
+        'unique_id': 'test-gateway-1_climateControl_isLockFunctionEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is lock function enabled',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is lock function enabled',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_lock_function_enabled',
+        'entity_id': 'binary_sensor.test_room_b_is_lock_function_enabled',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_is_powerful_mode_active': dict({
+    'binary_sensor.test_room_b_is_powerful_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1230,7 +1230,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.test_room_b_is_powerful_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1249,22 +1249,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_isPowerfulModeActive',
+        'unique_id': 'test-gateway-1_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Is powerful mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Is powerful mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.test_room_b_is_powerful_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.woonkamer_airco_led_enabled': dict({
+    'binary_sensor.test_room_b_led_enabled': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1278,7 +1278,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.woonkamer_airco_led_enabled',
+        'entity_id': 'binary_sensor.test_room_b_led_enabled',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1297,15 +1297,15 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ledenabled',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_ledEnabled',
+        'unique_id': 'test-gateway-1_gateway_ledEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco LED enabled',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B LED enabled',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.woonkamer_airco_led_enabled',
+        'entity_id': 'binary_sensor.test_room_b_led_enabled',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1360,7 +1360,7 @@
         'state': 'unknown',
       }),
     }),
-    'climate.laurens_room_temperature': dict({
+    'climate.test_room_a_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1410,7 +1410,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.laurens_room_temperature',
+        'entity_id': 'climate.test_room_a_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1429,7 +1429,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 953>,
         'translation_key': 'room_temperature',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_roomTemperature',
+        'unique_id': 'test-gateway-2_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1445,7 +1445,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -1480,14 +1480,14 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.laurens_room_temperature',
+        'entity_id': 'climate.test_room_a_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.woonkamer_airco_room_temperature': dict({
+    'climate.test_room_b_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1533,7 +1533,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.woonkamer_airco_room_temperature',
+        'entity_id': 'climate.test_room_b_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1552,7 +1552,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 441>,
         'translation_key': 'room_temperature',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_roomTemperature',
+        'unique_id': 'test-gateway-1_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1568,7 +1568,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -1598,14 +1598,14 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.woonkamer_airco_room_temperature',
+        'entity_id': 'climate.test_room_b_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'heat',
       }),
     }),
-    'select.laurens_schedule': dict({
+    'select.test_room_a_schedule': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1626,7 +1626,7 @@
         'disabled_by': None,
         'domain': 'select',
         'entity_category': None,
-        'entity_id': 'select.laurens_schedule',
+        'entity_id': 'select.test_room_a_schedule',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1645,12 +1645,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_schedule',
+        'unique_id': 'test-gateway-2_climateControl_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Schedule',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -1659,14 +1659,14 @@
           ]),
         }),
         'context': <ANY>,
-        'entity_id': 'select.laurens_schedule',
+        'entity_id': 'select.test_room_a_schedule',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'select.woonkamer_airco_schedule': dict({
+    'select.test_room_b_schedule': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1687,7 +1687,7 @@
         'disabled_by': None,
         'domain': 'select',
         'entity_category': None,
-        'entity_id': 'select.woonkamer_airco_schedule',
+        'entity_id': 'select.test_room_b_schedule',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1706,12 +1706,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_schedule',
+        'unique_id': 'test-gateway-1_climateControl_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Schedule',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -1720,7 +1720,7 @@
           ]),
         }),
         'context': <ANY>,
-        'entity_id': 'select.woonkamer_airco_schedule',
+        'entity_id': 'select.test_room_b_schedule',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1767,7 +1767,7 @@
       }),
       'state': None,
     }),
-    'sensor.laurens_cooling_daily_electrical_consumption': dict({
+    'sensor.test_room_a_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1783,7 +1783,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1805,25 +1805,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingdailyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_cooling_daily_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_cooling_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Cooling daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Cooling daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.laurens_cooling_monthly_electrical_consumption': dict({
+    'sensor.test_room_a_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1839,7 +1839,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1861,25 +1861,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingmonthlyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_cooling_monthly_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_cooling_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Cooling monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Cooling monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '1.1',
       }),
     }),
-    'sensor.laurens_cooling_weekly_electrical_consumption': dict({
+    'sensor.test_room_a_cooling_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1895,7 +1895,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1917,25 +1917,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingweeklyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_cooling_weekly_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_cooling_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Cooling weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Cooling weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.laurens_cooling_yearly_electrical_consumption': dict({
+    'sensor.test_room_a_cooling_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1951,7 +1951,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1973,25 +1973,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingyearlyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_cooling_yearly_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_cooling_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Cooling yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Cooling yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_cooling_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '29.9',
       }),
     }),
-    'sensor.laurens_dry_keep_setting': dict({
+    'sensor.test_room_a_dry_keep_setting': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2005,7 +2005,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_dry_keep_setting',
+        'entity_id': 'sensor.test_room_a_dry_keep_setting',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2024,22 +2024,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'drykeepsetting',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_indoorUnit_dryKeepSetting',
+        'unique_id': 'test-gateway-2_indoorUnit_dryKeepSetting',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Dry keep setting',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Dry keep setting',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_dry_keep_setting',
+        'entity_id': 'sensor.test_room_a_dry_keep_setting',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'sensor.laurens_error_code': dict({
+    'sensor.test_room_a_error_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2053,7 +2053,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_error_code',
+        'entity_id': 'sensor.test_room_a_error_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2072,22 +2072,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_errorCode',
+        'unique_id': 'test-gateway-2_gateway_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_error_code',
+        'entity_id': 'sensor.test_room_a_error_code',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '',
       }),
     }),
-    'sensor.laurens_error_code_2': dict({
+    'sensor.test_room_a_error_code_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2101,7 +2101,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_error_code_2',
+        'entity_id': 'sensor.test_room_a_error_code_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2120,22 +2120,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_errorCode',
+        'unique_id': 'test-gateway-2_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_error_code_2',
+        'entity_id': 'sensor.test_room_a_error_code_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '00-',
       }),
     }),
-    'sensor.laurens_error_code_3': dict({
+    'sensor.test_room_a_error_code_3': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2149,7 +2149,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_error_code_3',
+        'entity_id': 'sensor.test_room_a_error_code_3',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2168,22 +2168,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_outdoorUnit_errorCode',
+        'unique_id': 'test-gateway-2_outdoorUnit_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_error_code_3',
+        'entity_id': 'sensor.test_room_a_error_code_3',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '00-',
       }),
     }),
-    'sensor.laurens_heating_daily_electrical_consumption': dict({
+    'sensor.test_room_a_heating_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2199,7 +2199,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2221,25 +2221,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_heating_daily_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Heating daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Heating daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.laurens_heating_monthly_electrical_consumption': dict({
+    'sensor.test_room_a_heating_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2255,7 +2255,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2277,25 +2277,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_heating_monthly_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Heating monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Heating monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '4.8',
       }),
     }),
-    'sensor.laurens_heating_weekly_electrical_consumption': dict({
+    'sensor.test_room_a_heating_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2311,7 +2311,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2333,25 +2333,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_heating_weekly_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Heating weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Heating weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0.5',
       }),
     }),
-    'sensor.laurens_heating_yearly_electrical_consumption': dict({
+    'sensor.test_room_a_heating_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2367,7 +2367,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2389,25 +2389,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_electrical_heating_yearly_consumption',
+        'unique_id': 'test-gateway-2_climateControl_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Heating yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Heating yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_a_heating_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '23.3',
       }),
     }),
-    'sensor.laurens_outdoor_temperature': dict({
+    'sensor.test_room_a_outdoor_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2423,7 +2423,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_outdoor_temperature',
+        'entity_id': 'sensor.test_room_a_outdoor_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2445,25 +2445,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_sensory_data_outdoorTemperature',
+        'unique_id': 'test-gateway-2_climateControl_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Outdoor temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Outdoor temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_outdoor_temperature',
+        'entity_id': 'sensor.test_room_a_outdoor_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '9.5',
       }),
     }),
-    'sensor.laurens_region_code': dict({
+    'sensor.test_room_a_region_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2477,7 +2477,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_region_code',
+        'entity_id': 'sensor.test_room_a_region_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2496,12 +2496,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'regioncode',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_regionCode',
+        'unique_id': 'test-gateway-2_gateway_regionCode',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.laurens_room_temperature': dict({
+    'sensor.test_room_a_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2517,7 +2517,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.laurens_room_temperature',
+        'entity_id': 'sensor.test_room_a_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2539,25 +2539,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_sensory_data_roomTemperature',
+        'unique_id': 'test-gateway-2_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Room temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.laurens_room_temperature',
+        'entity_id': 'sensor.test_room_a_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '16',
       }),
     }),
-    'sensor.laurens_ssid': dict({
+    'sensor.test_room_a_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2571,7 +2571,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_ssid',
+        'entity_id': 'sensor.test_room_a_ssid',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2590,12 +2590,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ssid',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_ssid',
+        'unique_id': 'test-gateway-2_gateway_ssid',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.laurens_time_zone': dict({
+    'sensor.test_room_a_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2609,7 +2609,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_time_zone',
+        'entity_id': 'sensor.test_room_a_time_zone',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2628,12 +2628,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'timezone',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_timeZone',
+        'unique_id': 'test-gateway-2_gateway_timeZone',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.laurens_wifi_connection_ssid': dict({
+    'sensor.test_room_a_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2647,7 +2647,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_wifi_connection_ssid',
+        'entity_id': 'sensor.test_room_a_wifi_connection_ssid',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2666,12 +2666,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionssid',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_wifiConnectionSSID',
+        'unique_id': 'test-gateway-2_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.laurens_wifi_connection_strength': dict({
+    'sensor.test_room_a_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2687,7 +2687,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.laurens_wifi_connection_strength',
+        'entity_id': 'sensor.test_room_a_wifi_connection_strength',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2706,12 +2706,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionstrength',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_wifiConnectionStrength',
+        'unique_id': 'test-gateway-2_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
       'state': None,
     }),
-    'sensor.woonkamer_airco_cooling_daily_electrical_consumption': dict({
+    'sensor.test_room_b_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2727,7 +2727,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2749,25 +2749,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingdailyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_cooling_daily_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_cooling_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Cooling daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Cooling daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.woonkamer_airco_cooling_monthly_electrical_consumption': dict({
+    'sensor.test_room_b_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2783,7 +2783,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2805,25 +2805,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingmonthlyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_cooling_monthly_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_cooling_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Cooling monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Cooling monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.woonkamer_airco_cooling_weekly_electrical_consumption': dict({
+    'sensor.test_room_b_cooling_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2839,7 +2839,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2861,25 +2861,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingweeklyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_cooling_weekly_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_cooling_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Cooling weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Cooling weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.woonkamer_airco_cooling_yearly_electrical_consumption': dict({
+    'sensor.test_room_b_cooling_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2895,7 +2895,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2917,25 +2917,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingyearlyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_cooling_yearly_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_cooling_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Cooling yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Cooling yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_cooling_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.woonkamer_airco_dry_keep_setting': dict({
+    'sensor.test_room_b_dry_keep_setting': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2949,7 +2949,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_dry_keep_setting',
+        'entity_id': 'sensor.test_room_b_dry_keep_setting',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2968,22 +2968,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'drykeepsetting',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_indoorUnit_dryKeepSetting',
+        'unique_id': 'test-gateway-1_indoorUnit_dryKeepSetting',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Dry keep setting',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Dry keep setting',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_dry_keep_setting',
+        'entity_id': 'sensor.test_room_b_dry_keep_setting',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'sensor.woonkamer_airco_error_code': dict({
+    'sensor.test_room_b_error_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2997,7 +2997,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_error_code',
+        'entity_id': 'sensor.test_room_b_error_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3016,22 +3016,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_errorCode',
+        'unique_id': 'test-gateway-1_gateway_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_error_code',
+        'entity_id': 'sensor.test_room_b_error_code',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '',
       }),
     }),
-    'sensor.woonkamer_airco_error_code_2': dict({
+    'sensor.test_room_b_error_code_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3045,7 +3045,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_error_code_2',
+        'entity_id': 'sensor.test_room_b_error_code_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3064,22 +3064,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_errorCode',
+        'unique_id': 'test-gateway-1_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_error_code_2',
+        'entity_id': 'sensor.test_room_b_error_code_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '00-',
       }),
     }),
-    'sensor.woonkamer_airco_error_code_3': dict({
+    'sensor.test_room_b_error_code_3': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3093,7 +3093,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_error_code_3',
+        'entity_id': 'sensor.test_room_b_error_code_3',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3112,22 +3112,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_outdoorUnit_errorCode',
+        'unique_id': 'test-gateway-1_outdoorUnit_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_error_code_3',
+        'entity_id': 'sensor.test_room_b_error_code_3',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '00-',
       }),
     }),
-    'sensor.woonkamer_airco_heating_daily_electrical_consumption': dict({
+    'sensor.test_room_b_heating_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3143,7 +3143,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3165,25 +3165,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_heating_daily_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Heating daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Heating daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.woonkamer_airco_heating_monthly_electrical_consumption': dict({
+    'sensor.test_room_b_heating_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3199,7 +3199,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3221,25 +3221,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_heating_monthly_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Heating monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Heating monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '54.1',
       }),
     }),
-    'sensor.woonkamer_airco_heating_weekly_electrical_consumption': dict({
+    'sensor.test_room_b_heating_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3255,7 +3255,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3277,25 +3277,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_heating_weekly_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Heating weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Heating weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '13.2',
       }),
     }),
-    'sensor.woonkamer_airco_heating_yearly_electrical_consumption': dict({
+    'sensor.test_room_b_heating_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3311,7 +3311,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3333,25 +3333,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_electrical_heating_yearly_consumption',
+        'unique_id': 'test-gateway-1_climateControl_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Heating yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Heating yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_room_b_heating_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '89.5',
       }),
     }),
-    'sensor.woonkamer_airco_outdoor_temperature': dict({
+    'sensor.test_room_b_outdoor_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3367,7 +3367,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_outdoor_temperature',
+        'entity_id': 'sensor.test_room_b_outdoor_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3389,25 +3389,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_sensory_data_outdoorTemperature',
+        'unique_id': 'test-gateway-1_climateControl_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Outdoor temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Outdoor temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_outdoor_temperature',
+        'entity_id': 'sensor.test_room_b_outdoor_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '9.5',
       }),
     }),
-    'sensor.woonkamer_airco_region_code': dict({
+    'sensor.test_room_b_region_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3421,7 +3421,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_region_code',
+        'entity_id': 'sensor.test_room_b_region_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3440,12 +3440,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'regioncode',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_regionCode',
+        'unique_id': 'test-gateway-1_gateway_regionCode',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.woonkamer_airco_room_humidity': dict({
+    'sensor.test_room_b_room_humidity': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3461,7 +3461,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_room_humidity',
+        'entity_id': 'sensor.test_room_b_room_humidity',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3480,25 +3480,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomhumidity',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_sensory_data_roomHumidity',
+        'unique_id': 'test-gateway-1_climateControl_sensory_data_roomHumidity',
         'unit_of_measurement': '%',
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Room humidity',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Room humidity',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_room_humidity',
+        'entity_id': 'sensor.test_room_b_room_humidity',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '55',
       }),
     }),
-    'sensor.woonkamer_airco_room_temperature': dict({
+    'sensor.test_room_b_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3514,7 +3514,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.woonkamer_airco_room_temperature',
+        'entity_id': 'sensor.test_room_b_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3536,25 +3536,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_sensory_data_roomTemperature',
+        'unique_id': 'test-gateway-1_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Room temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.woonkamer_airco_room_temperature',
+        'entity_id': 'sensor.test_room_b_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '18',
       }),
     }),
-    'sensor.woonkamer_airco_ssid': dict({
+    'sensor.test_room_b_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3568,7 +3568,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_ssid',
+        'entity_id': 'sensor.test_room_b_ssid',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3587,12 +3587,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ssid',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_ssid',
+        'unique_id': 'test-gateway-1_gateway_ssid',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.woonkamer_airco_time_zone': dict({
+    'sensor.test_room_b_time_zone': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3606,7 +3606,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_time_zone',
+        'entity_id': 'sensor.test_room_b_time_zone',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3625,12 +3625,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'timezone',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_timeZone',
+        'unique_id': 'test-gateway-1_gateway_timeZone',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.woonkamer_airco_wifi_connection_ssid': dict({
+    'sensor.test_room_b_wifi_connection_ssid': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3644,7 +3644,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_wifi_connection_ssid',
+        'entity_id': 'sensor.test_room_b_wifi_connection_ssid',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3663,12 +3663,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionssid',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_wifiConnectionSSID',
+        'unique_id': 'test-gateway-1_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.woonkamer_airco_wifi_connection_strength': dict({
+    'sensor.test_room_b_wifi_connection_strength': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3684,7 +3684,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.woonkamer_airco_wifi_connection_strength',
+        'entity_id': 'sensor.test_room_b_wifi_connection_strength',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3703,12 +3703,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionstrength',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_wifiConnectionStrength',
+        'unique_id': 'test-gateway-1_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
       'state': None,
     }),
-    'switch.laurens_econo_mode': dict({
+    'switch.test_room_a_econo_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3722,7 +3722,7 @@
         'disabled_by': None,
         'domain': 'switch',
         'entity_category': None,
-        'entity_id': 'switch.laurens_econo_mode',
+        'entity_id': 'switch.test_room_a_econo_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3741,22 +3741,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'economode',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_econoMode',
+        'unique_id': 'test-gateway-2_climateControl_econoMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Econo mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Econo mode',
         }),
         'context': <ANY>,
-        'entity_id': 'switch.laurens_econo_mode',
+        'entity_id': 'switch.test_room_a_econo_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'switch.laurens_streamer_mode': dict({
+    'switch.test_room_a_streamer_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3770,7 +3770,7 @@
         'disabled_by': None,
         'domain': 'switch',
         'entity_category': None,
-        'entity_id': 'switch.laurens_streamer_mode',
+        'entity_id': 'switch.test_room_a_streamer_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3789,22 +3789,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'streamermode',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_climateControl_streamerMode',
+        'unique_id': 'test-gateway-2_climateControl_streamerMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Streamer mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Streamer mode',
         }),
         'context': <ANY>,
-        'entity_id': 'switch.laurens_streamer_mode',
+        'entity_id': 'switch.test_room_a_streamer_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'switch.woonkamer_airco_econo_mode': dict({
+    'switch.test_room_b_econo_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3818,7 +3818,7 @@
         'disabled_by': None,
         'domain': 'switch',
         'entity_category': None,
-        'entity_id': 'switch.woonkamer_airco_econo_mode',
+        'entity_id': 'switch.test_room_b_econo_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3837,22 +3837,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'economode',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_econoMode',
+        'unique_id': 'test-gateway-1_climateControl_econoMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Econo mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Econo mode',
         }),
         'context': <ANY>,
-        'entity_id': 'switch.woonkamer_airco_econo_mode',
+        'entity_id': 'switch.test_room_b_econo_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'switch.woonkamer_airco_streamer_mode': dict({
+    'switch.test_room_b_streamer_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3866,7 +3866,7 @@
         'disabled_by': None,
         'domain': 'switch',
         'entity_category': None,
-        'entity_id': 'switch.woonkamer_airco_streamer_mode',
+        'entity_id': 'switch.test_room_b_streamer_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3885,22 +3885,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'streamermode',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_climateControl_streamerMode',
+        'unique_id': 'test-gateway-1_climateControl_streamerMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Streamer mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Streamer mode',
         }),
         'context': <ANY>,
-        'entity_id': 'switch.woonkamer_airco_streamer_mode',
+        'entity_id': 'switch.test_room_b_streamer_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.laurens_firmware_update': dict({
+    'update.test_room_a_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3914,7 +3914,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.laurens_firmware_update',
+        'entity_id': 'update.test_room_a_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3933,7 +3933,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_firmware',
+        'unique_id': 'test-gateway-2_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3942,7 +3942,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_12_84',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_12_84',
@@ -3954,14 +3954,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.laurens_firmware_update',
+        'entity_id': 'update.test_room_a_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.laurens_firmware_update_2': dict({
+    'update.test_room_a_firmware_update_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3975,7 +3975,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.laurens_firmware_update_2',
+        'entity_id': 'update.test_room_a_firmware_update_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3994,7 +3994,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_indoorUnit_firmware',
+        'unique_id': 'test-gateway-2_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4003,7 +4003,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laurens Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room A Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20003001',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20003001',
@@ -4015,14 +4015,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.laurens_firmware_update_2',
+        'entity_id': 'update.test_room_a_firmware_update_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.woonkamer_airco_firmware_update': dict({
+    'update.test_room_b_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -4036,7 +4036,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.woonkamer_airco_firmware_update',
+        'entity_id': 'update.test_room_b_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -4055,7 +4055,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_firmware',
+        'unique_id': 'test-gateway-1_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4064,7 +4064,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_12_84',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_12_84',
@@ -4076,14 +4076,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.woonkamer_airco_firmware_update',
+        'entity_id': 'update.test_room_b_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.woonkamer_airco_firmware_update_2': dict({
+    'update.test_room_b_firmware_update_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -4097,7 +4097,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.woonkamer_airco_firmware_update_2',
+        'entity_id': 'update.test_room_b_firmware_update_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -4116,7 +4116,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_indoorUnit_firmware',
+        'unique_id': 'test-gateway-1_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4125,7 +4125,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer airco Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room B Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '19015C02',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '19015C02',
@@ -4137,7 +4137,7 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.woonkamer_airco_firmware_update_2',
+        'entity_id': 'update.test_room_b_firmware_update_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

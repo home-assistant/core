@@ -1,6 +1,6 @@
 [
   {
-    "_id": "27920256-e0af-4780-8f5f-1f88d8fdf0ba",
+    "_id": "test-gateway-1",
     "type": "dx4",
     "deviceModel": "dx4",
     "isCloudConnectionUp": {
@@ -34,7 +34,7 @@
         },
         "macAddress": {
           "settable": false,
-          "value": "dc:fe:23:81:f4:46"
+          "value": "02:00:00:00:00:01"
         },
         "modelInfo": {
           "settable": false,
@@ -46,11 +46,11 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "0000000005165265"
+          "value": "TEST-SERIAL-0001"
         },
         "ssid": {
           "settable": false,
-          "value": "DaikinAP79283"
+          "value": "DaikinTestAP1"
         },
         "timeZone": {
           "settable": true,
@@ -58,7 +58,7 @@
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "SSIDPLOEG24"
+          "value": "TEST_WIFI"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -356,7 +356,7 @@
         "name": {
           "settable": true,
           "maxLength": 20,
-          "value": "Woonkamer airco"
+          "value": "Test room B"
         },
         "onOffMode": {
           "settable": true,
@@ -693,13 +693,13 @@
         }
       }
     ],
-    "embeddedId": "643159",
+    "embeddedId": "test-embedded-1",
     "timestamp": "2022-11-04T09:50:46.754Z",
-    "id": "27920256-e0af-4780-8f5f-1f88d8fdf0ba",
+    "id": "test-gateway-1",
     "lastUpdateReceived": "2022-11-04T09:50:46.754Z"
   },
   {
-    "_id": "71f33ee1-a82d-4f08-8f61-bf25fd872731",
+    "_id": "test-gateway-2",
     "type": "dx4",
     "deviceModel": "dx4",
     "isCloudConnectionUp": {
@@ -733,7 +733,7 @@
         },
         "macAddress": {
           "settable": false,
-          "value": "e8:4f:25:d3:f5:fe"
+          "value": "02:00:00:00:00:02"
         },
         "modelInfo": {
           "settable": false,
@@ -745,11 +745,11 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "0000000003088268"
+          "value": "TEST-SERIAL-0002"
         },
         "ssid": {
           "settable": false,
-          "value": "DaikinAP31731"
+          "value": "DaikinTestAP2"
         },
         "timeZone": {
           "settable": true,
@@ -757,7 +757,7 @@
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "SSIDPLOEG24"
+          "value": "TEST_WIFI"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -1094,7 +1094,7 @@
         "name": {
           "settable": true,
           "maxLength": 20,
-          "value": "Laurens"
+          "value": "Test room A"
         },
         "onOffMode": {
           "settable": true,
@@ -1460,9 +1460,9 @@
         }
       }
     ],
-    "embeddedId": "186315",
+    "embeddedId": "test-embedded-2",
     "timestamp": "2022-11-04T09:29:48.045Z",
-    "id": "71f33ee1-a82d-4f08-8f61-bf25fd872731",
+    "id": "test-gateway-2",
     "lastUpdateReceived": "2022-11-04T09:29:48.045Z"
   }
 ]
