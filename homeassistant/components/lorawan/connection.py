@@ -50,12 +50,7 @@ DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
 async def async_register_connection(
     hass: HomeAssistant, entry: ConfigEntry, *, connection: Connection
 ) -> Unsubscribe:
-    """Register a connected backend from lorawan-connection and return cleanup.
-
-    Providers own transport setup, recovery, and shutdown. Register this cleanup
-    with entry.async_on_unload(). Registration waits for discovery's inventory
-    replay but stores no device inventory or status.
-    """
+    """Register a connected backend from lorawan-connection and return cleanup."""
     registry = hass.data[DATA_REGISTRY]
     entry_id = entry.entry_id
     if (
