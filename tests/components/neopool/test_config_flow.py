@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 import pytest
@@ -327,6 +327,42 @@ async def test_reconfigure_flow_relink_same_endpoint(
 
     while mock_config_entry_serial.state is not ConfigEntryState.LOADED:
         await hass.async_block_till_done()
+    await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_reconfigure_flow_relink_aborts_on_failed_unload(
+    hass: HomeAssistant,
+    mock_config_entry_serial: MockConfigEntry,
+) -> None:
+    """A failed unload aborts the relink instead of probing a held port.
+
+    The entry still holds the port on its old line settings, so probing the new
+    settings could only clash; the flow aborts rather than report a misleading
+    error, leaving the entry untouched.
+    """
+    await setup_integration(hass, mock_config_entry_serial)
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
+
+    result = await mock_config_entry_serial.start_reconfigure_flow(hass)
+    with patch.object(
+        hass.config_entries, "async_unload", return_value=False
+    ) as mock_unload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_DEVICE: "/dev/ttyUSB0",
+                CONF_BAUDRATE: 9600,
+                SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
+            },
+        )
+
+    assert mock_unload.called
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_unload_failed"
+    assert mock_config_entry_serial.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
+
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
     await hass.async_block_till_done()
 

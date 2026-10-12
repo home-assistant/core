@@ -227,8 +227,11 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
 
             relinking = False
             if _needs_relink(entry, merged):
-                # A failed unload leaves the entry loaded; let the probe run.
-                relinking = await self.hass.config_entries.async_unload(entry.entry_id)
+                # A failed unload keeps the port held on the old settings, so
+                # the probe could only clash: abort rather than mislead.
+                if not await self.hass.config_entries.async_unload(entry.entry_id):
+                    return self.async_abort(reason="reconfigure_unload_failed")
+                relinking = True
 
             serial, error_key = await _async_probe(self.hass, merged)
 
