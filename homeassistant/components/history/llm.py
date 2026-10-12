@@ -86,37 +86,49 @@ def _get_statistics(
 ) -> dict[str, Any]:
     """Fetch and format the long-term statistics in the recorder executor."""
     metadata = statistics.get_metadata(hass, statistic_ids=set(entity_ids))
-    result: dict[str, Any] = {}
-    for entity_id in entity_ids:
-        if entity_id not in metadata:
-            result[entity_id] = {"error": _NO_STATISTICS}
-            continue
-        meta = metadata[entity_id][1]
-        types: list[_StatisticType] = []
+    entity_types: dict[str, list[_StatisticType]] = {}
+    for entity_id, (_, meta) in metadata.items():
+        types = entity_types[entity_id] = []
         if meta["mean_type"] is StatisticMeanType.ARITHMETIC:
             types.extend(["mean", "min", "max"])
         elif meta["mean_type"] is StatisticMeanType.CIRCULAR:
             types.append("mean")
         if meta["has_sum"]:
             types.append("change")
+    rows = (
+        statistics.statistics_during_period(
+            hass,
+            start_time,
+            end_time,
+            set(entity_types),
+            period,
+            None,
+            {stat_type for types in entity_types.values() for stat_type in types},
+        )
+        if entity_types
+        else {}
+    )
+    result: dict[str, Any] = {}
+    for entity_id in entity_ids:
+        if (columns := entity_types.get(entity_id)) is None:
+            result[entity_id] = {"error": _NO_STATISTICS}
+            continue
+        meta = metadata[entity_id][1]
         # Statistics are converted to the unit of the current state when possible.
         unit = statistics.get_display_unit(
             hass, entity_id, meta["unit_class"], meta["unit_of_measurement"]
         )
-        rows = statistics.statistics_during_period(
-            hass, start_time, end_time, {entity_id}, period, None, set(types)
-        ).get(entity_id, [])
         entry: dict[str, Any] = {}
         if unit:
             entry["unit"] = unit
         entry["csv"] = _to_csv(
-            ["start", *types],
+            ["start", *columns],
             [
                 [
                     _format_time(row["start"]),
-                    *(_format_number(row.get(stat_type)) for stat_type in types),
+                    *(_format_number(row.get(column)) for column in columns),
                 ]
-                for row in rows
+                for row in rows.get(entity_id, [])
             ],
         )
         result[entity_id] = entry
