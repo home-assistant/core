@@ -13,10 +13,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components.homewizard.const import (
-    CONF_UPDATE_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.homewizard.const import CONF_UPDATE_INTERVAL, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
