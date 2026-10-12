@@ -75,20 +75,41 @@
     }
   },
   "exceptions": {
-    "authentication_failed": {
-      "message": "Daikin API authentication failed"
-    },
     "api_error": {
       "message": "Daikin API returned HTTP {status}"
     },
+    "authentication_failed": {
+      "message": "Daikin API authentication failed"
+    },
+    "climate_hvac_mode_unavailable": {
+      "message": "The requested HVAC mode is unavailable for {device}"
+    },
+    "climate_operation_mode_unavailable": {
+      "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
+    },
+    "climate_power_unavailable": {
+      "message": "The power control is unavailable for {device}"
+    },
+    "climate_temperature_unavailable": {
+      "message": "The temperature control is unavailable for {device}"
+    },
     "connection_failed": {
       "message": "Unable to connect to the Daikin API"
+    },
+    "fan_control_unavailable": {
+      "message": "Cannot set the fan mode for {device} because fan-control data is unavailable"
+    },
+    "fan_mode_unavailable": {
+      "message": "The requested fan mode is unavailable for {device}"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "oauth2_token_request_failed": {
       "message": "Unable to obtain Daikin OAuth token: {error}"
+    },
+    "preset_mode_unavailable": {
+      "message": "The requested preset mode is unavailable for {device}"
     },
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
@@ -107,6 +128,9 @@
     },
     "set_temperature_failed": {
       "message": "Failed to set the temperature for {device}"
+    },
+    "swing_control_unavailable": {
+      "message": "Swing control is unavailable for {device}"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {device}"

@@ -2,7 +2,7 @@
 
 from typing import Never, override
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,6 +23,14 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
         """Initialize the entity with its coordinator and gateway device."""
         super().__init__(coordinator)
         self._device = device
+
+    def _raise_service_validation_error(self, translation_key: str) -> Never:
+        """Raise a translated error for an unavailable device control."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device": self._device.name},
+        )
 
     def _raise_command_failed(self, translation_key: str) -> Never:
         """Raise a translated error when Daikin rejects a command."""
