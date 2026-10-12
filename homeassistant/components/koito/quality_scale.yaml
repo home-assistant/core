@@ -20,7 +20,9 @@ rules:
   docs-triggers:
     status: exempt
     comment: The integration has no custom triggers.
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to external events; CoordinatorEntity manages coordinator update callbacks.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done

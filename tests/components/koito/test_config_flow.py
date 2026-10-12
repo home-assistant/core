@@ -88,6 +88,7 @@ async def test_normalization(hass: HomeAssistant, url: str, expected: str) -> No
         (KoitoAuthenticationError(), "invalid_auth"),
         (KoitoConnectionError(), "cannot_connect"),
         (KoitoResponseError(), "cannot_connect"),
+        (RuntimeError("Unexpected validation failure"), "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -101,6 +102,8 @@ async def test_error_recovery(
     mock_client.async_get_summary.side_effect = failure
     result = await hass.config_entries.flow.async_configure(form["flow_id"], INPUT)
     assert result["errors"] == {"base": error}
+    translations = await async_get_translations(hass, "en", "config", {DOMAIN})
+    assert translations.get(f"component.koito.config.error.{error}")
     mock_client.async_get_summary.side_effect = None
     result = await hass.config_entries.flow.async_configure(form["flow_id"], INPUT)
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -125,6 +128,7 @@ async def test_duplicate(
         (KoitoAuthenticationError(), "invalid_auth"),
         (KoitoConnectionError(), "cannot_connect"),
         (KoitoResponseError(), "cannot_connect"),
+        (RuntimeError("Unexpected validation failure"), "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
