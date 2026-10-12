@@ -464,14 +464,13 @@ async def _async_fetch_any(
         for task in tasks:
             task.cancel()
 
-    responses: list[httpx2.Response] = []
+    if responses := [r for r in results if isinstance(r, httpx2.Response)]:
+        return responses
     not_found = False
     transport_error: TimeoutConnectError | CannotConnect | None = None
     other_error: Exception | None = None
     for result in results:
-        if isinstance(result, httpx2.Response):
-            responses.append(result)
-        elif isinstance(result, NotFoundError):
+        if isinstance(result, NotFoundError):
             _LOGGER.debug("Fetch failed: %s", result)
             not_found = True
         elif isinstance(result, (TimeoutConnectError, CannotConnect)):
@@ -484,8 +483,6 @@ async def _async_fetch_any(
                 other_error = result
         else:
             _LOGGER.warning("Unexpected fetch result: %s", type(result).__name__)
-    if responses:
-        return responses
     # A 404 is not the failure when another URL had a transport error.
     if transport_error is not None:
         raise transport_error
@@ -537,18 +534,20 @@ async def async_discover_protected_resource(
     document for another path cannot win ahead of the header URL.
     """
     parsed_url = URL(mcp_server_url)
-    # A list keeps the header URL first; dict.fromkeys drops duplicates.
-    urls_to_try = [
-        auth_url,
-        str(
-            parsed_url.with_path(
-                f"{OAUTH_PROTECTED_RESOURCE_ENDPOINT}{parsed_url.path}"
-            )
-        ),
-        str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
-    ]
+    # Ordered so the header URL is tried first, without duplicates.
+    urls_to_try = dict.fromkeys(
+        [
+            auth_url,
+            str(
+                parsed_url.with_path(
+                    f"{OAUTH_PROTECTED_RESOURCE_ENDPOINT}{parsed_url.path}"
+                )
+            ),
+            str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
+        ]
+    )
 
-    for response in await _async_fetch_any(hass, dict.fromkeys(urls_to_try)):
+    for response in await _async_fetch_any(hass, urls_to_try):
         if (
             metadata := _resource_metadata_from_response(response, mcp_server_url)
         ) is not None:
