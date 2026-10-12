@@ -1,0 +1,116 @@
+{
+  "/vms/123": {
+    "VM.GuestAgent.FileSystemMgmt": 1,
+    "VM.Console": 1,
+    "VM.Config.CDROM": 1,
+    "VM.Config.HWType": 1,
+    "VM.Clone": 1,
+    "VM.Migrate": 1,
+    "VM.Snapshot": 1,
+    "VM.Config.Disk": 1,
+    "VM.Config.CPU": 1,
+    "VM.Config.Network": 1,
+    "VM.Replicate": 1,
+    "VM.Backup": 1,
+    "VM.Snapshot.Rollback": 1,
+    "VM.Config.Cloudinit": 1,
+    "VM.GuestAgent.Unrestricted": 1,
+    "VM.Config.Memory": 1,
+    "VM.GuestAgent.FileWrite": 1,
+    "VM.Audit": 1,
+    "VM.GuestAgent.Audit": 1,
+    "VM.Allocate": 1,
+    "VM.PowerMgmt": 1,
+    "VM.GuestAgent.FileRead": 1,
+    "VM.Config.Options": 1
+  },
+  "/nodes": {
+    "VM.GuestAgent.Audit": 1,
+    "VM.Audit": 1,
+    "Mapping.Audit": 1,
+    "Pool.Audit": 1,
+    "Sys.Audit": 1,
+    "Datastore.Audit": 1,
+    "SDN.Audit": 1
+  },
+  "/access/groups": {
+    "VM.Audit": 1,
+    "VM.GuestAgent.Audit": 1,
+    "Mapping.Audit": 1,
+    "Pool.Audit": 1,
+    "Sys.Audit": 1,
+    "Datastore.Audit": 1,
+    "SDN.Audit": 1
+  },
+  "/pool": {
+    "VM.GuestAgent.Audit": 1,
+    "VM.Audit": 1,
+    "Mapping.Audit": 1,
+    "Pool.Audit": 1,
+    "Sys.Audit": 1,
+    "SDN.Audit": 1,
+    "Datastore.Audit": 1
+  },
+  "/vms/102": {
+    "VM.GuestAgent.FileRead": 1,
+    "VM.PowerMgmt": 1,
+    "VM.Config.CDROM": 1,
+    "VM.Config.Cloudinit": 1,
+    "VM.Audit": 1,
+    "VM.GuestAgent.Audit": 1,
+    "VM.Backup": 1,
+    "VM.Console": 1,
+    "VM.GuestAgent.FileWrite": 1,
+    "VM.GuestAgent.FileSystemMgmt": 1
+  },
+  "/vms": {
+    "VM.GuestAgent.Audit": 1,
+    "VM.Audit": 1,
+    "Mapping.Audit": 1,
+    "Pool.Audit": 1,
+    "Sys.Audit": 1,
+    "Datastore.Audit": 1,
+    "SDN.Audit": 1
+  },
+  "/vms/701": {
+    "Sys.Syslog": 0,
+    "Sys.Audit": 0,
+    "Sys.Console": 0
+  },
+  "/access": {
+    "VM.GuestAgent.Audit": 1,
+    "VM.Audit": 1,
+    "Pool.Audit": 1,
+    "Mapping.Audit": 1,
+    "Sys.Audit": 1,
+    "SDN.Audit": 1,
+    "Datastore.Audit": 1
+  },
+  "/": {
+    "VM.Audit": 1,
+    "VM.GuestAgent.Audit": 1,
+    "Mapping.Audit": 1,
+    "Sys.Audit": 1,
+    "Pool.Audit": 1,
+    "Datastore.Audit": 1,
+    "SDN.Audit": 1
+  },
+  "/storage": {
+    "VM.GuestAgent.Audit": 1,
+    "VM.Audit": 1,
+    "Mapping.Audit": 1,
+    "Pool.Audit": 1,
+    "Sys.Audit": 1,
+    "SDN.Audit": 1,
+    "Datastore.Audit": 1
+  },
+  "/sdn": {
+    "VM.Audit": 1,
+    "VM.GuestAgent.Audit": 1,
+    "Pool.Audit": 1,
+    "Mapping.Audit": 1,
+    "Sys.Audit": 1,
+    "Datastore.Audit": 1,
+    "SDN.Audit": 1
+  }
+}
