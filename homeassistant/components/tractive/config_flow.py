@@ -111,11 +111,11 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                existing_entry = await self.async_set_unique_id(info["user_id"])
-                if existing_entry:
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                return self.async_abort(reason="reauth_failed_existing")
+                await self.async_set_unique_id(info["user_id"])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
