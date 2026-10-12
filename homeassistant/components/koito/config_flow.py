@@ -1,6 +1,7 @@
 """Config flow for Koito."""
 
 from collections.abc import Mapping
+import logging
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlsplit, urlunsplit
 
@@ -23,6 +24,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -152,4 +155,7 @@ async def _async_validate_connection(
         return "invalid_auth"
     except KoitoConnectionError, KoitoResponseError:
         return "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception validating Koito connection")
+        return "unknown"
     return None
