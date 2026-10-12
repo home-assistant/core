@@ -27,7 +27,7 @@
         "data_description": {
           "all_llm_apis": "Expose every LLM API, including LLM APIs added later.",
           "llm_hass_api": "The methods for controlling Home Assistant to expose with the Model Context Protocol.",
-          "read_only": "Only expose tools that do not change anything.",
+          "read_only": "Only expose controls that do not change anything.",
           "require_admin": "Only allow administrator accounts to use this Model Context Protocol endpoint."
         },
         "description": "See the [integration documentation]({more_info_url}) for setup instructions."
