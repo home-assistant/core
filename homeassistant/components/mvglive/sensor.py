@@ -17,6 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
@@ -52,6 +53,8 @@ ATTRIBUTION = "Data provided by mvg.de"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+MAX_DEPARTURES = 100
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_NEXT_DEPARTURE): [
@@ -86,22 +89,41 @@ async def async_setup_platform(
     ]
 
     all_imported = True
+    retry_import = False
+    failed_issues: set[str] = set()
     for nextdeparture, result in zip(stations, results, strict=True):
         if (
             result["type"] is FlowResultType.ABORT
             and result["reason"] != "already_configured"
         ):
             all_imported = False
+            retry_import |= result["reason"] == "cannot_connect"
+            issue_id = f"deprecated_yaml_import_issue_{result['reason']}_{nextdeparture[CONF_STATION]}"
+            failed_issues.add(issue_id)
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"deprecated_yaml_import_issue_{result['reason']}_{nextdeparture[CONF_STATION]}",
+                issue_id,
                 breaks_in_ha_version="2027.5.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
                 translation_placeholders={"station": nextdeparture[CONF_STATION]},
             )
+    for nextdeparture in stations:
+        for reason in ("cannot_connect", "invalid_station"):
+            issue_id = (
+                f"deprecated_yaml_import_issue_{reason}_{nextdeparture[CONF_STATION]}"
+            )
+            if issue_id not in failed_issues:
+                ir.async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                )
+
+    if retry_import:
+        raise PlatformNotReady("Could not connect to MVG to import YAML stations")
 
     if all_imported:
         ir.async_create_issue(
@@ -125,16 +147,7 @@ async def async_setup_entry(
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:
-    """Calculate the time difference in minutes between the current time and a given departure time.
-
-    Args:
-        departure_time: Unix timestamp of the departure time, in seconds.
-
-    Returns:
-        The time difference in minutes, as an integer, rounded down so that
-        already-departed connections stay negative instead of clamping to 0.
-
-    """
+    """Return the minutes until departure, rounded down."""
     current_time = dt_util.utcnow()
     departure_datetime = dt_util.utc_from_timestamp(departure_time)
     time_difference = (departure_datetime - current_time).total_seconds()
@@ -199,10 +212,13 @@ class MVGSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
+        has_local_filters = (
+            "" not in self._destinations[:1] or "" not in self._lines[:1]
+        )
         try:
             departures = await MvgApi.departures_async(
                 station_id=self._station_id,
-                limit=self._number,
+                limit=MAX_DEPARTURES if has_local_filters else self._number,
                 offset=self._timeoffset,
                 transport_types=self._transport_types,
                 session=async_get_clientsession(self.hass),
@@ -217,7 +233,7 @@ class MVGSensor(SensorEntity):
             self._destinations,
             self._lines,
             self._timeoffset,
-        )
+        )[: self._number]
 
     @property
     @override
@@ -233,7 +249,7 @@ class MVGSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         if not self._departures:
             return NONE_ICON
-        return str(self._departures[0]["icon"]) or NONE_ICON
+        return str(self._departures[0]["icon"] or NONE_ICON)
 
     @property
     @override
