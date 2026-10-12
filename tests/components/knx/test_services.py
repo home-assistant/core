@@ -1,19 +1,27 @@
 """Test KNX services."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import probatio
 import pytest
+from xknx.core import XknxConnectionState, XknxConnectionType
+from xknx.exceptions import (
+    ManagementConnectionError,
+    ManagementConnectionRefused,
+    ManagementConnectionTimeout,
+)
+from xknx.telegram import IndividualAddress
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx import async_unload_entry as knx_async_unload_entry
 from homeassistant.components.knx.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events
+from tests.common import MockUser, async_capture_events
 
 
 @pytest.mark.parametrize(
@@ -311,3 +319,128 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "integration_not_loaded"
+
+
+async def test_restart_device(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test `knx.restart_device` sends a basic restart to the device."""
+    await knx.setup_integration()
+
+    with patch(
+        "homeassistant.components.knx.services.dm_restart", new_callable=AsyncMock
+    ) as mock_restart:
+        await hass.services.async_call(
+            DOMAIN, "restart_device", {"individual_address": "1.1.5"}, blocking=True
+        )
+
+    mock_restart.assert_awaited_once_with(knx.xknx, IndividualAddress("1.1.5"))
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key", "extra_placeholders"),
+    [
+        (ManagementConnectionTimeout("timeout"), "restart_device_no_response", {}),
+        (ManagementConnectionRefused("refused"), "restart_device_refused", {}),
+        (
+            ManagementConnectionError("boom"),
+            "restart_device_failed",
+            {"error": "boom"},
+        ),
+    ],
+)
+async def test_restart_device_errors(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    side_effect: Exception,
+    translation_key: str,
+    extra_placeholders: dict[str, str],
+) -> None:
+    """Test xknx management errors map to translated errors."""
+    await knx.setup_integration()
+
+    with (
+        patch(
+            "homeassistant.components.knx.services.dm_restart",
+            new_callable=AsyncMock,
+            side_effect=side_effect,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, "restart_device", {"individual_address": "1.1.5"}, blocking=True
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {
+        "individual_address": "1.1.5",
+        **extra_placeholders,
+    }
+
+
+async def test_restart_device_not_connected(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test no restart is attempted without a bus connection."""
+    await knx.setup_integration()
+    knx.xknx.connection_manager.connection_state_changed(
+        state=XknxConnectionState.DISCONNECTED,
+        connection_type=XknxConnectionType.NOT_CONNECTED,
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.knx.services.dm_restart", new_callable=AsyncMock
+        ) as mock_restart,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, "restart_device", {"individual_address": "1.1.5"}, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "restart_device_not_connected"
+    assert exc_info.value.translation_placeholders == {"individual_address": "1.1.5"}
+    mock_restart.assert_not_awaited()
+
+
+@pytest.mark.parametrize("address", ["1/1/5", "1.1", "16.0.1", "1.1.256", ""])
+async def test_restart_device_invalid_address(
+    hass: HomeAssistant, knx: KNXTestKit, address: str
+) -> None:
+    """Test invalid individual addresses are rejected by the schema."""
+    await knx.setup_integration()
+
+    with (
+        patch(
+            "homeassistant.components.knx.services.dm_restart", new_callable=AsyncMock
+        ) as mock_restart,
+        pytest.raises(probatio.Invalid),
+    ):
+        await hass.services.async_call(
+            DOMAIN, "restart_device", {"individual_address": address}, blocking=True
+        )
+
+    mock_restart.assert_not_awaited()
+
+
+async def test_restart_device_requires_admin(
+    hass: HomeAssistant, knx: KNXTestKit, hass_read_only_user: MockUser
+) -> None:
+    """Test `knx.restart_device` is an admin action."""
+    await knx.setup_integration()
+
+    with (
+        patch(
+            "homeassistant.components.knx.services.dm_restart", new_callable=AsyncMock
+        ) as mock_restart,
+        pytest.raises(Unauthorized),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "restart_device",
+            {"individual_address": "1.1.5"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    mock_restart.assert_not_awaited()

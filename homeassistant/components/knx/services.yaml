@@ -74,3 +74,10 @@ exposure_register:
       selector:
         boolean:
 reload:
+restart_device:
+  fields:
+    individual_address:
+      required: true
+      example: "1.1.5"
+      selector:
+        text:

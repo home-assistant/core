@@ -5,9 +5,16 @@ from typing import TYPE_CHECKING
 
 import probatio
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import ConversionError
+from xknx.exceptions import (
+    ConversionError,
+    CouldNotParseAddress,
+    ManagementConnectionError,
+    ManagementConnectionRefused,
+    ManagementConnectionTimeout,
+)
+from xknx.management.procedures import dm_restart
 from xknx.telegram import Telegram
-from xknx.telegram.address import parse_device_group_address
+from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
@@ -17,6 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
+    CONF_KNX_INDIVIDUAL_ADDRESS,
     DOMAIN,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
@@ -27,10 +35,12 @@ from .const import (
     SERVICE_KNX_EVENT_REGISTER,
     SERVICE_KNX_EXPOSURE_REGISTER,
     SERVICE_KNX_READ,
+    SERVICE_KNX_RESTART_DEVICE,
     SERVICE_KNX_SEND,
 )
 from .expose import create_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
+from .validation import ia_validator
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -76,6 +86,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
         description_placeholders=_DESCRIPTION_PLACEHOLDERS,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_KNX_RESTART_DEVICE,
+        service_restart_device,
+        schema=SERVICE_KNX_RESTART_DEVICE_SCHEMA,
     )
 
     async_register_admin_service(
@@ -308,3 +326,58 @@ async def service_reload_integration(call: ServiceCall) -> None:
     knx_module = get_knx_module(call.hass)
     await call.hass.config_entries.async_reload(knx_module.entry.entry_id)
     call.hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+
+def _parse_individual_address(value: str | int) -> IndividualAddress:
+    """Parse a validated individual address, rejecting out of range parts."""
+    try:
+        return IndividualAddress(value)
+    except CouldNotParseAddress as exc:
+        raise probatio.Invalid(
+            f"'{value}' is not a valid KNX individual address: {exc.message}"
+        ) from exc
+
+
+SERVICE_KNX_RESTART_DEVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_KNX_INDIVIDUAL_ADDRESS): probatio.All(
+            ia_validator, _parse_individual_address
+        ),
+    }
+)
+
+
+async def service_restart_device(call: ServiceCall) -> None:
+    """Service for sending a basic restart to a KNX device."""
+    knx_module = get_knx_module(call.hass)
+    individual_address: IndividualAddress = call.data[CONF_KNX_INDIVIDUAL_ADDRESS]
+    placeholders = {"individual_address": str(individual_address)}
+
+    if not knx_module.xknx.connection_manager.connected.is_set():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="restart_device_not_connected",
+            translation_placeholders=placeholders,
+        )
+
+    try:
+        await dm_restart(knx_module.xknx, individual_address)
+    # subclasses of ManagementConnectionError first
+    except ManagementConnectionTimeout as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="restart_device_no_response",
+            translation_placeholders=placeholders,
+        ) from err
+    except ManagementConnectionRefused as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="restart_device_refused",
+            translation_placeholders=placeholders,
+        ) from err
+    except ManagementConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="restart_device_failed",
+            translation_placeholders={**placeholders, "error": str(err)},
+        ) from err

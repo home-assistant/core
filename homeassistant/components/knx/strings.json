@@ -1237,6 +1237,12 @@
         "lines": "Lines",
         "locations": "Locations",
         "not_found": "No devices found in project data.",
+        "restart": {
+          "confirm": "Restart",
+          "sent": "Restart sent to {address}",
+          "text": "{name} ({address}) restarts and does not react to telegrams for a short time. Its parameters and application program are kept.",
+          "title": "Restart device?"
+        },
         "title": "Devices"
       },
       "group_addresses": {
@@ -1342,6 +1348,18 @@
     },
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
+    },
+    "restart_device_failed": {
+      "message": "Restarting KNX device {individual_address} failed: {error}"
+    },
+    "restart_device_no_response": {
+      "message": "KNX device {individual_address} did not respond."
+    },
+    "restart_device_not_connected": {
+      "message": "Cannot restart KNX device {individual_address}: Home Assistant is not connected to the KNX bus."
+    },
+    "restart_device_refused": {
+      "message": "KNX device {individual_address} refused the connection."
     },
     "service_event_register_ga_not_found": {
       "message": "Could not find registered event for `{group_addresses}` to remove."
@@ -1516,6 +1534,16 @@
     "reload": {
       "description": "Reloads the KNX integration.",
       "name": "[%key:common::action::reload%]"
+    },
+    "restart_device": {
+      "description": "Sends a basic restart to a KNX device. Its parameters and application program are kept. Only sending the restart is confirmed, not that the device restarted.",
+      "fields": {
+        "individual_address": {
+          "description": "Individual address of the device to restart, e.g. `1.1.5`.",
+          "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
+        }
+      },
+      "name": "Restart device"
     },
     "send": {
       "description": "Sends arbitrary data directly to the KNX bus.",

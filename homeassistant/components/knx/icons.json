@@ -51,6 +51,9 @@
     "reload": {
       "service": "mdi:reload"
     },
+    "restart_device": {
+      "service": "mdi:restart"
+    },
     "send": {
       "service": "mdi:email-arrow-right"
     }
