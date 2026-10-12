@@ -146,6 +146,43 @@ async def test_reauth_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_reauth_flow_while_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test reauth when entry is already loaded uses update listener."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(mock_config_entry.update_listeners) > 0
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.rejseplanen.config_flow.Rejseplanen.validate_auth_key_async",
+            return_value=True,
+        ),
+        patch.object(
+            hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+        ) as mock_reload,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new-api-key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     ("side_effect", "return_value", "expected_error"),
     [
