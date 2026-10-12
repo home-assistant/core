@@ -388,7 +388,7 @@ aiopnsense==1.0.10
 aiopowerwall==0.4.1
 
 # homeassistant.components.proxmoxve
-aioproxmox==0.0.4a4
+aioproxmox==0.1.0
 
 # homeassistant.components.ptdevices
 aioptdevices==2026.03.2

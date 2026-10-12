@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["aioproxmox"],
   "quality_scale": "gold",
-  "requirements": ["aioproxmox==0.0.4a4"]
+  "requirements": ["aioproxmox==0.1.0"]
 }
