@@ -74,6 +74,42 @@ async def test_deprecation_warning(
     assert all(issue.severity == ir.IssueSeverity.WARNING for issue in issues)
 
 
+@pytest.mark.parametrize(
+    ("sensor_type", "ignore_non_numeric"),
+    [
+        pytest.param("max", True, id="max"),
+        pytest.param("sum", False, id="sum"),
+    ],
+)
+async def test_deprecation_yaml_keeps_unavailable_input_behavior(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    sensor_type: str,
+    ignore_non_numeric: bool,
+) -> None:
+    """Test the suggested group YAML handles unavailable inputs like Min/Max."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "type": sensor_type,
+            "entity_ids": ["sensor.test_1", "sensor.test_2"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    (issue,) = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN and issue.translation_key == "yaml_deprecated"
+    ]
+    assert issue.translation_placeholders
+    assert (
+        "ignore_non_numeric: true" in issue.translation_placeholders["yaml_config"]
+    ) is ignore_non_numeric
+
+
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
     """Test the min sensor with a default name."""
     config = {
