@@ -140,6 +140,11 @@ async def test_invalid_parameters(
         pytest.param({"start_time": "yesterday"}, "Invalid start_time", id="start"),
         pytest.param({"end_time": "now"}, "Invalid end_time", id="end"),
         pytest.param(
+            {"start_time": "2026-02-30T10:00:00"},
+            "Invalid start_time",
+            id="impossible_date",
+        ),
+        pytest.param(
             {
                 "start_time": "2026-10-12T10:00:00+00:00",
                 "end_time": "2026-10-12T09:00:00+00:00",

@@ -125,7 +125,9 @@ def _get_statistics(
 
 def _parse_time(value: str) -> datetime | None:
     """Parse a datetime string, assuming local time when no offset is given."""
-    if (parsed := dt_util.parse_datetime(value)) is None:
+    try:
+        parsed = dt_util.parse_datetime(value, raise_on_error=True)
+    except ValueError:
         return None
     return dt_util.as_utc(parsed)
 
