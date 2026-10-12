@@ -42,6 +42,7 @@ HACS_JSON_MAX = 1 << 16
 # Exit status when the sync completed but some repos could not be downloaded
 # (argparse already uses 2 for usage errors)
 EXIT_PARTIAL = 3
+MIN_LIST_RATIO = 0.5
 
 
 def is_repo_slug(value: str) -> bool:
@@ -309,12 +310,25 @@ def main() -> None:
     # Write it now so a run interrupted before any download still marks root
     save_state(root, state)
 
+    hacs_list = json.loads(_get(HACS_LIST))
+    if (
+        not isinstance(hacs_list, list)
+        or not hacs_list
+        or not all(isinstance(repo, str) for repo in hacs_list)
+    ):
+        sys.exit("HACS list is not a non-empty list of strings; refusing")
     hacs = []
-    for repo in sorted(set(json.loads(_get(HACS_LIST)))):
+    for repo in sorted(set(hacs_list)):
         if is_repo_slug(repo):
             hacs.append(repo)
         else:
             print(f"skipping invalid HACS entry {repo!r}", file=sys.stderr)
+    # A full sync prunes everything missing from the list, so a truncated
+    # response must not be mistaken for repos leaving HACS
+    if not args.repos and len(hacs) < len(state) * MIN_LIST_RATIO:
+        sys.exit(
+            f"HACS list has {len(hacs)} repos but {len(state)} are synced; refusing"
+        )
     targets = args.repos or hacs
     print(f"HACS list: {len(hacs)} repos, checking {len(targets)}", file=sys.stderr)
 
