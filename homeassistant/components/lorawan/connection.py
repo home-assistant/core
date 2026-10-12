@@ -38,8 +38,6 @@ class ConnectionRegistry:
     """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
     """Registered connections keyed by provider config entry ID."""
-    discovered_domains: set[str] = field(default_factory=set)
-    """Device integration domains already discovered during this run."""
     connection_change_listeners: list[Callable[[ConnectionChange], None]] = field(
         default_factory=list
     )
@@ -75,9 +73,6 @@ async def async_register_connection(
 
     @callback
     def discover(domain: str) -> None:
-        if domain in registry.discovered_domains:
-            return
-        registry.discovered_domains.add(domain)
         discovery_flow.async_create_flow(
             hass,
             domain,

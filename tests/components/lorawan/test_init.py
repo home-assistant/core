@@ -69,7 +69,7 @@ async def test_registration_and_reconnect(
 async def test_discovery_replay_and_live_events(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
-    """Discover a vendor once across existing devices, live additions, and connections."""
+    """Discover once per connection replay and for each later device addition."""
     with patch(
         "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
     ) as discover:
@@ -89,6 +89,14 @@ async def test_discovery_replay_and_live_events(
                 received_at=dt_util.utcnow(),
             )
         )
+        assert discover.call_count == 2
+        backend.emit(
+            AddedEvent(
+                descriptor=replace(DESCRIPTOR, dev_eui="0201010101010104"),
+                received_at=dt_util.utcnow(),
+            )
+        )
+        assert discover.call_count == 3
         backend.emit(RemovedEvent(descriptor=DESCRIPTOR, received_at=dt_util.utcnow()))
         backend.emit(
             AddedEvent(
@@ -96,10 +104,20 @@ async def test_discovery_replay_and_live_events(
                 received_at=dt_util.utcnow(),
             )
         )
-        await registered_backend("other", [replace(DESCRIPTOR, network_id="other")])
+        assert discover.call_count == 3
+        await registered_backend(
+            "other",
+            [
+                replace(DESCRIPTOR, network_id="other"),
+                replace(DESCRIPTOR, network_id="other", dev_eui="0201010101010102"),
+            ],
+        )
+        assert discover.call_count == 4
         backend.disconnect()
-        await registered_backend("network", [DESCRIPTOR])
-        assert discover.call_count == 1
+        await registered_backend(
+            "network", [DESCRIPTOR, replace(DESCRIPTOR, dev_eui="0201010101010102")]
+        )
+        assert discover.call_count == 5
 
 
 @pytest.mark.parametrize("event_class", [UpdatedEvent, RemovedEvent])
@@ -141,7 +159,7 @@ async def test_discovery_ignores_device_activity(
 async def test_discovery_of_another_vendor(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
-    """Deduplication of one vendor does not prevent discovery of another."""
+    """Replay discovers each matching domain once; later additions discover again."""
     with (
         patch(
             "homeassistant.components.lorawan.async_get_lorawan",
@@ -154,14 +172,29 @@ async def test_discovery_of_another_vendor(
             "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
         ) as discover,
     ):
-        backend, _ = await registered_backend("network", [DESCRIPTOR])
+        backend, _ = await registered_backend(
+            "network",
+            [
+                DESCRIPTOR,
+                replace(DESCRIPTOR, dev_eui="0201010101010102"),
+                replace(DESCRIPTOR, dev_eui="0201010101010103", brand_id=456),
+                replace(DESCRIPTOR, dev_eui="0201010101010104", brand_id=456),
+            ],
+        )
+        assert [call.args[1] for call in discover.call_args_list] == [
+            "other_vendor",
+            "test_vendor",
+        ]
         backend.emit(
             AddedEvent(
-                descriptor=replace(DESCRIPTOR, brand_id=456),
+                descriptor=replace(
+                    DESCRIPTOR, dev_eui="0201010101010105", brand_id=456
+                ),
                 received_at=dt_util.utcnow(),
             )
         )
         assert [call.args[1] for call in discover.call_args_list] == [
+            "other_vendor",
             "test_vendor",
             "other_vendor",
         ]
