@@ -463,10 +463,10 @@ aiotankerkoenig==0.5.5
 aiotedee==0.3.0
 
 # homeassistant.components.threema
-aiothreema==0.1.0
+aiothreema==0.2.0
 
 # homeassistant.components.tractive
-aiotractive==1.1.2
+aiotractive==1.2.0
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -1005,7 +1005,7 @@ eurotronic-cometblue-ha==2.0.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==2.1.0
+evohome-async==3.0.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -1834,7 +1834,7 @@ open-meteo==1.0.1
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 # homeassistant.components.ovhcloud_ai_endpoints
-openai==3.10.0
+openai==3.26.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -2347,7 +2347,7 @@ pyitachip2ir2==0.0.8
 pyituran==0.1.6
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.6
+pyjvcprojector==2.1.0
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.2.0
@@ -3124,7 +3124,7 @@ snapcast==2.3.8
 soco==0.31.5
 
 # homeassistant.components.sofar
-sofar-modbus==0.20.0
+sofar-modbus==0.21.0
 
 # homeassistant.components.solaredge
 solaredge-web==0.5.0
