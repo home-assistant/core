@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     ModbusConnectionError,
     ModbusError,
+    ModbusExceptionError,
     ModbusSerialParams,
     ModbusTcpParams,
     ModbusTimeoutError,
@@ -449,15 +450,23 @@ async def test_setup_while_asleep_keeps_the_device_versions(
     assert device.sw_version == MOCK_SW_VERSION
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ValueError("bug"), id="unexpected_error"),
+        pytest.param(ModbusExceptionError(0x02), id="exception_response"),
+    ],
+)
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_setup_retries_on_an_unexpected_error(
+async def test_setup_retries_unless_the_inverter_is_silent(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
+    error: Exception,
 ) -> None:
-    """Test an unexpected poll error is not taken for a sleeping inverter."""
+    """Test only a timeout is taken for a sleeping inverter."""
     mock_config_entry.add_to_hass(hass)
-    mock_connection.for_unit(1).fail_requests(ValueError("bug"))
+    mock_connection.for_unit(1).fail_requests(error)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -474,7 +483,7 @@ async def test_setup_retries_without_the_adapter(
     with patch.object(
         MockModbusConnection,
         "_connect_client",
-        side_effect=ModbusConnectionError("no adapter"),
+        side_effect=ModbusTimeoutError("no adapter"),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
