@@ -47,6 +47,8 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    DisplayDirection,
+    DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
@@ -448,6 +450,9 @@ def thermostat_gen2_device(
     name: str = "Thermostat Gen2",
     supports_display_configuration: bool = False,
     humidity_warning_enabled: bool = False,
+    display_direction: DisplayDirection.Direction | None = None,
+    displayed_temperature: DisplayedTemperatureConfiguration.DisplayedTemperature
+    | None = None,
 ) -> SHCThermostatGen2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
     device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
@@ -462,6 +467,10 @@ def thermostat_gen2_device(
     device.status = "AVAILABLE"
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
+    device.supports_display_direction = display_direction is not None
+    device.display_direction = display_direction
+    device.supports_displayed_temperature = displayed_temperature is not None
+    device.displayed_temperature = displayed_temperature
     return device
 
 
