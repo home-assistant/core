@@ -793,7 +793,7 @@ async def test_thermostat_heatit_z_trm3(
     assert state
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
 
-    # Try switching to floor sensor
+    # Try switching to room sensor
     event = Event(
         type="value updated",
         data={
@@ -806,7 +806,7 @@ async def test_thermostat_heatit_z_trm3(
                 "endpoint": 0,
                 "property": 2,
                 "propertyName": "Sensor mode",
-                "newValue": 0,
+                "newValue": 2,
                 "prevValue": 4,
             },
         },
@@ -814,7 +814,7 @@ async def test_thermostat_heatit_z_trm3(
     node.receive_event(event)
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
     assert state
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 18.8
 
 
 async def test_thermostat_heatit_z_trm2fx(
