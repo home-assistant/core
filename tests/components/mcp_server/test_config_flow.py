@@ -47,7 +47,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     """Test changing the LLM APIs in the options flow."""
     llm.async_register_api(hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test"))
     # The title generated for the APIs the entry was created with
-    hass.config_entries.async_update_entry(config_entry, title="Assist")
+    hass.config_entries.async_update_entry(config_entry, title="Device control")
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -76,7 +76,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
         CONF_REQUIRE_ADMIN: True,
     }
-    assert config_entry.title == "Assist, Test"
+    assert config_entry.title == "Device control, Test"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])
@@ -207,7 +207,7 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
         pytest.param(
             False,
             [llm.LLM_API_ASSIST],
-            "Assist",
+            "Device control",
             {
                 CONF_ALL_LLM_APIS: False,
                 CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
