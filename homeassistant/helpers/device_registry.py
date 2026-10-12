@@ -137,8 +137,8 @@ type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 class _DeviceInfoMapping:
     """Dict-style access for the device info dataclasses.
 
-    Device info used to be a TypedDict, and integrations still build and read it as
-    a mapping, for example by passing it to the device registry with
+    Device info used to be a TypedDict, and integrations still set and read it as a
+    mapping, for example by passing it to the device registry with
     `**device_info`. A field left at UNDEFINED is not part of the mapping, which
     preserves the TypedDict semantics of an unset key.
 
@@ -221,8 +221,9 @@ class _DeviceInfoMapping:
         """Return the set fields.
 
         Reads the fields, so a caller does not need the mapping interface the
-        integrations use. The JSON encoders serialize an object with an as_dict; a
-        dataclass would otherwise be serialized field by field, unset ones included.
+        integrations use. Serialize a device info through this method: orjson, and so
+        the Home Assistant JSON helpers, serialize a dataclass field by field, unset
+        ones included, without calling as_dict.
         """
         return {
             name: value

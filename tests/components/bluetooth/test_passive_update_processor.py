@@ -42,9 +42,11 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from . import (
     inject_bluetooth_service_info,
@@ -1982,3 +1984,22 @@ def test_deserialize_entity_description(
     """Test deserializing an entity description."""
     description = deserialize_entity_description(description_type, description_dict)
     assert description == expected_description
+
+
+def test_restore_data_device_info_round_trip() -> None:
+    """Test device infos are stored with their set fields only, and restored."""
+    devices = {
+        None: DeviceInfo(name="Main", manufacturer="Test Manufacturer"),
+        "sub": DeviceInfo(name="Sub"),
+    }
+    data = PassiveBluetoothDataUpdate(devices=devices)
+
+    stored = json_loads(json_bytes(data.async_get_restore_data()))
+    assert stored["devices"] == {
+        "": {"name": "Main", "manufacturer": "Test Manufacturer"},
+        "sub": {"name": "Sub"},
+    }
+
+    restored = PassiveBluetoothDataUpdate()
+    restored.async_set_restore_data(stored, EntityDescription)
+    assert restored.devices == devices

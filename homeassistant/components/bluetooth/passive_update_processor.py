@@ -172,7 +172,7 @@ class PassiveBluetoothDataUpdate[_T]:
         """Serialize restore data to storage."""
         return {
             "devices": {
-                # A device info is stored as the mapping of the fields it sets
+                # A plain dict, as orjson would also write the unset dataclass fields
                 key or "": dict(device_info)
                 for key, device_info in self.devices.items()
             },
