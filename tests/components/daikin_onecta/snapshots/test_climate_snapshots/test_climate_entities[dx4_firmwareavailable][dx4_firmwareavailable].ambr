@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[dx4_firmwareavailable][dx4_firmwareavailable]
   dict({
-    'climate.johnny_maaike_room_temperature': dict({
+    'climate.living_room_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -50,7 +50,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.johnny_maaike_room_temperature',
+        'entity_id': 'climate.living_room_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -69,7 +69,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 953>,
         'translation_key': 'room_temperature',
-        'unique_id': '32db6075-b739-4026-b661-127009254b42_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000001_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -85,7 +85,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -119,7 +119,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.johnny_maaike_room_temperature',
+        'entity_id': 'climate.living_room_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

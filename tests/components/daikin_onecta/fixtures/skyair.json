@@ -1,6 +1,6 @@
 [
   {
-    "_id": "0e621e8c-0a79-4cda-b387-9ff79f9ba61a",
+    "_id": "00000000-0000-4000-8000-000000000003",
     "type": "dx23",
     "deviceModel": "dx23",
     "isCloudConnectionUp": {
@@ -31,11 +31,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "10.20.26.51"
+          "value": "192.0.2.2"
         },
         "macAddress": {
           "settable": false,
-          "value": "10:68:38:c4:d3:88"
+          "value": "02:00:00:00:00:02"
         },
         "regionCode": {
           "settable": false,
@@ -59,11 +59,11 @@
         },
         "ssid": {
           "settable": false,
-          "value": "**REDACTED**"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "**REDACTED**"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -542,12 +542,12 @@
         }
       }
     ],
-    "embeddedId": "69a4cccf-34d5-41f8-b202-466330751f01",
+    "embeddedId": "test-gateway-2",
     "timestamp": "2026-08-07T12:57:32.915Z",
-    "id": "0e621e8c-0a79-4cda-b387-9ff79f9ba61a"
+    "id": "00000000-0000-4000-8000-000000000003"
   },
   {
-    "_id": "1200abf5-59e3-4173-a5fd-5e0560aead8d",
+    "_id": "00000000-0000-4000-8000-000000000004",
     "type": "dx23",
     "deviceModel": "dx23",
     "isCloudConnectionUp": {
@@ -578,11 +578,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "10.20.26.52"
+          "value": "192.0.2.3"
         },
         "macAddress": {
           "settable": false,
-          "value": "10:68:38:c4:d3:24"
+          "value": "02:00:00:00:00:03"
         },
         "regionCode": {
           "settable": false,
@@ -606,11 +606,11 @@
         },
         "ssid": {
           "settable": false,
-          "value": "**REDACTED**"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "**REDACTED**"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -1085,12 +1085,12 @@
         }
       }
     ],
-    "embeddedId": "b7f72789-0539-497a-bdc1-cfe65e76abc4",
+    "embeddedId": "test-gateway-3",
     "timestamp": "2026-08-07T14:17:24.654Z",
-    "id": "1200abf5-59e3-4173-a5fd-5e0560aead8d"
+    "id": "00000000-0000-4000-8000-000000000004"
   },
   {
-    "_id": "7596a914-2a79-49ca-9901-53897e03ee4c",
+    "_id": "00000000-0000-4000-8000-000000000005",
     "type": "dx23",
     "deviceModel": "dx23",
     "isCloudConnectionUp": {
@@ -1121,11 +1121,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "10.20.26.53"
+          "value": "192.0.2.4"
         },
         "macAddress": {
           "settable": false,
-          "value": "10:68:38:c4:d5:88"
+          "value": "02:00:00:00:00:04"
         },
         "regionCode": {
           "settable": false,
@@ -1149,11 +1149,11 @@
         },
         "ssid": {
           "settable": false,
-          "value": "**REDACTED**"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "**REDACTED**"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -1628,8 +1628,8 @@
         }
       }
     ],
-    "embeddedId": "87cb207c-2f8e-4a84-8f67-ff3f08ccc65a",
+    "embeddedId": "test-gateway-4",
     "timestamp": "2026-08-07T13:29:26.856Z",
-    "id": "7596a914-2a79-49ca-9901-53897e03ee4c"
+    "id": "00000000-0000-4000-8000-000000000005"
   }
 ]
