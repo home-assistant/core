@@ -115,14 +115,13 @@ class PowerwallDataManager:
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
-                _LOGGER.error("The powerwall api has changed: %s", str(err))
-                # The error might include some important information
-                # about what exactly changed.
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
                 self.runtime_data[POWERWALL_API_CHANGED] = True
-                raise UpdateFailed("The powerwall api has changed") from err
+                # The error might include some important information
+                # about what exactly changed.
+                raise UpdateFailed(f"The powerwall api has changed: {err}") from err
             except AccessDeniedError as err:
                 if attempt == 1:
                     # failed to authenticate => the credentials must be wrong

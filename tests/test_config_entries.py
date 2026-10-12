@@ -2067,6 +2067,38 @@ async def test_setup_not_ready_exponential_backoff(
         assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("retry_after", "expected_wait"),
+    [
+        pytest.param(3600, 3600, id="honored"),
+        pytest.param(1, 5, id="backoff_is_floor"),
+        pytest.param(-60, 5, id="already_passed"),
+        pytest.param(10**9, 86400, id="capped_at_one_day"),
+    ],
+)
+async def test_setup_not_ready_retry_after(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    retry_after: float,
+    expected_wait: int,
+) -> None:
+    """Test setup retry honors retry_after between the backoff and one day."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryNotReady(retry_after=retry_after)
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+        await manager.async_setup(entry.entry_id)
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert int(mock_call.call_args.args[1]) == expected_wait
+
+
 async def test_setup_raise_not_ready_from_exception(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -3477,6 +3509,60 @@ async def test_entry_unload(
     assert len(unload_entry_calls) == 1
     assert entry.state is expected_state
     assert hasattr(entry, "runtime_data") == has_runtime_data
+
+
+@pytest.mark.parametrize(
+    (
+        "exc",
+        "reason",
+        "translation_key",
+        "translation_placeholders",
+        "translation_domain",
+    ),
+    [
+        pytest.param(Exception(), "Unknown error", None, None, None, id="exception"),
+        pytest.param(
+            Exception("Some error"), "Some error", None, None, None, id="message"
+        ),
+        pytest.param(
+            ConfigEntryError(
+                translation_domain="comp",
+                translation_key="unload_failed",
+                translation_placeholders={"host": "localhost"},
+            ),
+            "unload_failed",
+            "unload_failed",
+            {"host": "localhost"},
+            "comp",
+            id="translated_config_entry_error",
+        ),
+    ],
+)
+async def test_entry_unload_raises(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    exc: Exception,
+    reason: str,
+    translation_key: str | None,
+    translation_placeholders: dict[str, str] | None,
+    translation_domain: str | None,
+) -> None:
+    """Test an exception from unload sets the failed unload reason."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp", async_unload_entry=AsyncMock(side_effect=exc))
+    )
+
+    assert not await manager.async_unload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+    assert entry.reason == reason
+    assert entry.error_reason_translation_key == translation_key
+    assert entry.error_reason_translation_placeholders == translation_placeholders
+    assert entry.error_reason_translation_domain == translation_domain
+    assert "Error unloading entry" in caplog.text
 
 
 @pytest.mark.parametrize(

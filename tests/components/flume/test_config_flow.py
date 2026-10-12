@@ -1,5 +1,7 @@
 """Test the flume config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -21,6 +23,16 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import DEVICE_LIST, DEVICE_LIST_URL
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_device_list(requests_mock: Mocker) -> Generator[None]:
+    """Return a device list and patch the entry setup."""
+    requests_mock.register_uri(
+        "GET", DEVICE_LIST_URL, status_code=HTTPStatus.OK, json={"data": DEVICE_LIST}
+    )
+    with patch("homeassistant.components.flume.async_setup_entry", return_value=True):
+        yield
 
 
 @pytest.mark.usefixtures("access_token", "device_list")
@@ -89,9 +101,23 @@ async def test_form_invalid_auth(hass: HomeAssistant, requests_mock: Mocker) -> 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
+    with _patch_device_list(requests_mock):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("access_token", "device_list_timeout")
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -109,6 +135,20 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_device_list(requests_mock):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("access_token")
@@ -217,3 +257,17 @@ async def test_form_no_devices(hass: HomeAssistant, requests_mock: Mocker) -> No
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_device_list(requests_mock):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_CLIENT_ID: "client_id",
+                CONF_CLIENT_SECRET: "client_secret",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import httpx2
 from mcp import McpError
@@ -33,6 +33,9 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_contex
 
 from .auth import AuthenticateHeader
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .types import ModelContextProtocolConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,14 +225,12 @@ class ModelContextProtocolTool(llm.Tool):
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
     """Define an object to hold MCP data."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: ModelContextProtocolConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: ModelContextProtocolConfigEntry,
         token_manager: TokenManager | None = None,
     ) -> None:
         """Initialize ModelContextProtocolCoordinator."""

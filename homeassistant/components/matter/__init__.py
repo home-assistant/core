@@ -121,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
     except Exception as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"

@@ -11,13 +11,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_SITE_ID,
-    DATA_API_CLIENT,
-    DATA_MODULES_COORDINATOR,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_MODULES_COORDINATOR, DOMAIN
 from .coordinator import SolarEdgeModulesCoordinator
 from .types import SolarEdgeConfigEntry, SolarEdgeData
 
@@ -37,12 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         try:
             response = await api.get_details(site_id)
         except (TimeoutError, ClientError, socket.gaierror) as ex:
-            LOGGER.error("Could not retrieve details from SolarEdge API")
-            raise ConfigEntryNotReady from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_details",
+            ) from ex
 
         if "details" not in response:
-            LOGGER.error("Missing details data in SolarEdge response")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="missing_details",
+            )
 
         if response["details"].get("status", "").lower() != "active":
             raise ConfigEntryError(

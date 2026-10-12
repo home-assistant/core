@@ -144,6 +144,7 @@ async def test_installations_list_error(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -170,3 +171,54 @@ async def test_login_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
+            side_effect=mock_get_device_config,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
+            side_effect=mock_get_device_status,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
+            return_value=GET_INSTALLATION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
+            return_value=GET_INSTALLATIONS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
+            side_effect=mock_get_webserver,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: CONFIG[CONF_USERNAME],
+                CONF_PASSWORD: CONFIG[CONF_PASSWORD],
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ID: CONFIG[CONF_ID],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

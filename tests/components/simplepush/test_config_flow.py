@@ -131,3 +131,9 @@ async def test_error_on_connection_failure(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -34,6 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.melcloud_home.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -387,6 +388,119 @@ async def test_atw_set_hvac_mode(
 
 
 @pytest.mark.parametrize(
+    ("entity_id", "power", "zone_mode", "hvac_mode", "expected_kwargs"),
+    [
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "True",
+            "HeatCurve",
+            HVACMode.HEAT,
+            {"operation_mode_zone1": ATWZoneMode.HEAT_CURVE},
+            id="heat_curve_kept",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "False",
+            "HeatFlowTemperature",
+            HVACMode.HEAT,
+            {"operation_mode_zone1": ATWZoneMode.HEAT_FLOW_TEMPERATURE},
+            id="off_to_heat_keeps_flow",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "True",
+            "CoolRoomTemperature",
+            HVACMode.HEAT,
+            {"operation_mode_zone1": ATWZoneMode.HEAT_ROOM_TEMPERATURE},
+            id="cool_room_to_heat",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "True",
+            "CoolFlowTemperature",
+            HVACMode.HEAT,
+            {"operation_mode_zone1": ATWZoneMode.HEAT_FLOW_TEMPERATURE},
+            id="cool_flow_to_heat",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "True",
+            "HeatFlowTemperature",
+            HVACMode.COOL,
+            {"operation_mode_zone1": ATWZoneMode.COOL_FLOW_TEMPERATURE},
+            id="heat_flow_to_cool",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "True",
+            "HeatCurve",
+            HVACMode.COOL,
+            {"operation_mode_zone1": ATWZoneMode.COOL_ROOM_TEMPERATURE},
+            id="heat_curve_to_cool",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "False",
+            "CoolFlowTemperature",
+            HVACMode.COOL,
+            {"operation_mode_zone1": ATWZoneMode.COOL_FLOW_TEMPERATURE},
+            id="off_to_cool_keeps_flow",
+        ),
+        pytest.param(
+            ATW_ZONE1_ENTITY_ID,
+            "True",
+            "Unknown",
+            HVACMode.HEAT,
+            {"operation_mode_zone1": ATWZoneMode.HEAT_ROOM_TEMPERATURE},
+            id="unknown_to_heat",
+        ),
+        pytest.param(
+            ATW_ZONE2_ENTITY_ID,
+            "True",
+            "HeatFlowTemperature",
+            HVACMode.COOL,
+            {"operation_mode_zone2": ATWZoneMode.COOL_FLOW_TEMPERATURE},
+            id="zone2_heat_flow_to_cool",
+        ),
+    ],
+)
+async def test_atw_set_hvac_mode_keeps_strategy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+    entity_id: str,
+    power: str,
+    zone_mode: str,
+    hvac_mode: HVACMode,
+    expected_kwargs: dict[str, ATWZoneMode],
+) -> None:
+    """Test setting the HVAC mode keeps the zone's room, flow or curve control."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    settings = {
+        setting["name"]: setting
+        for setting in context["buildings"][0]["airToWaterUnits"][0]["settings"]
+    }
+    settings["Power"]["value"] = power
+    settings["OperationModeZone1"]["value"] = zone_mode
+    settings["OperationModeZone2"]["value"] = zone_mode
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    mock_melcloud_client.control_atw_unit.assert_called_once_with(
+        "atw-unit-uuid-1", power=True, **expected_kwargs
+    )
+
+
+@pytest.mark.parametrize(
     ("entity_id", "expected_kwargs"),
     [
         pytest.param(ATW_ZONE1_ENTITY_ID, {"set_temperature_zone1": 23.0}, id="zone1"),
@@ -540,6 +654,11 @@ async def test_atw_zone_temperature_range(
             {"OperationMode": "HeatZones"}, HVACAction.HEATING, id="heat_zones"
         ),
         pytest.param({"OperationMode": "Cool"}, HVACAction.COOLING, id="cool"),
+        pytest.param({"OperationMode": "Heating"}, HVACAction.HEATING, id="heating"),
+        pytest.param(
+            {"OperationMode": "FreezeStat"}, HVACAction.HEATING, id="freeze_stat"
+        ),
+        pytest.param({"OperationMode": "Cooling"}, HVACAction.COOLING, id="cooling"),
         pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
         pytest.param(
             {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"
@@ -679,3 +798,28 @@ async def test_action_exceptions(
         )
 
     assert exc_info.value.translation_key == translation_key
+
+
+async def test_action_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+) -> None:
+    """Test an authentication error during an action starts reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.control_ata_unit.side_effect = MelCloudHomeAuthenticationError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ATA_ENTITY_ID},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

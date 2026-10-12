@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from tailscale import TailscaleAuthenticationError, TailscaleConnectionError
 
 from homeassistant.components.tailscale.const import CONF_TAILNET, DOMAIN
@@ -99,6 +100,7 @@ async def test_full_flow_with_authentication_error(
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(
     hass: HomeAssistant, mock_tailscale_config_flow: MagicMock
 ) -> None:
@@ -124,6 +126,17 @@ async def test_connection_error(
     assert result.get("errors") == {"base": "cannot_connect"}
 
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
+
+    mock_tailscale_config_flow.devices.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TAILNET: "homeassistant.github",
+            CONF_API_KEY: "tskey-FAKE",
+        },
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(
@@ -205,6 +218,7 @@ async def test_reauth_with_authentication_error(
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_api_error(
     hass: HomeAssistant,
     mock_tailscale_config_flow: MagicMock,
@@ -227,3 +241,13 @@ async def test_reauth_api_error(
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "cannot_connect"}
+
+    mock_tailscale_config_flow.devices.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_API_KEY: "tskey-VALID"},
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"
