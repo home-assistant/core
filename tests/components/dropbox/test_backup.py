@@ -560,7 +560,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_dropbox_client.delete_file.await_count == 2
 
 
@@ -586,7 +586,8 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"}
+        "agent_error_translations": {},
+        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"},
     }
 
 
@@ -609,7 +610,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_remove_backup_agents_listener(
