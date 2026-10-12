@@ -115,9 +115,12 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
-        if not self.node.position.known:
+        # While the cover moves, pyvlx estimates the position from the
+        # gateway's completion time and refreshes it every second.
+        position = self.node.get_position()
+        if not position.known:
             return None
-        return 100 - self.node.position.position_percent
+        return 100 - position.position_percent
 
     @property
     @override
