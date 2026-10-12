@@ -1,4 +1,3 @@
-
 """Config flow for HomeWizard."""
 
 from collections.abc import Mapping
