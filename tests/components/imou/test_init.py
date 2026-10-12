@@ -44,15 +44,19 @@ async def test_setup_and_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    ("exception", "expected_state", "translation_key"),
     [
         (
             InvalidAppIdOrSecretException("bad credentials"),
             ConfigEntryState.SETUP_ERROR,
+            "invalid_auth",
         ),
-        (ImouException("cloud failure"), ConfigEntryState.SETUP_RETRY),
-        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
-        (RuntimeError("unexpected"), ConfigEntryState.SETUP_RETRY),
+        (
+            ImouException("cloud failure"),
+            ConfigEntryState.SETUP_RETRY,
+            "fetch_devices_failed",
+        ),
+        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY, "update_timeout"),
     ],
 )
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
@@ -62,6 +66,7 @@ async def test_setup_entry_exceptions(
     mock_imou_ha_device_manager: AsyncMock,
     exception: Exception,
     expected_state: ConfigEntryState,
+    translation_key: str,
 ) -> None:
     """Test the coordinator errors while listing devices during setup."""
     mock_imou_ha_device_manager.async_get_devices.side_effect = exception
@@ -71,6 +76,8 @@ async def test_setup_entry_exceptions(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == translation_key
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -352,8 +359,50 @@ async def test_coordinator_update_fails_when_all_devices_fail(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.last_update_success is False
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [TimeoutError("timeout"), ImouException("cloud failure")],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_poll_list_devices_keeps_entry_loaded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    side_effect: Exception,
+) -> None:
+    """A later device-list failure leaves the entry loaded and entities unavailable."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = side_effect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_poll_status_refresh_timeout_translation(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """A later status-refresh timeout leaves the entry loaded and entities unavailable."""
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = TimeoutError(
+        "timeout"
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")

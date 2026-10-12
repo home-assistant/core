@@ -49,7 +49,7 @@ ATW_OPERATION_STATUS: dict[ATWOperationMode, str] = {
     ATWOperationMode.HEAT: "heating_zones",
     ATWOperationMode.HEAT_ZONES: "heating_zones",
     ATWOperationMode.HEATING: "heating_zones",
-    ATWOperationMode.FREEZE_STAT: "heating_zones",
+    ATWOperationMode.FREEZE_STAT: "frost_protection",
     ATWOperationMode.COOL: "cooling",
     ATWOperationMode.COOLING: "cooling",
 }

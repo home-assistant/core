@@ -2574,8 +2574,6 @@ ABBREVIATIONS_WHITE_LIST = [
     # MQTT client/server/trigger settings
     # Integration info
     "CONF_SUPPORT_URL",
-    # Undocumented device configuration
-    "CONF_DEPRECATED_VIA_HUB",
     "CONF_VIA_DEVICE",
     # Already short
     "CONF_FAN_MODE_LIST",
@@ -2587,6 +2585,7 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_SCHEMA",
     "CONF_TEMP_STEP",
     # Removed
+    "CONF_DEPRECATED_VIA_HUB",
     "CONF_WHITE_VALUE",
     # Config entry only settings
     "CONF_BROKER",

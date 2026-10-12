@@ -115,15 +115,21 @@ _ADD_REMOVE_METHODS = (
 def _entity_class_requires_readd(entity_class: type[Entity]) -> bool:
     """Return if an entity_id change must remove and re-add entities of a class.
 
-    Add or remove methods in _ADD_REMOVE_METHODS defined by a class are covered
-    when that class, or a subclass of it in the MRO, defines
-    async_entity_id_changed. A sibling which is merely earlier in the MRO does
-    not cover them. Entity itself does not count, and neither do the internal add
-    and remove methods, which core handles in async_internal_entity_id_changed.
+    Only classes defined outside of Home Assistant Core count, entities of core
+    integrations are always changed in place. Add or remove methods in
+    _ADD_REMOVE_METHODS defined by such a class are covered when that class, or
+    a subclass of it in the MRO, defines async_entity_id_changed. A sibling
+    which is merely earlier in the MRO does not cover them. The internal add and
+    remove methods do not count, core handles them in
+    async_internal_entity_id_changed.
 
     This can be removed in Home Assistant Core 2027.11.
     """
-    mro = [cls for cls in entity_class.__mro__ if cls is not Entity]
+    mro = [
+        cls
+        for cls in entity_class.__mro__
+        if not cls.__module__.startswith("homeassistant.")
+    ]
     hook_owners = [cls for cls in mro if "async_entity_id_changed" in cls.__dict__]
     return any(
         any(method in cls.__dict__ for method in _ADD_REMOVE_METHODS)
@@ -1781,7 +1787,8 @@ class Entity(
     ) -> None:
         """Remove the entity and add it again with its new entity_id.
 
-        Used for entities which have not opted in to async_entity_id_changed.
+        Used for entities of custom integrations which have not opted in to
+        async_entity_id_changed.
         Can be removed in Home Assistant Core 2027.11.
         """
         await self.async_remove(force_remove=True)
