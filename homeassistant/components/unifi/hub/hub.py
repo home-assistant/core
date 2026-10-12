@@ -23,7 +23,6 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
-from .client_store import UnifiNetworkClientStore
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
@@ -46,12 +45,6 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
-        self.network_clients: UnifiNetworkClientStore | None = (
-            UnifiNetworkClientStore(hass, config_entry)
-            if self.config.uses_api_key
-            else None
-        )
-        """Clients kept across restarts; the Integration API cannot list them."""
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
@@ -204,8 +197,6 @@ class UnifiHub:
         if not unload_ok:
             return False
 
-        if self.network_clients is not None:
-            await self.network_clients.async_unload()
         self._entity_helper.reset()
 
         return True

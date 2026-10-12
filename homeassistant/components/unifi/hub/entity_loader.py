@@ -18,10 +18,9 @@ from homeassistant.core import async_noop, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
-from ..const import CLIENT_RESTORE_MAX_AGE, DOMAIN, LOGGER, UNIFI_WIRELESS_CLIENTS
+from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UnifiApiHandler, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
 
@@ -29,8 +28,6 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-CLIENT_PRUNE_INTERVAL = timedelta(hours=1)
-"""How often clients of the Integration API are checked against the retention window."""
 
 
 class UnifiEntityLoader:
@@ -44,13 +41,12 @@ class UnifiEntityLoader:
 
         if hub.config.uses_api_key:
             # The Integration API; its handlers are polled
-            network = hub.api.network
+            devices = hub.api.network.devices
             self._startup_only_api_updaters: tuple[
                 Callable[[], Coroutine[Any, Any, None]], ...
             ] = ()
             self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
-                id(handler): UnifiDataUpdateCoordinator(hub, handler)
-                for handler in (network.clients, network.devices)
+                id(devices): UnifiDataUpdateCoordinator(hub, devices)
             }
         else:
             self._startup_only_api_updaters = (
@@ -141,20 +137,6 @@ class UnifiEntityLoader:
         hub.application_version = info["applicationVersion"]
         await network.assign_site(hub.config.site)
 
-        # The API cannot list clients that are not connected; put back the
-        # ones seen before, so their trackers exist as away from the start
-        assert hub.network_clients is not None
-        await hub.network_clients.async_load()
-        pruned = hub.network_clients.restore(
-            network.clients, set(hub.config.option_supported_clients)
-        )
-        self._remove_clients(pruned)
-        hub.config.entry.async_on_unload(
-            async_track_time_interval(
-                hub.hass, self._prune_network_clients, CLIENT_PRUNE_INTERVAL
-            )
-        )
-
         await self._refresh_data(
             [
                 coordinator.async_refresh
@@ -224,49 +206,6 @@ class UnifiEntityLoader:
                 api.clients.process_raw([dict(api.clients_all[mac].raw)])
 
     @callback
-    def _prune_network_clients(self, now: datetime) -> None:
-        """Drop clients of the Integration API outside the retention window.
-
-        The store prunes when the entry starts; this keeps doing it while the
-        entry stays loaded, so a long-running instance does not keep every
-        client it has ever seen. Connected and selected clients stay.
-        """
-        clients = self.hub.api.network.clients
-        keep = set(self.hub.config.option_supported_clients)
-        stale = [
-            mac
-            for mac in clients
-            if mac not in keep
-            and not clients.is_connected(mac)
-            and (
-                (last_seen := clients.last_seen(mac)) is None
-                or now - last_seen > CLIENT_RESTORE_MAX_AGE
-            )
-        ]
-        for mac in stale:
-            clients.forget(mac)
-        self._remove_clients(stale)
-
-    @callback
-    def _remove_clients(self, macs: list[str]) -> None:
-        """Remove the tracker entities and devices of clients no longer kept.
-
-        The device goes even when the tracker entity is already gone, as
-        after a change of the tracked clients, so no device with its uptime
-        sensor is left behind.
-        """
-        if not macs:
-            return
-        entity_registry = er.async_get(self.hub.hass)
-        device_registry = dr.async_get(self.hub.hass)
-        for mac in macs:
-            entity_id = entity_registry.async_get_entity_id(
-                Platform.DEVICE_TRACKER, DOMAIN, f"{self.hub.site}-{mac}"
-            )
-            self._remove_client(entity_registry, device_registry, entity_id, mac)
-        LOGGER.debug("Pruned %s stale UniFi client device(s)", len(macs))
-
-    @callback
     def _client_is_stale(self, client: Client, now: datetime) -> bool:
         """Return if a client has not been seen within the retention window."""
         last_seen = dt_util.utc_from_timestamp(client.last_seen or 0)
@@ -277,12 +216,11 @@ class UnifiEntityLoader:
         self,
         entity_registry: er.EntityRegistry,
         device_registry: dr.DeviceRegistry,
-        entity_id: str | None,
+        entity_id: str,
         mac: str,
     ) -> None:
-        """Remove a stale client's tracker entity, if any, and its device."""
-        if entity_id is not None:
-            entity_registry.async_remove(entity_id)
+        """Remove a stale client's tracker entity and its device."""
+        entity_registry.async_remove(entity_id)
         if device := device_registry.async_get_device_by_connection(
             (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
         ):

@@ -12,16 +12,9 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CONNECTION_MODE,
-    CONNECTION_MODE_API_KEY,
-    DOMAIN,
-    PLATFORMS,
-    UNIFI_WIRELESS_CLIENTS,
-)
+from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
-from .hub.client_store import UnifiNetworkClientStore
 from .services import async_setup_services
 
 type UnifiConfigEntry = ConfigEntry[UnifiHub]
@@ -97,14 +90,6 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await config_entry.runtime_data.async_reset()
-
-
-async def async_remove_entry(
-    hass: HomeAssistant, config_entry: UnifiConfigEntry
-) -> None:
-    """Delete what an entry set up with an API key stored."""
-    if config_entry.data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY:
-        await UnifiNetworkClientStore(hass, config_entry).async_remove()
 
 
 async def async_remove_config_entry_device(

@@ -28,9 +28,7 @@ from aiounifi.models.device import (
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
-from aiounifi.network.v1.interfaces.clients import Clients as NetworkClients
 from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
-from aiounifi.network.v1.models.client import Client as NetworkClient
 from aiounifi.network.v1.models.device import (
     Device as NetworkDevice,
     DeviceState as NetworkDeviceState,
@@ -61,14 +59,13 @@ from homeassistant.util import dt as dt_util, slugify
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
 from .coordinator import UnifiApiHandler
-from .device_tracker import async_client_allowed_fn, async_network_client_allowed_fn
+from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
-    async_network_client_device_info_fn,
     async_network_device_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
@@ -149,18 +146,6 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
     if client.uptime < 1000000000:
         return dt_util.now() - timedelta(seconds=client.uptime)
     return dt_util.utc_from_timestamp(float(client.uptime))
-
-
-@callback
-def async_network_client_uptime_value_fn(
-    hub: UnifiHub, client: NetworkClient
-) -> datetime | None:
-    """When a client of the Integration API connected."""
-    if not client.connected_at or not hub.api.network.clients.is_connected(
-        client.mac_address or ""
-    ):
-        return None
-    return dt_util.parse_datetime(client.connected_at)
 
 
 @callback
@@ -923,20 +908,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
 
 NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
-    UnifiSensorEntityDescription[NetworkClients, NetworkClient](
-        key="Client uptime",
-        device_class=SensorDeviceClass.UPTIME,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        allowed_fn=async_network_client_allowed_fn,
-        api_handler_fn=lambda api: api.network.clients,
-        device_info_fn=async_network_client_device_info_fn,
-        object_fn=lambda api, obj_id: api.network.clients[obj_id],
-        supported_fn=lambda hub, _: hub.config.option_allow_uptime_sensors,
-        unique_id_fn=lambda hub, obj_id: f"uptime-{obj_id}",
-        value_fn=async_network_client_uptime_value_fn,
-        value_changed_fn=async_uptime_value_changed_fn,
-    ),
     UnifiSensorEntityDescription[NetworkDevices, NetworkDevice](
         key="Device State",
         translation_key="device_state",

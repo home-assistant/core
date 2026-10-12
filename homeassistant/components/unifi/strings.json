@@ -26,7 +26,7 @@
           "port": "[%key:component::unifi::config::step::local_user::data_description::port%]",
           "verify_ssl": "[%key:component::unifi::config::step::local_user::data_description::verify_ssl%]"
         },
-        "description": "Connect with an API key from *Network → Settings → Control Plane → Integrations*, without a local user. This mode provides device and client trackers, device state and device restart. For more information: {api_key_documentation_url}",
+        "description": "Connect with an API key from *Network → Settings → Control Plane → Integrations*, without a local user. Fewer entities are available this way. For more information: {api_key_documentation_url}",
         "title": "Set up UniFi Network with an API key"
       },
       "local_user": {

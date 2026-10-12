@@ -94,26 +94,20 @@ async def test_network_api_coordinators_keep_polling_when_empty(
     """Ensure Integration API handlers poll at full rate even while empty.
 
     Polling is their only source of change, so an empty site must be polled
-    as often as a busy one to notice its first client or device.
+    as often as a busy one to notice its first device.
     """
-    loader = network_api_config_entry_setup.runtime_data.entity_loader
-    network = network_api_config_entry_setup.runtime_data.api.network
-    coordinators = [
-        loader.get_data_update_coordinator(handler)
-        for handler in (network.clients, network.devices)
-    ]
+    hub = network_api_config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.network.devices)
 
-    for coordinator in coordinators:
-        assert not coordinator.handler.items()
-        assert coordinator.update_interval == POLL_INTERVAL
+    assert not coordinator.handler.items()
+    assert coordinator.update_interval == POLL_INTERVAL
 
     async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    for coordinator in coordinators:
-        assert coordinator.last_update_success
-        assert not coordinator.handler.items()
-        assert coordinator.update_interval == POLL_INTERVAL
+    assert coordinator.last_update_success
+    assert not coordinator.handler.items()
+    assert coordinator.update_interval == POLL_INTERVAL
 
 
 async def test_get_data_update_coordinator_requires_registered_handler(

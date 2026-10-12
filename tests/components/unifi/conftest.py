@@ -294,7 +294,6 @@ def mock_network_api_lists(
     *,
     sites: list[dict[str, Any]] | None = None,
     devices: list[dict[str, Any]] | None = None,
-    clients: list[dict[str, Any]] | None = None,
 ) -> None:
     """Register the Integration API's info and list endpoints.
 
@@ -322,22 +321,17 @@ def mock_network_api_lists(
         ),
     )
     aioclient_mock.get(f"{site}/devices", json=network_api_envelope(devices or []))
-    aioclient_mock.get(f"{site}/clients", json=network_api_envelope(clients or []))
 
 
 @pytest.fixture(name="mock_network_api_requests")
 def fixture_network_api_requests(
     aioclient_mock: AiohttpClientMocker,
-    network_client_payload: list[dict[str, Any]],
     network_device_payload: list[dict[str, Any]],
     network_site_payload: list[dict[str, Any]],
 ) -> None:
     """Mock the Integration API's responses from the payload fixtures."""
     mock_network_api_lists(
-        aioclient_mock,
-        sites=network_site_payload,
-        devices=network_device_payload,
-        clients=network_client_payload,
+        aioclient_mock, sites=network_site_payload, devices=network_device_payload
     )
 
 
@@ -456,12 +450,6 @@ def fixture_network_site_payload() -> list[dict[str, Any]]:
     return [
         {"id": NETWORK_SITE_ID, "internalReference": DEFAULT_SITE, "name": "Site name"}
     ]
-
-
-@pytest.fixture(name="network_client_payload")
-def fixture_network_client_payload() -> list[dict[str, Any]]:
-    """Connected clients of the Integration API."""
-    return []
 
 
 @pytest.fixture(name="network_device_payload")

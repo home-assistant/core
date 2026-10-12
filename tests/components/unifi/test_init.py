@@ -1,6 +1,5 @@
 """Test UniFi Network integration setup process."""
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
@@ -18,7 +17,6 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.unifi.hub.client_store import SAVE_DELAY, storage_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -338,7 +336,7 @@ async def test_revoked_api_key_triggers_reauth_while_polling(
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/clients",
+        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/devices",
         status=401,
         json={"error": {"code": 401, "message": "Unauthorized"}},
     )
@@ -352,48 +350,3 @@ async def test_revoked_api_key_triggers_reauth_while_polling(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"
     assert flows[0]["step_id"] == "reauth_api_key"
-
-
-@pytest.mark.parametrize(
-    "network_client_payload",
-    [
-        [
-            {
-                "type": "WIRED",
-                "id": "f9edef13-b667-369f-9556-bc36978095af",
-                "name": "ha",
-                "macAddress": "00:00:00:00:00:01",
-                "access": {"type": "DEFAULT"},
-            }
-        ]
-    ],
-)
-async def test_remove_entry_with_api_key_deletes_stored_clients(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-    network_api_config_entry_setup: MockConfigEntry,
-) -> None:
-    """Test removing an entry set up with an API key deletes its stored clients."""
-    config_entry = network_api_config_entry_setup
-    key = storage_key(config_entry)
-    hub = config_entry.runtime_data
-    assert hub.network_clients is not None
-    await flush_store(hub.network_clients._store)
-    assert key in hass_storage
-
-    # A poll leaves a delayed save pending when the entry goes
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert key not in hass_storage
-
-    freezer.tick(timedelta(seconds=SAVE_DELAY + 1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert key not in hass_storage, "the pending save did not put the file back"
