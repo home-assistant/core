@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from . import VALID_CONFIG
 from .conftest import DoorbirdMockerType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 
 @pytest.fixture
@@ -187,3 +187,26 @@ async def test_change_schedule_fails(
     # Ensure the attempt to update the schedule to fix the incorrect
     # param is made
     assert new_schedule[-1].output[-1].param == "1"
+
+
+async def test_disabled_webhook_output_is_reconfigured(
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test a switched off webhook output is wired up again."""
+    schedule = DoorBirdScheduleEntry.parse_all(
+        load_json_value_fixture("schedule.json", DOMAIN)
+    )
+    doorbell = next(entry for entry in schedule if entry.input == "doorbell")
+    for output in doorbell.output:
+        if output.event == "http":
+            output.enabled = False
+
+    await doorbird_mocker(schedule=schedule)
+
+    # A disabled output is one the device will not call, so it counts as
+    # unconfigured and an enabled one is written back for the same favorite.
+    assert [
+        (output.param, output.enabled)
+        for output in doorbell.output
+        if output.event == "http"
+    ] == [("0", False), ("0", True)]
