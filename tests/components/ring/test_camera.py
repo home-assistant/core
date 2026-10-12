@@ -447,10 +447,10 @@ async def test_camera_live_view_for_video_intercom_without_snapshot_method(
     assert await camera.async_camera_image() is None
 
 
+@pytest.mark.usefixtures("mock_ring_client")
 async def test_camera_live_view_for_video_intercom_update_keeps_snapshot_path(
     hass: HomeAssistant,
-    mock_ring_client,
-    mock_ring_devices,
+    mock_ring_devices: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test intercom camera updates keep using the snapshot path."""
@@ -514,7 +514,7 @@ async def test_camera_stream_attributes(
 @pytest.mark.parametrize(
     ("device_id", "entity_id"),
     [
-        pytest.param(FRONT_DEVICE_ID, "camera.front_live_view", id="doorbell"),
+        pytest.param(FRONT_DEVICE_ID, "camera.front_live_view", id="stickup-camera"),
         pytest.param(
             INGRESS_DEVICE_ID, "camera.ingress_live_view", id="video-intercom"
         ),
