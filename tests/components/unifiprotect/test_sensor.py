@@ -701,7 +701,13 @@ async def test_sensor_update_alarm_with_last_trip_time(
 ) -> None:
     """Test sensor motion entity with last trip time."""
 
-    setup_public_sensor(ufp, tampering_detected_at=fixed_now - timedelta(hours=3))
+    # Distinct offsets: equal values would hide a swapped path.
+    setup_public_sensor(
+        ufp,
+        motion_detected_at=fixed_now - timedelta(hours=1),
+        open_status_changed_at=fixed_now - timedelta(hours=2),
+        tampering_detected_at=fixed_now - timedelta(hours=3),
+    )
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 23, 23)
 

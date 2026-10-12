@@ -110,6 +110,9 @@
     },
     "device_offline": {
       "message": "SwitchBot Cloud device is offline."
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication while connecting to the SwitchBot API"
     }
   },
   "services": {

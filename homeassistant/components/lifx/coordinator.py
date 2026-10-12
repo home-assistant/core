@@ -21,6 +21,7 @@ from lifx import (
     LightWaveform,
     MatrixLight,
     MatrixLightState,
+    MirrorLightState,
     MultiZoneLight,
     MultiZoneLightState,
     ThemeLibrary,
@@ -41,6 +42,7 @@ type LIFXState = (
     | MultiZoneLightState
     | MatrixLightState
     | CeilingLightState
+    | MirrorLightState
     | HevLightState
     | InfraredLightState
 )

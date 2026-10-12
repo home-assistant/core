@@ -106,6 +106,23 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    with (
+        patch(
+            "homeassistant.components.coolmaster.config_flow.CoolMasterNet.status",
+            return_value={"test_id": "test_unit"},
+        ),
+        patch(
+            "homeassistant.components.coolmaster.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _flow_data()
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_duplicate_host(hass: HomeAssistant) -> None:
     """Test we abort when a bridge on this host is already configured."""

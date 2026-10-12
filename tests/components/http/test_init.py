@@ -2354,6 +2354,194 @@ async def test_websocket_configure_rejected_while_not_running(
     assert len(restart_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "server_port",
+    [
+        pytest.param(default_server_port(), id="same_port"),
+        pytest.param(9123, id="new_port"),
+    ],
+)
+async def test_websocket_configure_rejects_overlapping_hosts(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    server_port: int,
+) -> None:
+    """Listen addresses that overlap on the same port are rejected.
+
+    A wildcard and a specific address of the same family both bind with
+    SO_REUSEADDR but only one can listen, so the server would fail once it
+    starts serving. The check does not need the configured port, so it also
+    covers a host-only change while the running server holds that port.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": server_port,
+                "server_host": ["0.0.0.0", "127.0.0.1", "::1"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert response["error"]["message"] == (
+        "Listen addresses '0.0.0.0' and '127.0.0.1' overlap: both cannot listen"
+        " on the same port"
+    )
+
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_same_port_host_change_is_accepted(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """A host-only change on the current port is checked without binding it."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    # The running server holds the port: a real bind would fail against
+    # ourselves, so success proves only the listen addresses were checked.
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    current_port = default_server_port()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": current_port,
+                "server_host": ["0.0.0.0", "::1"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_host"] == [
+        "0.0.0.0",
+        "::1",
+    ]
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "hosts",
+    [
+        pytest.param(["0.0.0.0", "::"], id="dual_stack_wildcards"),
+        pytest.param(["0.0.0.0", "::1"], id="ipv4_wildcard_ipv6_loopback"),
+        pytest.param(["127.0.0.1", "::1"], id="loopback_only"),
+        pytest.param(["127.0.0.1"], id="single"),
+        # create_server() binds each resolved endpoint only once.
+        pytest.param(["::1", "::1"], id="duplicate"),
+        pytest.param(["0.0.0.0", "0.0.0.0"], id="duplicate_wildcard"),
+        # The same link-local address on two interfaces is two endpoints.
+        pytest.param(["fe80::1%1", "fe80::1%2"], id="scoped_link_local"),
+    ],
+)
+async def test_verify_hosts_distinct_accepts(
+    hass: HomeAssistant, hosts: list[str]
+) -> None:
+    """Hosts that can all listen on one port pass the check."""
+    await http.server.async_verify_hosts_distinct(hass, hosts)
+
+
+@pytest.mark.parametrize(
+    ("hosts", "first", "second"),
+    [
+        pytest.param(["0.0.0.0", "127.0.0.1"], "0.0.0.0", "127.0.0.1", id="v4"),
+        pytest.param(
+            ["127.0.0.1", "0.0.0.0"], "127.0.0.1", "0.0.0.0", id="v4_reversed"
+        ),
+        pytest.param(["::", "::1"], "::", "::1", id="v6"),
+        pytest.param(["0.0.0.0", "::1", "::"], "::1", "::", id="v6_after_v4"),
+        pytest.param(["::", "fe80::1%1"], "::", "fe80::1%1", id="v6_scoped"),
+    ],
+)
+async def test_verify_hosts_distinct_rejects(
+    hass: HomeAssistant, hosts: list[str], first: str, second: str
+) -> None:
+    """Hosts of one family overlap on a wildcard or a repeated address."""
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Listen addresses {first!r} and {second!r} overlap",
+    ):
+        await http.server.async_verify_hosts_distinct(hass, hosts)
+
+
+async def test_verify_hosts_distinct_resolves_host_names(
+    hass: HomeAssistant,
+) -> None:
+    """A host name counts with every address it resolves to."""
+    localhost_infos = [
+        (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
+        (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("::1", 0, 0, 0)),
+    ]
+    real_getaddrinfo = socket.getaddrinfo
+
+    def _getaddrinfo(host: str, *args: Any, **kwargs: Any) -> list[Any]:
+        if host == "localhost":
+            return localhost_infos
+        return real_getaddrinfo(host, *args, **kwargs)
+
+    with patch("homeassistant.components.http.server.socket.getaddrinfo", _getaddrinfo):
+        await http.server.async_verify_hosts_distinct(hass, ["localhost", "192.0.2.1"])
+        # localhost and 127.0.0.1 resolve to the same endpoint, bound once.
+        await http.server.async_verify_hosts_distinct(hass, ["localhost", "127.0.0.1"])
+        with pytest.raises(
+            HomeAssistantError,
+            match="Listen addresses 'localhost' and '::' overlap",
+        ):
+            await http.server.async_verify_hosts_distinct(hass, ["localhost", "::"])
+
+
+@pytest.mark.parametrize(
+    ("error", "match"),
+    [
+        pytest.param(
+            socket.gaierror(-2, "Name or service not known"),
+            "Cannot resolve listen address 'nope.invalid': .*Name or service",
+            id="unresolvable",
+        ),
+        pytest.param(
+            UnicodeError("encoding with 'idna' codec failed"),
+            "Cannot resolve listen address 'nope.invalid': .*idna",
+            id="unencodable",
+        ),
+    ],
+)
+async def test_verify_hosts_distinct_rejects_unresolvable_host(
+    hass: HomeAssistant, error: Exception, match: str
+) -> None:
+    """A host that cannot be resolved is reported."""
+    with (
+        patch(
+            "homeassistant.components.http.server.socket.getaddrinfo",
+            side_effect=error,
+        ),
+        pytest.raises(HomeAssistantError, match=match),
+    ):
+        await http.server.async_verify_hosts_distinct(hass, ["nope.invalid"])
+
+
 async def test_pending_config_auto_reverts_to_stable(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
