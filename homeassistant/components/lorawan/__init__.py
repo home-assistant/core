@@ -10,9 +10,11 @@ from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connec
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
 from .entity import LoRaWANEntity
+from .models import LoRaWANDiscoveryInfo
 
 __all__ = [
     "DeviceManager",
+    "LoRaWANDiscoveryInfo",
     "LoRaWANEntity",
     "async_register_connection",
     "device_identifier",

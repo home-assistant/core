@@ -18,7 +18,10 @@ from lorawan_connection import (
 from lorawan_connection.mock import MockConnection
 import pytest
 
-from homeassistant.components.lorawan import async_register_connection
+from homeassistant.components.lorawan import (
+    LoRaWANDiscoveryInfo,
+    async_register_connection,
+)
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -77,7 +80,7 @@ async def test_discovery_replay_and_live_events(
             hass,
             "test_vendor",
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
-            data={},
+            data=LoRaWANDiscoveryInfo(),
         )
         backend.emit(UpdatedEvent(descriptor=DESCRIPTOR, received_at=dt_util.utcnow()))
         backend.emit(
@@ -327,5 +330,8 @@ async def test_discovery_matches_connection_stack(
         assert backend.stack_type == stack_type
         assert subscribe.call_args.kwargs["brands"] == frozenset({(stack_type, 123)})
         discover.assert_called_once_with(
-            hass, stack_type, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data={}
+            hass,
+            stack_type,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=LoRaWANDiscoveryInfo(),
         )

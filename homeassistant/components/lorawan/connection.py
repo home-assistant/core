@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.util.hass_dict import HassKey
 
+from .models import LoRaWANDiscoveryInfo
+
 type ConnectionChange = tuple[str, Connection | None]
 
 
@@ -77,7 +79,10 @@ async def async_register_connection(
             return
         registry.discovered_domains.add(domain)
         discovery_flow.async_create_flow(
-            hass, domain, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data={}
+            hass,
+            domain,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=LoRaWANDiscoveryInfo(),
         )
 
     @callback
