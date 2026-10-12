@@ -2,13 +2,13 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import Mock
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.london_air.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.london_air.const import DOMAIN, SCAN_INTERVAL, URL
 from homeassistant.components.london_air.coordinator import NO_SPECIES_DATA
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -21,20 +21,18 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 async def test_sensor_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     api_payload: dict[str, Any],
 ) -> None:
     """Test the sensor reports the authority air quality band."""
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    response.json = AsyncMock(return_value=api_payload)
-    mock_session.get.return_value = response
+    aioclient_mock.get(URL, json=api_payload)
 
     mock_config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
@@ -63,7 +61,7 @@ async def test_sensor_state(
 async def test_sensor_no_species_sentinel(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test a site with no species data preserves the legacy sentinel."""
     payload = {
@@ -86,10 +84,7 @@ async def test_sensor_no_species_sentinel(
             ]
         }
     }
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    response.json = AsyncMock(return_value=payload)
-    mock_session.get.return_value = response
+    aioclient_mock.get(URL, json=payload)
 
     mock_config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
@@ -108,24 +103,18 @@ async def test_sensor_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     api_payload: dict[str, Any],
 ) -> None:
     """Test the sensor becomes unavailable when a refresh fails."""
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    response.json = AsyncMock(return_value=api_payload)
-    mock_session.get.return_value = response
+    aioclient_mock.get(URL, json=api_payload)
 
     mock_config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    mock_session.get.return_value = MagicMock(
-        raise_for_status=MagicMock(
-            side_effect=ClientConnectorError(Mock(), OSError("test"))
-        )
-    )
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(URL, exc=ClientConnectorError(Mock(), OSError("test")))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -138,14 +127,10 @@ async def test_sensor_unavailable(
 async def test_setup_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup retries when the API is unavailable."""
-    mock_session.get.return_value = MagicMock(
-        raise_for_status=MagicMock(
-            side_effect=ClientConnectorError(Mock(), OSError("test"))
-        )
-    )
+    aioclient_mock.get(URL, exc=ClientConnectorError(Mock(), OSError("test")))
 
     mock_config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
@@ -158,14 +143,11 @@ async def test_yaml_migration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     api_payload: dict[str, Any],
 ) -> None:
     """Test YAML setup imports a config entry and keeps the legacy entity IDs."""
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    response.json = AsyncMock(return_value=api_payload)
-    mock_session.get.return_value = response
+    aioclient_mock.get(URL, json=api_payload)
 
     assert await async_setup_component(
         hass,
@@ -211,14 +193,10 @@ async def test_yaml_migration(
 async def test_yaml_migration_import_failure(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test YAML setup registers a repair issue when the import fails."""
-    mock_session.get.return_value = MagicMock(
-        raise_for_status=MagicMock(
-            side_effect=ClientConnectorError(Mock(), OSError("test"))
-        )
-    )
+    aioclient_mock.get(URL, exc=ClientConnectorError(Mock(), OSError("test")))
 
     assert await async_setup_component(
         hass,
@@ -248,14 +226,11 @@ async def test_yaml_migration_existing_entry(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     api_payload: dict[str, Any],
 ) -> None:
     """Test YAML setup with an existing entry does not create duplicates."""
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    response.json = AsyncMock(return_value=api_payload)
-    mock_session.get.return_value = response
+    aioclient_mock.get(URL, json=api_payload)
 
     mock_config_entry.add_to_hass(hass)
 
@@ -287,22 +262,21 @@ async def test_yaml_migration_multiple_blocks(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     api_payload: dict[str, Any],
     delay: float,
 ) -> None:
     """Test that multiple YAML blocks merge into a single entry."""
-    response = MagicMock()
-    response.raise_for_status = MagicMock()
-    response.json = AsyncMock(return_value=api_payload)
 
-    async def _get(*args: Any, **kwargs: Any) -> MagicMock:
+    async def _side_effect(
+        method: str, url: Any, data: Any
+    ) -> AiohttpClientMockResponse:
         # Yield so both import flows run concurrently; a non-zero delay keeps
         # the entry SETUP_IN_PROGRESS for several merge-poll cycles.
         await asyncio.sleep(delay)
-        return response
+        return AiohttpClientMockResponse(method=method, url=url, json=api_payload)
 
-    mock_session.get.side_effect = _get
+    aioclient_mock.get(URL, side_effect=_side_effect)
 
     assert await async_setup_component(
         hass,
@@ -347,17 +321,17 @@ async def test_yaml_migration_multiple_blocks(
 async def test_yaml_migration_multiple_blocks_import_failure(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     delay: float,
 ) -> None:
     """Test concurrent YAML blocks report the import failure when the API is down."""
 
-    async def _get(*args: Any, **kwargs: Any) -> Any:
+    async def _side_effect(method: str, url: Any, data: Any) -> Any:
         # Yield so both import flows run concurrently before the API fails.
         await asyncio.sleep(delay)
         raise ClientConnectorError(Mock(), OSError("test"))
 
-    mock_session.get.side_effect = _get
+    aioclient_mock.get(URL, side_effect=_side_effect)
 
     assert await async_setup_component(
         hass,
@@ -393,7 +367,7 @@ async def test_yaml_migration_multiple_blocks_import_failure(
 async def test_yaml_migration_multiple_blocks_import_deadline(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test the follower aborts with cannot_connect when the creator hangs past the deadline."""
@@ -404,12 +378,12 @@ async def test_yaml_migration_multiple_blocks_import_deadline(
     )
     release = asyncio.Event()
 
-    async def _get(*args: Any, **kwargs: Any) -> Any:
+    async def _side_effect(method: str, url: Any, data: Any) -> Any:
         # Hang until released so the creator flow stays in progress past the deadline.
         await release.wait()
         raise ClientConnectorError(Mock(), OSError("test"))
 
-    mock_session.get.side_effect = _get
+    aioclient_mock.get(URL, side_effect=_side_effect)
 
     assert await async_setup_component(
         hass,
@@ -456,7 +430,7 @@ async def test_yaml_migration_multiple_blocks_import_deadline(
 async def test_yaml_migration_import_failure_unrelated_user_flow(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_session: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test an unrelated user flow does not delay the follower after a failed import."""
     # Start an unrelated user flow left on the initial form.
@@ -465,12 +439,12 @@ async def test_yaml_migration_import_failure_unrelated_user_flow(
     )
     assert result["type"] is FlowResultType.FORM
 
-    async def _get(*args: Any, **kwargs: Any) -> Any:
+    async def _side_effect(method: str, url: Any, data: Any) -> Any:
         # Yield so both import flows run concurrently before the API fails.
         await asyncio.sleep(0.5)
         raise ClientConnectorError(Mock(), OSError("test"))
 
-    mock_session.get.side_effect = _get
+    aioclient_mock.get(URL, side_effect=_side_effect)
 
     assert await async_setup_component(
         hass,

@@ -38,6 +38,20 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+def _merge_import_locations(hass: HomeAssistant, config: ConfigType) -> None:
+    """Merge imported locations into the existing entry, if any."""
+    entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
+    if entry is None:
+        return
+    locations = list(entry.data[CONF_LOCATIONS])
+    for location in config[CONF_LOCATIONS]:
+        if location not in locations:
+            locations.append(location)
+    if locations != entry.data[CONF_LOCATIONS]:
+        hass.config_entries.async_update_entry(entry, data={CONF_LOCATIONS: locations})
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -48,10 +62,11 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
+    _merge_import_locations(hass, config)
+    if result.get("type") is FlowResultType.ABORT and result.get("reason") not in {
+        "already_configured",
+        "single_instance_allowed",
+    }:
         ir.async_create_issue(
             hass,
             DOMAIN,

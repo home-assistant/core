@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/london_air",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "legacy"
+  "quality_scale": "legacy",
+  "single_config_entry": true
 }

@@ -7,12 +7,7 @@ from typing import Any, override
 import aiohttp
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -82,16 +77,11 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         try:
-            entry = await self.async_set_unique_id(DOMAIN)
+            await self.async_set_unique_id(DOMAIN)
         except AbortFlow:
             # A concurrent import is creating the entry; wait for its
             # outcome so this block reports the same result.
-            return self.async_abort(
-                reason=await self._async_await_creator_outcome(import_config)
-            )
-        if entry is not None:
-            self._merge_import_locations(entry, import_config)
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason=await self._async_await_creator_outcome())
         try:
             await self._test_connection()
         except aiohttp.ClientError, TimeoutError:
@@ -102,23 +92,7 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
             data={CONF_LOCATIONS: list(import_config[CONF_LOCATIONS])},
         )
 
-    def _merge_import_locations(
-        self, entry: ConfigEntry, import_config: Mapping[str, Any]
-    ) -> None:
-        """Merge imported locations into an existing entry."""
-        locations = list(entry.data[CONF_LOCATIONS])
-        for location in import_config[CONF_LOCATIONS]:
-            if location not in locations:
-                locations.append(location)
-        if locations != entry.data[CONF_LOCATIONS]:
-            self.hass.config_entries.async_update_entry(
-                entry, data={CONF_LOCATIONS: locations}
-            )
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
-
-    async def _async_await_creator_outcome(
-        self, import_config: Mapping[str, Any]
-    ) -> str:
+    async def _async_await_creator_outcome(self) -> str:
         """Wait for the concurrent import's outcome and return the abort reason."""
         loop = asyncio.get_running_loop()
         deadline = loop.time() + _import_deadline()
@@ -130,7 +104,6 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry is not None
                 and entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
             ):
-                self._merge_import_locations(entry, import_config)
                 return "already_configured"
             if entry is None and not self._creator_flow_in_progress():
                 # The concurrent import finished without creating an entry.
