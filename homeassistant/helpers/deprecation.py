@@ -484,7 +484,12 @@ class _DeprecatedEntityMember[_T]:
     def __set_name__(self, owner: type, name: str) -> None:
         """Store the deprecated name and the domain of the entity base class."""
         self.name = name
-        self.domain = owner.__module__.rpartition(".")[2]
+        module = owner.__module__
+        # The base class may live in any module of its integration
+        if module.startswith("homeassistant.components."):
+            self.domain = module.split(".")[2]
+        else:
+            self.domain = module.rpartition(".")[2]
 
     @overload
     def __get__(self, instance: None, owner: type | None = None) -> Self: ...

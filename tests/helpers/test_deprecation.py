@@ -3,7 +3,7 @@
 from enum import StrEnum
 import logging
 import sys
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from propcache.api import cached_property
@@ -891,6 +891,82 @@ def test_deprecated_entity_member_native_storage_wins(
     assert BothPropertyEntity().native_value == 2
     assert BothSlotEntity().native_value == 2
     assert "provides the deprecated" not in caplog.text
+
+
+def test_deprecated_entity_member_super_reaches_ancestor() -> None:
+    """Test super() from a deprecated override serves what an ancestor authored."""
+
+    class MigratedEntity(MockRenamedEntity):
+        @property
+        def native_value(self) -> int:
+            return 42
+
+    class PlainValueEntity(MockRenamedEntity):
+        native_value = 8
+
+    class LegacyOverMigratedEntity(MigratedEntity):
+        @property
+        def value(self) -> int:
+            return cast(int, super().value) + 1
+
+    class LegacyOverPlainValueEntity(PlainValueEntity):
+        @property
+        def value(self) -> int:
+            return cast(int, super().value) + 1
+
+    class LegacyOverBaseEntity(MockRenamedEntity):
+        def __init__(self) -> None:
+            self._attr_native_value = 5
+
+        @property
+        def value(self) -> int:
+            return cast(int, super().value) + 1
+
+    assert LegacyOverMigratedEntity().native_value == 43
+    assert LegacyOverPlainValueEntity().native_value == 9
+    entity = LegacyOverBaseEntity()
+    assert entity.native_value == 6
+    # Reading the base cached property must not cache under the fallback's name
+    entity._attr_native_value = 7
+    assert entity.native_value == 8
+
+
+def test_deprecated_entity_member_super_without_replacement() -> None:
+    """Test super() from a deprecated override when no class provides the native."""
+
+    class BareEntity(Entity):
+        value = DeprecatedEntityProperty[int | None]("native_value", "2099.1")
+
+        def __init_subclass__(cls, **kwargs: Any) -> None:
+            super().__init_subclass__(**kwargs)
+            migrate_deprecated_entity_members(cls, BareEntity)
+
+    class LegacyEntity(BareEntity):
+        @property
+        def value(self) -> int | None:
+            return cast(int | None, super().value)
+
+    with pytest.raises(AttributeError, match="native_value"):
+        _ = LegacyEntity().native_value
+
+
+def test_deprecated_entity_member_domain() -> None:
+    """Test the domain is the integration of the entity base class."""
+
+    def base_in(module: str) -> type[Entity]:
+        return type(
+            "BaseEntity",
+            (Entity,),
+            {
+                "__module__": module,
+                "value": DeprecatedEntityProperty[int]("native_value", "2099.1"),
+            },
+        )
+
+    # Read off the class, the descriptor itself is returned
+    assert base_in("homeassistant.components.hue").value.domain == "hue"
+    assert base_in("homeassistant.components.hue.entity").value.domain == "hue"
+    assert base_in("custom_components.foo").value.domain == "foo"
 
 
 def test_deprecated_entity_member_same_line(caplog: pytest.LogCaptureFixture) -> None:
