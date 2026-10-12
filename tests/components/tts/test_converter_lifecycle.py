@@ -1352,7 +1352,7 @@ async def test_known_stdin_failure_before_next_output_pull(
             await gen.aclose()
 
 
-@pytest.mark.parametrize("exit_code", [None, 7], ids=["live-child", "slow-failure"])
+@pytest.mark.parametrize("exit_code", [None, 7], ids=["live-child", "known-exit"])
 async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
     ffmpeg_ready: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1362,10 +1362,11 @@ async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
     release_finalizer = asyncio.Event()
     finalizer_entered = asyncio.Event()
     transport_failed = asyncio.Event()
+    transport_errors: list[BrokenPipeError] = []
     processes = []
     spawn_os = asyncio.create_subprocess_exec
     script = (
-        "import os,time,sys;os.close(0);time.sleep(0.05);"
+        "import os,time,sys;os.close(0);"
         "os.write(2,b'held-finalizer child failure\\n');sys.exit(7)"
         if exit_code is not None
         else "import os,time;os.close(0);time.sleep(30)"
@@ -1380,8 +1381,13 @@ async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
         async def observe_drain():
             try:
                 await drain()
-            except BrokenPipeError:
+            except BrokenPipeError as err:
+                transport_errors.append(err)
                 transport_failed.set()
+                if exit_code is not None:
+                    # Deliver the actual drain exception only once the real
+                    # child has exited; the live-child case remains unblocked.
+                    assert await asyncio.wait_for(process.wait(), 3) == 7
                 raise
 
         process.stdin.drain = observe_drain
@@ -1408,11 +1414,13 @@ async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
             )
             await asyncio.wait_for(finalizer_entered.wait(), 3)
             assert transport_failed.is_set()  # Real StreamWriter.drain raised.
+            assert len(transport_errors) == 1
             # Observation never cancels the owner, child or source. These
             # assertions happen before any harness release/kill/cancellation.
             if exit_code is None:
-                with pytest.raises(BrokenPipeError):
+                with pytest.raises(BrokenPipeError) as caught:
                     await _observe(owner, 3)
+                assert caught.value is transport_errors[0]
                 assert processes[0].returncode is not None
             else:
                 with pytest.raises(
@@ -1424,6 +1432,7 @@ async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
                     "held-finalizer child failure" in record.message
                     for record in caplog.records
                 )
+            assert finalizer_entered.is_set()
             assert not release_finalizer.is_set()
     finally:
         # Harness cleanup only after the observable outcome and reaping checks.
