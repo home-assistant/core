@@ -181,7 +181,7 @@ async def test_duplicate_registration(
     "error", [ConnectionUnavailable("offline"), asyncio.CancelledError()]
 )
 async def test_registration_failure(
-    hass: HomeAssistant, provider_entry: MockConfigEntry, error: BaseException
+    hass: HomeAssistant, connection_entry: MockConfigEntry, error: BaseException
 ) -> None:
     """Failure and cancellation clean up discovery and allow a later attempt."""
     assert await async_setup_component(hass, "lorawan", {})
@@ -192,18 +192,18 @@ async def test_registration_failure(
         async_subscribe=AsyncMock(side_effect=error),
     )
     with pytest.raises(type(error)):
-        await async_register_connection(hass, provider_entry, connection=backend)
+        await async_register_connection(hass, connection_entry, connection=backend)
     stop_disconnect.assert_called_once_with()
     assert not hass.data[DATA_REGISTRY].connections
 
     unsubscribe = await async_register_connection(
-        hass, provider_entry, connection=MockConnection(stack_type="example")
+        hass, connection_entry, connection=MockConnection(stack_type="example")
     )
     unsubscribe()
 
 
 async def test_concurrent_registration(
-    hass: HomeAssistant, provider_entry: MockConfigEntry
+    hass: HomeAssistant, connection_entry: MockConfigEntry
 ) -> None:
     """The entry is reserved while existing devices are being replayed."""
     assert await async_setup_component(hass, "lorawan", {})
@@ -225,12 +225,12 @@ async def test_concurrent_registration(
         async_subscribe=AsyncMock(side_effect=replay),
     )
     registration = hass.async_create_task(
-        async_register_connection(hass, provider_entry, connection=backend)
+        async_register_connection(hass, connection_entry, connection=backend)
     )
     await started.wait()
     with pytest.raises(ValueError, match="already registered"):
         await async_register_connection(
-            hass, provider_entry, connection=MockConnection(stack_type="example")
+            hass, connection_entry, connection=MockConnection(stack_type="example")
         )
     finish.set()
     unsubscribe = await registration
@@ -240,7 +240,7 @@ async def test_concurrent_registration(
 
 
 async def test_disconnect_during_registration(
-    hass: HomeAssistant, provider_entry: MockConfigEntry
+    hass: HomeAssistant, connection_entry: MockConfigEntry
 ) -> None:
     """A disconnect during replay cannot publish or discover a stale connection."""
     assert await async_setup_component(hass, "lorawan", {})
@@ -265,7 +265,7 @@ async def test_disconnect_during_registration(
         ) as discover,
         pytest.raises(ConnectionUnavailable),
     ):
-        await async_register_connection(hass, provider_entry, connection=backend)
+        await async_register_connection(hass, connection_entry, connection=backend)
     discover.assert_not_called()
     stop_events.assert_called_once_with()
     stop_disconnect.assert_called_once_with()
@@ -276,7 +276,7 @@ async def test_disconnect_during_registration(
     ) as discover:
         unsubscribe = await async_register_connection(
             hass,
-            provider_entry,
+            connection_entry,
             connection=MockConnection([DESCRIPTOR], stack_type="example"),
         )
         discover.assert_called_once()

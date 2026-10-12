@@ -124,8 +124,8 @@ def device_integration(hass: HomeAssistant) -> Generator[None]:
 
 
 @pytest.fixture
-def provider_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Represent a provider without a server integration."""
+def connection_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a config entry for the connection integration."""
     entry = MockConfigEntry(domain="test_provider", entry_id="network")
     entry.add_to_hass(hass)
     return entry
