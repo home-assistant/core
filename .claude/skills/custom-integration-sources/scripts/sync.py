@@ -38,6 +38,8 @@ def _token() -> str:
 
 def _get(url: str, token: str | None = None, data: bytes | None = None) -> bytes:
     req = urllib.request.Request(url, data=data)
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
     if token:
         req.add_header("Authorization", f"bearer {token}")
     for attempt in range(RETRIES):
@@ -151,6 +153,26 @@ def prune(root: Path, wanted: set[str]) -> list[str]:
     return removed
 
 
+def load_state(root: Path) -> dict[str, str]:
+    """Return the recorded SHAs, refusing a destination this script does not own.
+
+    Pruning deletes every unknown <owner>/<repo> directory, so a populated
+    directory without a valid state file must never be used.
+    """
+    state_file = root / ".state.json"
+    if not root.exists() or not any(root.iterdir()):
+        return {}
+    try:
+        state = json.loads(state_file.read_text())
+    except OSError, ValueError:
+        state = None
+    if not isinstance(state, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in state.items()
+    ):
+        sys.exit(f"{root} is not empty and has no valid {state_file.name}; refusing")
+    return state
+
+
 def ensure_ignored(root: Path) -> None:
     """Add root to the local git exclude file if it is inside an unignored work tree."""
 
@@ -185,13 +207,13 @@ def main() -> None:
     args = parser.parse_args()
 
     root: Path = args.dest.resolve()
+    state = load_state(root)
     root.mkdir(parents=True, exist_ok=True)
     ensure_ignored(root)
     state_file = root / ".state.json"
+    # Write it now so a run interrupted before any download still marks root
+    state_file.write_text(json.dumps(state, indent=0, sort_keys=True))
 
-    state: dict[str, str] = (
-        json.loads(state_file.read_text()) if state_file.exists() else {}
-    )
     hacs = sorted(set(json.loads(_get(HACS_LIST))))
     targets = args.repos or hacs
     print(f"HACS list: {len(hacs)} repos, checking {len(targets)}", file=sys.stderr)

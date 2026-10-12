@@ -37,7 +37,7 @@ Fall back to `grep -rlE --include='*.py' '<pattern>' .` if `rg` is unavailable.
 - Besides Python, the copy has `manifest.json`, `services.yaml`, `strings.json`, `translations/`, `icons.json` and frontend files; change the `--glob` to search those.
 - Some integrations vendor libraries inside `custom_components/`; matches there are not the integration's own code.
 - Text search over-matches (comments, strings, unrelated attributes with the same name). For anything that will be reported or used as a number, confirm each match with Python's `ast` module: for example, check that a name is used as an attribute of an entity subclass, or that a call actually passes the argument in question.
-- One repo can contain several integrations; read the `domain` from `custom_components/<domain>/manifest.json` when reporting.
+- One repo can contain several integrations; read the `domain` from `custom_components/<domain>/manifest.json` (or the root `manifest.json` for `content_in_root` repos) when reporting.
 
 ## Report
 
