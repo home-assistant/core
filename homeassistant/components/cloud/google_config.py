@@ -201,8 +201,8 @@ async def _async_migrate_entity_settings_v2(
     cloud: Cloud[CloudClient],
 ) -> None:
     """Preserve the pre-migration name of exposed entities as an alias."""
-    # Discovery only needs the YAML config and the exposed entity settings,
-    # so the config is not initialized, which would start reporting state
+    # Deliberately not initialized: discovery only needs the YAML config and
+    # the exposed entity settings, and initializing would start reporting state
     google_conf = CloudGoogleConfig(
         hass, config, await prefs.get_cloud_user(), prefs, cloud
     )
