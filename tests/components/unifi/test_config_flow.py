@@ -311,6 +311,8 @@ async def test_reauth_flow_update_configuration(
             CONF_VERIFY_SSL: True,
         },
     )
+    # Let the scheduled config entry reload finish before teardown
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -377,6 +379,8 @@ async def test_reconfigure_flow_update_configuration(
             CONF_VERIFY_SSL: True,
         },
     )
+    # Let the scheduled config entry reload finish before teardown
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -399,7 +403,7 @@ async def test_reconfigure_flow_retains_user_input_on_error(
     side_effect: type[Exception],
     error: str,
 ) -> None:
-    """Verify reconfigure flow can update hub configuration."""
+    """Verify reconfigure flow retains user input on error and can recover."""
     config_entry = config_entry_setup
 
     result = await config_entry.start_reconfigure_flow(hass)
@@ -437,6 +441,8 @@ async def test_reconfigure_flow_retains_user_input_on_error(
         result["flow_id"],
         user_input={**user_input, CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
     )
+    # Let the scheduled config entry reload finish before teardown
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
