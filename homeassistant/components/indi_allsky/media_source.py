@@ -222,7 +222,7 @@ class IndiAllSkyMediaSource(MediaSource):
         """Resolve media item to a URL and mime type."""
         entry_id, path = self._parse_identifier(item.identifier)
 
-        if not entry_id or not path:
+        if not entry_id or not path or not _is_valid_media_path(path):
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="incomplete_media_identifier",
