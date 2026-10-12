@@ -109,7 +109,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
     _attr_name = None
     _attr_operation_list = OPERATION_MODES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -159,7 +159,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._tado_zone_data.target_temp
 

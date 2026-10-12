@@ -3,7 +3,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Literal, final, override
+from typing import Any, Final, Literal, final, override
 
 from propcache.api import cached_property
 
@@ -23,6 +23,11 @@ from homeassistant.const import (  # noqa: F401
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import (
+    DeprecatedEntityAttr,
+    DeprecatedEntityProperty,
+    migrate_deprecated_entity_members,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -138,17 +143,17 @@ class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
-    "temperature_unit",
+    "native_temperature_unit",
     "current_humidity",
     "target_humidity",
     "hvac_mode",
     "hvac_modes",
     "hvac_action",
-    "current_temperature",
-    "target_temperature",
+    "native_current_temperature",
+    "native_target_temperature",
     "target_temperature_step",
-    "target_temperature_high",
-    "target_temperature_low",
+    "native_target_temperature_high",
+    "native_target_temperature_low",
     "preset_mode",
     "preset_modes",
     "fan_mode",
@@ -186,7 +191,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: ClimateEntityDescription
     _attr_current_humidity: float | None = None
-    _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
     _attr_hvac_action: HVACAction | None = None
@@ -196,6 +200,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_max_temp: float
     _attr_min_humidity: float = DEFAULT_MIN_HUMIDITY
     _attr_min_temp: float
+    _attr_native_current_temperature: float | None = None
+    _attr_native_target_temperature: float | None = None
+    _attr_native_target_temperature_high: float | None
+    _attr_native_target_temperature_low: float | None
+    _attr_native_temperature_unit: str
     _attr_precision: float
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
@@ -206,11 +215,13 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_swing_horizontal_modes: list[str] | None
     _attr_target_humidity: float | None = None
     _attr_target_humidity_step: int | None = None
-    _attr_target_temperature_high: float | None
-    _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
-    _attr_target_temperature: float | None = None
-    _attr_temperature_unit: str
+
+    @override
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Serve the native temperature API of subclasses still providing the old one."""
+        super().__init_subclass__(**kwargs)
+        migrate_deprecated_entity_members(cls, ClimateEntity)
 
     @final
     @property
@@ -239,17 +250,17 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
-        temperature_unit = self.temperature_unit
+        native_temperature_unit = self.native_temperature_unit
         precision = self.precision
         hass = self.hass
 
         data: dict[str, Any] = {
             ClimateEntityCapabilityAttribute.HVAC_MODES: self.hvac_modes,
             ClimateEntityCapabilityAttribute.MIN_TEMP: show_temp(
-                hass, self.min_temp, temperature_unit, precision
+                hass, self.min_temp, native_temperature_unit, precision
             ),
             ClimateEntityCapabilityAttribute.MAX_TEMP: show_temp(
-                hass, self.max_temp, temperature_unit, precision
+                hass, self.max_temp, native_temperature_unit, precision
             ),
         }
 
@@ -289,30 +300,42 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
-        temperature_unit = self.temperature_unit
+        native_temperature_unit = self.native_temperature_unit
         precision = self.precision
         hass = self.hass
 
         data: dict[str, str | float | None] = {
             ClimateEntityStateAttribute.CURRENT_TEMPERATURE: show_temp(
-                hass, self.current_temperature, temperature_unit, precision
+                hass,
+                self.native_current_temperature,
+                native_temperature_unit,
+                precision,
+            ),
+            ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                hass.config.units.temperature_unit
             ),
         }
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
             data[ClimateEntityStateAttribute.TARGET_TEMPERATURE] = show_temp(
                 hass,
-                self.target_temperature,
-                temperature_unit,
+                self.native_target_temperature,
+                native_temperature_unit,
                 precision,
             )
 
         if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in supported_features:
             data[ClimateEntityStateAttribute.TARGET_TEMP_HIGH] = show_temp(
-                hass, self.target_temperature_high, temperature_unit, precision
+                hass,
+                self.native_target_temperature_high,
+                native_temperature_unit,
+                precision,
             )
             data[ClimateEntityStateAttribute.TARGET_TEMP_LOW] = show_temp(
-                hass, self.target_temperature_low, temperature_unit, precision
+                hass,
+                self.native_target_temperature_low,
+                native_temperature_unit,
+                precision,
             )
 
         if (current_humidity := self.current_humidity) is not None:
@@ -341,9 +364,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return data
 
     @cached_property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return self._attr_temperature_unit
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement the entity reports temperatures in."""
+        return self._attr_native_temperature_unit
+
+    temperature_unit: Final = DeprecatedEntityProperty[str](
+        "native_temperature_unit", "2027.11"
+    )
+    _attr_temperature_unit: Final = DeprecatedEntityAttr[str](
+        "_attr_native_temperature_unit", "2027.11"
+    )
 
     @cached_property
     def current_humidity(self) -> float | None:
@@ -371,14 +401,28 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_hvac_action
 
     @cached_property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return self._attr_current_temperature
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature in the native unit."""
+        return self._attr_native_current_temperature
+
+    current_temperature: Final = DeprecatedEntityProperty[float | None](
+        "native_current_temperature", "2027.11"
+    )
+    _attr_current_temperature: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_current_temperature", "2027.11"
+    )
 
     @cached_property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self._attr_target_temperature
+    def native_target_temperature(self) -> float | None:
+        """Return the temperature we try to reach, in the native unit."""
+        return self._attr_native_target_temperature
+
+    target_temperature: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature", "2027.11"
+    )
+    _attr_target_temperature: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature", "2027.11"
+    )
 
     @cached_property
     def target_temperature_step(self) -> float | None:
@@ -386,20 +430,34 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_target_temperature_step
 
     @cached_property
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach.
 
-        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
+        In the native unit. Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
-        return self._attr_target_temperature_high
+        return self._attr_native_target_temperature_high
+
+    target_temperature_high: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature_high", "2027.11"
+    )
+    _attr_target_temperature_high: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature_high", "2027.11"
+    )
 
     @cached_property
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach.
 
-        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
+        In the native unit. Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
-        return self._attr_target_temperature_low
+        return self._attr_native_target_temperature_low
+
+    target_temperature_low: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature_low", "2027.11"
+    )
+    _attr_target_temperature_low: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature_low", "2027.11"
+    )
 
     @cached_property
     def preset_mode(self) -> str | None:
@@ -655,7 +713,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
             return TemperatureConverter.convert(
-                DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+                DEFAULT_MIN_TEMP,
+                UnitOfTemperature.CELSIUS,
+                self.native_temperature_unit,
             )
         return self._attr_min_temp
 
@@ -664,7 +724,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
             return TemperatureConverter.convert(
-                DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+                DEFAULT_MAX_TEMP,
+                UnitOfTemperature.CELSIUS,
+                self.native_temperature_unit,
             )
         return self._attr_max_temp
 

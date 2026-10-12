@@ -18,15 +18,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ACTION_OFF,
-    ACTION_RECOVER,
-    ACTION_STAY,
-    ATTR_ACTION,
-    ATTR_COUNT,
-    ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_DETECTED_MODEL,
     CONF_FLOW_PARAMS,
@@ -44,41 +38,16 @@ from .const import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     PLATFORMS,
-    YEELIGHT_HSV_TRANSACTION,
-    YEELIGHT_RGB_TRANSITION,
-    YEELIGHT_SLEEP_TRANSACTION,
-    YEELIGHT_TEMPERATURE_TRANSACTION,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA,
 )
 from .device import YeelightDevice, async_format_id
 from .scanner import YeelightScanner
+from .services import async_setup_services
 
 type YeelightConfigEntry = ConfigEntry[YeelightDevice]
 
 _LOGGER = logging.getLogger(__name__)
 
-
-YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
-    probatio.Optional(ATTR_COUNT, default=0): cv.positive_int,
-    probatio.Optional(ATTR_ACTION, default=ACTION_RECOVER): probatio.Any(
-        ACTION_RECOVER, ACTION_OFF, ACTION_STAY
-    ),
-    probatio.Required(ATTR_TRANSITIONS): [
-        {
-            probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
-                probatio.EnsureList(), [cv.positive_int]
-            ),
-            probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
-                probatio.EnsureList(), [cv.positive_int]
-            ),
-            probatio.Exclusive(
-                YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
-            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
-            probatio.Exclusive(
-                YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
-            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
-        }
-    ],
-}
 
 DEVICE_SCHEMA = probatio.Schema(
     {
@@ -117,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
     hass.data[DATA_CUSTOM_EFFECTS_KEY] = conf.get(CONF_CUSTOM_EFFECTS, [])
+    async_setup_services(hass)
     # Make sure the scanner is always started in case we are
     # going to retry via ConfigEntryNotReady and the bulb has changed
     # ip

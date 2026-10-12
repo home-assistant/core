@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
 
 from homeassistant.config_entries import ConfigSubentry

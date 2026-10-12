@@ -35,6 +35,9 @@
     "switch": {
       "bluetooth": {
         "default": "mdi:bluetooth"
+      },
+      "screensaver": {
+        "default": "mdi:sleep"
       }
     },
     "time": {

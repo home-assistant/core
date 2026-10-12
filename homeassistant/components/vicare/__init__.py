@@ -10,10 +10,14 @@ from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
+    PyViCareInvalidDataError,
     PyViCareRateLimitError,
 )
+import requests
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -31,12 +35,14 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import MY_AUTH_CALLBACK_PATH
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryAuth
 from .const import (
@@ -48,6 +54,7 @@ from .const import (
     VIESSMANN_DEVELOPER_PORTAL,
 )
 from .coordinator import ViCareCoordinator
+from .services import async_setup_services
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device_serial
 
@@ -127,6 +134,15 @@ async def async_migrate_entry(
     return True
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Viessmann ViCare integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
@@ -166,6 +182,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"ViCare API rate limit exceeded, resets at {err.limitResetDate}"
         ) from err
+    except (
+        PyViCareDeviceCommunicationError,
+        PyViCareInternalServerError,
+        PyViCareInvalidDataError,
+        requests.RequestException,
+    ) as err:
+        # The coordinator treats the same errors as transient.
+        raise ConfigEntryNotReady("Unable to reach the ViCare API") from err
 
     # Group devices by gateway: in viaGateway mode one bulk fetch refreshes
     # every device behind a gateway, so one coordinator serves the gateway.

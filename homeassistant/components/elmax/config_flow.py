@@ -7,7 +7,7 @@ from typing import Any, override
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry, PanelStatus
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -169,7 +169,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await client.login()
-        except ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout:
+        except ElmaxNetworkError, httpx2.ConnectError, httpx2.ConnectTimeout:
             return self.async_show_form(
                 step_id=CONF_ELMAX_MODE_DIRECT,
                 data_schema=DIRECT_SETUP_SCHEMA,

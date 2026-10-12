@@ -7,6 +7,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -90,7 +91,13 @@ async def async_setup_entry(
         upnp_bind_multicast,
     )
     entry.runtime_data = server
-    return await server.setup()
+    if not await server.setup():
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": name},
+        )
+    return True
 
 
 async def async_unload_entry(
