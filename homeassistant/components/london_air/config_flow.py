@@ -20,6 +20,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import AUTHORITIES, CONF_LOCATIONS, DOMAIN, REQUEST_TIMEOUT, URL
 
 
+def _import_deadline() -> float:
+    """Return the deadline margin for waiting on a concurrent import."""
+    # Two sequential REQUEST_TIMEOUT-bounded requests (connection test and
+    # first refresh) can elapse while the entry stays SETUP_IN_PROGRESS;
+    # add a margin so we do not give up just before the entry is ready.
+    return 2 * (REQUEST_TIMEOUT.total or 10.0) + 5.0
+
+
 class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a London Air config flow."""
 
@@ -113,10 +121,7 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> str:
         """Wait for the concurrent import's outcome and return the abort reason."""
         loop = asyncio.get_running_loop()
-        # Two sequential REQUEST_TIMEOUT-bounded requests (connection test and
-        # first refresh) can elapse while the entry stays SETUP_IN_PROGRESS;
-        # add a margin so we do not give up just before the entry is ready.
-        deadline = loop.time() + 2 * (REQUEST_TIMEOUT.total or 10.0) + 5.0
+        deadline = loop.time() + _import_deadline()
         while True:
             entry = self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, DOMAIN
@@ -135,11 +140,13 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
             await asyncio.sleep(0.1)
 
     def _creator_flow_in_progress(self) -> bool:
-        """Return True if another flow for this domain is still running."""
+        """Return True if the concurrent import flow is still running."""
         return any(
-            flow["flow_id"] != self.flow_id and flow["handler"] == DOMAIN
-            for flow in self.hass.config_entries.flow.async_progress(
-                include_uninitialized=True
+            flow["flow_id"] != self.flow_id
+            for flow in self.hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN,
+                include_uninitialized=True,
+                match_context={"unique_id": DOMAIN},
             )
         )
 

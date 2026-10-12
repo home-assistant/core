@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
-from aiohttp import ClientConnectorError, ClientTimeout
+from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -12,6 +12,7 @@ from homeassistant.components.london_air.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.london_air.coordinator import NO_SPECIES_DATA
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -396,10 +397,10 @@ async def test_yaml_migration_multiple_blocks_import_deadline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test the follower aborts with cannot_connect when the creator hangs past the deadline."""
-    # Shrink the deadline to ~5s so the test does not wait the full 25s.
+    # Shrink the deadline so the test does not wait the full 25s.
     monkeypatch.setattr(
-        "homeassistant.components.london_air.config_flow.REQUEST_TIMEOUT",
-        ClientTimeout(total=0.01),
+        "homeassistant.components.london_air.config_flow._import_deadline",
+        lambda: 0.05,
     )
     release = asyncio.Event()
 
@@ -450,3 +451,51 @@ async def test_yaml_migration_multiple_blocks_import_deadline(
 
     assert hass.states.get("sensor.merton") is None
     assert hass.states.get("sensor.city_of_london") is None
+
+
+async def test_yaml_migration_import_failure_unrelated_user_flow(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_session: MagicMock,
+) -> None:
+    """Test an unrelated user flow does not delay the follower after a failed import."""
+    # Start an unrelated user flow left on the initial form.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    async def _get(*args: Any, **kwargs: Any) -> Any:
+        # Yield so both import flows run concurrently before the API fails.
+        await asyncio.sleep(0.5)
+        raise ClientConnectorError(Mock(), OSError("test"))
+
+    mock_session.get.side_effect = _get
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": "london_air", "locations": ["Merton"]},
+                {"platform": "london_air", "locations": ["City of London"]},
+            ]
+        },
+    )
+
+    # The follower must not wait for the unrelated user flow; poll for the issue.
+    while (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
+        is None
+    ):
+        await asyncio.sleep(0.1)
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml_import_issue"
