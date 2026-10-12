@@ -48,9 +48,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     def __init__(self, entry: VictronGxConfigEntry) -> None:
         """Initialize the firmware update entity."""
         self._hub = entry.runtime_data
-        info = self._hub.firmware_update_info
-        self._installed_version = info.installed_version
-        self._online_version = info.available_version
+        self._firmware_info = self._hub.firmware_update_info
         self._attr_unique_id = f"{entry.unique_id}_firmware"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.unique_id}_system_0")}
@@ -71,8 +69,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     @callback
     def _on_firmware_update(self, info: FirmwareUpdateInfo) -> None:
         """Handle updated firmware information."""
-        self._installed_version = info.installed_version
-        self._online_version = info.available_version
+        self._firmware_info = info
         self._attr_in_progress = info.in_progress
         self._attr_update_percentage = info.progress if info.in_progress else None
         self.async_write_ha_state()
@@ -81,13 +78,16 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     @override
     def installed_version(self) -> str | None:
         """Return the installed Venus OS version."""
-        return self._installed_version
+        return self._firmware_info.installed_version
 
     @property
     @override
     def latest_version(self) -> str | None:
         """Return the latest available Venus OS version."""
-        return self._online_version or self._installed_version
+        return (
+            self._firmware_info.available_version
+            or self._firmware_info.installed_version
+        )
 
     @property
     @override
@@ -99,15 +99,14 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     @override
     def has_update(self) -> bool:
         """Return whether Victron offers a Venus OS firmware build."""
-        return self._online_version is not None
+        return self._firmware_info.update_available
 
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest Venus OS firmware."""
-        latest_version = self._online_version
-        if latest_version is None:
+        if not self._firmware_info.update_available:
             return
 
         self._attr_in_progress = True
