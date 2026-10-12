@@ -145,15 +145,15 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
 
 
 @pytest.mark.parametrize("device_fixture", [ModelName.LINEA_MICRA])
-async def test_bt_offline_mode_steam_level_missing_widget(
+async def test_bt_offline_mode_steam_boiler_missing_widget(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry_bluetooth: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the steam level select handles a missing steam boiler widget."""
+    """Test steam boiler entities handle a missing steam boiler widget."""
     await async_init_integration(hass, mock_config_entry_bluetooth)
-    entity_id = f"select.{mock_lamarzocco.serial_number}_steam_level"
 
     del mock_lamarzocco.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL]
 
@@ -161,9 +161,20 @@ async def test_bt_offline_mode_steam_level_missing_widget(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
+    for entity_id in (
+        f"select.{mock_lamarzocco.serial_number}_steam_level",
+        f"switch.{mock_lamarzocco.serial_number}_steam_boiler",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get(
+        f"sensor.{mock_lamarzocco.serial_number}_steam_boiler_ready_time"
+    )
     assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
+    assert "KeyError" not in caplog.text
 
 
 async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
