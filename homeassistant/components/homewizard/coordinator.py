@@ -1,4 +1,5 @@
 """Update coordinator for HomeWizard."""
+
 from datetime import timedelta
 from typing import override
 
