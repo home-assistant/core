@@ -193,7 +193,8 @@
           },
           "rssi": -52,
           "frostProtection": {
-            "active": false,
+            "zone1Active": false,
+            "zone2Active": false,
             "enabled": true,
             "min": 5,
             "max": 8

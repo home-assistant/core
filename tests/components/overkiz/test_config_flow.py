@@ -18,6 +18,7 @@ from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
     NoSuchTokenError,
+    ServiceUnavailableError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -31,7 +32,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -148,6 +149,19 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_somfy_multi_account_hidden(hass: HomeAssistant) -> None:
+    """Test the experimental Somfy multi-account server cannot be selected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"hub": "somfy"},
+        )
+
+
 async def test_form_only_cloud_supported(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -249,6 +263,7 @@ async def test_form_local_happy_flow(
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceError, "server_in_maintenance"),
+        (ServiceUnavailableError, "cannot_connect"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
         (ApplicationNotAllowedError, "application_not_allowed"),
@@ -425,6 +440,7 @@ async def test_form_invalid_hardware_cloud_local(
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceError, "server_in_maintenance"),
+        (ServiceUnavailableError, "cannot_connect"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
         (NoSuchTokenError, "invalid_auth"),

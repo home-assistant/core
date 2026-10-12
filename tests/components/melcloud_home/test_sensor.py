@@ -76,7 +76,7 @@ async def test_energy_measure_per_unit_type(
         pytest.param("HeatZones", "heating_zones", id="heating_zones"),
         pytest.param("Cool", "cooling", id="cool"),
         pytest.param("Heating", "heating_zones", id="heating"),
-        pytest.param("FreezeStat", "heating_zones", id="freeze_stat"),
+        pytest.param("FreezeStat", "frost_protection", id="freeze_stat"),
         pytest.param("Cooling", "cooling", id="cooling"),
         pytest.param("Defrost", STATE_UNKNOWN, id="unsupported_mode"),
     ],
