@@ -41,6 +41,8 @@ def mock_config_entry(unique_id: str | None) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="name",
+        # Fixed to keep the no_unique_id snapshots stable, as Kodi falls back
+        # to the entry ID as unique ID
         entry_id="01JZ8Y6K9QW3X5V7T2R4P6N8M0",
         unique_id=unique_id,
         data={
