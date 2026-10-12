@@ -19,8 +19,10 @@ from homeassistant.components.cert_expiry.helper import (
     async_get_ssl_context,
     get_cert_expiry_timestamp,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util.ssl import create_client_context, get_default_context
 
 from tests.common import MockConfigEntry
@@ -326,3 +328,151 @@ async def test_private_ca_hostname_mismatch(
     cause = exc.value.__cause__
     assert isinstance(cause, ssl.SSLCertVerificationError)
     assert cause.verify_code == X509_V_ERR_IP_ADDRESS_MISMATCH
+
+
+@pytest.mark.parametrize(
+    (
+        "certificate",
+        "initial_settings",
+        "updated_settings",
+        "initial_result",
+        "expected_result",
+    ),
+    [
+        pytest.param(
+            "self-signed",
+            (True, "empty"),
+            (False, "empty"),
+            (STATE_UNKNOWN, False, False),
+            ("timestamp", False, True),
+            id="disable-verification",
+        ),
+        pytest.param(
+            "self-signed",
+            (False, "empty"),
+            (True, "empty"),
+            ("timestamp", False, True),
+            (STATE_UNKNOWN, False, False),
+            id="enable-verification",
+        ),
+        pytest.param(
+            "private-ca",
+            (True, "empty"),
+            (True, "issuer"),
+            (STATE_UNKNOWN, False, False),
+            ("timestamp", True, True),
+            id="add-ca",
+        ),
+        pytest.param(
+            "private-ca",
+            (True, "unrelated"),
+            (True, "issuer"),
+            (STATE_UNKNOWN, False, False),
+            ("timestamp", True, True),
+            id="replace-with-issuer",
+        ),
+        pytest.param(
+            "private-ca",
+            (True, "issuer"),
+            (True, "unrelated"),
+            ("timestamp", True, True),
+            (STATE_UNKNOWN, False, False),
+            id="replace-with-unrelated",
+        ),
+        pytest.param(
+            "private-ca",
+            (True, "issuer"),
+            (True, "empty"),
+            ("timestamp", True, True),
+            (STATE_UNKNOWN, False, False),
+            id="clear-ca",
+        ),
+        pytest.param(
+            "private-ca",
+            (True, "issuer"),
+            (True, "whitespace"),
+            ("timestamp", True, True),
+            (STATE_UNKNOWN, False, False),
+            id="clear-ca-with-whitespace",
+        ),
+    ],
+    indirect=["certificate"],
+)
+@pytest.mark.usefixtures("ignore_tls_client_abort")
+async def test_reconfigure_tls_settings(
+    hass: HomeAssistant,
+    certificate: x509.Certificate,
+    ca_certificate: x509.Certificate,
+    unrelated_ca_certificate: x509.Certificate,
+    tls_port: int,
+    initial_settings: tuple[bool, str],
+    updated_settings: tuple[bool, str],
+    initial_result: tuple[str, bool, bool],
+    expected_result: tuple[str, bool, bool],
+) -> None:
+    """Apply TLS settings through the public reconfigure flow and reload."""
+    initial_verification, initial_bundle = initial_settings
+    verify_ssl, new_bundle = updated_settings
+    initial_state, initial_valid, initial_error_is_none = initial_result
+    expected_state, expected_valid, expected_error_is_none = expected_result
+    bundles = {
+        "empty": "",
+        "whitespace": " \n\t ",
+        "issuer": ca_certificate.public_bytes(serialization.Encoding.PEM).decode(
+            "ascii"
+        ),
+        "unrelated": unrelated_ca_certificate.public_bytes(
+            serialization.Encoding.PEM
+        ).decode("ascii"),
+    }
+    expected_states = {
+        "timestamp": certificate.not_valid_after_utc.isoformat(),
+        STATE_UNKNOWN: STATE_UNKNOWN,
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: tls_port,
+            CONF_VERIFY_SSL: initial_verification,
+            CONF_CA_CERTIFICATES: bundles[initial_bundle],
+        },
+        unique_id=f"localhost:{tls_port}",
+    )
+    entry.add_to_hass(hass)
+    entry_id = entry.entry_id
+    entity_id = f"sensor.localhost_{tls_port}_cert_expiry"
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_states[initial_state]
+    assert state.attributes["is_valid"] is initial_valid
+    assert (state.attributes["error"] is None) is initial_error_is_none
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "localhost",
+            CONF_PORT: tls_port,
+            CONF_VERIFY_SSL: verify_ssl,
+            CONF_CA_CERTIFICATES: bundles[new_bundle],
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.entry_id == entry_id
+    assert entry.unique_id == f"localhost:{tls_port}"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_states[expected_state]
+    assert state.attributes["is_valid"] is expected_valid
+    assert (state.attributes["error"] is None) is expected_error_is_none

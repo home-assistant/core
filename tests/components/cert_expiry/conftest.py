@@ -92,6 +92,17 @@ def ca_key() -> ec.EllipticCurvePrivateKey:
 @pytest.fixture
 def ca_certificate(ca_key: ec.EllipticCurvePrivateKey) -> x509.Certificate:
     """Create a private root CA accepted by strict OpenSSL verification."""
+    return _create_ca_certificate(ca_key)
+
+
+@pytest.fixture
+def unrelated_ca_certificate() -> x509.Certificate:
+    """Create a different CA key to test replacing an entry's trusted issuer."""
+    return _create_ca_certificate(ec.generate_private_key(ec.SECP256R1()))
+
+
+def _create_ca_certificate(ca_key: ec.EllipticCurvePrivateKey) -> x509.Certificate:
+    """Build a private root CA with the extensions needed for strict validation."""
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Private test CA")])
     return (
         x509.CertificateBuilder()
