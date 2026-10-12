@@ -189,13 +189,10 @@ async def async_migrate_entry(
                 minor_version=4,
             )
 
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
-        return True
-
-    # This means the user has downgraded from a future version
-    return False
+    return True

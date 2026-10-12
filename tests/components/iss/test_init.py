@@ -1,7 +1,9 @@
 """Test the ISS integration setup and coordinator."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
 from homeassistant.components.iss.const import MAX_CONSECUTIVE_FAILURES
@@ -10,7 +12,14 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def _async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance the time to the next coordinator update."""
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_setup_entry(
@@ -65,7 +74,10 @@ async def test_update_listener(
 
 
 async def test_coordinator_single_failure_uses_cached_data(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_pyiss: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator tolerates single API failure and uses cached data."""
     coordinator = init_integration.runtime_data
@@ -74,9 +86,7 @@ async def test_coordinator_single_failure_uses_cached_data(
     # Simulate API failure
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
 
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
 
     # Should still have the cached data
     assert coordinator.data == original_data
@@ -84,7 +94,10 @@ async def test_coordinator_single_failure_uses_cached_data(
 
 
 async def test_coordinator_multiple_failures_uses_cached_data(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_pyiss: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator tolerates multiple failures below threshold."""
     coordinator = init_integration.runtime_data
@@ -94,19 +107,25 @@ async def test_coordinator_multiple_failures_uses_cached_data(
     mock_pyiss.number_of_people_in_space.side_effect = RequestsConnectionError(
         "Connection failed"
     )
+    calls = mock_pyiss.number_of_people_in_space.call_count
 
     for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        await _async_poll(hass, freezer)
 
+    assert (
+        mock_pyiss.number_of_people_in_space.call_count
+        == calls + MAX_CONSECUTIVE_FAILURES - 1
+    )
     # Should still have cached data and be successful
     assert coordinator.data == original_data
     assert coordinator.last_update_success is True
 
 
 async def test_coordinator_max_failures_marks_unavailable(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_pyiss: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator marks update failed after MAX_CONSECUTIVE_FAILURES."""
     coordinator = init_integration.runtime_data
@@ -115,9 +134,7 @@ async def test_coordinator_max_failures_marks_unavailable(
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
 
     for _ in range(MAX_CONSECUTIVE_FAILURES):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        await _async_poll(hass, freezer)
 
     # After MAX_CONSECUTIVE_FAILURES, update should be marked as failed
     assert coordinator.last_update_success is False
@@ -125,7 +142,10 @@ async def test_coordinator_max_failures_marks_unavailable(
 
 
 async def test_coordinator_failure_counter_resets_on_success(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_pyiss: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator resets failure counter after successful fetch."""
     coordinator = init_integration.runtime_data
@@ -133,16 +153,12 @@ async def test_coordinator_failure_counter_resets_on_success(
     # Simulate some failures
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
     for _ in range(2):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        await _async_poll(hass, freezer)
 
     # Now simulate success
     mock_pyiss.number_of_people_in_space.side_effect = None
     mock_pyiss.number_of_people_in_space.return_value = 8
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
 
     assert coordinator.last_update_success is True
     assert coordinator.data.number_of_people_in_space == 8
@@ -152,9 +168,7 @@ async def test_coordinator_failure_counter_resets_on_success(
         "Connection failed"
     )
     for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        await _async_poll(hass, freezer)
 
     # Should still be successful due to cached data
     assert coordinator.last_update_success is True
@@ -175,7 +189,10 @@ async def test_coordinator_initial_failure_no_cached_data(
 
 
 async def test_coordinator_handles_connection_error(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_pyiss: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handles ConnectionError exceptions."""
     coordinator = init_integration.runtime_data
@@ -186,9 +203,7 @@ async def test_coordinator_handles_connection_error(
         "Network unreachable"
     )
 
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
 
     # Should use cached data
     assert coordinator.data == original_data

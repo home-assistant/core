@@ -2,10 +2,15 @@
 
 import logging
 
+from freezegun.api import FrozenDateTimeFactory
 from pynws import NwsNoDataError
 import pytest
 
-from homeassistant.components.nws.const import CONF_LOCATION_ENTITY, DOMAIN
+from homeassistant.components.nws.const import (
+    CONF_LOCATION_ENTITY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -13,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import NWS_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -277,6 +282,7 @@ async def test_no_update_without_significant_move(
     location_entity_config: dict,
     new_lat: float,
     new_lon: float,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that unchanged or within-threshold coordinate changes do not create a new API."""
     entity = location_entity_config["entry"]
@@ -297,10 +303,13 @@ async def test_no_update_without_significant_move(
         "away",
         {ATTR_LATITUDE: new_lat, ATTR_LONGITUDE: new_lon},
     )
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await config_entry.runtime_data.coordinator_observation.async_refresh()
-    await hass.async_block_till_done()
+    update_observation = mock_simple_nws.return_value.update_observation
+    observation_calls = update_observation.call_count
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert update_observation.call_count > observation_calls
     assert mock_simple_nws.call_count == 1
     assert config_entry.runtime_data.latitude == 40.0
     assert config_entry.runtime_data.longitude == -80.0

@@ -1,12 +1,11 @@
 """The twinkly component."""
 
-import logging
-
 from aiohttp import ClientError
 from ttls.client import Twinkly
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -14,8 +13,6 @@ from .const import DEVICE_TIMEOUT, DOMAIN
 from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 
 PLATFORMS = [Platform.LIGHT, Platform.SELECT]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> bool:
@@ -55,8 +52,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) ->
         try:
             device_info = await client.get_details()
         except (TimeoutError, ClientError) as exception:
-            _LOGGER.error("Error while migrating: %s", exception)
-            return False
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": entry.data[CONF_HOST]},
+            ) from exception
         identifier = entry.unique_id
         assert identifier is not None
         entity_registry = er.async_get(hass)

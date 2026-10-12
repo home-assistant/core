@@ -42,6 +42,10 @@ from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
     _async_get_rsa_key_pem,
@@ -71,6 +75,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_HOST,
     CONF_PASSWORD,
@@ -94,6 +99,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import (
@@ -111,6 +117,20 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
+
+
+async def _async_update_live_status(hass: HomeAssistant) -> None:
+    """Ask for a live status update, as a user would."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: LIVE_STATUS_ENTITY_ID},
+        blocking=True,
+    )
+
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -670,8 +690,7 @@ async def test_live_status_coordinator_retry_exceptions(
     assert call_count == 1
 
     # The recovery/manual REST path still raises the exception
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+    await _async_update_live_status(hass)
     await hass.async_block_till_done()
 
     # API was called exactly once for this refresh (no manual retry loop)
@@ -701,12 +720,13 @@ async def test_live_status_auth_error(
         assert entry.state is ConfigEntryState.LOADED
 
         # The recovery/manual REST path surfaces the auth error
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+        await _async_update_live_status(hass)
         await hass.async_block_till_done()
 
-        # Auth error triggers reauth flow
+        # An auth error fails the live update
         assert entry.state is ConfigEntryState.LOADED
+        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
+        assert not live_coordinator.last_update_success
 
 
 async def test_live_status_generic_error(
@@ -730,12 +750,13 @@ async def test_live_status_generic_error(
         assert entry.state is ConfigEntryState.LOADED
 
         # The recovery/manual REST path surfaces the error
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+        await _async_update_live_status(hass)
         await hass.async_block_till_done()
 
         # Entry stays loaded but coordinator will have failed
         assert entry.state is ConfigEntryState.LOADED
+        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
+        assert not live_coordinator.last_update_success
 
 
 async def test_missing_token_data(hass: HomeAssistant) -> None:
@@ -1083,11 +1104,11 @@ async def test_live_status_coordinator_refresh_error(
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+    await _async_update_live_status(hass)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not entry.runtime_data.energysites[0].live_coordinator.last_update_success
 
 
 async def test_dynamic_device_discovery_triggers_reload(

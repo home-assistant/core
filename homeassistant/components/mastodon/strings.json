@@ -101,9 +101,6 @@
     "failed_to_connect": {
       "message": "Failed to connect."
     },
-    "idempotency_key_too_short": {
-      "message": "Idempotency key must be at least 4 characters long."
-    },
     "media_source_not_supported": {
       "message": "Media source {media_content_id} is not supported."
     },

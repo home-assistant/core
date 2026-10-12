@@ -3,15 +3,17 @@
 from unittest.mock import patch
 
 from eurotronic_cometblue_ha import InvalidByteValueError
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.eurotronic_cometblue.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "sensor.comet_blue_aa_bb_cc_dd_ee_ff_battery"
 
@@ -31,6 +33,7 @@ async def test_sensor_state(
 async def test_update_data_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that update data errors are handled and retried."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
@@ -44,9 +47,9 @@ async def test_update_data_error_handling(
         "homeassistant.components.eurotronic_cometblue.coordinator.AsyncCometBlue.get_battery_async",
         side_effect=InvalidByteValueError("Invalid byte"),
     ) as mock_get_battery:
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_battery.call_count == 1
         assert mock_config_entry.runtime_data.last_update_success is True

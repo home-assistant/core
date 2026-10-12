@@ -33,11 +33,6 @@ async def test_entry_diagnostics(
     mock_config_entry.add_to_hass(hass)
     await setup_integration(hass, mock_config_entry)
 
-    # Trigger update for all coordinators before diagnostics
-    for coordinator in mock_config_entry.runtime_data.values():
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
@@ -61,11 +56,6 @@ async def test_device_diagnostics(
         (DOMAIN, SUBENTRY_ID_1), mock_config_entry.entry_id
     )
     assert device is not None
-
-    # Trigger update for the coordinator before diagnostics
-    coordinator = mock_config_entry.runtime_data[SUBENTRY_ID_1]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
 
     result = await get_diagnostics_for_device(
         hass, hass_client, mock_config_entry, device

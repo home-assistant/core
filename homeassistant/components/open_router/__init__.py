@@ -1,7 +1,12 @@
 """The OpenRouter integration."""
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
-from python_open_router import OpenRouterClient, OpenRouterError
+from python_open_router import (
+    OpenRouterAuthenticationError,
+    OpenRouterClient,
+    OpenRouterConnectionError,
+    OpenRouterError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform
@@ -10,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_OUTPUT_MODALITIES, CONF_WEB_SEARCH, LOGGER
+from .const import CONF_OUTPUT_MODALITIES, CONF_WEB_SEARCH, DOMAIN, LOGGER
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
@@ -33,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
         async for _ in client.with_options(timeout=10.0).models.list():
             break
     except AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
         raise ConfigEntryError("Invalid API key") from err
     except OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
@@ -86,9 +90,18 @@ async def async_migrate_entry(
         )
         try:
             models = {model.id: model for model in await client.get_models()}
+        except OpenRouterAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="invalid_api_key"
+            ) from err
+        except OpenRouterConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         except OpenRouterError as err:
-            LOGGER.error("Error fetching models during migration: %s", err)
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="fetch_models_failed"
+            ) from err
 
         for subentry in entry.subentries.values():
             if subentry.subentry_type != "ai_task_data":

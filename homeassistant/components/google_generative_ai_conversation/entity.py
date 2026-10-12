@@ -484,6 +484,7 @@ async def _transform_stream(
                 and candidate.finish_reason != "STOP"
             ):
                 # The message ended due to a content error as explained in: https://ai.google.dev/api/generate-content#FinishReason
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error(
                     "Error in Google Generative AI response: %s, see: https://ai.google.dev/api/generate-content#FinishReason",
                     candidate.finish_reason,
@@ -558,6 +559,7 @@ async def _transform_stream(
         APIError,
         ValueError,
     ) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("Error sending message: %s %s", type(err), err)
         if isinstance(err, APIError):
             message = err.message
@@ -728,6 +730,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 ClientError,
                 ValueError,
             ) as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error sending message: %s %s", type(err), err)
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err

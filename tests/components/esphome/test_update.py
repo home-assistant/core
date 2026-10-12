@@ -1,6 +1,7 @@
 """Test ESPHome update entities."""
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
@@ -9,7 +10,8 @@ from awesomeversion import AwesomeVersion
 from awesomeversion.exceptions import AwesomeVersionCompareException
 import pytest
 
-from homeassistant.components.esphome.dashboard import async_get_dashboard
+from homeassistant.components.esphome import dashboard
+from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL
 from homeassistant.components.esphome.update import KEY_UPDATE_LOCK
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -31,10 +33,23 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
+from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
+
+
+async def _async_dashboard_poll(hass: HomeAssistant) -> None:
+    """Advance the time to the dashboard's next poll."""
+    # The next poll is scheduled up to half a second after the interval
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + REFRESH_INTERVAL + timedelta(seconds=1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 RELEASE_SUMMARY = "This is a release summary"
 RELEASE_URL = "https://esphome.io/changelog"
@@ -54,7 +69,7 @@ def stub_reconnect():
 
 
 @pytest.mark.parametrize(
-    ("devices_payload", "expected_state", "expected_attributes"),
+    ("mock_dashboard_devices", "expected_state", "expected_attributes"),
     [
         (
             [
@@ -87,19 +102,16 @@ def stub_reconnect():
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_entity(
     hass: HomeAssistant,
-    mock_dashboard: dict[str, Any],
-    devices_payload: list[dict[str, Any]],
+    mock_dashboard_devices: list[dict[str, Any]],
     expected_state: str,
     expected_attributes: dict[str, Any],
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome update entity."""
-    mock_dashboard["configured"] = devices_payload
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
 
     await mock_esphome_device(
         mock_client=mock_client,
@@ -194,21 +206,24 @@ async def test_update_entity(
     assert mock_upload.mock_calls[0][1][0] == "test.yaml"
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "1.2.3",
+            },
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_static_info(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "1.2.3",
-        },
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
@@ -237,24 +252,27 @@ async def test_update_static_info(
         (False, STATE_ON, True),
     ],
 )
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "1.2.3",
+            },
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_device_state_for_availability(
     hass: HomeAssistant,
     expected_disconnect: bool,
     expected_state: str,
     has_deep_sleep: bool,
-    mock_dashboard: dict[str, Any],
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome update entity changes availability with the device."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "1.2.3",
-        },
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"has_deep_sleep": has_deep_sleep},
@@ -272,17 +290,15 @@ async def test_update_entity_dashboard_not_available_startup(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when dashboard is not available at startup."""
-    with (
-        patch(
-            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
-            side_effect=TimeoutError,
-        ),
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
+        side_effect=TimeoutError,
     ):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await async_get_dashboard(hass).async_refresh()
+        await dashboard.async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
         await mock_esphome_device(
             mock_client=mock_client,
         )
@@ -291,16 +307,20 @@ async def test_update_entity_dashboard_not_available_startup(
     state = hass.states.get("update.test_firmware")
     assert state is None
 
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
+        return_value={
+            "configured": [
+                {
+                    "name": "test",
+                    "current_version": "2023.2.0-dev",
+                    "configuration": "test.yaml",
+                }
+            ],
+            "importable": [],
+        },
+    ):
+        await _async_dashboard_poll(hass)
 
     state = hass.states.get("update.test_firmware")
     assert state.state == STATE_ON
@@ -317,16 +337,15 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test update entity when dashboard discovered after startup fails."""
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await async_get_dashboard(hass).async_refresh()
-        await hass.async_block_till_done()
+        await dashboard.async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
         mock_device = await mock_esphome_device(
             mock_client=mock_client,
         )
@@ -336,26 +355,28 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
 
     await mock_device.mock_disconnect(False)
 
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # Device goes unavailable, and dashboard becomes available
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
+        return_value={
+            "configured": [
+                {
+                    "name": "test",
+                    "current_version": "2023.2.0-dev",
+                    "configuration": "test.yaml",
+                }
+            ],
+            "importable": [],
+        },
+    ):
+        # Device goes unavailable, and dashboard becomes available
+        await _async_dashboard_poll(hass)
 
-    state = hass.states.get("update.test_firmware")
-    assert state is None
+        state = hass.states.get("update.test_firmware")
+        assert state is None
 
-    # Finally both are available
-    await mock_device.mock_connect()
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
-    await hass.async_block_till_done()
+        # Finally both are available
+        await mock_device.mock_connect()
+        await _async_dashboard_poll(hass)
     state = hass.states.get("update.test_firmware")
     assert state is not None
 
@@ -397,9 +418,7 @@ async def test_update_becomes_available_at_runtime(
         }
     ]
 
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
-    await hass.async_block_till_done()
+    await _async_dashboard_poll(hass)
 
     state = hass.states.get("update.test_firmware")
     assert state is not None
@@ -430,9 +449,7 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
     state = hass.states.get("update.test_firmware")
     assert state is None
 
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
-    await hass.async_block_till_done()
+    await _async_dashboard_poll(hass)
 
     state = hass.states.get("update.none_firmware")
     assert state is None
@@ -763,22 +780,25 @@ async def test_update_entity_release_notes(
     assert result["result"] == RELEASE_SUMMARY
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2023.2.0-dev",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_attempt_to_update_twice(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test attempting to update twice."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(
         mock_client=mock_client,
     )
@@ -823,22 +843,25 @@ async def test_attempt_to_update_twice(
             await update_task
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2026.6.0",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_dashboard_with_build_queue_skips_global_lock(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test the global compile lock is skipped when the dashboard has a build queue."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2026.6.0",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(mock_client=mock_client)
     await hass.async_block_till_done()
 
@@ -867,22 +890,25 @@ async def test_update_dashboard_with_build_queue_skips_global_lock(
     assert mock_compile.mock_calls[0][1][0] == "test.yaml"
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2026.5.0",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_dashboard_without_build_queue_waits_for_global_lock(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test the global compile lock still serializes installs on older dashboards."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2026.5.0",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(mock_client=mock_client)
     await hass.async_block_till_done()
 
@@ -917,22 +943,25 @@ async def test_update_dashboard_without_build_queue_waits_for_global_lock(
     assert mock_compile.mock_calls[0][1][0] == "test.yaml"
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2023.2.0-dev",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_deep_sleep_already_online(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test attempting to update twice."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(
         mock_client=mock_client,
         device_info={"has_deep_sleep": True},
@@ -960,22 +989,25 @@ async def test_update_deep_sleep_already_online(
         )
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2023.2.0-dev",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_deep_sleep_offline(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test device comes online while updating."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"has_deep_sleep": True},
@@ -1010,22 +1042,25 @@ async def test_update_deep_sleep_offline(
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2023.2.0-dev",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_deep_sleep_offline_sleep_during_ota(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test device goes to sleep right as we start the OTA."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"has_deep_sleep": True},
@@ -1089,22 +1124,25 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    "mock_dashboard_devices",
+    [
+        [
+            {
+                "name": "test",
+                "current_version": "2023.2.0-dev",
+                "configuration": "test.yaml",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_update_deep_sleep_offline_cancelled_unload(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test deep sleep update attempt is cancelled on unload."""
-    mock_dashboard["configured"] = [
-        {
-            "name": "test",
-            "current_version": "2023.2.0-dev",
-            "configuration": "test.yaml",
-        }
-    ]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await async_get_dashboard(hass).async_refresh()
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"has_deep_sleep": True},
