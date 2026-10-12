@@ -5,16 +5,15 @@ collection and coordinator. Platforms subscribe once to receive existing and new
 added device coordinators from all current and future connections.
 
 The manager:
-- Owns a device collection per connection and subscribes it to matching events.
+- Owns a device collection per connection.
 - Shares one model and coordinator per device across entity platforms, keeping
   identical DevEUIs on different connections separate.
-- Creates and updates device registry records, and removes them when devices or
-  their provider config entries are deleted.
+- Creates, updates, and removes device registry records owned by the device
+  integration's config entry.
 - Retains models and coordinators during temporary disconnections, marks affected
   devices unavailable, and reconciles inventory when a replacement connection
-  registers. Retained models send commands through the replacement connection.
-- Releases subscriptions, collections, coordinators, and tasks on unload while
-  preserving device registry records.
+  registers.
+- Releases subscriptions, collections, coordinators, and tasks on unload.
 
 Device libraries decode payloads, and device integrations create entities from
 coordinators. Provider integrations own backend transport setup and reconnection.
