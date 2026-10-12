@@ -1,5 +1,7 @@
+
 """Update coordinator for HomeWizard."""
 
+from datetime import timedelta
 from typing import override
 
 from homewizard_energy import HomeWizardEnergy
@@ -13,6 +15,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_UPDATE_INTERVAL,
     DOMAIN,
     ISSUE_BATTERY_MODE_CLOUD_DISABLED,
     LOGGER,
@@ -43,7 +46,12 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=UPDATE_INTERVAL,
+            update_interval=timedelta(
+                seconds=config_entry.options.get(
+                    CONF_UPDATE_INTERVAL,
+                    int(UPDATE_INTERVAL.total_seconds()),
+                )
+            ),
         )
         self.api = api
 
