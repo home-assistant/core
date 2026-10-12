@@ -50,7 +50,8 @@ def device_identifier(domain: str, device: Device) -> tuple[str, str]:
 class _CollectionConnection:
     """Keep one collection subscribed while its server transport is replaced."""
 
-    def __init__(self) -> None:
+    def __init__(self, stack_type: str) -> None:
+        self.stack_type = stack_type
         self.registration: RegisteredConnection | None = None
         self._devices: dict[str, DeviceDescriptor] = {}
         self._unsubscribe: Unsubscribe | None = None
@@ -239,7 +240,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
         session = self._sessions.get(entry_id)
         created = session is None
         if session is None:
-            connection = _CollectionConnection()
+            connection = _CollectionConnection(registration.connection.stack_type)
             collection = self._create_collection(connection)
             session = self._sessions[entry_id] = _Session(connection, collection)
             session.unsubscribes.extend(

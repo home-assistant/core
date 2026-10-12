@@ -29,7 +29,7 @@ from tests.common import (
 @pytest.fixture
 def mock_connection() -> MockConnection:
     """Use the published in-memory connection."""
-    return MockConnection()
+    return MockConnection(stack_type="example")
 
 
 @pytest.fixture(autouse=True)
@@ -142,7 +142,9 @@ def registered_backend(hass: HomeAssistant) -> Generator[RegisterBackend]:
         if entry is None:
             entry = MockConfigEntry(domain="test_provider", entry_id=entry_id)
             entry.add_to_hass(hass)
-        backend = MockConnection(descriptors)
+        backend = MockConnection(
+            descriptors, stack_type=descriptors[0].stack if descriptors else "example"
+        )
         unsubscribe = await async_register_connection(hass, entry, connection=backend)
         cleanups.append(unsubscribe)
         return backend, unsubscribe

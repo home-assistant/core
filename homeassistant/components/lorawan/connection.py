@@ -58,6 +58,13 @@ async def async_register_connection(
         or entry_id in registry.pending_connection_registrations
     ):
         raise ValueError("A connection is already registered for this entry")
+    discovery_brands = {}
+    for domain, matchers in registry.integrations.items():
+        brands = {
+            brand_id for stack, brand_id in matchers if stack == connection.stack_type
+        }
+        if brands:
+            discovery_brands[domain] = brands
     registry.pending_connection_registrations.add(entry_id)
     active = False
     disconnected = False
@@ -77,10 +84,9 @@ async def async_register_connection(
     def handle_event(event: DeviceEvent) -> None:
         if disconnected or event.type != EventType.ADDED:
             return
-        descriptor = event.descriptor
-        key = (descriptor.stack, descriptor.brand_id)
-        for domain, brands in registry.integrations.items():
-            if key in brands:
+        brand_id = event.descriptor.brand_id
+        for domain, brands in discovery_brands.items():
+            if brand_id in brands:
                 if active:
                     discover(domain)
                 else:
@@ -104,7 +110,9 @@ async def async_register_connection(
         unsubscribes.append(
             await connection.async_subscribe(
                 brands=frozenset(
-                    pair for brands in registry.integrations.values() for pair in brands
+                    (connection.stack_type, brand_id)
+                    for brands in discovery_brands.values()
+                    for brand_id in brands
                 ),
                 listener=handle_event,
             )

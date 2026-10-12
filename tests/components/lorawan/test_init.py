@@ -148,7 +148,9 @@ async def test_duplicate_registration(
     backend, _ = await registered_backend("network", [DESCRIPTOR])
     entry = hass.config_entries.async_get_entry("network")
     with pytest.raises(ValueError, match="already registered"):
-        await async_register_connection(hass, entry, connection=MockConnection())
+        await async_register_connection(
+            hass, entry, connection=MockConnection(stack_type="example")
+        )
     assert hass.data[DATA_REGISTRY].connections["network"].connection is backend
 
 
@@ -162,6 +164,7 @@ async def test_registration_failure(
     assert await async_setup_component(hass, "lorawan", {})
     stop_disconnect = Mock()
     backend = Mock(
+        stack_type="example",
         on_disconnect=Mock(return_value=stop_disconnect),
         async_subscribe=AsyncMock(side_effect=error),
     )
@@ -171,7 +174,7 @@ async def test_registration_failure(
     assert not hass.data[DATA_REGISTRY].connections
 
     unsubscribe = await async_register_connection(
-        hass, provider_entry, connection=MockConnection()
+        hass, provider_entry, connection=MockConnection(stack_type="example")
     )
     unsubscribe()
 
@@ -194,6 +197,7 @@ async def test_concurrent_registration(
         return stop_events
 
     backend = Mock(
+        stack_type="example",
         on_disconnect=Mock(return_value=stop_disconnect),
         async_subscribe=AsyncMock(side_effect=replay),
     )
@@ -203,7 +207,7 @@ async def test_concurrent_registration(
     await started.wait()
     with pytest.raises(ValueError, match="already registered"):
         await async_register_connection(
-            hass, provider_entry, connection=MockConnection()
+            hass, provider_entry, connection=MockConnection(stack_type="example")
         )
     finish.set()
     unsubscribe = await registration
@@ -218,7 +222,9 @@ async def test_disconnect_during_registration(
     """A disconnect during replay cannot publish or discover a stale connection."""
     assert await async_setup_component(hass, "lorawan", {})
     stop_events, stop_disconnect = Mock(), Mock()
-    backend = Mock(on_disconnect=Mock(return_value=stop_disconnect))
+    backend = Mock(
+        stack_type="example", on_disconnect=Mock(return_value=stop_disconnect)
+    )
 
     async def replay(
         *,
@@ -246,7 +252,9 @@ async def test_disconnect_during_registration(
         "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
     ) as discover:
         unsubscribe = await async_register_connection(
-            hass, provider_entry, connection=MockConnection([DESCRIPTOR])
+            hass,
+            provider_entry,
+            connection=MockConnection([DESCRIPTOR], stack_type="example"),
         )
         discover.assert_called_once()
         unsubscribe()
@@ -265,3 +273,36 @@ async def test_shutdown_releases_subscriptions(
     ) as discover:
         backend.emit(inventory(DESCRIPTOR, EventType.UPDATED))
     discover.assert_not_called()
+
+
+@pytest.mark.parametrize("stack_type", ["example", "other_stack"])
+async def test_discovery_matches_connection_stack(
+    hass: HomeAssistant, registered_backend: RegisterBackend, stack_type: str
+) -> None:
+    """Identical brand IDs in different catalogs discover only the matching stack."""
+    with (
+        patch(
+            "homeassistant.components.lorawan.async_get_lorawan",
+            return_value={
+                "example": [("example", 123)],
+                "other_stack": [("other_stack", 123)],
+            },
+        ),
+        patch(
+            "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
+        ) as discover,
+        patch.object(
+            MockConnection,
+            "async_subscribe",
+            autospec=True,
+            side_effect=MockConnection.async_subscribe,
+        ) as subscribe,
+    ):
+        backend, _ = await registered_backend(
+            "network", [replace(DESCRIPTOR, stack=stack_type)]
+        )
+        assert backend.stack_type == stack_type
+        assert subscribe.call_args.kwargs["brands"] == frozenset({(stack_type, 123)})
+        discover.assert_called_once_with(
+            hass, stack_type, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data={}
+        )

@@ -332,7 +332,7 @@ async def test_disconnect_during_collection_setup(
 async def test_collection_connection_filter_and_disconnect() -> None:
     """The retained transport filters replay and rejects commands while detached."""
 
-    connection = _CollectionConnection()
+    connection = _CollectionConnection("example")
     # Ignore activity without a descriptor until inventory identifies the device.
     connection.emit(
         UplinkEvent(
@@ -359,7 +359,7 @@ async def test_collection_connection_filter_and_disconnect() -> None:
 async def test_disconnect_while_vendor_subscribes() -> None:
     """A subscription completing after withdrawal is immediately cleaned up."""
 
-    connection = _CollectionConnection()
+    connection = _CollectionConnection("example")
     listener = Mock()
     await connection.async_subscribe(brands=None, listener=listener)
     stop_events = Mock()
