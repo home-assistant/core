@@ -8,7 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import httpx2
-from mcp import McpError
+from mcp import MCPError as McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
@@ -90,7 +90,6 @@ async def mcp_client(
             streamable_http_client(url=url, http_client=http_client) as (
                 read_stream,
                 write_stream,
-                _,
             ),
             ClientSession(read_stream, write_stream) as session,
         ):
@@ -111,6 +110,7 @@ async def mcp_client(
                 "Streamable HTTP client failed, attempting SSE client: %s", main_error
             )
             try:
+                # pylint: disable-next=contextmanager-generator-missing-cleanup
                 async with (
                     sse_client(
                         url=url,
@@ -139,10 +139,10 @@ def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:
     declared = {
         field: value
         for field, value in (
-            ("read_only", remote.readOnlyHint),
-            ("destructive", remote.destructiveHint),
-            ("idempotent", remote.idempotentHint),
-            ("open_world", remote.openWorldHint),
+            ("read_only", remote.read_only_hint),
+            ("destructive", remote.destructive_hint),
+            ("idempotent", remote.idempotent_hint),
+            ("open_world", remote.open_world_hint),
         )
         if value is not None
     }
@@ -222,8 +222,10 @@ class ModelContextProtocolTool(llm.Tool):
                 f"Error communicating with MCP server when calling tool: {error}"
             ) from error
         return llm.ToolResult(
-            data=result.model_dump(exclude_unset=True, exclude_none=True),
-            error=bool(result.isError),
+            data=result.model_dump(
+                by_alias=True, exclude_unset=True, exclude_none=True
+            ),
+            error=bool(result.is_error),
         )
 
 
@@ -288,10 +290,10 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = from_openapi(tool.inputSchema)
+                parameters = from_openapi(tool.input_schema)
             except Exception as err:
                 raise UpdateFailed(
-                    f"Error converting schema {err}: {tool.inputSchema}"
+                    f"Error converting schema {err}: {tool.input_schema}"
                 ) from err
             tools.append(
                 ModelContextProtocolTool(
