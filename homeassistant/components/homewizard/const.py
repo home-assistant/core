@@ -23,6 +23,9 @@ CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"
 
 UPDATE_INTERVAL = timedelta(seconds=5)
+CONF_UPDATE_INTERVAL = "update_interval"
+MIN_UPDATE_INTERVAL = 1
+MAX_UPDATE_INTERVAL = 60
 
 
 def battery_mode_cloud_issue_id(entry_id: str) -> str:
