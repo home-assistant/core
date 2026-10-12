@@ -392,7 +392,7 @@ async def test_coordinator_poll_status_refresh_timeout_translation(
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
-    """Scheduled refresh uses a translatable timeout when status refresh stalls."""
+    """A later status-refresh timeout leaves the entry loaded and entities unavailable."""
     mock_imou_ha_device_manager.async_update_devices_status.side_effect = TimeoutError(
         "timeout"
     )
