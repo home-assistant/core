@@ -58,6 +58,7 @@ def handle_backup_errors[_R, **P](
             raise BackupNotFound(
                 translation_domain=DOMAIN,
                 translation_key="file_not_found",
+                translation_placeholders={"service": "Dropbox"},
             ) from err
         except DropboxAuthException as err:
             self._entry.async_start_reauth(self._hass)
