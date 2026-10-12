@@ -1,6 +1,8 @@
 """Proxmox parent entity class."""
 
-from typing import Any, override
+from typing import override
+
+from aioproxmox.model.pve import ContainerResource, NodeStorageResource, QemuResource
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -34,14 +36,14 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox node entity."""
         super().__init__(coordinator)
         self._node_data = node_data
-        self.device_id = node_data.node["id"]
-        self.device_name = node_data.node["node"]
+        self.device_id = node_data.node.id
+        self.device_name = node_data.node.node
         self.entity_description = entity_description
         self._attr_device_info = node_device_info(coordinator, node_data)
 
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}"
-            f"_{node_data.node['id']}"
+            f"_{node_data.node.id}"
             f"_{entity_description.key}"
         )
 
@@ -59,16 +61,16 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
         self,
         coordinator: ProxmoxCoordinator,
         entity_description: EntityDescription,
-        storage_data: dict[str, Any],
+        storage_data: NodeStorageResource,
         node_data: ProxmoxNodeData,
     ) -> None:
         """Initialize the Proxmox Storage entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._storage_data = storage_data
-        self._node_name = node_data.node["node"]
-        self.device_id = storage_data["storage"]
-        self.device_name = storage_data["storage"]
+        self._node_name = node_data.node.node
+        self.device_id = storage_data.storage
+        self.device_name = storage_data.storage
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -80,13 +82,13 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
             name=f"Storage ({self.device_name})",
             model="Storage",
             configuration_url=proxmox_base_url(coordinator).with_fragment(
-                f"v1:0:=storage/{self._node_name}/{storage_data['storage']}"
+                f"v1:0:=storage/{self._node_name}/{storage_data.storage}"
             ),
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (
                     DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+                    f"{coordinator.config_entry.entry_id}_node_{node_data.node.id}",
                 ),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
@@ -110,7 +112,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
-    def storage_data(self) -> dict[str, Any]:
+    def storage_data(self) -> NodeStorageResource:
         """Return the Storage data."""
         return self.coordinator.data[self._node_name].storages[self.device_id]
 
@@ -122,16 +124,16 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         self,
         coordinator: ProxmoxCoordinator,
         entity_description: EntityDescription,
-        vm_data: dict[str, Any],
+        vm_data: QemuResource,
         node_data: ProxmoxNodeData,
     ) -> None:
         """Initialize the Proxmox VM entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._vm_data = vm_data
-        self._node_name = node_data.node["node"]
-        self.device_id = int(vm_data["vmid"])
-        self.device_name = vm_data["name"]
+        self._node_name = node_data.node.node
+        self.device_id = vm_data.vmid
+        self.device_name = vm_data.name
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -140,13 +142,13 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
             name=self.device_name,
             model="VM",
             configuration_url=proxmox_base_url(coordinator).with_fragment(
-                f"v1:0:=qemu/{vm_data['vmid']}"
+                f"v1:0:=qemu/{vm_data.vmid}"
             ),
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (
                     DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+                    f"{coordinator.config_entry.entry_id}_node_{node_data.node.id}",
                 ),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
@@ -169,7 +171,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
-    def vm_data(self) -> dict[str, Any]:
+    def vm_data(self) -> QemuResource:
         """Return the VM data."""
         return self.coordinator.data[self._node_name].vms[self.device_id]
 
@@ -181,17 +183,16 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         self,
         coordinator: ProxmoxCoordinator,
         entity_description: EntityDescription,
-        container_data: dict[str, Any],
+        container_data: ContainerResource,
         node_data: ProxmoxNodeData,
     ) -> None:
         """Initialize the Proxmox Container entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._container_data = container_data
-        self._node_name = node_data.node["node"]
-        # Proxmox hands out a container vmid as a string, a VM one as an int
-        self.device_id = int(container_data["vmid"])
-        self.device_name = container_data["name"]
+        self._node_name = node_data.node.node
+        self.device_id = container_data.vmid
+        self.device_name = container_data.name
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -203,13 +204,13 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
             name=self.device_name,
             model="Container",
             configuration_url=proxmox_base_url(coordinator).with_fragment(
-                f"v1:0:=lxc/{container_data['vmid']}"
+                f"v1:0:=lxc/{container_data.vmid}"
             ),
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (
                     DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+                    f"{coordinator.config_entry.entry_id}_node_{node_data.node.id}",
                 ),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
@@ -232,6 +233,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
-    def container_data(self) -> dict[str, Any]:
+    def container_data(self) -> ContainerResource:
         """Return the Container data."""
         return self.coordinator.data[self._node_name].containers[self.device_id]
