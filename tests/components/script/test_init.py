@@ -136,7 +136,7 @@ async def test_turn_on_off_toggle(
     @callback
     def state_listener(event):
         nonlocal was_on
-        if event.data["new_state"].state == "on":
+        if (new_state := event.data["new_state"]) and new_state.state == "on":
             was_on = True
 
     async_track_state_change_event(hass, ENTITY_ID, state_listener)

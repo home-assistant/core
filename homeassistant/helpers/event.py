@@ -203,8 +203,7 @@ def async_track_state_change_event(
 ) -> CALLBACK_TYPE:
     """Track specific state change events indexed by entity_id.
 
-    Unlike async_track_state_change, async_track_state_change_event
-    passes the full event to the callback.
+    The full event is passed to the callback.
 
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job

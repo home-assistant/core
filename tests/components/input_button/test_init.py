@@ -220,7 +220,7 @@ async def test_reload_not_changing_state(hass: HomeAssistant, storage_setup) -> 
     state_changes = []
 
     def state_changed_listener(event: Event[EventStateChangedData]):
-        state_changes.append(event.data["new_state"].state)
+        state_changes.append(event.data["new_state"])
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state is not None
