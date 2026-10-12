@@ -97,6 +97,9 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.version == 1
+    assert entry.minor_version == 1
 
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
