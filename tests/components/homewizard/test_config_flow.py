@@ -899,6 +899,7 @@ async def test_discovery_with_v2_api_ask_authorization(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TOKEN] == "cool_token"
 
+
 @pytest.mark.parametrize("interval", [1, 5, 10, 30, 60])
 async def test_options_flow_update_interval(
     hass: HomeAssistant,
