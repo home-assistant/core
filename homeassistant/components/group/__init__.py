@@ -182,6 +182,7 @@ async def async_clean_import(hass: HomeAssistant, entry: ConfigEntry) -> None:
             new_unique_id=entry.entry_id,
         )
     except ValueError as err:
+        await hass.config_entries.async_setup(old_entity_entry.config_entry_id)
         raise ConfigEntryError(
             "Failed to migrate Min/Max entity to group platform; entity is still loaded"
         ) from err

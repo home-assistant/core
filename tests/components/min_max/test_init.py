@@ -9,6 +9,7 @@ from syrupy.filters import props
 
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -501,3 +502,50 @@ async def test_issue_is_aborted_on_could_not_start_group_entry_remains(
     assert entity.platform == GROUP_DOMAIN
 
     assert not hass.config_entries.async_has_entries(DOMAIN)
+
+
+async def test_min_max_restored_when_entity_migration_fails(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the Min/Max entry is set up again if moving its entity fails."""
+    assert await async_setup_component(hass, "repairs", {})
+    hass.states.async_set("sensor.input_one", "10")
+    hass.states.async_set("sensor.input_two", "20")
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_ids": ["sensor.input_one", "sensor.input_two"],
+            "name": "My min_max",
+            "round_digits": 2.0,
+            "type": "max",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
+    with (
+        patch.object(
+            entity_registry, "async_update_entity_platform", side_effect=ValueError
+        ),
+        patch("homeassistant.components.min_max.repairs.asyncio.sleep"),
+    ):
+        data = await process_repair_fix_flow(client, data["flow_id"], json={})
+        await hass.async_block_till_done()
+
+    assert data["type"] == FlowResultType.ABORT
+    assert data["reason"] == "could_not_start_group_entity"
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.async_entries(GROUP_DOMAIN)
+    entity = entity_registry.async_get("sensor.my_min_max")
+    assert entity.platform == DOMAIN
+    assert hass.states.get("sensor.my_min_max").state == "20.0"
