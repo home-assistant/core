@@ -51,6 +51,11 @@ TONNEAU_SERVICES = [
     pytest.param(SERVICE_CLOSE_COVER, "close_tonneau", ClosureState.CLOSE, id="close"),
     pytest.param(SERVICE_STOP_COVER, "stop_tonneau", ClosureState.STOP, id="stop"),
 ]
+TONNEAU_BLUETOOTH_SERVICES = [
+    pytest.param(SERVICE_OPEN_COVER, "open_tonneau", id="open"),
+    pytest.param(SERVICE_CLOSE_COVER, "close_tonneau", id="close"),
+    pytest.param(SERVICE_STOP_COVER, "stop_tonneau", id="stop"),
+]
 
 
 @pytest.fixture
@@ -274,13 +279,12 @@ async def test_cover_tonneau_services(
         assert state.state == CoverState.CLOSED
 
 
-@pytest.mark.parametrize(("service", "ble_command", "state"), TONNEAU_SERVICES)
+@pytest.mark.parametrize(("service", "ble_command"), TONNEAU_BLUETOOTH_SERVICES)
 async def test_cover_tonneau_bluetooth(
     hass: HomeAssistant,
     ble_cybertruck: tuple[AsyncMock, MagicMock],
     service: str,
     ble_command: str,
-    state: ClosureState,
 ) -> None:
     """Tests that a Bluetooth-paired Cybertruck in range moves the tonneau locally."""
     bluetooth_vehicle, _ = ble_cybertruck
