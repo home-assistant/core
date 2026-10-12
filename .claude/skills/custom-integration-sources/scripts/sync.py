@@ -288,6 +288,15 @@ def main() -> None:
         wanted = set(hacs) - set(missing)
         removed = prune(root, wanted)
         state = {r: s for r, s in state.items() if r in wanted}
+    else:
+        for repo in missing:
+            repo_dir = root / repo
+            if repo_dir.is_dir():
+                shutil.rmtree(repo_dir)
+                removed.append(repo)
+                if not any(repo_dir.parent.iterdir()):
+                    repo_dir.parent.rmdir()
+            state.pop(repo, None)
     save_state(root, state)
 
     print(f"updated {len(todo) - len(failed)}, removed {len(removed)}")
