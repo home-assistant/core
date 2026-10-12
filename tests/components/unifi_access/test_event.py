@@ -32,10 +32,6 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
-from homeassistant.components.unifi_access.coordinator import (
-    DoorEvent,
-    UnifiAccessCoordinator,
-)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -1339,6 +1335,7 @@ def _make_logs_add(
         ),
     ],
 )
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_duplicate_access_event_dispatched_once(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1350,10 +1347,6 @@ async def test_duplicate_access_event_dispatched_once(
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
 
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
-
     messages = {
         "access.logs.insights.add": _make_insights_add(),
         "access.logs.add": _make_logs_add(),
@@ -1362,8 +1355,12 @@ async def test_duplicate_access_event_dispatched_once(
     await handlers[second_event](messages[second_event])
     await hass.async_block_till_done()
 
-    assert len(events) == 1
-    assert events[0].event_type == "access_granted"
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    # A single dispatch keeps the first trigger's timestamp; a suppressed
+    # duplicate would have advanced it by one millisecond.
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
 @pytest.mark.parametrize(
@@ -1391,6 +1388,7 @@ async def test_duplicate_access_event_dispatched_once(
         ),
     ],
 )
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_distinct_access_events_not_suppressed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1402,17 +1400,17 @@ async def test_distinct_access_events_not_suppressed(
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
 
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
-
     await handlers["access.logs.insights.add"](insights)
     await handlers["access.logs.add"](logs)
     await hass.async_block_till_done()
 
-    assert len(events) == 2
+    # Both dispatches reach the entity, advancing its timestamp by one millisecond.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.001+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_same_second_different_doors_not_suppressed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1434,17 +1432,20 @@ async def test_same_second_different_doors_not_suppressed(
         )
     )
 
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
-
     await handlers["access.logs.add"](_make_logs_add())
     await handlers["access.logs.add"](_make_logs_add(device_id="hub-device-002"))
     await hass.async_block_till_done()
 
-    assert len(events) == 2
+    # Each door's event entity sees a single dispatch.
+    front_state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert front_state is not None
+    assert front_state.state == "2025-01-01T00:00:00.000+00:00"
+    back_state = hass.states.get(BACK_DOOR_ACCESS_ENTITY)
+    assert back_state is not None
+    assert back_state.state == "2025-01-01T00:00:00.000+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_unusable_insights_copy_does_not_suppress_logs(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1453,10 +1454,6 @@ async def test_unusable_insights_copy_does_not_suppress_logs(
     """Test an insights event without a door does not shadow its logs.add copy."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
-
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
 
     doorless_insights = InsightsAdd(
         event="access.logs.insights.add",
@@ -1478,9 +1475,13 @@ async def test_unusable_insights_copy_does_not_suppress_logs(
     await handlers["access.logs.add"](_make_logs_add())
     await hass.async_block_till_done()
 
-    assert len(events) == 1
+    # Only the logs.add copy dispatches, so the entity sees one trigger.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_unusable_logs_copy_does_not_suppress_insights(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1489,10 +1490,6 @@ async def test_unusable_logs_copy_does_not_suppress_insights(
     """Test a logs.add event without a resolvable door does not shadow insights."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
-
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
 
     doorless_logs = LogAdd(
         event="access.logs.add",
@@ -1517,9 +1514,13 @@ async def test_unusable_logs_copy_does_not_suppress_insights(
     await handlers["access.logs.insights.add"](_make_insights_add())
     await hass.async_block_till_done()
 
-    assert len(events) == 1
+    # Only the insights copy dispatches, so the entity sees one trigger.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_null_issuer_still_suppressed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1528,10 +1529,6 @@ async def test_null_issuer_still_suppressed(
     """Test a logs.add event without an issuer still matches its insights copy."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
-
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
 
     issuerless_logs = LogAdd(
         event="access.logs.add",
@@ -1558,9 +1555,13 @@ async def test_null_issuer_still_suppressed(
     await handlers["access.logs.add"](issuerless_logs)
     await hass.async_block_till_done()
 
-    assert len(events) == 1
+    # The empty issuer matches the insights auth id, so only one trigger fires.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_none_insights_auth_id_still_suppressed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1569,10 +1570,6 @@ async def test_none_insights_auth_id_still_suppressed(
     """Test an insights event with a null auth id still matches its logs copy."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
-
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
 
     null_auth_insights = InsightsAdd(
         event="access.logs.insights.add",
@@ -1595,9 +1592,13 @@ async def test_none_insights_auth_id_still_suppressed(
     await handlers["access.logs.add"](_make_logs_add(auth_id=None))
     await hass.async_block_till_done()
 
-    assert len(events) == 1
+    # Both null auth values normalize to the same key, so only one trigger fires.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_missing_published_not_suppressed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1607,17 +1608,17 @@ async def test_missing_published_not_suppressed(
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
 
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
-
     await handlers["access.logs.add"](_make_logs_add(published=None))
     await handlers["access.logs.add"](_make_logs_add(published=None))
     await hass.async_block_till_done()
 
-    assert len(events) == 2
+    # Neither event is suppressed, so the entity sees two triggers.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.001+00:00"
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_access_event_redelivered_after_window(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -1626,10 +1627,6 @@ async def test_access_event_redelivered_after_window(
     """Test an identical event is dispatched again once the dedup window has passed."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
-
-    events: list[DoorEvent] = []
-    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
-    coordinator.async_subscribe_door_events(events.append)
 
     # A negative window expires every recorded event immediately
     with patch(
@@ -1640,4 +1637,7 @@ async def test_access_event_redelivered_after_window(
             await handlers["access.logs.add"](_make_logs_add())
             await hass.async_block_till_done()
 
-    assert len(events) == 2
+    # Both dispatches reach the entity, advancing its timestamp.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.001+00:00"
