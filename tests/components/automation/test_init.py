@@ -1,13 +1,14 @@
 """The tests for the automation component."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
@@ -15,9 +16,9 @@ from homeassistant.components.automation import (
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
-    SERVICE_TRIGGER,
     AutomationEntity,
 )
+from homeassistant.components.automation.const import CONF_STOP_ACTIONS, SERVICE_TRIGGER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -47,7 +48,12 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    trigger as trigger_helper,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -440,30 +446,28 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     )
 
     context = Context()
-    first_automation_listener = Mock()
-    event_mock = Mock()
-
-    hass.bus.async_listen("test_event2", first_automation_listener)
-    hass.bus.async_listen(EVENT_AUTOMATION_TRIGGERED, event_mock)
+    first_automation_events = async_capture_events(hass, "test_event2")
+    triggered_events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
     hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    # Event triggers schedule their action with call_soon, so wait for 'bye' as well
     await hass.async_block_till_done()
 
     # Ensure events was fired
-    assert first_automation_listener.call_count == 1
-    assert event_mock.call_count == 2
+    assert len(first_automation_events) == 1
+    assert len(triggered_events) == 2
 
     # Verify automation triggered evenet for 'hello' automation
-    args, _ = event_mock.call_args_list[0]
-    first_trigger_context = args[0].context
+    event = triggered_events[0]
+    first_trigger_context = event.context
     assert first_trigger_context.parent_id == context.id
     # Ensure event data has all attributes set
-    assert args[0].data.get(ATTR_NAME) is not None
-    assert args[0].data.get(ATTR_ENTITY_ID) is not None
-    assert args[0].data.get(ATTR_SOURCE) is not None
+    assert event.data.get(ATTR_NAME) is not None
+    assert event.data.get(ATTR_ENTITY_ID) is not None
+    assert event.data.get(ATTR_SOURCE) is not None
 
     # Ensure context set correctly for event fired by 'hello' automation
-    args, _ = first_automation_listener.call_args
-    assert args[0].context is first_trigger_context
+    assert first_automation_events[0].context is first_trigger_context
 
     # Ensure the 'hello' automation state has the right context
     state = hass.states.get("automation.hello")
@@ -471,13 +475,13 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     assert state.context is first_trigger_context
 
     # Verify automation triggered evenet for 'bye' automation
-    args, _ = event_mock.call_args_list[1]
-    second_trigger_context = args[0].context
+    event = triggered_events[1]
+    second_trigger_context = event.context
     assert second_trigger_context.parent_id == first_trigger_context.id
     # Ensure event data has all attributes set
-    assert args[0].data.get(ATTR_NAME) is not None
-    assert args[0].data.get(ATTR_ENTITY_ID) is not None
-    assert args[0].data.get(ATTR_SOURCE) is not None
+    assert event.data.get(ATTR_NAME) is not None
+    assert event.data.get(ATTR_ENTITY_ID) is not None
+    assert event.data.get(ATTR_SOURCE) is not None
 
     # Ensure the service call from the second automation
     # shares the same context
@@ -811,7 +815,7 @@ async def test_automation_stops(
         await hass.services.async_call(
             automation.DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
+            {ATTR_ENTITY_ID: entity_id, CONF_STOP_ACTIONS: False},
             blocking=True,
         )
     elif service == "reload":
@@ -1134,7 +1138,8 @@ async def test_reload_moved_automation_without_alias(
 ) -> None:
     """Test that changing the order of automations without alias triggers reload."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1189,7 +1194,8 @@ async def test_reload_identical_automations_without_id(
 ) -> None:
     """Test reloading of identical automations without id."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1364,7 +1370,8 @@ async def test_reload_unchanged_automation(
 ) -> None:
     """Test an unmodified automation is not reloaded."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {automation.DOMAIN: [automation_config]}
         assert await async_setup_component(hass, automation.DOMAIN, config)
@@ -1399,7 +1406,8 @@ async def test_reload_automation_when_blueprint_changes(
 ) -> None:
     """Test an automation is updated at reload if the blueprint has changed."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1940,7 +1948,7 @@ async def test_automation_with_error_in_script_2(
             False,
         ),
         (
-            vol.Invalid("not valid"),
+            probatio.Invalid("not valid"),
             "Error while executing automation automation.hello: not valid",
             False,
         ),
@@ -1950,7 +1958,7 @@ async def test_automation_with_error_in_script_2(
             True,
         ),
     ],
-    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+    ids=["home_assistant_error", "probatio_invalid", "unexpected_exception"],
 )
 async def test_automation_with_error_in_action_script(
     hass: HomeAssistant,
@@ -1984,7 +1992,7 @@ async def test_automation_with_error_in_action_script(
 
     assert len(calls) == 0
     assert expected_error in caplog.text
-    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # A HomeAssistantError/probatio error is logged without a traceback, an
     # unexpected error is logged with a traceback.
     assert ("Traceback" in caplog.text) is expect_traceback
 
@@ -2009,7 +2017,7 @@ async def test_automation_with_error_in_action_script(
             False,
         ),
         (
-            vol.Invalid("not valid"),
+            probatio.Invalid("not valid"),
             "Error while checking conditions of automation automation.hello: not valid",
             False,
         ),
@@ -2019,7 +2027,7 @@ async def test_automation_with_error_in_action_script(
             True,
         ),
     ],
-    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+    ids=["home_assistant_error", "probatio_invalid", "unexpected_exception"],
 )
 async def test_automation_with_error_in_condition(
     hass: HomeAssistant,
@@ -2059,7 +2067,7 @@ async def test_automation_with_error_in_condition(
     # The action must not run when the condition check raises.
     assert len(calls) == 0
     assert expected_error in caplog.text
-    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # A HomeAssistantError/probatio error is logged without a traceback, an
     # unexpected error is logged with a traceback.
     assert ("Traceback" in caplog.text) is expect_traceback
 
@@ -3343,6 +3351,11 @@ async def test_blueprint_automation_bad_config(
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
+    # The automation is broken, but still listed under its blueprint
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
+    ]
+
 
 async def test_blueprint_automation_fails_substitution(
     hass: HomeAssistant,
@@ -4251,40 +4264,346 @@ async def test_automation_changed_entity_id(
     assert entry.entity_id == "automation.custom_id"
 
     hass.states.async_set("binary_sensor.test", "on")
+    running = asyncio.Event()
 
+    @callback
+    def running_cb(event: Event) -> None:
+        running.set()
+
+    hass.bus.async_listen("running", running_cb)
+
+    # Triggers are attached after the state is written during startup, so this
+    # is available when rendering the trigger
+    hass.set_state(CoreState.not_running)
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
             automation.DOMAIN: {
                 "id": "test_automation",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
                 "condition": {
                     "condition": "state",
                     "entity_id": "binary_sensor.test",
                     "state": "on",
                 },
-                "action": {"action": "test.automation"},
+                "action": [
+                    {"action": "test.automation"},
+                    {"event": "running"},
+                    {"wait_for_trigger": {"trigger": "event", "event_type": "go"}},
+                    {"action": "test.automation"},
+                ],
             }
         },
     )
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     # Automation should work with the custom entity_id
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
+    hass.bus.async_fire("automation.custom_id_event")
+    # Can't block till done while the action is waiting
+    await asyncio.wait_for(running.wait(), 1)
     assert len(calls) == 1
+    assert hass.states.get("automation.custom_id").attributes["current"] == 1
 
-    # Change entity_id while loaded
+    # Change entity_id while the action is running
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="automation.custom_id_2"
     )
     assert entry.entity_id == "automation.custom_id_2"
-    await hass.async_block_till_done()
 
-    # Automation should still work after entity_id change
-    hass.bus.async_fire("test_event")
+    # The running action is not stopped by the entity_id change
+    assert hass.states.get("automation.custom_id") is None
+    assert hass.states.get("automation.custom_id_2").attributes["current"] == 1
+    hass.bus.async_fire("go")
     await hass.async_block_till_done()
     assert len(calls) == 2
+    assert hass.states.get("automation.custom_id_2").attributes["current"] == 0
+
+    # Automation should still work after entity_id change, and the triggers
+    # are attached with this referring to the new entity_id
+    hass.bus.async_fire("automation.custom_id_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    running.clear()
+    hass.bus.async_fire("automation.custom_id_2_event")
+    await asyncio.wait_for(running.wait(), 1)
+    assert len(calls) == 3
+    hass.bus.async_fire("go")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+
+
+async def test_automation_changed_entity_id_enables_trigger(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test a trigger disabled by `this` is attached after an entity_id change."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation"
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "enabled": "{{ this.entity_id == 'automation.enabled' }}",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # No trigger is attached
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.enabled"
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def _turn_off_automation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Turn off the renamed automation."""
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "automation.second"},
+        blocking=True,
+    )
+
+
+async def _remove_automation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Remove the renamed automation from the entity registry."""
+    entity_registry.async_remove("automation.second")
+    await asyncio.sleep(0)
+
+
+async def _rename_automation_again(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Change the entity_id of the renamed automation again."""
+    entity_registry.async_update_entity(
+        "automation.second", new_entity_id="automation.third"
+    )
+    await asyncio.sleep(0)
+
+
+@pytest.mark.parametrize(
+    ("change", "expected_listeners"),
+    [
+        pytest.param(_turn_off_automation, {}, id="turn_off"),
+        pytest.param(_remove_automation, {}, id="remove"),
+        pytest.param(
+            _rename_automation_again,
+            {"automation.third_event": 1},
+            id="rename_again",
+        ),
+    ],
+)
+async def test_automation_changed_entity_id_while_attaching(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    change: Callable[[HomeAssistant, er.EntityRegistry], Coroutine[Any, Any, None]],
+    expected_listeners: dict[str, int],
+) -> None:
+    """Test no trigger listeners leak when the automation changes while attaching."""
+    entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation", suggested_object_id="first"
+    )
+    # Triggers are attached after the state is written during startup
+    hass.set_state(CoreState.not_running)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    def trigger_listeners() -> dict[str, int]:
+        return {
+            event_type: count
+            for event_type, count in hass.bus.async_listeners().items()
+            if event_type.endswith("_event")
+        }
+
+    assert trigger_listeners() == {"automation.first_event": 1}
+
+    release = asyncio.Event()
+    initialize_triggers = trigger_helper.async_initialize_triggers
+
+    async def blocked_initialize_triggers(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[], None] | None:
+        await release.wait()
+        return await initialize_triggers(*args, **kwargs)
+
+    with patch.object(
+        trigger_helper, "async_initialize_triggers", blocked_initialize_triggers
+    ):
+        entity_registry.async_update_entity(
+            "automation.first", new_entity_id="automation.second"
+        )
+        await asyncio.sleep(0)
+        # The triggers are detached while the new ones are being attached
+        assert trigger_listeners() == {}
+        await change(hass, entity_registry)
+        release.set()
+        await hass.async_block_till_done()
+
+    assert trigger_listeners() == expected_listeners
+
+
+async def _start_hass(hass: HomeAssistant) -> None:
+    """Start Home Assistant, which enables the automation."""
+    await hass.async_start()
+
+
+async def _turn_on_automation(hass: HomeAssistant) -> None:
+    """Turn on the automation."""
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "automation.first"},
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("core_state", "initial_state", "enable"),
+    [
+        pytest.param(CoreState.not_running, True, _start_hass, id="startup"),
+        pytest.param(CoreState.running, False, _turn_on_automation, id="turn_on"),
+    ],
+)
+async def test_automation_changed_entity_id_while_enabling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
+    initial_state: bool,
+    enable: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+) -> None:
+    """Test triggers attached while enabling follow an entity_id change."""
+    entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation", suggested_object_id="first"
+    )
+    hass.set_state(core_state)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "initial_state": initial_state,
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    def trigger_listeners() -> dict[str, int]:
+        return {
+            event_type: count
+            for event_type, count in hass.bus.async_listeners().items()
+            if event_type.endswith("_event")
+        }
+
+    attaching = asyncio.Event()
+    release = asyncio.Event()
+    initialize_triggers = trigger_helper.async_initialize_triggers
+
+    async def blocked_initialize_triggers(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[], None] | None:
+        attaching.set()
+        await release.wait()
+        return await initialize_triggers(*args, **kwargs)
+
+    with patch.object(
+        trigger_helper, "async_initialize_triggers", blocked_initialize_triggers
+    ):
+        # Starting or turning on waits until the triggers are attached
+        enable_task = hass.async_create_task(enable(hass))
+        await asyncio.wait_for(attaching.wait(), 1)
+        entity_registry.async_update_entity(
+            "automation.first", new_entity_id="automation.second"
+        )
+        await asyncio.sleep(0)
+        release.set()
+        await enable_task
+        await hass.async_block_till_done()
+
+    assert trigger_listeners() == {"automation.second_event": 1}
+
+
+async def test_unavailable_automation_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair issue of a broken automation follows its entity_id."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    assert issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.bad_automation_validation_failed_schema"
+    )
+
+    entity_registry.async_update_entity(
+        "automation.bad_automation", new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.bad_automation_validation_failed_schema"
+    )
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_validation_failed_schema"
+    )
+    assert issue
+    assert issue.translation_placeholders["entity_id"] == "automation.renamed"
+
+    # The moved issue is deleted when the automation is removed
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: []},
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_validation_failed_schema"
+    )
 
 
 class _MockDiagnosticTrigger(Trigger):

@@ -7,9 +7,7 @@
       "account_mismatch": "The used account does not match the original account",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -357,6 +355,7 @@
           "bunched_carrots_whole_small": "Bunched carrots (whole, small)",
           "butter_cake": "Butter cake",
           "cafe_au_lait": "Café au lait",
+          "caffe_americano": "Caffè Americano",
           "caffe_latte": "Caffè latte",
           "cappuccino": "Cappuccino",
           "cappuccino_italiano": "Cappuccino Italiano",
@@ -381,6 +380,7 @@
           "celery_pieces": "Celery (pieces)",
           "celery_sliced": "Celery (sliced)",
           "cep": "Cep",
+          "chai_latte": "Chai latte",
           "chanterelle": "Chanterelle",
           "char": "Char",
           "check_appliance": "Check appliance",
@@ -579,6 +579,7 @@
           "lemon_meringue_pie": "Lemon meringue pie",
           "linzer_augen_1_tray": "Linzer Augen (1 tray)",
           "linzer_augen_2_trays": "Linzer Augen (2 trays)",
+          "long_black": "Long black",
           "long_coffee": "Long coffee",
           "long_grain_rice_general_rapid_steam_cooking": "Long grain rice (general, rapid steam cooking)",
           "long_grain_rice_general_steam_cooking": "Long grain rice (general, steam cooking)",
@@ -1146,12 +1147,6 @@
     }
   },
   "exceptions": {
-    "config_entry_auth_failed": {
-      "message": "Authentication failed. Please log in again."
-    },
-    "config_entry_not_ready": {
-      "message": "Error while loading the integration."
-    },
     "get_programs_error": {
       "message": "'Get programs' action failed: {status} / {message}"
     },

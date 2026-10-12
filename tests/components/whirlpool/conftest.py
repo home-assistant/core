@@ -101,9 +101,7 @@ def get_aircon_mock(said):
     """Get a mock of an air conditioner."""
     mock_aircon = Mock(spec=aircon.Aircon, said=said)
     mock_aircon.name = f"Aircon {said}"
-    mock_aircon.appliance_info = Mock(
-        data_model="aircon_model", category="aircon", model_number="12345"
-    )
+    mock_aircon.appliance_info = Mock(category="aircon", model_number="12345")
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = aircon.Mode.Cool
@@ -113,6 +111,12 @@ def get_aircon_mock(said):
     mock_aircon.get_current_humidity.return_value = 80
     mock_aircon.get_humidity.return_value = 50
     mock_aircon.get_h_louver_swing.return_value = True
+    mock_aircon.get_raw_data.return_value = {
+        "_id": said,
+        "attributes": {
+            "Cavity_OpSetHorzLouverSwing": {"value": "1", "updateTime": 1626517992782},
+        },
+    }
 
     return mock_aircon
 
@@ -134,9 +138,7 @@ def mock_washer_api():
     """Get a mock of a washer."""
     mock_washer = Mock(spec=washer.Washer, said="said_washer")
     mock_washer.name = "Washer"
-    mock_washer.appliance_info = Mock(
-        data_model="washer", category="washer_dryer", model_number="12345"
-    )
+    mock_washer.appliance_info = Mock(category="washer_dryer", model_number="12345")
     mock_washer.get_online.return_value = True
     mock_washer.get_machine_state.return_value = washer.MachineState.RunningMainCycle
     mock_washer.get_door_open.return_value = False
@@ -148,6 +150,12 @@ def mock_washer_api():
     mock_washer.get_cycle_status_soaking.return_value = False
     mock_washer.get_cycle_status_spinning.return_value = False
     mock_washer.get_cycle_status_washing.return_value = False
+    mock_washer.get_raw_data.return_value = {
+        "_id": "WBR123456789",
+        "attributes": {
+            "Cavity_OpSetHorzLouverSwing": {"value": "1", "updateTime": 1626517992782},
+        },
+    }
 
     return mock_washer
 
@@ -157,14 +165,18 @@ def mock_dryer_api():
     """Get a mock of a dryer."""
     mock_dryer = mock.Mock(spec=dryer.Dryer, said="said_dryer")
     mock_dryer.name = "Dryer"
-    mock_dryer.appliance_info = Mock(
-        data_model="dryer", category="washer_dryer", model_number="12345"
-    )
+    mock_dryer.appliance_info = Mock(category="washer_dryer", model_number="12345")
     mock_dryer.get_online.return_value = True
     mock_dryer.get_machine_state.return_value = dryer.MachineState.RunningMainCycle
     mock_dryer.get_door_open.return_value = False
     mock_dryer.get_time_remaining.return_value = 3540
     mock_dryer.get_cycle_status_sensing.return_value = False
+    mock_dryer.get_raw_data.return_value = {
+        "_id": "WBR123456789",
+        "attributes": {
+            "Cavity_OpSetHorzLouverSwing": {"value": "1", "updateTime": 1626517992782},
+        },
+    }
     return mock_dryer
 
 
@@ -173,9 +185,7 @@ def mock_oven_single_cavity_api():
     """Get a mock of a single cavity oven."""
     mock_oven = Mock(spec=oven.Oven, said="said_oven_single")
     mock_oven.name = "Single Cavity Oven"
-    mock_oven.appliance_info = Mock(
-        data_model="oven", category="oven", model_number="12345"
-    )
+    mock_oven.appliance_info = Mock(category="oven", model_number="12345")
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
@@ -185,6 +195,12 @@ def mock_oven_single_cavity_api():
     mock_oven.get_light.return_value = True
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
+    mock_oven.get_raw_data.return_value = {
+        "_id": "WBR123456789",
+        "attributes": {
+            "Cavity_OpSetHorzLouverSwing": {"value": "1", "updateTime": 1626517992782},
+        },
+    }
     return mock_oven
 
 
@@ -193,9 +209,7 @@ def mock_oven_dual_cavity_api():
     """Get a mock of a dual cavity oven."""
     mock_oven = Mock(spec=oven.Oven, said="said_oven_dual")
     mock_oven.name = "Dual Cavity Oven"
-    mock_oven.appliance_info = Mock(
-        data_model="oven", category="oven", model_number="12345"
-    )
+    mock_oven.appliance_info = Mock(category="oven", model_number="12345")
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
@@ -209,6 +223,12 @@ def mock_oven_dual_cavity_api():
     mock_oven.get_light.side_effect = lambda cavity: cavity == oven.Cavity.Upper
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
+    mock_oven.get_raw_data.return_value = {
+        "_id": "WBR123456789",
+        "attributes": {
+            "Cavity_OpSetHorzLouverSwing": {"value": "1", "updateTime": 1626517992782},
+        },
+    }
     return mock_oven
 
 
@@ -218,7 +238,13 @@ def mock_refrigerator_api():
     mock_refrigerator = Mock(spec=refrigerator.Refrigerator, said="said_refrigerator")
     mock_refrigerator.name = "Beer fridge"
     mock_refrigerator.appliance_info = Mock(
-        data_model="refrigerator", category="refrigerator", model_number="12345"
+        category="refrigerator", model_number="12345"
     )
     mock_refrigerator.get_offset_temp.return_value = 0
+    mock_refrigerator.get_raw_data.return_value = {
+        "_id": "WBR123456789",
+        "attributes": {
+            "Cavity_OpSetHorzLouverSwing": {"value": "1", "updateTime": 1626517992782},
+        },
+    }
     return mock_refrigerator

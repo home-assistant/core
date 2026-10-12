@@ -3,11 +3,12 @@
 import logging
 from typing import override
 
+import probatio
 import telnetlib  # pylint: disable=deprecated-module
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -39,8 +40,8 @@ SUPPORT_MEDIA_MODES = (
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -92,6 +93,8 @@ def setup_platform(
 
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon device."""
+
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def __init__(self, name, host):
         """Initialize the Denon device."""

@@ -1,17 +1,20 @@
 """Test the Blink init."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
 from blinkpy.auth import LoginError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.blink.const import DOMAIN
+from homeassistant.components.blink.coordinator import SCAN_INTERVAL
 from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 CAMERA_NAME = "Camera 1"
 FILENAME = "blah"
@@ -76,6 +79,30 @@ async def test_unload_entry(
     assert hass.services.has_service(DOMAIN, SERVICE_SAVE_VIDEO)
 
 
+async def test_scheduled_refresh_is_not_forced(
+    hass: HomeAssistant,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a scheduled poll does not force a cache refresh.
+
+    BlinkPy propagates a forced refresh as ``force_cache=True`` to the sync
+    modules, which re-downloads media that is already cached. See #182552.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_blink_api.refresh.reset_mock()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_blink_api.refresh.assert_awaited_once_with()
+
+
 async def test_migrate_V0(
     hass: HomeAssistant,
     mock_blink_api: MagicMock,
@@ -114,6 +141,10 @@ async def test_migrate(
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        f"Cannot migrate configuration entry from version {version},"
+        " re-authentication is required"
+    )
 
 
 async def test_migrate_v3_to_v4(

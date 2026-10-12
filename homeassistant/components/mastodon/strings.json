@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
@@ -102,9 +100,6 @@
     },
     "failed_to_connect": {
       "message": "Failed to connect."
-    },
-    "idempotency_key_too_short": {
-      "message": "Idempotency key must be at least 4 characters long."
     },
     "media_source_not_supported": {
       "message": "Media source {media_content_id} is not supported."

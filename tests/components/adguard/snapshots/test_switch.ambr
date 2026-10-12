@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filtering',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_filtering',
+    'unique_id': '01JADGUARDHOME0000000000000_filtering',
     'unit_of_measurement': None,
   })
 # ---
@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'parental',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_parental',
+    'unique_id': '01JADGUARDHOME0000000000000_parental',
     'unit_of_measurement': None,
   })
 # ---
@@ -132,7 +132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'protection',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_protection',
+    'unique_id': '01JADGUARDHOME0000000000000_protection',
     'unit_of_measurement': None,
   })
 # ---
@@ -182,7 +182,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'query_log',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_querylog',
+    'unique_id': '01JADGUARDHOME0000000000000_querylog',
     'unit_of_measurement': None,
   })
 # ---
@@ -232,7 +232,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safe_browsing',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_safebrowsing',
+    'unique_id': '01JADGUARDHOME0000000000000_safebrowsing',
     'unit_of_measurement': None,
   })
 # ---
@@ -282,7 +282,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safe_search',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_safesearch',
+    'unique_id': '01JADGUARDHOME0000000000000_safesearch',
     'unit_of_measurement': None,
   })
 # ---

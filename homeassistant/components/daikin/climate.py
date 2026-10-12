@@ -184,7 +184,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     """Representation of a Daikin HVAC."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HA_STATE_TO_DAIKIN)
     _attr_target_temperature_step = 1
     _attr_fan_modes: list[str]
@@ -253,13 +253,13 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.inside_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.device.target_temperature
 
@@ -390,7 +390,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     """Representation of a Daikin zone temperature controller."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -439,7 +439,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the zone target temperature for the active mode."""
         heating, cooling = _zone_temperature_lists(self.device)
         mode = self._main_hvac_mode

@@ -6,6 +6,11 @@
       }
     }
   },
+  "exceptions": {
+    "project_id_changed": {
+      "message": "The project ID in configuration.yaml has changed, the entry will be replaced"
+    }
+  },
   "services": {
     "request_sync": {
       "description": "Sends a request_sync command to Google.",

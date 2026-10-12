@@ -3,7 +3,7 @@
 import logging
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -55,7 +55,7 @@ TRIGGER_REQUIRED_BRIDGE_TYPES: dict[str, frozenset[str]] = {
 
 LUTRON_BUTTON_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(SUPPORTED_INPUTS_EVENTS_TYPES),
     }
 )
 
@@ -84,7 +84,7 @@ PICO_2_BUTTON_BUTTON_TYPES_TO_LEAP = {
 }
 PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_2_BUTTON_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(PICO_2_BUTTON_BUTTON_TYPES_TO_LIP),
     }
 )
 
@@ -103,7 +103,7 @@ PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
 }
 PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(
+        probatio.Required(CONF_SUBTYPE): probatio.In(
             PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LIP
         ),
     }
@@ -122,7 +122,7 @@ PICO_3_BUTTON_BUTTON_TYPES_TO_LEAP = {
 }
 PICO_3_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_3_BUTTON_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(PICO_3_BUTTON_BUTTON_TYPES_TO_LIP),
     }
 )
 
@@ -142,7 +142,7 @@ PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
 }
 PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(
+        probatio.Required(CONF_SUBTYPE): probatio.In(
             PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LIP
         ),
     }
@@ -165,7 +165,7 @@ LEAP_TO_PICO_4_BUTTON_BUTTON_TYPES = {
 }
 PICO_4_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(PICO_4_BUTTON_BUTTON_TYPES_TO_LIP),
     }
 )
 
@@ -187,7 +187,9 @@ LEAP_TO_PICO_4_BUTTON_ZONE_BUTTON_TYPES = {
 }
 PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_ZONE_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(
+            PICO_4_BUTTON_ZONE_BUTTON_TYPES_TO_LIP
+        ),
     }
 )
 
@@ -206,7 +208,9 @@ PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LEAP = {
 }
 PICO_4_BUTTON_SCENE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(
+            PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LIP
+        ),
     }
 )
 
@@ -225,7 +229,9 @@ PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LEAP = {
 }
 PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(
+            PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LIP
+        ),
     }
 )
 
@@ -285,7 +291,9 @@ FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP = {
 }
 FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(
+            FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LIP
+        ),
     }
 )
 
@@ -300,7 +308,9 @@ PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LEAP = {
 }
 PADDLE_SWITCH_PICO_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP),
+        probatio.Required(CONF_SUBTYPE): probatio.In(
+            PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP
+        ),
     }
 )
 
@@ -348,7 +358,7 @@ LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP: dict[str, dict[int, str]] = {
     k: _reverse_dict(v) for k, v in DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.items()
 }
 
-TRIGGER_SCHEMA = vol.Any(
+TRIGGER_SCHEMA = probatio.Any(
     PICO_2_BUTTON_TRIGGER_SCHEMA,
     PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
     PICO_4_BUTTON_TRIGGER_SCHEMA,

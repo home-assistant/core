@@ -85,16 +85,24 @@ class GoogleDriveBackupAgent(BackupAgent):
         :param backup: Metadata about the backup that should be uploaded.
         """
 
+        bytes_uploaded = 0
+
         @wraps(open_stream)
         async def wrapped_open_stream() -> AsyncIterator[bytes]:
             stream = await open_stream()
 
             async def _progress_stream() -> AsyncIterator[bytes]:
-                bytes_uploaded = 0
+                nonlocal bytes_uploaded
+                position = 0
                 async for chunk in stream:
                     yield chunk
-                    bytes_uploaded += len(chunk)
-                    on_progress(bytes_uploaded=bytes_uploaded)
+                    position += len(chunk)
+                    # A retried upload reopens the stream from the beginning and
+                    # skips whatever the server already received, so only report
+                    # progress once it passes what was previously uploaded.
+                    if position > bytes_uploaded:
+                        bytes_uploaded = position
+                        on_progress(bytes_uploaded=bytes_uploaded)
 
             return _progress_stream()
 

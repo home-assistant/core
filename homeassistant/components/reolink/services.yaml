@@ -43,3 +43,20 @@ play_chime:
             - operetta
             - moonlight
             - waybackhome
+
+snapshot_past:
+  target:
+    entity:
+      integration: reolink
+      domain: camera
+  fields:
+    timestamp:
+      required: true
+      example: "2025-09-29 14:30:00"
+      selector:
+        datetime:
+    filename:
+      required: true
+      example: "/tmp/reolink_snapshot.jpg"
+      selector:
+        text:

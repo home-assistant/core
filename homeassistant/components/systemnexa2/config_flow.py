@@ -6,8 +6,8 @@ import socket
 from typing import Any, override
 
 import aiohttp
+import probatio
 from sn2.device import Device
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -31,9 +31,9 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_SCHEMA = vol.Schema(
+_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 

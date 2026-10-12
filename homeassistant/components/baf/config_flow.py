@@ -6,7 +6,7 @@ from typing import Any, override
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
@@ -111,8 +111,8 @@ class BAFFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS, default=ip_address): str}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_IP_ADDRESS, default=ip_address): str}
             ),
             errors=errors,
         )

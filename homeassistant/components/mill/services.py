@@ -1,6 +1,6 @@
 """Services for the Mill integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, service
@@ -15,12 +15,12 @@ from .const import (
 )
 from .coordinator import MillConfigEntry
 
-SET_ROOM_TEMP_SCHEMA = vol.Schema(
+SET_ROOM_TEMP_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ROOM_NAME): cv.string,
-        vol.Optional(ATTR_AWAY_TEMP): cv.positive_int,
-        vol.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
-        vol.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
+        probatio.Required(ATTR_ROOM_NAME): cv.string,
+        probatio.Optional(ATTR_AWAY_TEMP): cv.positive_int,
+        probatio.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
+        probatio.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
     }
 )
 

@@ -13,10 +13,12 @@ from opendisplay import (
     BLEConnectionError,
 )
 from PIL import Image as PILImage
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.camera import Image as CameraImage
+from homeassistant.components.image import Image as ImageEntityImage
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -125,6 +127,66 @@ async def test_upload_image_remote_url(
             blocking=True,
         )
 
+    mock_upload_device.upload_image.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "patch_target", "entity_id", "image_cls"),
+    [
+        pytest.param(
+            "media-source://image/image.collection",
+            "homeassistant.components.image.async_get_image",
+            "image.collection",
+            ImageEntityImage,
+            id="image_entity",
+        ),
+        pytest.param(
+            "media-source://camera/camera.front_door",
+            "homeassistant.components.camera.async_get_image",
+            "camera.front_door",
+            CameraImage,
+            id="camera_entity",
+        ),
+    ],
+)
+async def test_upload_image_from_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: MagicMock,
+    media_content_id: str,
+    patch_target: str,
+    entity_id: str,
+    image_cls: type[ImageEntityImage | CameraImage],
+) -> None:
+    """Test uploading a snapshot from an image or camera entity."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    buf = io.BytesIO()
+    PILImage.new("RGB", (10, 10)).save(buf, format="PNG")
+
+    with (
+        patch(
+            patch_target, return_value=image_cls("image/png", buf.getvalue())
+        ) as mock_get_image,
+        patch(
+            "homeassistant.components.opendisplay.services.async_resolve_media"
+        ) as mock_resolve,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": media_content_id,
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    mock_get_image.assert_awaited_once_with(hass, entity_id)
+    mock_resolve.assert_not_called()
     mock_upload_device.upload_image.assert_called_once()
 
 
@@ -255,7 +317,7 @@ async def test_upload_image_invalid_mode(
     """Test that invalid mode strings are rejected by the schema."""
     device_id = _device_id(hass, mock_config_entry)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "upload_image",

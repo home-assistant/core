@@ -15,7 +15,7 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_TIMING_MODE,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
@@ -47,35 +47,37 @@ def _as_snake_case(mode: str) -> str:
 
 
 # System service schemas (registered as domain services)
-SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
-    vol.Required(SZ_MODE): cv.string,  # ... so, don't use SystemMode enum here
-    vol.Exclusive(SZ_DURATION, "temporary"): vol.All(
+    probatio.Required(SZ_MODE): cv.string,  # ... so, don't use SystemMode enum here
+    probatio.Exclusive(SZ_DURATION, "temporary"): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+        probatio.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
     ),
-    vol.Exclusive(SZ_PERIOD, "temporary"): vol.All(
+    probatio.Exclusive(SZ_PERIOD, "temporary"): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+        probatio.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+    probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
 }
 
 # Zone service schemas (registered as entity services)
-SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(SZ_SETPOINT): vol.All(vol.Coerce(float), vol.Range(min=4.0, max=35.0)),
-    vol.Optional(SZ_DURATION): vol.All(
+SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
+    probatio.Required(SZ_SETPOINT): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=4.0, max=35.0)
+    ),
+    probatio.Optional(SZ_DURATION): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+        probatio.Range(min=timedelta(days=0), max=timedelta(days=1)),
     ),
 }
 
 # DHW service schemas (registered as entity services)
-SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(SZ_STATE): cv.boolean,
-    vol.Optional(SZ_DURATION): vol.All(
+SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
+    probatio.Required(SZ_STATE): cv.boolean,
+    probatio.Optional(SZ_DURATION): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+        probatio.Range(min=timedelta(days=0), max=timedelta(days=1)),
     ),
 }
 
@@ -175,7 +177,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
             translation_placeholders={SZ_MODE: mode},
         )
 
-    # voluptuous schema ensures that duration and period are not both present
+    # probatio schema ensures that duration and period are not both present
 
     if not mode_info[SZ_CAN_BE_TEMPORARY]:
         if SZ_DURATION in data or SZ_PERIOD in data:
@@ -263,7 +265,7 @@ def async_setup_services(
         DOMAIN,
         EvoService.SET_SYSTEM_MODE,
         set_system_mode,
-        schema=vol.Schema(SET_SYSTEM_MODE_SCHEMA),
+        schema=probatio.Schema(SET_SYSTEM_MODE_SCHEMA),
     )
 
     _register_zone_entity_services(hass)

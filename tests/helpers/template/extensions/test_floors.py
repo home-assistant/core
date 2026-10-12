@@ -85,6 +85,7 @@ async def test_floor_id(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     device_entry = device_registry.async_update_device(
         device_entry.id, area_id=area_entry_hex.id
@@ -156,6 +157,7 @@ async def test_floor_name(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     device_entry = device_registry.async_update_device(
         device_entry.id, area_id=area_entry_hex.id

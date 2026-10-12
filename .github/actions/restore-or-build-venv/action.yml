@@ -36,7 +36,7 @@ runs:
   steps:
     - name: Set up uv and managed Python
       id: python
-      uses: ./.github/actions/setup-uv-python
+      uses: $/.github/actions/setup-uv-python
       with:
         uv-version: ${{ inputs.uv-version }}
         python-version: ${{ inputs.python-version }}
@@ -73,7 +73,7 @@ runs:
     # timeout instead of a per-step cap.
     - name: Install additional OS dependencies
       if: steps.cache-venv.outputs.cache-hit != 'true'
-      uses: ./.github/actions/cache-apt-packages
+      uses: $/.github/actions/cache-apt-packages
       with:
         packages: >-
           bluez

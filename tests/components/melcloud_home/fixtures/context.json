@@ -23,7 +23,7 @@
           "capabilities": {
             "isMultiSplitSystem": false,
             "isLegacyDevice": false,
-            "hasStandby": false,
+            "hasStandby": true,
             "hasCoolOperationMode": true,
             "hasHeatOperationMode": true,
             "hasAutoOperationMode": true,
@@ -43,10 +43,9 @@
             "hasDemandSideControl": false,
             "hasHalfDegreeIncrements": true,
             "supportsWideVane": false,
-            "hasOutdoorTemperatureSensor": false,
+            "hasOutdoorTemperatureSensor": true,
             "hasVaneVertical": true,
-            "hasVaneHorizontal": true,
-            "hasStandbyMode": false
+            "hasVaneHorizontal": true
           },
           "frostProtection": {
             "active": false,
@@ -189,7 +188,7 @@
             "hasCoolingMode": true,
             "minSetTankTemperature": 40,
             "maxSetTankTemperature": 60,
-            "hasStandbyMode": false,
+            "hasStandbyMode": true,
             "hasEnergyConsumedMeter": true
           },
           "rssi": -52,
