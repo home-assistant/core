@@ -382,8 +382,8 @@ async def test_thermostat_temperature_offset(
         pytest.param(
             "aqara_thermostat_w500",
             "number.floor_heating_thermostat_temperature_offset",
-            -2.5,
-            2.5,
+            -12.7,
+            12.7,
             id="cluster_revision_6_legacy_range",
         ),
         pytest.param(
