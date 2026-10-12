@@ -212,9 +212,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        # The service climate.set_temperature can set the hvac_mode too, see
-        # https://www.home-assistant.io/integrations/climate/#service-climateset_temperature
-        # se we first set the hvac_mode, if provided, then the temperature.
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.async_set_tank_temperature(float(temperature))
 

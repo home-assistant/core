@@ -274,7 +274,7 @@
         "name": "Powerful mode"
       },
       "ratelimitremainingday": {
-        "name": "Ratelimit remaining day"
+        "name": "Rate limit remaining day"
       },
       "regioncode": {
         "name": "Region code"
