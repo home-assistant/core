@@ -21,6 +21,7 @@ from pysmartthings import (
     SmartThingsConnectionError,
     SmartThingsError,
     SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
     SmartThingsSinkError,
     Status,
 )
@@ -67,6 +68,7 @@ from .const import (
     DOMAIN,
     EVENT_BUTTON,
     MAIN,
+    MANAGE_PLANS_URL,
     OLD_DATA,
     SENSOR_ATTRIBUTES_TO_CAPABILITIES,
     SMARTTHINGS_ACCOUNT_URL,
@@ -124,6 +126,15 @@ PLATFORMS = [
 ]
 
 
+def _quota_exceeded_not_ready() -> ConfigEntryNotReady:
+    """Build a retryable setup error explaining the quota problem."""
+    return ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="quota_exceeded",
+        translation_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
+    )
+
+
 async def _async_fetch_devices(
     client: SmartThings, entry: SmartThingsConfigEntry
 ) -> tuple[dict[str, str], dict[str, FullDevice], dict[str, Scene]]:
@@ -161,8 +172,9 @@ async def _async_fetch_devices(
         raise ConfigEntryAuthFailed from err
     except SmartThingsConnectionError as err:
         raise ConfigEntryNotReady from err
+    except SmartThingsQuotaExceededError as err:
+        raise _quota_exceeded_not_ready() from err
     except SmartThingsForbiddenError as err:
-        # TODO: determine actual error for unentitled users  # pylint: disable=fixme
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="entitlement_required"
         ) from err
@@ -222,12 +234,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             await client.delete_subscription(old_identifier)
         except SmartThingsConnectionError as err:
             raise ConfigEntryNotReady("Could not delete old subscription") from err
+        except SmartThingsQuotaExceededError as err:
+            raise _quota_exceeded_not_ready() from err
 
     _LOGGER.debug("Trying to create a new subscription")
     try:
         subscription = await client.create_subscription(
             entry.data[CONF_LOCATION_ID],
         )
+    except SmartThingsQuotaExceededError as err:
+        raise _quota_exceeded_not_ready() from err
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         raise ConfigEntryNotReady(f"Couldn't create a new subscription: {err}") from err
     subscription_id = subscription.subscription_id

@@ -78,10 +78,6 @@ def mock_smartthings() -> Generator[AsyncMock]:
             "homeassistant.components.smartthings.config_flow.SmartThings",
             new=mock_client,
         ),
-        patch(
-            "homeassistant.components.smartthings.app_ledger.SmartThings",
-            new=mock_client,
-        ),
         # pysmartthings doesn't have create_app/delete_app yet, so autospec
         # doesn't know about them -- create=True adds them as plain AsyncMocks
         # until the real methods exist and this can go through autospec too.

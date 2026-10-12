@@ -124,8 +124,8 @@ class SmartThingsEntity(Entity):
             ) from err
         except SmartThingsForbiddenError as err:
             # TODO: check actual error for unentitled users after switch. We may want to revert this change.  # pylint: disable=fixme
-            assert self.platform.config_entry
-            self.platform.config_entry.async_start_reauth_if_available(self.hass)
+            if (entry := self.platform.config_entry) is not None:
+                entry.async_start_reauth_if_available(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="entitlement_required"
             ) from err

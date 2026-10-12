@@ -10,6 +10,7 @@ from pysmartthings import (
     DeviceStatus,
     Lifecycle,
     SmartThingsConnectionError,
+    SmartThingsQuotaExceededError,
     SmartThingsSinkError,
     Subscription,
 )
@@ -160,6 +161,53 @@ async def test_button_event(
     assert events[0] == snapshot
 
 
+@pytest.mark.parametrize("device_fixture", ["button"])
+async def test_button_event_unknown_device_schedules_reload(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a button event from an unknown device reloads the entry."""
+    await setup_integration(hass, mock_config_entry)
+    events = []
+    hass.bus.async_listen(EVENT_BUTTON, events.append)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await trigger_update(
+            hass,
+            devices,
+            "00000000-0000-0000-0000-000000000000",
+            Capability.BUTTON,
+            Attribute.BUTTON,
+            "pushed",
+        )
+
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+    assert not events
+
+
+@pytest.mark.parametrize("device_fixture", ["button"])
+async def test_button_event_device_without_main_status_is_ignored(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a button event from a device without main status fires nothing."""
+    await setup_integration(hass, mock_config_entry)
+    device_id = "c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b"
+    del mock_config_entry.runtime_data.devices[device_id]
+    events = []
+    hass.bus.async_listen(EVENT_BUTTON, events.append)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await trigger_update(
+            hass, devices, device_id, Capability.BUTTON, Attribute.BUTTON, "pushed"
+        )
+
+    mock_reload.assert_not_called()
+    assert not events
+
+
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_create_subscription(
     hass: HomeAssistant,
@@ -192,6 +240,7 @@ async def test_create_subscription(
     [
         SmartThingsSinkError("Sink error"),
         SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
+        SmartThingsQuotaExceededError("Quota exceeded"),
     ],
 )
 async def test_create_subscription_error(
@@ -225,15 +274,42 @@ async def test_create_subscription_error(
         "get_scenes",
     ],
 )
-async def test_initial_fetch_connection_error(
+@pytest.mark.parametrize(
+    "error",
+    [
+        SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
+        SmartThingsQuotaExceededError("Quota exceeded"),
+    ],
+)
+async def test_initial_fetch_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     call: str,
+    error: Exception,
 ) -> None:
-    """Test retrying setup when the cloud is unreachable while fetching."""
-    getattr(devices, call).side_effect = SmartThingsConnectionError(
-        "Timeout occurred while connecting to SmartThings"
+    """Test retrying setup when fetching fails with a retryable error."""
+    getattr(devices, call).side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_delete_stale_subscription_quota_exceeded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying setup when deleting the old subscription hits the quota."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "old-id"},
+    )
+    devices.delete_subscription.side_effect = SmartThingsQuotaExceededError(
+        "Quota exceeded"
     )
 
     await setup_integration(hass, mock_config_entry)

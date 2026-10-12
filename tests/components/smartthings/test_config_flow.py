@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,8 +12,13 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.smartthings import OLD_DATA
+from homeassistant.components.smartthings.app_ledger import (
+    STORAGE_KEY,
+    SmartThingsAppLedger,
+)
 from homeassistant.components.smartthings.const import (
     CONF_LOCATION_ID,
+    CONF_PAT_TOKEN,
     CONF_SUBSCRIPTION_ID,
     DOMAIN,
 )
@@ -20,6 +26,7 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntrySt
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -78,6 +85,39 @@ async def test_pat_implementation_auto_selects_stored_credential(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_pat_flow_records_app_before_storing_credential(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Check a created app is tracked even if storing its credential fails."""
+    mock_smartthings.list_apps.return_value = []
+
+    with patch(
+        "homeassistant.components.smartthings.config_flow.async_get_implementations",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["step_id"] == "pat"
+
+        with (
+            patch.object(
+                SmartThingsAppLedger,
+                "async_replace_credential",
+                side_effect=HomeAssistantError,
+            ),
+            pytest.raises(HomeAssistantError),
+        ):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+            )
+
+    assert hass_storage[STORAGE_KEY]["data"]["app_ids"] == ["mock-app-id"]
+
+
 @pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")
 async def test_pick_implementation_only_offers_cloud_and_pat(
     hass: HomeAssistant,
@@ -104,12 +144,8 @@ async def test_pick_implementation_only_offers_cloud_and_pat(
         assert implementation_field.default() == "pat"
         selector = result["data_schema"].schema[implementation_field]
         assert selector.config["mode"] == "list"
-        assert [
-            (option["value"], option["label"]) for option in selector.config["options"]
-        ] == [
-            ("cloud", "Nabu Casa Cloud"),
-            ("pat", "API Access App"),
-        ]
+        assert selector.config["translation_key"] == "implementation"
+        assert selector.config["options"] == ["cloud", "pat"]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")

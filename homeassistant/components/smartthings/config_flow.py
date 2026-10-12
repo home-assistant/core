@@ -27,7 +27,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_redirect_uri,
 )
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -110,11 +109,6 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.flow_impl = self._implementations["cloud"]
             return await self.async_step_auth()
 
-        options: list[SelectOptionDict] = [
-            SelectOptionDict(value="cloud", label=self._implementations["cloud"].name),
-            SelectOptionDict(value=PAT_IMPLEMENTATION, label="API Access App"),
-        ]
-
         return self.async_show_form(
             step_id="pick_implementation",
             data_schema=probatio.Schema(
@@ -123,18 +117,17 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                         "implementation", default=PAT_IMPLEMENTATION
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=options,
+                            options=["cloud", PAT_IMPLEMENTATION],
                             mode=SelectSelectorMode.LIST,
+                            translation_key="implementation",
                         )
                     )
                 }
             ),
         )
 
-    async def async_step_pat_implementation(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Use a stored credential automatically, falling back to a personal access token."""
+    async def async_step_pat_implementation(self) -> ConfigFlowResult:
+        """Use a stored credential, or fall back to a personal access token."""
         implementations = {
             key: impl
             for key, impl in self._implementations.items()
@@ -158,7 +151,6 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except SmartThingsAuthenticationFailedError:
                 errors["base"] = "invalid_pat"
             except SmartThingsForbiddenError:
-                # TODO: check actual error for unentitled users  # pylint: disable=fixme
                 errors["base"] = "entitlement_required"
             except SmartThingsConnectionError:
                 errors["base"] = "cannot_connect"
@@ -183,7 +175,6 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         client.authenticate(pat)
 
         ledger = await async_get_app_ledger(self.hass)
-        # await ledger.async_reconcile(client)
 
         apps = await client.list_apps()
         existing_app = next(
@@ -211,13 +202,13 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         auth_domain = app_auth_domain(self._app_id)
 
+        await ledger.async_record(self._app_id)
+
         created_at = dt_util.now().strftime("%b %d, %Y at %H:%M")
         await ledger.async_replace_credential(
             auth_domain,
             ClientCredential(client_id, client_secret, name=f"Created {created_at}"),
         )
-
-        await ledger.async_record(self._app_id)
 
         implementations = await async_get_implementations(self.hass, DOMAIN)
         self.flow_impl = implementations[auth_domain]
