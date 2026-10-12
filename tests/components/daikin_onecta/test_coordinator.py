@@ -1,5 +1,6 @@
 """Test the Daikin Onecta coordinator."""
 
+from copy import deepcopy
 from datetime import UTC, datetime, time, timedelta
 from math import ceil
 from types import SimpleNamespace
@@ -12,6 +13,7 @@ from daikin_onecta import (
     OnectaConnectionError,
     OnectaRateLimitError,
 )
+from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
@@ -26,7 +28,10 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +39,7 @@ EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
 
 
-def test_device_update_refreshes_cached_name() -> None:
+def test_device_update_detects_registry_metadata_changes() -> None:
     """Use the replacement cloud model's name in device-registry metadata."""
     device = DaikinOnectaDevice(
         SimpleNamespace(
@@ -47,7 +52,7 @@ def test_device_update_refreshes_cached_name() -> None:
         )
     )
 
-    device.set_device_data(
+    assert device.set_device_data(
         SimpleNamespace(
             id="gateway",
             display_name="New name",
@@ -59,6 +64,143 @@ def test_device_update_refreshes_cached_name() -> None:
     )
 
     assert device.name == "New name"
+
+
+def test_device_update_ignores_unchanged_registry_metadata() -> None:
+    """Avoid rewriting a device registry entry for unchanged cloud metadata."""
+    device = DaikinOnectaDevice(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Name",
+            available=True,
+            mac_address=None,
+            device_model="Model",
+            gateway_embedded_id=None,
+        )
+    )
+
+    assert not device.set_device_data(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Name",
+            available=True,
+            mac_address=None,
+            device_model="Model",
+            gateway_embedded_id=None,
+        )
+    )
+
+
+async def test_device_registry_refreshes_without_climate_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Refresh a gateway registry entry even when it has no climate entity."""
+    gateway = DaikinOnectaDevice(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Old name",
+            available=True,
+            mac_address=None,
+            device_model="Old model",
+            gateway_embedded_id=None,
+        )
+    )
+    gateway.async_update_device_registry(hass, config_entry)
+    gateway.set_device_data(
+        SimpleNamespace(
+            id="gateway",
+            display_name="New name",
+            available=True,
+            mac_address=None,
+            device_model="New model",
+            gateway_embedded_id=None,
+        )
+    )
+    gateway.async_update_device_registry(hass, config_entry)
+
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gateway"), config_entry.entry_id
+    )
+    assert entry is not None
+    assert entry.name == "New name"
+    assert entry.model_id == "New model"
+
+
+@pytest.mark.parametrize(
+    ("mac_address", "expected_connections"),
+    [
+        ("02:00:00:00:00:01", {(dr.CONNECTION_NETWORK_MAC, "02:00:00:00:00:01")}),
+        (None, set()),
+    ],
+)
+async def test_device_registry_updates_changed_mac_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    mac_address: str | None,
+    expected_connections: set[tuple[str, str]],
+) -> None:
+    """Detect MAC-only changes and replace, rather than retain, stale connections."""
+    gateway = DaikinOnectaDevice(_load_gateway_devices("ururu")[0])
+    gateway.async_update_device_registry(hass, config_entry)
+    replacement = deepcopy(gateway.device)
+    replacement.gateway_management_point.characteristics["macAddress"] = Characteristic(
+        value=mac_address
+    )
+
+    assert gateway.set_device_data(replacement)
+    gateway.async_update_device_registry(hass, config_entry)
+
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway.id), config_entry.entry_id
+    )
+    assert entry is not None
+    assert entry.connections == expected_connections
+    assert not gateway.set_device_data(deepcopy(replacement))
+
+
+async def test_poll_refreshes_changed_metadata_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Refresh renamed gateways and firmware only after changed cloud metadata."""
+    await _async_setup_fixture(hass, config_entry, "ururu")
+    coordinator = config_entry.runtime_data
+    assert coordinator.data is not None
+    device = next(iter(coordinator.data.values()))
+    replacement = deepcopy(device.device)
+    point = replacement.management_point("climateControl")
+    assert point is not None
+    point.name = Characteristic(value="Renamed Daikin")
+    gateway = replacement.gateway_management_point
+    assert gateway is not None
+    gateway.firmware_version = Characteristic(value="new-firmware")
+
+    with (
+        patch.object(
+            device,
+            "async_update_device_registry",
+            wraps=device.async_update_device_registry,
+        ) as update_registry,
+        patch.object(
+            coordinator.api, "get_cloud_device_details", return_value=[replacement]
+        ),
+    ):
+        await coordinator.async_refresh()
+        update_registry.assert_called_once_with(hass, config_entry)
+        coordinator.async_update_listeners()
+        await coordinator.async_refresh()
+        update_registry.assert_called_once_with(hass, config_entry)
+
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.id), config_entry.entry_id
+    )
+    assert entry is not None
+    assert entry.name == "Renamed Daikin"
+    assert entry.sw_version == "new-firmware"
 
 
 def _patch_polling_schedule(
@@ -453,6 +595,7 @@ class TestOnectaDataUpdateCoordinator:
     async def test_updated_cloud_device_replaces_cached_model(self, coordinator):
         """Replace the cached gateway model with cloud data."""
         existing_device = MagicMock()
+        existing_device.set_device_data.return_value = False
         cloud_device = MagicMock(id="gateway")
         coordinator.data = {"gateway": existing_device}
         coordinator.api.last_patch_call = None
@@ -463,3 +606,23 @@ class TestOnectaDataUpdateCoordinator:
         await coordinator._async_update_data_from_cloud()
 
         existing_device.set_device_data.assert_called_once_with(cloud_device)
+        existing_device.async_update_device_registry.assert_not_called()
+
+    async def test_changed_gateway_metadata_refreshes_device_registry(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Refresh the registry only when a cloud replacement changes metadata."""
+        existing_device = MagicMock()
+        existing_device.set_device_data.return_value = True
+        cloud_device = MagicMock(id="gateway")
+        coordinator.data = {"gateway": existing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            return_value=[cloud_device]
+        )
+
+        await coordinator._async_update_data_from_cloud()
+
+        existing_device.async_update_device_registry.assert_called_once_with(
+            coordinator.hass, coordinator.config_entry
+        )

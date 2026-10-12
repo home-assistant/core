@@ -3,7 +3,6 @@
 from typing import Never, override
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -66,10 +65,3 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
             if management_point.version is not None:
                 info["sw_version"] = management_point.version
         return info
-
-    def _async_update_device_registry(self) -> None:
-        """Refresh device registry metadata after a coordinator update."""
-        dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.coordinator.config_entry.entry_id,
-            **self.device_info,
-        )
