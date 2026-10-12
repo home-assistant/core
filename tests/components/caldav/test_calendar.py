@@ -14,6 +14,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.caldav.api import async_get_calendars
+from homeassistant.components.caldav.coordinator import CalDavUpdateCoordinator
 from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -1400,6 +1401,90 @@ async def test_get_events_all_day_adjacent_day(
     response = await client.get(
         f"/api/calendars/{TEST_ENTITY}"
         "?start=2024-08-29T00:00:00-04:00&end=2024-08-30T00:00:00-04:00"
+    )
+    assert response.status == HTTPStatus.OK
+    assert [event["summary"] for event in await response.json()] == ["aug-29"]
+
+
+def _as_utc(value: datetime.date | datetime.datetime) -> datetime.datetime:
+    """Interpret a DATE or floating DATE-TIME in UTC, like a CalDAV server."""
+    if not isinstance(value, datetime.datetime):
+        return datetime.datetime.combine(value, datetime.time.min, tzinfo=dt_util.UTC)
+    if value.tzinfo is None:
+        return value.replace(tzinfo=dt_util.UTC)
+    return value
+
+
+def _mock_server_calendar(name: str, vevents: list[str]) -> Mock:
+    """Return a mock calendar that filters searches by time range like a server."""
+    calendar = _mock_calendar_holding(name, vevents)
+    events = calendar.search.return_value
+
+    def _search(
+        start: datetime.datetime, end: datetime.datetime, **kwargs: Any
+    ) -> list[Event]:
+        return [
+            event
+            for event in events
+            if _as_utc(event.vobject_instance.vevent.dtstart.value) < end
+            and _as_utc(
+                CalDavUpdateCoordinator.get_end_date(event.vobject_instance.vevent)
+            )
+            > start
+        ]
+
+    calendar.search = MagicMock(side_effect=_search)
+    return calendar
+
+
+@pytest.mark.parametrize(
+    ("tz", "start", "end"),
+    [
+        (ASIA_BAGHDAD, "2024-08-29T00:00:00+03:00", "2024-08-29T00:15:00+03:00"),
+        (ASIA_BAGHDAD, "2024-08-29T23:45:00+03:00", "2024-08-30T00:00:00+03:00"),
+        (AMERICA_NEW_YORK, "2024-08-29T00:00:00-04:00", "2024-08-29T00:15:00-04:00"),
+        (AMERICA_NEW_YORK, "2024-08-29T23:45:00-04:00", "2024-08-30T00:00:00-04:00"),
+    ],
+    ids=["east_start", "east_end", "west_start", "west_end"],
+)
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_server_calendar(
+                CALENDAR_NAME,
+                [
+                    _ics_event(
+                        "aug-29",
+                        "DTSTART;VALUE=DATE:20240829\nDTEND;VALUE=DATE:20240830",
+                    ),
+                    _ics_event(
+                        "aug-30",
+                        "DTSTART;VALUE=DATE:20240830\nDTEND;VALUE=DATE:20240831",
+                    ),
+                ],
+            )
+        ]
+    ],
+)
+async def test_get_events_all_day_near_midnight(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    start: str,
+    end: str,
+) -> None:
+    """Test a short range at the start or end of a day returns the all-day event.
+
+    This is the range the calendar trigger asks for.  A server matching all-day
+    events in UTC misses the event at the start of the day east of UTC
+    (issue #154204) and at the end of the day west of UTC.
+    """
+    await setup_platform_cb()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}", params={"start": start, "end": end}
     )
     assert response.status == HTTPStatus.OK
     assert [event["summary"] for event in await response.json()] == ["aug-29"]
