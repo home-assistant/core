@@ -4,7 +4,7 @@ import asyncio
 import logging
 from types import MappingProxyType
 
-import httpx
+import httpx2
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
         # in the UI, instead of ConfigEntryNotReady which would
         # just keep retrying.
         raise ConfigEntryError(err) from err
-    except (TimeoutError, httpx.ConnectError, ConnectionError) as err:
+    except (TimeoutError, httpx2.ConnectError, ConnectionError) as err:
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client

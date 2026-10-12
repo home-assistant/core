@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
     PSNAWPError,
@@ -11,7 +12,6 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPNotFoundError,
 )
 from psnawp_api.utils.misc import parse_npsso_token
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -36,7 +36,7 @@ from .helpers import PlaystationNetwork
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_NPSSO): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_NPSSO): str})
 
 
 class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -212,9 +212,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ACCOUNT_ID): SelectSelector(
+                        probatio.Required(CONF_ACCOUNT_ID): SelectSelector(
                             SelectSelectorConfig(options=options)
                         )
                     }

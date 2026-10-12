@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -36,29 +36,29 @@ TIME_RANGE_FULL_DAY = "full_day"
 def _validate_hours(v: float) -> float:
     """Validate that hours is a multiple of 0.25 (15 minutes)."""
     if abs(v * 4 - round(v * 4)) >= 1e-9:
-        raise vol.Invalid("hours must be a multiple of 0.25 (15 minutes)")
+        raise probatio.Invalid("hours must be a multiple of 0.25 (15 minutes)")
     return v
 
 
-SERVICE_GET_PRICES_SCHEMA = vol.Schema(
+SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        vol.Required(ATTR_HOURS): vol.All(
-            vol.Coerce(float),
-            vol.Range(min=0.25, max=24),
+        probatio.Required(ATTR_HOURS): probatio.All(
+            probatio.Coerce(float),
+            probatio.Range(min=0.25, max=24),
             _validate_hours,
         ),
     }
 )
 
-SERVICE_GET_CHEAPEST_DURATION_SCHEMA = vol.Schema(
+SERVICE_GET_CHEAPEST_DURATION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DURATION): vol.All(
-            vol.Coerce(float), vol.Range(min=0.5, max=24)
+        probatio.Required(ATTR_DURATION): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0.5, max=24)
         ),
-        vol.Optional(ATTR_TIME_RANGE, default=TIME_RANGE_FULL_DAY): vol.In(
+        probatio.Optional(ATTR_TIME_RANGE, default=TIME_RANGE_FULL_DAY): probatio.In(
             [TIME_RANGE_DAY, TIME_RANGE_NIGHT, TIME_RANGE_FULL_DAY]
         ),
     }

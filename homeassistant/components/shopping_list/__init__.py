@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
@@ -28,7 +28,7 @@ PLATFORMS = [Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema({DOMAIN: {}}, extra=probatio.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -115,7 +115,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             return self.json(item)
         except NoMatchingShoppingListItem:
             return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.json_message("Item not found", HTTPStatus.BAD_REQUEST)
 
 
@@ -125,7 +125,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = "/api/shopping_list/item"
     name = "api:shopping_list:item"
 
-    @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
+    @RequestDataValidator(probatio.Schema({probatio.Required("name"): str}))
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Create a new shopping list item."""
         shopping_data = _get_shopping_data(request.app[http.KEY_HASS])
@@ -147,7 +147,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items"})
+@websocket_api.websocket_command({probatio.Required("type"): "shopping_list/items"})
 def websocket_handle_items(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -160,7 +160,10 @@ def websocket_handle_items(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/add", vol.Required("name"): str}
+    {
+        probatio.Required("type"): "shopping_list/items/add",
+        probatio.Required("name"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_add(
@@ -176,7 +179,10 @@ async def websocket_handle_add(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/remove", vol.Required("item_id"): str}
+    {
+        probatio.Required("type"): "shopping_list/items/remove",
+        probatio.Required("item_id"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_remove(
@@ -204,10 +210,10 @@ async def websocket_handle_remove(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "shopping_list/items/update",
-        vol.Required("item_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("complete"): bool,
+        probatio.Required("type"): "shopping_list/items/update",
+        probatio.Required("item_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("complete"): bool,
     }
 )
 @websocket_api.async_response
@@ -235,7 +241,9 @@ async def websocket_handle_update(
     connection.send_message(websocket_api.result_message(msg_id, item))
 
 
-@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items/clear"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "shopping_list/items/clear"}
+)
 @websocket_api.async_response
 async def websocket_handle_clear(
     hass: HomeAssistant,
@@ -250,8 +258,8 @@ async def websocket_handle_clear(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "shopping_list/items/reorder",
-        vol.Required("item_ids"): [str],
+        probatio.Required("type"): "shopping_list/items/reorder",
+        probatio.Required("item_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -272,7 +280,7 @@ async def websocket_handle_reorder(
             "One or more item id(s) not found.",
         )
         return
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, f"{err}")
         return
 

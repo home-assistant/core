@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
 from homeassistant.const import (
@@ -45,29 +45,29 @@ CONF_NOT_TO = "not_to"
 
 BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "state",
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
-        vol.Optional(CONF_FOR): cv.positive_time_period_template,
-        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+        probatio.Required(CONF_PLATFORM): "state",
+        probatio.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
+        probatio.Optional(CONF_FOR): cv.positive_time_period_template,
+        probatio.Optional(CONF_ATTRIBUTE): cv.match_all,
     }
 )
 
 TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
     {
         # These are str on purpose. Want to catch YAML conversions
-        vol.Exclusive(CONF_FROM, CONF_FROM): vol.Any(str, [str], None),
-        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): vol.Any(str, [str], None),
-        vol.Exclusive(CONF_TO, CONF_TO): vol.Any(str, [str], None),
-        vol.Exclusive(CONF_NOT_TO, CONF_TO): vol.Any(str, [str], None),
+        probatio.Exclusive(CONF_FROM, CONF_FROM): probatio.Any(str, [str], None),
+        probatio.Exclusive(CONF_NOT_FROM, CONF_FROM): probatio.Any(str, [str], None),
+        probatio.Exclusive(CONF_TO, CONF_TO): probatio.Any(str, [str], None),
+        probatio.Exclusive(CONF_NOT_TO, CONF_TO): probatio.Any(str, [str], None),
     }
 )
 
 TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
     {
-        vol.Exclusive(CONF_FROM, CONF_FROM): cv.match_all,
-        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): cv.match_all,
-        vol.Exclusive(CONF_TO, CONF_TO): cv.match_all,
-        vol.Exclusive(CONF_NOT_TO, CONF_TO): cv.match_all,
+        probatio.Exclusive(CONF_FROM, CONF_FROM): cv.match_all,
+        probatio.Exclusive(CONF_NOT_FROM, CONF_FROM): cv.match_all,
+        probatio.Exclusive(CONF_TO, CONF_TO): cv.match_all,
+        probatio.Exclusive(CONF_NOT_TO, CONF_TO): cv.match_all,
     }
 )
 
@@ -77,9 +77,9 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate trigger config."""
     if not isinstance(config, dict):
-        raise vol.Invalid("Expected a dictionary")
+        raise probatio.Invalid("Expected a dictionary")
 
-    # We use this approach instead of vol.Any because
+    # We use this approach instead of probatio.Any because
     # this gives better error messages.
     if CONF_ATTRIBUTE in config:
         config = TRIGGER_ATTRIBUTE_SCHEMA(config)
@@ -206,7 +206,7 @@ async def async_attach_trigger(
             period[entity] = cv.positive_time_period(
                 template.render_complex(time_delta, variables)
             )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
+        except (exceptions.TemplateError, probatio.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", trigger_info["name"], ex
             )

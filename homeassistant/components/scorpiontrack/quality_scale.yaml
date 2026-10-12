@@ -81,9 +81,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

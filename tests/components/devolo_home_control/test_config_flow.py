@@ -36,6 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
+    assert result["result"].unique_id == "123456"
 
 
 async def test_form_invalid_credentials_user(
@@ -104,6 +105,7 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
+    assert result["result"].unique_id == "123456"
 
 
 async def test_form_invalid_credentials_zeroconf(
@@ -207,7 +209,9 @@ async def test_form_invalid_credentials_reauth(
     assert result["type"] is FlowResultType.ABORT
 
 
-async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
+async def test_form_uuid_change_reauth(
+    hass: HomeAssistant, mydevolo: MagicMock
+) -> None:
     """Test that the reauth confirmation form is served."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -228,3 +232,11 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "reauth_failed"}
+
+    mydevolo.uuid.return_value = "123457"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-username-new", CONF_PASSWORD: "test-password-new"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

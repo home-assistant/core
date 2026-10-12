@@ -157,6 +157,12 @@
               "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]",
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
             }
+          },
+          "speed": {
+            "state": {
+              "normal": "Normal",
+              "silent": "Silent"
+            }
           }
         }
       },
@@ -172,6 +178,28 @@
             "state": {
               "performance": "Performance",
               "quiet": "Quiet"
+            }
+          }
+        }
+      }
+    },
+    "event": {
+      "off_button": {
+        "name": "OFF button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
+            }
+          }
+        }
+      },
+      "on_button": {
+        "name": "ON button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press"
             }
           }
         }
@@ -209,6 +237,7 @@
           "preset_mode": {
             "state": {
               "baby": "Baby",
+              "hurricane": "Hurricane",
               "natural": "Natural",
               "normal": "[%key:common::state::normal%]",
               "sleep": "Sleep"
@@ -260,6 +289,9 @@
     },
     "light": {
       "air_purifier_light": {
+        "name": "[%key:component::light::title%]"
+      },
+      "circulator_fan_pro_light": {
         "name": "[%key:component::light::title%]"
       },
       "light": {

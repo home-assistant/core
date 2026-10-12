@@ -3,8 +3,8 @@
 from typing import Any, override
 
 from libsoundtouch import soundtouch_device
+import probatio
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -44,9 +44,9 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             last_step=True,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
                 }
             ),
             errors=errors,

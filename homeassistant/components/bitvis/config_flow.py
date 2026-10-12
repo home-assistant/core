@@ -12,7 +12,7 @@ from bitvis_protobuf.utils import (
     async_verify_udp_port_bindable,
     normalize_host,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -27,9 +27,9 @@ from .coordinator import async_get_listener_registry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     }
 )
 

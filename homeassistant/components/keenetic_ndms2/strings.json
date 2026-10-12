@@ -36,7 +36,6 @@
           "include_arp": "Use ARP data (ignored if hotspot data used)",
           "include_associated": "Use Wi-Fi AP associations data (ignored if hotspot data used)",
           "interfaces": "Choose interfaces to scan",
-          "scan_interval": "Scan interval",
           "try_hotspot": "Use 'ip hotspot' data (most accurate)"
         }
       }
