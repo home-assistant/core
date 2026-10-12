@@ -401,6 +401,19 @@ async def test_link_step_fails(
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": error_string}
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "http://1.2.3.4:80/api",
+        json=[{"success": {"username": API_KEY}}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant,

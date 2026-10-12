@@ -439,7 +439,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "huisbaasje",
     "hunterdouglas_powerview",
     "husqvarna_automower_ble",
-    "hydrawise",
     "hyperion",
     "ialarm",
     "iammeter",

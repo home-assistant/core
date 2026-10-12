@@ -14,7 +14,7 @@ from linkplay.bridge import (
 from linkplay.consts import API_ENDPOINT, LoopMode, PlayingStatus
 import pytest
 
-from homeassistant.components.linkplay.const import DOMAIN, SHARED_DATA
+from homeassistant.components.linkplay.const import DOMAIN, SHARED_DATA_KEY
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -99,7 +99,7 @@ async def leader_player(
         leader.player = player
         leader.device = AsyncMock(spec=LinkPlayDevice)
         leader.device.uuid = LEADER_UUID
-        hass.data[DOMAIN][SHARED_DATA].entity_to_bridge[LEADER_ENTITY_ID] = LEADER_UUID
+        hass.data[SHARED_DATA_KEY].entity_to_bridge[LEADER_ENTITY_ID] = LEADER_UUID
 
         bridge = mock_config_entry.runtime_data.bridge
         bridge.multiroom = LinkPlayMultiroom(leader)
@@ -181,7 +181,7 @@ async def test_group_members_follow_renamed_entity_id(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test group members report the new entity_id after a rename."""
-    entity_to_bridge = hass.data[DOMAIN][SHARED_DATA].entity_to_bridge
+    entity_to_bridge = hass.data[SHARED_DATA_KEY].entity_to_bridge
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reports: list[Event[EventStateReportedData]] = []
 
@@ -235,7 +235,7 @@ async def test_join_renamed_entity_id(
 
     with (
         patch.object(LinkPlayMultiroom, "add_follower") as mock_add_follower,
-        patch.object(hass.data[DOMAIN][SHARED_DATA].controller, "discover_multirooms"),
+        patch.object(hass.data[SHARED_DATA_KEY].controller, "discover_multirooms"),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

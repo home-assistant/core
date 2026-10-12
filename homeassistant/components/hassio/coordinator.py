@@ -13,6 +13,7 @@ from aiohasupervisor.models import (
     AddonsStats,
     AddonState,
     CIFSMountResponse,
+    DiskMountResponse,
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
@@ -109,6 +110,7 @@ from .const import (
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
@@ -147,7 +149,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_MOUNT_MOUNT_FAILED,
     "issue_system_multiple_data_disks",
-    "issue_system_reboot_required",
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
@@ -834,7 +836,7 @@ class HassioMainData:
     core: HomeAssistantInfo
     supervisor: SupervisorInfo
     host: HostInfo
-    mounts: dict[str, CIFSMountResponse | NFSMountResponse]
+    mounts: dict[str, CIFSMountResponse | DiskMountResponse | NFSMountResponse]
     os: OSInfo | None
     panels: dict[str, IngressPanel]
 
@@ -1132,7 +1134,7 @@ def async_register_addons_in_dev_reg(
 def async_register_mounts_in_dev_reg(
     entry_id: str,
     dev_reg: dr.DeviceRegistry,
-    mounts: list[CIFSMountResponse | NFSMountResponse],
+    mounts: list[CIFSMountResponse | DiskMountResponse | NFSMountResponse],
 ) -> None:
     """Register mounts in the device registry."""
     for mount in mounts:

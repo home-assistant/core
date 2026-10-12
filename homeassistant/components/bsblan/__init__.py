@@ -252,7 +252,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     # Create coordinators with the already-initialized client
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan, circuits)
-    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
+    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan, circuits)
+    entry.async_on_unload(slow_coordinator.async_add_listener(lambda: None))
 
     # Perform first refresh of fast coordinator (required for entities)
     await fast_coordinator.async_config_entry_first_refresh()

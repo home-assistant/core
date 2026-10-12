@@ -50,14 +50,12 @@ class NINADataUpdateCoordinator(
 ):
     """Class to manage fetching NINA data API."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: NinaConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: NinaConfigEntry,
     ) -> None:
         """Initialize."""
         self._nina: Nina = Nina(async_get_clientsession(hass))

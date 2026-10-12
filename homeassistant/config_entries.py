@@ -143,6 +143,7 @@ SAVE_DELAY = 1
 DISCOVERY_COOLDOWN = 1
 
 SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+SETUP_RETRY_AFTER_MAX_WAIT = 86400  # 1 day
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
@@ -802,7 +803,14 @@ class ConfigEntry[_DataT = Any]:
                 reason.translation_placeholders,
                 reason.translation_domain,
             )
-            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT)
+            if exc.retry_after is not None:
+                # The backoff stays the floor, so a delay that has already
+                # passed does not retry immediately.
+                wait_time = max(
+                    wait_time, min(exc.retry_after, SETUP_RETRY_AFTER_MAX_WAIT)
+                )
+            wait_time += (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
@@ -1145,8 +1153,20 @@ class ConfigEntry[_DataT = Any]:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if domain_is_integration:
+                translation = (
+                    (
+                        exc.translation_key,
+                        exc.translation_placeholders,
+                        exc.translation_domain,
+                    )
+                    if isinstance(exc, HomeAssistantError)
+                    else (None, None, None)
+                )
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
+                    hass,
+                    ConfigEntryState.FAILED_UNLOAD,
+                    str(exc) or "Unknown error",
+                    *translation,
                 )
             return False
         return result  # type: ignore[unreachable]

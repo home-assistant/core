@@ -2,15 +2,17 @@
 
 from asyncio import timeout
 from logging import getLogger
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from switchbot_api import Device, Remote, SwitchBotAPI, SwitchBotConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import SwitchbotCloudConfigEntry
 
 _LOGGER = getLogger(__name__)
 
@@ -20,8 +22,7 @@ type Status = dict[str, Any] | None
 class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     """SwitchBot Cloud coordinator."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: SwitchbotCloudConfigEntry
     _api: SwitchBotAPI
     _device_id: str
     _manageable_by_webhook: bool
@@ -30,8 +31,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotCloudConfigEntry,
         api: SwitchBotAPI,
         device: Device | Remote,
         manageable_by_webhook: bool,

@@ -115,6 +115,16 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual"
     assert CONF_DEVICE in result["errors"]
 
+    with (
+        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the manual flow with a valid path."""
@@ -150,6 +160,16 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert CONF_DEVICE in result["errors"]
+
+    with (
+        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=Mock())),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:

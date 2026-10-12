@@ -198,17 +198,16 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     RegisterDataListener(modules=MODULES)
                 )
             except AuthenticationException as exception:
-                self.logger.error(
-                    "Authentication failed at setup for %s: %s", self.title, exception
-                )
                 await self.clean_disconnect()
-                raise ConfigEntryAuthFailed from exception
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                    translation_placeholders={
+                        "title": self.title,
+                        "host": self._host,
+                    },
+                ) from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
-                self.logger.warning(
-                    "[register] Connection error occurred for %s: %s",
-                    self.title,
-                    exception,
-                )
                 await self.clean_disconnect()
                 raise UpdateFailed(
                     f"Connection error occurred for {self.title}: {exception}"

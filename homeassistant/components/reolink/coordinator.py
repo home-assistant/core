@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from reolink_aio.exceptions import (
     CredentialsInvalidError,
@@ -11,12 +11,15 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .host import ReolinkHost
+
+if TYPE_CHECKING:
+    from .util import ReolinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,14 +32,12 @@ DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 class ReolinkCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for Reolink."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: ReolinkConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         name: str,
         *,
@@ -61,8 +62,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         *,
         min_timeout: float,
@@ -146,8 +146,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         *,
         min_timeout: float,

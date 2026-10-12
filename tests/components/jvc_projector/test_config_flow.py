@@ -89,13 +89,6 @@ async def test_user_config_flow_bad_connect_errors(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -159,13 +152,6 @@ async def test_user_config_flow_bad_host_errors(
 
     # Finish flow with success
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -212,13 +198,6 @@ async def test_user_config_flow_bad_auth_errors(
     # Finish flow with success
 
     mock_device.connect.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -1,9 +1,13 @@
 """Test ViCare fan."""
 
+import logging
 from unittest.mock import patch
 
 import pytest
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareNotSupportedFeatureError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
@@ -17,6 +21,9 @@ from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+GET_ACTIVE_MODE = (
+    "PyViCare.PyViCareVentilationDevice.VentilationDevice.getActiveVentilationMode"
+)
 GET_QUICKMODE = (
     "PyViCare.PyViCareVentilationDevice.VentilationDevice.getVentilationQuickmode"
 )
@@ -45,6 +52,49 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_api_error_logged_on_the_edge(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a lasting API error is logged once and again after it clears."""
+    fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/VitoPure.json")]
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = hass.states.async_entity_ids(FAN_DOMAIN)[0]
+    error = PyViCareDeviceCommunicationError(
+        {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+    )
+
+    def logged() -> list[str]:
+        return [
+            record.getMessage()
+            for record in caplog.records
+            if record.levelno >= logging.WARNING
+            and "Device communication error" in record.getMessage()
+        ]
+
+    caplog.clear()
+    with patch(GET_ACTIVE_MODE, side_effect=error):
+        for _ in range(3):
+            await async_update_entity(hass, entity_id)
+    assert len(logged()) == 1
+
+    await async_update_entity(hass, entity_id)
+    with patch(GET_ACTIVE_MODE, side_effect=error):
+        await async_update_entity(hass, entity_id)
+    assert len(logged()) == 2
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
