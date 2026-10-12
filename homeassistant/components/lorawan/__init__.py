@@ -31,7 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def shutdown(event: Event) -> None:
         for registered in tuple(registry.connections.values()):
             registered.unsubscribe()
-        registry.changed.clear()
+        registry.connection_change_listeners.clear()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
     return True

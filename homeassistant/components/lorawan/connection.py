@@ -36,10 +36,12 @@ class ConnectionRegistry:
     """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
     """Registered connections keyed by provider config entry ID."""
-    discovered: set[str] = field(default_factory=set)
+    discovered_domains: set[str] = field(default_factory=set)
     """Device integration domains already discovered during this run."""
-    changed: list[Callable[[ConnectionChange], None]] = field(default_factory=list)
-    pending: set[str] = field(default_factory=set)
+    connection_change_listeners: list[Callable[[ConnectionChange], None]] = field(
+        default_factory=list
+    )
+    pending_connection_registrations: set[str] = field(default_factory=set)
 
 
 DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
@@ -56,9 +58,12 @@ async def async_register_connection(
     """
     registry = hass.data[DATA_REGISTRY]
     entry_id = entry.entry_id
-    if entry_id in registry.connections or entry_id in registry.pending:
+    if (
+        entry_id in registry.connections
+        or entry_id in registry.pending_connection_registrations
+    ):
         raise ValueError("A connection is already registered for this entry")
-    registry.pending.add(entry_id)
+    registry.pending_connection_registrations.add(entry_id)
     active = False
     disconnected = False
     pending_discoveries: set[str] = set()
@@ -66,9 +71,9 @@ async def async_register_connection(
 
     @callback
     def discover(domain: str) -> None:
-        if domain in registry.discovered:
+        if domain in registry.discovered_domains:
             return
-        registry.discovered.add(domain)
+        registry.discovered_domains.add(domain)
         discovery_flow.async_create_flow(
             hass, domain, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data={}
         )
@@ -97,7 +102,7 @@ async def async_register_connection(
             active = False
             registry.connections.pop(entry_id)
             change: ConnectionChange = (entry_id, None)
-            notify(registry.changed, change)
+            notify(registry.connection_change_listeners, change)
         for unsubscribe in unsubscribes:
             unsubscribe()
         unsubscribes.clear()
@@ -116,7 +121,7 @@ async def async_register_connection(
         unregister()
         raise
     finally:
-        registry.pending.discard(entry_id)
+        registry.pending_connection_registrations.discard(entry_id)
 
     if disconnected:
         unregister()
@@ -124,7 +129,7 @@ async def async_register_connection(
     registry.connections[entry_id] = RegisteredConnection(connection, unregister)
     active = True
     change: ConnectionChange = (entry_id, connection)
-    notify(registry.changed, change)
+    notify(registry.connection_change_listeners, change)
     for domain in sorted(pending_discoveries):
         discover(domain)
     return unregister

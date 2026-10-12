@@ -200,7 +200,8 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
         self._unsubscribes.extend(
             [
                 subscribe(
-                    registry.changed, lambda change: self._connection_changed(change[0])
+                    registry.connection_change_listeners,
+                    lambda change: self._connection_changed(change[0]),
                 ),
                 async_dispatcher_connect(
                     self._hass, SIGNAL_CONFIG_ENTRY_CHANGED, self._entry_changed
