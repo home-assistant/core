@@ -190,6 +190,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     async def async_set_tank_temperature(self, value: float) -> None:
         """Set new target temperature."""
+        if self.current_operation is None:
+            self._raise_service_validation_error("water_heater_on_off_unavailable")
         if self.current_operation == STATE_OFF:
             self._raise_service_validation_error("water_heater_off")
         dht = self.domestic_hotwater_temperature
@@ -215,18 +217,21 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.async_set_tank_temperature(float(temperature))
 
-    def get_current_operation(self) -> str:
+    def get_current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
-        state = STATE_OFF
         point = self.hot_water_management_point
         hot_water = point.domestic_hot_water if point is not None else None
         onoff = hot_water.power if hot_water is not None else None
-        if onoff is not None and onoff.value == "on":
-            state = STATE_HEAT_PUMP
-            pwf = hot_water.powerful_mode if hot_water is not None else None
-            if pwf is not None and pwf.value == "on":
-                state = STATE_PERFORMANCE
-        return state
+        if onoff is None or onoff.value not in {"on", "off"}:
+            return None
+        if onoff.value == "off":
+            return STATE_OFF
+        pwf = hot_water.powerful_mode if hot_water is not None else None
+        return (
+            STATE_PERFORMANCE
+            if pwf is not None and pwf.value == "on"
+            else STATE_HEAT_PUMP
+        )
 
     def get_operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
@@ -269,6 +274,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             self._raise_service_validation_error(
                 "water_heater_operation_mode_unavailable"
             )
+        if self.current_operation is None:
+            self._raise_service_validation_error("water_heater_on_off_unavailable")
         # First determine the new settings for onOffMode/powerfulMode, we need these to set them to Daikin
         # and update our local cached version when succeeded
         on_off_mode, powerful_mode = self._requested_modes(operation_mode)
@@ -300,6 +307,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn water heater on."""
+        if self.current_operation is None:
+            self._raise_service_validation_error("water_heater_on_off_unavailable")
         if self.current_operation == STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")
@@ -315,6 +324,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn water heater off."""
+        if self.current_operation is None:
+            self._raise_service_validation_error("water_heater_on_off_unavailable")
         if self.current_operation != STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")

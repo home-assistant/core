@@ -175,6 +175,42 @@ async def test_device_registry_updates_changed_mac_address(
     assert not gateway.set_device_data(deepcopy(replacement))
 
 
+async def test_management_point_hardware_is_registered_as_subdevice(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Register physical management points beneath their cloud gateway."""
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    device = DaikinOnectaDevice(_load_gateway_devices("altherma_firmwareupdate")[0])
+
+    coordinator._async_register_device(device)
+
+    gateway_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.id), config_entry.entry_id
+    )
+    assert gateway_entry is not None
+    point = device.device.management_points_by_type("indoorUnitHydro")[0]
+    point_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.id}_{point.embedded_id}"), config_entry.entry_id
+    )
+    assert point_entry is not None
+    assert point_entry.name == f"{device.name} Indoor hydro unit"
+    assert point_entry.model == point.model
+    assert point_entry.sw_version == point.version
+    assert point_entry.via_device_id == gateway_entry.id
+
+
+def test_device_update_detects_management_point_metadata_changes() -> None:
+    """Refresh registry metadata when physical management-point data changes."""
+    device = DaikinOnectaDevice(_load_gateway_devices("altherma_firmwareupdate")[0])
+    replacement = deepcopy(device.device)
+    point = replacement.management_points_by_type("indoorUnitHydro")[0]
+    point.software_version = Characteristic(value="new-firmware")
+
+    assert device.set_device_data(replacement)
+
+
 async def test_poll_refreshes_changed_metadata_once(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

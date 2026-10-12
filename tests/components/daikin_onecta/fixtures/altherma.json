@@ -1,6 +1,6 @@
 [
   {
-    "_id": "1ece521b-5401-4a42-acce-6f76fba246aa",
+    "_id": "00000000-0000-4000-8000-000000000105",
     "isCloudConnectionUp": {
       "settable": false,
       "value": true
@@ -19,7 +19,7 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.207",
+          "value": "192.0.2.18",
           "maxLength": 15
         },
         "iconId": {
@@ -46,18 +46,18 @@
         "ssid": {
           "settable": false,
           "requiresReboot": false,
-          "value": "daikin-ap",
+          "value": "Test Wi-Fi",
           "maxLength": 9
         },
         "serialNumber": {
           "settable": false,
-          "value": "0023085",
+          "value": "TEST-SERIAL-0105",
           "maxLength": 16
         },
         "wifiConnectionSSID": {
           "settable": false,
           "requiresReboot": false,
-          "value": "WILLEMSEN",
+          "value": "Test Wi-Fi",
           "maxLength": 32
         },
         "wifiConnectionStrength": {
@@ -811,13 +811,13 @@
         }
       }
     ],
-    "embeddedId": "6cce8059-4e4e-48bf-bfa4-08ac36d1e7b8",
+    "embeddedId": "test-embedded-115",
     "timestamp": "2022-06-01T07:33:38.548Z",
-    "id": "1ece521b-5401-4a42-acce-6f76fba246aa",
+    "id": "00000000-0000-4000-8000-000000000105",
     "lastUpdateReceived": "2022-06-01T07:33:38.548Z"
   },
   {
-    "_id": "32db6075-b739-4026-b661-127009254b42",
+    "_id": "00000000-0000-4000-8000-000000000107",
     "isCloudConnectionUp": {
       "settable": false,
       "value": true
@@ -843,7 +843,7 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "0000000002641374"
+          "value": "TEST-SERIAL-0103"
         },
         "errorCode": {
           "settable": false,
@@ -855,7 +855,7 @@
         },
         "ssid": {
           "settable": false,
-          "value": "DaikinAP83731"
+          "value": "Test Wi-Fi"
         },
         "regionCode": {
           "settable": false,
@@ -875,7 +875,7 @@
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "WILLEMSEN"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -898,7 +898,7 @@
         "name": {
           "settable": true,
           "maxLength": 20,
-          "value": "Johnny&Maaike"
+          "value": "Test living room"
         },
         "iconId": {
           "settable": true,
@@ -1488,13 +1488,13 @@
         }
       }
     ],
-    "embeddedId": "295619",
+    "embeddedId": "test-embedded-109",
     "timestamp": "2022-06-01T07:41:55.881Z",
-    "id": "32db6075-b739-4026-b661-127009254b42",
+    "id": "00000000-0000-4000-8000-000000000107",
     "lastUpdateReceived": "2022-06-01T07:41:55.881Z"
   },
   {
-    "_id": "6f944461-08cb-4fee-979c-710ff66cea77",
+    "_id": "00000000-0000-4000-8000-000000000111",
     "isCloudConnectionUp": {
       "settable": false,
       "value": true
@@ -1520,7 +1520,7 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "0000000002642750"
+          "value": "TEST-SERIAL-0104"
         },
         "errorCode": {
           "settable": false,
@@ -1532,7 +1532,7 @@
         },
         "ssid": {
           "settable": false,
-          "value": "DaikinAP32931"
+          "value": "Test Wi-Fi"
         },
         "regionCode": {
           "settable": false,
@@ -1552,7 +1552,7 @@
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "WILLEMSEN"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -1575,7 +1575,7 @@
         "name": {
           "settable": true,
           "maxLength": 20,
-          "value": "Werkkamer"
+          "value": "Test office"
         },
         "iconId": {
           "settable": true,
@@ -2165,13 +2165,13 @@
         }
       }
     ],
-    "embeddedId": "295607",
+    "embeddedId": "test-embedded-108",
     "timestamp": "2022-06-01T07:39:57.369Z",
-    "id": "6f944461-08cb-4fee-979c-710ff66cea77",
+    "id": "00000000-0000-4000-8000-000000000111",
     "lastUpdateReceived": "2022-06-01T07:39:57.369Z"
   },
   {
-    "_id": "c04342c4-2fbc-4a32-b54d-6067fa1311f6",
+    "_id": "00000000-0000-4000-8000-000000000118",
     "isCloudConnectionUp": {
       "settable": false,
       "value": true
@@ -2197,7 +2197,7 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "0000000002404589"
+          "value": "TEST-SERIAL-0101"
         },
         "errorCode": {
           "settable": false,
@@ -2209,7 +2209,7 @@
         },
         "ssid": {
           "settable": false,
-          "value": "DaikinAP66051"
+          "value": "Test Wi-Fi"
         },
         "regionCode": {
           "settable": false,
@@ -2229,7 +2229,7 @@
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "WILLEMSEN"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -2252,7 +2252,7 @@
         "name": {
           "settable": true,
           "maxLength": 20,
-          "value": "Linde"
+          "value": "Test bedroom 1"
         },
         "iconId": {
           "settable": true,
@@ -2896,13 +2896,13 @@
         }
       }
     ],
-    "embeddedId": "295628",
+    "embeddedId": "test-embedded-110",
     "timestamp": "2022-06-01T07:39:42.478Z",
-    "id": "c04342c4-2fbc-4a32-b54d-6067fa1311f6",
+    "id": "00000000-0000-4000-8000-000000000118",
     "lastUpdateReceived": "2022-06-01T07:39:42.478Z"
   },
   {
-    "_id": "f7ff41ad-4169-45e5-8df4-15e033a05668",
+    "_id": "00000000-0000-4000-8000-000000000122",
     "isCloudConnectionUp": {
       "settable": false,
       "value": true
@@ -2928,7 +2928,7 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "0000000002405236"
+          "value": "TEST-SERIAL-0102"
         },
         "errorCode": {
           "settable": false,
@@ -2940,7 +2940,7 @@
         },
         "ssid": {
           "settable": false,
-          "value": "DaikinAP22483"
+          "value": "Test Wi-Fi"
         },
         "regionCode": {
           "settable": false,
@@ -2960,7 +2960,7 @@
         },
         "wifiConnectionSSID": {
           "settable": false,
-          "value": "WILLEMSEN"
+          "value": "Test Wi-Fi"
         },
         "wifiConnectionStrength": {
           "settable": false,
@@ -2983,7 +2983,7 @@
         "name": {
           "settable": true,
           "maxLength": 20,
-          "value": "Sanne"
+          "value": "Test bedroom 2"
         },
         "iconId": {
           "settable": true,
@@ -3573,9 +3573,9 @@
         }
       }
     ],
-    "embeddedId": "295633",
+    "embeddedId": "test-embedded-111",
     "timestamp": "2022-06-01T07:39:54.384Z",
-    "id": "f7ff41ad-4169-45e5-8df4-15e033a05668",
+    "id": "00000000-0000-4000-8000-000000000122",
     "lastUpdateReceived": "2022-06-01T07:39:54.384Z"
   }
 ]

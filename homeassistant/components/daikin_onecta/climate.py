@@ -790,6 +790,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         result = True
         if cc is None or cc.on_off_mode is None:
             self._raise_service_validation_error("climate_power_unavailable")
+        if cc.on_off_mode.value not in {"on", "off"}:
+            self._raise_service_validation_error("climate_power_unavailable")
         if cc.on_off_mode.value == "off":
             if not cc.on_off_mode.settable:
                 self._raise_service_validation_error("climate_power_unavailable")
@@ -812,6 +814,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         cc = self._climate_control()
         result = True
         if cc is None or cc.on_off_mode is None:
+            self._raise_service_validation_error("climate_power_unavailable")
+        if cc.on_off_mode.value not in {"on", "off"}:
             self._raise_service_validation_error("climate_power_unavailable")
         if cc.on_off_mode.value == "on":
             if not cc.on_off_mode.settable:

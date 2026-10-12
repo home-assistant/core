@@ -498,11 +498,11 @@ async def test_switch_service_updates_cached_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SWITCH_SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.johnny_maaike_econo_mode"},
+        {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
         blocking=True,
     )
 
-    state = hass.states.get("switch.johnny_maaike_econo_mode")
+    state = hass.states.get("switch.test_living_room_econo_mode")
     assert state is not None
     assert state.state == "off"
 
@@ -523,7 +523,7 @@ async def test_switch_updates_sibling_climate_preset(
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
-    entity_id = "climate.johnny_maaike_room_temperature"
+    entity_id = "climate.test_living_room_room_temperature"
     assert hass.states.get(entity_id).attributes["preset_mode"] == "eco"
 
     for service, expected in (
@@ -533,7 +533,7 @@ async def test_switch_updates_sibling_climate_preset(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.johnny_maaike_econo_mode"},
+            {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
             blocking=True,
         )
         assert hass.states.get(entity_id).attributes["preset_mode"] == expected
@@ -821,6 +821,35 @@ async def test_schedule_select_ignores_current_option(
     )
 
     execute_command.assert_not_awaited()
+
+
+async def test_schedule_select_preserves_read_only_disabled_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Keep a read-only enabled flag while changing the selected schedule."""
+    await _async_setup_fixture(hass, config_entry, "gas")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    state = hass.states.get("select.my_living_room_schedule")
+    assert state is not None
+    assert state.state == "althermaClimateControl0"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: state.entity_id, "option": "althermaClimateControl1"},
+        blocking=True,
+    )
+
+    coordinator.client.put_management_point.assert_awaited_once_with(
+        next(iter(coordinator.data)),
+        "1",
+        "schedule/heating/current",
+        {"scheduleId": "1", "enabled": False},
+    )
+    updated_state = hass.states.get(state.entity_id)
+    assert updated_state is not None
+    assert updated_state.state == "althermaClimateControl1"
 
 
 async def test_schedule_select_rejects_missing_selection() -> None:
@@ -1306,6 +1335,67 @@ def test_switch_preserves_unknown_state() -> None:
     entity._switch_state = None
 
     assert entity.is_on is None
+
+
+@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
+async def test_switch_rejects_unknown_state(method: str) -> None:
+    """Reject switch commands when Daikin omits the current value."""
+    entity = object.__new__(DaikinSwitch)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity._switch_state = None
+    entity._async_execute_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)()
+
+    assert err.value.translation_key == "switch_state_unavailable"
+    entity._async_execute_command.assert_not_awaited()
+
+
+@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
+async def test_air_purifier_rejects_unknown_power_state(method: str) -> None:
+    """Reject purifier commands when Daikin omits the current power value."""
+    entity = object.__new__(DaikinAirPurifier)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity._air_purification = MagicMock(
+        return_value=SimpleNamespace(power=Characteristic(value=None, settable=True))
+    )
+    entity._power_control_is_available = MagicMock(return_value=True)
+    entity._async_execute_air_purification_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)()
+
+    assert err.value.translation_key == "air_purifier_power_unavailable"
+    entity._async_execute_air_purification_command.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("method", "args"),
+    [
+        ("async_turn_on", ()),
+        ("async_turn_off", ()),
+        ("async_set_operation_mode", (STATE_HEAT_PUMP,)),
+        ("async_set_tank_temperature", (50,)),
+    ],
+)
+async def test_water_heater_rejects_unknown_power_state(
+    method: str, args: tuple[object, ...]
+) -> None:
+    """Reject water-heater commands when Daikin omits the current power value."""
+    entity = object.__new__(DaikinWaterTank)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    object.__setattr__(entity, "_attr_current_operation", None)
+    entity.get_operation_list = MagicMock(
+        return_value=[STATE_OFF, STATE_HEAT_PUMP, STATE_PERFORMANCE]
+    )
+    entity._async_execute_hot_water_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)(*args)
+
+    assert err.value.translation_key == "water_heater_on_off_unavailable"
+    entity._async_execute_hot_water_command.assert_not_awaited()
 
 
 async def test_air_purifier_turn_off_then_on_updates_cached_state(

@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_gateway_isFirmwareUpdateSupported',
+        'unique_id': '00000000-0000-4000-8000-000000000113_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -178,7 +178,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinemergencystate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_isInEmergencyState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_isInEmergencyState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -227,7 +227,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinemergencystate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_isInEmergencyState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_isInEmergencyState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -276,7 +276,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -325,7 +325,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -374,7 +374,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isininstallerstate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_isInInstallerState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_isInInstallerState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -422,7 +422,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isininstallerstate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_isInInstallerState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_isInInstallerState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -470,7 +470,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -519,7 +519,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -568,7 +568,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_isPowerfulModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -676,7 +676,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'leaving_water_offset',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_leavingWaterOffset',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_leavingWaterOffset',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -752,7 +752,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'room_temperature',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -823,7 +823,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -881,7 +881,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -932,7 +932,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_controlMode',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -980,7 +980,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1028,7 +1028,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1076,7 +1076,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatupmode',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_heatupMode',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_heatupMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1129,7 +1129,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_electrical_heating_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1185,7 +1185,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_electrical_heating_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1241,7 +1241,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_electrical_heating_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1297,7 +1297,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_electrical_heating_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1353,7 +1353,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_electrical_heating_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1409,7 +1409,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_electrical_heating_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1465,7 +1465,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_electrical_heating_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1521,7 +1521,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_electrical_heating_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1572,7 +1572,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_gateway_ipAddress',
+        'unique_id': '00000000-0000-4000-8000-000000000113_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': None,
@@ -1615,7 +1615,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'leavingwatertemperature',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_sensory_data_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_sensory_data_leavingWaterTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1671,7 +1671,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_sensory_data_outdoorTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1727,7 +1727,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_sensory_data_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1778,7 +1778,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_climateControlMainZone_setpointMode',
+        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1826,7 +1826,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_setpointMode',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1879,7 +1879,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'tanktemperature',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank_sensory_data_tankTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_sensory_data_tankTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1970,7 +1970,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 1>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_gateway_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000113_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1998,7 +1998,7 @@
         'state': 'off',
       }),
     }),
-    'update.altherma_firmware_update_2': dict({
+    'update.altherma_indoor_hydro_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2012,7 +2012,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.altherma_firmware_update_2',
+        'entity_id': 'update.altherma_indoor_hydro_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2031,7 +2031,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_indoorUnitHydro_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000113_indoorUnitHydro_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2040,7 +2040,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Indoor hydro unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20017704',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20017704',
@@ -2052,14 +2052,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.altherma_firmware_update_2',
+        'entity_id': 'update.altherma_indoor_hydro_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.altherma_firmware_update_3': dict({
+    'update.altherma_outdoor_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2073,7 +2073,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.altherma_firmware_update_3',
+        'entity_id': 'update.altherma_outdoor_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2092,7 +2092,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_outdoorUnit_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000113_outdoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2101,7 +2101,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Outdoor unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'FFFF',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'FFFF',
@@ -2113,14 +2113,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.altherma_firmware_update_3',
+        'entity_id': 'update.altherma_outdoor_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.altherma_firmware_update_4': dict({
+    'update.altherma_user_interface_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2134,7 +2134,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.altherma_firmware_update_4',
+        'entity_id': 'update.altherma_user_interface_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2153,7 +2153,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_userInterface_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000113_userInterface_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2162,7 +2162,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma User interface Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '7.6.0',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '7.6.0',
@@ -2174,7 +2174,7 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.altherma_firmware_update_4',
+        'entity_id': 'update.altherma_user_interface_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -2223,7 +2223,7 @@
         'suggested_object_id': None,
         'supported_features': <WaterHeaterEntityFeature: 10>,
         'translation_key': None,
-        'unique_id': '79136e0d-6c52-4bc6-b8b6-430ea471c392_domesticHotWaterTank',
+        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

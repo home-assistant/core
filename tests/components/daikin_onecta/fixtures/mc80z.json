@@ -1,6 +1,6 @@
 [
   {
-    "_id": "1c80e348-61c1-4f0d-a8b1-917f2f904529",
+    "_id": "00000000-0000-4000-8000-000000000104",
     "type": "dx4",
     "deviceModel": "air-purifier",
     "isCloudConnectionUp": {
@@ -30,11 +30,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.31"
+          "value": "192.0.2.19"
         },
         "macAddress": {
           "settable": false,
-          "value": "9c:50:d1:ba:3a:96"
+          "value": "02:00:00:00:01:08"
         },
         "modelInfo": {
           "settable": false,
@@ -381,12 +381,12 @@
         }
       }
     ],
-    "embeddedId": "671489",
+    "embeddedId": "test-embedded-113",
     "timestamp": "2024-02-14T11:17:34.732Z",
-    "id": "1c80e348-61c1-4f0d-a8b1-917f2f904529"
+    "id": "00000000-0000-4000-8000-000000000104"
   },
   {
-    "_id": "4e19a975-b0e4-4ae1-8439-c037e7d0df01",
+    "_id": "00000000-0000-4000-8000-000000000109",
     "type": "heating",
     "deviceModel": "Altherma",
     "isCloudConnectionUp": {
@@ -417,11 +417,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.205"
+          "value": "192.0.2.17"
         },
         "macAddress": {
           "settable": false,
-          "value": "00:23:7e:cb:98:8d"
+          "value": "02:00:00:00:01:01"
         },
         "errorCode": {
           "settable": false,
@@ -439,7 +439,7 @@
         "managementPointCategory": "primary",
         "name": {
           "settable": false,
-          "value": "Vloerverwarming",
+          "value": "Test floor heating",
           "maxLength": 63
         },
         "errorCode": {
@@ -691,7 +691,7 @@
         "managementPointType": "domesticHotWaterTank",
         "name": {
           "settable": false,
-          "value": "Warm water",
+          "value": "Test hot water",
           "maxLength": 63
         },
         "errorCode": {
@@ -1012,8 +1012,8 @@
         }
       }
     ],
-    "embeddedId": "81a99bcc-20dd-41c2-af6c-06e2c2c6dbab",
+    "embeddedId": "test-embedded-116",
     "timestamp": "2024-02-14T11:00:46.276Z",
-    "id": "4e19a975-b0e4-4ae1-8439-c037e7d0df01"
+    "id": "00000000-0000-4000-8000-000000000109"
   }
 ]

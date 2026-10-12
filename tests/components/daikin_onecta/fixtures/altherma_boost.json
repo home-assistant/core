@@ -1,6 +1,6 @@
 [
   {
-    "_id": "1ece521b-5401-4a42-acce-6f76fba246aa",
+    "_id": "00000000-0000-4000-8000-000000000105",
     "deviceModel": "Altherma",
     "type": "heating-wlan",
     "isCloudConnectionUp": {
@@ -19,7 +19,7 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.207",
+          "value": "192.0.2.18",
           "maxLength": 15
         },
         "isFirmwareUpdateSupported": {
@@ -29,7 +29,7 @@
         },
         "macAddress": {
           "settable": false,
-          "value": "00:e9:3a:67:14:a6",
+          "value": "02:00:00:00:01:04",
           "maxLength": 17
         },
         "modelInfo": {
@@ -743,8 +743,8 @@
         }
       }
     ],
-    "embeddedId": "6cce8059-4e4e-48bf-bfa4-08ac36d1e7b8",
+    "embeddedId": "test-embedded-115",
     "timestamp": "2024-03-19T07:34:25.14Z",
-    "id": "1ece521b-5401-4a42-acce-6f76fba246aa"
+    "id": "00000000-0000-4000-8000-000000000105"
   }
 ]

@@ -1375,7 +1375,7 @@ async def test_climate_service_rejects_unavailable_power(
     initial_power: str,
     invalidate_power: Callable[[ManagementPoint], None],
 ) -> None:
-    """Reject lost or read-only power controls without sending a cloud command."""
+    """Reject unavailable power controls without sending a cloud command."""
     await _async_setup_fixture(hass, config_entry, "ururu")
     coordinator = config_entry.runtime_data
     assert coordinator.data is not None
@@ -1405,6 +1405,29 @@ async def test_climate_service_rejects_unavailable_power(
     assert err.value.translation_key == "climate_power_unavailable"
     command.assert_not_awaited()
     assert coordinator.last_patch_call is None
+
+
+@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
+async def test_climate_turn_rejects_unknown_power_state(method: str) -> None:
+    """Reject turn actions when Daikin omits the current power value."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device", name="Device")
+    coordinator = MagicMock()
+    climate_control = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value=None, settable=True)
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    entity.coordinator = coordinator
+    entity._climate_control = MagicMock(return_value=climate_control)
+    entity._async_execute_climate_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)()
+
+    assert err.value.translation_key == "climate_power_unavailable"
+    entity._async_execute_climate_command.assert_not_awaited()
+    coordinator.async_update_listeners.assert_not_called()
 
 
 async def test_climate_platform_services_and_management_points(

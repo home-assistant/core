@@ -12,6 +12,13 @@ SCHEDULE_OFF = "off"
 
 FANMODE_FIXED = "fixed"
 
+MANAGEMENT_POINT_DEVICE_NAMES = {
+    "indoorUnit": "Indoor unit",
+    "indoorUnitHydro": "Indoor hydro unit",
+    "outdoorUnit": "Outdoor unit",
+    "userInterface": "User interface",
+}
+
 SENSORY_DATA_SENSOR_TYPES = (
     "roomTemperature",
     "outdoorTemperature",

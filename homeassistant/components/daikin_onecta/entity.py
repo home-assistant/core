@@ -6,6 +6,7 @@ from typing import Never, override
 from daikin_onecta.client import OnectaClient
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceEntryType,
@@ -13,7 +14,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_NAMES
 from .coordinator import OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 
@@ -150,3 +151,33 @@ class DaikinManagementPointEntity(DaikinEntity):
     ) -> None:
         """Initialize a management-point entity."""
         super().__init__(device, coordinator, embedded_id)
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return a physical management point as a gateway subdevice."""
+        point = self._device.management_point(self._embedded_id)
+        if (
+            point is None
+            or point.management_point_type not in MANAGEMENT_POINT_DEVICE_NAMES
+        ):
+            return super().device_info
+
+        info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._device.id}_{self._embedded_id}")},
+            manufacturer="Daikin",
+            model=point.model,
+            name=(
+                f"{self._device.name} "
+                f"{MANAGEMENT_POINT_DEVICE_NAMES[point.management_point_type]}"
+            ),
+            serial_number=point.serial,
+            sw_version=point.version,
+        )
+        if gateway_device_id := dr.async_get_device_id_by_identifier(
+            self.coordinator.hass,
+            (DOMAIN, self._device.id),
+            config_entry_id=self.coordinator.config_entry.entry_id,
+        ):
+            info["via_device_id"] = gateway_device_id
+        return info

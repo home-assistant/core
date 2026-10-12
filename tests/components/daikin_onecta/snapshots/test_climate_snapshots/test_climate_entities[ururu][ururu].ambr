@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[ururu][ururu]
   dict({
-    'climate.daikinap95800_room_temperature': dict({
+    'climate.test_room_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -47,7 +47,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.daikinap95800_room_temperature',
+        'entity_id': 'climate.test_room_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -66,7 +66,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 953>,
         'translation_key': 'room_temperature',
-        'unique_id': '95c2f177-dd7a-4bdc-ad48-1a7f47f34a01_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -81,7 +81,7 @@
             '4',
             '5',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DaikinAP95800 Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -113,7 +113,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.daikinap95800_room_temperature',
+        'entity_id': 'climate.test_room_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

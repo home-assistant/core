@@ -134,6 +134,8 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
+        if self.is_on is None:
+            self._raise_service_validation_error("switch_state_unavailable")
         if not self.is_on:
             await self._async_execute_command(
                 lambda client: client.management_point(
@@ -156,6 +158,8 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
+        if self.is_on is None:
+            self._raise_service_validation_error("switch_state_unavailable")
         if self.is_on:
             await self._async_execute_command(
                 lambda client: client.management_point(

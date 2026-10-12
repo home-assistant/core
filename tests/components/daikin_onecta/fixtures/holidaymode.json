@@ -1,6 +1,6 @@
 [
   {
-    "_id": "13995b32-fc6e-43ed-918e-5d2b01095ccb",
+    "_id": "00000000-0000-4000-8000-000000000101",
     "type": "heating",
     "deviceModel": "NDJ",
     "isCloudConnectionUp": {
@@ -31,11 +31,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.45.16"
+          "value": "192.0.2.23"
         },
         "macAddress": {
           "settable": false,
-          "value": "00:23:7e:f8:91:3e"
+          "value": "02:00:00:00:01:03"
         },
         "errorCode": {
           "settable": false,
@@ -453,8 +453,8 @@
         }
       }
     ],
-    "embeddedId": "53588aa5-df40-42f7-83c2-730952dfd262",
+    "embeddedId": "test-embedded-112",
     "timestamp": "2024-03-21T10:18:53.637Z",
-    "id": "13995b32-fc6e-43ed-918e-5d2b01095ccb"
+    "id": "00000000-0000-4000-8000-000000000101"
   }
 ]

@@ -203,6 +203,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         """Turn on the air purifier."""
         if not self._power_control_is_available():
             self._raise_service_validation_error("air_purifier_power_unavailable")
+        if self.is_on is None:
+            self._raise_service_validation_error("air_purifier_power_unavailable")
         if not self.is_on:
             await self._async_execute_air_purification_command(
                 lambda purifier: purifier.set_power(True),
@@ -222,6 +224,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the air purifier."""
         if not self._power_control_is_available():
+            self._raise_service_validation_error("air_purifier_power_unavailable")
+        if self.is_on is None:
             self._raise_service_validation_error("air_purifier_power_unavailable")
         if not self.is_on:
             return

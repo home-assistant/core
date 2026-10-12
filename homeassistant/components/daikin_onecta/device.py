@@ -2,6 +2,8 @@
 
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 
+from .const import MANAGEMENT_POINT_DEVICE_NAMES
+
 
 class DaikinOnectaDevice:
     """Class to represent and control one Daikin Onecta Device."""
@@ -44,9 +46,7 @@ class DaikinOnectaDevice:
         """Mark the device unavailable after it is absent from a cloud response."""
         self._is_present_in_cloud = False
 
-    def _metadata(
-        self,
-    ) -> tuple[str, str | None, str | None, str | None, str | None, str | None]:
+    def _metadata(self) -> tuple[object, ...]:
         """Return the cloud identity and descriptive metadata."""
         model, serial_number, sw_version = self._gateway_metadata()
         return (
@@ -56,6 +56,19 @@ class DaikinOnectaDevice:
             serial_number,
             sw_version,
             self.device.mac_address,
+            tuple(
+                sorted(
+                    (
+                        point.embedded_id,
+                        point.management_point_type,
+                        point.model,
+                        point.serial,
+                        point.version,
+                    )
+                    for point in getattr(self.device, "management_points", [])
+                    if point.management_point_type in MANAGEMENT_POINT_DEVICE_NAMES
+                )
+            ),
         )
 
     def _gateway_metadata(self) -> tuple[str | None, str | None, str | None]:

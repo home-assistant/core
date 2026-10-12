@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_isPowerfulModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -192,7 +192,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 400>,
         'translation_key': 'calculated_leaving_water_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_calculatedLeavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_calculatedLeavingWaterTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -271,7 +271,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 400>,
         'translation_key': 'leaving_water_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_leavingWaterTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -350,7 +350,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'room_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -422,7 +422,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -439,7 +439,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'unknown',
+        'state': 'althermaClimateControl0',
       }),
     }),
     'sensor.daikin_onecta_account_ratelimit_remaining_day': dict({
@@ -515,7 +515,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_controlMode',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -568,7 +568,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingdailyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_cooling_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_cooling_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -624,7 +624,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingdailygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_cooling_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_cooling_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -680,7 +680,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingmonthlyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_cooling_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_cooling_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -736,7 +736,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingmonthlygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_cooling_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_cooling_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -792,7 +792,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingweeklyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_cooling_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_cooling_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -848,7 +848,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingweeklygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_cooling_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_cooling_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -904,7 +904,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingyearlyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_cooling_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_cooling_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -960,7 +960,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingyearlygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_cooling_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_cooling_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1011,7 +1011,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatupmode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_heatupMode',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_heatupMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1064,7 +1064,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_heating_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1120,7 +1120,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_heating_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1176,7 +1176,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_heating_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1232,7 +1232,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_heating_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1288,7 +1288,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_heating_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1344,7 +1344,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_heating_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1400,7 +1400,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_electrical_heating_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1456,7 +1456,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlygasconsumption',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_gas_heating_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_gas_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
@@ -1507,7 +1507,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_0_ipAddress',
+        'unique_id': '00000000-0000-4000-8000-000000000115_0_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': None,
@@ -1550,7 +1550,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'leavingwatertemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensory_data_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_sensory_data_leavingWaterTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1606,7 +1606,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensory_data_outdoorTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1662,7 +1662,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensory_data_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1713,7 +1713,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_setpointMode',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1766,7 +1766,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'tanktemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_2_sensory_data_tankTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_2_sensory_data_tankTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1817,7 +1817,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 4>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_0_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000115_0_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1846,7 +1846,7 @@
         'state': 'off',
       }),
     }),
-    'update.my_living_room_firmware_update_2': dict({
+    'update.my_living_room_indoor_hydro_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1860,7 +1860,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.my_living_room_firmware_update_2',
+        'entity_id': 'update.my_living_room_indoor_hydro_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1879,7 +1879,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_3_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000115_3_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1888,7 +1888,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Indoor hydro unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'ID66F2',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'ID66F2',
@@ -1900,14 +1900,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.my_living_room_firmware_update_2',
+        'entity_id': 'update.my_living_room_indoor_hydro_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.my_living_room_firmware_update_3': dict({
+    'update.my_living_room_outdoor_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1921,7 +1921,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.my_living_room_firmware_update_3',
+        'entity_id': 'update.my_living_room_outdoor_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1940,7 +1940,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_4_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000115_4_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1949,7 +1949,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Outdoor unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'ID0000',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'ID0000',
@@ -1961,7 +1961,7 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.my_living_room_firmware_update_3',
+        'entity_id': 'update.my_living_room_outdoor_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -2004,7 +2004,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': None,
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_2',
+        'unique_id': '00000000-0000-4000-8000-000000000115_2',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2024,7 +2024,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'off',
+        'state': 'unknown',
       }),
     }),
   })

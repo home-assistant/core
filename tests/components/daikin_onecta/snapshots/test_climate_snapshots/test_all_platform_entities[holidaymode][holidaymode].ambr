@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_isFirmwareUpdateSupported',
+        'unique_id': '00000000-0000-4000-8000-000000000101_0_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000101_2_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -178,7 +178,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000101_0_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -227,7 +227,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -276,7 +276,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000101_2_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -325,7 +325,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -374,7 +374,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000101_2_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -482,7 +482,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 16>,
         'translation_key': 'room_temperature',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -549,7 +549,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -641,7 +641,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_controlMode',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -689,7 +689,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000101_0_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -737,7 +737,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -785,7 +785,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000101_2_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -833,7 +833,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_ipAddress',
+        'unique_id': '00000000-0000-4000-8000-000000000101_0_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': None,
@@ -871,7 +871,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'onoffmode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_onOffMode',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_onOffMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -919,7 +919,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'onoffmode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_onOffMode',
+        'unique_id': '00000000-0000-4000-8000-000000000101_2_onOffMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -972,7 +972,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_sensory_data_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1023,7 +1023,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 1>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000101_0_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1051,7 +1051,7 @@
         'state': 'off',
       }),
     }),
-    'update.ndj_firmware_update_2': dict({
+    'update.ndj_indoor_hydro_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1065,7 +1065,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.ndj_firmware_update_2',
+        'entity_id': 'update.ndj_indoor_hydro_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1084,7 +1084,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_3_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000101_3_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1093,7 +1093,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Indoor hydro unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '02_BA_B',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '02_BA_B',
@@ -1105,14 +1105,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.ndj_firmware_update_2',
+        'entity_id': 'update.ndj_indoor_hydro_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.ndj_firmware_update_3': dict({
+    'update.ndj_outdoor_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1126,7 +1126,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.ndj_firmware_update_3',
+        'entity_id': 'update.ndj_outdoor_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1145,7 +1145,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_4_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000101_4_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1154,7 +1154,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Outdoor unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '--',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '--',
@@ -1166,14 +1166,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.ndj_firmware_update_3',
+        'entity_id': 'update.ndj_outdoor_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.ndj_firmware_update_4': dict({
+    'update.ndj_user_interface_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1187,7 +1187,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.ndj_firmware_update_4',
+        'entity_id': 'update.ndj_user_interface_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1206,7 +1206,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_5_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000101_5_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1215,7 +1215,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ User interface Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'V37.06',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'V37.06',
@@ -1227,7 +1227,7 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.ndj_firmware_update_4',
+        'entity_id': 'update.ndj_user_interface_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1271,7 +1271,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': None,
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2',
+        'unique_id': '00000000-0000-4000-8000-000000000101_2',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

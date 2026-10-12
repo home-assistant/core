@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_gateway_isFirmwareUpdateSupported',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isincautionstate',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_isInCautionState',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_isInCautionState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -179,7 +179,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_gateway_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -228,7 +228,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -277,7 +277,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -293,7 +293,7 @@
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_firmware_update_supported': dict({
+    'binary_sensor.test_floor_heating_is_firmware_update_supported': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -307,7 +307,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_firmware_update_supported',
+        'entity_id': 'binary_sensor.test_floor_heating_is_firmware_update_supported',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -326,22 +326,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_0_isFirmwareUpdateSupported',
+        'unique_id': '00000000-0000-4000-8000-000000000109_0_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is firmware update supported',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is firmware update supported',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_firmware_update_supported',
+        'entity_id': 'binary_sensor.test_floor_heating_is_firmware_update_supported',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'on',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_holiday_mode_active': dict({
+    'binary_sensor.test_floor_heating_is_holiday_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -355,7 +355,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.test_floor_heating_is_holiday_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -374,22 +374,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is holiday mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is holiday mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.test_floor_heating_is_holiday_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_holiday_mode_active_2': dict({
+    'binary_sensor.test_floor_heating_is_holiday_mode_active_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -403,7 +403,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_holiday_mode_active_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_holiday_mode_active_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -422,22 +422,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is holiday mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is holiday mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_holiday_mode_active_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_holiday_mode_active_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_emergency_state': dict({
+    'binary_sensor.test_floor_heating_is_in_emergency_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -451,7 +451,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_emergency_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_emergency_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -470,23 +470,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinemergencystate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_isInEmergencyState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_isInEmergencyState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in emergency state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in emergency state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_emergency_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_emergency_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_emergency_state_2': dict({
+    'binary_sensor.test_floor_heating_is_in_emergency_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -500,7 +500,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_emergency_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_emergency_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -519,23 +519,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinemergencystate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_isInEmergencyState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_isInEmergencyState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in emergency state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in emergency state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_emergency_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_emergency_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_error_state': dict({
+    'binary_sensor.test_floor_heating_is_in_error_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -549,7 +549,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_error_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -568,23 +568,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_0_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_0_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_error_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_error_state_2': dict({
+    'binary_sensor.test_floor_heating_is_in_error_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -598,7 +598,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_error_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -617,23 +617,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_error_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_error_state_3': dict({
+    'binary_sensor.test_floor_heating_is_in_error_state_3': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -647,7 +647,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state_3',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_error_state_3',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -666,23 +666,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state_3',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_error_state_3',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_installer_state': dict({
+    'binary_sensor.test_floor_heating_is_in_installer_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -696,7 +696,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_installer_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_installer_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -715,22 +715,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isininstallerstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_isInInstallerState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_isInInstallerState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in installer state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in installer state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_installer_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_installer_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_installer_state_2': dict({
+    'binary_sensor.test_floor_heating_is_in_installer_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -744,7 +744,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_installer_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_installer_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -763,22 +763,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isininstallerstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_isInInstallerState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_isInInstallerState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in installer state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in installer state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_installer_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_installer_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_warning_state': dict({
+    'binary_sensor.test_floor_heating_is_in_warning_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -792,7 +792,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_warning_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_warning_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -811,23 +811,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in warning state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in warning state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_warning_state',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_warning_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_in_warning_state_2': dict({
+    'binary_sensor.test_floor_heating_is_in_warning_state_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -841,7 +841,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_warning_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_warning_state_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -860,23 +860,23 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_isInWarningState',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in warning state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is in warning state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_in_warning_state_2',
+        'entity_id': 'binary_sensor.test_floor_heating_is_in_warning_state_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.vloerverwarming_is_powerful_mode_active': dict({
+    'binary_sensor.test_floor_heating_is_powerful_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -890,7 +890,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.test_floor_heating_is_powerful_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -909,15 +909,15 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_isPowerfulModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is powerful mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Is powerful mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.vloerverwarming_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.test_floor_heating_is_powerful_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -972,7 +972,7 @@
         'state': 'unknown',
       }),
     }),
-    'climate.vloerverwarming_leaving_water_offset': dict({
+    'climate.test_floor_heating_leaving_water_offset': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1000,7 +1000,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.vloerverwarming_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1019,13 +1019,13 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'leaving_water_offset',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_leavingWaterOffset',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_leavingWaterOffset',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Leaving water offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water offset',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -1045,7 +1045,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.vloerverwarming_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1094,7 +1094,7 @@
         'suggested_object_id': None,
         'supported_features': <FanEntityFeature: 57>,
         'translation_key': None,
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_air_purifier',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_air_purifier',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1161,7 +1161,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1182,7 +1182,7 @@
         'state': 'off',
       }),
     }),
-    'select.vloerverwarming_schedule': dict({
+    'select.test_floor_heating_schedule': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1200,7 +1200,7 @@
         'disabled_by': None,
         'domain': 'select',
         'entity_category': None,
-        'entity_id': 'select.vloerverwarming_schedule',
+        'entity_id': 'select.test_floor_heating_schedule',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1219,18 +1219,18 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Schedule',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             'User defined',
           ]),
         }),
         'context': <ANY>,
-        'entity_id': 'select.vloerverwarming_schedule',
+        'entity_id': 'select.test_floor_heating_schedule',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1270,7 +1270,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'airpurificationmode',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_airPurificationMode',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_airPurificationMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1318,7 +1318,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_gateway_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1366,7 +1366,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1414,7 +1414,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_gateway_ipAddress',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': None,
@@ -1454,7 +1454,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'pm10concentration',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_sensory_data_pm10Concentration',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_sensory_data_pm10Concentration',
         'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
       }),
       'state': StateSnapshot({
@@ -1507,7 +1507,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'pm1concentration',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_sensory_data_pm1Concentration',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_sensory_data_pm1Concentration',
         'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
       }),
       'state': StateSnapshot({
@@ -1560,7 +1560,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'pm25concentration',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_sensory_data_pm25Concentration',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_sensory_data_pm25Concentration',
         'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
       }),
       'state': StateSnapshot({
@@ -1613,7 +1613,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomhumidity',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_sensory_data_roomHumidity',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_sensory_data_roomHumidity',
         'unit_of_measurement': '%',
       }),
       'state': StateSnapshot({
@@ -1669,7 +1669,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_sensory_data_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1727,7 +1727,7 @@
       }),
       'state': None,
     }),
-    'sensor.vloerverwarming_control_mode': dict({
+    'sensor.test_floor_heating_control_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1741,7 +1741,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_control_mode',
+        'entity_id': 'sensor.test_floor_heating_control_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1760,22 +1760,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_controlMode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Control mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Control mode',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_control_mode',
+        'entity_id': 'sensor.test_floor_heating_control_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'externalRoomTemperature',
       }),
     }),
-    'sensor.vloerverwarming_cooling_daily_electrical_consumption': dict({
+    'sensor.test_floor_heating_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1791,7 +1791,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1813,25 +1813,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingdailyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_cooling_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_cooling_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Cooling daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.vloerverwarming_cooling_monthly_electrical_consumption': dict({
+    'sensor.test_floor_heating_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1847,7 +1847,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1869,25 +1869,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingmonthlyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_cooling_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_cooling_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Cooling monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.vloerverwarming_cooling_weekly_electrical_consumption': dict({
+    'sensor.test_floor_heating_cooling_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1903,7 +1903,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1925,25 +1925,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingweeklyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_cooling_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_cooling_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Cooling weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.vloerverwarming_cooling_yearly_electrical_consumption': dict({
+    'sensor.test_floor_heating_cooling_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1959,7 +1959,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1981,25 +1981,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'coolingyearlyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_cooling_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_cooling_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Cooling yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_cooling_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.vloerverwarming_error_code': dict({
+    'sensor.test_floor_heating_error_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2013,7 +2013,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.vloerverwarming_error_code',
+        'entity_id': 'sensor.test_floor_heating_error_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2032,22 +2032,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_0_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_0_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_error_code',
+        'entity_id': 'sensor.test_floor_heating_error_code',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '',
       }),
     }),
-    'sensor.vloerverwarming_error_code_2': dict({
+    'sensor.test_floor_heating_error_code_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2061,7 +2061,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.vloerverwarming_error_code_2',
+        'entity_id': 'sensor.test_floor_heating_error_code_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2080,22 +2080,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_error_code_2',
+        'entity_id': 'sensor.test_floor_heating_error_code_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '',
       }),
     }),
-    'sensor.vloerverwarming_error_code_3': dict({
+    'sensor.test_floor_heating_error_code_3': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2109,7 +2109,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.vloerverwarming_error_code_3',
+        'entity_id': 'sensor.test_floor_heating_error_code_3',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2128,22 +2128,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_error_code_3',
+        'entity_id': 'sensor.test_floor_heating_error_code_3',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '',
       }),
     }),
-    'sensor.vloerverwarming_heat_up_mode': dict({
+    'sensor.test_floor_heating_heat_up_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2157,7 +2157,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heat_up_mode',
+        'entity_id': 'sensor.test_floor_heating_heat_up_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2176,22 +2176,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatupmode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_heatupMode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_heatupMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heat up mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heat up mode',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heat_up_mode',
+        'entity_id': 'sensor.test_floor_heating_heat_up_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'scheduleOnly',
       }),
     }),
-    'sensor.vloerverwarming_heating_daily_electrical_consumption': dict({
+    'sensor.test_floor_heating_heating_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2207,7 +2207,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2229,25 +2229,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_heating_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '3',
       }),
     }),
-    'sensor.vloerverwarming_heating_daily_electrical_consumption_2': dict({
+    'sensor.test_floor_heating_heating_daily_electrical_consumption_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2263,7 +2263,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_daily_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_daily_electrical_consumption_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2285,25 +2285,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingdailyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_electrical_heating_daily_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_electrical_heating_daily_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_daily_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_daily_electrical_consumption_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '1',
       }),
     }),
-    'sensor.vloerverwarming_heating_monthly_electrical_consumption': dict({
+    'sensor.test_floor_heating_heating_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2319,7 +2319,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2341,25 +2341,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_heating_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.vloerverwarming_heating_monthly_electrical_consumption_2': dict({
+    'sensor.test_floor_heating_heating_monthly_electrical_consumption_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2375,7 +2375,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_monthly_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_monthly_electrical_consumption_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2397,25 +2397,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingmonthlyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_electrical_heating_monthly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_electrical_heating_monthly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_monthly_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_monthly_electrical_consumption_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.vloerverwarming_heating_weekly_electrical_consumption': dict({
+    'sensor.test_floor_heating_heating_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2431,7 +2431,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2453,25 +2453,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_heating_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '15',
       }),
     }),
-    'sensor.vloerverwarming_heating_weekly_electrical_consumption_2': dict({
+    'sensor.test_floor_heating_heating_weekly_electrical_consumption_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2487,7 +2487,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_weekly_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_weekly_electrical_consumption_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2509,25 +2509,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingweeklyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_electrical_heating_weekly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_electrical_heating_weekly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_weekly_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_weekly_electrical_consumption_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '5',
       }),
     }),
-    'sensor.vloerverwarming_heating_yearly_electrical_consumption': dict({
+    'sensor.test_floor_heating_heating_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2543,7 +2543,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2565,25 +2565,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_electrical_heating_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.test_floor_heating_heating_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '416',
       }),
     }),
-    'sensor.vloerverwarming_heating_yearly_electrical_consumption_2': dict({
+    'sensor.test_floor_heating_heating_yearly_electrical_consumption_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2599,7 +2599,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_heating_yearly_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_yearly_electrical_consumption_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2621,25 +2621,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatingyearlyelectricalconsumption',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_electrical_heating_yearly_consumption',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_electrical_heating_yearly_consumption',
         'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Heating yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_heating_yearly_electrical_consumption_2',
+        'entity_id': 'sensor.test_floor_heating_heating_yearly_electrical_consumption_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '68',
       }),
     }),
-    'sensor.vloerverwarming_ip_address': dict({
+    'sensor.test_floor_heating_ip_address': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2653,7 +2653,7 @@
         'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.vloerverwarming_ip_address',
+        'entity_id': 'sensor.test_floor_heating_ip_address',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2672,12 +2672,12 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_0_ipAddress',
+        'unique_id': '00000000-0000-4000-8000-000000000109_0_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': None,
     }),
-    'sensor.vloerverwarming_leaving_water_temperature': dict({
+    'sensor.test_floor_heating_leaving_water_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2693,7 +2693,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_leaving_water_temperature',
+        'entity_id': 'sensor.test_floor_heating_leaving_water_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2715,25 +2715,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'leavingwatertemperature',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_sensory_data_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_sensory_data_leavingWaterTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Leaving water temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_leaving_water_temperature',
+        'entity_id': 'sensor.test_floor_heating_leaving_water_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '25',
       }),
     }),
-    'sensor.vloerverwarming_outdoor_temperature': dict({
+    'sensor.test_floor_heating_outdoor_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2749,7 +2749,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_outdoor_temperature',
+        'entity_id': 'sensor.test_floor_heating_outdoor_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2771,25 +2771,25 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_sensory_data_outdoorTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Outdoor temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Outdoor temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_outdoor_temperature',
+        'entity_id': 'sensor.test_floor_heating_outdoor_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '12',
       }),
     }),
-    'sensor.vloerverwarming_setpoint_mode': dict({
+    'sensor.test_floor_heating_setpoint_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2803,7 +2803,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_setpoint_mode',
+        'entity_id': 'sensor.test_floor_heating_setpoint_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2822,22 +2822,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_setpointMode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Setpoint mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Setpoint mode',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_setpoint_mode',
+        'entity_id': 'sensor.test_floor_heating_setpoint_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'weatherDependent',
       }),
     }),
-    'sensor.vloerverwarming_setpoint_mode_2': dict({
+    'sensor.test_floor_heating_setpoint_mode_2': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2851,7 +2851,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_setpoint_mode_2',
+        'entity_id': 'sensor.test_floor_heating_setpoint_mode_2',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2870,22 +2870,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_setpointMode',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Setpoint mode',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Setpoint mode',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_setpoint_mode_2',
+        'entity_id': 'sensor.test_floor_heating_setpoint_mode_2',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'fixed',
       }),
     }),
-    'sensor.vloerverwarming_tank_temperature': dict({
+    'sensor.test_floor_heating_tank_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -2901,7 +2901,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.vloerverwarming_tank_temperature',
+        'entity_id': 'sensor.test_floor_heating_tank_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -2923,18 +2923,18 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'tanktemperature',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2_sensory_data_tankTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2_sensory_data_tankTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Tank temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Tank temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.vloerverwarming_tank_temperature',
+        'entity_id': 'sensor.test_floor_heating_tank_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -2974,7 +2974,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 1>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_gateway_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3002,7 +3002,7 @@
         'state': 'off',
       }),
     }),
-    'update.air_purifier_firmware_update_2': dict({
+    'update.air_purifier_indoor_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3016,7 +3016,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.air_purifier_firmware_update_2',
+        'entity_id': 'update.air_purifier_indoor_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3035,7 +3035,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_indoorUnit_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000104_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3044,7 +3044,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Indoor unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '22014C01',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '22014C01',
@@ -3056,14 +3056,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.air_purifier_firmware_update_2',
+        'entity_id': 'update.air_purifier_indoor_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.vloerverwarming_firmware_update': dict({
+    'update.test_floor_heating_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3077,7 +3077,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.vloerverwarming_firmware_update',
+        'entity_id': 'update.test_floor_heating_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3096,7 +3096,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 1>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_0_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000109_0_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3105,7 +3105,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '436CC166000',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '436CC166000',
@@ -3117,14 +3117,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.vloerverwarming_firmware_update',
+        'entity_id': 'update.test_floor_heating_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.vloerverwarming_firmware_update_2': dict({
+    'update.test_floor_heating_indoor_hydro_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3138,7 +3138,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.vloerverwarming_firmware_update_2',
+        'entity_id': 'update.test_floor_heating_indoor_hydro_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3157,7 +3157,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_3_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000109_3_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3166,7 +3166,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Indoor hydro unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'ID7401',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'ID7401',
@@ -3178,14 +3178,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.vloerverwarming_firmware_update_2',
+        'entity_id': 'update.test_floor_heating_indoor_hydro_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.vloerverwarming_firmware_update_3': dict({
+    'update.test_floor_heating_outdoor_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3199,7 +3199,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.vloerverwarming_firmware_update_3',
+        'entity_id': 'update.test_floor_heating_outdoor_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3218,7 +3218,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_4_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000109_4_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3227,7 +3227,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Outdoor unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'IDE7C4',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'IDE7C4',
@@ -3239,14 +3239,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.vloerverwarming_firmware_update_3',
+        'entity_id': 'update.test_floor_heating_outdoor_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'update.vloerverwarming_firmware_update_4': dict({
+    'update.test_floor_heating_user_interface_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3260,7 +3260,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.vloerverwarming_firmware_update_4',
+        'entity_id': 'update.test_floor_heating_user_interface_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3279,7 +3279,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_5_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000109_5_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3288,7 +3288,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating User interface Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'v01.07.00',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'v01.07.00',
@@ -3300,14 +3300,14 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.vloerverwarming_firmware_update_4',
+        'entity_id': 'update.test_floor_heating_user_interface_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'water_heater.vloerverwarming': dict({
+    'water_heater.test_floor_heating': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3330,7 +3330,7 @@
         'disabled_by': None,
         'domain': 'water_heater',
         'entity_category': None,
-        'entity_id': 'water_heater.vloerverwarming',
+        'entity_id': 'water_heater.test_floor_heating',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3349,13 +3349,13 @@
         'suggested_object_id': None,
         'supported_features': <WaterHeaterEntityFeature: 10>,
         'translation_key': None,
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_2',
+        'unique_id': '00000000-0000-4000-8000-000000000109_2',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 41.0,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating',
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30.0,
           <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -3372,7 +3372,7 @@
           <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'water_heater.vloerverwarming',
+        'entity_id': 'water_heater.test_floor_heating',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

@@ -122,7 +122,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '6a84eb95-60ea-4c21-8376-a10b3886437f_gateway_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000110_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

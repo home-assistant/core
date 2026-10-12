@@ -1,6 +1,6 @@
 [
   {
-    "_id": "6f944461-08cb-4fee-979c-710ff66cea77",
+    "_id": "00000000-0000-4000-8000-000000000111",
     "type": "dx4",
     "deviceModel": "dx4",
     "isCloudConnectionUp": {
@@ -30,11 +30,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.200"
+          "value": "192.0.2.16"
         },
         "macAddress": {
           "settable": false,
-          "value": "e8:4f:25:c7:fe:da"
+          "value": "02:00:00:00:01:10"
         },
         "modelInfo": {
           "settable": false,
@@ -291,7 +291,7 @@
         "name": {
           "settable": false,
           "maxLength": 20,
-          "value": "Werkkamer"
+          "value": "Test office"
         },
         "onOffMode": {
           "settable": true,
@@ -565,8 +565,8 @@
         }
       }
     ],
-    "embeddedId": "295607",
+    "embeddedId": "test-embedded-108",
     "timestamp": "2024-03-20T09:56:11.488Z",
-    "id": "6f944461-08cb-4fee-979c-710ff66cea77"
+    "id": "00000000-0000-4000-8000-000000000111"
   }
 ]

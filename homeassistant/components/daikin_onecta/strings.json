@@ -427,6 +427,9 @@
     "swing_control_unavailable": {
       "message": "Swing control is unavailable for {device}"
     },
+    "switch_state_unavailable": {
+      "message": "Cannot change {device} because its current switch state is unavailable"
+    },
     "switch_turn_off_failed": {
       "message": "Failed to turn off {device}"
     },

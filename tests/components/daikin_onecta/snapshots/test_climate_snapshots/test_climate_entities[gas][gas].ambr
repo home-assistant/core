@@ -48,7 +48,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 400>,
         'translation_key': 'calculated_leaving_water_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_calculatedLeavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_calculatedLeavingWaterTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -127,7 +127,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 400>,
         'translation_key': 'leaving_water_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_leavingWaterTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -206,7 +206,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'room_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_1_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

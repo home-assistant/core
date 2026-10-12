@@ -1,7 +1,7 @@
 [
   {
-    "_id": "13995b32-fc6e-43ed-918e-5d2b01095ccb",
-    "id": "13995b32-fc6e-43ed-918e-5d2b01095ccb",
+    "_id": "00000000-0000-4000-8000-000000000101",
+    "id": "00000000-0000-4000-8000-000000000101",
     "type": "dx23",
     "deviceModel": "dx23",
     "isCloudConnectionUp": {
@@ -24,7 +24,7 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.2"
+          "value": "192.0.2.15"
         },
         "macAddress": {
           "settable": false,
@@ -617,7 +617,7 @@
         }
       }
     ],
-    "embeddedId": "53588aa5-df40-42f7-83c2-730952dfd262",
+    "embeddedId": "test-embedded-112",
     "timestamp": "2024-10-21T09:33:53.683Z"
   }
 ]

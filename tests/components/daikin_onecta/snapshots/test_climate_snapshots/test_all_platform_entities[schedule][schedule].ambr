@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_isFirmwareUpdateSupported',
+        'unique_id': '00000000-0000-4000-8000-000000000115_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_isHolidayModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_isInErrorState',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -179,7 +179,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_isPowerfulModeActive',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -297,7 +297,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 409>,
         'translation_key': 'room_temperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -379,7 +379,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'schedule',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_schedule',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -473,7 +473,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -521,7 +521,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_ipAddress',
+        'unique_id': '00000000-0000-4000-8000-000000000115_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': None,
@@ -564,7 +564,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_sensory_data_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000115_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -615,7 +615,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 1>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000115_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -643,7 +643,7 @@
         'state': 'off',
       }),
     }),
-    'update.master_firmware_update_2': dict({
+    'update.master_indoor_unit_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -657,7 +657,7 @@
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.master_firmware_update_2',
+        'entity_id': 'update.master_indoor_unit_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -676,7 +676,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_indoorUnit_firmware',
+        'unique_id': '00000000-0000-4000-8000-000000000115_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -685,7 +685,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Indoor unit Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '0',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '0',
@@ -697,7 +697,7 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.master_firmware_update_2',
+        'entity_id': 'update.master_indoor_unit_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

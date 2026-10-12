@@ -1,6 +1,6 @@
 [
   {
-    "_id": "29e9a6af-0a8e-49ac-bc19-361c1347ba95",
+    "_id": "00000000-0000-4000-8000-000000000106",
     "deviceModel": "altherma4",
     "type": "heating-wlan",
     "isCloudConnectionUp": {
@@ -37,7 +37,7 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.1.104",
+          "value": "192.0.2.13",
           "maxLength": 15
         },
         "isFirmwareUpdateSupported": {
@@ -47,7 +47,7 @@
         },
         "macAddress": {
           "settable": false,
-          "value": "f0:68:e3:3b:67:7b",
+          "value": "02:00:00:00:01:12",
           "maxLength": 17
         },
         "modelInfo": {
@@ -57,7 +57,7 @@
         },
         "serialNumber": {
           "settable": false,
-          "value": "4300000111",
+          "value": "TEST-SERIAL-0107",
           "maxLength": 16
         }
       },
@@ -270,7 +270,7 @@
         "name": {
           "settable": false,
           "requiresReboot": false,
-          "value": "Climate control getr422",
+          "value": "Test climate control",
           "maxLength": 63
         },
         "onOffMode": {
@@ -488,7 +488,7 @@
         "name": {
           "settable": false,
           "requiresReboot": false,
-          "value": "Hot water tank etrg422",
+          "value": "Test hot water tank",
           "maxLength": 63
         },
         "onOffMode": {
@@ -593,7 +593,7 @@
         "sgtin": {
           "settable": false,
           "requiresReboot": false,
-          "value": "30F54A78620000BA77FA6750"
+          "value": "TEST-SGTIN-0001"
         },
         "softwareVersion": {
           "settable": false,
@@ -603,8 +603,8 @@
         }
       }
     ],
-    "embeddedId": "f52da504-e875-4765-8033-39d0853e5751",
+    "embeddedId": "test-embedded-122",
     "timestamp": "2026-04-27T11:14:09.524Z",
-    "id": "29e9a6af-0a8e-49ac-bc19-361c1347ba95"
+    "id": "00000000-0000-4000-8000-000000000106"
   }
 ]

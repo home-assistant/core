@@ -90,9 +90,18 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
     def get_current_option(self) -> str | None:
         """Return the selected schedule name."""
         selection = self.selection()
-        if selection is None or not selection.enabled:
+        if selection is None:
+            return None
+        if not selection.enabled and selection.enabled_settable:
             return SCHEDULE_OFF
-        return selection.current_option
+        return selection.current_option or next(
+            (
+                schedule.name
+                for schedule in selection.options
+                if schedule.id == selection.selected
+            ),
+            None,
+        )
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -116,13 +125,16 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
                 option,
             )
 
+        enabled = (
+            option != SCHEDULE_OFF if selection.enabled_settable else selection.enabled
+        )
         await self._async_execute_command(
             lambda client: client.schedule(
                 self._device.id, self._embedded_id
             ).set_current(
                 selection.mode,
                 schedule_id,
-                enabled=option != SCHEDULE_OFF,
+                enabled=enabled,
             ),
             "schedule_select_failed",
         )
@@ -132,7 +144,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             schedule_state.apply_selection(
                 selection.mode,
                 schedule_id,
-                enabled=option != SCHEDULE_OFF,
+                enabled=enabled,
             )
         self.update_state()
         self.async_write_ha_state()
