@@ -457,7 +457,7 @@ def thermostat_gen2_device(
     supports_display_direction: bool | None = None,
     supports_displayed_temperature: bool | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
-) -> SHCThermostatGen2:
+) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
     device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
