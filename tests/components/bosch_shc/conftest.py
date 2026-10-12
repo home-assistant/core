@@ -454,6 +454,8 @@ def thermostat_gen2_device(
     display_direction: DisplayDirection.Direction | None = None,
     displayed_temperature: DisplayedTemperatureConfiguration.DisplayedTemperature
     | None = None,
+    supports_display_direction: bool | None = None,
+    supports_displayed_temperature: bool | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -469,9 +471,17 @@ def thermostat_gen2_device(
     device.status = "AVAILABLE"
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
-    device.supports_display_direction = display_direction is not None
+    device.supports_display_direction = (
+        display_direction is not None
+        if supports_display_direction is None
+        else supports_display_direction
+    )
     device.display_direction = display_direction
-    device.supports_displayed_temperature = displayed_temperature is not None
+    device.supports_displayed_temperature = (
+        displayed_temperature is not None
+        if supports_displayed_temperature is None
+        else supports_displayed_temperature
+    )
     device.displayed_temperature = displayed_temperature
     return device
 

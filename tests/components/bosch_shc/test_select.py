@@ -14,7 +14,7 @@ from boschshcpy.services_impl import (
 import pytest
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -405,6 +405,32 @@ async def test_thermostat_display_unsupported(
 
     assert hass.states.get(DISPLAY_DIRECTION_ENTITY_ID) is None
     assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    supports_display_direction=True,
+                    supports_displayed_temperature=True,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_display_unknown_initial_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Supported display selects are created even without an initial value."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(DISPLAY_DIRECTION_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
