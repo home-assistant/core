@@ -159,7 +159,7 @@ async def test_bt_offline_mode_steam_boiler_missing_widget(
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for entity_id in (
         f"select.{mock_lamarzocco.serial_number}_steam_level",
