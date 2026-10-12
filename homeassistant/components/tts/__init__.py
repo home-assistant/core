@@ -500,10 +500,24 @@ async def _async_convert_audio(  # noqa: C901
     )
     read_task: asyncio.Task | None = None
     complete = False
+
+    def check_completed_writer() -> None:
+        """Propagate a finalizer failure unless a known child failure is primary."""
+        if (
+            writer_task is not None
+            and writer_task.done()
+            and not writer_task.cancelled()
+            and writer_task.exception() is not None
+            and not (wait_task.done() and wait_task.result() != 0)
+        ):
+            writer_task.result()
+
     try:
         while True:
             if source_read_error is not None:
                 raise source_read_error
+            if input_exhausted:
+                check_completed_writer()
             if (
                 writer_task is not None
                 and not input_exhausted
@@ -538,6 +552,8 @@ async def _async_convert_audio(  # noqa: C901
                 # Do not let a later source close or child failure replace an
                 # error already observed while reading input.
                 raise source_read_error
+            if input_exhausted:
+                check_completed_writer()
             if (
                 writer_task is not None
                 and not input_exhausted
@@ -573,18 +589,30 @@ async def _async_convert_audio(  # noqa: C901
 
         if source_read_error is not None:
             raise source_read_error
+        if input_exhausted:
+            check_completed_writer()
         if not wait_task.done():
             if writer_task is not None and not input_exhausted:
                 # A held source cannot keep a child with closed stdout alive
                 # indefinitely. It may still exit during this brief grace.
                 await asyncio.wait({wait_task}, timeout=0.1)
             if writer_task is None or input_exhausted:
-                # stdout EOF is not process exit. For completed input, wait
-                # for the actual exit code without imposing an arbitrary
-                # timeout; shield the owned wait task from owner cancellation.
-                await asyncio.shield(wait_task)
+                # stdout EOF is not process exit. With completed input a
+                # pending finalizer failure must also wake this process wait.
+                if writer_task is not None and not writer_task.done():
+                    await asyncio.wait(
+                        {wait_task, writer_task}, return_when=asyncio.FIRST_COMPLETED
+                    )
+                    if source_read_error is not None:
+                        raise source_read_error
+                    check_completed_writer()
+                if not wait_task.done():
+                    # A successful close still waits for the actual exit.
+                    await asyncio.shield(wait_task)
         if source_read_error is not None:
             raise source_read_error
+        if input_exhausted:
+            check_completed_writer()
         if not wait_task.done():
             raise HomeAssistantError(
                 "ffmpeg output closed before TTS input was exhausted"

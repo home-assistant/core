@@ -629,7 +629,7 @@ async def test_exhausted_source_close_error_is_propagated(
             assert caught.value is failure
             assert source.pulls == 2
             assert source.closed
-            assert processes[0].returncode == 0
+            assert processes[0].returncode is not None
             assert not any(
                 task.get_name()
                 in (
@@ -643,6 +643,223 @@ async def test_exhausted_source_close_error_is_propagated(
                 for task in asyncio.all_tasks()
             )
     finally:
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+
+
+class _FailingExhaustedClose(AsyncGenerator[bytes]):
+    """An exhausted OS-child input whose close fails after an explicit barrier."""
+
+    def __init__(self) -> None:
+        self.failure = RuntimeError("unique exhausted source close failure")
+        self.pulls = 0
+        self.close_entered = asyncio.Event()
+        self.release_close = asyncio.Event()
+        self.closed = asyncio.Event()
+
+    async def asend(self, value) -> bytes:  # codespell:ignore asend
+        self.pulls += 1
+        if self.pulls == 1:
+            return b"R" * 100  # OS-child ownership substitute, not valid WAV.
+        raise StopAsyncIteration
+
+    async def __anext__(self) -> bytes:
+        return await self.asend(None)  # codespell:ignore asend
+
+    async def athrow(self, *args) -> bytes:
+        raise NotImplementedError
+
+    async def aclose(self) -> None:
+        self.close_entered.set()
+        try:
+            await self.release_close.wait()
+            raise self.failure
+        finally:
+            self.closed.set()
+
+
+@pytest.mark.parametrize("boundary", ["eager", "blocked", "paused", "eof_wait"])
+async def test_failed_exhausted_close_aborts_live_child(
+    ffmpeg_ready: HomeAssistant, boundary: str
+) -> None:
+    """A failed close wakes the owner even after stdout EOF and during a pause."""
+    source = _FailingExhaustedClose()
+    if boundary == "eager":
+        source.release_close.set()
+    first_wait_entered = asyncio.Event()
+    completed_wait_entered = asyncio.Event()
+    completed_wait_suspended = asyncio.Event()
+    empty_stdout_read = asyncio.Event()
+    captured: dict[str, asyncio.Task] = {}
+    spawn_os = asyncio.create_subprocess_exec
+    original_wait = asyncio.wait
+    original_shield = asyncio.shield
+    create_background = ffmpeg_ready.async_create_background_task
+    processes = []
+    first_writer_done = None
+
+    def background(coro, name, eager_start=True):
+        task = create_background(coro, name, eager_start=eager_start)
+        captured[name] = task
+        return task
+
+    async def observed_wait(tasks, *args, **kwargs):
+        nonlocal first_writer_done
+        names = {task.get_name() for task in tasks}
+        if {"tts_ffmpeg_stdout", "tts_ffmpeg_wait"} <= names:
+            if not first_wait_entered.is_set():
+                first_writer_done = captured["tts_ffmpeg_conversion"].done()
+            first_wait_entered.set()
+        entering_completed_wait = (
+            len(tasks) == 2
+            and "tts_ffmpeg_wait" in names
+            and "tts_ffmpeg_conversion" in names
+            and asyncio.current_task() is owner
+        )
+        if entering_completed_wait:
+            completed_wait_entered.set()
+            # A scheduled callback proves the owner has suspended inside the
+            # real wait, without inspecting coroutine implementation frames.
+            asyncio.get_running_loop().call_soon(completed_wait_suspended.set)
+        return await original_wait(tasks, *args, **kwargs)
+
+    def observed_shield(task):
+        if (
+            boundary == "eof_wait"
+            and asyncio.current_task() is owner
+            and task.get_name() == "tts_ffmpeg_wait"
+        ):
+            completed_wait_entered.set()
+        return original_shield(task)
+
+    script = (
+        "import os,sys,time;sys.stdin.buffer.read();os.close(1);time.sleep(30)"
+        if boundary == "eof_wait"
+        else "import os,time;os.write(1,b'PREFIX');time.sleep(30)"
+        if boundary == "paused"
+        else "import time;time.sleep(30)"
+    )
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(sys.executable, "-c", script, **kwargs)
+        if boundary == "eof_wait":
+            assert process.stdout is not None
+            read = process.stdout.read
+
+            async def observed_read(n: int = -1) -> bytes:
+                chunk = await read(n)
+                if not chunk:
+                    empty_stdout_read.set()
+                return chunk
+
+            process.stdout.read = observed_read
+        processes.append(process)
+        return process
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav")
+    owner = None
+    try:
+        with (
+            patch.object(ffmpeg_ready, "async_create_background_task", background),
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch("homeassistant.components.tts.asyncio.wait", observed_wait),
+            patch("homeassistant.components.tts.asyncio.shield", observed_shield),
+        ):
+            if boundary == "paused":
+                assert await asyncio.wait_for(anext(gen), 3) == b"PREFIX"
+                await asyncio.wait_for(source.close_entered.wait(), 3)
+                source.release_close.set()
+                await asyncio.wait_for(source.closed.wait(), 3)
+                owner = asyncio.create_task(anext(gen))
+            else:
+                owner = asyncio.create_task(_collect(gen))
+                await asyncio.wait_for(source.close_entered.wait(), 3)
+                if boundary == "blocked":
+                    await asyncio.wait_for(first_wait_entered.wait(), 3)
+                    assert not captured["tts_ffmpeg_conversion"].done()
+                if boundary == "eof_wait":
+                    await asyncio.wait_for(empty_stdout_read.wait(), 3)
+                    await asyncio.wait_for(completed_wait_entered.wait(), 3)
+                    await asyncio.wait_for(completed_wait_suspended.wait(), 3)
+                    assert not captured["tts_ffmpeg_wait"].done()
+                source.release_close.set()
+            with pytest.raises(RuntimeError) as caught:
+                await _observe(owner, 1.5)
+            assert caught.value is source.failure
+            if boundary == "eager":
+                assert captured["tts_ffmpeg_conversion"].done()
+                assert not first_wait_entered.is_set()
+            elif boundary != "paused":
+                assert first_writer_done is False
+            if boundary == "eof_wait":
+                assert empty_stdout_read.is_set() and completed_wait_entered.is_set()
+            assert source.pulls == 2 and source.closed.is_set()
+            assert processes[0].returncode is not None  # Before harness kill.
+            assert captured["tts_ffmpeg_conversion"].done()
+            assert not any(
+                task.get_name() in ("tts_ffmpeg_stdout", "tts_ffmpeg_wait")
+                and not task.done()
+                for task in asyncio.all_tasks()
+            )
+    finally:
+        source.release_close.set()
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        await gen.aclose()
+
+
+async def test_failed_exhausted_close_keeps_known_child_diagnostic(
+    ffmpeg_ready: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """An actually exited nonzero child stays primary over source close."""
+    source = _FailingExhaustedClose()
+    spawn_os = asyncio.create_subprocess_exec
+    processes = []
+    owner = None
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(
+            sys.executable,
+            "-c",
+            "import os,sys;sys.stdin.buffer.read();os.write(2,b'known child failure\\n');sys.exit(7)",
+            **kwargs,
+        )
+        processes.append(process)
+        return process
+
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        ):
+            owner = asyncio.create_task(
+                _collect(tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav"))
+            )
+            await asyncio.wait_for(source.close_entered.wait(), 3)
+            assert await asyncio.wait_for(processes[0].wait(), 3) == 7
+            assert source.pulls == 2 and not source.closed.is_set()
+            source.release_close.set()
+            with pytest.raises(
+                HomeAssistantError, match="Unexpected error while running ffmpeg"
+            ):
+                await _observe(owner)
+            assert source.closed.is_set()
+            assert any(
+                "known child failure" in record.message for record in caplog.records
+            )
+    finally:
+        source.release_close.set()
         for process in processes:
             if process.returncode is None:
                 process.kill()
