@@ -6,6 +6,7 @@ import probatio
 import pytest
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import (
+    CommunicationError,
     ManagementConnectionError,
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
@@ -344,6 +345,11 @@ async def test_restart_device(hass: HomeAssistant, knx: KNXTestKit) -> None:
             ManagementConnectionError("boom"),
             "restart_device_failed",
             {"error": "boom"},
+        ),
+        (
+            CommunicationError("no confirmation"),
+            "restart_device_failed",
+            {"error": "no confirmation"},
         ),
     ],
 )

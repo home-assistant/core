@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import probatio
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import (
+    CommunicationError,
     ConversionError,
     CouldNotParseAddress,
     ManagementConnectionError,
@@ -362,7 +363,8 @@ async def service_restart_device(call: ServiceCall) -> None:
 
     try:
         await dm_restart(knx_module.xknx, individual_address)
-    # subclasses of ManagementConnectionError first
+    # subclasses of ManagementConnectionError first; dm_restart sends without
+    # waiting for an ack, so raw CommunicationErrors are not wrapped by xknx
     except ManagementConnectionTimeout as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -375,7 +377,7 @@ async def service_restart_device(call: ServiceCall) -> None:
             translation_key="restart_device_refused",
             translation_placeholders=placeholders,
         ) from err
-    except ManagementConnectionError as err:
+    except (ManagementConnectionError, CommunicationError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="restart_device_failed",
