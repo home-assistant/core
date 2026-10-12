@@ -48,7 +48,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'leaving_water_offset',
-        'unique_id': '1ece521b-5401-4a42-acce-6f76fba246aa_climateControlMainZone_leavingWaterOffset',
+        'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -127,7 +127,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 400>,
         'translation_key': 'leaving_water_temperature',
-        'unique_id': '1ece521b-5401-4a42-acce-6f76fba246aa_climateControlMainZone_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -205,7 +205,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'room_temperature',
-        'unique_id': '1ece521b-5401-4a42-acce-6f76fba246aa_climateControlMainZone_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

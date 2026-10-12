@@ -1,9 +1,9 @@
 [
   {
-    "_id": "b84e8af3-310a-4e6e-8e52-295573423485",
+    "_id": "00000000-0000-4000-8000-000000000117",
     "deviceModel": "Altherma",
-    "embeddedId": "c50ad019-9f1e-4334-9043-c4b5bfd020a5",
-    "id": "b84e8af3-310a-4e6e-8e52-295573423485",
+    "embeddedId": "test-embedded-117",
+    "id": "00000000-0000-4000-8000-000000000117",
     "isCloudConnectionUp": {
       "settable": false,
       "value": true
@@ -15,7 +15,7 @@
         "managementPointCategory": "secondary",
         "ipAddress": {
           "settable": false,
-          "value": "192.168.2.13",
+          "value": "192.0.2.20",
           "maxLength": 15
         },
         "isFirmwareUpdateSupported": {

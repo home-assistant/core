@@ -41,7 +41,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'room_temperature',
-        'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

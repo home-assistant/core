@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[mc80z][mc80z]
   dict({
-    'climate.vloerverwarming_leaving_water_offset': dict({
+    'climate.test_floor_heating_leaving_water_offset': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -29,7 +29,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.vloerverwarming_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -48,13 +48,13 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 401>,
         'translation_key': 'leaving_water_offset',
-        'unique_id': '4e19a975-b0e4-4ae1-8439-c037e7d0df01_1_leavingWaterOffset',
+        'unique_id': '00000000-0000-4000-8000-000000000109_1_leavingWaterOffset',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Leaving water offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water offset',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -74,7 +74,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.vloerverwarming_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

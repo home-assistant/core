@@ -1,7 +1,7 @@
 [
   {
-    "_id": "7edb544e-2c53-405b-98bc-3d9392f4d1f9",
-    "id": "7edb544e-2c53-405b-98bc-3d9392f4d1f9",
+    "_id": "00000000-0000-4000-8000-000000000115",
+    "id": "00000000-0000-4000-8000-000000000115",
     "deviceModel": "dx23",
     "isCloudConnectionUp": {
       "value": true,
@@ -19,11 +19,11 @@
           "maxLength": 64
         },
         "ipAddress": {
-          "value": "192.168.0.1",
+          "value": "192.0.2.11",
           "settable": false
         },
         "macAddress": {
-          "value": "00:23:7e:f8:26:4e",
+          "value": "02:00:00:00:01:02",
           "settable": false
         },
         "firmwareVersion": {
@@ -31,7 +31,7 @@
           "settable": false
         },
         "serialNumber": {
-          "value": "165000014",
+          "value": "TEST-SERIAL-0106",
           "settable": false
         },
         "modelInfo": {

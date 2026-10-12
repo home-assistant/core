@@ -1,6 +1,6 @@
 [
   {
-    "_id": "95c2f177-dd7a-4bdc-ad48-1a7f47f34a01",
+    "_id": "00000000-0000-4000-8000-000000000116",
     "type": "dx23",
     "deviceModel": "dx23",
     "isCloudConnectionUp": {
@@ -23,11 +23,11 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.2.42"
+          "value": "192.0.2.21"
         },
         "macAddress": {
           "settable": false,
-          "value": "10:68:38:c4:d3:88"
+          "value": "02:00:00:00:01:05"
         },
         "firmwareVersion": {
           "settable": false,
@@ -51,7 +51,7 @@
         "name": {
           "settable": false,
           "maxLength": 32,
-          "value": "DaikinAP95800"
+          "value": "Test room"
         },
         "isHolidayModeActive": {
           "settable": false,
@@ -521,8 +521,8 @@
         }
       }
     ],
-    "embeddedId": "6ccb3d40-19ce-48d5-a41e-a7799fb65c46",
+    "embeddedId": "test-embedded-114",
     "timestamp": "2024-04-22T18:55:19.308Z",
-    "id": "95c2f177-dd7a-4bdc-ad48-1a7f47f34a01"
+    "id": "00000000-0000-4000-8000-000000000116"
   }
 ]

@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[altherma_firmwareupdate][altherma_firmwareupdate]
   dict({
-    'climate.climate_control_getr422_leaving_water_temperature': dict({
+    'climate.test_climate_control_leaving_water_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -22,7 +22,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.climate_control_getr422_leaving_water_temperature',
+        'entity_id': 'climate.test_climate_control_leaving_water_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -41,13 +41,13 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'leaving_water_temperature',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_climateControlMainZone_leavingWaterTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000106_climateControlMainZone_leavingWaterTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422 Leaving water temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test climate control Leaving water temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.HEAT: 'heat'>,
           ]),
@@ -58,7 +58,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.climate_control_getr422_leaving_water_temperature',
+        'entity_id': 'climate.test_climate_control_leaving_water_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

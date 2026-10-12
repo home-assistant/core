@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 from tests.syrupy import HomeAssistantSnapshotExtension
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures"
-CLIMATE_ENTITY_ID = "climate.werkkamer_room_temperature"
+CLIMATE_ENTITY_ID = "climate.test_office_room_temperature"
 
 FIXTURES = (
     "altherma",
@@ -68,12 +68,7 @@ class SingleFileHomeAssistantSnapshotExtension(
 def _load_gateway_devices(fixture: str) -> list[GatewayDevice]:
     """Load gateway devices from an archived cloud response."""
     fixture_data = json.loads((FIXTURE_PATH / f"{fixture}.json").read_text())
-    response_data = (
-        fixture_data
-        if isinstance(fixture_data, list)
-        else fixture_data["data"]["json_data"]
-    )
-    return [GatewayDevice.from_dict(device) for device in response_data]
+    return [GatewayDevice.from_dict(device) for device in fixture_data]
 
 
 async def _async_setup_fixture(

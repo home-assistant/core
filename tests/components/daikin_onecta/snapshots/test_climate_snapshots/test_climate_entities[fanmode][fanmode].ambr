@@ -68,7 +68,7 @@
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 953>,
         'translation_key': 'room_temperature',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000101_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

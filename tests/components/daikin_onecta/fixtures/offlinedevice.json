@@ -1,7 +1,7 @@
 [
   {
-    "_id": "1c80e348-61c1-4f0d-a8b1-917f2f904529",
-    "id": "1c80e348-61c1-4f0d-a8b1-917f2f904529",
+    "_id": "00000000-0000-4000-8000-000000000104",
+    "id": "00000000-0000-4000-8000-000000000104",
     "deviceModel": "dx4",
     "isCloudConnectionUp": {
       "settable": false,
@@ -30,7 +30,7 @@
         },
         "ipAddress": {
           "settable": false,
-          "value": "192.168.0.0"
+          "value": "192.0.2.10"
         },
         "macAddress": {
           "settable": false,
@@ -551,7 +551,7 @@
       }
     ],
     "type": "dx4",
-    "embeddedId": "81a99bcc-20dd-41c2-af6c-06e2c2c6dbab",
+    "embeddedId": "test-embedded-116",
     "timestamp": "2024-05-11T05:11:02.672Z"
   }
 ]
