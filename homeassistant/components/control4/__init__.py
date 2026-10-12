@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 import functools
 import logging
-import random
 from typing import Any
 
 from aiohttp import client_exceptions
@@ -334,8 +333,8 @@ class RefreshTokensObject:
                 )
             except ConfigEntryNotReady:
                 self.retries += 1
-                delay = random.uniform(0, min(2**self.retries, RETRY_BACKOFF_MAX_SEC))
-                _LOGGER.warning("Token refresh failed, retrying in %.0f seconds", delay)
+                delay = min(2**self.retries, RETRY_BACKOFF_MAX_SEC)
+                _LOGGER.warning("Token refresh failed, retrying in %d seconds", delay)
                 self.entry.runtime_data.cancel_token_refresh_callback = (
                     async_call_later(
                         hass=self.hass, delay=delay, action=self.refresh_tokens
