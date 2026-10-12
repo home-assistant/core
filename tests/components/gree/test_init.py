@@ -63,6 +63,7 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
     """Test gree integration sets up with static IP entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="aabbcc112233",
         data={CONF_IP_ADDRESS: "192.168.1.100"},
     )
     entry.add_to_hass(hass)
@@ -208,3 +209,21 @@ async def test_static_ip_entry_takes_over_discovered_device(
     entity = entity_registry.async_get(entity_ids[0])
     assert entity is not None
     assert entity.config_entry_id == static_entry.entry_id
+
+
+async def test_setup_static_ip_different_device(hass: HomeAssistant) -> None:
+    """Test static IP entry retries when another device answers at the address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbcc112233",
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_device = build_device_mock(ipAddress="192.168.1.100", mac="ddeeff445566")
+
+    with patch(_PATCH_BIND, return_value=mock_device):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

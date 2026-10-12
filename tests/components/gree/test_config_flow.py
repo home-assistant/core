@@ -193,7 +193,7 @@ async def test_manual_step_already_configured(
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_scan_single_instance_allowed(
+async def test_scan_already_configured(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test scan step aborts when a discovery entry already exists."""

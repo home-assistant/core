@@ -35,6 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
             raise ConfigEntryNotReady(
                 f"Unable to connect to Gree device at {ip_address}"
             ) from err
+        if device.device_info.mac != entry.unique_id:
+            raise ConfigEntryNotReady(
+                f"Gree device at {ip_address} has MAC {device.device_info.mac},"
+                f" expected {entry.unique_id}"
+            )
         coordinator = DeviceDataUpdateCoordinator(hass, entry, device)
         await coordinator.async_config_entry_first_refresh()
 
