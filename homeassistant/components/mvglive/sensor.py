@@ -225,6 +225,7 @@ class MVGSensor(SensorEntity):
             )
         except MvgApiError as err:
             _LOGGER.warning("Could not update MVG departures: %s", err)
+            self._attr_available = False
             self._departures = []
             return
 
@@ -234,6 +235,7 @@ class MVGSensor(SensorEntity):
             self._lines,
             self._timeoffset,
         )[: self._number]
+        self._attr_available = True
 
     @property
     @override

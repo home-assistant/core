@@ -20,17 +20,21 @@ from homeassistant.components.mvglive.sensor import (
     PLATFORM_SCHEMA,
     async_setup_platform,
 )
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-from .conftest import TEST_STATION
+from .conftest import TEST_DEPARTURES, TEST_STATION
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+TEST_ENTITY_ID = "sensor.hauptbahnhof"
 
 
 def test_platform_schema_accepts_deprecated_directions() -> None:
@@ -126,7 +130,7 @@ async def test_sensor_options(
         transport_types=[TransportType.UBAHN],
         session=async_get_clientsession(hass),
     )
-    state = hass.states.get("sensor.hauptbahnhof")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state == str(expected_minutes[0])
     assert [
@@ -150,9 +154,62 @@ async def test_sensor_missing_icon(
     ]
     await setup_integration(hass, config_entry)
 
-    state = hass.states.get("sensor.hauptbahnhof")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.attributes["icon"] == "mdi:clock"
+
+
+@pytest.mark.parametrize(
+    ("initial_error", "initial_state"),
+    [
+        pytest.param(None, "5", id="initial_success"),
+        pytest.param(MvgApiError("offline"), STATE_UNAVAILABLE, id="initial_failure"),
+    ],
+)
+async def test_sensor_availability(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mvg_api: dict[str, AsyncMock],
+    freezer: FrozenDateTimeFactory,
+    initial_error: MvgApiError | None,
+    initial_state: str,
+) -> None:
+    """Test availability on API failure, recovery, and empty results."""
+    freezer.move_to("2026-08-19 12:00:00+00:00")
+    departures = [
+        {**TEST_DEPARTURES[0], "time": int(dt_util.utcnow().timestamp()) + 300}
+    ]
+    api = mvg_api["departures_async"]
+    api.return_value = departures
+    api.side_effect = initial_error
+    await setup_integration(hass, config_entry)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == initial_state
+
+    api.side_effect = MvgApiError("offline")
+    await async_update_entity(hass, TEST_ENTITY_ID)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "departures" not in state.attributes
+
+    api.side_effect = None
+    await async_update_entity(hass, TEST_ENTITY_ID)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5"
+    assert len(state.attributes["departures"]) == 1
+
+    api.return_value = []
+    await async_update_entity(hass, TEST_ENTITY_ID)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
