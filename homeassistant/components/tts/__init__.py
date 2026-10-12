@@ -413,6 +413,7 @@ async def _async_convert_audio(  # noqa: C901
     writer_task: asyncio.Task | None = None
     input_exhausted = False
     source_read_error: BaseException | None = None
+    source_failed = asyncio.Event()
     stdin_error: OSError | None = None
     stdin_failed = asyncio.Event()
 
@@ -434,6 +435,7 @@ async def _async_convert_audio(  # noqa: C901
                         break
                     except BaseException as err:
                         source_read_error = err
+                        source_failed.set()
                         raise
                     try:
                         process.stdin.write(chunk)
@@ -476,6 +478,13 @@ async def _async_convert_audio(  # noqa: C901
         _async_ffmpeg_stderr(process.stderr, diagnostic), "tts_ffmpeg_stderr"
     )
     wait_task = hass.async_create_background_task(process.wait(), "tts_ffmpeg_wait")
+    source_failure_task = (
+        hass.async_create_background_task(
+            source_failed.wait(), "tts_ffmpeg_source_failure"
+        )
+        if is_input_gen
+        else None
+    )
     stdin_failure_task = (
         hass.async_create_background_task(
             stdin_failed.wait(), "tts_ffmpeg_stdin_failure"
@@ -513,6 +522,8 @@ async def _async_convert_audio(  # noqa: C901
                 pending.add(wait_task)
             if writer_task is not None and not writer_task.done():
                 pending.add(writer_task)
+            if source_failure_task is not None and not source_failure_task.done():
+                pending.add(source_failure_task)
             if stdin_failure_task is not None and not stdin_failure_task.done():
                 pending.add(stdin_failure_task)
             done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
@@ -586,6 +597,9 @@ async def _async_convert_audio(  # noqa: C901
         await stderr_task
         complete = True
     finally:
+        if source_failure_task is not None:
+            source_failure_task.cancel()
+            await _async_ffmpeg_join(source_failure_task)
         if stdin_failure_task is not None:
             stdin_failure_task.cancel()
             await _async_ffmpeg_join(stdin_failure_task)
@@ -759,8 +773,12 @@ class ResultStream:
         """Get the stream of this result."""
         if self._override_media_path is not None:
             # Overridden
-            async for chunk in self._async_stream_override_result():
-                yield chunk
+            override_audio = self._async_stream_override_result()
+            try:
+                async for chunk in override_audio:
+                    yield chunk
+            finally:
+                await override_audio.aclose()
 
             self.last_used = monotonic()
             return
@@ -834,8 +852,11 @@ class ResultStream:
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
             to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
-        async for chunk in converted_audio:
-            yield chunk
+        try:
+            async for chunk in converted_audio:
+                yield chunk
+        finally:
+            await converted_audio.aclose()
 
     def delete(self) -> None:
         """Remove the result stream from the manager."""

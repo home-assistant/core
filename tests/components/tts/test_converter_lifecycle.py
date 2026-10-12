@@ -6,6 +6,7 @@ import contextlib
 import io
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 from unittest.mock import patch
 import wave
 
@@ -92,6 +93,10 @@ async def test_normal_eof_reaps_and_decodes(
             assert len(pcm) >= 30000
     assert len(processes) == 4  # two converters and two independent decoders
     assert all(process.returncode == 0 for process in processes)
+    assert not any(
+        task.get_name() == "tts_ffmpeg_source_failure" and not task.done()
+        for task in asyncio.all_tasks()
+    )
 
 
 async def test_owner_close_stops_held_source_and_reaps(
@@ -305,7 +310,7 @@ async def test_child_exit_while_source_held_is_not_success(
 
     async def spawn(*args, **kwargs):
         process = await spawn_os(
-            "python",
+            sys.executable,
             "-c",
             f"import sys; sys.stderr.write('exit detail'); sys.exit({exit_code})",
             **kwargs,
@@ -358,7 +363,7 @@ async def test_large_stderr_is_drained_and_logged_bounded(
 
     async def spawn(*args, **kwargs):
         process = await spawn_os(
-            "python",
+            sys.executable,
             "-c",
             "import os,sys; os.write(2, b'A'*250000+b'\\xffend'); sys.exit(3)",
             **kwargs,
@@ -571,6 +576,202 @@ async def test_observed_source_error_survives_failing_close(
         if task is not None:
             with contextlib.suppress(ReadFailed, CloseFailed):
                 await asyncio.wait_for(asyncio.shield(task), 5)
+
+
+@pytest.mark.parametrize("mode", ["held", "suppress_cancel", "cooperative", "eager"])
+async def test_source_pull_failure_wakes_blocked_owner_before_close(
+    ffmpeg_ready: HomeAssistant, mode: str
+) -> None:
+    """An observed pull error wakes an existing wait without its writer finalizer."""
+
+    class PullFailed(Exception):
+        pass
+
+    class Source(AsyncGenerator[bytes]):
+        def __init__(self) -> None:
+            self.error = PullFailed("observed source failure")
+            self.pulls = 0
+            self.pulling = asyncio.Event()
+            self.fail = asyncio.Event()
+            self.closing = asyncio.Event()
+            self.release_close = asyncio.Event()
+            self.closed = asyncio.Event()
+
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
+            self.pulls += 1
+            if self.pulls == 1 and mode != "eager":
+                return b"R" * 32  # Child is an OS substitute, not a WAV decoder.
+            self.pulling.set()
+            if mode != "eager":
+                await self.fail.wait()
+            raise self.error
+
+        async def __anext__(self) -> bytes:
+            return await self.asend(None)  # codespell:ignore asend
+
+        async def athrow(self, *args) -> bytes:
+            raise NotImplementedError
+
+        async def aclose(self) -> None:
+            self.closing.set()
+            if mode in ("held", "suppress_cancel"):
+                try:
+                    await self.release_close.wait()
+                except asyncio.CancelledError:
+                    if mode != "suppress_cancel":
+                        raise
+                    await self.release_close.wait()
+            self.closed.set()
+
+    source = Source()
+    processes = []
+    spawn_os = asyncio.create_subprocess_exec
+
+    async def spawn(*args, **kwargs):
+        # Keep stdout and process exit pending while the source fails.
+        process = await spawn_os(
+            sys.executable, "-c", "import time;time.sleep(30)", **kwargs
+        )
+        processes.append(process)
+        return process
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav")
+    owner = None
+    try:
+        with (
+            patch(
+                "homeassistant.components.tts.ffmpeg.get_ffmpeg_manager",
+                return_value=SimpleNamespace(binary="unused-os-substitute"),
+            ),
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+        ):
+            owner = asyncio.create_task(anext(gen))
+            await asyncio.wait_for(source.pulling.wait(), 3)
+            if mode != "eager":
+                # Observe the actual generator suspended inside asyncio.wait,
+                # not merely the source about to fail under eager scheduling.
+                for _ in range(400):
+                    awaited = gen.ag_await
+                    if awaited is not None and awaited.cr_code.co_name == "wait":
+                        break
+                    await asyncio.sleep(0.005)
+                else:
+                    pytest.fail("converter never entered its blocked wait")
+                assert not owner.done()
+                source.fail.set()
+            await asyncio.wait_for(source.closing.wait(), 3)
+            assert processes[0].returncode is None
+            if mode in ("held", "suppress_cancel"):
+                assert not source.release_close.is_set()
+            with pytest.raises(PullFailed) as raised:
+                await _observe(owner, 1.5)
+            assert raised.value is source.error
+            assert processes[0].returncode is not None
+            assert not any(
+                task.get_name() == "tts_ffmpeg_source_failure" and not task.done()
+                for task in asyncio.all_tasks()
+            )
+            assert not source.release_close.is_set()
+            if mode == "cooperative":
+                assert source.closed.is_set()
+            if mode in ("held", "suppress_cancel"):
+                assert not source.closed.is_set()
+    finally:
+        source.fail.set()
+        source.release_close.set()  # Harness release after outcome/reap assertions.
+        if processes and processes[0].returncode is None:
+            processes[0].kill()
+        for process in processes:
+            await asyncio.wait_for(process.wait(), 5)
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("boundary", ["public", "inner"])
+async def test_converted_override_close_reaps_live_ffmpeg(
+    ffmpeg_ready: HomeAssistant, tmp_path: Path, boundary: str
+) -> None:
+    """Each override owner forwards close to its real, still-live converter."""
+    input_path = tmp_path / "long.wav"
+    with wave.open(str(input_path), "wb") as output:
+        output.setnchannels(1)
+        output.setsampwidth(2)
+        output.setframerate(16000)
+        output.writeframes(b"\x01\x02" * (16000 * 120))
+
+    manager = SimpleNamespace(
+        token_to_stream={},
+        token_to_stream_cleanup=SimpleNamespace(schedule=lambda: None),
+    )
+    stream = tts.ResultStream(
+        hass=ffmpeg_ready,
+        token="override-close",
+        extension="wav",
+        content_type="audio/wav",
+        engine="fixture",
+        use_file_cache=False,
+        language="en",
+        options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+        supports_streaming_input=False,
+        _manager=manager,
+    )
+    stream.async_override_result(input_path)
+    spawn_os = asyncio.create_subprocess_exec
+    convert = tts._async_convert_audio
+    get_inner = tts.ResultStream._async_stream_override_result
+    processes = []
+    converters = []
+    inners = []
+    public = None
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(*args, **kwargs)
+        processes.append(process)
+        return process
+
+    def track_convert(*args, **kwargs):
+        converter = convert(*args, **kwargs)
+        converters.append(converter)
+        return converter
+
+    def track_inner(self):
+        inner = get_inner(self)
+        inners.append(inner)
+        return inner
+
+    try:
+        with (
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch("homeassistant.components.tts._async_convert_audio", track_convert),
+            patch.object(
+                tts.ResultStream, "_async_stream_override_result", track_inner
+            ),
+        ):
+            public = stream.async_stream_result()
+            gen = (
+                public
+                if boundary == "public"
+                else stream._async_stream_override_result()
+            )
+            assert (await asyncio.wait_for(anext(gen), 5)).startswith(b"RIFF")
+            assert len(processes) == len(converters) == 1
+            assert processes[0].returncode is None  # Actual OS child still alive.
+            await asyncio.wait_for(gen.aclose(), 3)
+            assert processes[0].returncode is not None  # Before harness cleanup.
+            assert converters[0].ag_frame is None
+            if boundary == "public":
+                assert len(inners) == 1 and inners[0].ag_frame is None
+    finally:
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        for generator in (public, *inners, *converters):
+            if generator is not None:
+                await generator.aclose()
 
 
 async def test_manager_converted_wrapper_forwards_close(
