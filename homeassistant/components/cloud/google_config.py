@@ -8,10 +8,14 @@ from typing import TYPE_CHECKING, Any, override
 from hass_nabucasa import Cloud
 from hass_nabucasa.google_report_state import ErrorResponse
 
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     AbstractConfig,
-    entity_supported,
+    async_get_entities,
 )
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
@@ -21,6 +25,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_set_assistant_option,
     async_should_expose,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_NAME
 from homeassistant.core import (
     CoreState,
@@ -32,6 +37,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, start
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.setup import async_setup_component
 
@@ -51,6 +57,78 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 CLOUD_GOOGLE = f"{DOMAIN}.{GOOGLE_DOMAIN}"
+
+
+SUPPORTED_DOMAINS = {
+    "alarm_control_panel",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "group",
+    "humidifier",
+    "input_boolean",
+    "input_button",
+    "input_select",
+    "light",
+    "lock",
+    "media_player",
+    "scene",
+    "script",
+    "select",
+    "switch",
+    "vacuum",
+}
+
+SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES = {
+    BinarySensorDeviceClass.DOOR,
+    BinarySensorDeviceClass.GARAGE_DOOR,
+    BinarySensorDeviceClass.LOCK,
+    BinarySensorDeviceClass.MOTION,
+    BinarySensorDeviceClass.OPENING,
+    BinarySensorDeviceClass.PRESENCE,
+    BinarySensorDeviceClass.WINDOW,
+}
+
+SUPPORTED_SENSOR_DEVICE_CLASSES = {
+    SensorDeviceClass.AQI,
+    SensorDeviceClass.CO,
+    SensorDeviceClass.CO2,
+    SensorDeviceClass.HUMIDITY,
+    SensorDeviceClass.PM10,
+    SensorDeviceClass.PM25,
+    SensorDeviceClass.TEMPERATURE,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+}
+
+
+def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return if the entity is supported.
+
+    This is called when migrating from legacy config format to avoid exposing
+    all binary sensors and sensors.
+    """
+    domain = split_entity_id(entity_id)[0]
+    if domain in SUPPORTED_DOMAINS:
+        return True
+
+    try:
+        device_class = get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        # The entity no longer exists
+        return False
+
+    if (
+        domain == BINARY_SENSOR_DOMAIN
+        and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
+    ):
+        return True
+
+    if domain == SENSOR_DOMAIN and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+        return True
+
+    return False
 
 
 @callback
@@ -77,12 +155,12 @@ def _async_should_expose_legacy(
 
     # Backwards compat
     if default_expose is None:
-        return not auxiliary_entity and entity_supported(hass, entity_id)
+        return not auxiliary_entity and _supported_legacy(hass, entity_id)
 
     return (
         not auxiliary_entity
         and split_entity_id(entity_id)[0] in default_expose
-        and entity_supported(hass, entity_id)
+        and _supported_legacy(hass, entity_id)
     )
 
 
@@ -116,22 +194,16 @@ def _async_migrate_entity_settings_v1(
             )
 
 
-@callback
-def _async_migrate_entity_settings_v2(
-    hass: HomeAssistant, config: dict[str, Any]
+async def _async_migrate_entity_settings_v2(
+    hass: HomeAssistant, cloud: Cloud[CloudClient]
 ) -> None:
     """Preserve the pre-migration name of exposed entities as an alias."""
-    entity_config = config.get(CONF_ENTITY_CONFIG) or {}
-    entity_filter: EntityFilter = config[CONF_FILTER]
-    for entity_id in list(er.async_get(hass).entities):
-        if CONF_NAME in entity_config.get(entity_id, {}):
+    config = await cloud.client.get_google_config()
+    for entity in async_get_entities(hass, config):
+        entity_id = entity.entity_id
+        if CONF_NAME in config.entity_config.get(entity_id, {}):
             continue
-        # The UI only offers supported entities, a YAML filter does not
-        if entity_filter.empty_filter:
-            exposed = async_should_expose(hass, CLOUD_GOOGLE, entity_id)
-        else:
-            exposed = entity_filter(entity_id) and entity_supported(hass, entity_id)
-        if exposed:
+        if config.should_expose(entity_id):
             er.async_preserve_compat_name_as_alias(hass, entity_id)
 
 
@@ -168,7 +240,7 @@ async def async_migrate_entity_settings(
         and cloud.is_logged_in
         and prefs.google_enabled
     ):
-        _async_migrate_entity_settings_v2(hass, config)
+        await _async_migrate_entity_settings_v2(hass, cloud)
 
     _LOGGER.info(
         "Finished migration of Google Assistant settings from v%s to v%s",

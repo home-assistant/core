@@ -879,11 +879,11 @@ async def test_google_config_migrate_expose_entity_prefs_default(
         suggested_object_id="unsupported",
     )
 
-    device_tracker = entity_registry.async_get_or_create(
-        "device_tracker",
+    water_heater = entity_registry.async_get_or_create(
+        "water_heater",
         "test",
         "unique",
-        suggested_object_id="device_tracker",
+        suggested_object_id="water_heater",
     )
 
     await cloud_prefs.async_update(
@@ -894,9 +894,9 @@ async def test_google_config_migrate_expose_entity_prefs_default(
 
     cloud_prefs._prefs[PREF_GOOGLE_DEFAULT_EXPOSE] = [
         "binary_sensor",
-        "device_tracker",
         "light",
         "sensor",
+        "water_heater",
     ]
     # The migration runs after start, when registry entities have a state
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -920,7 +920,7 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     assert async_get_entity_settings(hass, sensor_unsupported.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
-    assert async_get_entity_settings(hass, device_tracker.entity_id) == {
+    assert async_get_entity_settings(hass, water_heater.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
 
@@ -928,22 +928,10 @@ async def test_google_config_migrate_expose_entity_prefs_default(
 @pytest.mark.parametrize(
     ("enabled", "logged_in", "subscription_expired", "expected_entity_ids"),
     [
-        pytest.param(
-            True,
-            True,
-            False,
-            ["light.exposed", "water_heater.water_heater"],
-            id="enabled",
-        ),
+        pytest.param(True, True, False, ["light.exposed"], id="enabled"),
         pytest.param(False, True, False, [], id="disabled"),
         pytest.param(True, False, False, [], id="logged_out"),
-        pytest.param(
-            True,
-            True,
-            True,
-            ["light.exposed", "water_heater.water_heater"],
-            id="subscription_expired",
-        ),
+        pytest.param(True, True, True, ["light.exposed"], id="subscription_expired"),
     ],
 )
 async def test_google_config_migrate_entity_names(
@@ -957,11 +945,9 @@ async def test_google_config_migrate_entity_names(
 ) -> None:
     """Test the v4 migration preserves the names of exposed entities as aliases.
 
-    Nothing is preserved for a disabled or logged out Google Assistant, it
-    exposed nothing. An expired subscription still did, so its names are preserved.
+    Nothing is preserved for a disabled or logged out Google Assistant, it exposed
+    nothing. An expired subscription still did, so its names are preserved.
     """
-    hass.set_state(CoreState.not_running)
-
     assert await async_setup_component(hass, "homeassistant", {})
     entity_exposed = entity_registry.async_get_or_create(
         "light", "test", "light_exposed", suggested_object_id="exposed"
@@ -972,71 +958,43 @@ async def test_google_config_migrate_entity_names(
     entity_yaml_name = entity_registry.async_get_or_create(
         "light", "test", "light_yaml_name", suggested_object_id="yaml_name"
     )
-    entity_water_heater = entity_registry.async_get_or_create(
-        "water_heater", "test", "water_heater", suggested_object_id="water_heater"
+    entity_unsupported = entity_registry.async_get_or_create(
+        "device_tracker", "test", "unsupported", suggested_object_id="unsupported"
     )
+    for entity in (
+        entity_exposed,
+        entity_not_exposed,
+        entity_yaml_name,
+        entity_unsupported,
+    ):
+        hass.states.async_set(entity.entity_id, "on")
     expose_entity(hass, entity_exposed.entity_id, True)
     expose_entity(hass, entity_not_exposed.entity_id, False)
     expose_entity(hass, entity_yaml_name.entity_id, True)
-    expose_entity(hass, entity_water_heater.entity_id, True)
+    expose_entity(hass, entity_unsupported.entity_id, True)
 
     await cloud_prefs.async_update(
         google_enabled=enabled,
         google_report_state=False,
         google_settings_version=3,
     )
+    config = GACTIONS_SCHEMA(
+        {"entity_config": {entity_yaml_name.entity_id: {"name": "Configured"}}}
+    )
+    cloud = Mock(is_logged_in=logged_in, subscription_expired=subscription_expired)
+    cloud.client.get_google_config = AsyncMock(
+        return_value=CloudGoogleConfig(hass, config, "mock-user-id", cloud_prefs, cloud)
+    )
     with patch(
         "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
     ) as mock_preserve:
         await google_config.async_migrate_entity_settings(
-            hass,
-            GACTIONS_SCHEMA(
-                {"entity_config": {entity_yaml_name.entity_id: {"name": "Configured"}}}
-            ),
-            cloud_prefs,
-            Mock(is_logged_in=logged_in, subscription_expired=subscription_expired),
+            hass, config, cloud_prefs, cloud
         )
 
     assert mock_preserve.mock_calls == [
         call(hass, entity_id) for entity_id in expected_entity_ids
     ]
-    assert cloud_prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
-
-
-async def test_google_config_migrate_entity_names_yaml_filter(
-    hass: HomeAssistant,
-    cloud_prefs: CloudPreferences,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the v4 migration with a YAML filter only preserves supported entities."""
-    entity_valve = entity_registry.async_get_or_create(
-        "valve", "test", "valve", suggested_object_id="valve"
-    )
-    entity_registry.async_get_or_create(
-        "device_tracker", "test", "tracker", suggested_object_id="tracker"
-    )
-    entity_registry.async_get_or_create(
-        "light", "test", "excluded", suggested_object_id="excluded"
-    )
-
-    await cloud_prefs.async_update(
-        google_enabled=True,
-        google_report_state=False,
-        google_settings_version=3,
-    )
-    with patch(
-        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
-    ) as mock_preserve:
-        await google_config.async_migrate_entity_settings(
-            hass,
-            GACTIONS_SCHEMA(
-                {"filter": {"include_domains": ["valve", "device_tracker"]}}
-            ),
-            cloud_prefs,
-            Mock(is_logged_in=True, subscription_expired=False),
-        )
-
-    assert mock_preserve.mock_calls == [call(hass, entity_valve.entity_id)]
     assert cloud_prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
 
 

@@ -15,7 +15,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
@@ -42,7 +42,7 @@ from .const import (
     STORE_ENTITY_SETTINGS_VERSION,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from .helpers import AbstractConfig, entity_supported
+from .helpers import AbstractConfig, async_get_entities
 from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,21 +97,20 @@ class GoogleConfig(AbstractConfig):
         # We need to initialize the store before calling super
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_initialize()
-        await self._async_migrate_entity_settings()
+        if self._store.entity_settings_version < ENTITY_SETTINGS_VERSION:
+            # Discovery needs the entity states
+            start.async_at_started(self.hass, self._async_migrate_entity_settings)
 
         await super().async_initialize()
 
         self.async_enable_local_sdk()
 
-    async def _async_migrate_entity_settings(self) -> None:
+    async def _async_migrate_entity_settings(self, _: HomeAssistant) -> None:
         """Migrate the entity settings to the current version."""
-        if self._store.entity_settings_version == ENTITY_SETTINGS_VERSION:
-            return
         # v2: preserve the pre-migration name of exposed entities as an alias
-        for entity_id in list(er.async_get(self.hass).entities):
-            if CONF_NAME in self.entity_config.get(
-                entity_id, {}
-            ) or not entity_supported(self.hass, entity_id):
+        for entity in async_get_entities(self.hass, self):
+            entity_id = entity.entity_id
+            if CONF_NAME in self.entity_config.get(entity_id, {}):
                 continue
             if self.should_expose(entity_id):
                 er.async_preserve_compat_name_as_alias(self.hass, entity_id)

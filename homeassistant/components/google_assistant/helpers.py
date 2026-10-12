@@ -15,21 +15,8 @@ from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import webhook
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, EntityStateAttribute
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Context,
-    HomeAssistant,
-    State,
-    callback,
-    split_entity_id,
-)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -37,7 +24,6 @@ from homeassistant.helpers import (
     intent,
     start,
 )
-from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.redact import partial_redact
@@ -489,52 +475,6 @@ class RequestData:
     def is_local_request(self):
         """Return if this is a local request."""
         return self.source == SOURCE_LOCAL
-
-
-SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES = {
-    BinarySensorDeviceClass.DOOR,
-    BinarySensorDeviceClass.GARAGE_DOOR,
-    BinarySensorDeviceClass.LOCK,
-    BinarySensorDeviceClass.MOTION,
-    BinarySensorDeviceClass.OPENING,
-    BinarySensorDeviceClass.PRESENCE,
-    BinarySensorDeviceClass.WINDOW,
-}
-
-SUPPORTED_SENSOR_DEVICE_CLASSES = {
-    SensorDeviceClass.AQI,
-    SensorDeviceClass.CO,
-    SensorDeviceClass.CO2,
-    SensorDeviceClass.HUMIDITY,
-    SensorDeviceClass.PM10,
-    SensorDeviceClass.PM25,
-    SensorDeviceClass.TEMPERATURE,
-    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-}
-
-
-def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the entity domain and device class are supported.
-
-    This approximates discovery from the registry, without needing a state.
-    """
-    domain = split_entity_id(entity_id)[0]
-    if domain in DOMAIN_TO_GOOGLE_TYPES and domain not in (
-        BINARY_SENSOR_DOMAIN,
-        SENSOR_DOMAIN,
-    ):
-        return True
-
-    try:
-        device_class = get_device_class(hass, entity_id)
-    except HomeAssistantError:
-        # The entity no longer exists
-        return False
-    if domain == BINARY_SENSOR_DOMAIN:
-        return device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
-    if domain == SENSOR_DOMAIN:
-        return device_class in SUPPORTED_SENSOR_DEVICE_CLASSES
-    return (domain, device_class) in DEVICE_CLASS_TO_GOOGLE_TYPES
 
 
 def get_google_type(domain, device_class):

@@ -719,7 +719,7 @@ async def test_async_get_users(
                     },
                 }
             },
-            [call(ANY, "light.exposed"), call(ANY, "valve.valve")],
+            [call(ANY, "light.exposed")],
             id="existing_store_migrates",
         ),
         pytest.param({}, [], id="new_store_has_nothing_to_migrate"),
@@ -733,26 +733,25 @@ async def test_google_config_migrate_entity_names(
     expected_calls: list[Any],
 ) -> None:
     """Test the entity settings migration preserves exposed entity names once."""
-    entity_registry.async_get_or_create(
+    exposed = entity_registry.async_get_or_create(
         "light", "test", "exposed", suggested_object_id="exposed"
     )
-    entity_registry.async_get_or_create(
+    yaml_name = entity_registry.async_get_or_create(
         "light", "test", "yaml_name", suggested_object_id="yaml_name"
     )
-    entity_registry.async_get_or_create(
+    not_exposed = entity_registry.async_get_or_create(
         "switch", "test", "not_exposed", suggested_object_id="not_exposed"
     )
-    entity_registry.async_get_or_create(
+    unsupported = entity_registry.async_get_or_create(
         "device_tracker", "test", "unsupported", suggested_object_id="unsupported"
     )
-    entity_registry.async_get_or_create(
-        "valve", "test", "valve", suggested_object_id="valve"
-    )
+    for entity in (exposed, yaml_name, not_exposed, unsupported):
+        hass.states.async_set(entity.entity_id, "on")
     hass_storage.update(storage)
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
-            "exposed_domains": ["light", "device_tracker", "valve"],
+            "exposed_domains": ["light", "device_tracker"],
             "entity_config": {"light.yaml_name": {"name": "Configured"}},
         }
     )
@@ -761,6 +760,7 @@ async def test_google_config_migrate_entity_names(
         "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
     ) as mock_preserve:
         await GoogleConfig(hass, config).async_initialize()
+        await hass.async_block_till_done()
     assert mock_preserve.mock_calls == expected_calls
     assert hass_storage["google_assistant"]["data"]["entity_settings_version"] == 2
 
@@ -769,4 +769,5 @@ async def test_google_config_migrate_entity_names(
         "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
     ) as mock_preserve:
         await GoogleConfig(hass, config).async_initialize()
+        await hass.async_block_till_done()
     assert mock_preserve.mock_calls == []

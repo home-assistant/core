@@ -15,7 +15,7 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.typing import ConfigType
 
 from .auth import Auth
@@ -31,7 +31,7 @@ from .const import (
     EVENT_ALEXA_SMART_HOME,
 )
 from .diagnostics import async_redact_auth_data
-from .entities import entity_supported
+from .entities import async_get_entities
 from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
@@ -59,17 +59,16 @@ class AlexaConfig(AbstractConfig):
     async def async_initialize(self) -> None:
         """Initialize the config and migrate the entity settings."""
         await super().async_initialize()
-        await self._async_migrate_entity_settings()
+        if self._store.entity_settings_version < ENTITY_SETTINGS_VERSION:
+            # Discovery needs the entity states
+            start.async_at_started(self.hass, self._async_migrate_entity_settings)
 
-    async def _async_migrate_entity_settings(self) -> None:
+    async def _async_migrate_entity_settings(self, _: HomeAssistant) -> None:
         """Migrate the entity settings to the current version."""
-        if self._store.entity_settings_version == ENTITY_SETTINGS_VERSION:
-            return
         # v2: preserve the pre-migration name of exposed entities as an alias
-        for entity_id in list(er.async_get(self.hass).entities):
-            if CONF_NAME in self.entity_config.get(
-                entity_id, {}
-            ) or not entity_supported(self.hass, entity_id):
+        for entity in async_get_entities(self.hass, self):
+            entity_id = entity.entity_id
+            if CONF_NAME in self.entity_config.get(entity_id, {}):
                 continue
             if self.should_expose(entity_id):
                 er.async_preserve_compat_name_as_alias(self.hass, entity_id)

@@ -26,10 +26,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.components.alert import DOMAIN as ALERT_DOMAIN
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.climate import (
@@ -67,7 +64,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
@@ -83,10 +80,9 @@ from homeassistant.const import (
     UnitOfTemperature,
     __version__,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er, intent, network
-from homeassistant.helpers.entity import entity_sources, get_device_class
+from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
@@ -407,43 +403,6 @@ class AlexaEntity:
         result["capabilities"] = capabilities
 
         return result
-
-
-SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES = {
-    BinarySensorDeviceClass.DOOR,
-    BinarySensorDeviceClass.GARAGE_DOOR,
-    BinarySensorDeviceClass.MOTION,
-    BinarySensorDeviceClass.OPENING,
-    BinarySensorDeviceClass.PRESENCE,
-    BinarySensorDeviceClass.WINDOW,
-}
-
-SUPPORTED_SENSOR_DEVICE_CLASSES = {
-    SensorDeviceClass.TEMPERATURE,
-}
-
-
-def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the entity domain and device class are supported.
-
-    This approximates discovery from the registry, without needing a state.
-    """
-    domain = split_entity_id(entity_id)[0]
-    if domain not in ENTITY_ADAPTERS:
-        return False
-    if domain not in (BINARY_SENSOR_DOMAIN, EVENT_DOMAIN, SENSOR_DOMAIN):
-        return True
-
-    try:
-        device_class = get_device_class(hass, entity_id)
-    except HomeAssistantError:
-        # The entity no longer exists
-        return False
-    if domain == BINARY_SENSOR_DOMAIN:
-        return device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
-    if domain == EVENT_DOMAIN:
-        return device_class == event.EventDeviceClass.DOORBELL
-    return device_class in SUPPORTED_SENSOR_DEVICE_CLASSES
 
 
 @callback
