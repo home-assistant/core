@@ -15,7 +15,7 @@ The manager:
 - Releases subscriptions, collections, coordinators, and tasks on unload.
 
 Device libraries decode payloads, and device integrations create entities from
-coordinators. Provider integrations own backend transport setup and reconnection.
+coordinators. Connection integrations own backend transport setup and reconnection.
 """
 
 import asyncio
