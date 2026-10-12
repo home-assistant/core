@@ -44,6 +44,10 @@ _AUTO_PERIOD_MAX_SPAN: list[tuple[timedelta, _Period]] = [
     (timedelta(days=62), "day"),
     (timedelta(days=366), "week"),
 ]
+_UNIT_MISMATCH = (
+    "Statistics are recorded in {unit}, which cannot be converted to the unit "
+    f"of the entity. Use source '{SOURCE_STATE_CHANGES}' instead."
+)
 _NO_STATISTICS = f"No statistics recorded. Use source '{SOURCE_STATE_CHANGES}' instead."
 
 
@@ -106,18 +110,21 @@ def _get_statistics(
             types.append("mean")
         if meta["has_sum"]:
             types.append("change")
-        # Request the stored unit so the reported unit is always correct.
-        units = (
-            {meta["unit_class"]: meta["unit_of_measurement"]}
-            if meta["unit_class"] and meta["unit_of_measurement"]
-            else None
+        # Statistics are converted to the unit of the current state when possible.
+        unit = statistics.get_display_unit(
+            hass, entity_id, meta["unit_class"], meta["unit_of_measurement"]
         )
+        if (state := hass.states.get(entity_id)) and state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT
+        ) != unit:
+            result[entity_id] = {"error": _UNIT_MISMATCH.format(unit=unit)}
+            continue
         rows = statistics.statistics_during_period(
-            hass, start_time, end_time, {entity_id}, period, units, set(types)
+            hass, start_time, end_time, {entity_id}, period, None, set(types)
         ).get(entity_id, [])
         entry: dict[str, Any] = {}
-        if meta["unit_of_measurement"]:
-            entry["unit"] = meta["unit_of_measurement"]
+        if unit:
+            entry["unit"] = unit
         entry["csv"] = _to_csv(
             ["start", *types],
             [

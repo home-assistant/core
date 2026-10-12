@@ -309,3 +309,59 @@ async def test_get_statistics(
 
     assert result.error is False
     assert result.data == snapshot
+
+
+@pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
+@pytest.mark.parametrize(
+    ("entity_id", "unit", "expected"),
+    [
+        pytest.param(
+            ENTITY_ID,
+            "°F",
+            {
+                "unit": "°F",
+                "total": 24,
+                "csv": "start,mean,min,max\n2026-10-12 04:00:00,74.6,158.0,161.6\n",
+            },
+            id="converted",
+        ),
+        pytest.param(
+            ENERGY_ENTITY_ID,
+            "Wh",
+            {
+                "unit": "Wh",
+                "total": 24,
+                "csv": "start,change\n2026-10-12 04:00:00,1500.0\n",
+            },
+            id="converted_sum",
+        ),
+        pytest.param(
+            ENERGY_ENTITY_ID,
+            "W",
+            {
+                "error": "Statistics are recorded in kWh, which cannot be "
+                "converted to the unit of the entity. Use source "
+                "'state_changes' instead."
+            },
+            id="not_convertible",
+        ),
+    ],
+)
+async def test_statistics_state_unit(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_id: str,
+    unit: str,
+    expected: JsonObjectType,
+) -> None:
+    """Test statistics are reported in the unit of the entity's state."""
+    hass.states.async_set(entity_id, "1", {"unit_of_measurement": unit})
+    tool = GetHistoryTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_ids": [entity_id], "limit": 1}),
+        llm_context,
+    )
+
+    assert result.error is False
+    assert result.data["result"]["entities"] == {entity_id: expected}
