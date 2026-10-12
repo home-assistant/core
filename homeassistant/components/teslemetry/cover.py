@@ -1,6 +1,8 @@
 """Cover platform for Teslemetry integration."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass
+from functools import partial
 from itertools import chain
 from typing import Any, Self, override
 
@@ -38,6 +40,11 @@ from .models import TeslemetryVehicleData
 OPEN = 1
 CLOSED = 0
 TONNEAU_CLOSED = "Closed"
+TONNEAU_BLUETOOTH_COMMANDS = {
+    ClosureState.OPEN: "open_tonneau",
+    ClosureState.CLOSE: "close_tonneau",
+    ClosureState.STOP: "stop_tonneau",
+}
 
 PARALLEL_UPDATES = 0
 
@@ -571,6 +578,14 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
         self.async_write_ha_state()
 
 
+class _TonneauBackend:
+    """One backend's tonneau command under the name VehicleRouter dispatches."""
+
+    def __init__(self, command: Callable[[], Awaitable[dict[str, Any]]]) -> None:
+        """Initialize the backend."""
+        self.move_tonneau = command
+
+
 class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the Cybertruck tonneau cover entity."""
 
@@ -584,7 +599,7 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open tonneau."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.closure(tonneau=ClosureState.OPEN))
+        await handle_vehicle_command(self._move_tonneau(ClosureState.OPEN))
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -592,7 +607,7 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close tonneau."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.closure(tonneau=ClosureState.CLOSE))
+        await handle_vehicle_command(self._move_tonneau(ClosureState.CLOSE))
         self._attr_is_closed = True
         self.async_write_ha_state()
 
@@ -600,9 +615,23 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop tonneau."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.closure(tonneau=ClosureState.STOP))
+        await handle_vehicle_command(self._move_tonneau(ClosureState.STOP))
         self._attr_is_closed = False
         self.async_write_ha_state()
+
+    def _move_tonneau(self, state: ClosureState) -> Awaitable[dict[str, Any]]:
+        """Return the tonneau command, sent over Bluetooth when it is in range."""
+        if not isinstance(self.api, VehicleRouter):
+            return self.api.closure(tonneau=state)
+        # Bluetooth has no closure command, so pair its tonneau command with the cloud one.
+        command: Awaitable[dict[str, Any]] = VehicleRouter(
+            _TonneauBackend(
+                getattr(self.api.primary, TONNEAU_BLUETOOTH_COMMANDS[state])
+            ),
+            _TonneauBackend(partial(self.api.secondary.closure, tonneau=state)),
+            health=self.api.is_healthy,
+        ).move_tonneau()
+        return command
 
 
 class TeslemetryStreamingTonneauEntity(
