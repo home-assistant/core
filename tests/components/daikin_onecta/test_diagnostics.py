@@ -37,6 +37,32 @@ async def test_diagnostics(
     config_entry.runtime_data.api.client.get_gateway_devices.assert_not_awaited()
 
 
+async def test_diagnostics_redacts_serialized_product_identifiers(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Redact Altherma product identifiers without requesting cloud data."""
+    await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
+    api = config_entry.runtime_data.api
+    api.client.get_gateway_devices = AsyncMock()
+    api.client.get_sites = AsyncMock()
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
+
+    point = next(
+        point
+        for device in diagnostics["devices"]
+        for point in device["management_points"]
+        if "sgtin" in point["characteristics"]
+    )
+    assert point["characteristics"]["sgtin"] == REDACTED
+    api.client.get_gateway_devices.assert_not_awaited()
+    api.client.get_sites.assert_not_awaited()
+
+
 async def test_diagnostics_redacts_gateway_ssids(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

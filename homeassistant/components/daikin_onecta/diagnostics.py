@@ -20,6 +20,7 @@ TO_REDACT = {
     "refresh_token",
     "serialNumber",
     "serial_number",
+    "sgtin",
     "ssid",
     "token",
     "unique_id",
