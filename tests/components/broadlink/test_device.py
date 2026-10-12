@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-import broadlink.exceptions as blke
+import broadlink_async.exceptions as blke
 import pytest
 
 from homeassistant.components.broadlink.const import BROADLINK_DATA, DOMAIN

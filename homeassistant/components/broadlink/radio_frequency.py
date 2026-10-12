@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import TICK
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import TICK
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
