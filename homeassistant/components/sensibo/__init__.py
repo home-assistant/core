@@ -5,7 +5,7 @@ from pysensibo.exceptions import AuthenticationError
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> None:
     """Set up Sensibo from a config entry."""
 
     coordinator = SensiboDataUpdateCoordinator(hass, entry)
@@ -59,15 +59,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> None:
     """Unload Sensibo config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="unload_platforms_failed",
+        )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> None:
     """Migrate old entry."""
     # Change entry unique id from api_key to username
     if entry.version == 1:
@@ -98,8 +100,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
             unique_id=new_unique_id,
             version=2,
         )
-
-    return True
 
 
 async def async_remove_config_entry_device(

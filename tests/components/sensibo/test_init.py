@@ -44,6 +44,18 @@ async def test_load_unload_entry(hass: HomeAssistant, mock_client: MagicMock) ->
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_unload_entry_fails(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+    """Test unload config entry fails when platforms fail to unload."""
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(load_int.entry_id)
+        await hass.async_block_till_done()
+
+    assert load_int.state is ConfigEntryState.FAILED_UNLOAD
+    assert load_int.reason == "Failed to unload one or more platforms"
+
+
 async def test_migrate_entry(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
