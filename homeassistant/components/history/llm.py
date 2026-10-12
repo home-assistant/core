@@ -10,7 +10,6 @@ import probatio
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.recorder import get_instance, statistics
 from homeassistant.components.recorder.models import StatisticMeanType
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.llm import (
@@ -46,10 +45,6 @@ _AUTO_PERIOD_MAX_SPAN: list[tuple[timedelta, _Period]] = [
     (timedelta(days=62), "day"),
     (timedelta(days=366), "week"),
 ]
-_UNIT_MISMATCH = (
-    "Statistics are recorded in {unit}, which cannot be converted to the unit "
-    "of the entity."
-)
 _NO_STATISTICS = "No statistics are recorded for this entity."
 
 
@@ -108,11 +103,6 @@ def _get_statistics(
         unit = statistics.get_display_unit(
             hass, entity_id, meta["unit_class"], meta["unit_of_measurement"]
         )
-        if (state := hass.states.get(entity_id)) and state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
-        ) != unit:
-            result[entity_id] = {"error": _UNIT_MISMATCH.format(unit=unit)}
-            continue
         rows = statistics.statistics_during_period(
             hass, start_time, end_time, {entity_id}, period, None, set(types)
         ).get(entity_id, [])
@@ -152,7 +142,8 @@ class GetHistoryTool(Tool):
         "one period, such as the mean, min and max of a temperature or the change "
         "of an energy meter. Statistics are only available for entities with "
         "numeric statistics (sensors with a state class) and only cover completed "
-        "periods. Values are in the unit of the entity."
+        "periods. Values are converted to the unit of the entity when possible. "
+        "'unit' gives the unit of the values."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False

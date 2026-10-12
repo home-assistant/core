@@ -283,10 +283,7 @@ async def test_get_statistics(
         pytest.param(
             ENERGY_ENTITY_ID,
             "W",
-            {
-                "error": "Statistics are recorded in kWh, which cannot be "
-                "converted to the unit of the entity."
-            },
+            {"unit": "kWh", "csv": "start,change\n2026-10-12T04:00:00-07:00,1.5\n"},
             id="not_convertible",
         ),
     ],
@@ -298,7 +295,7 @@ async def test_statistics_state_unit(
     unit: str,
     expected: JsonObjectType,
 ) -> None:
-    """Test statistics are reported in the unit of the entity's state."""
+    """Test statistics are converted to the unit of the entity when possible."""
     hass.states.async_set(entity_id, "1", {"unit_of_measurement": unit})
     tool = GetHistoryTool()
     result = await tool.async_call(
