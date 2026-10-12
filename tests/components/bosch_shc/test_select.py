@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from boschshcpy import SHCRoomThermostat2
 from boschshcpy.services_impl import (
     DisplayDirection,
     DisplayedTemperatureConfiguration,
@@ -404,3 +405,43 @@ async def test_thermostat_display_unsupported(
 
     assert hass.states.get(DISPLAY_DIRECTION_ENTITY_ID) is None
     assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    spec=SHCRoomThermostat2,
+                    display_direction=DisplayDirection.Direction.NORMAL,
+                    displayed_temperature=DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_2_display_selects(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Room Thermostat II gets the display selects and writes to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.roomthermostats[0]
+    entity_id = "select.thermostat_gen2_display_orientation"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "normal"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, "option": "reversed"},
+        blocking=True,
+    )
+    assert device.display_direction == DisplayDirection.Direction.REVERSED
+    assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is not None

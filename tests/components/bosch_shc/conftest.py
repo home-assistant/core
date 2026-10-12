@@ -31,6 +31,7 @@ from boschshcpy import (
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCPresenceSimulationSystem,
+    SHCRoomThermostat2,
     SHCShutterContact,
     SHCShutterContact2,
     SHCShutterContact2Plus,
@@ -453,9 +454,10 @@ def thermostat_gen2_device(
     display_direction: DisplayDirection.Direction | None = None,
     displayed_temperature: DisplayedTemperatureConfiguration.DisplayedTemperature
     | None = None,
+    spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
-    device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
+    device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
     device.id = device_id
     device.root_device_id = "test-mac"

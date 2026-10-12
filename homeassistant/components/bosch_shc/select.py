@@ -247,7 +247,6 @@ async def async_setup_entry(
         )
         for thermostat in thermostats
         if thermostat.supports_display_direction
-        and thermostat.display_direction is not None
     )
     async_add_entities(
         SHCSelect(
@@ -259,7 +258,6 @@ async def async_setup_entry(
         )
         for thermostat in thermostats
         if thermostat.supports_displayed_temperature
-        and thermostat.displayed_temperature is not None
     )
 
 
