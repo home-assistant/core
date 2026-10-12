@@ -1,5 +1,6 @@
 """Tests for the Samsung Infrared climate platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from infrared_protocols.commands.samsung_ac import (
@@ -470,3 +471,70 @@ async def test_samsung_infrared_climate_turn_on_after_restart_resumes_last_mode(
 
         sent_command = mock_send_command.call_args[0][0]
         assert sent_command.hvac_mode == SamsungAC0292HvacMode.HEAT
+
+
+@pytest.mark.parametrize(
+    ("units", "restored_attributes", "expected_native", "expected_displayed"),
+    [
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {ATTR_TEMPERATURE: 154, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            24,
+            75,
+            id="out_of_range_falls_back_to_default",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {ATTR_TEMPERATURE: 20, "temperature_unit": "invalid"},
+            24,
+            24,
+            id="invalid_unit_falls_back_to_default",
+        ),
+    ],
+)
+async def test_samsung_infrared_climate_restore_temperature_falls_back_to_default(
+    hass: HomeAssistant,
+    units: UnitSystem,
+    restored_attributes: dict[str, Any],
+    expected_native: int,
+    expected_displayed: float,
+) -> None:
+    """Test an out-of-range or unconvertible restored temperature keeps the default."""
+    hass.config.units = units
+    remote_entity_id = "remote.living_room_ir"
+    hass.states.async_set(remote_entity_id, STATE_ON)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "infrared_emitter_entity_id": remote_entity_id,
+            "device_type": "ac",
+        },
+        unique_id="samsung_ir_ac_test",
+    )
+    entry.add_to_hass(hass)
+
+    mock_restore_cache(
+        hass, [State("climate.samsung_ac", HVACMode.OFF, restored_attributes)]
+    )
+
+    with patch(
+        "homeassistant.components.samsung_infrared.climate.SamsungIrClimate._send_command",
+        new_callable=AsyncMock,
+    ) as mock_send_command:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("climate.samsung_ac")
+        assert state is not None
+        assert state.attributes[ATTR_TEMPERATURE] == expected_displayed
+
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.samsung_ac", ATTR_HVAC_MODE: HVACMode.COOL},
+            blocking=True,
+        )
+
+        mock_send_command.assert_called_once()
+        assert mock_send_command.call_args[0][0].target_temperature == expected_native
