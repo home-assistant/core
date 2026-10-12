@@ -152,6 +152,8 @@ class _DeviceInfoMapping:
     if TYPE_CHECKING:
         # The mapping keys, in field declaration order, set by _device_info_fields
         _field_names: ClassVar[tuple[str, ...]]
+        __required_keys__: ClassVar[frozenset[str]]
+        __optional_keys__: ClassVar[frozenset[str]]
 
         # Set by the @attr.s decorator, declared for _device_info_fields
         __attrs_attrs__: ClassVar[tuple[attr.Attribute[Any], ...]]
@@ -247,6 +249,11 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
 ) -> type[_DeviceInfoT]:
     """Cache the field names a device info exposes as mapping keys."""
     cls._field_names = tuple(field.name for field in cls.__attrs_attrs__)
+    # Integrations read these TypedDict attributes to check for a field
+    cls.__required_keys__ = frozenset(
+        field.name for field in cls.__attrs_attrs__ if field.default is attr.NOTHING
+    )
+    cls.__optional_keys__ = frozenset(cls._field_names) - cls.__required_keys__
     return cls
 
 
