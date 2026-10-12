@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from boschshcpy import SHCRoomThermostat2, SHCWallThermostat
 import pytest
 
 from homeassistant.components.number import (
@@ -399,3 +400,39 @@ async def test_thermostat_offset_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(OFFSET_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("device_buckets", "entity_id"),
+    [
+        (
+            {
+                "wallthermostats": [
+                    thermostat_device(offset=1.0, spec=SHCWallThermostat)
+                ]
+            },
+            OFFSET_ENTITY_ID,
+        ),
+        (
+            {
+                "roomthermostats": [
+                    thermostat_device(offset=1.0, spec=SHCRoomThermostat2)
+                ]
+            },
+            OFFSET_ENTITY_ID,
+        ),
+    ],
+    indirect=["device_buckets"],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_other_thermostat_families_offset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Wall Thermostat and Room Thermostat II also get the offset number."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1.0"

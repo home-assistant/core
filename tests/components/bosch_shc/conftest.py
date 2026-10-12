@@ -424,9 +424,10 @@ def thermostat_device(
     supports_silentmode: bool = False,
     silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
     offset: float | None = None,
+    spec: type[SHCThermostat] = SHCThermostat,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
-    device = create_autospec(SHCThermostat, instance=True, spec_set=True)
+    device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
     device.id = device_id
     device.root_device_id = "test-mac"
@@ -436,11 +437,12 @@ def thermostat_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
-    device.child_lock = child_lock
-    device.position = position
-    device.valvestate = valvestate
-    device.supports_silentmode = supports_silentmode
-    device.silentmode = silentmode
+    if spec is SHCThermostat:
+        device.child_lock = child_lock
+        device.position = position
+        device.valvestate = valvestate
+        device.supports_silentmode = supports_silentmode
+        device.silentmode = silentmode
     device.supports_temperature_offset = offset is not None
     device.offset = offset
     device.min_offset = -5.0
