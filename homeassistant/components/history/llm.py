@@ -66,9 +66,9 @@ def _auto_period(span: timedelta) -> _Period:
 
 
 def _format_time(timestamp: float) -> str:
-    """Format a timestamp as local time."""
-    return dt_util.as_local(dt_util.utc_from_timestamp(timestamp)).strftime(
-        "%Y-%m-%d %H:%M:%S"
+    """Format a timestamp as a local ISO 8601 datetime."""
+    return dt_util.as_local(dt_util.utc_from_timestamp(timestamp)).isoformat(
+        timespec="seconds"
     )
 
 
@@ -268,8 +268,8 @@ class GetHistoryTool(Tool):
     title = "Get history"
     description = (
         "Retrieve the recorded history of one or more entities as CSV, with times "
-        "in local time. Use this to answer questions about past values, when "
-        "something changed, or how a value evolved over time. "
+        "as ISO 8601 datetimes in local time. Use this to answer questions about "
+        "past values, when something changed, or how a value evolved over time. "
         f"Source '{SOURCE_STATISTICS}' (default) returns aggregated values per "
         "period, such as the mean, min and max of a temperature or the change of "
         "an energy meter. It is only available for entities with numeric "
@@ -373,7 +373,6 @@ class GetHistoryTool(Tool):
             )
 
         result: JsonObjectType = {
-            "timezone": hass.config.time_zone,
             "source": args["source"],
         }
         if args["source"] == SOURCE_STATISTICS:

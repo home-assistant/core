@@ -43,8 +43,9 @@ def llm_context() -> llm.LLMContext:
 
 @pytest.fixture
 async def recorded_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    """Record a series of states, one hour apart, ending at 2026-10-12 12:00 UTC."""
-    freezer.move_to("2026-10-12 08:00:00+00:00")
+    """Record a series of states, one hour apart, starting at 2026-10-12 08:00 UTC."""
+    # Microseconds check that times are returned with second precision.
+    freezer.move_to("2026-10-12 08:00:00.123456+00:00")
     assert await async_setup_component(hass, history.DOMAIN, {})
     hass.states.async_set(OTHER_ENTITY_ID, "45")
     for value in ("18.0", "19.5", "21.0", "20.5"):
@@ -210,10 +211,11 @@ async def test_call_through_api(
     assert result == llm.ToolResult(
         data={
             "result": {
-                "timezone": "US/Pacific",
                 "source": "state_changes",
                 "entities": {
-                    OTHER_ENTITY_ID: {"csv": "time,state\n2026-10-12 01:00:00,45\n"}
+                    OTHER_ENTITY_ID: {
+                        "csv": "time,state\n2026-10-12T01:00:00-07:00,45\n"
+                    }
                 },
             }
         }
@@ -250,7 +252,7 @@ async def test_get_state_changes(
     tool_args: JsonObjectType,
 ) -> None:
     """Test getting the state changes of entities."""
-    assert dt_util.utcnow().isoformat() == "2026-10-12T12:00:00+00:00"
+    assert dt_util.utcnow().isoformat() == "2026-10-12T12:00:00.123456+00:00"
     tool = GetHistoryTool()
     result = await tool.async_call(
         hass,
@@ -319,7 +321,7 @@ async def test_get_statistics(
             {
                 "unit": "°F",
                 "total": 24,
-                "csv": "start,mean,min,max\n2026-10-12 04:00:00,74.6,158.0,161.6\n",
+                "csv": "start,mean,min,max\n2026-10-12T04:00:00-07:00,74.6,158.0,161.6\n",
             },
             id="converted",
         ),
@@ -329,7 +331,7 @@ async def test_get_statistics(
             {
                 "unit": "Wh",
                 "total": 24,
-                "csv": "start,change\n2026-10-12 04:00:00,1500.0\n",
+                "csv": "start,change\n2026-10-12T04:00:00-07:00,1500.0\n",
             },
             id="converted_sum",
         ),
@@ -372,17 +374,17 @@ async def test_statistics_state_unit(
         pytest.param(
             False,
             "time,state,current_position\n"
-            "2026-10-12 01:00:00,open,30\n"
-            "2026-10-12 02:00:00,open,80\n"
-            "2026-10-12 04:00:00,closed,0\n",
+            "2026-10-12T01:00:00-07:00,open,30\n"
+            "2026-10-12T02:00:00-07:00,open,80\n"
+            "2026-10-12T04:00:00-07:00,closed,0\n",
             id="significant_attributes",
         ),
         pytest.param(
             True,
             "time,state,current_position,attributes\n"
-            '2026-10-12 01:00:00,open,30,"{""current_position"":30}"\n'
-            '2026-10-12 02:00:00,open,80,"{""current_position"":80}"\n'
-            '2026-10-12 04:00:00,closed,0,"{""current_position"":0,""friendly_name"":""Garage""}"\n',
+            '2026-10-12T01:00:00-07:00,open,30,"{""current_position"":30}"\n'
+            '2026-10-12T02:00:00-07:00,open,80,"{""current_position"":80}"\n'
+            '2026-10-12T04:00:00-07:00,closed,0,"{""current_position"":0,""friendly_name"":""Garage""}"\n',
             id="include_full_attributes",
         ),
     ],
@@ -426,7 +428,6 @@ async def test_state_changes_significant_attributes(
     assert result == llm.ToolResult(
         data={
             "result": {
-                "timezone": "US/Pacific",
                 "source": "state_changes",
                 "entities": {"cover.garage": {"csv": expected_csv}},
             }
@@ -440,14 +441,14 @@ async def test_state_changes_significant_attributes(
     [
         pytest.param(
             False,
-            "time,state\n2026-10-12 01:00:00,playing\n2026-10-12 03:00:00,paused\n",
+            "time,state\n2026-10-12T01:00:00-07:00,playing\n2026-10-12T03:00:00-07:00,paused\n",
             id="state_only",
         ),
         pytest.param(
             True,
             "time,state,attributes\n"
-            '2026-10-12 01:00:00,playing,"{""media_title"":""Song 1""}"\n'
-            '2026-10-12 03:00:00,paused,"{""media_title"":""Song 2""}"\n',
+            '2026-10-12T01:00:00-07:00,playing,"{""media_title"":""Song 1""}"\n'
+            '2026-10-12T03:00:00-07:00,paused,"{""media_title"":""Song 2""}"\n',
             id="include_full_attributes",
         ),
     ],
