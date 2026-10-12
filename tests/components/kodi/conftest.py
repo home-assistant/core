@@ -71,6 +71,11 @@ def mock_connection(can_subscribe: bool) -> Generator[MagicMock]:
     )
     connection.connected = True
     connection.can_subscribe = can_subscribe
+
+    async def close() -> None:
+        connection.connected = False
+
+    connection.close.side_effect = close
     with patch(
         "homeassistant.components.kodi.get_kodi_connection",
         return_value=connection,

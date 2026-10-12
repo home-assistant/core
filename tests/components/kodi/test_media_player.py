@@ -701,25 +701,30 @@ async def test_watchdog_connect_failure(
 
 
 @websocket
-@pytest.mark.usefixtures("mock_connection")
-async def test_watchdog_warns_again_after_ping_recovers(
+async def test_watchdog_warns_again_after_ping_failure_and_reconnect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
     mock_kodi: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a ping failing after a successful ping is reported again."""
+    """Test a ping failing again after a reconnect is reported again."""
+
+    async def connect() -> None:
+        mock_connection.connected = True
+
+    mock_connection.connect.side_effect = connect
     await setup_integration(hass, mock_config_entry)
 
     mock_kodi.ping.side_effect = TransportError("Connection lost")
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
     assert caplog.text.count("Unable to ping Kodi via websocket") == 1
+    assert not mock_connection.connected
 
-    mock_kodi.ping.side_effect = None
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
+    assert mock_connection.connected
 
-    mock_kodi.ping.side_effect = TransportError("Connection lost")
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
     assert caplog.text.count("Unable to ping Kodi via websocket") == 2
 
