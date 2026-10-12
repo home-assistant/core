@@ -9,6 +9,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TelegramBotConfigEntry
@@ -51,7 +52,11 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         assert device_info is not None
         device_info["identifiers"] = {(DOMAIN, f"{self.bot_id}_{self.chat_id}")}
         device_info["name"] = subentry.title
-        device_info["via_device"] = (DOMAIN, f"{self.bot_id}")
+        device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+            config_entry.runtime_data.hass,
+            (DOMAIN, f"{self.bot_id}"),
+            config_entry_id=config_entry.entry_id,
+        )
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:

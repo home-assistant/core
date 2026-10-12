@@ -24,8 +24,7 @@
   "config_subentries": {
     "location": {
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
       },
       "entry_type": "Location",
       "initiate_flow": {

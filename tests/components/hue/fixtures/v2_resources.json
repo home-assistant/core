@@ -169,6 +169,10 @@
     },
     "speed": 0.6269841194152832,
     "auto_dynamic": false,
+    "status": {
+      "active": "dynamic_palette",
+      "last_recall": "2025-09-12T11:41:46.318Z"
+    },
     "type": "scene"
   },
   {
@@ -222,10 +226,14 @@
     },
     "speed": 0.5,
     "auto_dynamic": false,
+    "status": {
+      "active": "static",
+      "last_recall": "2025-09-12T11:41:46.318Z"
+    },
     "type": "scene"
   },
   {
-    "id": "redacted-8abe5a3e-94c8-4058-908f-56241818509a",
+    "id": "8abe5a3e-94c8-4058-908f-56241818509a",
     "type": "smart_scene",
     "metadata": {
       "name": "Smart Test Scene",
@@ -1509,8 +1517,8 @@
       "on": true
     },
     "owner": {
-      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
-      "rtype": "zone"
+      "rid": "a3fbc86a-bf4c-4c69-899d-d6eafc37e288",
+      "rtype": "bridge_home"
     },
     "type": "grouped_light"
   },
@@ -2235,6 +2243,7 @@
     "description": "Countdown Timer",
     "id": "e73bc72d-96b1-46f8-aa57-729861f80c78",
     "metadata": {
+      "category": "automation",
       "name": "Timers"
     },
     "state_schema": {

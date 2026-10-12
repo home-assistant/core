@@ -4,7 +4,7 @@ from http import HTTPStatus
 import time
 from unittest.mock import MagicMock, Mock, patch
 
-from httpx import HTTPStatusError, RequestError
+from httpx2 import HTTPStatusError, RequestError
 from pysenz import TOKEN_ENDPOINT
 import pytest
 

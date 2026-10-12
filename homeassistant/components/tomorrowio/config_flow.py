@@ -4,13 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
     RateLimitedException,
 )
 from pytomorrowio.pytomorrowio import TomorrowioV4
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -45,24 +45,26 @@ from .entity import async_get_base_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
-def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
+def _get_location_schema(hass: HomeAssistant) -> probatio.Schema:
     """Return the schema for a location subentry."""
-    return vol.Schema(
+    return probatio.Schema(
         {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-            vol.Required(
+            probatio.Required(CONF_NAME, default=DEFAULT_NAME): str,
+            probatio.Required(
                 CONF_LOCATION,
                 default={
                     CONF_LATITUDE: hass.config.latitude,
                     CONF_LONGITUDE: hass.config.longitude,
                 },
             ): LocationSelector(LocationSelectorConfig(radius=False)),
-            vol.Required(CONF_TIMESTEP, default=DEFAULT_TIMESTEP): vol.In(
+            probatio.Required(CONF_TIMESTEP, default=DEFAULT_TIMESTEP): probatio.In(
                 [1, 5, 15, 30, 60]
             ),
         }

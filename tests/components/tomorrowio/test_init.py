@@ -174,13 +174,12 @@ async def test_migrate_entry_v1_to_v2(
     }
 
     # Verify the device was re-identified and linked to the subentry
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, subentry.subentry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), config_entry.entry_id
     )
     assert device is not None
-    assert device.config_entries_subentries == {
-        config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     # Verify the entity kept its unique ID and was linked to the subentry
     migrated_entity_entry = entity_registry.async_get(entity_entry.entity_id)
@@ -263,14 +262,13 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
         (home_subentry, device1.id),
         (work_subentry, device2.id),
     ):
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), entry1.entry_id
         )
         assert device is not None
         assert device.id == device_id
-        assert device.config_entries_subentries == {
-            entry1.entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == entry1.entry_id
+        assert device.config_subentry_id == subentry.subentry_id
 
     # Verify entities from both entries were moved to entry1
     for entity_entry, subentry in (
@@ -360,9 +358,8 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     migrated_device = device_registry.async_get(device2.id)
     assert migrated_device is not None
     assert migrated_device.disabled_by is dr.DeviceEntryDisabler.USER
-    assert migrated_device.config_entries_subentries == {
-        entry1.entry_id: {work_subentry.subentry_id}
-    }
+    assert migrated_device.config_entry_id == entry1.entry_id
+    assert migrated_device.config_subentry_id == work_subentry.subentry_id
 
     migrated_entity_entry = entity_registry.async_get(entity_entry_2.entity_id)
     assert migrated_entity_entry is not None

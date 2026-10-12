@@ -4,7 +4,7 @@ from collections import defaultdict
 import re
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.const.command_class.meter import CC_SPECIFIC_METER_TYPE
@@ -68,68 +68,70 @@ ACTION_TYPES = {
 
 CLEAR_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_CLEAR_LOCK_USERCODE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+        probatio.Required(CONF_TYPE): SERVICE_CLEAR_LOCK_USERCODE,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
     }
 )
 
 PING_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_PING,
+        probatio.Required(CONF_TYPE): SERVICE_PING,
     }
 )
 
 REFRESH_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_REFRESH_VALUE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Optional(ATTR_REFRESH_ALL_VALUES, default=False): cv.boolean,
+        probatio.Required(CONF_TYPE): SERVICE_REFRESH_VALUE,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Optional(ATTR_REFRESH_ALL_VALUES, default=False): cv.boolean,
     }
 )
 
 RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_RESET_METER,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Optional(ATTR_METER_TYPE): vol.Coerce(int),
-        vol.Optional(ATTR_VALUE): vol.Coerce(int),
+        probatio.Required(CONF_TYPE): SERVICE_RESET_METER,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Optional(ATTR_METER_TYPE): probatio.Coerce(int),
+        probatio.Optional(ATTR_VALUE): probatio.Coerce(int),
     }
 )
 
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
-        vol.Required(ATTR_ENDPOINT, default=0): vol.Coerce(int),
-        vol.Required(ATTR_CONFIG_PARAMETER): vol.Any(int, str),
-        vol.Required(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(None, int, str),
-        vol.Required(ATTR_VALUE): vol.Coerce(int),
-        vol.Required(CONF_SUBTYPE): cv.string,
+        probatio.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
+        probatio.Required(ATTR_ENDPOINT, default=0): probatio.Coerce(int),
+        probatio.Required(ATTR_CONFIG_PARAMETER): probatio.Any(int, str),
+        probatio.Required(ATTR_CONFIG_PARAMETER_BITMASK): probatio.Any(None, int, str),
+        probatio.Required(ATTR_VALUE): probatio.Coerce(int),
+        probatio.Required(CONF_SUBTYPE): cv.string,
     }
 )
 
 SET_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_SET_LOCK_USERCODE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-        vol.Required(ATTR_USERCODE): cv.string,
+        probatio.Required(CONF_TYPE): SERVICE_SET_LOCK_USERCODE,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
+        probatio.Required(ATTR_USERCODE): cv.string,
     }
 )
 
 SET_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): SERVICE_SET_VALUE,
-        vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
-        vol.Required(ATTR_PROPERTY): vol.Any(int, str),
-        vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-        vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-        vol.Required(ATTR_VALUE): VALUE_SCHEMA,
-        vol.Optional(ATTR_WAIT_FOR_RESULT, default=False): cv.boolean,
+        probatio.Required(CONF_TYPE): SERVICE_SET_VALUE,
+        probatio.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
+        probatio.Required(ATTR_PROPERTY): probatio.Any(int, str),
+        probatio.Optional(ATTR_PROPERTY_KEY): probatio.Any(
+            probatio.Coerce(int), cv.string
+        ),
+        probatio.Optional(ATTR_ENDPOINT): probatio.Coerce(int),
+        probatio.Required(ATTR_VALUE): VALUE_SCHEMA,
+        probatio.Optional(ATTR_WAIT_FOR_RESULT, default=False): cv.boolean,
     }
 )
 
-_ACTION_SCHEMA = vol.Any(
+_ACTION_SCHEMA = probatio.Any(
     CLEAR_LOCK_USERCODE_SCHEMA,
     PING_SCHEMA,
     REFRESH_VALUE_SCHEMA,
@@ -283,7 +285,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     action_type = config[CONF_TYPE]
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
@@ -291,46 +293,46 @@ async def async_get_action_capabilities(
     # Add additional fields to the automation action UI
     if action_type == SERVICE_CLEAR_LOCK_USERCODE:
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Required(ATTR_CODE_SLOT): cv.string,
+                    probatio.Required(ATTR_CODE_SLOT): cv.string,
                 }
             )
         }
 
     if action_type == SERVICE_SET_LOCK_USERCODE:
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Required(ATTR_CODE_SLOT): cv.string,
-                    vol.Required(ATTR_USERCODE): cv.string,
+                    probatio.Required(ATTR_CODE_SLOT): cv.string,
+                    probatio.Required(ATTR_USERCODE): cv.string,
                 }
             )
         }
 
     if action_type == SERVICE_RESET_METER:
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Optional(ATTR_VALUE): cv.string,
+                    probatio.Optional(ATTR_VALUE): cv.string,
                 }
             )
         }
 
     if action_type == SERVICE_REFRESH_VALUE:
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Optional(ATTR_REFRESH_ALL_VALUES): cv.boolean,
+                    probatio.Optional(ATTR_REFRESH_ALL_VALUES): cv.boolean,
                 }
             )
         }
 
     if action_type == SERVICE_SET_VALUE:
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Required(ATTR_COMMAND_CLASS): vol.In(
+                    probatio.Required(ATTR_COMMAND_CLASS): probatio.In(
                         {
                             str(CommandClass(cc.id).value): cc.name
                             for cc in sorted(
@@ -338,11 +340,11 @@ async def async_get_action_capabilities(
                             )
                         }
                     ),
-                    vol.Required(ATTR_PROPERTY): cv.string,
-                    vol.Optional(ATTR_PROPERTY_KEY): cv.string,
-                    vol.Optional(ATTR_ENDPOINT): cv.string,
-                    vol.Required(ATTR_VALUE): cv.string,
-                    vol.Optional(ATTR_WAIT_FOR_RESULT): cv.boolean,
+                    probatio.Required(ATTR_PROPERTY): cv.string,
+                    probatio.Optional(ATTR_PROPERTY_KEY): cv.string,
+                    probatio.Optional(ATTR_ENDPOINT): cv.string,
+                    probatio.Required(ATTR_VALUE): cv.string,
+                    probatio.Optional(ATTR_WAIT_FOR_RESULT): cv.boolean,
                 }
             )
         }
@@ -358,6 +360,10 @@ async def async_get_action_capabilities(
         value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
-        return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
+        return {
+            "extra_fields": probatio.Schema(
+                {probatio.Required(ATTR_VALUE): value_schema}
+            )
+        }
 
     return {}

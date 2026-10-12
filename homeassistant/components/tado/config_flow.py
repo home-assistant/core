@@ -5,10 +5,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from PyTado.exceptions import TadoException
 from PyTado.http import DeviceActivationStatus
 from PyTado.interface import Tado
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import (
@@ -210,14 +210,14 @@ class OptionsFlowHandler(OptionsFlow):
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return result
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_FALLBACK,
                     default=self.config_entry.options.get(
                         CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
                     ),
-                ): vol.In(CONST_OVERLAY_TADO_OPTIONS),
+                ): probatio.In(CONST_OVERLAY_TADO_OPTIONS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

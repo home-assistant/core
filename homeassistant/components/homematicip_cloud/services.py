@@ -5,14 +5,14 @@ from pathlib import Path
 
 from homematicip.async_home import AsyncHome
 from homematicip.base.helpers import handle_config
-from homematicip.device import SwitchMeasuring
+from homematicip.device import Device, SwitchMeasuring
 from homematicip.group import HeatingGroup
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
     async_register_admin_service,
@@ -21,6 +21,7 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN
 from .hap import HomematicIPConfigEntry
+from .helpers import get_door_opener_authorization_channel, is_error_response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
 ATTR_COOLING = "cooling"
+ATTR_PIN = "pin"
 
 DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 
@@ -41,6 +43,7 @@ SERVICE_ACTIVATE_VACATION = "activate_vacation"
 SERVICE_DEACTIVATE_ECO_MODE = "deactivate_eco_mode"
 SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
+SERVICE_PULL_LATCH = "pull_latch"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
 SERVICE_SET_HOME_COOLING_MODE = "set_home_cooling_mode"
@@ -52,68 +55,94 @@ HMIPC_SERVICES = [
     SERVICE_DEACTIVATE_ECO_MODE,
     SERVICE_DEACTIVATE_VACATION,
     SERVICE_DUMP_HAP_CONFIG,
+    SERVICE_PULL_LATCH,
     SERVICE_RESET_ENERGY_COUNTER,
     SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
     SERVICE_SET_HOME_COOLING_MODE,
 ]
 
-SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = vol.Schema(
+SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = probatio.Schema(
     {
-        vol.Required(ATTR_DURATION): cv.positive_int,
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
-    }
-)
-
-SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD = vol.Schema(
-    {
-        vol.Required(ATTR_ENDTIME): cv.datetime,
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
-    }
-)
-
-SCHEMA_ACTIVATE_VACATION = vol.Schema(
-    {
-        vol.Required(ATTR_ENDTIME): cv.datetime,
-        vol.Required(ATTR_TEMPERATURE, default=18.0): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=55)
+        probatio.Required(ATTR_DURATION): cv.positive_int,
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
         ),
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
     }
 )
 
-SCHEMA_DEACTIVATE_ECO_MODE = vol.Schema(
-    {vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24))}
-)
-
-SCHEMA_DEACTIVATE_VACATION = vol.Schema(
-    {vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24))}
-)
-
-SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
+SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Required(ATTR_CLIMATE_PROFILE_INDEX): cv.positive_int,
+        probatio.Required(ATTR_ENDTIME): cv.datetime,
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        ),
     }
 )
 
-SCHEMA_DUMP_HAP_CONFIG = vol.Schema(
+SCHEMA_ACTIVATE_VACATION = probatio.Schema(
     {
-        vol.Optional(ATTR_CONFIG_OUTPUT_PATH): cv.string,
-        vol.Optional(
+        probatio.Required(ATTR_ENDTIME): cv.datetime,
+        probatio.Required(ATTR_TEMPERATURE, default=18.0): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=55)
+        ),
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        ),
+    }
+)
+
+SCHEMA_DEACTIVATE_ECO_MODE = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        )
+    }
+)
+
+SCHEMA_DEACTIVATE_VACATION = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        )
+    }
+)
+
+SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = probatio.Schema(
+    {
+        probatio.Required(ATTR_ENTITY_ID): comp_entity_ids,
+        probatio.Required(ATTR_CLIMATE_PROFILE_INDEX): cv.positive_int,
+    }
+)
+
+SCHEMA_DUMP_HAP_CONFIG = probatio.Schema(
+    {
+        probatio.Optional(ATTR_CONFIG_OUTPUT_PATH): cv.string,
+        probatio.Optional(
             ATTR_CONFIG_OUTPUT_FILE_PREFIX, default=DEFAULT_CONFIG_FILE_PREFIX
         ): cv.string,
-        vol.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
+        probatio.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
     }
 )
 
-SCHEMA_RESET_ENERGY_COUNTER = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): comp_entity_ids}
+SCHEMA_RESET_ENERGY_COUNTER = probatio.Schema(
+    {probatio.Required(ATTR_ENTITY_ID): comp_entity_ids}
 )
 
-SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
+SCHEMA_SET_HOME_COOLING_MODE = probatio.Schema(
     {
-        vol.Optional(ATTR_COOLING, default=True): cv.boolean,
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
+        probatio.Optional(ATTR_COOLING, default=True): cv.boolean,
+        probatio.Optional(ATTR_ACCESSPOINT_ID): probatio.All(
+            str, probatio.Length(min=24, max=24)
+        ),
+    }
+)
+
+SCHEMA_PULL_LATCH = probatio.Schema(
+    {
+        probatio.Required(ATTR_DEVICE_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(ATTR_PIN): cv.string,
     }
 )
 
@@ -139,6 +168,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             await _async_deactivate_vacation(service)
         elif service_name == SERVICE_DUMP_HAP_CONFIG:
             await _async_dump_hap_config(service)
+        elif service_name == SERVICE_PULL_LATCH:
+            await _async_pull_latch(service)
         elif service_name == SERVICE_RESET_ENERGY_COUNTER:
             await _async_reset_energy_counter(service)
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
@@ -186,6 +217,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_SET_ACTIVE_CLIMATE_PROFILE,
+    )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_PULL_LATCH,
+        service_func=async_call_hmipc_service,
+        schema=SCHEMA_PULL_LATCH,
     )
 
     async_register_admin_service(
@@ -316,7 +354,9 @@ async def _async_dump_hap_config(service: ServiceCall) -> None:
         json_state = await entry.runtime_data.home.download_configuration_async()
         json_state = handle_config(json_state, anonymize)
 
-        config_file.write_text(json_state, encoding="utf8")
+        await service.hass.async_add_executor_job(
+            config_file.write_text, json_state, "utf8"
+        )
 
 
 async def _async_reset_energy_counter(service: ServiceCall):
@@ -347,6 +387,54 @@ async def _async_set_home_cooling_mode(service: ServiceCall):
         entry: HomematicIPConfigEntry
         for entry in service.hass.config_entries.async_loaded_entries(DOMAIN):
             await entry.runtime_data.home.set_cooling_async(cooling)
+
+
+async def _async_pull_latch(service: ServiceCall) -> None:
+    """Service to pull the latch of a door opener."""
+    pin = service.data.get(ATTR_PIN)
+    device_registry = dr.async_get(service.hass)
+
+    for device_id in service.data[ATTR_DEVICE_ID]:
+        device = _get_device(service.hass, device_registry, device_id)
+        channel = get_door_opener_authorization_channel(device)
+        if channel is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="pull_latch_not_supported",
+                translation_placeholders={"device_name": device.label},
+            )
+        result = await channel.async_pull_latch(pin)
+        if is_error_response(result):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="pull_latch_failed",
+                translation_placeholders={
+                    "device_name": device.label,
+                    "error_code": str(result.get("errorCode")),
+                },
+            )
+
+
+def _get_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device_id: str
+) -> Device:
+    """Return the HmIP device for a device registry entry."""
+    if device_entry := device_registry.async_get(device_id):
+        hmip_id = next(
+            (ident[1] for ident in device_entry.identifiers if ident[0] == DOMAIN),
+            None,
+        )
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            for device in entry.runtime_data.home.devices:
+                if str(device.id) == hmip_id:
+                    return device
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 def _get_home(hass: HomeAssistant, hapid: str) -> AsyncHome | None:

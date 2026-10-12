@@ -1,5 +1,6 @@
 """Test numbers for ToGrill integration."""
 
+from datetime import timedelta
 from unittest.mock import Mock
 
 from bleak.exc import BleakError
@@ -9,6 +10,7 @@ from togrill_bluetooth.exceptions import BaseError
 from togrill_bluetooth.packets import (
     PacketA0Notify,
     PacketA6Write,
+    PacketA7Write,
     PacketA8Notify,
     PacketA300Write,
     PacketA301Write,
@@ -324,6 +326,32 @@ async def test_set_ambient_number(
             PacketA6Write(temperature_unit=None, alarm_interval=15),
             id="alarm_interval",
         ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    temperature_1=50.0,
+                ),
+            ],
+            "number.probe_1_timer",
+            10.0,
+            PacketA7Write(probe=1, time=timedelta(minutes=10), unknown=1),
+            id="timer",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    temperature_1=50.0,
+                ),
+            ],
+            "number.probe_1_timer",
+            0.0,
+            PacketA7Write(probe=1, time=timedelta(0), unknown=0),
+            id="timer_stop",
+        ),
     ],
 )
 async def test_set_number(
@@ -442,3 +470,28 @@ async def test_set_number_disconnected(
             },
             blocking=True,
         )
+
+
+async def test_timer_readback(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+) -> None:
+    """Test that a running timer is reported back in minutes."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
+
+    mock_client.mocked_notify(
+        PacketA8Notify(
+            probe=1,
+            alarm_type=None,
+            time=timedelta(minutes=30),
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.probe_1_timer")
+    assert state is not None
+    assert float(state.state) == 30.0

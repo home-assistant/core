@@ -1,18 +1,26 @@
 """Test Roborock Sensors."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from roborock.data.v1 import RoborockDockTypeCode
+from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockDyadDataProtocol
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.roborock.const import A01_UPDATE_INTERVAL, DOMAIN
+from homeassistant.components.roborock.coordinator import MIN_UNAVAILABLE_DURATION
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -90,3 +98,161 @@ async def test_sensors_coordinator_state(
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
     assert state.state == expected_state
+
+
+async def test_dock_cleaning_brush_sensor_not_created_and_cleaned_up(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    entity_registry: er.EntityRegistry,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test cleaning brush sensor is not created and removed if it was in the registry."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.pearl_dock)
+    )
+    entity_registry.async_get_or_create(
+        domain=Platform.SENSOR,
+        platform=DOMAIN,
+        unique_id="cleaning_brush_time_left_abc123",
+        config_entry=mock_roborock_entry,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "cleaning_brush_time_left_abc123"
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Cleaning brush sensor must be removed from the entity registry
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, "cleaning_brush_time_left_abc123"
+        )
+        is None
+    )
+    assert (
+        hass.states.get("sensor.roborock_s7_maxv_dock_maintenance_brush_time_left")
+        is None
+    )
+    # Washable dock strainer sensor must still exist
+    assert (
+        hass.states.get("sensor.roborock_s7_maxv_dock_strainer_time_left") is not None
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dock_cleaning_brush_sensor_created_when_supported(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test cleaning brush sensor is created on a dock that supports it."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.o3_plus_dock)
+    )
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.roborock_s7_maxv_dock_maintenance_brush_time_left")
+    assert state is not None
+    assert state.state == "235"
+
+
+async def test_dyad_follows_reported_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the device state is applied as the library reports it."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+
+    dyad.values = {**dyad.values, RoborockDyadDataProtocol.POWER: 50}
+    dyad.add_update_listener.call_args[0][0]()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+
+
+async def test_dyad_unsubscribed_on_unload(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the update listener is removed when the config entry unloads."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    unsub = dyad.add_update_listener.return_value
+
+    assert await hass.config_entries.async_unload(setup_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unsub.assert_called_once()
+
+
+async def test_dyad_unreported_protocol_is_unknown(
+    hass: HomeAssistant,
+    fake_devices: list[FakeDevice],
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Test a protocol the device has not reported yet reads as unknown."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    dyad.values = {RoborockDyadDataProtocol.POWER: 50}
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+    assert hass.states.get("sensor.dyad_pro_status").state == STATE_UNKNOWN
+
+
+async def test_dyad_update_does_not_postpone_poll(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the fallback poll keeps its schedule while the device reports state."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    dyad.query_values.reset_mock()
+
+    freezer.tick(A01_UPDATE_INTERVAL / 2)
+    dyad.add_update_listener.call_args[0][0]()
+    await hass.async_block_till_done()
+
+    freezer.tick(A01_UPDATE_INTERVAL / 2 + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert dyad.query_values.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("last_message_age", "expected_state"),
+    [
+        pytest.param(timedelta(0), "100", id="still_talking"),
+        pytest.param(MIN_UNAVAILABLE_DURATION, STATE_UNAVAILABLE, id="gone_silent"),
+    ],
+)
+async def test_dyad_availability_follows_last_message(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    freezer: FrozenDateTimeFactory,
+    last_message_age: timedelta,
+    expected_state: str,
+) -> None:
+    """Test a failed poll only reports unavailable once the device stops talking."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    dyad.query_values.side_effect = RoborockException("Simulated failure")
+    dyad.last_message_time = dt_util.utcnow() - last_message_age
+
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == expected_state

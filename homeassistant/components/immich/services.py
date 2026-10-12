@@ -3,10 +3,10 @@
 import logging
 
 from aioimmich.exceptions import ImmichError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import service
 from homeassistant.helpers.selector import MediaSelector
@@ -21,11 +21,11 @@ CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_FILE = "file"
 
 SERVICE_UPLOAD_FILE = "upload_file"
-SERVICE_SCHEMA_UPLOAD_FILE = vol.Schema(
+SERVICE_SCHEMA_UPLOAD_FILE = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY_ID): str,
-        vol.Required(CONF_FILE): MediaSelector({"accept": ["image/*", "video/*"]}),
-        vol.Optional(CONF_ALBUM_ID): str,
+        probatio.Required(CONF_CONFIG_ENTRY_ID): str,
+        probatio.Required(CONF_FILE): MediaSelector({"accept": ["image/*", "video/*"]}),
+        probatio.Optional(CONF_ALBUM_ID): str,
     }
 )
 
@@ -75,7 +75,8 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
         ) from ex
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for immich integration."""
 
     hass.services.async_register(

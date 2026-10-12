@@ -240,6 +240,12 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
 
     @property
     @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self._feature.is_error
+
+    @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self._feature.native_value)

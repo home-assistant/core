@@ -90,6 +90,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "PSF-2.0",
     "Python-2.0",
     "Unlicense",
+    "UPL-1.0",
     "Zlib",
     "ZPL-2.1",
 }
@@ -181,7 +182,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
-    "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
@@ -199,12 +199,12 @@ EXCEPTIONS = {
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "tempora",  # https://github.com/jaraco/tempora/issues/61
     "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
 # fmt: off
-TODO = {
-    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
+TODO: dict[str, AwesomeVersion] = {
 }
 # fmt: on
 

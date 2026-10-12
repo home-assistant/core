@@ -108,8 +108,9 @@ async def test_pipeline_api_audio(
         },
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
@@ -779,8 +780,9 @@ async def test_timer_events(
         },
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     total_seconds = (1 * 60 * 60) + (2 * 60) + 3
@@ -848,8 +850,9 @@ async def test_unknown_timer_event(
     )
     await hass.async_block_till_done()
     assert mock_device.entry.unique_id is not None
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
     assert dev is not None
 
@@ -1189,8 +1192,9 @@ async def test_announce_media_id(
     )
     await hass.async_block_till_done()
 
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
@@ -1470,8 +1474,9 @@ async def test_start_conversation_media_id(
     )
     await hass.async_block_till_done()
 
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
 
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
@@ -2362,6 +2367,51 @@ async def test_multichannel_audio(
             await satellite.handle_audio(b"channel 0", b"channel 1")
             await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
+
+
+async def test_empty_audio_frame_does_not_end_stream(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test an empty audio frame from the device doesn't end the audio stream."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    received_chunks: list[bytes] = []
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        received_chunks.extend([chunk async for chunk in kwargs["stt_stream"]])
+        pipeline_finished.set()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"before")
+            await satellite.handle_audio(b"")
+            await satellite.handle_audio(b"after")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+    assert received_chunks == [b"before", b"after"]
 
 
 async def test_multichannel_audio_fallback_channel_0(

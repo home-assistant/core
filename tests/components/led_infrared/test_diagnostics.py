@@ -1,7 +1,9 @@
 """Test for diagnostics platform of the LED Infrared integration."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.led_infrared.const import LEDIrDeviceType
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -10,6 +12,17 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.parametrize(
+    "config_entry",
+    [
+        LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_24_KEY,
+        LEDIrDeviceType.GENERIC_40_KEY,
+        LEDIrDeviceType.GENERIC_44_KEY,
+    ],
+    indirect=True,
+)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

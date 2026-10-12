@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': 'http://192.168.1.10:80',
+    'connections': set({
+      tuple(
+        'mac',
+        '24:a4:2c:39:f8:7e',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netio',
+        '24A42C39F87E',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'NETIO products',
+    'model': '101x',
+    'model_id': None,
+    'name': 'PowerCable',
+    'name_by_user': None,
+    'serial_number': '24A42C39F87E',
+    'sw_version': '3.1.4',
+    'via_device_id': None,
+  })
+# ---

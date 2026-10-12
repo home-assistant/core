@@ -53,7 +53,13 @@ async def test_user_flow_api_key_already_configured(hass: HomeAssistant) -> None
     make_v2_config_entry().add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MIN_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MIN_CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -78,25 +84,35 @@ async def test_user_flow_api_key_already_configured(hass: HomeAssistant) -> None
     ],
 )
 async def test_user_flow_errors(
-    hass: HomeAssistant, side_effect: Exception, errors: dict[str, str]
+    hass: HomeAssistant, side_effect: type[Exception], errors: dict[str, str]
 ) -> None:
-    """Test user config flow errors."""
+    """Test user config flow errors and recovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=MIN_CONFIG
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MIN_CONFIG
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == errors
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MIN_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Tomorrow.io"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
+    assert result["result"].unique_id == API_KEY
 
 
 async def test_location_subentry_flow(hass: HomeAssistant) -> None:

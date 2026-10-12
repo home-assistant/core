@@ -14,33 +14,67 @@ from homeassistant.helpers import (
     floor_registry as fr,
     intent,
 )
-from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+)
 
+from .const import DOMAIN
 from .timers import async_device_supports_timers
 
 # Generic intents exposed as LLM tools regardless of a timer-capable device.
-LLM_INTENTS = (
-    intent.INTENT_TURN_ON,
-    intent.INTENT_TURN_OFF,
-    intent.INTENT_CANCEL_ALL_TIMERS,
-    intent.INTENT_SET_POSITION,
-    intent.INTENT_STOP_MOVING,
-)
+LLM_INTENTS = {
+    intent.INTENT_TURN_ON: "Turn on",
+    intent.INTENT_TURN_OFF: "Turn off",
+    intent.INTENT_CANCEL_ALL_TIMERS: "Cancel all timers",
+    intent.INTENT_SET_POSITION: "Set position",
+    intent.INTENT_STOP_MOVING: "Stop moving",
+}
 
 # Timer intents, only exposed for a device that supports timers.
-TIMER_INTENTS = (
-    intent.INTENT_START_TIMER,
-    intent.INTENT_CANCEL_TIMER,
-    intent.INTENT_INCREASE_TIMER,
-    intent.INTENT_DECREASE_TIMER,
-    intent.INTENT_PAUSE_TIMER,
-    intent.INTENT_UNPAUSE_TIMER,
-    intent.INTENT_TIMER_STATUS,
-)
+TIMER_INTENTS = {
+    intent.INTENT_START_TIMER: "Start timer",
+    intent.INTENT_CANCEL_TIMER: "Cancel timer",
+    intent.INTENT_INCREASE_TIMER: "Add time to timer",
+    intent.INTENT_DECREASE_TIMER: "Remove time from timer",
+    intent.INTENT_PAUSE_TIMER: "Pause timer",
+    intent.INTENT_UNPAUSE_TIMER: "Resume timer",
+    intent.INTENT_TIMER_STATUS: "Get timer status",
+}
+
+INTENT_TITLES = LLM_INTENTS | TIMER_INTENTS
+
+# Every intent here acts on Home Assistant's own entities and timers, so none
+# of them reaches an open world.
+_CONTROL = ToolAnnotations(idempotent=True, open_world=False)
+_REPEATS = ToolAnnotations(open_world=False)
+_ADDS = ToolAnnotations(destructive=False, open_world=False)
+_READ_ONLY = ToolAnnotations(read_only=True, open_world=False)
+
+INTENT_ANNOTATIONS = {
+    # Turning on a button entity presses it, which acts again on every call.
+    intent.INTENT_TURN_ON: _REPEATS,
+    intent.INTENT_TURN_OFF: _CONTROL,
+    intent.INTENT_SET_POSITION: _CONTROL,
+    intent.INTENT_STOP_MOVING: _CONTROL,
+    intent.INTENT_CANCEL_ALL_TIMERS: _CONTROL,
+    intent.INTENT_CANCEL_TIMER: _CONTROL,
+    intent.INTENT_PAUSE_TIMER: _CONTROL,
+    intent.INTENT_UNPAUSE_TIMER: _CONTROL,
+    # A started timer can carry a command to run when it finishes, so it is
+    # not only additive. Adding time to a timer is.
+    intent.INTENT_START_TIMER: _REPEATS,
+    intent.INTENT_INCREASE_TIMER: _ADDS,
+    intent.INTENT_DECREASE_TIMER: _REPEATS,
+    intent.INTENT_TIMER_STATUS: _READ_ONLY,
+}
 
 DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
     "When controlling Home Assistant always call the intent tools. "
-    "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
+    "Use intent__HassTurnOn to lock and intent__HassTurnOff to unlock a lock. "
     "When controlling a device, prefer passing just name and domain. "
     "When controlling an area, prefer passing just area name and domain."
 )
@@ -75,7 +109,14 @@ def async_get_tools(
     ]
 
     tools: list[Tool] = [
-        IntentTool(handler.intent_type, handler) for handler in handlers
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=INTENT_TITLES[handler.intent_type],
+            integration=DOMAIN,
+            annotations=INTENT_ANNOTATIONS[handler.intent_type],
+        )
+        for handler in handlers
     ]
     if not tools:
         return None
@@ -91,7 +132,9 @@ def async_get_tools(
         device := dr.async_get(hass).async_get(llm_context.device_id)
     ):
         area_reg = ar.async_get(hass)
-        if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+        if (device_area_id := dr.async_get_effective_area_id(hass, device)) and (
+            area := area_reg.async_get_area(device_area_id)
+        ):
             if area.floor_id:
                 floor = fr.async_get(hass).async_get_floor(area.floor_id)
 

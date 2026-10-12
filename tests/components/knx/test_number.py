@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import NumberSchema
@@ -139,6 +140,7 @@ async def test_number_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> Non
                 KNX_ADDRESS: test_address,
                 CONF_STATE_ADDRESS: test_state_address,
                 CONF_TYPE: "illuminance",
+                CONF_SYNC_STATE: "init",
             }
         }
     )
@@ -279,7 +281,7 @@ async def test_number_ui_load(knx: KNXTestKit) -> None:
     )
     knx.assert_state(
         "number.test_options",
-        "3000",
+        "3000.0",  # `min`, `max` and `step` are floats after validation
         unit_of_measurement="kW",
         device_class="power",
         min=3000,

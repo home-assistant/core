@@ -244,7 +244,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup[service_info3-98bd0d13-0b0e-421a-84e5-ddbf75dc6de4-raw3-number.mock_title_manual_watering_time]
+# name: test_setup[service_info3-98bd0d13-0b0e-421a-84e5-ddbf75dc6de4:1-raw3-number.mock_title_manual_watering_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -263,7 +263,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_setup[service_info3-98bd0d13-0b0e-421a-84e5-ddbf75dc6de4-raw3-number.mock_title_manual_watering_time].1
+# name: test_setup[service_info3-98bd0d13-0b0e-421a-84e5-ddbf75dc6de4:1-raw3-number.mock_title_manual_watering_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -282,7 +282,7 @@
     'state': '10.0',
   })
 # ---
-# name: test_setup[service_info4-98bd0112-0b0e-421a-84e5-ddbf75dc6de4-raw4-number.mock_title_sector]
+# name: test_setup[service_info4-98bd0112-0b0e-421a-84e5-ddbf75dc6de4:1-raw4-number.mock_title_sector]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Sector',
@@ -300,7 +300,7 @@
     'state': '359.0',
   })
 # ---
-# name: test_setup[service_info4-98bd0112-0b0e-421a-84e5-ddbf75dc6de4-raw4-number.mock_title_sector].1
+# name: test_setup[service_info4-98bd0112-0b0e-421a-84e5-ddbf75dc6de4:1-raw4-number.mock_title_sector].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Sector',
@@ -318,7 +318,7 @@
     'state': '10.0',
   })
 # ---
-# name: test_setup[service_info5-98bd0111-0b0e-421a-84e5-ddbf75dc6de4-raw5-number.mock_title_distance]
+# name: test_setup[service_info5-98bd0111-0b0e-421a-84e5-ddbf75dc6de4:1-raw5-number.mock_title_distance]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Distance',
@@ -336,7 +336,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_setup[service_info5-98bd0111-0b0e-421a-84e5-ddbf75dc6de4-raw5-number.mock_title_distance].1
+# name: test_setup[service_info5-98bd0111-0b0e-421a-84e5-ddbf75dc6de4:1-raw5-number.mock_title_distance].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Distance',

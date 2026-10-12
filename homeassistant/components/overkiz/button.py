@@ -24,7 +24,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizButtonDescription(ButtonEntityDescription):
     """Class to describe an Overkiz button."""
 
-    press_args: OverkizStateType | None = None
+    press_args: list[OverkizStateType] | None = None
 
 
 BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
@@ -74,7 +74,7 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
     OverkizButtonDescription(
         key=OverkizCommand.GO_TO_ALIAS,
-        press_args="1",
+        press_args=["1"],
         name="My position",
         icon="mdi:star",
     ),
@@ -83,10 +83,25 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         name="Toggle",
         icon="mdi:sync",
     ),
+    # DimmerOnOffLight (rts:DimmableLightRTSComponent)
+    OverkizButtonDescription(
+        key=OverkizCommand.STEP_POSITIVE,
+        name="Brightness up",
+        icon="mdi:brightness-7",
+        # step (0-127), execution duration (0-15, optional)
+        press_args=[5],
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.STEP_NEGATIVE,
+        name="Brightness down",
+        icon="mdi:brightness-3",
+        # step (0-127), execution duration (0-15, optional)
+        press_args=[5],
+    ),
     # SmokeSensor
     OverkizButtonDescription(
         key=OverkizCommand.CHECK_EVENT_TRIGGER,
-        press_args=OverkizCommandParam.SHORT,
+        press_args=[OverkizCommandParam.SHORT],
         name="Test",
         icon="mdi:smoke-detector",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -138,9 +153,9 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Handle the button press."""
-        if self.entity_description.press_args:
+        if (press_args := self.entity_description.press_args) is not None:
             await self.executor.async_execute_command(
-                self.entity_description.key, self.entity_description.press_args
+                self.entity_description.key, *press_args
             )
             return
 

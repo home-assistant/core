@@ -44,7 +44,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [PRESET_NONE, PRESET_PROG]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -95,7 +95,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         state = (
             OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
@@ -107,7 +107,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(

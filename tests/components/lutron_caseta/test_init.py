@@ -1,12 +1,15 @@
 """Tests for the Lutron Caseta integration."""
 
+import ssl
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import lutron_caseta
+from homeassistant.components.lutron_caseta.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import MockBridge, async_setup_integration, make_mock_entry
 
@@ -52,3 +55,39 @@ async def test_cannot_connect(
     )
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Connection failed to 1.1.1.1" in caplog.text
+
+
+async def test_invalid_certificate(hass: HomeAssistant) -> None:
+    """Test setup fails with an invalid certificate."""
+    mock_entry = make_mock_entry()
+    mock_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
+        side_effect=ssl.SSLError,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_entry.reason == "Invalid certificate used to connect to bridge at 1.1.1.1"
+    )
+
+
+async def test_keypad_device_via_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test the keypad device is linked to the bridge device via via_device_id."""
+    mock_entry = await async_setup_integration(hass, MockBridge)
+
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 1234), mock_entry.entry_id
+    )
+    keypad_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 66286451), mock_entry.entry_id
+    )
+
+    assert bridge_device is not None
+    assert keypad_device is not None
+    assert keypad_device.via_device_id == bridge_device.id
+    assert bridge_device.via_device_id is None

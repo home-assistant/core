@@ -52,6 +52,7 @@ async def test_stripping_token(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_TOKEN: "token"}
+    assert result["result"].unique_id == "218886794"
 
 
 @pytest.mark.parametrize(
