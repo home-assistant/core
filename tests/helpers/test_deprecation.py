@@ -953,17 +953,31 @@ def test_deprecated_entity_member_super_without_replacement() -> None:
 
 
 @pytest.mark.parametrize(
-    "annotations",
+    ("annotations", "message"),
     [
-        pytest.param({}, id="unannotated"),
-        pytest.param({"value": int}, id="not_final"),
+        pytest.param(
+            {},
+            r"BaseEntity\.value must be annotated Final, so type checkers",
+            id="unannotated",
+        ),
+        pytest.param(
+            {"value": int},
+            r"BaseEntity\.value must be annotated Final, so type checkers",
+            id="not_final",
+        ),
+        pytest.param(
+            # As stored by "from __future__ import annotations"
+            {"value": "Final"},
+            r"BaseEntity\.value must be annotated Final, remove 'from __future__",
+            id="stringized",
+        ),
     ],
 )
 def test_deprecated_entity_member_requires_final(
-    annotations: dict[str, Any],
+    annotations: dict[str, Any], message: str
 ) -> None:
     """Test a deprecated member must be annotated Final."""
-    with pytest.raises(TypeError, match=r"BaseEntity\.value must be annotated Final"):
+    with pytest.raises(TypeError, match=message):
         type(
             "BaseEntity",
             (Entity,),

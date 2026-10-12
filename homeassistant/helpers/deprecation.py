@@ -495,10 +495,19 @@ class _DeprecatedEntityMember[_T]:
 
     def __set_name__(self, owner: type, name: str) -> None:
         """Store the deprecated name and the domain of the entity base class."""
-        # Final makes type checkers reject subclasses still providing the name
         annotation = get_annotations(owner, format=Format.FORWARDREF).get(name)
+        if isinstance(annotation, str):
+            # Stringized by "from __future__ import annotations", not needed since
+            # Python 3.14
+            raise TypeError(
+                f"{owner.__qualname__}.{name} must be annotated Final, remove "
+                "'from __future__ import annotations' so it can be checked"
+            )
         if annotation is not Final and get_origin(annotation) is not Final:
-            raise TypeError(f"{owner.__qualname__}.{name} must be annotated Final")
+            raise TypeError(
+                f"{owner.__qualname__}.{name} must be annotated Final, so type "
+                "checkers reject subclasses still providing the deprecated name"
+            )
         self.name = name
         module = owner.__module__
         # The base class may live in any module of its integration
