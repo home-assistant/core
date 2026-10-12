@@ -59,6 +59,7 @@ class AlexaConfig(AbstractConfig):
     async def async_initialize(self) -> None:
         """Initialize the config and migrate the entity settings."""
         await super().async_initialize()
+
         if self._store.entity_settings_version < ENTITY_SETTINGS_VERSION:
             # Discovery needs the entity states
             start.async_at_started(self.hass, self._async_migrate_entity_settings)

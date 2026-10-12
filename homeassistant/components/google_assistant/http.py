@@ -97,11 +97,12 @@ class GoogleConfig(AbstractConfig):
         # We need to initialize the store before calling super
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_initialize()
+
+        await super().async_initialize()
+
         if self._store.entity_settings_version < ENTITY_SETTINGS_VERSION:
             # Discovery needs the entity states
             start.async_at_started(self.hass, self._async_migrate_entity_settings)
-
-        await super().async_initialize()
 
         self.async_enable_local_sdk()
 

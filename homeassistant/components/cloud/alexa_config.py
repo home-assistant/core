@@ -187,15 +187,22 @@ def _async_migrate_entity_settings_v1(
 
 
 async def _async_migrate_entity_settings_v2(
-    hass: HomeAssistant, cloud: Cloud[CloudClient]
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    prefs: CloudPreferences,
+    cloud: Cloud[CloudClient],
 ) -> None:
     """Preserve the pre-migration name of exposed entities as an alias."""
-    config = await cloud.client.get_alexa_config()
-    for entity in alexa_entities.async_get_entities(hass, config):
+    # Discovery only needs the YAML config and the exposed entity settings,
+    # so the config is not initialized, which would start reporting state
+    alexa_conf = CloudAlexaConfig(
+        hass, config, await prefs.get_cloud_user(), prefs, cloud
+    )
+    for entity in alexa_entities.async_get_entities(hass, alexa_conf):
         entity_id = entity.entity_id
-        if CONF_NAME in config.entity_config.get(entity_id, {}):
+        if CONF_NAME in alexa_conf.entity_config.get(entity_id, {}):
             continue
-        if config.should_expose(entity_id):
+        if alexa_conf.should_expose(entity_id):
             er.async_preserve_compat_name_as_alias(hass, entity_id)
 
 
@@ -228,7 +235,7 @@ async def async_migrate_entity_settings(
     # Only a logged in and enabled Alexa exposed names, so only then
     # is there anything to preserve
     if prefs.alexa_settings_version < 4 and cloud.is_logged_in and prefs.alexa_enabled:
-        await _async_migrate_entity_settings_v2(hass, cloud)
+        await _async_migrate_entity_settings_v2(hass, config, prefs, cloud)
 
     _LOGGER.info(
         "Finished migration of Alexa settings from v%s to v%s",

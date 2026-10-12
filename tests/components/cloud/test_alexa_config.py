@@ -967,14 +967,13 @@ async def test_alexa_config_migrate_entity_names(
         {"entity_config": {entity_yaml_name.entity_id: {"name": "Configured"}}}
     )
     cloud = Mock(is_logged_in=logged_in, subscription_expired=subscription_expired)
-    cloud.client.get_alexa_config = AsyncMock(
-        return_value=alexa_config.CloudAlexaConfig(
-            hass, config, "mock-user-id", cloud_prefs, cloud
-        )
-    )
-    with patch(
-        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
-    ) as mock_preserve:
+    with (
+        patch(
+            "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+        ) as mock_preserve,
+        # Initializing the config would start reporting state to Alexa
+        patch.object(alexa_config.CloudAlexaConfig, "async_initialize") as mock_init,
+    ):
         await alexa_config.async_migrate_entity_settings(
             hass, config, cloud_prefs, cloud
         )
@@ -982,6 +981,7 @@ async def test_alexa_config_migrate_entity_names(
     assert mock_preserve.mock_calls == [
         call(hass, entity_id) for entity_id in expected_entity_ids
     ]
+    mock_init.assert_not_called()
     assert cloud_prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
 
 

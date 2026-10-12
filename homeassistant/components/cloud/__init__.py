@@ -436,14 +436,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await cloud.initialize()
 
-    async def _async_migrate_assistant_settings(_: HomeAssistant) -> None:
-        """Migrate the assistant entity settings, connected or not."""
+    async def _async_migrate_alexa_settings(_: HomeAssistant) -> None:
+        """Migrate the Alexa entity settings, connected or not."""
         await alexa_config.async_migrate_entity_settings(hass, alexa_conf, prefs, cloud)
+
+    async def _async_migrate_google_settings(_: HomeAssistant) -> None:
+        """Migrate the Google Assistant entity settings, connected or not."""
         await google_config.async_migrate_entity_settings(
             hass, google_conf, prefs, cloud
         )
 
-    start.async_at_started(hass, _async_migrate_assistant_settings)
+    # Separate jobs, so one failing does not block the other
+    start.async_at_started(hass, _async_migrate_alexa_settings)
+    start.async_at_started(hass, _async_migrate_google_settings)
 
     if not cloud.is_logged_in:
         # Remove leftover config entries if the user is not logged in.
