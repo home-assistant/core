@@ -211,10 +211,10 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_GATEWAY_ID, default=self._gateway_id or ""): str,
                 probatio.Required(
-                    CONF_API_SECRET, default=self._api_secret or ""
+                    probatio.Secret(CONF_API_SECRET), default=self._api_secret or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 probatio.Optional(
-                    CONF_PRIVATE_KEY, default=self._private_key or ""
+                    probatio.Secret(CONF_PRIVATE_KEY), default=self._private_key or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 probatio.Optional(
                     _CONF_PUBLIC_KEY, default=self._public_key or ""
@@ -275,7 +275,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_SECRET): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_SECRET)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

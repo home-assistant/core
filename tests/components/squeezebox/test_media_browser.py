@@ -260,12 +260,35 @@ async def test_async_search_media(
         assert category_level[0]["title"] == "Fake Item 1"
 
 
-async def test_async_search_media_in_artist(
+@pytest.mark.parametrize(
+    ("media_content_type", "category", "id_key", "first_item"),
+    [
+        pytest.param(
+            MediaType.ARTIST,
+            "artist",
+            "artist_id",
+            ("Love Album", MediaClass.ALBUM, MediaType.ALBUM, "1", True),
+            id="artist",
+        ),
+        pytest.param(
+            MediaType.GENRE,
+            "genre",
+            "genre_id",
+            ("Love Band", MediaClass.ARTIST, MediaType.ARTIST, "1", True),
+            id="genre",
+        ),
+    ],
+)
+async def test_async_search_media_in_container(
     hass: HomeAssistant,
     lms: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    media_content_type: MediaType,
+    category: str,
+    id_key: str,
+    first_item: tuple[str, MediaClass, MediaType, str, bool],
 ) -> None:
-    """Test a search inside an artist returns matching albums and tracks."""
+    """Test a search inside an artist or genre also matches track titles."""
 
     async def mock_browse(
         category: str,
@@ -274,10 +297,9 @@ async def test_async_search_media_in_artist(
         search_query: str | None = None,
     ) -> dict[str, Any]:
         items = {
-            "artist": [{"id": "1", "title": "Love Album"}],
             "titles": [{"id": "2", "title": "Love Song"}],
-        }
-        return {"title": category, "items": items[category]}
+        }.get(category, [{"id": "1", "title": first_item[0]}])
+        return {"title": category, "items": items}
 
     player = (await lms.async_get_players())[0]
     player.async_browse.side_effect = mock_browse
@@ -289,7 +311,7 @@ async def test_async_search_media_in_artist(
             "type": "media_player/search_media",
             "entity_id": "media_player.test_player",
             "media_content_id": "42",
-            "media_content_type": MediaType.ARTIST,
+            "media_content_type": media_content_type,
             "search_query": "love",
         }
     )
@@ -305,12 +327,12 @@ async def test_async_search_media_in_artist(
         )
         for item in response["result"]["result"]
     ] == [
-        ("Love Album", MediaClass.ALBUM, MediaType.ALBUM, "1", True),
+        first_item,
         ("Love Song", MediaClass.TRACK, MediaType.TRACK, "2", False),
     ]
     assert player.async_browse.call_args_list == [
-        call("artist", limit=ANY, browse_id=("artist_id", "42"), search_query="love"),
-        call("titles", limit=ANY, browse_id=("artist_id", "42"), search_query="love"),
+        call(category, limit=ANY, browse_id=(id_key, "42"), search_query="love"),
+        call("titles", limit=ANY, browse_id=(id_key, "42"), search_query="love"),
     ]
 
 
@@ -345,7 +367,8 @@ async def test_async_search_media_invalid_filter(
     "media_content_type",
     [
         pytest.param("Fake Type", id="unknown"),
-        pytest.param("artist tracks", id="internal"),
+        pytest.param("artist tracks", id="internal_artist"),
+        pytest.param("genre tracks", id="internal_genre"),
     ],
 )
 async def test_async_search_media_invalid_type(
@@ -375,6 +398,7 @@ async def test_async_search_media_invalid_type(
         err_message = "If specified, Media content type must be one of"
         assert err_message in response["error"]["message"]
         assert "artist tracks" not in response["error"]["message"]
+        assert "genre tracks" not in response["error"]["message"]
 
 
 async def test_async_search_media_not_found(

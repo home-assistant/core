@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionException
-from httpx import HTTPError, InvalidURL
+from httpx2 import HTTPError, InvalidURL
 import probatio
 from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth, VersionInfo

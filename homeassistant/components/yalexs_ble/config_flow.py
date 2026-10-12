@@ -229,7 +229,10 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_validate",
             data_schema=probatio.Schema(
-                {probatio.Required(CONF_KEY): str, probatio.Required(CONF_SLOT): int}
+                {
+                    probatio.Required(probatio.Secret(CONF_KEY)): str,
+                    probatio.Required(CONF_SLOT): int,
+                }
             ),
             description_placeholders={
                 "address": reauth_entry.data[CONF_ADDRESS],
@@ -280,7 +283,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="key_slot",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_KEY)): str,
                     probatio.Required(CONF_SLOT): int,
                 }
             ),

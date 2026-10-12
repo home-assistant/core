@@ -804,7 +804,6 @@ ENCHARGE_AGGREGATE_SENSORS = (
         translation_key="reserve_soc",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("reserve_state_of_charge"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(

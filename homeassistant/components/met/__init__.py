@@ -1,16 +1,18 @@
 """The met component."""
 
-import logging
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_TRACK_HOME, DEFAULT_HOME_LATITUDE, DEFAULT_HOME_LONGITUDE
+from .const import (
+    CONF_TRACK_HOME,
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+)
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 PLATFORMS = [Platform.WEATHER]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -26,10 +28,10 @@ async def async_setup_entry(
             and hass.config.longitude == DEFAULT_HOME_LONGITUDE
         )
     ):
-        _LOGGER.warning(
-            "Skip setting up met.no integration; No Home location has been set"
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_home_location",
         )
-        return False
 
     coordinator = MetDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()

@@ -75,7 +75,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
                         self._ecobee.refresh_tokens
                     )
                 except EcobeeAuthMfaRequiredError as err:
-                    self._mfa_challenge = err.args[0]
+                    self._mfa_challenge = err.challenge
                     return await self.async_step_mfa()
                 except EcobeeAuthFailedError:
                     errors["base"] = "invalid_auth"
@@ -177,7 +177,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._ecobee.refresh_tokens
                 )
             except EcobeeAuthMfaRequiredError as err:
-                self._mfa_challenge = err.args[0]
+                self._mfa_challenge = err.challenge
                 return await self.async_step_mfa()
             except EcobeeAuthFailedError:
                 errors["base"] = "invalid_auth"
