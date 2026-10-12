@@ -79,12 +79,16 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         select_option_fn=lambda machine, option: machine.set_steam_level(
             STEAM_LEVEL_HA_TO_LM[option]
         ),
-        current_option_fn=lambda machine: STEAM_LEVEL_LM_TO_HA[
-            cast(
-                SteamBoilerLevel,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
-            ).target_level
-        ],
+        current_option_fn=lambda machine: (
+            STEAM_LEVEL_LM_TO_HA[
+                cast(
+                    SteamBoilerLevel,
+                    machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
+                ).target_level
+            ]
+            if WidgetType.CM_STEAM_BOILER_LEVEL in machine.dashboard.config
+            else None
+        ),
         supported_fn=(
             lambda coordinator: (
                 coordinator.device.dashboard.model_name

@@ -1,6 +1,7 @@
 """Tests for Shelly sensor platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import Mock, PropertyMock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_CAMERA, MODEL_EM3
@@ -20,7 +21,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import DOMAIN, UPDATE_PERIOD_MULTIPLIER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -793,6 +795,129 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "22.9"
+
+
+async def test_rpc_sleeping_last_seen_sensor(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC last seen sensor for a sleeping device."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_last_seen"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-sys-last_seen"
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Device wakes up and gets initialized
+    freezer.move_to("2026-10-08 10:00:00+00:00")
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2026-10-08T10:00:00+00:00"
+
+    # Device wakes up and sends a status update
+    freezer.tick(1000)
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2026-10-08T10:16:40+00:00"
+
+    # Device stops reporting, other sensors become unavailable
+    freezer.tick(UPDATE_PERIOD_MULTIPLIER * 1000)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_temperature"))
+    assert state.state == STATE_UNAVAILABLE
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2026-10-08T10:16:40+00:00"
+
+
+async def test_rpc_last_seen_sensor_not_sleeping_device(
+    hass: HomeAssistant, mock_rpc_device: Mock
+) -> None:
+    """Test RPC last seen sensor is not created for a non-sleeping device."""
+    await init_integration(hass, 2)
+
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_last_seen") is None
+
+
+@pytest.mark.parametrize(
+    ("restored_states", "expected_state"),
+    [
+        (
+            (
+                (
+                    State(f"{SENSOR_DOMAIN}.test_name_last_seen", ""),
+                    {
+                        "native_value": {
+                            "__type": "<class 'datetime.datetime'>",
+                            "isoformat": "2026-10-07T20:00:00+00:00",
+                        },
+                        "native_unit_of_measurement": None,
+                    },
+                ),
+            ),
+            "2026-10-07T20:00:00+00:00",
+        ),
+        ((), STATE_UNKNOWN),
+    ],
+)
+async def test_rpc_restored_sleeping_last_seen_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+    restored_states: tuple[tuple[State, dict[str, Any]], ...],
+    expected_state: str,
+) -> None:
+    """Test RPC restored last seen sensor."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device = register_device(device_registry, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_last_seen",
+        "sys-last_seen",
+        entry,
+        device_id=device.id,
+    )
+
+    mock_restore_cache_with_extra_data(hass, restored_states)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == expected_state
+
+    # Make device online
+    freezer.move_to("2026-10-08 10:00:00+00:00")
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Mock update
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2026-10-08T10:00:00+00:00"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

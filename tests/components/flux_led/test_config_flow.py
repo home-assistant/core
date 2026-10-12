@@ -103,6 +103,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
     }
+    assert result3["result"].unique_id == MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -178,6 +179,7 @@ async def test_discovery_legacy(hass: HomeAssistant) -> None:
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
     }
+    assert result3["result"].unique_id == MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -261,6 +263,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
             CONF_REMOTE_ACCESS_HOST: "the.cloud",
             CONF_REMOTE_ACCESS_PORT: 8816,
         }
+        assert result3["result"].unique_id == MAC_ADDRESS
         await hass.async_block_till_done()
 
     mock_setup_entry.assert_called_once()
@@ -428,6 +431,7 @@ async def test_manual_no_discovery_data(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: IP_ADDRESS,
@@ -528,6 +532,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
     }
+    assert result2["result"].unique_id == MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -567,6 +572,7 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
     }
+    assert result2["result"].unique_id == MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -600,6 +606,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass: HomeAssistant) -> None:
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
     }
+    assert result2["result"].unique_id == MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -636,6 +643,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
     }
     assert result2["title"] == "Bulb RGBCW DDEEFF"
+    assert result2["result"].unique_id == MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 

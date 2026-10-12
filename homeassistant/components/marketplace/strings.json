@@ -360,23 +360,25 @@
       "fix_flow": {
         "step": {
           "confirm_restart": {
-            "description": "Restart Home Assistant to finish the installation or update of {name}. Select **Submit** to restart now.",
-            "title": "Restart required"
+            "description": "Restart Home Assistant to finish installing or updating {name}.",
+            "submit": "[%key:common::action::restart%]",
+            "title": "Restart required for {name}"
           }
         }
       },
-      "title": "Restart required"
+      "title": "Restart required for {name}"
     },
     "restart_required_uninstall": {
       "fix_flow": {
         "step": {
           "confirm_restart": {
-            "description": "Restart Home Assistant to finish uninstalling {name}, its code keeps running until then. Select **Submit** to restart now.",
-            "title": "Restart required"
+            "description": "Restart Home Assistant to finish uninstalling {name}. It is not fully removed until then.",
+            "submit": "[%key:common::action::restart%]",
+            "title": "Restart required for {name}"
           }
         }
       },
-      "title": "Restart required"
+      "title": "Restart required for {name}"
     }
   },
   "system_health": {

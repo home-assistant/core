@@ -165,6 +165,40 @@ async def test_media_player_added_before_console_status(
     assert state.state != STATE_UNAVAILABLE
 
 
+async def test_media_player_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the media player becomes unavailable when a status update fails."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = TimeoutException(
+        "timeout"
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = None
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
 @pytest.mark.usefixtures("xbox_live_client")
 async def test_browse_media(
     hass: HomeAssistant,

@@ -239,14 +239,11 @@ def async_migrate_sensor_signal_strength(
         registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
-# Release that removes the deprecated mirrors.
-SENSE_SETTING_MIRROR_BREAKS_IN = "2026.11.0"
-
-# Sense settings whose read-only mirror is deprecated, keyed by the mirror's own
+# Removed read-only mirrors of the sense setting controls, keyed by the mirror's
 # (platform, key) and pointing at the (platform, key) of the control that
-# replaces it. Camera and light entities reuse these key strings, so the match
-# is scoped to the sensor MACs below.
-_SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
+# replaces it. Camera and light entities reuse these keys, so the match is
+# scoped to sensor MACs.
+_SENSE_SETTING_MIRRORS: dict[tuple[str, str], tuple[Platform, str]] = {
     (Platform.BINARY_SENSOR, "motion_enabled"): (Platform.SWITCH, "motion"),
     (Platform.BINARY_SENSOR, "temperature"): (Platform.SWITCH, "temperature"),
     (Platform.BINARY_SENSOR, "humidity"): (Platform.SWITCH, "humidity"),
@@ -257,54 +254,142 @@ _SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
 
 
 @callback
-def async_deprecate_sense_setting_mirrors(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+def async_remove_sense_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, sensor_macs: set[str]
 ) -> None:
-    """Deprecate the read-only mirrors of the sense setting controls.
+    """Remove the read-only mirrors of the sense setting controls.
 
-    Those controls write through the public API, which the local user's write
-    permission does not gate, so the switch or number is now available to every
-    user and the ``PermRequired.NO_WRITE`` mirror only duplicates its state.
-
-    The mirrors keep working until the removal, so a dashboard or automation
-    referencing one does not break without warning. Two releases is enough
-    here: the replacement holds the same state, so the migration is an entity
-    id swap, and the repair points at the exact entity to swap in.
+    Deprecated in 2026.9.0: the switch or number they mirror writes through the
+    public API and is available to every user. Remove each stale entry, raising
+    a repair first if a still-enabled one is referenced by an automation or
+    script, and drop the stored deprecation repair.
 
     Runs after platform setup, unlike the other migrations in this file: the
-    repair needs the replacement switch/number to already be in the registry
-    so it can name it, and that entity is only created once the platform is
-    set up.
+    repair names the replacement, which only exists once the platform is set up.
 
-    Added in 2026.9.0
+    Added in 2026.11.0
     """
-    if not (macs := {sensor.mac for sensor in bootstrap.sensors.values()}):
+    if not sensor_macs:
         return
     registry = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         mac, _, key = entity.unique_id.partition("_")
-        replacement = _SENSE_SETTING_REPLACEMENTS.get((entity.domain, key))
-        if replacement is None or mac not in macs:
+        replacement = _SENSE_SETTING_MIRRORS.get((entity.domain, key))
+        if replacement is None or mac not in sensor_macs:
             continue
+        ir.async_delete_issue(
+            hass, DOMAIN, f"sense_setting_mirror_deprecated_{entity.unique_id}"
+        )
         replacement_platform, replacement_key = replacement
-        # The device may not support the setting at all (no capability match),
-        # in which case there is nothing to point the repair at.
         if replacement_entity_id := registry.async_get_entity_id(
             replacement_platform, DOMAIN, f"{mac}_{replacement_key}"
         ):
             _async_repair_if_used(
                 hass,
                 entity,
-                f"sense_setting_mirror_deprecated_{entity.unique_id}",
-                "sense_setting_mirror_deprecated",
+                f"sense_setting_mirror_removed_{entity.unique_id}",
+                "sense_setting_mirror_removed",
                 {"replacement": replacement_entity_id},
-                breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
             )
         else:
             _async_repair_if_used(
                 hass,
                 entity,
-                f"sense_setting_mirror_deprecated_{entity.unique_id}",
-                "sense_setting_mirror_deprecated_no_replacement",
-                breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
+                f"sense_setting_mirror_removed_{entity.unique_id}",
+                "sense_setting_mirror_removed_no_replacement",
             )
+        registry.async_remove(entity.entity_id)
+
+
+# Release that removes the deprecated light mirrors.
+LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+
+# Light mirrors keyed by their own (platform, key), pointing at the (platform,
+# key) of the control that replaces them and the repair text. ``None`` is the
+# light entity itself, whose unique_id is the bare MAC.
+_LIGHT_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+    (Platform.BINARY_SENSOR, "light"): (
+        Platform.LIGHT,
+        None,
+        "setting_mirror_deprecated",
+    ),
+    (Platform.BINARY_SENSOR, "status_light"): (
+        Platform.SWITCH,
+        "status_light",
+        "setting_mirror_deprecated",
+    ),
+    (Platform.SENSOR, "sensitivity"): (
+        Platform.NUMBER,
+        "sensitivity",
+        "setting_mirror_deprecated",
+    ),
+    # The sensor shows the raw mode, the select its own option names.
+    (Platform.SENSOR, "light_motion"): (
+        Platform.SELECT,
+        "light_motion",
+        "setting_mirror_deprecated_light_mode",
+    ),
+}
+
+
+@callback
+def async_deprecate_light_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the read-only mirrors of the light controls.
+
+    The light and its controls write through the public API, which the local
+    user's write permission does not gate, so they are now available to every
+    user and the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {light.mac for light in bootstrap.lights.values()},
+        _LIGHT_MIRROR_REPLACEMENTS,
+        LIGHT_SETTING_MIRROR_BREAKS_IN,
+    )
+
+
+@callback
+def _async_deprecate_setting_mirrors(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    macs: set[str],
+    replacements: dict[tuple[str, str], tuple[Platform, str | None, str]],
+    breaks_in: str,
+) -> None:
+    """Raise a repair for each used mirror, pointing at its replacement.
+
+    The mirror keys are shared across device types, so the match is scoped to
+    ``macs``.
+    """
+    if not macs:
+        return
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        mac, _, key = entity.unique_id.partition("_")
+        mirror = (entity.domain, key)
+        if mirror not in replacements or mac not in macs:
+            continue
+        platform, replacement_key, translation_key = replacements[mirror]
+        replacement_id = registry.async_get_entity_id(
+            platform,
+            DOMAIN,
+            mac if replacement_key is None else f"{mac}_{replacement_key}",
+        )
+        # Nothing to point the repair at before the replacement exists.
+        if replacement_id is None:
+            continue
+        _async_repair_if_used(
+            hass,
+            entity,
+            f"setting_mirror_deprecated_{entity.unique_id}",
+            translation_key,
+            {"replacement": replacement_id},
+            breaks_in=breaks_in,
+        )

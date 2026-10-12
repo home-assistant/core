@@ -66,7 +66,7 @@ class BryantEvolutionClimate(ClimateEntity):
     """
 
     _attr_has_entity_name = True
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -107,31 +107,33 @@ class BryantEvolutionClimate(ClimateEntity):
 
     async def async_update(self) -> None:
         """Update the entity state."""
-        self._attr_current_temperature = await self._client.read_current_temperature()
+        self._attr_native_current_temperature = (
+            await self._client.read_current_temperature()
+        )
         if (fan_mode := await self._client.read_fan_mode()) is not None:
             self._attr_fan_mode = fan_mode.lower()
         else:
             self._attr_fan_mode = None
-        self._attr_target_temperature = None
-        self._attr_target_temperature_high = None
-        self._attr_target_temperature_low = None
+        self._attr_native_target_temperature = None
+        self._attr_native_target_temperature_high = None
+        self._attr_native_target_temperature_low = None
         self._attr_hvac_mode = await self._read_hvac_mode()
 
         # Set target_temperature or target_temperature_{high, low} based on mode.
         match self._attr_hvac_mode:
             case HVACMode.HEAT:
-                self._attr_target_temperature = (
+                self._attr_native_target_temperature = (
                     await self._client.read_heating_setpoint()
                 )
             case HVACMode.COOL:
-                self._attr_target_temperature = (
+                self._attr_native_target_temperature = (
                     await self._client.read_cooling_setpoint()
                 )
             case HVACMode.HEAT_COOL:
-                self._attr_target_temperature_high = (
+                self._attr_native_target_temperature_high = (
                     await self._client.read_cooling_setpoint()
                 )
-                self._attr_target_temperature_low = (
+                self._attr_native_target_temperature_low = (
                     await self._client.read_heating_setpoint()
                 )
             case HVACMode.OFF:
@@ -185,10 +187,13 @@ class BryantEvolutionClimate(ClimateEntity):
                 # In AUTO, we need to figure out what the actual action is
                 # based on the setpoints.
                 if (
-                    self.current_temperature is not None
-                    and self.target_temperature_low is not None
+                    self.native_current_temperature is not None
+                    and self.native_target_temperature_low is not None
                 ):
-                    if self.current_temperature > self.target_temperature_low:
+                    if (
+                        self.native_current_temperature
+                        > self.native_target_temperature_low
+                    ):
                         # If the system is on and the current temperature is
                         # higher than the point at which heating would activate,
                         # then we must be cooling.
@@ -199,8 +204,8 @@ class BryantEvolutionClimate(ClimateEntity):
             translation_key="failed_to_parse_hvac_action",
             translation_placeholders={
                 "mode_and_active": mode_and_active,
-                "current_temperature": str(self.current_temperature),
-                "target_temperature_low": str(self.target_temperature_low),
+                "current_temperature": str(self.native_current_temperature),
+                "target_temperature_low": str(self.native_target_temperature_low),
             },
         )
 
@@ -225,7 +230,7 @@ class BryantEvolutionClimate(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_clsp"
                 )
-            self._attr_target_temperature_high = temp
+            self._attr_native_target_temperature_high = temp
 
         if value := kwargs.get(ATTR_TARGET_TEMP_LOW):
             temp = int(value)
@@ -233,7 +238,7 @@ class BryantEvolutionClimate(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_htsp"
                 )
-            self._attr_target_temperature_low = temp
+            self._attr_native_target_temperature_low = temp
 
         if value := kwargs.get(ATTR_TEMPERATURE):
             temp = int(value)
@@ -246,7 +251,7 @@ class BryantEvolutionClimate(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_temp"
                 )
-            self._attr_target_temperature = temp
+            self._attr_native_target_temperature = temp
 
         # If we get here, we must have changed something unless HA allowed an
         # invalid service call (without any recognized kwarg).

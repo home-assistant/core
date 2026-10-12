@@ -30,7 +30,11 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import ServiceNotFound, TemplateError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -1655,11 +1659,13 @@ async def test_script_service_changed_entity_id(
     assert entry.entity_id == "script.custom_entity_id"
 
     calls = []
+    called = asyncio.Event()
 
     @callback
     def record_call(service):
         """Add recorded event to set."""
         calls.append(service)
+        called.set()
 
     hass.services.async_register("test", "script", record_call)
 
@@ -1670,35 +1676,93 @@ async def test_script_service_changed_entity_id(
         {
             "script": {
                 "test": {
-                    "sequence": {
-                        "action": "test.script",
-                        "data_template": {"entity_id": "{{ this.entity_id }}"},
-                    }
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data_template": {"entity_id": "{{ this.entity_id }}"},
+                        },
+                        {"wait_for_trigger": {"trigger": "event", "event_type": "go"}},
+                        {"action": "test.script"},
+                    ]
                 }
             }
         },
     )
 
-    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
-
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "script.custom_entity_id"}
+    )
+    # Can't block till done while the script is waiting
+    await asyncio.wait_for(called.wait(), 1)
 
     assert len(calls) == 1
     assert calls[0].data["entity_id"] == "script.custom_entity_id"
+    assert hass.states.get("script.custom_entity_id").state == "on"
 
-    # Change entity while the script entity is loaded, and make sure
-    # the service still works
+    # Change entity while the script is running, and make sure the run is
+    # not stopped and the service still works
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="script.custom_entity_id_2"
     )
     assert entry.entity_id == "script.custom_entity_id_2"
-    await hass.async_block_till_done()
 
-    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+    assert hass.states.get("script.custom_entity_id") is None
+    assert hass.states.get("script.custom_entity_id_2").state == "on"
+
+    hass.bus.async_fire("go")
     await hass.async_block_till_done()
 
     assert len(calls) == 2
-    assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
+    assert hass.states.get("script.custom_entity_id_2").state == "off"
+
+    called.clear()
+    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+    await asyncio.wait_for(called.wait(), 1)
+    hass.bus.async_fire("go")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 4
+    assert calls[2].data["entity_id"] == "script.custom_entity_id_2"
+
+
+async def test_unavailable_script_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair issue of a broken script follows its entity_id."""
+    assert await async_setup_component(
+        hass, script.DOMAIN, {script.DOMAIN: {"bad_script": {"alias": "bad_script"}}}
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "script.bad_script_validation_failed_schema"
+    )
+
+    entity_registry.async_update_entity(
+        "script.bad_script", new_entity_id="script.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "script.bad_script_validation_failed_schema"
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "script.renamed_validation_failed_schema"
+    )
+    assert issue
+    assert issue.translation_placeholders["entity_id"] == "script.renamed"
+
+    # The moved issue is deleted when the script is removed
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={script.DOMAIN: {}},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "script.renamed_validation_failed_schema"
+    )
 
 
 async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -1795,6 +1859,11 @@ async def test_blueprint_script_bad_config(
         "name": "test_script",
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
+    # The script is broken, but still listed under its blueprint
+    assert script.scripts_with_blueprint(hass, "test_service.yaml") == [
+        "script.test_script"
+    ]
 
 
 async def test_blueprint_script_fails_substitution(
