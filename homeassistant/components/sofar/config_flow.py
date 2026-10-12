@@ -6,7 +6,6 @@ from typing import Any, override
 
 from modbus_connection import ModbusError
 import probatio
-from sofar_modbus.modern import async_detect_type
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -74,13 +73,7 @@ async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInv
     """Connect to the inverter and identify it, or raise."""
     params = create_modbus_params(data)
     async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
-        device = await SofarInverter.async_detect(unit)
-        if (
-            not device.inverter_type
-            and (detected := await async_detect_type(unit)) is not None
-        ):
-            device.inverter_type = detected
-        return device
+        return await SofarInverter.async_detect(unit)
 
 
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
