@@ -397,13 +397,14 @@ async def test_yaml_migration_multiple_blocks_import_deadline(
     )
 
     # The follower gives up once the deadline elapses; the creator is still hanging.
-    while (
-        issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-        )
-        is None
-    ):
-        await asyncio.sleep(0.1)
+    async with asyncio.timeout(5):
+        while (
+            issue_registry.async_get_issue(
+                DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+            )
+            is None
+        ):
+            await asyncio.sleep(0.1)
 
     release.set()
     await hass.async_block_till_done()
@@ -458,13 +459,14 @@ async def test_yaml_migration_import_failure_unrelated_user_flow(
     )
 
     # The follower must not wait for the unrelated user flow; poll for the issue.
-    while (
-        issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-        )
-        is None
-    ):
-        await asyncio.sleep(0.1)
+    async with asyncio.timeout(5):
+        while (
+            issue_registry.async_get_issue(
+                DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+            )
+            is None
+        ):
+            await asyncio.sleep(0.1)
 
     assert hass.config_entries.async_entries(DOMAIN) == []
 
