@@ -358,7 +358,7 @@ aiomodernforms==0.3.1
 aiomusiccast==0.15.0
 
 # homeassistant.components.nanoleaf
-aionanoleaf2==1.0.2
+aionanoleaf2==1.0.5
 
 # homeassistant.components.notion
 aionotion==2024.03.0
@@ -1783,7 +1783,7 @@ numato-gpio==0.13.0
 numpy==2.3.2
 
 # homeassistant.components.nyt_games
-nyt_games==1.0.0
+nyt_games==1.0.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.4
@@ -3209,6 +3209,9 @@ systembridgeconnector==5.12.1
 
 # homeassistant.components.tailscale
 tailscale==1.0.0
+
+# homeassistant.components.tank_utility
+tank-utility==1.5.1
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
