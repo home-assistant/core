@@ -20,7 +20,8 @@ python3 .claude/skills/custom-integration-sources/scripts/sync.py
 - Requires an authenticated `gh` (`gh auth status`), used only to resolve commit SHAs via GraphQL.
 - Incremental: only repos whose HEAD changed are downloaded. A no-change run takes about a minute; the first run downloads everything (~3 minutes).
 - Repos dropped from the HACS list are deleted. Repos that are deleted, private or empty are listed as `unavailable` and their local copy is removed.
-- A non-zero exit means some downloads failed and those repos are stale or missing; rerun before searching, or say which repos are affected.
+- Exit status 3 means the sync completed but some downloads failed: the listed repos are stale or missing. Rerun, or name them in the report.
+- Any other non-zero exit means the sync did not complete (authentication, refused destination, network or GraphQL error, another sync already running). Fix the cause and rerun before searching.
 - The directory is added to `.git/info/exclude` automatically; it must never be committed.
 - Options: `owner/repo ...` to sync only some repos, `--force` to re-download everything, `--dest DIR` to use another location (for example a directory shared between worktrees), `--workers N` for download concurrency.
 
