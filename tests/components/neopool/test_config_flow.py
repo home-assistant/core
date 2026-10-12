@@ -248,8 +248,8 @@ async def test_reconfigure_flow_happy_path(
     assert mock_config_entry.data[CONF_PORT] == 1502
     assert mock_config_entry.data[CONF_UNIT_ID] == 2
 
-    while mock_config_entry.state is not ConfigEntryState.LOADED:
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -279,8 +279,8 @@ async def test_reconfigure_flow_serial(
     assert mock_config_entry_serial.data[CONF_DEVICE] == "/dev/ttyUSB1"
     assert CONF_HOST not in mock_config_entry_serial.data
 
-    while mock_config_entry_serial.state is not ConfigEntryState.LOADED:
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
     await hass.async_block_till_done()
 
@@ -325,8 +325,8 @@ async def test_reconfigure_flow_relink_same_endpoint(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry_serial.data[CONF_BAUDRATE] == 9600
 
-    while mock_config_entry_serial.state is not ConfigEntryState.LOADED:
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
     await hass.async_block_till_done()
 
@@ -408,8 +408,8 @@ async def test_reconfigure_flow_relink_restores_on_error(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry_serial.data[CONF_BAUDRATE] == 9600
 
-    while mock_config_entry_serial.state is not ConfigEntryState.LOADED:
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
     await hass.async_block_till_done()
 
@@ -443,8 +443,8 @@ async def test_reconfigure_flow_relink_restores_on_mismatch(
     assert result["reason"] == "serial_mismatch"
     assert mock_config_entry_serial.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
 
-    while mock_config_entry_serial.state is not ConfigEntryState.LOADED:
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
     await hass.async_block_till_done()
 
