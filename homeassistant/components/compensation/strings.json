@@ -100,8 +100,14 @@
   "selector": {
     "data_points": {
       "fields": {
-        "compensated_value": "Compensated value",
-        "uncompensated_value": "Uncompensated value"
+        "compensated_value": {
+          "name": "Compensated value",
+          "overview_label": "Compensated value: {value}"
+        },
+        "uncompensated_value": {
+          "name": "Uncompensated value",
+          "overview_label": "Uncompensated value: {value}"
+        }
       }
     }
   }

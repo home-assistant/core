@@ -1814,7 +1814,6 @@ class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     label_field: str
     description_field: str
     translation_key: str
-    overview_labels: bool
 
 
 @SELECTORS.register("object")
@@ -1839,7 +1838,6 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             probatio.Optional("label_field"): str,
             probatio.Optional("description_field"): str,
             probatio.Optional("translation_key"): str,
-            probatio.Optional("overview_labels", default=False): bool,
         }
     )
 
