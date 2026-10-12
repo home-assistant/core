@@ -1008,12 +1008,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving Water Offset',
+        'object_id_base': 'Leaving water offset',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving Water Offset',
+        'original_name': 'Leaving water offset',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -1025,7 +1025,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Leaving Water Offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Leaving water offset',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,

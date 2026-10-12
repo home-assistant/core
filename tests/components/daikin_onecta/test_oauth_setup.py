@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import RequestInfo
 from daikin_onecta import OnectaAuthenticationError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
@@ -20,7 +21,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from .test_climate_snapshots import _async_setup_fixture
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _token_request_info() -> RequestInfo:
@@ -41,11 +42,11 @@ async def test_setup_rejected_cloud_token_requires_authentication(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             return_value="token",
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
             side_effect=OnectaAuthenticationError(
                 status=status, method="GET", path="/v1/gateway-devices"
             ),
@@ -79,18 +80,21 @@ async def test_poll_rejected_cloud_token_starts_reauthentication(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     status: int,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A real library authentication failure during polling starts the HA flow."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     with patch(
-        "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
         side_effect=OnectaAuthenticationError(
             status=status, method="GET", path="/v1/gateway-devices"
         ),
     ):
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -111,7 +115,7 @@ async def test_setup_entry_rejected_token_requires_authentication(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             side_effect=_reauth_error(),
         ),
     ):
@@ -131,7 +135,7 @@ async def test_setup_entry_retries_token_error(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             side_effect=_token_error(),
         ),
     ):
@@ -151,7 +155,7 @@ async def test_setup_entry_retries_token_timeout(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             side_effect=TimeoutError("timeout"),
         ),
     ):

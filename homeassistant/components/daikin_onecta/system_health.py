@@ -26,7 +26,6 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         if coordinator is None:
             continue
 
-        api = coordinator.api
         return {
             "api_status": system_health.async_check_can_reach_url(
                 hass, f"{DAIKIN_API_URL}/gateway-devices"
@@ -34,12 +33,12 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             "oauth2_status": system_health.async_check_can_reach_url(
                 hass, OAUTH2_AUTHORIZE
             ),
-            "max_minute": api.rate_limits["minute"],
-            "max_day": api.rate_limits["day"],
-            "remaining_minute": api.rate_limits["remaining_minutes"],
-            "remaining_day": api.rate_limits["remaining_day"],
-            "retry_after": api.rate_limits["retry_after"],
-            "ratelimit_reset": api.rate_limits["ratelimit_reset"],
-            "oauth2_token_valid": api.session.valid_token,
+            "max_minute": coordinator.rate_limits["minute"],
+            "max_day": coordinator.rate_limits["day"],
+            "remaining_minute": coordinator.rate_limits["remaining_minutes"],
+            "remaining_day": coordinator.rate_limits["remaining_day"],
+            "retry_after": coordinator.rate_limits["retry_after"],
+            "ratelimit_reset": coordinator.rate_limits["ratelimit_reset"],
+            "oauth2_token_valid": coordinator.session.valid_token,
         }
     return {}

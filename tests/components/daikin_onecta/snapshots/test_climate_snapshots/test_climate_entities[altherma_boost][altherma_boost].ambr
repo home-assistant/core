@@ -37,12 +37,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving Water Offset',
+        'object_id_base': 'Leaving water offset',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving Water Offset',
+        'original_name': 'Leaving water offset',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -54,7 +54,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving Water Offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -116,12 +116,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving Water Temperature',
+        'object_id_base': 'Leaving water temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving Water Temperature',
+        'original_name': 'Leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -133,7 +133,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving Water Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -194,12 +194,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -211,7 +211,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.4,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,

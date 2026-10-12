@@ -24,9 +24,9 @@ async def test_diagnostics(
 ) -> None:
     """Test cached cloud data is provided with identifying data redacted."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
-    api = config_entry.runtime_data.api
-    api.client.get_gateway_devices = AsyncMock()
-    api.client.get_sites = AsyncMock(
+    coordinator = config_entry.runtime_data
+    coordinator.client.get_gateway_devices = AsyncMock()
+    coordinator.client.get_sites = AsyncMock(
         return_value=[
             Site(
                 id="site-1",
@@ -58,8 +58,8 @@ async def test_diagnostics(
         "gateway_device_id": REDACTED,
         "linked_to_site": True,
     }
-    api.client.get_sites.assert_awaited_once_with()
-    api.client.get_gateway_devices.assert_not_awaited()
+    coordinator.client.get_sites.assert_awaited_once_with()
+    coordinator.client.get_gateway_devices.assert_not_awaited()
 
 
 async def test_diagnostics_redacts_gateway_ssids(
@@ -69,9 +69,9 @@ async def test_diagnostics_redacts_gateway_ssids(
 ) -> None:
     """Redact gateway Wi-Fi names from cached cloud data."""
     await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
-    api = config_entry.runtime_data.api
-    api.client.get_gateway_devices = AsyncMock()
-    api.client.get_sites = AsyncMock(return_value=[])
+    coordinator = config_entry.runtime_data
+    coordinator.client.get_gateway_devices = AsyncMock()
+    coordinator.client.get_sites = AsyncMock(return_value=[])
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -97,7 +97,7 @@ async def test_diagnostics_redacts_serialized_product_identifiers(
 ) -> None:
     """Redact the serialized identifier of an Altherma management point."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
-    config_entry.runtime_data.api.client.get_sites = AsyncMock(return_value=[])
+    config_entry.runtime_data.client.get_sites = AsyncMock(return_value=[])
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -136,7 +136,7 @@ async def test_diagnostics_reports_site_lookup_failures(
 ) -> None:
     """Keep diagnostics available when the explicit Sites lookup fails."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
-    config_entry.runtime_data.api.client.get_sites = AsyncMock(side_effect=error)
+    config_entry.runtime_data.client.get_sites = AsyncMock(side_effect=error)
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

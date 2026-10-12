@@ -30,7 +30,7 @@ async def missing_gateway(
         (DOMAIN, gateway_id), config_entry.entry_id
     )
     assert device_entry is not None
-    coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
+    coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
     await coordinator.async_refresh()
     assert coordinator.last_update_success
     assert not coordinator.data[gateway_id].present_in_cloud
@@ -50,7 +50,7 @@ async def test_remove_missing_gateway_requires_complete_sites(
 ) -> None:
     """A complete Sites response is required before removing a missing gateway."""
     coordinator = config_entry.runtime_data
-    coordinator.api.get_sites = AsyncMock(
+    coordinator.async_get_sites = AsyncMock(
         return_value=[Site(id="site", gateway_device_ids=linked_gateways)]
     )
     gateway_id = next(iter(coordinator.data))
@@ -60,7 +60,7 @@ async def test_remove_missing_gateway_requires_complete_sites(
         is expected
     )
     assert (gateway_id in coordinator.data) is not expected
-    coordinator.api.get_sites.assert_awaited_once_with()
+    coordinator.async_get_sites.assert_awaited_once_with()
 
 
 async def test_remove_missing_gateway_rejects_site_membership(
@@ -70,7 +70,7 @@ async def test_remove_missing_gateway_rejects_site_membership(
 ) -> None:
     """A gateway linked to a site is not confirmed removed."""
     coordinator = config_entry.runtime_data
-    coordinator.api.get_sites = AsyncMock(
+    coordinator.async_get_sites = AsyncMock(
         return_value=[Site(id="site", gateway_device_ids=list(coordinator.data))]
     )
 
@@ -95,7 +95,7 @@ async def test_remove_missing_gateway_rejects_failed_sites_lookup(
 ) -> None:
     """A failed lookup must never be interpreted as an empty inventory."""
     coordinator = config_entry.runtime_data
-    coordinator.api.get_sites = AsyncMock(side_effect=error)
+    coordinator.async_get_sites = AsyncMock(side_effect=error)
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
@@ -115,14 +115,14 @@ async def test_remove_present_gateway_is_rejected_without_cloud_call(
     coordinator = config_entry.runtime_data
     gateway_id = next(iter(coordinator.data))
     coordinator.data[gateway_id].device.cloud_connection.value = online
-    coordinator.api.get_sites = AsyncMock()
+    coordinator.async_get_sites = AsyncMock()
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, gateway_id), config_entry.entry_id
     )
     assert device_entry is not None
 
     assert not await async_remove_config_entry_device(hass, config_entry, device_entry)
-    coordinator.api.get_sites.assert_not_awaited()
+    coordinator.async_get_sites.assert_not_awaited()
 
 
 async def test_remove_account_device_is_rejected(
@@ -132,14 +132,14 @@ async def test_remove_account_device_is_rejected(
     missing_gateway: dr.DeviceEntry,
 ) -> None:
     """The account device is removed only with its config entry."""
-    config_entry.runtime_data.api.get_sites = AsyncMock()
+    config_entry.runtime_data.async_get_sites = AsyncMock()
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"account_{config_entry.unique_id}"), config_entry.entry_id
     )
     assert device_entry is not None
 
     assert not await async_remove_config_entry_device(hass, config_entry, device_entry)
-    config_entry.runtime_data.api.get_sites.assert_not_awaited()
+    config_entry.runtime_data.async_get_sites.assert_not_awaited()
 
 
 async def test_remove_missing_gateway_rejects_failed_poll(
@@ -150,12 +150,12 @@ async def test_remove_missing_gateway_rejects_failed_poll(
     """Do not use cached absence after a failed poll."""
     coordinator = config_entry.runtime_data
     coordinator.last_update_success = False
-    coordinator.api.get_sites = AsyncMock()
+    coordinator.async_get_sites = AsyncMock()
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
     )
-    coordinator.api.get_sites.assert_not_awaited()
+    coordinator.async_get_sites.assert_not_awaited()
 
 
 async def test_remove_missing_gateway_rechecks_presence_after_lookup(
@@ -171,7 +171,7 @@ async def test_remove_missing_gateway_rechecks_presence_after_lookup(
         device.set_device_data(device.device)
         return []
 
-    coordinator.api.get_sites = AsyncMock(side_effect=restore_gateway)
+    coordinator.async_get_sites = AsyncMock(side_effect=restore_gateway)
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway

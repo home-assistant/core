@@ -286,12 +286,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -310,7 +310,7 @@
             '2',
             '3',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,

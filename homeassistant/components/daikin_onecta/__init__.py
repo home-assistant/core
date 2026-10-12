@@ -14,8 +14,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .const import DOMAIN
-from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
-from .daikin_api import DaikinApi, gateway_site_membership
+from .coordinator import (
+    DaikinOnectaConfigEntry,
+    OnectaDataUpdateCoordinator,
+    gateway_site_membership,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -46,10 +49,10 @@ async def async_setup_entry(
             translation_key="oauth2_implementation_unavailable",
         ) from err
 
-    daikin_api = DaikinApi(hass, config_entry, implementation)
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, implementation)
 
     try:
-        await daikin_api.async_get_access_token()
+        await coordinator.async_get_access_token()
     except OAuth2TokenRequestError:
         raise
     except (TimeoutError, aiohttp.ClientError) as err:
@@ -59,11 +62,10 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
-    config_entry.runtime_data = OnectaDataUpdateCoordinator(
-        hass, config_entry, daikin_api
-    )
+    config_entry.runtime_data = coordinator
 
     await config_entry.runtime_data.async_config_entry_first_refresh()
+    coordinator.async_register_devices()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -106,7 +108,7 @@ async def async_remove_config_entry_device(
     ):
         return False
     try:
-        sites = await coordinator.api.get_sites()
+        sites = await coordinator.async_get_sites()
     except OnectaError, aiohttp.ClientError, TimeoutError:
         return False
 

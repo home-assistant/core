@@ -42,6 +42,9 @@ async def async_setup_entry(
                             device,
                             coordinator,
                             management_point.embedded_id,
+                            BINARY_SENSOR_DESCRIPTIONS.get(
+                                value, BinarySensorEntityDescription(key=value)
+                            ),
                             value,
                         )
                     )
@@ -57,15 +60,14 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
+        description: BinarySensorEntityDescription,
         value: str,
     ) -> None:
         """Initialize the binary sensor from a device characteristic."""
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
-        self.entity_description = BINARY_SENSOR_DESCRIPTIONS.get(
-            value, BinarySensorEntityDescription(key=value)
-        )
+        self.entity_description = description
         self.update_state()
 
     def update_state(self) -> None:

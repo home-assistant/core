@@ -28,11 +28,12 @@ async def async_setup_entry(
 class DaikinRefreshButton(DaikinOnectaAccountEntity, ButtonEntity):
     """Button to request an immediate account data update."""
 
+    entity_description = BUTTON_DESCRIPTIONS["refresh"]
+
     def __init__(self, coordinator: OnectaDataUpdateCoordinator) -> None:
         """Initialize the account refresh button."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{self._account_id}_refresh"
-        self.entity_description = BUTTON_DESCRIPTIONS["refresh"]
 
     @property
     @override

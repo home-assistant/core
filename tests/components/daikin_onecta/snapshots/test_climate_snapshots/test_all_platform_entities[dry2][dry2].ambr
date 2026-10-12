@@ -3157,12 +3157,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3174,7 +3174,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 1 Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 1 Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3234,12 +3234,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3251,7 +3251,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.7,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 2 Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 2 Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3297,7 +3297,7 @@
             'away',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'swing',
+            'on',
             'fixed',
           ]),
         }),
@@ -3316,12 +3316,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3333,7 +3333,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.2,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 3 Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 3 Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3351,7 +3351,7 @@
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 432>,
           <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'fixed',
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
-            'swing',
+            'on',
             'fixed',
           ]),
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3399,12 +3399,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3416,7 +3416,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.8,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3476,12 +3476,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3493,7 +3493,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3553,12 +3553,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3570,7 +3570,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25.7,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bathroom Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bathroom Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3630,12 +3630,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -3647,7 +3647,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25.1,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,

@@ -45,18 +45,18 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 409>,
         'translation_key': 'room_temperature',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000003_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -69,7 +69,7 @@
             '2',
             '3',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Гостиная / Woonkamer Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -142,18 +142,18 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 409>,
         'translation_key': 'room_temperature',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000004_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -166,7 +166,7 @@
             '2',
             '3',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slaapkamer André / Olha Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -239,18 +239,18 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <ClimateEntityFeature: 409>,
         'translation_key': 'room_temperature',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_roomTemperature',
+        'unique_id': '00000000-0000-4000-8000-000000000005_climateControl_roomTemperature',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -263,7 +263,7 @@
             '2',
             '3',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'третий блок/Спальня второй этаж Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,

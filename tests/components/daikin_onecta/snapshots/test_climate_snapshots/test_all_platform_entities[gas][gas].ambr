@@ -181,12 +181,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Calculated Leaving Water Temperature',
+        'object_id_base': 'Calculated leaving water temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Calculated Leaving Water Temperature',
+        'original_name': 'Calculated leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -198,7 +198,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Calculated Leaving Water Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Calculated leaving water temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -260,12 +260,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving Water Temperature',
+        'object_id_base': 'Leaving water temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving Water Temperature',
+        'original_name': 'Leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -277,7 +277,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 12,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Leaving Water Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Leaving water temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -339,12 +339,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Room Temperature',
+        'object_id_base': 'Room temperature',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Room Temperature',
+        'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -356,7 +356,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Room Temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,

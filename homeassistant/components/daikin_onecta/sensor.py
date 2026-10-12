@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from daikin_onecta.models import ManagementPoint
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -101,7 +101,14 @@ def add_energy_sensors(
                 "Skipping unsupported Daikin energy aggregate '%s'", description_key
             )
             continue
-        sensors.append(DaikinEnergySensor(device, coordinator, details))
+        sensors.append(
+            DaikinEnergySensor(
+                device,
+                coordinator,
+                SENSOR_DESCRIPTIONS[description_key],
+                details,
+            )
+        )
 
 
 def add_simple_sensors(
@@ -141,6 +148,7 @@ def add_simple_sensors(
                 DaikinValueSensor(
                     device,
                     coordinator,
+                    SENSOR_DESCRIPTIONS[value],
                     ValueSensorDetails(
                         management_point.embedded_id,
                         None,
@@ -161,6 +169,7 @@ def add_sensory_sensors(
         DaikinValueSensor(
             device,
             coordinator,
+            SENSOR_DESCRIPTIONS[sensor],
             ValueSensorDetails(
                 management_point.embedded_id,
                 "sensoryData",
@@ -214,7 +223,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin sensors based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    sensors: list[SensorEntity] = [DaikinLimitSensor(coordinator, "remaining_day")]
+    sensors: list[SensorEntity] = [
+        DaikinLimitSensor(
+            coordinator,
+            SENSOR_DESCRIPTIONS["RatelimitRemainingDay"],
+            "remaining_day",
+        )
+    ]
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
             add_management_point_sensors(coordinator, device, management_point, sensors)
@@ -229,6 +244,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self,
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
+        description: SensorEntityDescription,
         details: EnergySensorDetails,
     ) -> None:
         """Initialize an energy sensor for a management point."""
@@ -236,8 +252,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._operation_mode = details.operation_mode
         self._period = details.period
         self._datatype = details.datatype
-        buildname = _energy_sensor_description_key(details)
-        self.entity_description = SENSOR_DESCRIPTIONS[buildname]
+        self.entity_description = description
         self._sensor_type = details.sensor_type
         self._attr_unique_id = _energy_sensor_unique_id(self._device.id, details)
         self.update_state()
@@ -300,13 +315,14 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         self,
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
+        description: SensorEntityDescription,
         details: ValueSensorDetails,
     ) -> None:
         """Initialize the sensor from a device value."""
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
-        self.entity_description = SENSOR_DESCRIPTIONS[details.value]
+        self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
             self._device.id,
             details.embedded_id,
@@ -344,6 +360,7 @@ class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
     def __init__(
         self,
         coordinator: OnectaDataUpdateCoordinator,
+        description: SensorEntityDescription,
         limit_key: str,
     ) -> None:
         """Initialize a rate-limit sensor."""
@@ -352,7 +369,7 @@ class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
         self._attr_unique_id = _rate_limit_sensor_unique_id(
             self._account_id, self._limit_key
         )
-        self.entity_description = SENSOR_DESCRIPTIONS["RatelimitRemainingDay"]
+        self.entity_description = description
         self.update_state()
 
     def update_state(self) -> None:
@@ -367,4 +384,4 @@ class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
 
     def sensor_value(self) -> int | None:
         """Return the current API rate-limit value."""
-        return self.coordinator.api.rate_limits[self._limit_key]
+        return self.coordinator.rate_limits[self._limit_key]

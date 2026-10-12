@@ -12,6 +12,7 @@ from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import Characteristic, GatewayDevice
 import pytest
 
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -284,13 +285,13 @@ def test_unsupported_energy_period_is_skipped() -> None:
 
 def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
     """Execute a typed command callback without making a cloud request."""
-    api = config_entry.runtime_data.api
-    api.client.patch_characteristic = AsyncMock()
-    api.client.put_management_point = AsyncMock()
-    api.client.install_firmware = AsyncMock()
+    coordinator = config_entry.runtime_data
+    coordinator.client.patch_characteristic = AsyncMock()
+    coordinator.client.put_management_point = AsyncMock()
+    coordinator.client.install_firmware = AsyncMock()
 
     async def execute(command) -> bool:
-        await command(api.client)
+        await command(coordinator.client)
         return True
 
     return AsyncMock(side_effect=execute)
@@ -346,7 +347,7 @@ async def test_refresh_button_recovers_after_failed_poll(
     """Keep the button usable to retry a failed poll without reloading."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
-    coordinator.api.get_cloud_device_details = AsyncMock(
+    coordinator._async_get_cloud_devices = AsyncMock(
         side_effect=OnectaConnectionError(
             "network unavailable", method="GET", path="/v1/gateway-devices"
         )
@@ -357,7 +358,7 @@ async def test_refresh_button_recovers_after_failed_poll(
     assert state is not None
     assert state.state != "unavailable"
 
-    coordinator.api.get_cloud_device_details = AsyncMock(
+    coordinator._async_get_cloud_devices = AsyncMock(
         return_value=_load_gateway_devices("dry")
     )
     await hass.services.async_call(
@@ -368,7 +369,7 @@ async def test_refresh_button_recovers_after_failed_poll(
     )
 
     assert coordinator.last_update_success
-    coordinator.api.get_cloud_device_details.assert_awaited_once()
+    coordinator._async_get_cloud_devices.assert_awaited_once()
 
 
 async def test_switch_service_updates_cached_state(
@@ -376,7 +377,7 @@ async def test_switch_service_updates_cached_state(
 ) -> None:
     """A successful switch command updates the state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "altherma")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
 
@@ -405,7 +406,7 @@ async def test_switch_updates_sibling_climate_preset(
 ) -> None:
     """A shared preset change immediately reaches the sibling climate entity."""
     await _async_setup_fixture(hass, config_entry, "altherma")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
     entity_id = "climate.johnny_maaike_room_temperature"
@@ -471,14 +472,14 @@ async def test_command_cache_survives_model_replacement(
     await _async_setup_fixture(hass, config_entry, fixture)
     coordinator = config_entry.runtime_data
     execute = _execute_typed_command(config_entry)
-    coordinator.api.async_execute_command = execute
+    coordinator.async_execute_command = execute
 
     async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         for device in coordinator.data.values():
             device.set_device_data(deepcopy(device.device))
         return await execute(command)
 
-    coordinator.api.async_execute_command = AsyncMock(side_effect=replace_model)
+    coordinator.async_execute_command = AsyncMock(side_effect=replace_model)
     await hass.services.async_call(
         domain,
         service,
@@ -496,7 +497,7 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
     execute = _execute_typed_command(config_entry)
-    coordinator.api.async_execute_command = execute
+    coordinator.async_execute_command = execute
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
@@ -512,14 +513,14 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
     embedded_id = device.device.management_points_by_type("climateControl")[
         0
     ].embedded_id
-    coordinator.api.client.patch_characteristic.reset_mock()
+    coordinator.client.patch_characteristic.reset_mock()
 
     async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         device.set_device_data(deepcopy(device.device))
         device.management_point(embedded_id).air_purification.mode.value = "autoFan"
         return await execute(command)
 
-    coordinator.api.async_execute_command = AsyncMock(side_effect=replace_model)
+    coordinator.async_execute_command = AsyncMock(side_effect=replace_model)
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
@@ -527,7 +528,7 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
         blocking=True,
     )
 
-    coordinator.api.client.patch_characteristic.assert_awaited_once_with(
+    coordinator.client.patch_characteristic.assert_awaited_once_with(
         device.id,
         embedded_id,
         "fanControl",
@@ -672,7 +673,7 @@ async def test_schedule_select_updates_cached_selection(
 ) -> None:
     """Selecting a schedule updates the entity state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "schedule")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
 
@@ -694,7 +695,7 @@ async def test_schedule_select_ignores_current_option(
     """Do not spend a cloud request when the selected schedule is unchanged."""
     await _async_setup_fixture(hass, config_entry, "schedule")
     execute_command = _execute_typed_command(config_entry)
-    config_entry.runtime_data.api.async_execute_command = execute_command
+    config_entry.runtime_data.async_execute_command = execute_command
     state = hass.states.get("select.master_schedule")
     assert state is not None
 
@@ -808,7 +809,7 @@ async def test_water_heater_turn_off_updates_cached_state(
 ) -> None:
     """A successful water-heater command updates the cached operation mode."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
     listener = MagicMock()
@@ -843,7 +844,7 @@ async def test_water_heater_temperature_updates_typed_cache(
 ) -> None:
     """A successful temperature write updates the shared typed model."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
     listener = MagicMock()
@@ -911,19 +912,19 @@ async def test_firmware_install_executes_command(
 ) -> None:
     """The update service executes the typed firmware-install command."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.johnny_maaike_firmware_update"},
+        {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
         blocking=True,
     )
 
-    config_entry.runtime_data.api.async_execute_command.assert_awaited_once()
-    state = hass.states.get("update.johnny_maaike_firmware_update")
+    config_entry.runtime_data.async_execute_command.assert_awaited_once()
+    state = hass.states.get("update.living_room_firmware_update")
     assert state is not None
     assert state.attributes["in_progress"] is True
 
@@ -935,7 +936,7 @@ async def test_firmware_install_executes_command(
         CLIMATE_DOMAIN,
         CLIMATE_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.johnny_maaike_room_temperature",
+            ATTR_ENTITY_ID: "climate.living_room_room_temperature",
             ATTR_TEMPERATURE: 25,
         },
         blocking=True,
@@ -944,7 +945,7 @@ async def test_firmware_install_executes_command(
 
     # Even a fresh poll without status or version evidence may still be stale.
     gateways = _load_gateway_devices("dx4_firmwareavailable")
-    coordinator.api.get_cloud_device_details = AsyncMock(return_value=gateways)
+    coordinator._async_get_cloud_devices = AsyncMock(return_value=gateways)
     await coordinator.async_refresh()
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
 
@@ -970,7 +971,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     """A queued poll cannot replace firmware state before install bookkeeping."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     coordinator = config_entry.runtime_data
-    entity_id = "update.johnny_maaike_firmware_update"
+    entity_id = "update.living_room_firmware_update"
     entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
     assert isinstance(entity, DaikinFirmwareUpdateEntity)
     requested_sequence = coordinator.cloud_update_sequence
@@ -1001,11 +1002,9 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         await coordinator.async_refresh()
 
     with (
+        patch.object(coordinator.client, "put_management_point", side_effect=install),
         patch.object(
-            coordinator.api.client, "put_management_point", side_effect=install
-        ),
-        patch.object(
-            coordinator.api.client, "get_gateway_devices", side_effect=read_gateways
+            coordinator.client, "get_gateway_devices", side_effect=read_gateways
         ),
         # Exercise the waiting poll without relying on the post-write cooldown.
         patch(
@@ -1060,7 +1059,7 @@ async def test_air_purifier_preset_updates_cached_state(
 ) -> None:
     """A successful purifier command updates its native preset state."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
 
@@ -1081,7 +1080,7 @@ async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
 ) -> None:
     """Setting speed selects the writable manual mode and updates its cache."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
 
@@ -1104,7 +1103,7 @@ async def test_air_purifier_turn_off_then_on_updates_cached_state(
 ) -> None:
     """Power commands immediately publish their successful local state."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
 
@@ -1136,7 +1135,7 @@ async def test_air_purifier_ignores_unchanged_preset(
     """Do not spend a cloud request when the selected purifier mode is unchanged."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     execute_command = _execute_typed_command(config_entry)
-    config_entry.runtime_data.api.async_execute_command = execute_command
+    config_entry.runtime_data.async_execute_command = execute_command
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -1153,7 +1152,7 @@ async def test_air_purifier_percentage_turns_on_and_exits_preset(
 ) -> None:
     """A nonzero manual speed powers on an off purifier and clears its preset."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
     await hass.services.async_call(
@@ -1183,7 +1182,7 @@ async def test_air_purifier_rejects_manual_speed_as_preset(
     """The HA preset action must not expose the native manual speed mode."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     command = _execute_typed_command(config_entry)
-    config_entry.runtime_data.api.async_execute_command = command
+    config_entry.runtime_data.async_execute_command = command
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -1225,7 +1224,13 @@ def test_unknown_binary_sensor_uses_generic_description() -> None:
         scalar_characteristic=MagicMock(return_value=SimpleNamespace(value=True))
     )
 
-    entity = DaikinBinarySensor(device, MagicMock(), "point", "futureBoolean")
+    entity = DaikinBinarySensor(
+        device,
+        MagicMock(),
+        "point",
+        BinarySensorEntityDescription(key="futureBoolean"),
+        "futureBoolean",
+    )
 
     assert entity.entity_description.key == "futureBoolean"
     assert entity.is_on is True

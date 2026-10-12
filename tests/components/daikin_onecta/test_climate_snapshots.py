@@ -89,11 +89,11 @@ async def _async_setup_fixture(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             new=AsyncMock(return_value=FAKE_ACCESS_TOKEN),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.daikin_api."
+            "homeassistant.components.daikin_onecta.coordinator."
             "OnectaClient.get_gateway_devices",
             new=AsyncMock(return_value=gateway_devices),
         ),
@@ -157,7 +157,7 @@ async def test_fan_mode_changes_with_hvac_mode(
 ) -> None:
     """Update the fan state from each native HVAC operation mode."""
     await _async_setup_fixture(hass, config_entry, "fanmode")
-    api = config_entry.runtime_data.api
+    api = config_entry.runtime_data
     api.client.patch_characteristic = AsyncMock()
 
     await hass.services.async_call(

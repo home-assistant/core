@@ -42,6 +42,8 @@ async def async_setup_entry(
 class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     """Represents the gateway firmware for a single Daikin device."""
 
+    entity_description = UPDATE_DESCRIPTIONS["FirmwareUpdate"]
+
     def __init__(
         self,
         coordinator: OnectaDataUpdateCoordinator,
@@ -52,7 +54,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         super().__init__(device, coordinator, gateway_mp.embedded_id)
         self._coordinator = coordinator
         self._pending_install: tuple[int, str | None] | None = None
-        self.entity_description = UPDATE_DESCRIPTIONS["FirmwareUpdate"]
 
         self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"
 

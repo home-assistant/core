@@ -44,6 +44,22 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device = device
 
+    def _raise_service_validation_error(self, translation_key: str) -> Never:
+        """Raise a translated error for an unavailable device control."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device": self._device.name},
+        )
+
+    def _raise_command_failed(self, translation_key: str) -> Never:
+        """Raise a translated error when Daikin rejects a command."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device": self._device.name},
+        )
+
     @property
     @override
     def device_info(self) -> DeviceInfo:
@@ -65,22 +81,6 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
         ):
             _add_management_point_metadata(info, self._device, embedded_id)
         return info
-
-    def _raise_service_validation_error(self, translation_key: str) -> Never:
-        """Raise a translated validation error for this device."""
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
-        )
-
-    def _raise_command_failed(self, translation_key: str) -> Never:
-        """Raise a translated command error for this device."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
-        )
 
 
 class DaikinOnectaAccountEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
@@ -133,7 +133,7 @@ class DaikinEntity(DaikinOnectaEntity):
         translation_key: str,
     ) -> None:
         """Execute a cloud command or raise a translated Home Assistant error."""
-        if not await self.coordinator.api.async_execute_command(command):
+        if not await self.coordinator.async_execute_command(command):
             self._raise_command_failed(translation_key)
 
 

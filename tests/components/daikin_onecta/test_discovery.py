@@ -133,11 +133,11 @@ async def test_poll_discovers_new_entities_through_reload(
             return_value=MagicMock(),
         ),
         patch(
-            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             return_value=FAKE_ACCESS_TOKEN,
         ),
         patch(
-            "homeassistant.components.daikin_onecta.daikin_api.OnectaClient.get_gateway_devices",
+            "homeassistant.components.daikin_onecta.coordinator.OnectaClient.get_gateway_devices",
             return_value=devices,
         ) as get_gateways,
     ):
@@ -164,13 +164,13 @@ async def test_pending_discovery_reload_is_not_scheduled_twice(
     coordinator = config_entry.runtime_data
     devices = _load_gateway_devices("minimal_data")
     _add_boolean(devices)
-    coordinator.api.get_cloud_device_details = AsyncMock(return_value=devices)
+    coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await coordinator.async_refresh()
         updated_devices = deepcopy(devices)
         _add_setpoint(updated_devices)
-        coordinator.api.get_cloud_device_details.return_value = updated_devices
+        coordinator._async_get_cloud_devices.return_value = updated_devices
         await coordinator.async_refresh()
 
     schedule_reload.assert_called_once_with(config_entry.entry_id)
@@ -188,7 +188,7 @@ async def test_state_changes_do_not_reload_platforms(
     next(iter(point.temperature_control.value.operation_modes.values())).setpoints[
         "roomTemperature"
     ].value += 1
-    coordinator.api.get_cloud_device_details = AsyncMock(return_value=devices)
+    coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await coordinator.async_refresh()
@@ -294,7 +294,7 @@ async def test_removed_controls_become_unavailable_and_recover(
     registry_entry = entity_registry.async_get(entity_id)
     restored_devices = deepcopy(devices)
     remove_capability(point)
-    coordinator.api.get_cloud_device_details = AsyncMock(return_value=devices)
+    coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await coordinator.async_refresh()
@@ -310,7 +310,7 @@ async def test_removed_controls_become_unavailable_and_recover(
         )
         assert schedule_reload.call_count == removal_reload_count
 
-        coordinator.api.get_cloud_device_details.return_value = restored_devices
+        coordinator._async_get_cloud_devices.return_value = restored_devices
         await coordinator.async_refresh()
 
     assert hass.states.get(entity_id).state == initial_state.state

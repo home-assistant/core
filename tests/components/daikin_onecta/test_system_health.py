@@ -38,17 +38,15 @@ async def test_system_health_info(hass: HomeAssistant) -> None:
         state=ConfigEntryState.LOADED,
     )
     config_entry.runtime_data = MagicMock(
-        api=MagicMock(
-            rate_limits={
-                "minute": 10,
-                "day": 200,
-                "remaining_minutes": 9,
-                "remaining_day": 199,
-                "retry_after": None,
-                "ratelimit_reset": None,
-            },
-            session=MagicMock(valid_token=True),
-        )
+        rate_limits={
+            "minute": 10,
+            "day": 200,
+            "remaining_minutes": 9,
+            "remaining_day": 199,
+            "retry_after": None,
+            "ratelimit_reset": None,
+        },
+        session=MagicMock(valid_token=True),
     )
     config_entry.add_to_hass(hass)
 

@@ -2,13 +2,6 @@
 
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-
-from .const import DOMAIN
-
 
 class DaikinOnectaDevice:
     """Class to represent and control one Daikin Onecta Device."""
@@ -40,51 +33,21 @@ class DaikinOnectaDevice:
         return self.device.gateway_embedded_id
 
     def set_device_data(self, device: GatewayDevice) -> bool:
-        """Overwrite cloud data and return whether registry metadata changed."""
-        previous_metadata = self._device_registry_metadata()
+        """Overwrite cloud data and return whether device metadata changed."""
+        previous_metadata = self._metadata()
         self.device = device
         self.name = device.display_name
         self._is_present_in_cloud = True
-        return previous_metadata != self._device_registry_metadata()
+        return previous_metadata != self._metadata()
 
     def mark_unavailable(self) -> None:
         """Mark the device unavailable after it is absent from a cloud response."""
         self._is_present_in_cloud = False
 
-    def async_update_device_registry(
-        self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        """Refresh gateway metadata in the Home Assistant device registry."""
-        gateway = self.device
-        connections = (
-            {(CONNECTION_NETWORK_MAC, gateway.mac_address)}
-            if gateway.mac_address
-            else set()
-        )
-        model, serial_number, sw_version = self._gateway_metadata()
-        registry = dr.async_get(hass)
-        if (
-            existing_entry := registry.async_get_device_by_identifier(
-                (DOMAIN, self.id), config_entry.entry_id
-            )
-        ) is not None and existing_entry.connections != connections:
-            registry.async_update_device(existing_entry.id, new_connections=connections)
-        registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, self.id)},
-            connections=connections,
-            manufacturer="Daikin",
-            model=model,
-            model_id=gateway.device_model,
-            name=self.name,
-            serial_number=serial_number,
-            sw_version=sw_version,
-        )
-
-    def _device_registry_metadata(
+    def _metadata(
         self,
     ) -> tuple[str, str | None, str | None, str | None, str | None, str | None]:
-        """Return the cloud fields mirrored in the device registry."""
+        """Return the cloud identity and descriptive metadata."""
         model, serial_number, sw_version = self._gateway_metadata()
         return (
             self.name,

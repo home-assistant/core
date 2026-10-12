@@ -89,40 +89,29 @@
     },
     "climate": {
       "calculated_leaving_water_temperature": {
-        "name": "Calculated Leaving Water Temperature"
+        "name": "Calculated leaving water temperature"
       },
       "leaving_water_offset": {
-        "name": "Leaving Water Offset"
+        "name": "Leaving water offset"
       },
       "leaving_water_temperature": {
-        "name": "Leaving Water Temperature"
+        "name": "Leaving water temperature"
       },
       "room_temperature": {
-        "name": "Room Temperature",
+        "name": "Room temperature",
         "state_attributes": {
           "fan_mode": {
             "state": {
               "quiet": "Quiet"
             }
           },
-          "swing_horizontal_mode": {
-            "state": {
-              "stop": "Stop",
-              "swing": "Swing"
-            }
-          },
           "swing_mode": {
             "state": {
-              "floorheatingairflow": "FloorHeating Airflow",
-              "stop": "Stop",
-              "swing": "Swing",
-              "windnice": "Comfort Airflow"
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
             }
           }
         }
-      },
-      "setpoint": {
-        "name": "Setpoint {setpoint}"
       }
     },
     "select": {
@@ -473,19 +462,6 @@
     },
     "water_heater_turn_on_failed": {
       "message": "Failed to turn on {device}"
-    }
-  },
-  "system_health": {
-    "info": {
-      "api_status": "API server",
-      "max_day": "Maximum day",
-      "max_minute": "Maximum minute",
-      "oauth2_status": "OAuth2 server",
-      "oauth2_token_valid": "OAuth2 token valid",
-      "ratelimit_reset": "Rate limit reset",
-      "remaining_day": "Remaining day",
-      "remaining_minute": "Remaining minute",
-      "retry_after": "Retry after"
     }
   }
 }

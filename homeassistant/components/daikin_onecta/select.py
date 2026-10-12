@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 from daikin_onecta.models import ScheduleSelection
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,6 +34,7 @@ async def async_setup_entry(
                 device,
                 coordinator,
                 management_point.embedded_id,
+                SELECT_DESCRIPTIONS["schedule"],
                 "schedule",
             )
             for management_point in device.device.management_points
@@ -51,13 +52,14 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
+        description: SelectEntityDescription,
         value: str,
     ) -> None:
         """Initialize a schedule selection entity."""
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
-        self.entity_description = SELECT_DESCRIPTIONS[value]
+        self.entity_description = description
         self.update_state()
 
     def update_state(self) -> None:
