@@ -249,7 +249,7 @@ async def test_set_cover_position(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 75},
         blocking=True,
     )
-    mock_c4_blind.set_level_target.assert_called_once_with(level=75)
+    mock_c4_blind.set_level_target.assert_called_once_with(75)
 
 
 @pytest.mark.parametrize(

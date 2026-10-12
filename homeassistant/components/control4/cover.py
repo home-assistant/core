@@ -176,6 +176,4 @@ class Control4Cover(Control4Entity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        await self._create_blind_api_object().set_level_target(
-            level=kwargs[ATTR_POSITION]
-        )
+        await self._create_blind_api_object().set_level_target(kwargs[ATTR_POSITION])
