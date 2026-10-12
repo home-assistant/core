@@ -67,6 +67,7 @@ class ImouSiren(ImouEntity, SirenEntity):
     the entity state stays unknown until a turn on or turn off command succeeds.
     """
 
+    _attr_assumed_state = True
     entity_description: ImouSirenEntityDescription
 
     def __init__(
@@ -84,6 +85,21 @@ class ImouSiren(ImouEntity, SirenEntity):
             features |= SirenEntityFeature.TURN_OFF
         self._attr_supported_features = features
 
+    def _tracks_local_siren_state(self) -> bool:
+        """Return whether turn on/off can both be issued for toggle semantics."""
+        features = self.supported_features
+        return bool(
+            features & SirenEntityFeature.TURN_ON
+            and features & SirenEntityFeature.TURN_OFF
+        )
+
+    def _set_local_siren_state(self, is_on: bool) -> None:
+        """Remember siren on/off after a successful command when toggle is supported."""
+        if not self._tracks_local_siren_state():
+            return
+        self._attr_is_on = is_on
+        self.async_write_ha_state()
+
     @override
     @async_wrap_imou_command("siren_operation_failed")
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -93,7 +109,7 @@ class ImouSiren(ImouEntity, SirenEntity):
             self.entity_description.start_param,
             0,
         )
-        self._attr_is_on = True
+        self._set_local_siren_state(True)
 
     @override
     @async_wrap_imou_command("siren_operation_failed")
@@ -104,4 +120,4 @@ class ImouSiren(ImouEntity, SirenEntity):
             self.entity_description.stop_param,
             0,
         )
-        self._attr_is_on = False
+        self._set_local_siren_state(False)
