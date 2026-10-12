@@ -33,6 +33,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 "charging_state": "CHARGING",
             }
         entry.runtime_data.client._send_hardware_update(event)
+        entry.runtime_data.client._send_tracker_state_update(event)
 
     def send_health_overview_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None

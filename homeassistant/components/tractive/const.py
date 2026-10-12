@@ -23,6 +23,7 @@ CLIENT_ID = "625e5349c3c3b41c28a669f1"
 
 TRACKER_HARDWARE_STATUS_UPDATED = f"{DOMAIN}_tracker_hardware_status_updated"
 TRACKER_POSITION_UPDATED = f"{DOMAIN}_tracker_position_updated"
+TRACKER_STATE_UPDATED = f"{DOMAIN}_tracker_state_updated"
 TRACKER_SWITCH_STATUS_UPDATED = f"{DOMAIN}_tracker_switch_updated"
 TRACKER_HEALTH_OVERVIEW_UPDATED = f"{DOMAIN}_tracker_health_overview_updated"
 

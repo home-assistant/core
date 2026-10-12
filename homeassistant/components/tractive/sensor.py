@@ -30,6 +30,7 @@ from .const import (
     ATTR_TRACKER_STATE,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_HEALTH_OVERVIEW_UPDATED,
+    TRACKER_STATE_UPDATED,
 )
 from .entity import TractiveEntity
 
@@ -101,7 +102,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_TRACKER_STATE,
         translation_key="tracker_state",
-        signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
+        signal_prefix=TRACKER_STATE_UPDATED,
         hardware_sensor=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
