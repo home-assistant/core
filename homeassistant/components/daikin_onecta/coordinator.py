@@ -20,8 +20,9 @@ from daikin_onecta.models import GatewayDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -151,6 +152,43 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             self._last_patch_call = dt_util.utcnow()
             return True
 
+    def async_register_devices(self) -> None:
+        """Register all gateways before forwarding platform setup."""
+        for device in (self.data or {}).values():
+            self._async_register_device(device)
+
+    def _async_register_device(self, device: DaikinOnectaDevice) -> None:
+        """Refresh gateway metadata in the Home Assistant device registry."""
+        gateway = device.device
+        connections = (
+            {(CONNECTION_NETWORK_MAC, gateway.mac_address)}
+            if gateway.mac_address
+            else set()
+        )
+        model, serial_number, sw_version = (
+            (point.model, point.serial, point.version)
+            if (point := gateway.gateway_management_point) is not None
+            else (None, None, None)
+        )
+        registry = dr.async_get(self.hass)
+        if (
+            existing_entry := registry.async_get_device_by_identifier(
+                (DOMAIN, device.id), self.config_entry.entry_id
+            )
+        ) is not None and existing_entry.connections != connections:
+            registry.async_update_device(existing_entry.id, new_connections=connections)
+        registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, device.id)},
+            connections=connections,
+            manufacturer="Daikin",
+            model=model,
+            model_id=gateway.device_model,
+            name=device.name,
+            serial_number=serial_number,
+            sw_version=sw_version,
+        )
+
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
 
@@ -212,10 +250,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         device = DaikinOnectaDevice(dev_data)
                         devices[dev_data.id] = device
                         registry_metadata_changed = True
-                    if registry_metadata_changed:
-                        device.async_update_device_registry(
-                            self.hass, self.config_entry
-                        )
+                    if registry_metadata_changed and self.data is not None:
+                        self._async_register_device(device)
 
                 self.update_interval = self._determine_update_interval()
 

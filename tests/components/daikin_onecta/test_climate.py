@@ -1256,6 +1256,7 @@ async def test_climate_service_updates_entity_state(
     device.device = SimpleNamespace(
         device_model="Daikin",
         gateway_embedded_id=None,
+        gateway_management_point=None,
         mac_address=None,
         management_points_by_type=lambda _: (climate_control,),
     )
@@ -1438,6 +1439,7 @@ async def test_climate_platform_services_and_management_points(
     device.device = SimpleNamespace(
         device_model="Daikin",
         gateway_embedded_id=None,
+        gateway_management_point=None,
         mac_address=None,
         management_points_by_type=lambda _: tuple(climate_controls.values()),
     )

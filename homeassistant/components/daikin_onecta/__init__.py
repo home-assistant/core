@@ -50,6 +50,7 @@ async def async_setup_entry(
     config_entry.runtime_data = coordinator
 
     await config_entry.runtime_data.async_config_entry_first_refresh()
+    coordinator.async_register_devices()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

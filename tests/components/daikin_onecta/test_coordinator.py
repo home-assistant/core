@@ -51,6 +51,7 @@ def test_device_update_detects_registry_metadata_changes() -> None:
             mac_address=None,
             device_model=None,
             gateway_embedded_id=None,
+            gateway_management_point=None,
         )
     )
 
@@ -62,6 +63,7 @@ def test_device_update_detects_registry_metadata_changes() -> None:
             mac_address=None,
             device_model=None,
             gateway_embedded_id=None,
+            gateway_management_point=None,
         )
     )
 
@@ -78,6 +80,7 @@ def test_device_update_ignores_unchanged_registry_metadata() -> None:
             mac_address=None,
             device_model="Model",
             gateway_embedded_id=None,
+            gateway_management_point=None,
         )
     )
 
@@ -89,6 +92,7 @@ def test_device_update_ignores_unchanged_registry_metadata() -> None:
             mac_address=None,
             device_model="Model",
             gateway_embedded_id=None,
+            gateway_management_point=None,
         )
     )
 
@@ -99,6 +103,7 @@ async def test_device_registry_refreshes_without_climate_entity(
     config_entry: MockConfigEntry,
 ) -> None:
     """Refresh a gateway registry entry even when it has no climate entity."""
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     gateway = DaikinOnectaDevice(
         SimpleNamespace(
             id="gateway",
@@ -107,9 +112,10 @@ async def test_device_registry_refreshes_without_climate_entity(
             mac_address=None,
             device_model="Old model",
             gateway_embedded_id=None,
+            gateway_management_point=None,
         )
     )
-    gateway.async_update_device_registry(hass, config_entry)
+    coordinator._async_register_device(gateway)
     gateway.set_device_data(
         SimpleNamespace(
             id="gateway",
@@ -118,9 +124,10 @@ async def test_device_registry_refreshes_without_climate_entity(
             mac_address=None,
             device_model="New model",
             gateway_embedded_id=None,
+            gateway_management_point=None,
         )
     )
-    gateway.async_update_device_registry(hass, config_entry)
+    coordinator._async_register_device(gateway)
 
     entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "gateway"), config_entry.entry_id
@@ -145,15 +152,16 @@ async def test_device_registry_updates_changed_mac_address(
     expected_connections: set[tuple[str, str]],
 ) -> None:
     """Detect MAC-only changes and replace, rather than retain, stale connections."""
+    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     gateway = DaikinOnectaDevice(_load_gateway_devices("ururu")[0])
-    gateway.async_update_device_registry(hass, config_entry)
+    coordinator._async_register_device(gateway)
     replacement = deepcopy(gateway.device)
     replacement.gateway_management_point.characteristics["macAddress"] = Characteristic(
         value=mac_address
     )
 
     assert gateway.set_device_data(replacement)
-    gateway.async_update_device_registry(hass, config_entry)
+    coordinator._async_register_device(gateway)
 
     entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, gateway.id), config_entry.entry_id
@@ -184,9 +192,9 @@ async def test_poll_refreshes_changed_metadata_once(
 
     with (
         patch.object(
-            device,
-            "async_update_device_registry",
-            wraps=device.async_update_device_registry,
+            coordinator,
+            "_async_register_device",
+            wraps=coordinator._async_register_device,
         ) as update_registry,
         patch.object(
             coordinator, "_async_get_cloud_devices", return_value=[replacement]
@@ -196,12 +204,12 @@ async def test_poll_refreshes_changed_metadata_once(
         freezer.tick(coordinator.update_interval)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        update_registry.assert_called_once_with(hass, config_entry)
+        update_registry.assert_called_once_with(device)
         coordinator.async_update_listeners()
         freezer.tick(coordinator.update_interval)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        update_registry.assert_called_once_with(hass, config_entry)
+        update_registry.assert_called_once_with(device)
 
     entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, device.id), config_entry.entry_id
@@ -280,7 +288,9 @@ async def coordinator(
 ) -> OnectaDataUpdateCoordinator:
     """Return a coordinator."""
     mock_config_entry.add_to_hass(hass)
-    return OnectaDataUpdateCoordinator(hass, mock_config_entry, MagicMock())
+    coordinator = OnectaDataUpdateCoordinator(hass, mock_config_entry, MagicMock())
+    coordinator._async_register_device = MagicMock()
+    return coordinator
 
 
 class TestOnectaDataUpdateCoordinator:
@@ -638,7 +648,7 @@ class TestOnectaDataUpdateCoordinator:
         await coordinator._async_update_data_from_cloud()
 
         existing_device.set_device_data.assert_called_once_with(cloud_device)
-        existing_device.async_update_device_registry.assert_not_called()
+        coordinator._async_register_device.assert_not_called()
 
     async def test_changed_gateway_metadata_refreshes_device_registry(
         self, coordinator: OnectaDataUpdateCoordinator
@@ -653,6 +663,25 @@ class TestOnectaDataUpdateCoordinator:
 
         await coordinator._async_update_data_from_cloud()
 
-        existing_device.async_update_device_registry.assert_called_once_with(
-            coordinator.hass, coordinator.config_entry
+        coordinator._async_register_device.assert_called_once_with(existing_device)
+
+
+async def test_device_registered_before_platform_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Register gateways upfront even when they have no supported climate target."""
+    gateway = _load_gateway_devices("mc80z")[0]
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups", new_callable=AsyncMock
+    ) as forward:
+        await _async_setup_fixture(hass, config_entry, "mc80z")
+
+    forward.assert_awaited_once()
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, gateway.id), config_entry.entry_id
         )
+        is not None
+    )
