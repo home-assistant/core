@@ -1806,10 +1806,12 @@ async def test_real_ffmpeg_abort_drains_large_valid_wav(
         await gen.aclose()
 
 
+@pytest.mark.parametrize("wait_order", ["exit", "stdout-eof"])
 async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
     ffmpeg_ready: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    wait_order: str,
 ) -> None:
     """A blocked discard does not block owner; its late failure is retrieved."""
     input_path = tmp_path / "large.wav"
@@ -1821,10 +1823,21 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
     paused = asyncio.Event()
     discard_entered = asyncio.Event()
     release_discard = asyncio.Event()
+    process_exited = asyncio.Event()
+    wait_eof = asyncio.Event()
     processes = []
     tasks = []
     spawn_os = asyncio.create_subprocess_exec
     background = ffmpeg_ready.async_create_background_task
+
+    async def observed_wait(process: asyncio.subprocess.Process) -> int:
+        # Observe the real OS child's exit independently of pipe teardown;
+        # asyncio 3.14.5 and 3.14.7 complete Process.wait in opposite orders.
+        await process_exited.wait()
+        if wait_order == "stdout-eof":
+            await wait_eof.wait()
+        assert process.returncode is not None
+        return process.returncode
 
     async def spawn(*args, **kwargs):
         process = await spawn_os(*args, **kwargs)
@@ -1838,7 +1851,21 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
             paused.set()
 
         transport.pause_reading = observed_pause
+        process_transport = process._transport  # type: ignore[attr-defined]  # Test observer.
+        on_exit = process_transport._process_exited
+
+        def observed_exit(returncode: int) -> None:
+            on_exit(returncode)
+            process_exited.set()
+
+        process_transport._process_exited = observed_exit
         read = process.stdout.read
+
+        async def observed_read(n: int = -1) -> bytes:
+            data = await read(n)
+            if not data:
+                wait_eof.set()
+            return data
 
         async def held_discard_read(n: int = -1) -> bytes:
             current = asyncio.current_task()
@@ -1849,7 +1876,7 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
                 discard_entered.set()
                 await release_discard.wait()
                 raise RuntimeError("late discard failure")
-            return await read(n)
+            return await observed_read(n)
 
         process.stdout.read = held_discard_read
         return process
@@ -1861,9 +1888,11 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
 
     gen = tts._async_convert_audio(ffmpeg_ready, "wav", input_path, "wav")
     close_task = None
+    wait_task = None
     try:
         with (
             patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch.object(asyncio.subprocess.Process, "wait", observed_wait),
             patch.object(
                 ffmpeg_ready, "async_create_background_task", tracked_background
             ),
@@ -1877,9 +1906,15 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
                 task for task in tasks if task.get_name() == "tts_ffmpeg_stdout_discard"
             )
             assert not discard.done() and not release_discard.is_set()
-            assert processes[0].returncode == -9
-            assert next(t for t in tasks if t.get_name() == "tts_ffmpeg_wait").done()
-            assert not processes[0].stdout.at_eof()
+            assert discard in ffmpeg_ready._background_tasks
+            process = processes[0]
+            assert process.returncode == -9  # Real child killed before release.
+            wait_task = next(t for t in tasks if t.get_name() == "tts_ffmpeg_wait")
+            assert wait_task.done() == (wait_order == "exit")
+            if not wait_task.done():
+                assert wait_task in ffmpeg_ready._background_tasks
+            assert not wait_eof.is_set()
+            assert not process.stdout.at_eof()
             assert any("did not stop promptly" in r.message for r in caplog.records)
             release_discard.set()
             with pytest.raises(RuntimeError, match="late discard failure"):
@@ -1898,6 +1933,11 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
                     while await asyncio.wait_for(process.stdout.read(65536), 3):
                         pass
             await asyncio.wait_for(process.wait(), 5)
+        assert wait_eof.is_set()
+        assert wait_task is not None
+        assert await _observe(wait_task, 5) == -9
+        assert not wait_task.cancelled()
+        assert processes[0].stdout.at_eof()
         await gen.aclose()
 
 
