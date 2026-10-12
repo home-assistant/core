@@ -5,7 +5,7 @@ from typing import override
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             LocalFile(
-                entry.options[CONF_NAME],
+                entry.title,
                 entry.options[CONF_FILE_PATH],
                 entry.entry_id,
             )

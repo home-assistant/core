@@ -71,7 +71,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
     # Remove any (persistent) repair issues for deprecations that have been completed
-    ir.async_delete_issue(hass, DOMAIN, "deprecated_set_system_mode_service")
+    for issue_id in (
+        "deprecated_clear_zone_override_service",
+        "deprecated_preset_reset",
+        "deprecated_reset_system_service",
+        "deprecated_set_system_mode_service",
+    ):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     token_manager = TokenManager(
         hass,

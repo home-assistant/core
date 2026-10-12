@@ -181,38 +181,47 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
 
 
+_STALE_ISSUES = {  # issue_id: translation_key
+    "deprecated_clear_zone_override_service": "deprecated_clear_zone_override_service",
+    "deprecated_preset_reset": "deprecated_preset_reset",
+    "deprecated_reset_system_service": "deprecated_reset_system_service",
+    "deprecated_set_system_mode_service": "deprecated_controller_service",
+}
+
+
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.parametrize(
     "ignore_missing_translations",
     [
         [
-            "component.evohome.issues.deprecated_controller_service.title",
-            "component.evohome.issues.deprecated_controller_service.description",
+            f"component.evohome.issues.{translation_key}.{key}"
+            for translation_key in _STALE_ISSUES.values()
+            for key in ("title", "description")
         ]
     ],
 )
-async def test_stale_deprecation_issue_removed(
+async def test_stale_deprecation_issues_removed(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a persistent repair issue of a completed deprecation is removed."""
+    """Test persistent repair issues of completed deprecations are removed."""
 
-    issue_id = "deprecated_set_system_mode_service"
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=False,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_controller_service",
-    )
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    for issue_id, translation_key in _STALE_ISSUES.items():
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+        )
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    for issue_id in _STALE_ISSUES:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
