@@ -4369,7 +4369,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21.18',
+    'state': '21.08',
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_channel-entry]
