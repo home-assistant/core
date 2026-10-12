@@ -398,3 +398,42 @@ async def test_generate_image(
             entity_id=TEST_ENTITY_ID,
             instructions="Test prompt",
         )
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+@pytest.mark.parametrize("limit", [0, 1, 2])
+async def test_generation_attachment_limit(
+    hass: HomeAssistant, mock_ai_task_entity: MockAITaskEntity, service: str, limit: int
+) -> None:
+    """Enforce the shared limit before capturing images or invoking the provider."""
+    mock_ai_task_entity._attr_max_attachments = limit
+    with (
+        patch(
+            "homeassistant.components.media_source.async_get_media_image"
+        ) as get_image,
+        pytest.raises(
+            HomeAssistantError, match=f"Too many attachments; maximum allowed: {limit}"
+        ),
+    ):
+        await hass.services.async_call(
+            "ai_task",
+            service,
+            {
+                "task_name": "Test",
+                "entity_id": TEST_ENTITY_ID,
+                "instructions": "Test prompt",
+                "attachments": [
+                    {
+                        "media_content_id": "media-source://camera/camera.test",
+                        "media_content_type": "image/jpeg",
+                    }
+                ]
+                * (limit + 1),
+            },
+            blocking=True,
+            return_response=True,
+        )
+    get_image.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks

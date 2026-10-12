@@ -76,14 +76,14 @@ QUESTIONS_SCHEMA = probatio.Schema(
                     probatio.Required("type"): "choice",
                     probatio.Required("instructions"): _NONEMPTY_STRING,
                     probatio.Required("criteria"): probatio.All(
-                        {_NONEMPTY_STRING: str}, probatio.Length(min=2)
+                        {_NONEMPTY_STRING: _NONEMPTY_STRING}, probatio.Length(min=2)
                     ),
                 },
                 {
                     probatio.Required("type"): "score",
                     probatio.Required("instructions"): _NONEMPTY_STRING,
                     probatio.Required("criteria"): probatio.All(
-                        [str], probatio.Length(min=2)
+                        [_NONEMPTY_STRING], probatio.Length(min=2)
                     ),
                 },
             )

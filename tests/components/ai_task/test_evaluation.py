@@ -240,7 +240,7 @@ async def test_camera_only(hass: HomeAssistant, mock_evaluate: AsyncMock) -> Non
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(captured_paths) == 1
     assert not captured_paths[0].exists()
 
@@ -286,6 +286,26 @@ async def test_missing_input(hass: HomeAssistant, mock_evaluate: AsyncMock) -> N
             id="extra-field",
         ),
         pytest.param({"": {"type": "noul", "instructions": "Question"}}, id="empty-id"),
+        pytest.param(
+            {
+                "q": {
+                    "type": "choice",
+                    "instructions": "Question",
+                    "criteria": {"yes": "", "no": "No"},
+                }
+            },
+            id="empty-choice-description",
+        ),
+        pytest.param(
+            {
+                "q": {
+                    "type": "score",
+                    "instructions": "Question",
+                    "criteria": ["", "High"],
+                }
+            },
+            id="empty-score-description",
+        ),
     ],
 )
 async def test_invalid_questions(
@@ -348,7 +368,7 @@ async def test_failed_task_cleans_snapshots(
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert not snapshot_path.exists()
 
 
@@ -364,7 +384,9 @@ async def test_attachment_limit(
         patch(
             "homeassistant.components.media_source.async_get_media_image"
         ) as get_image,
-        pytest.raises(HomeAssistantError, match="supports at most 1 attachments"),
+        pytest.raises(
+            HomeAssistantError, match="Too many attachments; maximum allowed: 1"
+        ),
     ):
         await ai_task.async_evaluate(
             hass,
