@@ -700,6 +700,7 @@ async def test_source_pull_failure_wakes_blocked_owner_before_close(
 
     source = Source()
     processes = []
+    stdout_read_started = asyncio.Event()
     spawn_os = asyncio.create_subprocess_exec
 
     async def spawn(*args, **kwargs):
@@ -707,6 +708,14 @@ async def test_source_pull_failure_wakes_blocked_owner_before_close(
         process = await spawn_os(
             sys.executable, "-c", "import time;time.sleep(30)", **kwargs
         )
+        assert process.stdout is not None
+        read = process.stdout.read
+
+        async def observed_read(n: int = -1) -> bytes:
+            stdout_read_started.set()
+            return await read(n)
+
+        process.stdout.read = observed_read
         processes.append(process)
         return process
 
@@ -723,15 +732,11 @@ async def test_source_pull_failure_wakes_blocked_owner_before_close(
             owner = asyncio.create_task(anext(gen))
             await asyncio.wait_for(source.pulling.wait(), 3)
             if mode != "eager":
-                # Observe the actual generator suspended inside asyncio.wait,
-                # not merely the source about to fail under eager scheduling.
-                for _ in range(400):
-                    awaited = gen.ag_await
-                    if awaited is not None and awaited.cr_code.co_name == "wait":
-                        break
-                    await asyncio.sleep(0.005)
-                else:
-                    pytest.fail("converter never entered its blocked wait")
+                # The controlled child keeps stdout open without writing. An
+                # entered real pipe read establishes the owner's pending output
+                # operation while the source pull is still held by the fixture.
+                await asyncio.wait_for(stdout_read_started.wait(), 3)
+                assert processes[0].returncode is None
                 assert not owner.done()
                 source.fail.set()
             await asyncio.wait_for(source.closing.wait(), 3)
