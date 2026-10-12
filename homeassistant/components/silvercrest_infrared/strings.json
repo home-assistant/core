@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device has already been configured with this infrared entity.",
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+    },
+    "error": {
+      "missing_infrared_entity": "Select an infrared emitter."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_type": "[%key:common::generic::device_type%]",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "device_type": "The type of device to control.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the device type and an infrared emitter.",
+        "title": "Set up SilverCrest infrared device"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mist": { "name": "Mist" },
+      "mode": { "name": "Mode" },
+      "osc": { "name": "Oscillation" },
+      "power": { "name": "Power" },
+      "speed": { "name": "Speed" },
+      "timer": { "name": "Timer" }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "fan": "Pedestal or tower fan",
+        "misting_fan": "Misting pedestal fan"
+      }
+    }
+  }
+}
