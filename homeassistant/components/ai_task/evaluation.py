@@ -67,25 +67,28 @@ _NONEMPTY_STRING = probatio.All(str, probatio.Length(min=1))
 QUESTIONS_SCHEMA = probatio.Schema(
     probatio.All(
         {
-            _NONEMPTY_STRING: probatio.Any(
-                {
-                    probatio.Required("type"): "noul",
-                    probatio.Required("instructions"): _NONEMPTY_STRING,
-                },
-                {
-                    probatio.Required("type"): "choice",
-                    probatio.Required("instructions"): _NONEMPTY_STRING,
-                    probatio.Required("criteria"): probatio.All(
-                        {_NONEMPTY_STRING: _NONEMPTY_STRING}, probatio.Length(min=2)
-                    ),
-                },
-                {
-                    probatio.Required("type"): "score",
-                    probatio.Required("instructions"): _NONEMPTY_STRING,
-                    probatio.Required("criteria"): probatio.All(
-                        [_NONEMPTY_STRING], probatio.Length(min=2)
-                    ),
-                },
+            _NONEMPTY_STRING: probatio.TaggedUnion(
+                "type",
+                [
+                    {
+                        probatio.Required("type"): "noul",
+                        probatio.Required("instructions"): _NONEMPTY_STRING,
+                    },
+                    {
+                        probatio.Required("type"): "choice",
+                        probatio.Required("instructions"): _NONEMPTY_STRING,
+                        probatio.Required("criteria"): probatio.All(
+                            {_NONEMPTY_STRING: _NONEMPTY_STRING}, probatio.Length(min=2)
+                        ),
+                    },
+                    {
+                        probatio.Required("type"): "score",
+                        probatio.Required("instructions"): _NONEMPTY_STRING,
+                        probatio.Required("criteria"): probatio.All(
+                            [_NONEMPTY_STRING], probatio.Length(min=2)
+                        ),
+                    },
+                ],
             )
         },
         probatio.Length(min=1),

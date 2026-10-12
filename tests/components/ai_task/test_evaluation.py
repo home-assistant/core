@@ -260,6 +260,7 @@ async def test_missing_input(hass: HomeAssistant, mock_evaluate: AsyncMock) -> N
     "questions",
     [
         pytest.param({}, id="empty"),
+        pytest.param({"q": {"instructions": "Question"}}, id="missing-type"),
         pytest.param(
             {"q": {"type": "unknown", "instructions": "Question"}}, id="unknown-type"
         ),
@@ -309,10 +310,13 @@ async def test_missing_input(hass: HomeAssistant, mock_evaluate: AsyncMock) -> N
     ],
 )
 async def test_invalid_questions(
-    hass: HomeAssistant, questions: dict, mock_evaluate: AsyncMock
+    hass: HomeAssistant,
+    questions: dict,
+    mock_evaluate: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Validate questions before calling a provider, including Python callers."""
-    with pytest.raises(probatio.Invalid):
+    """Report question-specific errors before calling a provider."""
+    with pytest.raises(probatio.Invalid) as err:
         await ai_task.async_evaluate(
             hass,
             task_name="Invalid",
@@ -320,6 +324,7 @@ async def test_invalid_questions(
             state="State",
             questions=questions,
         )
+    assert str(err.value) == snapshot
     mock_evaluate.assert_not_called()
 
 
