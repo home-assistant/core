@@ -501,23 +501,27 @@ async def _async_convert_audio(  # noqa: C901
     read_task: asyncio.Task | None = None
     complete = False
 
-    def check_completed_writer() -> None:
-        """Propagate a finalizer failure unless a known child failure is primary."""
+    def check_completed_writer() -> bool:
+        """Raise a close failure, or signal an already-known failed child."""
         if (
             writer_task is not None
             and writer_task.done()
             and not writer_task.cancelled()
             and writer_task.exception() is not None
-            and not (wait_task.done() and wait_task.result() != 0)
         ):
+            # On some asyncio runtimes the original wait remains pending until
+            # pipe disconnection even though the OS exit status is known.
+            if process.returncode is not None and process.returncode != 0:
+                return True
             writer_task.result()
+        return False
 
     try:
         while True:
             if source_read_error is not None:
                 raise source_read_error
-            if input_exhausted:
-                check_completed_writer()
+            if input_exhausted and check_completed_writer():
+                break
             if (
                 writer_task is not None
                 and not input_exhausted
@@ -552,8 +556,8 @@ async def _async_convert_audio(  # noqa: C901
                 # Do not let a later source close or child failure replace an
                 # error already observed while reading input.
                 raise source_read_error
-            if input_exhausted:
-                check_completed_writer()
+            if input_exhausted and check_completed_writer():
+                break
             if (
                 writer_task is not None
                 and not input_exhausted
@@ -589,9 +593,8 @@ async def _async_convert_audio(  # noqa: C901
 
         if source_read_error is not None:
             raise source_read_error
-        if input_exhausted:
-            check_completed_writer()
-        if not wait_task.done():
+        child_failure_with_close = input_exhausted and check_completed_writer()
+        if not wait_task.done() and not child_failure_with_close:
             if writer_task is not None and not input_exhausted:
                 # A held source cannot keep a child with closed stdout alive
                 # indefinitely. It may still exit during this brief grace.
@@ -605,19 +608,21 @@ async def _async_convert_audio(  # noqa: C901
                     )
                     if source_read_error is not None:
                         raise source_read_error
-                    check_completed_writer()
-                if not wait_task.done():
+                    child_failure_with_close = check_completed_writer()
+                if not wait_task.done() and not child_failure_with_close:
                     # A successful close still waits for the actual exit.
                     await asyncio.shield(wait_task)
         if source_read_error is not None:
             raise source_read_error
         if input_exhausted:
-            check_completed_writer()
-        if not wait_task.done():
+            child_failure_with_close = (
+                check_completed_writer() or child_failure_with_close
+            )
+        if not wait_task.done() and not child_failure_with_close:
             raise HomeAssistantError(
                 "ffmpeg output closed before TTS input was exhausted"
             )
-        retcode = wait_task.result()
+        retcode = process.returncode if child_failure_with_close else wait_task.result()
         if retcode != 0:
             # A known child failure is primary over source finalization. The
             # normal EOF case below still waits for its writer to finish.
