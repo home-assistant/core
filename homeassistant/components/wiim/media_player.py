@@ -35,9 +35,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -639,19 +638,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     @callback
     @override
-    def _async_registry_updated(
-        self, event: Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Keep the entity-to-UDN map in sync with entity registry updates."""
-        if (
-            event.data["action"] == "update"
-            and (old_entity_id := event.data.get("old_entity_id"))
-            and old_entity_id != (entity_id := event.data["entity_id"])
-        ):
-            self._wiim_data.entity_id_to_udn_map.pop(old_entity_id, None)
-            self._wiim_data.entity_id_to_udn_map[entity_id] = self._device.udn
-
-        super()._async_registry_updated(event)
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Keep the entity-to-UDN map in sync with the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._wiim_data.entity_id_to_udn_map.pop(old_entity_id, None)
+        self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
+        # Group members are resolved through the map, core writes the state
+        self._update_ha_state_from_sdk_cache(
+            write_state=False, update_supported_features=False
+        )
+        self._async_propagate_group_state_update(self._get_group_snapshot())
 
     @override
     async def async_added_to_hass(self) -> None:

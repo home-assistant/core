@@ -5,8 +5,12 @@ from contextlib import suppress
 import hashlib
 import re
 import shlex
-from typing import Literal, overload
+from typing import Any, Literal, overload
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
@@ -306,3 +310,26 @@ def create_platform_yaml_not_supported_issue(
         learn_more_url="https://www.home-assistant.io/integrations/command_line/",
         logger=LOGGER,
     )
+
+
+def shell_template_issue_ids(
+    command_line_config: list[dict[str, dict[str, Any]]],
+) -> set[str]:
+    """Return the shell template deprecation issue ids for the given config.
+
+    Only sensor, binary_sensor and notify run templated commands and can raise
+    the issue. The name mirrors each platform's setup: sensor and binary_sensor
+    always have a name (schema default), while notify falls back to the
+    integration domain when no name is configured.
+    """
+    issue_ids: set[str] = set()
+    for platform_config in command_line_config:
+        for platform, platform_conf in platform_config.items():
+            if platform == NOTIFY_DOMAIN:
+                name = platform_conf.get(CONF_NAME) or DOMAIN
+            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+                name = platform_conf[CONF_NAME]
+            else:
+                continue
+            issue_ids.add(build_shell_template_issue_id(platform, name))
+    return issue_ids

@@ -99,5 +99,10 @@
         "name": "Auto shut-off"
       }
     }
+  },
+  "exceptions": {
+    "valve_action_failed": {
+      "message": "Failed to change the valve state"
+    }
   }
 }

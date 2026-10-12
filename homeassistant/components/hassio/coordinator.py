@@ -38,6 +38,7 @@ from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
+    async_noop,
     callback,
     is_callback_check_partial,
 )
@@ -258,7 +259,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             )
         )
         # Keep polling active even if initial refresh fails so coordinator can recover.
-        self.async_add_listener(lambda: None)
+        self.async_add_listener(async_noop)
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -743,7 +744,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
 
         # Connect a stub listener to start the update interval polling on first subscriber
         if self._noop_listener_disconnect is None:
-            self._noop_listener_disconnect = self.async_add_listener(lambda: None)
+            self._noop_listener_disconnect = self.async_add_listener(async_noop)
 
         # Run the callback on each existing match
         # We catch all errors to prevent an error in one from stopping the others

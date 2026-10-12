@@ -53,7 +53,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the climate entity."""
@@ -67,7 +67,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self._device.async_request(self._device.api.set_temp, temperature)
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
     @callback
@@ -90,10 +90,10 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
         if self.sensor_mode is SensorMode.OUTER_SENSOR_CONTROL:
-            self._attr_current_temperature = data.get("external_temp")
+            self._attr_native_current_temperature = data.get("external_temp")
         else:
-            self._attr_current_temperature = data.get("room_temp")
-        self._attr_target_temperature = data.get("thermostat_temp")
+            self._attr_native_current_temperature = data.get("room_temp")
+        self._attr_native_target_temperature = data.get("thermostat_temp")
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

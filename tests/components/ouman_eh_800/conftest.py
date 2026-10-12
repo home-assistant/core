@@ -5,6 +5,8 @@ from contextlib import nullcontext
 from unittest.mock import AsyncMock, patch
 
 from ouman_eh_800_api import (
+    AccumulatorSensor,
+    BoilerSensor,
     HomeAwayControl,
     L1BaseEndpoints,
     L1ConstantTempMode,
@@ -29,6 +31,7 @@ from ouman_eh_800_api import (
     RelayTempDifference,
     RelayTemperature,
     RelayTimeProgram,
+    ReturnWaterSensor,
     SystemEndpoints,
 )
 import pytest
@@ -139,12 +142,16 @@ _ENDPOINT_VALUES: dict[OumanEndpoint, OumanValues] = {
     RelayTempDifference.CONTROL: RelayControl.AUTO,
     RelayL1ValvePosition.CONTROL: RelayControl.AUTO,
     RelayTimeProgram.CONTROL: RelayControl.AUTO,
+    # Optional measurement channels (any combination may be active)
+    ReturnWaterSensor.RETURN_WATER_TEMPERATURE: 32.5,
+    AccumulatorSensor.ACCUMULATOR_TEMPERATURE: 55.0,
+    BoilerSensor.BOILER_TEMPERATURE: 60.0,
 }
 
 # Each scenario is a valid registry set the device may expose. Together they
 # cover every endpoint the API can return — both curve types, both room-sensor
-# variants on each channel, the additive ConstantTempMode, and all 5 relay
-# variants.
+# variants on each channel, the additive ConstantTempMode, all 5 relay
+# variants, and the 3 optional measurement channel fragments.
 SCENARIOS: dict[str, list[type[OumanRegistry]]] = {
     # Realistic combinations
     "room_sensors": [
@@ -156,6 +163,7 @@ SCENARIOS: dict[str, list[type[OumanRegistry]]] = {
         L2BaseEndpoints,
         L2ThreePointCurve,
         L2RoomSensor,
+        ReturnWaterSensor,
     ],
     "no_room_sensors": [
         SystemEndpoints,
@@ -165,6 +173,8 @@ SCENARIOS: dict[str, list[type[OumanRegistry]]] = {
         L2BaseEndpoints,
         L2FivePointCurve,
         L2NoRoomSensor,
+        AccumulatorSensor,
+        BoilerSensor,
     ],
     "l1_constant_temp_relay_summer_stop": [
         SystemEndpoints,

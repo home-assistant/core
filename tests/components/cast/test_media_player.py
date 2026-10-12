@@ -494,7 +494,8 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = CastRuntimeData(
-        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform),
+        refresh_token="mock-token",
     )
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
@@ -506,7 +507,8 @@ async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entry.runtime_data = CastRuntimeData(
-        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform),
+        refresh_token="mock-token",
     )
     added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()

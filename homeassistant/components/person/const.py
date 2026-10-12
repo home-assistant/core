@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 DOMAIN = "person"
 
+CONF_USER_ID = "user_id"
+
 DATA_PERSON: HassKey[PersonData] = HassKey(DOMAIN)
 
 

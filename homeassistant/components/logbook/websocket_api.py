@@ -13,7 +13,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.const import EVENT_CALL_SERVICE
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, async_noop, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
@@ -303,7 +303,7 @@ async def ws_event_stream(
 
     if end_time and end_time <= utc_now:
         # Not live stream but we it might be a big query
-        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.subscriptions[msg_id] = async_noop
         connection.send_result(msg_id)
         # Fetch everything from history
         await _async_send_historical_events(

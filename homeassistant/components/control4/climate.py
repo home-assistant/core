@@ -229,7 +229,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the temperature unit based on the thermostat's SCALE setting."""
         data = self._thermostat_data
         if data is None:
@@ -244,7 +244,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         data = self._thermostat_data
         if data is None:
             return None
-        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+        if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
             return data.get(CONTROL4_COOL_SETPOINT_C)
         return data.get(CONTROL4_COOL_SETPOINT_F)
 
@@ -254,18 +254,18 @@ class Control4Climate(Control4Entity, ClimateEntity):
         data = self._thermostat_data
         if data is None:
             return None
-        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+        if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
             return data.get(CONTROL4_HEAT_SETPOINT_C)
         return data.get(CONTROL4_HEAT_SETPOINT_F)
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         data = self._thermostat_data
         if data is None:
             return None
-        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+        if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
             return data.get(CONTROL4_CURRENT_TEMPERATURE_C)
         return data.get(CONTROL4_CURRENT_TEMPERATURE_F)
 
@@ -316,7 +316,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         hvac_mode = self.hvac_mode
         if hvac_mode == HVACMode.COOL:
@@ -327,7 +327,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the high target temperature for auto mode."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._cool_setpoint
@@ -335,7 +335,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the low target temperature for auto mode."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._heat_setpoint
@@ -384,24 +384,24 @@ class Control4Climate(Control4Entity, ClimateEntity):
         # Handle temperature range for auto mode
         if self.hvac_mode == HVACMode.HEAT_COOL:
             if low_temp is not None:
-                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
                     await c4_climate.set_heat_setpoint_c(low_temp)
                 else:
                     await c4_climate.set_heat_setpoint_f(low_temp)
             if high_temp is not None:
-                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
                     await c4_climate.set_cool_setpoint_c(high_temp)
                 else:
                     await c4_climate.set_cool_setpoint_f(high_temp)
         # Handle single temperature setpoint
         elif temp is not None:
             if self.hvac_mode == HVACMode.COOL:
-                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
                     await c4_climate.set_cool_setpoint_c(temp)
                 else:
                     await c4_climate.set_cool_setpoint_f(temp)
             elif self.hvac_mode == HVACMode.HEAT:
-                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
                     await c4_climate.set_heat_setpoint_c(temp)
                 else:
                     await c4_climate.set_heat_setpoint_f(temp)

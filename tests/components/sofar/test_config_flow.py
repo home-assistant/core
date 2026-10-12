@@ -140,6 +140,8 @@ async def test_user_step_success(
     assert result["data"] == expected_data
     assert result["result"].unique_id == MOCK_SERIAL
     assert len(mock_setup_entry.mock_calls) == 1
+    # The probe must read only the identity, never poll the inverter.
+    assert len(mock_conn.for_unit(1).read_events) == 2
 
 
 async def test_user_step_success_without_model(
