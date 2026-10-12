@@ -33,21 +33,39 @@ def mock_connection() -> MockConnection:
 
 
 @pytest.fixture(autouse=True)
-def example_integrations(
+def provider_integration(
     hass: HomeAssistant, mock_connection: MockConnection
 ) -> Generator[None]:
-    """Exercise real config-entry/entity lifecycle with synthetic integrations."""
+    """Mock a connection provider integration."""
 
-    async def setup_integration(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(
             await async_register_connection(hass, entry, connection=mock_connection)
         )
         return True
 
-    async def unload_integration(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
-    async def setup_vendor(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    mock_integration(
+        hass,
+        MockModule(
+            "test_provider",
+            dependencies=["lorawan"],
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "test_provider.config_flow", Mock())
+    with mock_config_flow("test_provider", ConfigFlow):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def vendor_integration(hass: HomeAssistant) -> Generator[None]:
+    """Mock a device integration with a sensor platform."""
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manager = entry.runtime_data = DeviceManager(
             hass,
             entry,
@@ -59,7 +77,7 @@ def example_integrations(
         await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
         return True
 
-    async def unload_vendor(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await hass.config_entries.async_unload_platforms(
             entry, [Platform.SENSOR]
         )
@@ -80,19 +98,10 @@ def example_integrations(
     mock_integration(
         hass,
         MockModule(
-            "test_provider",
-            dependencies=["lorawan"],
-            async_setup_entry=setup_integration,
-            async_unload_entry=unload_integration,
-        ),
-    )
-    mock_integration(
-        hass,
-        MockModule(
             "test_vendor",
             dependencies=["lorawan"],
-            async_setup_entry=setup_vendor,
-            async_unload_entry=unload_vendor,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
         ),
     )
     mock_platform(
@@ -101,10 +110,8 @@ def example_integrations(
         SimpleNamespace(async_setup_entry=setup_sensor, PARALLEL_UPDATES=0),
     )
     mock_platform(hass, "test_vendor.config_flow", Mock())
-    mock_platform(hass, "test_provider.config_flow", Mock())
     with (
         mock_config_flow("test_vendor", ConfigFlow),
-        mock_config_flow("test_provider", ConfigFlow),
         patch(
             "homeassistant.components.lorawan.async_get_lorawan",
             return_value={"test_vendor": [("example", 123), ("other_stack", "vendor")]},
