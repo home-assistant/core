@@ -149,9 +149,6 @@
       "spin_level": {
         "default": "mdi:rotate-right"
       },
-      "tv_sound_mode": {
-        "default": "mdi:surround-sound"
-      },
       "water_temperature": {
         "default": "mdi:water-thermometer"
       },

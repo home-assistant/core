@@ -196,6 +196,7 @@
           "sound_mode": {
             "state": {
               "adaptive_sound": "Adaptive sound",
+              "amplify": "Amplify",
               "game": "Game",
               "standard": "Standard",
               "surround": "Surround"
@@ -427,13 +428,6 @@
           "no_spin": "No spin",
           "none": "None",
           "rinse_hold": "Rinse hold"
-        }
-      },
-      "tv_sound_mode": {
-        "name": "[%key:component::smartthings::entity::select::robot_cleaner_sound_mode::name%]",
-        "state": {
-          "amplify": "Amplify",
-          "standard": "[%key:component::smartthings::entity::media_player::media_player::state_attributes::sound_mode::state::standard%]"
         }
       },
       "water_temperature": {

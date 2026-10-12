@@ -146,14 +146,6 @@ async def test_select_option_map(
             "Movie",
             id="picture_mode",
         ),
-        pytest.param(
-            "select.theater_tv_samsung_8_series_49_sound_mode",
-            "standard",
-            Capability.CUSTOM_SOUND_MODE,
-            Command.SET_SOUND_MODE,
-            "Standard",
-            id="sound_mode",
-        ),
     ],
 )
 async def test_select_tv_mode(
@@ -166,7 +158,7 @@ async def test_select_tv_mode(
     command: Command,
     argument: str,
 ) -> None:
-    """Test selecting a TV picture or sound mode sends the device's own name."""
+    """Test selecting a TV picture mode sends the device's own name."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
