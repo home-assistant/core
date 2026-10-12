@@ -148,6 +148,11 @@ class Telegrams:
         )
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
 
+    @property
+    def store_initializing(self) -> bool:
+        """Return whether the telegram store is still being initialized."""
+        return self.store is None and self._uninitialized_store is not None
+
     @callback
     def async_start(self) -> None:
         """Initialize the telegram store in the background.

@@ -1353,6 +1353,10 @@
       "resume": "Resume",
       "search_label": "Search {count} telegrams",
       "search_label_singular": "Search {count} telegram",
+      "telegram_store_initializing": {
+        "description": "The telegram storage is still initializing. Live telegrams are shown; the recent history is added once it is ready.",
+        "title": "Telegram history is loading"
+      },
       "time_delta": {
         "after": {
           "label": "+ After (ms)"
@@ -1376,6 +1380,7 @@
         "partial": "The range is large; only part of it could be loaded.",
         "retention_clamped": "Adjusted to the oldest available data.",
         "select": "Select a time range",
+        "store_initializing": "The telegram storage is still initializing; history is not available yet.",
         "title": "Time range"
       },
       "title": "Group monitor",
