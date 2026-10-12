@@ -25,6 +25,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -673,12 +674,25 @@ async def test_device_registered_before_platform_setup(
 ) -> None:
     """Register gateways upfront even when they have no supported climate target."""
     gateway = _load_gateway_devices("mc80z")[0]
+
+    async def forward_platforms(
+        entry: MockConfigEntry, platforms: list[Platform]
+    ) -> None:
+        assert (
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, gateway.id), entry.entry_id
+            )
+            is not None
+        )
+
     with patch.object(
-        hass.config_entries, "async_forward_entry_setups", new_callable=AsyncMock
+        hass.config_entries,
+        "async_forward_entry_setups",
+        new=AsyncMock(side_effect=forward_platforms),
     ) as forward:
         await _async_setup_fixture(hass, config_entry, "mc80z")
 
-    forward.assert_awaited_once()
+    forward.assert_awaited_once_with(config_entry, [Platform.CLIMATE])
     assert (
         device_registry.async_get_device_by_identifier(
             (DOMAIN, gateway.id), config_entry.entry_id

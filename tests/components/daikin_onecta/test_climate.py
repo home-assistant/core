@@ -1640,7 +1640,7 @@ def test_swing_modes_translate_standard_values(
         (
             "speed",
             SERVICE_SET_FAN_MODE,
-            {"fan_mode": "quiet"},
+            {"fan_mode": "auto"},
             ClimateEntityFeature.FAN_MODE,
         ),
         (
@@ -1669,9 +1669,16 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     """Do not advertise or write read-only fan and swing telemetry."""
     await _async_setup_fixture(hass, config_entry, "ururu")
     coordinator = config_entry.runtime_data
+    assert coordinator.data is not None
     device = next(iter(coordinator.data.values()))
     point = next(iter(device.device.management_points_by_type("climateControl")))
+    assert point.climate_control is not None
     fan = point.climate_control.fan_operation()
+    assert fan is not None
+    assert fan.fan_speed is not None
+    assert fan.fan_direction is not None
+    assert fan.fan_direction.vertical is not None
+    assert fan.fan_direction.horizontal is not None
     characteristic = {
         "speed": fan.fan_speed.current_mode,
         "vertical": fan.fan_direction.vertical.current_mode,
@@ -1679,12 +1686,32 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     }[control]
     characteristic.settable = False
     coordinator.client.patch_characteristic = AsyncMock()
-    coordinator.async_update_listeners()
-    await hass.async_block_till_done()
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, f"{device.id}_{point.embedded_id}_roomTemperature"
     )
+    assert entity_id is not None
     state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["supported_features"] & feature
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+    assert (
+        err.value.translation_key
+        == {
+            "speed": "fan_mode_unavailable",
+            "vertical": "swing_control_unavailable",
+            "horizontal": "swing_control_unavailable",
+        }[control]
+    )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
     assert not state.attributes["supported_features"] & feature
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
