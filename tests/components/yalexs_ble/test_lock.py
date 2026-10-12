@@ -1,6 +1,7 @@
 """Test the Yale Access Bluetooth lock credential services and changed_by."""
 
-from collections.abc import AsyncGenerator, Callable
+import asyncio
+from collections.abc import AsyncGenerator, Callable, Generator
 from dataclasses import replace
 from datetime import timedelta
 from typing import Any
@@ -1195,6 +1196,42 @@ async def test_removal_cancels_hold(
     assert hass.states.get(ENTITY_ID).state == "unavailable"
 
 
+@pytest.fixture
+def unavailable_callbacks() -> Generator[list[Callable[[Any], None]]]:
+    """Capture the bluetooth unavailable callbacks the entities register."""
+    callbacks: list[Callable[[Any], None]] = []
+
+    def _track(
+        hass: HomeAssistant, callback: Callable[[Any], None], address: str
+    ) -> Callable[[], None]:
+        callbacks.append(callback)
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.yalexs_ble.entity.bluetooth.async_track_unavailable",
+        side_effect=_track,
+    ):
+        yield callbacks
+
+
+async def test_unavailable_cancels_hold(
+    hass: HomeAssistant,
+    unavailable_callbacks: list[Callable[[Any], None]],
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the device going unavailable drops the held state."""
+    mock_lock.push(LockStatus.UNLOCKED)
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    for callback in unavailable_callbacks:
+        callback(MagicMock())
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "unavailable"
+    await _expire_hold(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == "unavailable"
+
+
 @pytest.mark.usefixtures("entry")
 async def test_activity_callback_registered_before_start(
     mock_lock: MockLock,
@@ -1426,6 +1463,59 @@ async def test_device_target_status_shared(
     mock_lock.push_lock.get_keycode.assert_awaited_once_with(9)
     expected = {"credential_exists": True, "name": None}
     assert response == {ENTITY_ID: expected, SECURE_ENTITY_ID: expected}
+
+
+@pytest.mark.usefixtures("entry")
+async def test_parallel_set_credential_different_slots_both_run(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test concurrent calls sharing a context but not data both run."""
+    context = Context()
+    await asyncio.gather(
+        *(
+            _call(
+                hass,
+                "set_lock_credential",
+                {"credential_data": "1234", "credential_index": slot},
+                context=context,
+            )
+            for slot in (1, 2)
+        )
+    )
+
+    assert sorted(c.args for c in mock_lock.push_lock.set_keycode.await_args_list) == [
+        (1, "1234"),
+        (2, "1234"),
+    ]
+    assert not hass.config_entries.async_entries(DOMAIN)[
+        0
+    ].runtime_data.credential_operations
+
+
+@pytest.mark.usefixtures("entry")
+async def test_parallel_status_different_slots_both_run(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test concurrent status reads for different slots return their own result."""
+    mock_lock.push_lock.get_keycode.side_effect = lambda slot: (
+        "1234" if slot == 1 else None
+    )
+    context = Context()
+    first, second = await asyncio.gather(
+        *(
+            _call(
+                hass,
+                "get_lock_credential_status",
+                {"credential_index": slot},
+                context=context,
+                return_response=True,
+            )
+            for slot in (1, 2)
+        )
+    )
+
+    assert first[ENTITY_ID] == {"credential_exists": True, "name": None}
+    assert second[ENTITY_ID] == {"credential_exists": False, "name": None}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

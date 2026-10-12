@@ -21,6 +21,7 @@ from yalexs_ble import (
 )
 from yalexs_ble.const import OperationError
 
+from homeassistant.components import bluetooth
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
@@ -211,6 +212,15 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             self._hold_cancel = None
 
     @callback
+    @override
+    def _async_device_unavailable(
+        self, service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
+        """Drop any held state so its expiry cannot make the lock look available."""
+        self._async_cancel_hold()
+        super()._async_device_unavailable(service_info)
+
+    @callback
     def _async_flush_hold(self) -> None:
         """Apply the pending state and write it."""
         pending = self._pending
@@ -313,12 +323,15 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             await self._device.unlock()
 
     async def _async_run_once[T](
-        self, name: str, operation: Callable[[], Coroutine[Any, Any, T]]
+        self,
+        name: str,
+        data: dict[str, Any],
+        operation: Callable[[], Coroutine[Any, Any, T]],
     ) -> T:
         """Run a credential operation once per service call across sibling entities."""
         assert self._context is not None
-        context = self._context
-        key = (name, context.id)
+        # A context spans a script run, so parallel calls need the data to tell apart.
+        key = (name, self._context.id, tuple(sorted(data.items())))
         operations = self._data.credential_operations
         if (task := operations.get(key)) is None:
             task = self.hass.async_create_task(operation())
@@ -334,7 +347,9 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     async def async_set_lock_credential(self, **kwargs: Any) -> None:
         """Set a keypad PIN."""
-        await self._async_run_once("set", lambda: self._set_credential(**kwargs))
+        await self._async_run_once(
+            "set", kwargs, lambda: self._set_credential(**kwargs)
+        )
 
     async def _set_credential(self, **kwargs: Any) -> None:
         """Set a keypad PIN on the lock."""
@@ -356,7 +371,9 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     async def async_clear_lock_credential(self, **kwargs: Any) -> None:
         """Clear a keypad PIN."""
-        await self._async_run_once("clear", lambda: self._clear_credential(**kwargs))
+        await self._async_run_once(
+            "clear", kwargs, lambda: self._clear_credential(**kwargs)
+        )
 
     async def _clear_credential(self, **kwargs: Any) -> None:
         """Clear a keypad PIN on the lock."""
@@ -370,7 +387,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     ) -> dict[str, bool | str | None]:
         """Return whether a keypad PIN slot is in use, never the PIN itself."""
         return await self._async_run_once(
-            "status", lambda: self._credential_status(**kwargs)
+            "status", kwargs, lambda: self._credential_status(**kwargs)
         )
 
     async def _credential_status(self, **kwargs: Any) -> dict[str, bool | str | None]:
