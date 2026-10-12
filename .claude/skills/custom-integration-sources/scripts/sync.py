@@ -38,6 +38,7 @@ BINARY_PROBE = 8000
 # Characters GitHub allows in owner and repo names; slugs become paths under root
 REPO_SLUG = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+")
 LOCK_FILE = ".lock"
+HACS_JSON_MAX = 1 << 16
 # Exit status when the sync completed but some repos could not be downloaded
 # (argparse already uses 2 for usage errors)
 EXIT_PARTIAL = 3
@@ -155,6 +156,23 @@ def download(root: Path, repo: str, sha: str) -> None:
     tmp.rename(dest)
 
 
+def _content_in_root(
+    tar: tarfile.TarFile, files: list[tuple[tarfile.TarInfo, PurePosixPath]]
+) -> bool:
+    """Return the content_in_root flag from the root hacs.json, if any."""
+    for member, rel in files:
+        if rel == PurePosixPath("hacs.json"):
+            fobj = tar.extractfile(member)
+            try:
+                manifest = json.loads(fobj.read(HACS_JSON_MAX)) if fobj else None
+            except ValueError:
+                return False
+            return (
+                isinstance(manifest, dict) and manifest.get("content_in_root") is True
+            )
+    return False
+
+
 def _extract(archive: BinaryIO, tmp: Path) -> None:
     """Extract the installed text files of a repo tarball into tmp."""
     with tarfile.open(fileobj=archive, mode="r:gz") as tar:
@@ -166,14 +184,15 @@ def _extract(archive: BinaryIO, tmp: Path) -> None:
             rel = PurePosixPath(*PurePosixPath(member.name).parts[1:])
             if rel.parts and ".." not in rel.parts and not rel.is_absolute():
                 files.append((member, rel))
-        # Keep what HACS installs; content_in_root repos have no custom_components
-        has_components = any(
+        # Keep what HACS installs: the whole repo for content_in_root, else
+        # custom_components (whole repo too when there is none, as a fallback)
+        keep_all = _content_in_root(tar, files) or not any(
             len(rel.parts) > 1 and rel.parts[0] == "custom_components"
             for _, rel in files
         )
         for member, rel in files:
             if (
-                has_components
+                not keep_all
                 and rel.parts[0] != "custom_components"
                 and rel != PurePosixPath("hacs.json")
             ):
@@ -223,8 +242,6 @@ def load_state(root: Path) -> dict[str, str]:
     if not isinstance(state, dict) or not all(
         isinstance(k, str) and isinstance(v, str) for k, v in state.items()
     ):
-        # Not ours: leave it as found
-        (root / LOCK_FILE).unlink(missing_ok=True)
         sys.exit(f"{root} is not empty and has no valid {state_file.name}; refusing")
     return state
 
@@ -238,7 +255,7 @@ def save_state(root: Path, state: dict[str, str]) -> None:
 
 def lock(root: Path) -> BinaryIO:
     """Hold an exclusive lock on root for the life of the process."""
-    fobj = (root / LOCK_FILE).open("wb")
+    fobj = (root / LOCK_FILE).open("ab")
     try:
         fcntl.flock(fobj, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
@@ -283,6 +300,8 @@ def main() -> None:
 
     root: Path = args.dest.resolve()
     root.mkdir(parents=True, exist_ok=True)
+    # Read-only ownership check first, so a refused directory is never modified
+    load_state(root)
     # Kept open until exit; concurrent runs share the same temp paths
     _lock = lock(root)
     state = load_state(root)
