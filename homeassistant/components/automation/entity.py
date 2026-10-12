@@ -656,8 +656,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             new_issue_id = self._async_create_service_not_found_issue(
                 issue.translation_placeholders["service"]
             )
-            if issue.dismissed_version is not None:
-                issue_registry.async_ignore(DOMAIN, new_issue_id, True)
+            # An existing issue under the new id, e.g. left by a deleted automation,
+            # keeps its own ignored state when created again
+            issue_registry.async_ignore(
+                DOMAIN, new_issue_id, issue.dismissed_version is not None
+            )
 
     async def _async_attach_triggers_for_entity_id(self) -> None:
         """Attach the triggers, retrying if the entity_id changes while attaching.
