@@ -1,6 +1,5 @@
 """Common tools used for the Tradfri test suite."""
 
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
@@ -62,7 +61,7 @@ class CommandStore:
         assert observe_command
 
         device_path = "/".join(str(v) for v in device.path)
-        device_state = deepcopy(device.raw)
+        device_state = device.raw.dict(by_alias=True)
 
         # Create a default observed state based on the sent commands.
         for command in self.sent_commands:

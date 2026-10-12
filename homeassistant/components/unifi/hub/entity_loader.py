@@ -15,7 +15,7 @@ from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
-from homeassistant.core import callback
+from homeassistant.core import async_noop, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,7 +53,9 @@ class UnifiEntityLoader:
                 hub, hub.api.firewall_policies
             ),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
-                hub, hub.api.object_oriented_network_configs
+                hub,
+                hub.api.object_oriented_network_configs,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.port_forwarding): UnifiDataUpdateCoordinator(
                 hub, hub.api.port_forwarding
@@ -72,7 +74,7 @@ class UnifiEntityLoader:
         }
         for coordinator in self._data_coordinators.values():
             self.hub.config.entry.async_on_unload(
-                coordinator.async_add_listener(lambda: None)
+                coordinator.async_add_listener(async_noop)
             )
 
         self.platforms: list[

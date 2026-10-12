@@ -39,6 +39,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
+    CIRCULATOR_FAN_PRO = "circulator_fan_pro"
     K20_VACUUM = "k20_vacuum"
     S10_VACUUM = "s10_vacuum"
     K10_VACUUM = "k10_vacuum"
@@ -57,6 +58,7 @@ class SupportedModels(StrEnum):
     STRIP_LIGHT_3 = "strip_light_3"
     RGBICWW_STRIP_LIGHT = "rgbicww_strip_light"
     RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
+    RGBICWW_LIGHT_BARS = "rgbicww_light_bars"
     PERMANENT_OUTDOOR_LIGHT = "permanent_outdoor_light"
     PLUG_MINI_EU = "plug_mini_eu"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
@@ -95,6 +97,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: SupportedModels.CIRCULATOR_FAN_PRO,
     SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
     SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
     SwitchbotModel.S20_VACUUM: SupportedModels.S20_VACUUM,
@@ -113,6 +116,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: SupportedModels.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: SupportedModels.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.RGBICWW_LIGHT_BARS: SupportedModels.RGBICWW_LIGHT_BARS,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: SupportedModels.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
@@ -173,6 +177,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.RGBICWW_LIGHT_BARS,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM,
@@ -185,6 +190,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI,
     SwitchbotModel.CANDLE_WARMER_LAMP,
+    SwitchbotModel.CIRCULATOR_FAN_PRO,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT,
 }
@@ -208,6 +214,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: switchbot.SwitchbotRgbicLight,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: switchbot.SwitchbotRgbicLight,
+    SwitchbotModel.RGBICWW_LIGHT_BARS: switchbot.SwitchbotRgbicLight,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: switchbot.SwitchbotPermanentOutdoorLight,
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
@@ -222,6 +229,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
     SwitchbotModel.CANDLE_WARMER_LAMP: switchbot.SwitchbotCandleWarmerLamp,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: switchbot.SwitchbotCirculatorFanPro,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
 }
@@ -255,6 +263,17 @@ ROLLER_SHADE_SPEED_QUIET = "quiet"
 ROLLER_SHADE_SPEED_TO_MODE = {
     ROLLER_SHADE_SPEED_PERFORMANCE: 0,
     ROLLER_SHADE_SPEED_QUIET: 1,
+}
+
+# Curtain movement speeds, exposed as cover speeds.
+# Only the Curtain 3 (identified by its advertised model friendly name)
+# honours the speed byte; other curtain models always move at normal speed.
+CURTAIN_3_MODEL_FRIENDLY_NAME = "Curtain 3"
+CURTAIN_SPEED_NORMAL = "normal"
+CURTAIN_SPEED_SILENT = "silent"
+CURTAIN_SPEED_TO_VALUE = {
+    CURTAIN_SPEED_NORMAL: 255,
+    CURTAIN_SPEED_SILENT: 1,
 }
 
 AIRPURIFIER_BASIC_MODELS = {

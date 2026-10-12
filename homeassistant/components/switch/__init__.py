@@ -1,15 +1,13 @@
 """Component to interface with switches that can be controlled remotely."""
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -20,13 +18,17 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import (  # noqa: F401
+    DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
+    DOMAIN,
+    SwitchDeviceClass,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[SwitchEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -35,16 +37,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-class SwitchDeviceClass(StrEnum):
-    """Device class for switches."""
-
-    OUTLET = "outlet"
-    SWITCH = "switch"
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
-
 
 # mypy: disallow-any-generics
 
@@ -64,9 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    async_setup_services(hass)
 
     return True
 

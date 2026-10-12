@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_LANGUAGE, ATTR_MEDIA_PLAYER_ENTITY_ID, ATTR_MESSAGE, DOMAIN
+from .const import ATTR_LANGUAGE, ATTR_MEDIA_PLAYER_ENTITY_ID, ATTR_MESSAGE, DOMAIN
 
 CONF_MEDIA_PLAYER = "media_player"
 CONF_TTS_SERVICE = "tts_service"
@@ -23,7 +23,7 @@ ENTITY_LEGACY_PROVIDER_GROUP = "entity_or_legacy_provider"
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_TTS_SERVICE, CONF_ENTITY_ID),
+    probatio.AtLeastOne(CONF_TTS_SERVICE, CONF_ENTITY_ID),
     NOTIFY_PLATFORM_SCHEMA.extend(
         {
             probatio.Required(CONF_NAME): cv.string,

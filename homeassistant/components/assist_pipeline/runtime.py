@@ -14,7 +14,8 @@ from .const import DOMAIN
 from .models import PipelineEvent
 
 if TYPE_CHECKING:
-    from .pipeline import PipelineRun, PipelineStorageCollection
+    from .pipeline import PipelineStorageCollection
+    from .run import PipelineRun
 
 
 class PipelineRuns:
@@ -45,7 +46,7 @@ class PipelineRuns:
         if pipeline_runs := self._pipeline_runs.get(item_id):
             # Create a temporary list in case the list is modified while we iterate
             for pipeline_run in list(pipeline_runs.values()):
-                pipeline_run.abort_wake_word_detection = True
+                pipeline_run.invalidate()
 
 
 @dataclass(slots=True)

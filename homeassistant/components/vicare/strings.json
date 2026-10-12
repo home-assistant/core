@@ -646,6 +646,7 @@
           "permanent": "Permanent",
           "schedule": "Schedule",
           "sensordriven": "Sensor-driven",
+          "sensoroverride": "Sensor override",
           "silent": "Silent",
           "standby": "[%key:common::state::standby%]"
         }

@@ -79,10 +79,11 @@ from homeassistant.helpers.trigger import (
     StatelessEntityTriggerBase,
     Trigger,
     TriggerActionRunner,
+    TriggerActionType,
     TriggerConfig,
+    TriggerInfo,
     TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
-    _report_not_triggered_noop,
     async_initialize_triggers,
     async_validate_trigger_config,
     make_entity_numerical_state_changed_trigger,
@@ -92,6 +93,7 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
 )
+from homeassistant.helpers.trigger.entity_trigger import _report_not_triggered_noop
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
@@ -958,6 +960,76 @@ async def test_platform_multiple_triggers(
         )
 
 
+async def test_platform_legacy_and_new_style_triggers(hass: HomeAssistant) -> None:
+    """Test a platform providing a legacy trigger next to new-style triggers."""
+
+    class MockTrigger(Trigger):
+        """Mock new-style trigger."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+        async def async_attach_runner(
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
+        ) -> CALLBACK_TYPE:
+            """Attach a trigger."""
+            run_action({"extra": "new_style"}, "new-style desc")
+            return lambda: None
+
+    class MockTriggerPlatform:
+        """Mock platform with both kinds of triggers."""
+
+        TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend({"option": str})
+
+        @staticmethod
+        async def async_attach_trigger(
+            hass: HomeAssistant,
+            config: ConfigType,
+            action: TriggerActionType,
+            trigger_info: TriggerInfo,
+        ) -> CALLBACK_TYPE:
+            """Attach the legacy trigger."""
+            hass.async_run_job(action, {"trigger": {"extra": "legacy"}})
+            return lambda: None
+
+        @staticmethod
+        async def async_get_triggers(
+            hass: HomeAssistant,
+        ) -> dict[str, type[Trigger]]:
+            """Return the new-style triggers."""
+            return {"new_style": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", MockTriggerPlatform())
+
+    legacy_config = [{"platform": "test", "option": "value"}]
+    new_style_config = [{"platform": "test.new_style"}]
+    assert await async_validate_trigger_config(hass, legacy_config) == legacy_config
+    assert (
+        await async_validate_trigger_config(hass, new_style_config) == new_style_config
+    )
+    assert hass.data[TRIGGERS] == {"test": "test", "test.new_style": "test"}
+
+    action_calls: list[str] = []
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        action_calls.append(run_variables["trigger"]["extra"])
+
+    log_cb = MagicMock()
+    await async_initialize_triggers(hass, legacy_config, action, "test", "", log_cb)
+    await async_initialize_triggers(hass, new_style_config, action, "test", "", log_cb)
+    await hass.async_block_till_done()
+
+    assert action_calls == ["legacy", "new_style"]
+
+
 async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
     """Test a trigger platform with a migration."""
 
@@ -1171,8 +1243,8 @@ async def test_async_get_all_descriptions(
 
     with (
         patch(
-            "homeassistant.helpers.trigger._load_triggers_files",
-            side_effect=trigger._load_triggers_files,
+            "homeassistant.helpers.trigger.descriptions._load_triggers_files",
+            side_effect=trigger.descriptions._load_triggers_files,
         ) as proxy_load_triggers_files,
         patch(
             "annotatedyaml.loader.load_yaml",
@@ -1311,7 +1383,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     with (
         patch(
-            "homeassistant.helpers.trigger.load_yaml_dict",
+            "homeassistant.helpers.trigger.descriptions.load_yaml_dict",
             side_effect=_load_yaml_dict,
         ),
         patch.object(Integration, "has_triggers", return_value=True),

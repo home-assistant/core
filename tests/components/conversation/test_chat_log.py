@@ -1,6 +1,6 @@
 """Test the conversation session."""
 
-from dataclasses import asdict
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import (
     AssistantContent,
+    AssistantContentDeltaDict,
     ConversationInput,
     ConverseError,
     ToolResultContent,
@@ -22,6 +23,7 @@ from homeassistant.components.conversation import (
 from homeassistant.components.conversation.chat_log import (
     DATA_CHAT_LOGS,
     Attachment,
+    ChatLog,
     ChatLogEventType,
     async_subscribe_chat_logs,
 )
@@ -142,6 +144,7 @@ async def test_multiple_llm_apis(
 
         name = "test_tool"
         description = "Test function"
+        integration = "test"
         parameters = probatio.Schema(
             {probatio.Optional("param1", description="Test parameters"): str}
         )
@@ -440,7 +443,7 @@ async def test_tool_call(
     mock_tool.parameters = probatio.Schema(
         {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     with (
         patch(
@@ -494,13 +497,13 @@ async def test_tool_call(
         assert results[0] == ToolResultContent(
             agent_id=mock_conversation_input.agent_id,
             tool_call_id="mock-tool-call-id",
-            tool_result="Test response",
+            result=llm.ToolResult(data="Test response"),
             tool_name="test_tool",
         )
         assert results[1] == ToolResultContent(
             agent_id=mock_conversation_input.agent_id,
             tool_call_id="mock-tool-call-id-2",
-            tool_result="Test response",
+            result=llm.ToolResult(data="Test response"),
             tool_name="test_tool",
         )
 
@@ -554,7 +557,10 @@ async def test_tool_call_exception(
     assert result == ToolResultContent(
         agent_id=mock_conversation_input.agent_id,
         tool_call_id="mock-tool-call-id",
-        tool_result={"error": "HomeAssistantError", "error_text": "Test error"},
+        result=llm.ToolResult(
+            data={"error": "HomeAssistantError", "error_text": "Test error"},
+            error=True,
+        ),
         tool_name="test_tool",
     )
 
@@ -680,7 +686,7 @@ async def test_tool_call_exception(
                 "role": "tool_result",
                 "tool_call_id": "mock-tool-call-id",
                 "tool_name": "test_tool",
-                "tool_result": "Test Result",
+                "result": llm.ToolResult(data="Test Result"),
             },
         ],
     ],
@@ -702,9 +708,9 @@ async def test_add_delta_content_stream(
 
     async def tool_call(
         hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
-    ) -> str:
+    ) -> llm.ToolResult:
         """Call the tool."""
-        return tool_input.tool_args["param1"]
+        return llm.ToolResult(data=tool_input.tool_args["param1"])
 
     mock_tool.async_call.side_effect = tool_call
     expected_delta = []
@@ -749,11 +755,62 @@ async def test_add_delta_content_stream(
 
             # Interweave the tool results with the source deltas into expected_delta
             if content.role == "tool_result":
-                expected_delta.append(asdict(content))
+                expected_delta.append(content.as_dict())
 
         assert captured_deltas == expected_delta
         assert results == snapshot
         assert chat_log.content[2:] == results
+
+
+@freeze_time("2025-10-31 12:00:00")
+@pytest.mark.parametrize(
+    ("deltas", "expected_content"),
+    [
+        pytest.param([{"role": "assistant"}], [], id="role-only"),
+        pytest.param([{"role": "assistant", "content": ""}], [""], id="empty-message"),
+        pytest.param([{"role": "assistant"}, {"content": ""}], [""], id="empty-delta"),
+        pytest.param(
+            [
+                {"role": "assistant", "content": ""},
+                {"role": "assistant", "content": "Next"},
+            ],
+            ["", "Next"],
+            id="empty-before-next-message",
+        ),
+        pytest.param(
+            [{"role": "assistant", "content": ""}, {"content": "Hello"}],
+            ["Hello"],
+            id="text-after-empty-delta",
+        ),
+    ],
+)
+async def test_add_delta_content_stream_empty_content(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    deltas: list[AssistantContentDeltaDict],
+    expected_content: list[str],
+) -> None:
+    """Test explicit empty content is preserved but role-only messages are not."""
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        for delta in deltas:
+            yield delta
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        results = [
+            content
+            async for content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id", stream()
+            )
+        ]
+
+    assert results == [
+        AssistantContent(agent_id="mock-agent-id", content=content)
+        for content in expected_content
+    ]
 
 
 async def test_add_delta_content_stream_errors(
@@ -868,6 +925,43 @@ async def test_chat_log_continue_conversation(
         assert chat_log.continue_conversation is True
 
 
+@pytest.mark.parametrize(
+    ("content", "expected_content"),
+    [
+        pytest.param(None, {}, id="absent-content"),
+        pytest.param("", {"content": ""}, id="empty-content"),
+        pytest.param("Hello", {"content": "Hello"}, id="nonempty-content"),
+    ],
+)
+async def test_assistant_content_serialization(
+    hass: HomeAssistant,
+    content: str | None,
+    expected_content: dict[str, str],
+) -> None:
+    """Test chat logs and events distinguish empty text from absent text."""
+    chat_log = ChatLog(hass, "test-conversation")
+    message = AssistantContent(agent_id="test-agent", content=content)
+    expected_message = {
+        "role": "assistant",
+        "agent_id": "test-agent",
+        "created": message.created,
+        **expected_content,
+    }
+    event_callback = Mock()
+    unsubscribe = async_subscribe_chat_logs(hass, event_callback)
+
+    chat_log.async_add_assistant_content_without_tools(message)
+
+    assert message.as_dict() == expected_message
+    assert chat_log.as_dict()["content"][-1] == expected_message
+    event_callback.assert_called_once_with(
+        "test-conversation",
+        ChatLogEventType.CONTENT_ADDED,
+        {"content": expected_message},
+    )
+    unsubscribe()
+
+
 @freeze_time("2025-10-31 12:00:00")
 async def test_chat_log_subscription(
     hass: HomeAssistant,
@@ -957,13 +1051,17 @@ async def test_chat_log_subscription(
                 agent_id="test-agent",
                 tool_call_id="test-tool-call-123",
                 tool_name="test_tool",
-                tool_result="Tool execution completed successfully",
+                result=llm.ToolResult(data="Tool execution completed successfully"),
             )
         )
         # Check tool result content event
         assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
         tool_result_event = received_events[-1][2]["content"]
         assert tool_result_event["tool_name"] == "test_tool"
+        assert tool_result_event["result"] == {
+            "data": "Tool execution completed successfully",
+            "error": False,
+        }
         assert (
             tool_result_event["tool_result"] == "Tool execution completed successfully"
         )
@@ -1034,3 +1132,46 @@ async def test_chat_log_subscription(
 
     # Verify no new events were received after unsubscribing
     assert len(received_events) == events_before_unsubscribe
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_tool_result_content_deprecated_property() -> None:
+    """Test reading the deprecated tool_result property is reported."""
+    content = ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id="mock-tool-call-id",
+        tool_name="test_tool",
+        result=llm.ToolResult(data={"answer": 42}),
+    )
+
+    with pytest.raises(RuntimeError, match="ToolResultContent.tool_result"):
+        _ = content.tool_result
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_add_delta_content_stream_deprecated_tool_result(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test setting the deprecated tool_result key on a delta is reported."""
+
+    async def stream():
+        """Yield a tool result delta using the deprecated key."""
+        yield {
+            "role": "tool_result",
+            "tool_call_id": "mock-tool-call-id",
+            "tool_name": "test_tool",
+            "tool_result": {"answer": 42},
+        }
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(RuntimeError, match="tool result delta"),
+    ):
+        _ = [
+            content
+            async for content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id", stream()
+            )
+        ]

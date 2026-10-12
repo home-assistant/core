@@ -32,6 +32,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
         "MP1S": BroadlinkMP1SUpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
+        "RM5PLUS": BroadlinkRMUpdateManager,
         "RMMINI": BroadlinkRMUpdateManager,
         "RMMINIB": BroadlinkRMUpdateManager,
         "RMPRO": BroadlinkRMUpdateManager,

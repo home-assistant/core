@@ -1,11 +1,9 @@
 """Component to pressing a button as platforms."""
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import final, override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,13 +15,18 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, SERVICE_PRESS
+from .const import (  # noqa: F401
+    DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
+    DOMAIN,
+    SERVICE_PRESS,
+    ButtonDeviceClass,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[ButtonEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -31,16 +34,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-
-class ButtonDeviceClass(StrEnum):
-    """Device class for buttons."""
-
-    IDENTIFY = "identify"
-    RESTART = "restart"
-    UPDATE = "update"
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ButtonDeviceClass))
 
 # mypy: disallow-any-generics
 
@@ -52,11 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_PRESS,
-        None,
-        "_async_press_action",
-    )
+    async_setup_services(hass)
 
     return True
 

@@ -7,6 +7,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -25,10 +26,10 @@ from .const import (
 SERVER_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_LISTEN_PORT): cv.port,
+        probatio.Required(CONF_LISTEN_PORT): probatio.Port(),
         probatio.Optional(CONF_HOST_IP): cv.string,
         probatio.Optional(CONF_ADVERTISE_IP): cv.string,
-        probatio.Optional(CONF_ADVERTISE_PORT): cv.port,
+        probatio.Optional(CONF_ADVERTISE_PORT): probatio.Port(),
         probatio.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
     }
 )
@@ -38,7 +39,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_SERVERS): probatio.All(
-                    cv.ensure_list, [SERVER_CONFIG_SCHEMA]
+                    probatio.EnsureList(), [SERVER_CONFIG_SCHEMA]
                 )
             }
         )
@@ -90,7 +91,13 @@ async def async_setup_entry(
         upnp_bind_multicast,
     )
     entry.runtime_data = server
-    return await server.setup()
+    if not await server.setup():
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": name},
+        )
+    return True
 
 
 async def async_unload_entry(
