@@ -11,10 +11,10 @@ from homeassistant.components.siren import (
     DOMAIN as SIREN_DOMAIN,
     SirenEntityFeature,
 )
-from homeassistant.const import EntityStateAttribute
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EntityStateAttribute,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
