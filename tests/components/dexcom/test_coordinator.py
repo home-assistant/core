@@ -77,10 +77,10 @@ async def test_poll_after_fresh_reading(
     await _setup(hass)
     assert mock_reading.call_count == 1
 
-    # Next reading expected at +5 min, polled 15 s later (255 s from now)
-    await _advance(hass, freezer, 250)
+    # Next reading expected at +5 min, polled 20 s later (260 s from now)
+    await _advance(hass, freezer, 259)
     assert mock_reading.call_count == 1
-    await _advance(hass, freezer, 6)
+    await _advance(hass, freezer, 1)
     assert mock_reading.call_count == 2
 
 
@@ -93,11 +93,11 @@ async def test_backoff_on_unchanged_reading(
     await _setup(hass)
 
     # First poll after the expected reading time
-    await _advance(hass, freezer, 305)
+    await _advance(hass, freezer, 310)
     assert mock_reading.call_count == 2
 
-    # Same reading: retry after 30 s, 60 s, 120 s, then the default 180 s
-    for delay, calls in ((30, 3), (60, 4), (120, 5), (180, 6), (180, 7)):
+    # Same reading: retry once after 30 s, then the default 180 s
+    for delay, calls in ((30, 3), (180, 4), (180, 5)):
         await _advance(hass, freezer, delay - 1)
         assert mock_reading.call_count == calls - 1
         await _advance(hass, freezer, 1)
@@ -107,11 +107,32 @@ async def test_backoff_on_unchanged_reading(
     new_time = READING_TIME + timedelta(minutes=5)
     mock_reading.return_value = _reading(new_time)
     await _advance(hass, freezer, 180)
-    assert mock_reading.call_count == 8
-    mock_reading.return_value = _reading(new_time)
+    assert mock_reading.call_count == 6
     # Now well past the next expected reading, so poll after the 30 s floor
     await _advance(hass, freezer, 30)
-    assert mock_reading.call_count == 9
+    assert mock_reading.call_count == 7
+
+
+async def test_default_interval_after_failure(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_reading: MagicMock
+) -> None:
+    """Test a failed poll falls back to the default interval, not the 30 s retry."""
+    freezer.move_to(READING_TIME + timedelta(seconds=10))
+    mock_reading.return_value = _reading(READING_TIME)
+    await _setup(hass)
+
+    # Unchanged reading schedules the 30 s retry, which then fails
+    await _advance(hass, freezer, 310)
+    assert mock_reading.call_count == 2
+    mock_reading.side_effect = ConnectionError
+    await _advance(hass, freezer, 30)
+    assert mock_reading.call_count == 3
+
+    # While Dexcom is failing, poll only at the default interval
+    await _advance(hass, freezer, 179)
+    assert mock_reading.call_count == 3
+    await _advance(hass, freezer, 1)
+    assert mock_reading.call_count == 4
 
 
 async def test_default_interval_without_reading(

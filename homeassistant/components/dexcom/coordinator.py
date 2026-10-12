@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 _SCAN_INTERVAL = timedelta(seconds=180)
 # Dexcom publishes a new reading every 5 minutes; allow some upload delay
 _READING_INTERVAL = timedelta(minutes=5)
-_UPLOAD_MARGIN = timedelta(seconds=15)
+_UPLOAD_MARGIN = timedelta(seconds=20)
 _MIN_INTERVAL = timedelta(seconds=30)
 
 type DexcomConfigEntry = ConfigEntry[DexcomCoordinator]
@@ -47,6 +47,8 @@ class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading | None]):
     @override
     async def _async_update_data(self) -> GlucoseReading | None:
         """Fetch data from API endpoint."""
+        # Used if the fetch below fails, so an outage is not polled every 30 s
+        self.update_interval = _SCAN_INTERVAL
         reading = await self.hass.async_add_executor_job(
             self.dexcom.get_current_glucose_reading
         )
@@ -60,10 +62,9 @@ class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading | None]):
             self._unchanged_polls = 0
             return _SCAN_INTERVAL
         if self.data is not None and reading.datetime == self.data.datetime:
-            # The next reading is late, back off until it arrives
-            interval = min(_MIN_INTERVAL * 2**self._unchanged_polls, _SCAN_INTERVAL)
+            # The next reading is late: retry once soon, then fall back
             self._unchanged_polls += 1
-            return interval
+            return _MIN_INTERVAL if self._unchanged_polls == 1 else _SCAN_INTERVAL
         self._unchanged_polls = 0
         expected = reading.datetime + _READING_INTERVAL + _UPLOAD_MARGIN
         # Clamp in case the reading time is ahead of the local clock
