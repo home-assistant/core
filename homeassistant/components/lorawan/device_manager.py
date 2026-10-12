@@ -39,7 +39,6 @@ from lorawan_connection import (
     EventType,
     RemovedEvent,
     Unsubscribe,
-    UpdatedEvent,
     notify,
     subscribe,
 )
@@ -92,7 +91,9 @@ class _CollectionConnection:
         self._listeners.append(item)
         for descriptor in tuple(self._devices.values()):
             if brands is None or (descriptor.stack, descriptor.brand_id) in brands:
-                listener(self._event(EventType.ADDED, descriptor))
+                listener(
+                    AddedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
+                )
 
         def unsubscribe() -> None:
             if item in self._listeners:
@@ -148,18 +149,9 @@ class _CollectionConnection:
         self._unsubscribe = unsubscribe
         for eui, descriptor in previous.items():
             if eui not in seen:
-                self.emit(self._event(EventType.REMOVED, descriptor))
-
-    @staticmethod
-    def _event(kind: EventType, descriptor: DeviceDescriptor) -> DeviceEvent:
-        event_classes: dict[
-            EventType, type[AddedEvent | UpdatedEvent | RemovedEvent]
-        ] = {
-            EventType.ADDED: AddedEvent,
-            EventType.UPDATED: UpdatedEvent,
-            EventType.REMOVED: RemovedEvent,
-        }
-        return event_classes[kind](descriptor=descriptor, received_at=dt_util.utcnow())
+                self.emit(
+                    RemovedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
+                )
 
     def emit(self, event: DeviceEvent) -> None:
         descriptor = event.descriptor or self._devices.get(event.dev_eui)
