@@ -559,5 +559,5 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             if "old_entity_id" in event.data:
                 to_remove.append(event.data["old_entity_id"])
 
-        with suppress(alexa_errors.NoTokenAvailable):
+        with suppress(alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
             await self._sync_helper(to_update, to_remove)
