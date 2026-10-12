@@ -10,6 +10,8 @@ import pytest
 from homeassistant.components import mqtt
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.models import DATA_MQTT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -1056,8 +1058,11 @@ async def test_fires_once_after_entry_reload(
         ("mqtt", "0AFFD2"), entry.entry_id
     )
 
+    client_before_reload = hass.data[DATA_MQTT].client
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.data[DATA_MQTT].client is not client_before_reload
 
     # The broker replays the retained discovery payload after the reload
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", config, retain=True)
