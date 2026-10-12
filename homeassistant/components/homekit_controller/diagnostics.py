@@ -19,6 +19,7 @@ REDACTED_CHARACTERISTICS = [
 
 REDACTED_CONFIG_ENTRY_KEYS = [
     "AccessoryIP",
+    "AccessoryIPs",
     "iOSDeviceLTSK",
 ]
 

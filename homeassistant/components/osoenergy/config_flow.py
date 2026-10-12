@@ -14,7 +14,9 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_SCHEMA_STEP_USER = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+_SCHEMA_STEP_USER = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 CONF_PORTAL_URL = "portal_url"
 OSOENERGY_PORTAL_URL = "https://portal.osoenergy.no/"

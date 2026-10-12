@@ -1,13 +1,13 @@
 {
   "domain": "energieleser",
   "name": "energieleser",
-  "codeowners": ["@AjinkyaGokhale", "@amitkio"],
+  "codeowners": ["@AjinkyaGokhale", "@NiccoFink"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energieleser",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["energieleser==0.1.6"],
+  "requirements": ["energieleser==0.1.7"],
   "zeroconf": [
     {
       "type": "_stromleser._tcp.local."

@@ -1,12 +1,13 @@
 """Tests for the Yoto integration setup."""
 
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
-import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yoto_api import AuthenticationError, Device, YotoAPIError, YotoError, YotoPlayer
 
+from homeassistant.components.yoto import coordinator
 from homeassistant.components.yoto.const import (
     DOMAIN,
     SCAN_INTERVAL,
@@ -82,6 +83,24 @@ async def test_mqtt_event_updates_entity(
     assert state_after.last_updated > state_before.last_updated
 
 
+async def test_client_gets_token_from_config_entry(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The client asks the config entry session for a valid access token."""
+    await setup_integration(hass, mock_config_entry)
+    auth = coordinator.YotoClient.call_args.kwargs["auth"]
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+    ) as mock_ensure_token_valid:
+        access_token = await auth.async_get_access_token()
+
+    mock_ensure_token_valid.assert_awaited_once()
+    assert access_token == mock_config_entry.data["token"]["access_token"]
+
+
 async def test_status_push_tick(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -98,6 +117,28 @@ async def test_status_push_tick(
     await hass.async_block_till_done()
 
     mock_yoto_client.request_player_status.assert_called_once_with("player-test")
+
+
+async def test_status_push_tick_error(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed status request is logged and the timer keeps running."""
+    caplog.set_level(logging.DEBUG)
+    mock_yoto_client.is_mqtt_connected = True
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.request_player_status.side_effect = YotoError("timed out")
+
+    for _ in range(2):
+        freezer.tick(STATUS_PUSH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_yoto_client.request_player_status.call_count == 2
+    assert "Status request for player-test failed: timed out" in caplog.text
 
 
 async def test_status_push_skipped_when_mqtt_disconnected(
@@ -226,29 +267,6 @@ async def test_poll_reauth_on_authentication_error(
     )
 
 
-@pytest.mark.usefixtures("mock_yoto_client")
-async def test_poll_reauth_on_invalid_refresh_token(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """An unrecoverable token refresh during the poll starts a reauth flow."""
-    await setup_integration(hass, mock_config_entry)
-
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
-    ):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
-    )
-
-
 async def test_setup_retries_when_mqtt_unavailable(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -273,34 +291,6 @@ async def test_setup_succeeds_without_card_library(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        aiohttp.ClientError("boom"),
-        OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
-    ],
-)
-@pytest.mark.usefixtures("mock_yoto_client")
-async def test_periodic_poll_fails_on_token_validation_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    side_effect: Exception,
-) -> None:
-    """A failure refreshing the OAuth token marks the coordinator failed."""
-    await setup_integration(hass, mock_config_entry)
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=side_effect,
-    ):
-        freezer.tick(SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is False
 
 
 async def test_periodic_poll_fails_on_api_error(

@@ -26,6 +26,27 @@
       }
     }
   },
+  "config_subentries": {
+    "channel": {
+      "abort": {
+        "access_not_configured": "[%key:component::youtube::config::abort::access_not_configured%]",
+        "already_configured": "This channel is already configured.",
+        "no_subscriptions": "There are no channels available to add.",
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "unknown_channel": "The selected channel is no longer available."
+      },
+      "entry_type": "YouTube channel",
+      "initiate_flow": {
+        "user": "Add channel"
+      },
+      "step": {
+        "user": {
+          "data": { "channel_id": "Channel" },
+          "description": "Select the channel you want to add."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "latest_short": {
@@ -52,16 +73,6 @@
       "subscribers": { "name": "Subscribers" },
       "videos": { "name": "Videos" },
       "views": { "name": "Views" }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "channels": "[%key:component::youtube::config::step::channels::data::channels%]"
-        },
-        "description": "[%key:component::youtube::config::step::channels::description%]"
-      }
     }
   }
 }

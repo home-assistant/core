@@ -33,6 +33,7 @@
       'model': 'LIFX Mini W',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -1264,6 +1265,7 @@
         'kelvin': 3500,
         'saturation': 0.0,
       }),
+      'thread_info': None,
       'tile_colors': list([
         dict({
           'brightness': 0.5,
@@ -4045,6 +4047,7 @@
         'kelvin': 3500,
         'saturation': 0.0,
       }),
+      'thread_info': None,
       'tile_colors': list([
         dict({
           'brightness': 0.5,
@@ -4880,6 +4883,7 @@
       'model': 'Original',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -4933,6 +4937,7 @@
       'model': 'LIFX White 900 (BR30)',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -4987,6 +4992,7 @@
       'model': 'LIFX Beam',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5533,6 +5539,7 @@
       'model': 'LIFX Clean A19 1100lm',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5587,6 +5594,7 @@
       'model': 'LIFX+ (A19)',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5641,6 +5649,7 @@
       'model': 'LIFX Z',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'wifi_firmware': dict({
         'version_major': 3,
         'version_minor': 70,
@@ -5881,6 +5890,7 @@
       'model': 'LIFX Tile',
       'power': 65535,
       'serial': '**REDACTED**',
+      'thread_info': None,
       'tile_colors': list([
         dict({
           'brightness': 0.5,
@@ -7810,6 +7820,70 @@
         '2': 'Right Side Up',
         '3': 'Right Side Up',
         '4': 'Right Side Up',
+      }),
+      'wifi_firmware': dict({
+        'version_major': 3,
+        'version_minor': 70,
+      }),
+      'wifi_info': dict({
+        'rssi': None,
+        'rssi_unit': 'dBm',
+        'signal': None,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'serial': '**REDACTED**',
+      }),
+      'title': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[thread]
+  dict({
+    'data': dict({
+      'ambient_light': None,
+      'capabilities': dict({
+        'has_chain': False,
+        'has_color': True,
+        'has_extended_multizone': False,
+        'has_hev': False,
+        'has_infrared': False,
+        'has_matrix': False,
+        'has_multizone': False,
+        'has_variable_color_temp': True,
+        'kelvin_max': 9000,
+        'kelvin_min': 2500,
+      }),
+      'color': dict({
+        'brightness': 0.5,
+        'hue': 119.9981689453125,
+        'kelvin': 3500,
+        'saturation': 1.0,
+      }),
+      'group': '**REDACTED**',
+      'host_firmware': dict({
+        'version_major': 3,
+        'version_minor': 70,
+      }),
+      'label': '**REDACTED**',
+      'last_updated': 0.0,
+      'location': '**REDACTED**',
+      'mac_address': '**REDACTED**',
+      'model': 'Original',
+      'power': 65535,
+      'serial': '**REDACTED**',
+      'thread_info': dict({
+        'link_margin_db': 40,
+        'link_quality_in': 3,
+        'link_quality_out': 3,
+        'network_name': '**REDACTED**',
+        'next_hop': 2048,
+        'rloc': 1024,
+        'role': 'ROUTER',
+        'rssi': -60,
+        'rssi_unit': 'dBm',
       }),
       'wifi_firmware': dict({
         'version_major': 3,
