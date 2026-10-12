@@ -129,6 +129,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 )
             )
 
+        event_list.sort(key=lambda event: event.start_datetime_local)
         return event_list
 
     @override
