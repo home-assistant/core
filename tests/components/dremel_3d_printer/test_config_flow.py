@@ -31,10 +31,10 @@ async def test_full_user_flow_implementation(hass: HomeAssistant, connection) ->
             result["flow_id"], user_input=CONF_DATA
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "DREMEL 3D45"
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == "123456789"
 
 
 async def test_already_configured(

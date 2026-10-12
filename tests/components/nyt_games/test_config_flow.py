@@ -50,9 +50,9 @@ async def test_stripping_token(
         result["flow_id"],
         {CONF_TOKEN: " token "},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_TOKEN: "token"}
+    assert result["result"].unique_id == "218886794"
 
 
 @pytest.mark.parametrize(

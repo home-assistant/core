@@ -53,7 +53,6 @@ async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.2.3.4"
     assert result2["data"] == {
@@ -65,6 +64,7 @@ async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:
     assert result2["options"] == {
         CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]
     }
+    assert result2["result"].unique_id == "1234ABCD"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -308,7 +308,6 @@ async def test_form_zeroconf_correct_oui(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.2.3.4"
     assert result2["data"] == {
@@ -317,6 +316,7 @@ async def test_form_zeroconf_correct_oui(
         "password": "password",
         "username": "friend",
     }
+    assert result2["result"].unique_id == "1234ABCD"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -360,6 +360,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(
     assert result["reason"] == "not_doorbird_device"
 
 
+@pytest.mark.usefixtures("doorbird_api")
 async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -379,7 +380,22 @@ async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch("homeassistant.components.doorbird.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.doorbird.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], VALID_CONFIG
+        )
+        await hass.async_block_till_done()
 
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("doorbird_api")
 async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle cannot invalid auth error."""
     result = await hass.config_entries.flow.async_init(
@@ -399,6 +415,20 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with (
+        patch("homeassistant.components.doorbird.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.doorbird.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], VALID_CONFIG
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_user_doorbird_not_found(

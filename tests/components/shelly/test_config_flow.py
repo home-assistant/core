@@ -493,7 +493,6 @@ async def test_form(
             {CONF_HOST: "1.1.1.1", CONF_PORT: port},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -503,6 +502,7 @@ async def test_form(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -534,7 +534,6 @@ async def test_form_https_verify_ssl_disabled_by_default(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTPS_PORT},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -544,6 +543,7 @@ async def test_form_https_verify_ssl_disabled_by_default(
         CONF_GEN: 2,
         CONF_VERIFY_SSL: False,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -580,7 +580,6 @@ async def test_form_https_verify_ssl_enabled(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -590,6 +589,7 @@ async def test_form_https_verify_ssl_enabled(
         CONF_GEN: 2,
         CONF_VERIFY_SSL: True,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -630,7 +630,6 @@ async def test_form_enhanced_security(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -639,6 +638,7 @@ async def test_form_enhanced_security(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -669,7 +669,6 @@ async def test_form_enhanced_security_older_firmware(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -678,6 +677,7 @@ async def test_form_enhanced_security_older_firmware(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -709,7 +709,6 @@ async def test_form_enhanced_security_with_https_port(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTPS_PORT},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -719,6 +718,7 @@ async def test_form_enhanced_security_with_https_port(
         CONF_GEN: 2,
         CONF_VERIFY_SSL: False,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -893,7 +893,6 @@ async def test_form_auth(
         result["flow_id"], user_input
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -905,6 +904,7 @@ async def test_form_auth(
         CONF_USERNAME: username,
         CONF_PASSWORD: user_input[CONF_PASSWORD],
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1152,8 +1152,8 @@ async def test_user_setup_ignored_device(
             {CONF_HOST: "1.1.1.1"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "test-mac"
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
@@ -1191,9 +1191,9 @@ async def test_user_flow_no_devices_discovered(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
+    assert result["result"].unique_id == "test-mac"
 
 
 async def test_user_flow_with_zeroconf_devices(
@@ -1288,11 +1288,11 @@ async def test_user_flow_select_zeroconf_device(
             {CONF_DEVICE: "AABBCCDDEEFF"},  # Select by MAC
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_PORT] == 80
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1339,9 +1339,9 @@ async def test_user_flow_select_manual_entry(
             {CONF_HOST: "192.168.1.200", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.200"
+    assert result["result"].unique_id == "test-mac-2"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1396,8 +1396,8 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
             {CONF_DEVICE: "CCBA97C2D670"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "CCBA97C2D670"
     # Verify it used Zeroconf host (192.168.1.100) not BLE provisioning
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_PORT] == 80
@@ -1579,10 +1579,10 @@ async def test_user_flow_filters_already_configured_devices(
             {CONF_DEVICE: "112233445566"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Device"
     assert result["data"][CONF_HOST] == "192.168.1.101"
+    assert result["result"].unique_id == "112233445566"
 
 
 async def test_user_flow_includes_ignored_devices(
@@ -1640,9 +1640,9 @@ async def test_user_flow_includes_ignored_devices(
             {CONF_DEVICE: "AABBCCDDEEFF"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Ignored Device"
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 async def test_user_flow_aborts_when_another_flow_finishes_while_in_progress(
@@ -1815,9 +1815,9 @@ async def test_user_flow_zeroconf_device_requires_auth(
             {CONF_USERNAME: "admin", CONF_PASSWORD: "password"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 async def test_user_flow_zeroconf_invalid_mac_filtered(
@@ -1865,9 +1865,9 @@ async def test_user_flow_zeroconf_invalid_mac_filtered(
             {CONF_HOST: "192.168.1.100", CONF_PORT: 80},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual Entry Device"
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 async def test_user_flow_zeroconf_no_ipv4_filtered(
@@ -1915,9 +1915,9 @@ async def test_user_flow_zeroconf_no_ipv4_filtered(
             {CONF_HOST: "192.168.1.101", CONF_PORT: 80},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual IPv4 Device"
+    assert result["result"].unique_id == "112233445566"
 
 
 async def test_user_flow_ble_device_without_rpc_over_ble_filtered(
@@ -1980,9 +1980,9 @@ async def test_user_flow_ble_device_without_rpc_over_ble_filtered(
             {CONF_HOST: "192.168.1.102", CONF_PORT: 80},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual BLE Device"
+    assert result["result"].unique_id == "DDEEFF112233"
 
 
 async def test_user_flow_select_zeroconf_device_mac_mismatch(
@@ -2229,7 +2229,6 @@ async def test_user_flow_filters_devices_with_active_discovery_flows(
             {CONF_HOST: "10.10.10.10"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2239,6 +2238,7 @@ async def test_user_flow_filters_devices_with_active_discovery_flows(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_GEN: 2,
     }
+    assert result["result"].unique_id == "aabbccddeeff"
 
 
 @pytest.mark.parametrize(
@@ -2429,7 +2429,6 @@ async def test_zeroconf(
         {},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2439,6 +2438,7 @@ async def test_zeroconf(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2494,7 +2494,6 @@ async def test_zeroconf_enhanced_security(
         {},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2504,6 +2503,7 @@ async def test_zeroconf_enhanced_security(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2547,7 +2547,6 @@ async def test_zeroconf_enhanced_security_with_https_port(
         {},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2558,6 +2557,7 @@ async def test_zeroconf_enhanced_security_with_https_port(
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2603,7 +2603,6 @@ async def test_zeroconf_sleeping_device(
         {},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2613,6 +2612,7 @@ async def test_zeroconf_sleeping_device(
         CONF_SLEEP_PERIOD: 600,
         CONF_GEN: 1,
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2816,7 +2816,6 @@ async def test_zeroconf_require_auth(
         {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2828,6 +2827,7 @@ async def test_zeroconf_require_auth(
         CONF_USERNAME: "test username",
         CONF_PASSWORD: "test password",
     }
+    assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -3548,7 +3548,6 @@ async def test_sleeping_device_gen2_with_new_firmware(
             {CONF_HOST: "1.1.1.1"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -3557,6 +3556,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
         CONF_SLEEP_PERIOD: 666,
         CONF_GEN: 2,
     }
+    assert result["result"].unique_id == "test-mac"
 
 
 @pytest.mark.parametrize(CONF_GEN, [1, 2, 3])
@@ -5113,11 +5113,11 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should create entry successfully with IP from BLE
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_PORT] == DEFAULT_HTTP_PORT
+    assert result["result"].unique_id == "C049EF8873E8"
 
 
 @pytest.mark.usefixtures("mock_ble_rpc_device_class")
@@ -5306,8 +5306,8 @@ async def test_bluetooth_provision_secure_device_both_enabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
 
     # Verify security calls were made
     mock_device.wifi_setconfig.assert_called_once_with(ap_enable=False)
@@ -5358,8 +5358,8 @@ async def test_bluetooth_provision_secure_device_both_disabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created (secure device call is skipped when both disabled)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
 
 
 @pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
@@ -5411,8 +5411,8 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
 
     # Verify only wifi_setconfig was called
     mock_device.wifi_setconfig.assert_called_once_with(ap_enable=False)
@@ -5468,8 +5468,8 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
 
     # Verify only ble_setconfig was called
     mock_device.ble_setconfig.assert_called_once_with(enable=True, enable_rpc=False)
@@ -5526,8 +5526,8 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
 
     # Verify restart was triggered and shutdown called
     mock_device.trigger_reboot.assert_called_once_with(delay_ms=1000)

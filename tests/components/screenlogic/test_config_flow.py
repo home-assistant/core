@@ -57,13 +57,13 @@ async def test_flow_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Pentair: 01-01-01"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result2["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -121,13 +121,13 @@ async def test_flow_replace_ignored(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Pentair: 01-01-01"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result2["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -209,13 +209,13 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Pentair: 01-01-01"
     assert result3["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result3["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -268,13 +268,13 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Pentair: 01-01-01"
     assert result3["data"] == {
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result3["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -302,3 +302,24 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.screenlogic.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+            return_value="00-C0-33-01-01-01",
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_PORT: 80,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

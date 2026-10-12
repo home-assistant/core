@@ -3,13 +3,14 @@
 from unittest.mock import AsyncMock
 
 import aiohttp
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
+from . import DEVOPS_PROJECT, FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -24,6 +25,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_authorization_error(
     hass: HomeAssistant,
     mock_devops_client: AsyncMock,
@@ -50,6 +52,14 @@ async def test_authorization_error(
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    mock_devops_client.authorize.return_value = True
+    mock_devops_client.authorized = True
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_authorization_error(
     hass: HomeAssistant,
@@ -75,7 +85,17 @@ async def test_reauth_authorization_error(
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    mock_devops_client.authorize.return_value = True
+    mock_devops_client.authorized = True
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_REAUTH_INPUT,
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(
     hass: HomeAssistant,
     mock_devops_client: AsyncMock,
@@ -101,6 +121,14 @@ async def test_connection_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_devops_client.authorize.side_effect = None
+    mock_devops_client.authorized = True
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_connection_error(
@@ -128,7 +156,17 @@ async def test_reauth_connection_error(
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    mock_devops_client.authorize.side_effect = None
+    mock_devops_client.authorized = True
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_REAUTH_INPUT,
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_project_error(
     hass: HomeAssistant,
     mock_devops_client: AsyncMock,
@@ -155,6 +193,13 @@ async def test_project_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "project_error"}
+
+    mock_devops_client.get_project.return_value = DEVOPS_PROJECT
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_project_error(
@@ -183,6 +228,14 @@ async def test_reauth_project_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "project_error"}
+
+    mock_devops_client.get_project.return_value = DEVOPS_PROJECT
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_REAUTH_INPUT,
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_flow(

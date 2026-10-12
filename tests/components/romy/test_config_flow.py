@@ -229,8 +229,8 @@ async def test_zero_conf_locked_interface_robot(hass: HomeAssistant) -> None:
         )
 
         assert "errors" not in result2
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["result"].unique_id == "aicu-aicgsbksisfapcjqmqjq"
 
 
 async def test_zero_conf_uninitialized_robot(hass: HomeAssistant) -> None:

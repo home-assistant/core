@@ -50,6 +50,13 @@ async def test_connection_error(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    requests_mock.request(ANY, "/1.3/account", text='{"account":{"username":"user"}}')
+    requests_mock.request(ANY, "/1.3/server", text='{"servers": {"server":[]}}')
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_login_error(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
@@ -80,6 +87,13 @@ async def test_login_error(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
+    requests_mock.request(ANY, "/1.3/account", text='{"account":{"username":"user"}}')
+    requests_mock.request(ANY, "/1.3/server", text='{"servers": {"server":[]}}')
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_success(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
@@ -99,10 +113,10 @@ async def test_success(
         result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result["result"].unique_id == FIXTURE_USER_INPUT[CONF_USERNAME]
 
 
 async def test_already_configured(

@@ -108,7 +108,6 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
             user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -121,6 +120,7 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -215,7 +215,6 @@ async def test_config_flow_thread(
 
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_openthread_border_router")
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -228,6 +227,7 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 

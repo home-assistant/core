@@ -626,8 +626,8 @@ async def test_user_flow_initializes_client_with_host(
             result["flow_id"], USER_INPUT
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,

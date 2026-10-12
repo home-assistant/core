@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry
     "exception",
     [OSError(), asyncio.IncompleteReadError(partial=b"", expected=100), TimeoutError()],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_cannot_connect(
     hass: HomeAssistant,
     exception: Exception,
@@ -41,6 +42,14 @@ async def test_config_flow_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
+
+    mock_request_status.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

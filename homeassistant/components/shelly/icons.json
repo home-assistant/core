@@ -120,6 +120,9 @@
     "get_kvs_value": {
       "service": "mdi:import"
     },
+    "set_cover_position_and_tilt": {
+      "service": "mdi:window-shutter-cog"
+    },
     "set_kvs_value": {
       "service": "mdi:export"
     }

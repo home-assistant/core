@@ -144,8 +144,8 @@ async def test_dont_abort_if_exists_when_vias_differs(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{mock_config_entry.unique_id}_excl_vias"
 
 
 async def test_unavailable_api(

@@ -190,13 +190,13 @@ def gpu_usage_percentage(gpu: GPU) -> float | None:
 
 
 def memory_free(data: SystemBridgeData) -> float | None:
-    """Return the free memory."""
+    """Return the free memory, counting reclaimable cache as free."""
     if (
         data.memory is not None
         and (virtual := data.memory.virtual) is not None
-        and (free := virtual.free) is not None
+        and (available := virtual.available) is not None
     ):
-        return round(free / 1000**3, 2)
+        return round(available / 1000**3, 2)
     return None
 
 
@@ -208,6 +208,13 @@ def memory_used(data: SystemBridgeData) -> float | None:
         and (used := virtual.used) is not None
     ):
         return round(used / 1000**3, 2)
+    return None
+
+
+def memory_used_percentage(data: SystemBridgeData) -> float | None:
+    """Return the used memory percentage."""
+    if data.memory is not None and (virtual := data.memory.virtual) is not None:
+        return virtual.percent
     return None
 
 
@@ -293,7 +300,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
-        value=lambda data: data.memory.virtual.percent,
+        value=memory_used_percentage,
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used",

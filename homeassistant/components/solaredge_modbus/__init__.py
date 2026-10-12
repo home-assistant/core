@@ -32,10 +32,12 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ATTACHMENT_SCAN_INTERVAL,
+    CONF_SILENT_BLOCKS,
     CONF_UNIT_ID,
     DISCOVERY_SUBSYSTEMS,
     DOMAIN,
     LOGGER,
+    READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
     SUBSYSTEM_BATTERIES,
@@ -85,8 +87,14 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
+    # Blocks that were still silent on the last attachment check are taken for
+    # absent, so setting up does not wait out a timeout for each. The first
+    # check after setup asks them for real again, which is where a block that
+    # has started answering is found.
+    known_silent = _known_silent_blocks(entry)
+
     try:
-        solaredge = await SolarEdge.async_probe(unit)
+        solaredge = await SolarEdge.async_probe(unit, assume_absent=known_silent)
     except SolarEdgeConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -98,6 +106,9 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="no_solaredge_device",
         ) from err
+
+    # Only now: the probe gives up on a silent block after the link's default.
+    unit.require_timeout(READ_TIMEOUT)
 
     readings = SolarEdgeModbusDataUpdateCoordinator(
         hass,
@@ -158,12 +169,13 @@ async def async_setup_entry(
         attachments=_attachment_identities(solaredge),
     )
 
-    if silent := solaredge.unresponsive_blocks & _probed_blocks(solaredge).keys():
+    silent = solaredge.unresponsive_blocks & _probed_blocks(solaredge).keys()
+    if newly_silent := silent - known_silent:
         LOGGER.warning(
             "%s did not answer for %s while probing, so the entities those"
-            " would carry are missing; this is looked at again every %s minutes",
+            " would carry are missing; this is looked at again in %s minutes",
             entry.title,
-            " and ".join(sorted(silent)),
+            " and ".join(sorted(newly_silent)),
             int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
         )
 
@@ -182,6 +194,15 @@ async def async_setup_entry(
     )
 
     return True
+
+
+def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
+    """Return the blocks the last attachment check settled as silent.
+
+    Blocks that finding hardware depends on are never settled, so one stored
+    by anything else is not taken for absent either.
+    """
+    return frozenset(entry.data.get(CONF_SILENT_BLOCKS, ())) - DISCOVERY_SUBSYSTEMS
 
 
 def _attachment_identities(solaredge: SolarEdge) -> frozenset[str]:
@@ -252,9 +273,20 @@ async def _async_reload_when_attachments_change(
     # later removal until the entry loads again. Blocks that finding hardware
     # depends on are never settled: picking up what was wired in later is what
     # asking is for.
-    entry.runtime_data.settled_silent_blocks = (
+    settled = (
         probed.unresponsive_blocks & solaredge.unresponsive_blocks
     ) - DISCOVERY_SUBSYSTEMS
+    entry.runtime_data.settled_silent_blocks = settled
+
+    # Kept with the entry for the next setup, before a reload below can start
+    # one: a block that answered here must not be taken for absent by it. Only
+    # blocks whose return this check reloads for are kept: any other block that
+    # started answering later would stay unseen until something else reloaded.
+    kept = settled & _probed_blocks(probed).keys()
+    if kept != _known_silent_blocks(entry):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SILENT_BLOCKS: sorted(kept)}
+        )
 
     known = _probed_blocks(solaredge)
     for name, found in _probed_blocks(probed).items():

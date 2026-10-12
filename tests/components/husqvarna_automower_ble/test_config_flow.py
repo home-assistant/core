@@ -451,6 +451,15 @@ async def test_user_device_not_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_unable_to_connect(
     hass: HomeAssistant,
@@ -504,6 +513,16 @@ async def test_failed_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_automower_client.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: "1234",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_duplicate_entry(
@@ -567,6 +586,13 @@ async def test_exception_probe(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_automower_client.probe_gatts.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "1234"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_exception_connect(

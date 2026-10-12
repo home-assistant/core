@@ -108,6 +108,6 @@ async def test_user_flow_no_model_name_uses_default_title(
         result["flow_id"], user_input=USER_INPUT
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Internet-Box"
+    assert result["result"].unique_id == TEST_FORMATTED_MAC

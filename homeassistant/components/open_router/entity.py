@@ -209,6 +209,7 @@ async def _transform_stream(
         yield {"native": images}
 
     if not has_choices:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("API returned empty choices")
         raise HomeAssistantError("API returned empty response")
 
@@ -391,6 +392,7 @@ class OpenRouterEntity(Entity):
             try:
                 result = await client.chat.completions.create(**model_args, stream=True)
             except openai.OpenAIError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 

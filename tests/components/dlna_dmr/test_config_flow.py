@@ -126,7 +126,6 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -135,6 +134,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -167,7 +167,6 @@ async def test_user_flow_discovered_manual(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -176,6 +175,7 @@ async def test_user_flow_discovered_manual(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -198,7 +198,6 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_NAME}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -207,6 +206,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {}
 
 
@@ -231,6 +231,13 @@ async def test_user_flow_uncontactable(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "manual"
+
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_embedded_st(
@@ -263,7 +270,6 @@ async def test_user_flow_embedded_st(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -272,6 +278,7 @@ async def test_user_flow_embedded_st(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -296,6 +303,13 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     assert result["errors"] == {"base": "not_dmr"}
     assert result["step_id"] == "manual"
 
+    upnp_device.device_type = MOCK_DEVICE_TYPE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     """Test that SSDP discovery with an available device works."""
@@ -315,7 +329,6 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -324,6 +337,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {}
 
 
@@ -646,7 +660,6 @@ async def test_ignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -655,6 +668,7 @@ async def test_ignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
 
 
 async def test_ignore_flow_no_ssdp(
@@ -671,7 +685,6 @@ async def test_ignore_flow_no_ssdp(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -680,6 +693,7 @@ async def test_ignore_flow_no_ssdp(
         CONF_TYPE: None,
         CONF_MAC: None,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
 
 
 async def test_get_mac_address_ipv4(

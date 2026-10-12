@@ -265,9 +265,9 @@ async def test_user_step_hides_configured_devices(
         result["flow_id"], {CONF_DEVICE_PATH: FAKE_DEVICE_PATH_2}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH_2
+    assert result["result"].unique_id == REMOTE_BY_ID_BASENAME
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

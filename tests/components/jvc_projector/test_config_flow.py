@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT
+from . import MOCK_HOST, MOCK_MAC_FORMATED, MOCK_PASSWORD, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
@@ -50,12 +50,12 @@ async def test_user_config_flow_success(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["result"].unique_id == MOCK_MAC_FORMATED
 
 
 @pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
@@ -88,13 +88,6 @@ async def test_user_config_flow_bad_connect_errors(
     # Finish flow with success
 
     mock_device.connect.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -159,13 +152,6 @@ async def test_user_config_flow_bad_host_errors(
 
     # Finish flow with success
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -212,13 +198,6 @@ async def test_user_config_flow_bad_auth_errors(
     # Finish flow with success
 
     mock_device.connect.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

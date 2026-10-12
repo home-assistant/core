@@ -48,13 +48,13 @@ async def test_create_entry(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "someemail@gmail.com"
     assert result2["data"] == {
         CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
         CONF_USERNAME: "someemail@gmail.com",
     }
+    assert result2["result"].unique_id == ACCOUNT_ID
 
 
 @pytest.mark.parametrize(

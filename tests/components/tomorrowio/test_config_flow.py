@@ -51,13 +51,16 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert (
+        result["result"].unique_id
+        == f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}"
+    )
 
 
 async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
@@ -85,13 +88,16 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_NAME] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert (
+        result["result"].unique_id
+        == f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}"
+    )
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:

@@ -4,7 +4,7 @@ import itertools
 import logging
 
 from pylitterbot import Account
-from pylitterbot.exceptions import LitterRobotException
+from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -62,9 +63,14 @@ async def async_migrate_entry(
                 password=entry.data[CONF_PASSWORD],
             )
             user_id = account.user_id
-        except LitterRobotException:
-            _LOGGER.debug("Could not connect to set unique_id during migration")
-            return False
+        except LitterRobotLoginException as ex:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from ex
+        except LitterRobotException as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="migration_cannot_connect"
+            ) from ex
         finally:
             await account.disconnect()
 
