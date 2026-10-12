@@ -55,7 +55,7 @@
       "message": "SmartyPlants refused the request: {error}"
     },
     "invalid_auth": {
-      "message": "The SmartyPlants API key was rejected. Enter a new one to reconnect."
+      "message": "The SmartyPlants API key was rejected. Remove the integration and add it again with a new key."
     }
   }
 }
