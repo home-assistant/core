@@ -282,6 +282,9 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
         conversion_function=_joules_to_kwh,
     ),
     PowersensorSensorEntityDescription(
+        # Plugs report ROLE_APPLIANCE.  A message without a role falls back to
+        # the saved one (see handle_role_update), so once a plug has reported
+        # its role this shows "appliance" rather than "unknown".
         key="device_role",
         translation_key="device_role",
         device_class=SensorDeviceClass.ENUM,
@@ -462,7 +465,9 @@ async def async_setup_entry(
         )
 
         if mac_address in dispatcher.plugs:
-            # Plugs always have ROLE_APPLIANCE — no entity creation needed here.
+            # A plug's role is always ROLE_APPLIANCE, so there are no role-gated
+            # entities to add and no device to rename.  Saving it above is still
+            # deliberate: plug messages without a role fall back to it.
             return
 
         # The device is named after its role, but core only reads device_info
@@ -533,6 +538,7 @@ async def async_setup_entry(
     def handle_discovered_plug(plug_mac: str) -> None:
         """Create entities for a newly discovered plug."""
         _LOGGER.debug("Plug discovered: %s", plug_mac)
+        # Plugs only ever report ROLE_APPLIANCE, so their role is known upfront.
         async_add_entities(
             [
                 PowersensorPlugEntity(plug_mac, ROLE_APPLIANCE, desc)

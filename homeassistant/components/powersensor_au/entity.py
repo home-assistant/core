@@ -33,6 +33,9 @@ class PowersensorEntity(Entity):
         signal: str,
     ) -> None:
         """Initialize the entity."""
+        # Role of the device this entity belongs to.  A sensor's device is named
+        # after it (see PowersensorSensorEntity); a plug's is always
+        # ROLE_APPLIANCE, so plug entities carry it without depending on it.
         self._role: str | None = role
         self._has_recently_received_update_message = False
         self._mac = mac
