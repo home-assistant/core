@@ -951,4 +951,3 @@ async def test_options_flow_existing_interval(
 
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"]({}) == {CONF_UPDATE_INTERVAL: 30}
-
