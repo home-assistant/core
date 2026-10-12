@@ -145,7 +145,10 @@ async def test_current_event(
             "2026-09-11T16:00:00Z", "2026-09-11T17:00:00Z", [], id="ends-at-start"
         ),
         pytest.param(
-            "2026-09-11T18:00:00Z", "2026-09-11T19:00:00Z", [], id="starts-at-end"
+            "2026-09-11T18:00:00Z", "2026-09-11T19:00:00Z", [EVENT], id="starts-at-end"
+        ),
+        pytest.param(
+            "2026-09-11T18:00:01Z", "2026-09-11T19:00:00Z", [], id="after-end"
         ),
         pytest.param(
             "2026-09-11T18:00:00+01:00",
@@ -163,7 +166,7 @@ async def test_calendar_events(
     end: str,
     expected: list[dict[str, str]],
 ) -> None:
-    """Include overlapping events, excluding touching ranges."""
+    """Include ending events for end triggers, excluding later ranges."""
     await setup(hass, mock_config_entry)
     mock_client.get_status.reset_mock()
     assert await get_events(hass, start, end) == {ENTITY_ID: {"events": expected}}
@@ -353,4 +356,63 @@ async def test_calendar_trigger(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == {"summary": "Export"}
+    mock_client.get_status.assert_not_called()
+
+
+@pytest.mark.freeze_time("2026-09-11T16:59:00Z")
+@pytest.mark.parametrize(
+    ("offset", "end_minutes"),
+    [
+        pytest.param("00:00:00", 14, id="no-offset"),
+        pytest.param("00:05:00", 9, id="positive-offset"),
+        pytest.param("-00:05:00", 19, id="negative-offset"),
+    ],
+)
+async def test_end_trigger_at_scan_boundary(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    mock_event: GridEvent,
+    freezer: FrozenDateTimeFactory,
+    offset: str,
+    end_minutes: int,
+) -> None:
+    """Fire an end trigger exactly at the next calendar scan window."""
+    mock_client.get_status.return_value = AxleStatus(
+        replace(mock_event, end=mock_event.start + timedelta(minutes=end_minutes)),
+        False,
+    )
+    await setup(hass, mock_config_entry)
+    calls = async_mock_service(hass, "test", "automation")
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "triggers": [
+                    {
+                        "trigger": "calendar",
+                        "entity_id": ENTITY_ID,
+                        "event": "end",
+                        "offset": offset,
+                    }
+                ],
+                "actions": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert not calls
+    freezer.tick(timedelta(minutes=14, seconds=59))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert not calls
+    mock_client.get_status.reset_mock()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(calls) == 1
     mock_client.get_status.assert_not_called()

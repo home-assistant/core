@@ -57,7 +57,7 @@ class AxleCalendar(AxleEntity, CalendarEntity):
         if (
             (event := self.coordinator.event) is None
             or start_date == end_date
-            or event.end <= start_date
+            or event.end < start_date
             or event.start >= end_date
         ):
             return []
