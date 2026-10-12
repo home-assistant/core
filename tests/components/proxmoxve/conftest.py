@@ -1,8 +1,37 @@
 """Common fixtures for the ProxmoxVE tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
+from aioproxmox import ProxmoxVE
+from aioproxmox.endpoints import (
+    AccessEndpoint,
+    ClusterEndpoint,
+    LXCActionProperty,
+    LXCEndpoint,
+    LXCStatusEndpoint,
+    NodeActionProperty,
+    NodeAptEndpoint,
+    NodeEndpoint,
+    NodeStatusCommand,
+    QemuActionProperty,
+    QemuEndpoint,
+    QemuStatusEndpoint,
+)
+from aioproxmox.model import PVEPermissions
+from aioproxmox.model.pve import (
+    ClusterResourcesCollection,
+    ContainerResource,
+    NodeAptUpdate,
+    NodeAptUpdateProperty,
+    NodeStorageResource,
+    NodeStorageResources,
+    NodeTask,
+    NodeTasks,
+    NodeVersion,
+    QemuResource,
+)
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -32,6 +61,14 @@ from homeassistant.const import (
 )
 
 from . import MERGED_PERMISSIONS
+
+# Actions declared as descriptors, which autospec cannot see
+_ACTION_DESCRIPTORS = (
+    LXCActionProperty,
+    NodeActionProperty,
+    NodeStatusCommand,
+    QemuActionProperty,
+)
 
 MOCK_TEST_CONFIG_BASE = {
     CONF_AUTH_METHOD: "pam",
@@ -89,106 +126,114 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
+def _mock_endpoint(endpoint_cls: type) -> MagicMock:
+    """Autospec an aioproxmox endpoint, including its descriptor actions."""
+    endpoint = create_autospec(endpoint_cls, instance=True)
+    for name, attr in vars(endpoint_cls).items():
+        if isinstance(attr, _ACTION_DESCRIPTORS):
+            setattr(endpoint, name, AsyncMock())
+    return endpoint
+
+
+def _mock_guest(endpoint_cls: type, status_cls: type) -> MagicMock:
+    """Mock a QEMU or LXC endpoint, whose status endpoint is set in __init__."""
+    guest = create_autospec(endpoint_cls, instance=True)
+    guest.status = _mock_endpoint(status_cls)
+    return guest
+
+
 @pytest.fixture
-def mock_proxmox_client():
-    """Mock Proxmox client with dynamic exception injection support."""
+def mock_proxmox_client() -> Generator[MagicMock]:
+    """Mock the aioproxmox client, returning typed models built from fixtures."""
+    client = create_autospec(ProxmoxVE, instance=True)
+
+    all_cluster_resources = ClusterResourcesCollection.from_dict(
+        {"resources": load_json_array_fixture("nodes/nodes.json", DOMAIN)}
+    )
+    # Only pve1 to match MOCK_TEST_CONFIG; tests swap its `resources`
+    client.cluster_resources = ClusterResourcesCollection(
+        resources=[node for node in all_cluster_resources if node.node == "pve1"]
+    )
+    client.cluster = _mock_endpoint(ClusterEndpoint)
+    # Like the library, both refresh paths hand back the same collection
+    client.connect.return_value = client.cluster_resources
+    client.cluster.resources.return_value = client.cluster_resources
+
+    client.access = _mock_endpoint(AccessEndpoint)
+    client.access.permissions.return_value = PVEPermissions.from_api_response(
+        MERGED_PERMISSIONS
+    )
+
+    node = _mock_endpoint(NodeEndpoint)
+    qemu_list = [
+        QemuResource.from_dict(vm)
+        for vm in load_json_array_fixture("nodes/qemu.json", DOMAIN)
+    ]
+    lxc_list = [
+        ContainerResource.from_dict(ct)
+        for ct in load_json_array_fixture("nodes/lxc.json", DOMAIN)
+    ]
+    node.qemu_all.return_value = qemu_list
+    node.lxc_all.return_value = lxc_list
+    node.storage.return_value = NodeStorageResources(
+        storages=NodeStorageResource.list_from_api(
+            load_json_array_fixture("nodes/storage.json", DOMAIN)
+        )
+    )
+    node.version.return_value = NodeVersion.from_dict(
+        load_json_object_fixture("nodes/version.json", DOMAIN)
+    )
+
+    apt = _mock_endpoint(NodeAptEndpoint)
+    apt.update.return_value = NodeAptUpdate(
+        items=[
+            NodeAptUpdateProperty.from_dict(item)
+            for item in load_json_array_fixture("nodes/update.json", DOMAIN)
+        ]
+    )
+    node.apt.return_value = apt
+
+    tasks = NodeTask.list_from_api(load_json_array_fixture("nodes/tasks.json", DOMAIN))
+
+    def _tasks(**kwargs: Any) -> NodeTasks:
+        """Return backup tasks only when the user may audit nodes."""
+        permissions: PVEPermissions = client.access.permissions.return_value
+        if not permissions.has_permission("/nodes", ProxmoxPermission.SYSAUDIT):
+            return NodeTasks(tasks=[])
+        return NodeTasks(tasks=tasks)
+
+    node.tasks.side_effect = _tasks
+
+    # Kept per vmid so tests can assert on the action of a specific guest
+    qemu_mocks = {
+        vm.vmid: _mock_guest(QemuEndpoint, QemuStatusEndpoint) for vm in qemu_list
+    }
+    lxc_mocks = {
+        ct.vmid: _mock_guest(LXCEndpoint, LXCStatusEndpoint) for ct in lxc_list
+    }
+    node.qemu.side_effect = qemu_mocks.__getitem__
+    node.lxc.side_effect = lxc_mocks.__getitem__
+
+    client.nodes.return_value = node
+
+    client._node_mock = node
+    client._qemu_mocks = qemu_mocks
+    client._lxc_mocks = lxc_mocks
+    client._all_cluster_resources = all_cluster_resources
+
     with (
         patch(
-            "homeassistant.components.proxmoxve.coordinator.ProxmoxAPI", autospec=True
-        ) as mock_api,
+            "homeassistant.components.proxmoxve.coordinator.ProxmoxVE",
+            autospec=True,
+            return_value=client,
+        ),
         patch(
-            "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI"
-        ) as mock_api_cf,
+            "homeassistant.components.proxmoxve.config_flow.ProxmoxVE",
+            autospec=True,
+            return_value=client,
+        ),
     ):
-        mock_instance = MagicMock()
-        mock_api.return_value = mock_instance
-        mock_api_cf.return_value = mock_instance
-
-        mock_instance._mock_api = mock_api
-        mock_instance._mock_api_cf = mock_api_cf
-
-        mock_instance.access.ticket.post.return_value = load_json_object_fixture(
-            "access_ticket.json", DOMAIN
-        )
-
-        # Default privileges as defined
-        mock_instance.access.permissions.get.return_value = MERGED_PERMISSIONS
-
-        # Make a separate mock for the qemu and lxc endpoints
-        node_mock = MagicMock()
-        qemu_list = load_json_array_fixture("nodes/qemu.json", DOMAIN)
-        lxc_list = load_json_array_fixture("nodes/lxc.json", DOMAIN)
-
-        node_mock.qemu.get.return_value = qemu_list
-        node_mock.lxc.get.return_value = lxc_list
-        node_mock.storage.get.return_value = load_json_array_fixture(
-            "nodes/storage.json", DOMAIN
-        )
-
-        node_mock.tasks.get.side_effect = lambda **kwargs: (
-            []
-            if ProxmoxPermission.SYSAUDIT
-            not in mock_instance.access.permissions.get.return_value.get("/nodes", [])
-            else load_json_array_fixture("nodes/tasks.json", DOMAIN)
-        )
-        node_mock.version.get.return_value = load_json_object_fixture(
-            "nodes/version.json", DOMAIN
-        )
-        node_mock.apt.update.get.return_value = load_json_array_fixture(
-            "nodes/update.json", DOMAIN
-        )
-
-        qemu_by_vmid = {int(vm["vmid"]): vm for vm in qemu_list}
-        lxc_by_vmid = {int(vm["vmid"]): vm for vm in lxc_list}
-
-        # Cache resource mocks by vmid so callers (e.g. button tests) can
-        # inspect specific call counts after pressing a button.
-        qemu_mocks: dict[int, MagicMock] = {}
-        lxc_mocks: dict[int, MagicMock] = {}
-
-        def _qemu_resource(vmid: int) -> MagicMock:
-            """Return a cached mock resource for a QEMU VM."""
-            if vmid not in qemu_mocks:
-                resource = MagicMock()
-                vm = qemu_by_vmid[vmid]
-                resource.status.current.get.return_value = {
-                    "name": vm["name"],
-                    "status": vm["status"],
-                }
-                qemu_mocks[vmid] = resource
-            return qemu_mocks[vmid]
-
-        def _lxc_resource(vmid: int) -> MagicMock:
-            """Return a cached mock resource for an LXC container."""
-            if vmid not in lxc_mocks:
-                resource = MagicMock()
-                ct = lxc_by_vmid[vmid]
-                resource.status.current.get.return_value = {
-                    "name": ct["name"],
-                    "status": ct["status"],
-                }
-                lxc_mocks[vmid] = resource
-            return lxc_mocks[vmid]
-
-        node_mock.qemu.side_effect = _qemu_resource
-        node_mock.lxc.side_effect = _lxc_resource
-
-        mock_instance._qemu_mocks = qemu_mocks
-        mock_instance._lxc_mocks = lxc_mocks
-
-        nodes_mock = MagicMock()
-        all_nodes = load_json_array_fixture("nodes/nodes.json", DOMAIN)
-        # Filter to only pve1 to match MOCK_TEST_CONFIG
-        nodes_mock.get.return_value = [n for n in all_nodes if n["node"] == "pve1"]
-        nodes_mock.__getitem__.side_effect = lambda key: node_mock
-        nodes_mock.return_value = node_mock
-
-        mock_instance.nodes = nodes_mock
-        mock_instance._node_mock = node_mock
-        mock_instance._nodes_mock = nodes_mock
-        mock_instance._all_nodes = all_nodes
-
-        yield mock_instance
+        yield client
 
 
 @pytest.fixture
