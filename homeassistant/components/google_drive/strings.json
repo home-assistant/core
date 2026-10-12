@@ -60,10 +60,10 @@
       "message": "OAuth session is not valid, reauthentication required"
     },
     "delete_failed": {
-      "message": "Failed to delete backup: {error}"
+      "message": "Failed to delete backup"
     },
     "download_failed": {
-      "message": "Failed to download backup: {error}"
+      "message": "Failed to download backup"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
@@ -72,10 +72,10 @@
       "message": "Invalid response from Google Drive: {error}"
     },
     "list_failed": {
-      "message": "Failed to list backups: {error}"
+      "message": "Failed to list backups"
     },
     "upload_failed": {
-      "message": "Failed to upload backup: {error}"
+      "message": "Failed to upload backup"
     }
   }
 }

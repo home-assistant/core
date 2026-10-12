@@ -110,10 +110,10 @@ class GoogleDriveBackupAgent(BackupAgent):
         try:
             await self._client.async_upload_backup(wrapped_open_stream, backup)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("Failed to upload backup: %s", err)
             raise BackupAgentError(
                 translation_domain=DOMAIN,
                 translation_key="upload_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     @override
@@ -122,10 +122,10 @@ class GoogleDriveBackupAgent(BackupAgent):
         try:
             return await self._client.async_list_backups()
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("Failed to list backups: %s", err)
             raise BackupAgentError(
                 translation_domain=DOMAIN,
                 translation_key="list_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     @override
@@ -164,10 +164,10 @@ class GoogleDriveBackupAgent(BackupAgent):
                 stream = await self._client.async_download(file_id)
                 return ChunkAsyncStreamIterator(stream)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("Failed to download backup: %s", err)
             raise BackupAgentError(
                 translation_domain=DOMAIN,
                 translation_key="download_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         raise BackupNotFound(
             translation_domain=BACKUP_DOMAIN,
@@ -194,10 +194,10 @@ class GoogleDriveBackupAgent(BackupAgent):
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
                 return
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("Failed to delete backup: %s", err)
             raise BackupAgentError(
                 translation_domain=DOMAIN,
                 translation_key="delete_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         raise BackupNotFound(
             translation_domain=BACKUP_DOMAIN,
