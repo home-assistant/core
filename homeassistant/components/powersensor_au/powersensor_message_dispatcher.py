@@ -302,6 +302,10 @@ class PowersensorMessageDispatcher:
             outbound,
         )
 
+        # Sent with every measurement, not only when the role changes: like any
+        # device entity, device_role goes unavailable without an update within
+        # UPDATE_TIMEOUT, so this signal also keeps it available.  Repeating an
+        # unchanged role only refreshes last_reported.
         async_dispatcher_send(
             self._hass,
             f"{DATA_UPDATE_SIGNAL_PREFIX}{mac}_role",
