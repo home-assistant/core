@@ -37,6 +37,7 @@ SELECT_TYPES: tuple[SelectEntityDescription, ...] = (
     SelectEntityDescription(
         key=PARAM_COLLECTION_POINT,
         translation_key=PARAM_COLLECTION_POINT,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
