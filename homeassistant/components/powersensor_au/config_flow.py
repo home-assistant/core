@@ -121,22 +121,18 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return mac
         return device.name_by_user or device.name or mac
 
-    async def _async_prepare_setup(self) -> ConfigFlowResult | None:
-        """Register a unique ID and guard against duplicate entries or parallel flows."""
-        if self._async_in_progress(include_uninitialized=True):
-            return self.async_abort(reason="already_in_progress")
+    async def _async_prepare_setup(self) -> None:
+        """Register the unique ID, aborting if another flow is already in progress."""
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
         self.context.update({"title_placeholders": {"name": "Powersensor"}})
-        return None
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if result := await self._async_prepare_setup():
-            return result
+        await self._async_prepare_setup()
         return await self.async_step_manual_confirm()
 
     @override
@@ -159,8 +155,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="firmware_not_compatible")
 
-        if result := await self._async_prepare_setup():
-            return result
+        await self._async_prepare_setup()
 
         return await self.async_step_discovery_confirm()
 

@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "entry_not_loaded": "The Powersensor integration must be loaded before sensor roles can be reconfigured.",
       "no_sensors_found": "No Powersensor sensors have been discovered yet. Sensor roles can be set once a sensor reports to a plug."
     },
