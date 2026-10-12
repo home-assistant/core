@@ -42,21 +42,6 @@ def llm_context() -> llm.LLMContext:
 
 
 @pytest.fixture
-async def recorded_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    """Record a series of states, one hour apart, starting at 2026-10-12 08:00 UTC."""
-    # Microseconds check that times are returned with second precision.
-    freezer.move_to("2026-10-12 08:00:00.123456+00:00")
-    assert await async_setup_component(hass, history.DOMAIN, {})
-    hass.states.async_set(OTHER_ENTITY_ID, "45")
-    for value in ("18.0", "19.5", "21.0", "20.5"):
-        hass.states.async_set(
-            ENTITY_ID, value, {"unit_of_measurement": "°C", "friendly_name": "Temp"}
-        )
-        await async_wait_recording_done(hass)
-        freezer.tick(timedelta(hours=1))
-
-
-@pytest.fixture
 async def recorded_statistics(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -135,13 +120,6 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({}, id="missing_entity_ids"),
         pytest.param({"entity_ids": []}, id="empty_entity_ids"),
         pytest.param({"entity_ids": ["not_an_entity"]}, id="invalid_entity_id"),
-        pytest.param({"entity_ids": [ENTITY_ID], "limit": 0}, id="limit_too_low"),
-        pytest.param({"entity_ids": [ENTITY_ID], "limit": 1001}, id="limit_too_high"),
-        pytest.param(
-            {"entity_ids": [ENTITY_ID], "include_full_attributes": "invalid"},
-            id="invalid_boolean",
-        ),
-        pytest.param({"entity_ids": [ENTITY_ID], "source": "raw"}, id="source"),
         pytest.param({"entity_ids": [ENTITY_ID], "period": "year"}, id="period"),
         pytest.param({"entity_ids": [ENTITY_ID], "unknown": True}, id="unknown"),
     ],
@@ -169,15 +147,22 @@ async def test_invalid_parameters(
             "start_time must be before end_time",
             id="reversed",
         ),
+        pytest.param(
+            {"start_time": "2026-09-01T00:00:00Z", "period": "hour"},
+            "The time span has more than 500 hour rows. Use a longer period or "
+            "a shorter time span.",
+            id="too_many_rows",
+        ),
     ],
 )
-async def test_invalid_period(
+@pytest.mark.freeze_time("2026-10-12 12:00:00+00:00")
+async def test_invalid_time_span(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     tool_args: JsonObjectType,
     error: str,
 ) -> None:
-    """Test an invalid period returns an error result."""
+    """Test an invalid time span returns an error result."""
     tool = GetHistoryTool()
     result = await tool.async_call(
         hass,
@@ -188,7 +173,7 @@ async def test_invalid_period(
     assert result == llm.ToolResult(data={"error": error}, error=True)
 
 
-@pytest.mark.usefixtures("recorder_mock", "recorded_states")
+@pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
 async def test_call_through_api(
     hass: HomeAssistant, hass_admin_user: MockUser, llm_context: llm.LLMContext
 ) -> None:
@@ -205,16 +190,23 @@ async def test_call_through_api(
     result = await api.async_call_tool(
         llm.ToolInput(
             tool.name,
-            {"entity_ids": [OTHER_ENTITY_ID], "source": "state_changes"},
+            {
+                "entity_ids": [ENERGY_ENTITY_ID],
+                "start_time": "2026-10-12T10:00:00Z",
+                "period": "hour",
+            },
         )
     )
     assert result == llm.ToolResult(
         data={
             "result": {
-                "source": "state_changes",
+                "period": "hour",
                 "entities": {
-                    OTHER_ENTITY_ID: {
-                        "csv": "time,state\n2026-10-12T01:00:00-07:00,45\n"
+                    ENERGY_ENTITY_ID: {
+                        "unit": "kWh",
+                        "csv": "start,change\n"
+                        "2026-10-12T03:00:00-07:00,1.5\n"
+                        "2026-10-12T04:00:00-07:00,1.5\n",
                     }
                 },
             }
@@ -222,65 +214,20 @@ async def test_call_through_api(
     )
 
 
-@pytest.mark.usefixtures("recorder_mock", "recorded_states")
-@pytest.mark.parametrize(
-    "tool_args",
-    [
-        pytest.param({}, id="defaults"),
-        pytest.param({"limit": 2}, id="limit"),
-        pytest.param({"include_full_attributes": True}, id="include_full_attributes"),
-        pytest.param(
-            {
-                "start_time": "2026-10-12T02:30:00",
-                "end_time": "2026-10-12T03:30:00",
-            },
-            id="local_period",
-        ),
-        pytest.param(
-            {"start_time": "2026-10-12T10:30:00+00:00"}, id="start_time_with_offset"
-        ),
-        pytest.param({"end_time": "2026-10-12T09:30:00Z"}, id="end_time_only"),
-        pytest.param(
-            {"end_time": "2026-10-12T07:00:00+00:00"}, id="before_first_state"
-        ),
-    ],
-)
-async def test_get_state_changes(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    snapshot: SnapshotAssertion,
-    tool_args: JsonObjectType,
-) -> None:
-    """Test getting the state changes of entities."""
-    assert dt_util.utcnow().isoformat() == "2026-10-12T12:00:00.123456+00:00"
-    tool = GetHistoryTool()
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(
-            tool.name,
-            {
-                "entity_ids": [ENTITY_ID, "sensor.unknown"],
-                "source": "state_changes",
-                **tool_args,
-            },
-        ),
-        llm_context,
-    )
-
-    assert result.error is False
-    assert result.data == snapshot
-
-
 @pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
 @pytest.mark.parametrize(
     "tool_args",
     [
         pytest.param({}, id="defaults"),
-        pytest.param({"limit": 2}, id="limit"),
+        pytest.param({"start_time": "2026-10-12T09:00:00Z"}, id="auto_period_5minute"),
         pytest.param({"start_time": "2026-10-09T12:00:00Z"}, id="auto_period_day"),
         pytest.param(
-            {"start_time": "2026-10-12T09:00:00Z", "period": "5minute"},
-            id="no_short_term_statistics",
+            {
+                "start_time": "2026-10-12T01:00:00",
+                "end_time": "2026-10-12T03:00:00",
+                "period": "hour",
+            },
+            id="local_time_span",
         ),
         pytest.param(
             {"start_time": "2026-10-11T00:00:00", "period": "day"}, id="period_day"
@@ -320,7 +267,6 @@ async def test_get_statistics(
             "°F",
             {
                 "unit": "°F",
-                "total": 24,
                 "csv": "start,mean,min,max\n2026-10-12T04:00:00-07:00,74.6,158.0,161.6\n",
             },
             id="converted",
@@ -330,7 +276,6 @@ async def test_get_statistics(
             "Wh",
             {
                 "unit": "Wh",
-                "total": 24,
                 "csv": "start,change\n2026-10-12T04:00:00-07:00,1500.0\n",
             },
             id="converted_sum",
@@ -340,8 +285,7 @@ async def test_get_statistics(
             "W",
             {
                 "error": "Statistics are recorded in kWh, which cannot be "
-                "converted to the unit of the entity. Use source "
-                "'state_changes' instead."
+                "converted to the unit of the entity."
             },
             id="not_convertible",
         ),
@@ -359,133 +303,17 @@ async def test_statistics_state_unit(
     tool = GetHistoryTool()
     result = await tool.async_call(
         hass,
-        llm.ToolInput(tool.name, {"entity_ids": [entity_id], "limit": 1}),
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_ids": [entity_id],
+                "start_time": "2026-10-12T04:00:00",
+                "end_time": "2026-10-12T05:00:00",
+                "period": "hour",
+            },
+        ),
         llm_context,
     )
 
     assert result.error is False
     assert result.data["result"]["entities"] == {entity_id: expected}
-
-
-@pytest.mark.usefixtures("recorder_mock")
-@pytest.mark.parametrize(
-    ("include_full_attributes", "expected_csv"),
-    [
-        pytest.param(
-            False,
-            "time,state,current_position\n"
-            "2026-10-12T01:00:00-07:00,open,30\n"
-            "2026-10-12T02:00:00-07:00,open,80\n"
-            "2026-10-12T04:00:00-07:00,closed,0\n",
-            id="significant_attributes",
-        ),
-        pytest.param(
-            True,
-            "time,state,current_position,attributes\n"
-            '2026-10-12T01:00:00-07:00,open,30,"{""current_position"":30}"\n'
-            '2026-10-12T02:00:00-07:00,open,80,"{""current_position"":80}"\n'
-            '2026-10-12T04:00:00-07:00,closed,0,"{""current_position"":0,""friendly_name"":""Garage""}"\n',
-            id="include_full_attributes",
-        ),
-    ],
-)
-async def test_state_changes_significant_attributes(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    llm_context: llm.LLMContext,
-    include_full_attributes: bool,
-    expected_csv: str,
-) -> None:
-    """Test significant attributes are returned as columns for state changes."""
-    freezer.move_to("2026-10-12 08:00:00+00:00")
-    assert await async_setup_component(hass, history.DOMAIN, {})
-    for state, attributes in (
-        ("open", {"current_position": 30}),
-        # Only a significant attribute changes.
-        ("open", {"current_position": 80}),
-        # Only an insignificant attribute changes.
-        ("open", {"current_position": 80, "friendly_name": "Garage"}),
-        ("closed", {"current_position": 0, "friendly_name": "Garage"}),
-    ):
-        hass.states.async_set("cover.garage", state, attributes)
-        await async_wait_recording_done(hass)
-        freezer.tick(timedelta(hours=1))
-
-    tool = GetHistoryTool()
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(
-            tool.name,
-            {
-                "entity_ids": ["cover.garage"],
-                "source": "state_changes",
-                "include_full_attributes": include_full_attributes,
-            },
-        ),
-        llm_context,
-    )
-
-    assert result == llm.ToolResult(
-        data={
-            "result": {
-                "source": "state_changes",
-                "entities": {"cover.garage": {"csv": expected_csv}},
-            }
-        }
-    )
-
-
-@pytest.mark.usefixtures("recorder_mock")
-@pytest.mark.parametrize(
-    ("include_full_attributes", "expected_csv"),
-    [
-        pytest.param(
-            False,
-            "time,state\n2026-10-12T01:00:00-07:00,playing\n2026-10-12T03:00:00-07:00,paused\n",
-            id="state_only",
-        ),
-        pytest.param(
-            True,
-            "time,state,attributes\n"
-            '2026-10-12T01:00:00-07:00,playing,"{""media_title"":""Song 1""}"\n'
-            '2026-10-12T03:00:00-07:00,paused,"{""media_title"":""Song 2""}"\n',
-            id="include_full_attributes",
-        ),
-    ],
-)
-async def test_state_changes_media_player(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    llm_context: llm.LLMContext,
-    include_full_attributes: bool,
-    expected_csv: str,
-) -> None:
-    """Test media player attributes are only returned when requested."""
-    freezer.move_to("2026-10-12 08:00:00+00:00")
-    assert await async_setup_component(hass, history.DOMAIN, {})
-    for state, title in (
-        ("playing", "Song 1"),
-        ("playing", "Song 2"),
-        ("paused", "Song 2"),
-    ):
-        hass.states.async_set("media_player.speaker", state, {"media_title": title})
-        await async_wait_recording_done(hass)
-        freezer.tick(timedelta(hours=1))
-
-    tool = GetHistoryTool()
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(
-            tool.name,
-            {
-                "entity_ids": ["media_player.speaker"],
-                "source": "state_changes",
-                "include_full_attributes": include_full_attributes,
-            },
-        ),
-        llm_context,
-    )
-
-    assert result.data["result"]["entities"] == {
-        "media_player.speaker": {"csv": expected_csv}
-    }

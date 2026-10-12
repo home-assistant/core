@@ -1,172 +1,27 @@
 # serializer version: 1
-# name: test_get_state_changes[before_first_state]
+# name: test_get_statistics[auto_period_5minute]
   dict({
     'result': dict({
       'entities': dict({
+        'sensor.energy': dict({
+          'csv': '''
+            start,change
+  
+          ''',
+          'unit': 'kWh',
+        }),
+        'sensor.humidity': dict({
+          'error': 'No statistics are recorded for this entity.',
+        }),
         'sensor.temperature': dict({
           'csv': '''
-            time,state
+            start,mean,min,max
   
           ''',
           'unit': '°C',
         }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state
-  
-          ''',
-        }),
       }),
-      'source': 'state_changes',
-    }),
-  })
-# ---
-# name: test_get_state_changes[defaults]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.temperature': dict({
-          'csv': '''
-            time,state
-            2026-10-12T01:00:00-07:00,18.0
-            2026-10-12T02:00:00-07:00,19.5
-            2026-10-12T03:00:00-07:00,21.0
-            2026-10-12T04:00:00-07:00,20.5
-  
-          ''',
-          'unit': '°C',
-        }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state
-  
-          ''',
-        }),
-      }),
-      'source': 'state_changes',
-    }),
-  })
-# ---
-# name: test_get_state_changes[end_time_only]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.temperature': dict({
-          'csv': '''
-            time,state
-            2026-10-12T01:00:00-07:00,18.0
-            2026-10-12T02:00:00-07:00,19.5
-  
-          ''',
-          'unit': '°C',
-        }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state
-  
-          ''',
-        }),
-      }),
-      'source': 'state_changes',
-    }),
-  })
-# ---
-# name: test_get_state_changes[include_full_attributes]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.temperature': dict({
-          'csv': '''
-            time,state,attributes
-            2026-10-12T01:00:00-07:00,18.0,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
-            2026-10-12T02:00:00-07:00,19.5,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
-            2026-10-12T03:00:00-07:00,21.0,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
-            2026-10-12T04:00:00-07:00,20.5,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
-  
-          ''',
-          'unit': '°C',
-        }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state,attributes
-  
-          ''',
-        }),
-      }),
-      'source': 'state_changes',
-    }),
-  })
-# ---
-# name: test_get_state_changes[limit]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.temperature': dict({
-          'csv': '''
-            time,state
-            2026-10-12T03:00:00-07:00,21.0
-            2026-10-12T04:00:00-07:00,20.5
-  
-          ''',
-          'total': 4,
-          'unit': '°C',
-        }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state
-  
-          ''',
-        }),
-      }),
-      'source': 'state_changes',
-    }),
-  })
-# ---
-# name: test_get_state_changes[local_period]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.temperature': dict({
-          'csv': '''
-            time,state
-            2026-10-12T02:30:00-07:00,19.5
-            2026-10-12T03:00:00-07:00,21.0
-  
-          ''',
-          'unit': '°C',
-        }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state
-  
-          ''',
-        }),
-      }),
-      'source': 'state_changes',
-    }),
-  })
-# ---
-# name: test_get_state_changes[start_time_with_offset]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.temperature': dict({
-          'csv': '''
-            time,state
-            2026-10-12T03:30:00-07:00,21.0
-            2026-10-12T04:00:00-07:00,20.5
-  
-          ''',
-          'unit': '°C',
-        }),
-        'sensor.unknown': dict({
-          'csv': '''
-            time,state
-  
-          ''',
-        }),
-      }),
-      'source': 'state_changes',
+      'period': '5minute',
     }),
   })
 # ---
@@ -186,7 +41,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': "No statistics recorded. Use source 'state_changes' instead.",
+          'error': 'No statistics are recorded for this entity.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -201,7 +56,6 @@
         }),
       }),
       'period': 'day',
-      'source': 'statistics',
     }),
   })
 # ---
@@ -241,7 +95,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': "No statistics recorded. Use source 'state_changes' instead.",
+          'error': 'No statistics are recorded for this entity.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -276,67 +130,36 @@
         }),
       }),
       'period': 'hour',
-      'source': 'statistics',
     }),
   })
 # ---
-# name: test_get_statistics[limit]
+# name: test_get_statistics[local_time_span]
   dict({
     'result': dict({
       'entities': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
-            2026-10-12T03:00:00-07:00,1.5
-            2026-10-12T04:00:00-07:00,1.5
-  
-          ''',
-          'total': 24,
-          'unit': 'kWh',
-        }),
-        'sensor.humidity': dict({
-          'error': "No statistics recorded. Use source 'state_changes' instead.",
-        }),
-        'sensor.temperature': dict({
-          'csv': '''
-            start,mean,min,max
-            2026-10-12T03:00:00-07:00,23.333,69.0,71.0
-            2026-10-12T04:00:00-07:00,23.667,70.0,72.0
-  
-          ''',
-          'total': 24,
-          'unit': '°C',
-        }),
-      }),
-      'period': 'hour',
-      'source': 'statistics',
-    }),
-  })
-# ---
-# name: test_get_statistics[no_short_term_statistics]
-  dict({
-    'result': dict({
-      'entities': dict({
-        'sensor.energy': dict({
-          'csv': '''
-            start,change
+            2026-10-12T01:00:00-07:00,1.5
+            2026-10-12T02:00:00-07:00,1.5
   
           ''',
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': "No statistics recorded. Use source 'state_changes' instead.",
+          'error': 'No statistics are recorded for this entity.',
         }),
         'sensor.temperature': dict({
           'csv': '''
             start,mean,min,max
+            2026-10-12T01:00:00-07:00,22.667,67.0,69.0
+            2026-10-12T02:00:00-07:00,23.0,68.0,70.0
   
           ''',
           'unit': '°C',
         }),
       }),
-      'period': '5minute',
-      'source': 'statistics',
+      'period': 'hour',
     }),
   })
 # ---
@@ -354,7 +177,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': "No statistics recorded. Use source 'state_changes' instead.",
+          'error': 'No statistics are recorded for this entity.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -367,7 +190,6 @@
         }),
       }),
       'period': 'day',
-      'source': 'statistics',
     }),
   })
 # ---
@@ -376,7 +198,7 @@
     'additionalProperties': False,
     'properties': dict({
       'end_time': dict({
-        'description': 'End of the period as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: now).',
+        'description': 'End of the time span as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: now).',
         'type': 'string',
       }),
       'entity_ids': dict({
@@ -387,20 +209,8 @@
         'minItems': 1,
         'type': 'array',
       }),
-      'include_full_attributes': dict({
-        'default': False,
-        'description': "Only for source 'state_changes': whether to include all state attributes as JSON, for example the media details of a media player (default: false).",
-        'type': 'boolean',
-      }),
-      'limit': dict({
-        'default': 100,
-        'description': 'Maximum number of rows to return per entity (default: 100, max: 1000).',
-        'maximum': 1000,
-        'minimum': 1,
-        'type': 'integer',
-      }),
       'period': dict({
-        'description': "Only for source 'statistics': the length of each aggregated row. 5minute rows are usually kept for 10 days (default: picked from the length of the requested time span).",
+        'description': 'The length of each row. 5minute rows are usually kept for 10 days (default: picked from the length of the time span).',
         'enum': list([
           '5minute',
           'hour',
@@ -410,17 +220,8 @@
         ]),
         'type': 'string',
       }),
-      'source': dict({
-        'default': 'statistics',
-        'description': "'statistics' for aggregated values or 'state_changes' for each recorded state change (default: 'statistics').",
-        'enum': list([
-          'statistics',
-          'state_changes',
-        ]),
-        'type': 'string',
-      }),
       'start_time': dict({
-        'description': 'Start of the period as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 24 hours before end_time).',
+        'description': 'Start of the time span as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 24 hours before end_time).',
         'type': 'string',
       }),
     }),
