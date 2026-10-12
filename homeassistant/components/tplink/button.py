@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Final, override
 
-from kasa import Feature
+from kasa import Device, Feature, Module
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -12,12 +12,19 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
+from . import TPLinkConfigEntry, legacy_device_id
+from .coordinator import TPLinkDataUpdateCoordinator
 from .deprecate import DeprecatedInfo
-from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
+from .entity import (
+    CoordinatedTPLinkEntity,
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
+    async_refresh_after,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -89,6 +96,13 @@ BUTTON_DESCRIPTIONS: Final = [
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
 
+PTZ_PRESET_DESCRIPTION = TPLinkButtonEntityDescription(
+    key="ptz_preset",
+    translation_key="ptz_preset",
+    entity_category=EntityCategory.CONFIG,
+    available_fn=lambda dev: dev.is_on,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -120,6 +134,14 @@ async def async_setup_entry(
     first_check = False
     config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
+    if pan_tilt := device.modules.get(Module.PanTilt):
+        async_add_entities(
+            TPLinkPtzPresetButtonEntity(
+                device, parent_coordinator, preset_id=preset_id, preset_name=name
+            )
+            for name, preset_id in pan_tilt.presets.items()
+        )
+
 
 class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
     """Representation of a TPLink button entity."""
@@ -135,3 +157,42 @@ class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
     def _async_update_attrs(self) -> bool:
         """No need to update anything."""
         return self.entity_description.available_fn(self._device)
+
+
+class TPLinkPtzPresetButtonEntity(CoordinatedTPLinkEntity, ButtonEntity):
+    """Button that moves the camera to a saved PTZ preset."""
+
+    entity_description: TPLinkButtonEntityDescription
+
+    def __init__(
+        self,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        preset_id: str,
+        preset_name: str,
+    ) -> None:
+        """Initialize the PTZ preset button."""
+        self._preset_id = preset_id
+        self._pan_tilt = device.modules[Module.PanTilt]
+        super().__init__(device, coordinator, PTZ_PRESET_DESCRIPTION)
+        self._attr_translation_placeholders = {"preset_name": preset_name}
+
+    @override
+    def _get_unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        return f"{legacy_device_id(self._device)}_ptz_preset_{self._preset_id}"
+
+    @async_refresh_after
+    @override
+    async def async_press(self) -> None:
+        """Move the camera to the preset."""
+        await self._pan_tilt.goto_preset(self._preset_id)
+
+    @override
+    def _async_update_attrs(self) -> bool:
+        """Return if the preset still exists on the camera."""
+        return (
+            self.entity_description.available_fn(self._device)
+            and self._preset_id in self._pan_tilt.presets.values()
+        )
