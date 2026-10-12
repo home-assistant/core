@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import Characteristic, GatewayDevice
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -17,6 +18,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE as CLIMATE_SERVICE_SET_TEMPERATURE,
 )
+from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.binary_sensor import (
     DaikinBinarySensor,
     async_setup_entry as async_setup_binary_sensors,
@@ -89,7 +91,18 @@ from homeassistant.helpers import entity_registry as er
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def _async_fire_coordinator_update(
+    hass: HomeAssistant,
+    coordinator: OnectaDataUpdateCoordinator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Advance time until the coordinator's next scheduled update."""
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -441,7 +454,9 @@ async def test_refresh_button_reports_failed_refresh(
 
 
 async def test_refresh_button_recovers_after_failed_poll(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Keep the button usable to retry a failed poll without reloading."""
     await _async_setup_fixture(hass, config_entry, "dry")
@@ -451,7 +466,7 @@ async def test_refresh_button_recovers_after_failed_poll(
             "network unavailable", method="GET", path="/v1/gateway-devices"
         )
     )
-    await coordinator.async_refresh()
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert not coordinator.last_update_success
     state = hass.states.get("button.daikin_onecta_account_refresh")
     assert state is not None
@@ -1007,7 +1022,9 @@ async def test_water_heater_publishes_successful_partial_operation_write() -> No
 
 
 async def test_firmware_install_executes_command(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """The update service executes the typed firmware-install command."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
@@ -1045,22 +1062,22 @@ async def test_firmware_install_executes_command(
     # A few fresh polls without status or version evidence may still be stale.
     gateways = _load_gateway_devices("dx4_firmwareavailable")
     coordinator._async_get_cloud_devices = AsyncMock(return_value=gateways)
-    await coordinator.async_refresh()
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
-    await coordinator.async_refresh()
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
-    await coordinator.async_refresh()
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert hass.states.get(state.entity_id).attributes["in_progress"] is False
 
     gateway_point = gateways[0].management_point(gateways[0].gateway_embedded_id)
     gateway_point.firmware_update_status = Characteristic(value="in-progress")
-    await coordinator.async_refresh()
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
 
     gateway_point.firmware_update_status = None
     gateway_point.firmware_version = Characteristic(value="new-version")
     gateway_point.software_version = Characteristic(value="new-version")
-    await coordinator.async_refresh()
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert hass.states.get(state.entity_id).attributes["in_progress"] is False
     assert (
         hass.states.get(state.entity_id).attributes["installed_version"]
@@ -1069,7 +1086,9 @@ async def test_firmware_install_executes_command(
 
 
 async def test_firmware_install_records_pending_state_before_waiting_poll(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A queued poll cannot replace firmware state before install bookkeeping."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
@@ -1089,6 +1108,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     finish_install = asyncio.Event()
     poll_started = asyncio.Event()
     pending_at_poll: list[tuple[int, str | None, int] | None] = []
+    original_refresh = coordinator._async_refresh
 
     async def install(
         _gateway_id: str, _management_point_id: str, _resource: str
@@ -1100,15 +1120,26 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         pending_at_poll.append(entity._pending_install)
         return gateways
 
-    async def refresh() -> None:
+    async def track_refresh(
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
         poll_started.set()
-        await coordinator.async_refresh()
+        await original_refresh(
+            log_failures=log_failures,
+            raise_on_auth_failed=raise_on_auth_failed,
+            scheduled=scheduled,
+            raise_on_entry_error=raise_on_entry_error,
+        )
 
     with (
         patch.object(coordinator.client, "put_management_point", side_effect=install),
         patch.object(
             coordinator.client, "get_gateway_devices", side_effect=read_gateways
         ),
+        patch.object(coordinator, "_async_refresh", side_effect=track_refresh),
         # Exercise the waiting poll without relying on the post-write cooldown.
         patch(
             "homeassistant.components.daikin_onecta.coordinator._POST_WRITE_COOLDOWN",
@@ -1124,11 +1155,12 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
             )
         )
         await install_started.wait()
-        poll_task = hass.async_create_task(refresh())
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
         await poll_started.wait()
         finish_install.set()
         await install_task
-        await poll_task
+        await hass.async_block_till_done()
 
     assert pending_at_poll == [
         (requested_sequence, installed_version, requested_sequence + 3)

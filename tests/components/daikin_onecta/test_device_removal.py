@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from daikin_onecta import OnectaConnectionError, Site
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.daikin_onecta import async_remove_config_entry_device
@@ -13,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .test_climate_snapshots import _async_setup_fixture
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -21,6 +22,7 @@ async def missing_gateway(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> dr.DeviceEntry:
     """Retain a registered gateway absent from a successful cloud response."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -31,7 +33,9 @@ async def missing_gateway(
     )
     assert device_entry is not None
     coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
-    await coordinator.async_refresh()
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.last_update_success
     assert not coordinator.data[gateway_id].present_in_cloud
     return device_entry

@@ -10,8 +10,10 @@ from daikin_onecta.models import (
     ManagementPoint,
     Setpoint,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -21,7 +23,18 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import FAKE_ACCESS_TOKEN
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def _async_fire_coordinator_update(
+    hass: HomeAssistant,
+    coordinator: OnectaDataUpdateCoordinator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Advance time until the coordinator's next scheduled update."""
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 def _add_gateway(devices: list[GatewayDevice]) -> tuple[str, str]:
@@ -117,6 +130,7 @@ async def test_poll_discovers_new_entities_through_reload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     add_capability: Callable[[list[GatewayDevice]], tuple[str, str]],
     disabled_by_default: bool,
 ) -> None:
@@ -141,8 +155,7 @@ async def test_poll_discovers_new_entities_through_reload(
             return_value=devices,
         ) as get_gateways,
     ):
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.runtime_data is not coordinator
@@ -158,6 +171,7 @@ async def test_poll_discovers_new_entities_through_reload(
 async def test_pending_discovery_reload_is_not_scheduled_twice(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Only schedule one reload when another capability appears while it is pending."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -167,11 +181,11 @@ async def test_pending_discovery_reload_is_not_scheduled_twice(
     coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
-        await coordinator.async_refresh()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
         updated_devices = deepcopy(devices)
         _add_setpoint(updated_devices)
         coordinator._async_get_cloud_devices.return_value = updated_devices
-        await coordinator.async_refresh()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     schedule_reload.assert_called_once_with(config_entry.entry_id)
 
@@ -179,6 +193,7 @@ async def test_pending_discovery_reload_is_not_scheduled_twice(
 async def test_state_changes_do_not_reload_platforms(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ordinary temperature changes are not new entity capabilities."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -191,7 +206,7 @@ async def test_state_changes_do_not_reload_platforms(
     coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
-        await coordinator.async_refresh()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     schedule_reload.assert_not_called()
 
@@ -267,6 +282,7 @@ async def test_removed_controls_become_unavailable_and_recover(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     fixture: str,
     domain: str,
     suffix: str,
@@ -297,7 +313,7 @@ async def test_removed_controls_become_unavailable_and_recover(
     coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
-        await coordinator.async_refresh()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
         assert coordinator.data[gateway.id].available
         assert (
@@ -311,7 +327,7 @@ async def test_removed_controls_become_unavailable_and_recover(
         assert schedule_reload.call_count == removal_reload_count
 
         coordinator._async_get_cloud_devices.return_value = restored_devices
-        await coordinator.async_refresh()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert hass.states.get(entity_id).state == initial_state.state
     assert entity_registry.async_get(entity_id).id == registry_entry.id
