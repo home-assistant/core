@@ -173,6 +173,13 @@ def load_state(root: Path) -> dict[str, str]:
     return state
 
 
+def save_state(root: Path, state: dict[str, str]) -> None:
+    """Write the state file atomically, so an interrupted run never truncates it."""
+    tmp = root / ".state.json.tmp"
+    tmp.write_text(json.dumps(state, indent=0, sort_keys=True))
+    tmp.replace(root / ".state.json")
+
+
 def ensure_ignored(root: Path) -> None:
     """Add root to the local git exclude file if it is inside an unignored work tree."""
 
@@ -210,9 +217,8 @@ def main() -> None:
     state = load_state(root)
     root.mkdir(parents=True, exist_ok=True)
     ensure_ignored(root)
-    state_file = root / ".state.json"
     # Write it now so a run interrupted before any download still marks root
-    state_file.write_text(json.dumps(state, indent=0, sort_keys=True))
+    save_state(root, state)
 
     hacs = sorted(set(json.loads(_get(HACS_LIST))))
     targets = args.repos or hacs
@@ -240,14 +246,14 @@ def main() -> None:
                 state[repo] = todo[repo]
             if done % 100 == 0 or done == len(todo):
                 print(f"  downloaded {done}/{len(todo)}", file=sys.stderr)
-                state_file.write_text(json.dumps(state, indent=0, sort_keys=True))
+                save_state(root, state)
 
     removed: list[str] = []
     if not args.repos:
         wanted = set(hacs) - set(missing)
         removed = prune(root, wanted)
         state = {r: s for r, s in state.items() if r in wanted}
-    state_file.write_text(json.dumps(state, indent=0, sort_keys=True))
+    save_state(root, state)
 
     print(f"updated {len(todo) - len(failed)}, removed {len(removed)}")
     for line in (*(f"unavailable {r}" for r in missing), *failed):
