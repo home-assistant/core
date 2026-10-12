@@ -35,7 +35,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             probatio.All(
-                cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES, CONF_TRV),
+                probatio.AtLeastOne(CONF_LIGHTS, CONF_SWITCHES, CONF_TRV),
                 {
                     probatio.Required(CONF_HOST): cv.string,
                     probatio.Optional(CONF_LIGHTS, default={}): {
@@ -51,7 +51,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     probatio.Optional(CONF_TRV, default={}): {
                         probatio.Optional(
                             CONF_PROXY_PORT, default=DEFAULT_PROXY_PORT
-                        ): cv.port,
+                        ): probatio.Port(),
                         probatio.Optional(CONF_PROXY_IP): cv.string,
                         probatio.Required(CONF_TRVS, default={}): {
                             cv.string: probatio.Schema(

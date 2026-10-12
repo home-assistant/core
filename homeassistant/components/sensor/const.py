@@ -240,7 +240,7 @@ class SensorDeviceClass(StrEnum):
     electric energy consumption.
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     ENERGY_DISTANCE = "energy_distance"
@@ -262,7 +262,7 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     FREQUENCY = "frequency"

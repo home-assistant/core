@@ -19,7 +19,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, BinarySensorDeviceClass
+from .const import DOMAIN, BinarySensorDeviceClass
 
 # mypy: disallow-any-generics
 

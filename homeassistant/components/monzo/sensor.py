@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -35,6 +36,7 @@ ACCOUNT_SENSORS = (
         value_fn=lambda data: data["balance"]["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
     ),
     MonzoSensorEntityDescription(
         key="total_balance",
@@ -42,6 +44,7 @@ ACCOUNT_SENSORS = (
         value_fn=lambda data: data["balance"]["total_balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
     ),
     MonzoSensorEntityDescription(
         key="spend_today",
@@ -59,6 +62,7 @@ POT_SENSORS = (
         value_fn=lambda data: data["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
     ),
 )
 

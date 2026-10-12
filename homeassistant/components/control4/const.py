@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Any
 
 from pyControl4.account import C4Account
@@ -41,5 +42,5 @@ CONTROL4_ENTITY_TYPE = 7
 RETRY_BACKOFF_MAX_SEC = 30
 SCHEDULE_REFRESH_ADVANCE_SEC = 300
 
-DEFAULT_SCAN_INTERVAL = 5
+SCAN_INTERVAL = timedelta(seconds=5)
 WEBSOCKET_RESYNC_INTERVAL_SEC = 60

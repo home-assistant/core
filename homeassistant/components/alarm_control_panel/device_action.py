@@ -25,8 +25,11 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
-from .const import AlarmControlPanelEntityFeature, AlarmControlPanelEntityStateAttribute
+from .const import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
+)
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",

@@ -14,6 +14,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_ARP_PING,
@@ -26,6 +31,22 @@ from .const import (
 )
 from .coordinator import MikrotikConfigEntry, get_api
 from .errors import CannotConnect, LoginError
+
+DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
+        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
 
 
 class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -65,14 +86,36 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
-                    probatio.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
-                    probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
-                }
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            try:
+                await self.hass.async_add_executor_job(get_api, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except LoginError:
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, reconfigure_entry.data
             ),
             errors=errors,
         )
@@ -107,7 +150,12 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=errors,

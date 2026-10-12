@@ -457,20 +457,8 @@ class TimerManager:
         timer.finish()
 
         if timer.conversation_command:
-            from homeassistant.components.conversation import (  # noqa: PLC0415
-                async_converse,
-            )
-
             self.hass.async_create_background_task(
-                async_converse(
-                    self.hass,
-                    timer.conversation_command,
-                    conversation_id=None,
-                    context=Context(),
-                    language=timer.language,
-                    agent_id=timer.conversation_agent_id,
-                    device_id=timer.device_id,
-                ),
+                self._async_run_conversation_command(timer),
                 "timer assist command",
             )
         elif timer.device_id in self.handlers:
@@ -482,6 +470,33 @@ class TimerManager:
             timer.name,
             timer.device_id,
         )
+
+    async def _async_run_conversation_command(self, timer: TimerInfo) -> None:
+        """Run the delayed command of a finished timer."""
+        from homeassistant.components.conversation import (  # noqa: PLC0415
+            async_converse,
+        )
+
+        assert timer.conversation_command is not None
+
+        result = await async_converse(
+            self.hass,
+            timer.conversation_command,
+            conversation_id=None,
+            context=Context(),
+            language=timer.language,
+            agent_id=timer.conversation_agent_id,
+            device_id=timer.device_id,
+        )
+
+        # Nothing is listening to the response, so an error is only visible here.
+        if result.response.response_type is intent.IntentResponseType.ERROR:
+            _LOGGER.warning(
+                "Delayed command failed: command=%s, code=%s, response=%s",
+                timer.conversation_command,
+                result.response.error_code,
+                result.response.speech.get("plain", {}).get("speech", ""),
+            )
 
     def is_timer_device(self, device_id: str) -> bool:
         """Return True if device has been registered to handle timer events."""

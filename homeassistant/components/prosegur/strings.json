@@ -30,6 +30,20 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect with Prosegur backend"
+    },
+    "image_not_available": {
+      "message": "Unable to get image from camera {camera}"
+    },
+    "invalid_auth": {
+      "message": "Configured credentials are invalid"
+    },
+    "request_image_failed": {
+      "message": "Unable to request a new image from camera {camera}"
+    }
+  },
   "services": {
     "request_image": {
       "description": "Requests a new image from a Prosegur camera.",

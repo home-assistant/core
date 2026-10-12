@@ -17,6 +17,7 @@ from duco_connectivity import (
     ConfigValueString,
     DiagComponent,
     DiagInfo,
+    InfoOverview,
     KnownActionName,
     LanInfo,
     Node,
@@ -315,6 +316,14 @@ def mock_duco_client(
         client.async_get_node_info.side_effect = get_node_info
         client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
         client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_info_overview.return_value = InfoOverview(
+            rssi_wifi=mock_lan_info.rssi_wifi,
+            diagnostic_subsystems=(
+                DiagComponent(component="Ventilation", status="Ok"),
+            ),
+            time_filter_remain=180,
+            ventilation_temperatures=mock_ventilation_temperature_info,
+        )
         client.async_get_time_filter_remaining.return_value = 180
         client.async_get_ventilation_temperature_info.return_value = (
             mock_ventilation_temperature_info

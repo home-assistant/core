@@ -24,6 +24,7 @@ async def test_full_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test full config flow."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

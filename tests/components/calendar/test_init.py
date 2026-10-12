@@ -250,7 +250,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         (
             {},
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -264,7 +264,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date": "2022-04-02",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -278,7 +278,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -287,7 +287,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -333,7 +333,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -344,7 +344,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -406,7 +406,7 @@ async def test_create_event_service_invalid_params(
 ) -> None:
     """Test creating an event using the create_event service."""
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await hass.services.async_call(
             DOMAIN,
             CREATE_EVENT_SERVICE,
@@ -759,6 +759,42 @@ async def test_websocket_handle_subscribe_calendar_events(
     assert events[0]["uid"] == "calendar-event-uid-1"
     assert events[0]["rrule"] == "FREQ=WEEKLY;COUNT=3"
     assert events[0]["recurrence_id"] == "20260415"
+
+
+async def test_websocket_subscribers_share_one_fetch(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscribers watching the same range share a single event fetch."""
+    entity = test_entities[0]
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    for _ in range(3):
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "calendar/event/subscribe",
+                "entity_id": "calendar.calendar_1",
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+            }
+        )
+        assert (await client.receive_json())["success"]
+        assert (await client.receive_json())["type"] == "event"
+
+    entity.async_get_events.reset_mock()
+
+    entity.create_event(
+        start=start + timedelta(hours=2),
+        end=start + timedelta(hours=3),
+        summary="New Event",
+    )
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    assert entity.async_get_events.call_count == 1
 
 
 async def test_websocket_subscribe_updates_on_state_change(

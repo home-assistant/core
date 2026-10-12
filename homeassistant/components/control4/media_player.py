@@ -1,7 +1,6 @@
 """Platform for Control4 Rooms Media Players."""
 
 from dataclasses import dataclass
-from datetime import timedelta
 import enum
 import logging
 from typing import Any, override
@@ -21,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, Control4ConfigEntry, Control4RuntimeData
+from .const import SCAN_INTERVAL, Control4ConfigEntry, Control4RuntimeData
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4CoordinatorEntity
 
@@ -109,7 +108,7 @@ async def async_setup_entry(
         config_entry=entry,
         name="room",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+        update_interval=SCAN_INTERVAL,
     )
 
     # Fetch initial data so we have data when entities subscribe

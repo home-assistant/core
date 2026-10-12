@@ -20,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -53,7 +53,10 @@ async def _fetch_tokens(
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
     except BadCredentials as err:
-        raise ConfigEntryAuthFailed(err) from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     try:
@@ -324,7 +327,7 @@ class RefreshTokensObject:
         async with token_refresh_lock:
             try:
                 await refresh_tokens(self.hass, self.entry)
-            except ConfigEntryAuthFailed:
+            except ConfigEntryError:
                 _LOGGER.error(
                     "Control4 credentials are no longer valid; reload the integration"
                     " after updating them"

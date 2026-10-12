@@ -38,7 +38,6 @@ from homeassistant.helpers.reload import (
     async_reload_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -49,10 +48,9 @@ from .const import (
     DEFAULT_SSL_CIPHER_LIST,
     DOMAIN,
     PLATFORM_IDX,
-    REST,
-    REST_DATA,
     REST_IDX,
 )
+from .coordinator import RestCoordinator
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
 
@@ -94,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_setup_shared_data(hass: HomeAssistant) -> None:
     """Create shared data for platform config and rest coordinators."""
-    hass.data[DOMAIN] = {key: [] for key in (REST_DATA, *COORDINATOR_AWARE_PLATFORMS)}
+    hass.data[DOMAIN] = {key: [] for key in (COORDINATOR, *COORDINATOR_AWARE_PLATFORMS)}
 
 
 async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -110,11 +108,11 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
         resource_template: template.Template | None = conf.get(CONF_RESOURCE_TEMPLATE)
         payload_template: template.Template | None = conf.get(CONF_PAYLOAD_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
-        coordinator = _rest_coordinator(
-            hass, rest, resource_template, payload_template, scan_interval
+        coordinator = RestCoordinator(
+            hass, rest, None, resource_template, payload_template, scan_interval
         )
         refresh_coroutines.append(coordinator.async_refresh())
-        hass.data[DOMAIN][REST_DATA].append({REST: rest, COORDINATOR: coordinator})
+        hass.data[DOMAIN][COORDINATOR].append(coordinator)
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
             if platform_domain not in conf:
@@ -144,46 +142,15 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
 
 async def async_get_config_and_coordinator(
     hass: HomeAssistant, platform_domain: str, discovery_info: DiscoveryInfoType
-) -> tuple[ConfigType, DataUpdateCoordinator[None], RestData]:
+) -> tuple[ConfigType, RestCoordinator, RestData]:
     """Get the config and coordinator for the platform from discovery."""
-    shared_data = hass.data[DOMAIN][REST_DATA][discovery_info[REST_IDX]]
+    coordinator: RestCoordinator = hass.data[DOMAIN][COORDINATOR][
+        discovery_info[REST_IDX]
+    ]
     conf: ConfigType = hass.data[DOMAIN][platform_domain][discovery_info[PLATFORM_IDX]]
-    coordinator: DataUpdateCoordinator[None] = shared_data[COORDINATOR]
-    rest: RestData = shared_data[REST]
-    if rest.data is None:
+    if coordinator.rest.data is None:
         await coordinator.async_request_refresh()
-    return conf, coordinator, rest
-
-
-def _rest_coordinator(
-    hass: HomeAssistant,
-    rest: RestData,
-    resource_template: template.Template | None,
-    payload_template: template.Template | None,
-    update_interval: timedelta,
-) -> DataUpdateCoordinator[None]:
-    """Wrap a DataUpdateCoordinator around the rest object."""
-    if resource_template or payload_template:
-
-        async def _async_refresh_with_templates() -> None:
-            if resource_template:
-                rest.set_url(resource_template.async_render(parse_result=False))
-            if payload_template:
-                rest.set_payload(payload_template.async_render(parse_result=False))
-            await rest.async_update()
-
-        update_method = _async_refresh_with_templates
-    else:
-        update_method = rest.async_update
-
-    return DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name="rest data",
-        update_method=update_method,
-        update_interval=update_interval,
-    )
+    return conf, coordinator, coordinator.rest
 
 
 def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> RestData:

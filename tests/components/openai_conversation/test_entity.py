@@ -5,14 +5,77 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import conversation
 from homeassistant.components.openai_conversation.entity import (
+    _convert_content_to_param,
     _format_structured_output,
     async_prepare_files_for_prompt,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
+from homeassistant.helpers import llm, selector
+from homeassistant.util.json import JsonObjectType
+
+
+@pytest.mark.parametrize(
+    ("code", "outputs", "error", "external", "status"),
+    [
+        pytest.param(None, None, False, True, "completed", id="no_output"),
+        pytest.param(
+            "raise ValueError()",
+            [{"type": "logs", "logs": "ValueError"}],
+            True,
+            True,
+            "failed",
+            id="failed",
+        ),
+        pytest.param(
+            "plt.show()",
+            [{"type": "image", "url": "https://example.com/plot.png"}],
+            False,
+            True,
+            "completed",
+            id="image",
+        ),
+        pytest.param("print(1)", None, False, False, "completed", id="custom_function"),
+        pytest.param("print(1)", None, False, True, "incomplete", id="incomplete"),
+    ],
+)
+def test_convert_code_interpreter(
+    code: str | None,
+    outputs: list[JsonObjectType] | None,
+    error: bool,
+    external: bool,
+    status: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Restore native external calls while preserving custom function calls."""
+    content = [
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            tool_calls=[
+                llm.ToolInput(
+                    id="ci_A",
+                    tool_name="code_interpreter",
+                    tool_args={"code": code},
+                    external=external,
+                )
+            ],
+        ),
+        conversation.ToolResultContent(
+            agent_id="conversation.openai_conversation",
+            tool_call_id="ci_A",
+            tool_name="code_interpreter",
+            result=llm.ToolResult(
+                data={"container_id": "cntr_A", "output": outputs, "status": status},
+                error=error,
+            ),
+        ),
+    ]
+
+    assert _convert_content_to_param(content) == snapshot
 
 
 async def test_format_structured_output() -> None:
@@ -71,7 +134,6 @@ async def test_format_structured_output() -> None:
                     ],
                     "type": "object",
                     "additionalProperties": False,
-                    "strict": True,
                 },
                 "type": "array",
             },
@@ -81,7 +143,6 @@ async def test_format_structured_output() -> None:
             "stuff",
             "age",
         ],
-        "strict": True,
         "type": "object",
     }
 

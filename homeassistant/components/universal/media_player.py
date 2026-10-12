@@ -110,7 +110,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_CHILDREN, default=[]): cv.entity_ids,
         probatio.Optional(CONF_COMMANDS, default={}): CMD_SCHEMA,
         probatio.Optional(CONF_ATTRS, default={}): probatio.Or(
-            cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
+            probatio.EnsureList()(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
         probatio.Optional(CONF_BROWSE_MEDIA_ENTITY): cv.string,
         probatio.Optional(CONF_UNIQUE_ID): cv.string,

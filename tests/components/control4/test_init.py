@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyControl4.error_handling import BadToken
+from pyControl4.error_handling import BadCredentials, BadToken
 import pytest
 
 from homeassistant.components.control4 import RefreshTokensObject, _periodic_resync
@@ -12,6 +12,7 @@ from homeassistant.components.control4.director_utils import (
     gather_entry_variables,
     to_bool,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -180,3 +181,22 @@ async def test_gather_entry_variables_isolates_per_item_failures(
 def test_to_bool(value: object, expected: bool | None) -> None:
     """to_bool normalizes both real booleans and Control4's string encoding."""
     assert to_bool(value) is expected
+
+
+async def test_setup_bad_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_account: MagicMock,
+) -> None:
+    """Test setup fails with invalid credentials."""
+    mock_c4_account.get_account_bearer_token.side_effect = BadCredentials(
+        "Invalid credentials"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == (
+        "Error authenticating with the Control4 account API, incorrect username or"
+        " password"
+    )

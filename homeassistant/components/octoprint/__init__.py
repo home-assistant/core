@@ -71,7 +71,7 @@ BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)
-        ): probatio.All(cv.ensure_list, [probatio.In(BINARY_SENSOR_TYPES)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(BINARY_SENSOR_TYPES)]),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -88,7 +88,7 @@ SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-        ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_TYPES)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(SENSOR_TYPES)]),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -98,14 +98,14 @@ CONFIG_SCHEMA = probatio.Schema(
         cv.deprecated(DOMAIN),
         {
             DOMAIN: probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     probatio.Schema(
                         {
-                            probatio.Required(CONF_API_KEY): cv.string,
+                            probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
                             probatio.Required(CONF_HOST): cv.string,
                             probatio.Optional(CONF_SSL, default=False): cv.boolean,
-                            probatio.Optional(CONF_PORT, default=80): cv.port,
+                            probatio.Optional(CONF_PORT, default=80): probatio.Port(),
                             probatio.Optional(
                                 CONF_PATH, default="/"
                             ): ensure_valid_path,

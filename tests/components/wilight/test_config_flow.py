@@ -166,6 +166,7 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"WL{WILIGHT_ID}"
+    assert result["result"].unique_id == UPNP_SERIAL
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST

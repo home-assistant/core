@@ -1,13 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_qube_device": "The discovered device is not a Qube heat pump.",
+      "unique_id_mismatch": "The device at this address is a different Qube heat pump. Enter the address of the heat pump that was set up before."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_qube_device": "Could not verify this is a Qube heat pump. Check the host address."
     },
+    "flow_title": "Qube heat pump ({host})",
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::hr_energy_qube::config::step::user::data_description::host%]"
+        },
+        "description": "Enter the new IP address or hostname of your Qube heat pump."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -16,6 +28,9 @@
           "host": "The IP address or hostname of your Qube heat pump."
         },
         "description": "Enter the IP address or hostname of your Qube heat pump."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up the Qube heat pump at {host}?"
       }
     }
   },
@@ -232,6 +247,15 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the Qube heat pump at {host}."
+    },
+    "communication_error": {
+      "message": "Error communicating with the Qube heat pump: {error}"
+    },
+    "no_data": {
+      "message": "No data received from the Qube heat pump."
+    },
     "set_temperature_failed": {
       "message": "Failed to set the target temperature."
     },

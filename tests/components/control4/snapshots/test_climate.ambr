@@ -75,6 +75,7 @@
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 68,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.FAHRENHEIT: '°F'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_controller_residential_thermostat_v2',

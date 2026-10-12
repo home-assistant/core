@@ -183,9 +183,9 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return self._extra_state_attributes.get(ATTR_TEMPERATURE_F)
         return self._extra_state_attributes.get(ATTR_TEMPERATURE_C)
 
@@ -250,7 +250,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return active_modes
 
     def _get_heat_setpoint(self) -> float | None:
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             if ATTR_SETPOINT_HEAT_F in self._extra_state_attributes:
                 return self._extra_state_attributes.get(ATTR_SETPOINT_HEAT_F)
             if ATTR_HEAT_SETPOINT_F in self._extra_state_attributes:
@@ -263,7 +263,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return None
 
     def _get_cool_setpoint(self) -> float | None:
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             if ATTR_SETPOINT_COOL_F in self._extra_state_attributes:
                 return self._extra_state_attributes.get(ATTR_SETPOINT_COOL_F)
             if ATTR_COOL_SETPOINT_F in self._extra_state_attributes:
@@ -277,7 +277,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         if self.hvac_mode == HVACMode.HEAT:
             return self._get_heat_setpoint()
@@ -287,7 +287,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
@@ -295,7 +295,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
@@ -303,7 +303,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         scale = self._extra_state_attributes.get(ATTR_SCALE) or ""
         if "f" in scale.lower():
@@ -338,14 +338,14 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     async def _set_cool_setpoint(self, temp: float) -> None:
         c4_climate = self.create_api_object()
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             await c4_climate.set_cool_setpoint_f(temp)
         else:
             await c4_climate.set_cool_setpoint_c(temp)
 
     async def _set_heat_setpoint(self, temp: float) -> None:
         c4_climate = self.create_api_object()
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             await c4_climate.set_heat_setpoint_f(temp)
         else:
             await c4_climate.set_heat_setpoint_c(temp)

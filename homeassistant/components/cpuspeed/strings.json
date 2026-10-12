@@ -10,5 +10,10 @@
       }
     }
   },
+  "exceptions": {
+    "not_compatible": {
+      "message": "Unable to get CPU information, the CPU Speed integration is not compatible with your system"
+    }
+  },
   "title": "CPU Speed"
 }
