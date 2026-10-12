@@ -119,6 +119,7 @@ async def test_duplicate(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(form["flow_id"], INPUT)
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -156,6 +157,7 @@ async def test_reauth_recovery(
         form["flow_id"], {"api_key": "new-key"}
     )
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert result["translation_domain"] == "homeassistant"
     translations = await async_get_translations(hass, "en", "config", {"homeassistant"})
