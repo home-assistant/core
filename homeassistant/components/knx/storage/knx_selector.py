@@ -154,7 +154,7 @@ class GroupSelectSchema:
                 (err for err in errors if not _has_extra_keys_error(err)),
                 errors[0],
             )
-        raise probatio.AnyInvalid(self.msg or "no valid value found")
+        raise probatio.AnyInvalid(self.msg, translation_key="no_valid_value")
 
 
 class GroupSelect(KNXSelectorBase):
@@ -190,6 +190,18 @@ class GroupSelect(KNXSelectorBase):
             "type": self.selector_type,
             "collapsible": self.collapsible,
         }
+
+
+def _require_group_address(config: dict[str, Any]) -> dict[str, Any]:
+    """Require at least one group address."""
+    if not any(
+        config.get(key) for key in (CONF_GA_WRITE, CONF_GA_STATE, CONF_GA_PASSIVE)
+    ):
+        raise probatio.AnyInvalid(
+            "At least one group address must be set",
+            translation_key="group_address_required",
+        )
+    return config
 
 
 class GASelector(KNXSelectorBase):
@@ -282,20 +294,7 @@ class GASelector(KNXSelectorBase):
         self._add_group_addresses(schema)
         self._add_passive(schema)
         self._add_dpt(schema)
-        return probatio.Schema(
-            probatio.All(
-                schema,
-                probatio.Schema(  # one group address shall be included
-                    probatio.Any(
-                        {probatio.Required(CONF_GA_WRITE): probatio.IsTrue()},
-                        {probatio.Required(CONF_GA_STATE): probatio.IsTrue()},
-                        {probatio.Required(CONF_GA_PASSIVE): probatio.IsTrue()},
-                        msg="At least one group address must be set",
-                    ),
-                    extra=probatio.ALLOW_EXTRA,
-                ),
-            )
-        )
+        return probatio.Schema(probatio.All(schema, _require_group_address))
 
     def _add_group_addresses(self, schema: dict[probatio.Marker, Any]) -> None:
         """Add basic group address items to the schema."""
@@ -457,7 +456,11 @@ class SyncStateSelector(KNXSelectorBase):
     def __call__(self, data: Any) -> Any:
         """Validate the passed data."""
         if not self.allow_false and not data:
-            raise probatio.Invalid(f"Sync state cannot be {data}")
+            raise probatio.Invalid(
+                f"Sync state cannot be {data}",
+                translation_key="sync_state_disabled",
+                placeholders={"value": str(data)},
+            )
         return self.schema(data)
 
 
@@ -530,22 +533,38 @@ class KnxPayloadSelector(KNXSelectorBase):
         try:
             int_payload = int(payload, 16)
         except ValueError as ex:
-            raise probatio.Invalid(f"Invalid payload format: {payload}") from ex
+            raise probatio.Invalid(
+                f"Invalid payload format: {payload}",
+                translation_key="payload_invalid_format",
+                placeholders={"payload": payload},
+            ) from ex
 
         if int_payload < 0:
-            raise probatio.Invalid(f"Payload cannot be negative: {payload}")
+            raise probatio.Invalid(
+                f"Payload cannot be negative: {payload}",
+                translation_key="payload_negative",
+                placeholders={"payload": payload},
+            )
         if payload_length == 0:
             # DPT 1,2,3 is marked length 0, has 6 bit size
             if int_payload > 63:
                 raise probatio.Invalid(
-                    f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}"
+                    f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}",
+                    translation_key="payload_exceeds_6_bit",
+                    placeholders={"payload": payload},
                 )
         else:
             max_payload = (1 << (payload_length * 8)) - 1
             if int_payload > max_payload:
                 raise probatio.Invalid(
                     f"Payload {payload} exceeds possible maximum for "
-                    f"length {payload_length}: {hex(max_payload)}"
+                    f"length {payload_length}: {hex(max_payload)}",
+                    translation_key="payload_exceeds_length",
+                    placeholders={
+                        "payload": payload,
+                        "payload_length": payload_length,
+                        "max_payload": hex(max_payload),
+                    },
                 )
         return RawPayload(payload=int_payload, payload_length=payload_length)
 
@@ -593,10 +612,17 @@ class KnxSelectOptionsSelector(KNXSelectorBase):
         sub-validator.
         """
         if not isinstance(data, dict):
-            raise probatio.Invalid("Each option must be a dictionary")
+            raise probatio.Invalid(
+                "Each option must be a dictionary",
+                translation_key="select_option_not_a_mapping",
+            )
         option = data.get(SelectConf.OPTION)
         if not isinstance(option, str) or not option:
-            raise probatio.Invalid("Option name is required", path=[SelectConf.OPTION])
+            raise probatio.Invalid(
+                "Option name is required",
+                path=[SelectConf.OPTION],
+                translation_key="select_option_name_required",
+            )
         payload = {
             key: value for key, value in data.items() if key != SelectConf.OPTION
         }
