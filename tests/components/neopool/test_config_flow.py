@@ -27,7 +27,7 @@ from homeassistant.components.neopool.const import (
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
@@ -111,6 +111,20 @@ async def test_user_flow_serial(
     assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_user_flow_serial_rejects_non_positive_baudrate(
+    hass: HomeAssistant,
+) -> None:
+    """A non-positive baud rate is rejected by the schema."""
+    result = await _advance_to_step(hass, TYPE_SERIAL)
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**SERIAL_INPUT, CONF_BAUDRATE: 0},
+        )
+
+
 @pytest.mark.parametrize(
     ("exc", "expected_error"),
     [
@@ -155,13 +169,12 @@ async def test_user_flow_device_in_use(
     """A device held on different link settings surfaces as cannot_connect."""
     result = await _advance_to_step(hass, TYPE_TCP)
 
-    @asynccontextmanager
-    async def _in_use(*_args: object, **_kwargs: object) -> AsyncIterator[None]:
-        raise HomeAssistantError("in use")
-        yield
-
     with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(config_flow, "async_get_temporary_unit", _in_use)
+        mp.setattr(
+            config_flow,
+            "async_get_temporary_unit",
+            MagicMock(side_effect=HomeAssistantError("in use")),
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TCP_INPUT
         )
@@ -331,6 +344,18 @@ async def test_reconfigure_flow_relink_restores_on_error(
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_config_entry_serial.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_BAUDRATE: 9600,
+            SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry_serial.data[CONF_BAUDRATE] == 9600
+
     while mock_config_entry_serial.state is not ConfigEntryState.LOADED:
         await hass.async_block_till_done()
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
@@ -407,6 +432,18 @@ async def test_reconfigure_flow_probe_errors(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.0.2.99",
+            CONF_PORT: 502,
+            CONF_MODBUS_FRAMER: "tcp",
+            SECTION_MORE_OPTIONS: {CONF_UNIT_ID: 1},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures("mock_neopool_client")

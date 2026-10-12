@@ -75,8 +75,8 @@ STEP_TCP = probatio.Schema(
 STEP_SERIAL = probatio.Schema(
     {
         probatio.Required(CONF_DEVICE): SerialPortSelector(),
-        probatio.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.Coerce(
-            int
+        probatio.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
         **_MORE_OPTIONS,
     }

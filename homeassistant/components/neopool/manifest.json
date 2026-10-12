@@ -1,7 +1,6 @@
 {
   "domain": "neopool",
   "name": "NeoPool",
-  "after_dependencies": ["usb"],
   "codeowners": ["@svasek"],
   "config_flow": true,
   "dependencies": ["modbus", "usb"],
