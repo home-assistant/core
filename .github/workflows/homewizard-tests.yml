@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -20,8 +20,19 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
+      - name: Create virtual environment
+        run: uv venv .venv
+
       - name: Install dependencies
-        run: uv sync --group test
+        run: |
+          uv pip install -r requirements_test.txt
+          uv pip install -e .
+          uv pip install "python-homewizard-energy==10.2.0"
+
+      - name: Generate HomeWizard translations
+        run: |
+          .venv/bin/python -m script.translations develop --integration homewizard
 
       - name: Run HomeWizard tests
-        run: uv run pytest -q tests/components/homewizard/
+        run: |
+          .venv/bin/python -m pytest -q tests/components/homewizard/
