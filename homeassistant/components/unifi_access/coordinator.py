@@ -555,7 +555,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     insights.data.event_type,
                     insights.data.published,
                     insights.data.result,
-                    insights.data.metadata.authentication.id,
+                    insights.data.metadata.authentication.id or "",
                     insights.data.metadata.actor.display_name,
                     door.id,
                 ):

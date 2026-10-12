@@ -1295,7 +1295,7 @@ def _make_logs_add(
     event_object_id: str = "hub-001",
     result: str = "ACCESS",
     actor: str = "John Doe",
-    auth_id: str = "auth-001",
+    auth_id: str | None = "auth-001",
     published: int | None = 1700000000,
     device_id: str = "hub-device-001",
 ) -> LogAdd:
@@ -1556,6 +1556,43 @@ async def test_null_issuer_still_suppressed(
 
     await handlers["access.logs.insights.add"](_make_insights_add(auth_id=""))
     await handlers["access.logs.add"](issuerless_logs)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
+async def test_none_insights_auth_id_still_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test an insights event with a null auth id still matches its logs copy."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    events: list[DoorEvent] = []
+    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
+    coordinator.async_subscribe_door_events(events.append)
+
+    null_auth_insights = InsightsAdd(
+        event="access.logs.insights.add",
+        event_object_id="hub-001",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            published=1700000000,
+            metadata=InsightsMetadata.model_construct(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                actor=InsightsMetadataEntry(display_name="John Doe"),
+                authentication=InsightsMetadataEntry.model_construct(
+                    id=None, display_name="FACE"
+                ),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](null_auth_insights)
+    await handlers["access.logs.add"](_make_logs_add(auth_id=None))
     await hass.async_block_till_done()
 
     assert len(events) == 1
