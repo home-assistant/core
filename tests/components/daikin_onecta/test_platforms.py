@@ -1179,7 +1179,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     finish_install = asyncio.Event()
     poll_started = asyncio.Event()
     pending_at_poll: list[tuple[int, str | None, int] | None] = []
-    original_refresh = coordinator._async_refresh
+    original_update_data = coordinator._async_update_data
 
     async def install(
         _gateway_id: str, _management_point_id: str, _resource: str
@@ -1191,26 +1191,16 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         pending_at_poll.append(entity._pending_install)
         return gateways
 
-    async def track_refresh(
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
+    async def track_update_data() -> dict[str, DaikinOnectaDevice]:
         poll_started.set()
-        await original_refresh(
-            log_failures=log_failures,
-            raise_on_auth_failed=raise_on_auth_failed,
-            scheduled=scheduled,
-            raise_on_entry_error=raise_on_entry_error,
-        )
+        return await original_update_data()
 
     with (
         patch.object(coordinator.client, "put_management_point", side_effect=install),
         patch.object(
             coordinator.client, "get_gateway_devices", side_effect=read_gateways
         ),
-        patch.object(coordinator, "_async_refresh", side_effect=track_refresh),
+        patch.object(coordinator, "_async_update_data", side_effect=track_update_data),
         # Exercise the waiting poll without relying on the post-write cooldown.
         patch(
             "homeassistant.components.daikin_onecta.coordinator._POST_WRITE_COOLDOWN",
