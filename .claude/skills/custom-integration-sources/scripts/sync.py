@@ -258,6 +258,8 @@ def main() -> None:
     print(f"updated {len(todo) - len(failed)}, removed {len(removed)}")
     for line in (*(f"unavailable {r}" for r in missing), *failed):
         print(line)
+    if failed:
+        sys.exit(f"{len(failed)} downloads failed; those repos are stale or missing")
 
 
 if __name__ == "__main__":
