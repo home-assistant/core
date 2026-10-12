@@ -95,8 +95,9 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
         """Return whether the installed firmware version is available."""
         return self.installed_version is not None
 
+    @property
     @override
-    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+    def has_update(self) -> bool:
         """Return whether Victron offers a Venus OS firmware build."""
         return self._online_version is not None
 
