@@ -5,14 +5,14 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
           'unit': '°C',
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
         }),
@@ -28,7 +28,7 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state
+            time,state
             2026-10-12 01:00:00,18.0
             2026-10-12 02:00:00,19.5
             2026-10-12 03:00:00,21.0
@@ -39,7 +39,7 @@
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
         }),
@@ -55,7 +55,7 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state
+            time,state
             2026-10-12 01:00:00,18.0
             2026-10-12 02:00:00,19.5
   
@@ -64,7 +64,7 @@
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
         }),
@@ -80,7 +80,7 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state,attributes
+            time,state,attributes
             2026-10-12 01:00:00,18.0,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
             2026-10-12 02:00:00,19.5,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
             2026-10-12 03:00:00,21.0,"{""unit_of_measurement"":""°C"",""friendly_name"":""Temp""}"
@@ -91,7 +91,7 @@
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state,attributes
+            time,state,attributes
   
           ''',
         }),
@@ -107,7 +107,7 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state
+            time,state
             2026-10-12 03:00:00,21.0
             2026-10-12 04:00:00,20.5
   
@@ -117,7 +117,7 @@
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
         }),
@@ -133,7 +133,7 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state
+            time,state
             2026-10-12 02:30:00,19.5
             2026-10-12 03:00:00,21.0
   
@@ -142,7 +142,7 @@
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
         }),
@@ -158,7 +158,7 @@
       'entities': dict({
         'sensor.temperature': dict({
           'csv': '''
-            last_changed,state
+            time,state
             2026-10-12 03:30:00,21.0
             2026-10-12 04:00:00,20.5
   
@@ -167,7 +167,7 @@
         }),
         'sensor.unknown': dict({
           'csv': '''
-            last_changed,state
+            time,state
   
           ''',
         }),
@@ -421,11 +421,6 @@
           'month',
         ]),
         'type': 'string',
-      }),
-      'significant_changes_only': dict({
-        'default': True,
-        'description': "Only for source 'state_changes': only return significant state changes. Set to false to also include attribute-only changes (default: true).",
-        'type': 'boolean',
       }),
       'source': dict({
         'default': 'statistics',

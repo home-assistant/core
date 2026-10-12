@@ -213,9 +213,7 @@ async def test_call_through_api(
                 "timezone": "US/Pacific",
                 "source": "state_changes",
                 "entities": {
-                    OTHER_ENTITY_ID: {
-                        "csv": "last_changed,state\n2026-10-12 01:00:00,45\n"
-                    }
+                    OTHER_ENTITY_ID: {"csv": "time,state\n2026-10-12 01:00:00,45\n"}
                 },
             }
         }
@@ -365,3 +363,72 @@ async def test_statistics_state_unit(
 
     assert result.error is False
     assert result.data["result"]["entities"] == {entity_id: expected}
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("include_attributes", "expected_csv"),
+    [
+        pytest.param(
+            False,
+            "time,state,current_position\n"
+            "2026-10-12 01:00:00,open,30\n"
+            "2026-10-12 02:00:00,open,80\n"
+            "2026-10-12 04:00:00,closed,0\n",
+            id="significant_attributes",
+        ),
+        pytest.param(
+            True,
+            "time,state,current_position,attributes\n"
+            '2026-10-12 01:00:00,open,30,"{""current_position"":30}"\n'
+            '2026-10-12 02:00:00,open,80,"{""current_position"":80}"\n'
+            '2026-10-12 04:00:00,closed,0,"{""current_position"":0,""friendly_name"":""Garage""}"\n',
+            id="include_attributes",
+        ),
+    ],
+)
+async def test_state_changes_significant_attributes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    llm_context: llm.LLMContext,
+    include_attributes: bool,
+    expected_csv: str,
+) -> None:
+    """Test significant attributes are returned as columns for state changes."""
+    freezer.move_to("2026-10-12 08:00:00+00:00")
+    assert await async_setup_component(hass, history.DOMAIN, {})
+    for state, attributes in (
+        ("open", {"current_position": 30}),
+        # Only a significant attribute changes.
+        ("open", {"current_position": 80}),
+        # Only an insignificant attribute changes.
+        ("open", {"current_position": 80, "friendly_name": "Garage"}),
+        ("closed", {"current_position": 0, "friendly_name": "Garage"}),
+    ):
+        hass.states.async_set("cover.garage", state, attributes)
+        await async_wait_recording_done(hass)
+        freezer.tick(timedelta(hours=1))
+
+    tool = GetHistoryTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_ids": ["cover.garage"],
+                "source": "state_changes",
+                "include_attributes": include_attributes,
+            },
+        ),
+        llm_context,
+    )
+
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "timezone": "US/Pacific",
+                "source": "state_changes",
+                "entities": {"cover.garage": {"csv": expected_csv}},
+            }
+        }
+    )

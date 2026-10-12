@@ -11,7 +11,7 @@ from homeassistant.components.llm import LLMTools
 from homeassistant.components.recorder import get_instance, history, statistics
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
@@ -22,6 +22,10 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.helpers.significant_change import (
+    PLATFORM as SIGNIFICANT_CHANGE_PLATFORM,
+)
+from homeassistant.loader import async_get_integrations
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
@@ -139,27 +143,44 @@ def _get_statistics(
     return result
 
 
+def _format_value(value: Any) -> str:
+    """Format an attribute value for a CSV cell."""
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json_dumps(value)
+    return str(value)
+
+
 def _get_state_changes(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime,
     entity_ids: list[str],
-    significant_changes_only: bool,
+    significant_attributes: dict[str, set[str]],
     include_attributes: bool,
     limit: int,
 ) -> dict[str, Any]:
     """Fetch and format the state changes in the recorder executor."""
-    states = history.get_significant_states(
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        significant_changes_only=significant_changes_only,
-        no_attributes=not include_attributes,
-    )
-    header = ["last_changed", "state"]
-    if include_attributes:
-        header.append("attributes")
+    states: dict[str, list[Any]] = {}
+    # Attribute-only changes are needed for entities with significant attributes.
+    for attribute_changes in (False, True):
+        if query_ids := [
+            entity_id
+            for entity_id in entity_ids
+            if (split_entity_id(entity_id)[0] in significant_attributes)
+            is attribute_changes
+        ]:
+            states.update(
+                history.get_significant_states(
+                    hass,
+                    start_time,
+                    end_time,
+                    query_ids,
+                    significant_changes_only=not attribute_changes,
+                    no_attributes=not (attribute_changes or include_attributes),
+                )
+            )
     result: dict[str, Any] = {}
     for entity_id in entity_ids:
         entry: dict[str, Any] = {}
@@ -168,18 +189,60 @@ def _get_state_changes(
         ):
             entry["unit"] = unit
         entity_states = cast(list[State], states.get(entity_id, []))
-        entry["csv"] = _to_csv(
-            header,
-            [
+        columns = [
+            attribute
+            for attribute in sorted(
+                significant_attributes.get(split_entity_id(entity_id)[0], ())
+            )
+            if any(
+                state.attributes.get(attribute) is not None for state in entity_states
+            )
+        ]
+        rows: list[list[str]] = []
+        previous: list[str] | None = None
+        for state in entity_states:
+            values = [
+                state.state,
+                *(_format_value(state.attributes.get(column)) for column in columns),
+            ]
+            # Skip rows where only insignificant attributes changed.
+            if values == previous:
+                continue
+            previous = values
+            rows.append(
                 [
-                    _format_time(state.last_changed_timestamp),
-                    state.state,
+                    _format_time(state.last_updated_timestamp),
+                    *values,
                     *([json_dumps(state.attributes)] if include_attributes else []),
                 ]
-                for state in _limit_rows(entry, entity_states, limit)
+            )
+        entry["csv"] = _to_csv(
+            [
+                "time",
+                "state",
+                *columns,
+                *(["attributes"] if include_attributes else []),
             ],
+            _limit_rows(entry, rows, limit),
         )
         result[entity_id] = entry
+    return result
+
+
+async def _async_get_significant_attributes(
+    hass: HomeAssistant, entity_ids: list[str]
+) -> dict[str, set[str]]:
+    """Return the significant attributes declared by the entities' domains."""
+    domains = {split_entity_id(entity_id)[0] for entity_id in entity_ids}
+    result: dict[str, set[str]] = {}
+    for domain, integration in (await async_get_integrations(hass, domains)).items():
+        if isinstance(integration, Exception) or not integration.platforms_exists(
+            (SIGNIFICANT_CHANGE_PLATFORM,)
+        ):
+            continue
+        platform = await integration.async_get_platform(SIGNIFICANT_CHANGE_PLATFORM)
+        if attributes := getattr(platform, "SIGNIFICANT_ATTRIBUTES", None):
+            result[domain] = set(attributes)
     return result
 
 
@@ -206,8 +269,11 @@ class GetHistoryTool(Tool):
         "periods. "
         f"Source '{SOURCE_STATE_CHANGES}' returns each recorded state change. Use "
         "it for entities without statistics, to find out when something changed, "
-        "or when the exact values are needed. The first state is the state at the "
-        "start of the period. Raw state changes are usually kept for 10 days. "
+        "or when the exact values are needed. For some domains, such as climate, "
+        "cover and media_player, it also returns the important attributes as "
+        "columns, with a row for each change of them. The first row is the state "
+        "at the start of the period. Raw state changes are usually kept for 10 "
+        "days. "
         "If there are more rows than the limit, only the most recent rows are "
         "returned and 'total' shows how many rows there are."
     )
@@ -253,15 +319,6 @@ class GetHistoryTool(Tool):
                     "(default: picked from the length of the requested time span)."
                 ),
             ): probatio.In(_PERIODS),
-            probatio.Optional(
-                "significant_changes_only",
-                description=(
-                    f"Only for source '{SOURCE_STATE_CHANGES}': only return "
-                    "significant state changes. Set to false to also include "
-                    "attribute-only changes (default: true)."
-                ),
-                default=True,
-            ): probatio.All(probatio.Boolean(), bool),
             probatio.Optional(
                 "include_attributes",
                 description=(
@@ -329,7 +386,7 @@ class GetHistoryTool(Tool):
                 start_time,
                 end_time,
                 args["entity_ids"],
-                args["significant_changes_only"],
+                await _async_get_significant_attributes(hass, args["entity_ids"]),
                 args["include_attributes"],
                 args["limit"],
             )
