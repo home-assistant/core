@@ -181,11 +181,20 @@ def test_climate_availability(
     entity.coordinator = MagicMock(last_update_success=last_update_success)
     entity._device = MagicMock(available=device_available)
     entity._device.management_point.return_value = (
-        MagicMock() if management_point_exists else None
+        SimpleNamespace(
+            climate_control=SimpleNamespace(setpoint_types=["roomTemperature"])
+        )
+        if management_point_exists
+        else None
     )
     entity._embedded_id = "zone"
+    entity._setpoint = "roomTemperature"
 
     assert entity.available is expected
+
+    if expected:
+        entity._setpoint = "leavingWaterTemperature"
+        assert not entity.available
 
 
 async def test_async_climate_command_uses_bound_library_client() -> None:
@@ -411,6 +420,7 @@ async def test_set_hvac_mode_rejects_unavailable_native_mode() -> None:
     entity = object.__new__(DaikinClimate)
     object.__setattr__(entity, "_device", MagicMock(name="Device"))
     entity._native_hvac_mode = MagicMock(return_value=None)
+    entity._climate_control = MagicMock(return_value=None)
     entity._async_execute_climate_command = AsyncMock()
 
     with pytest.raises(ServiceValidationError) as err:
@@ -859,6 +869,23 @@ def test_missing_power_characteristic_uses_operation_mode() -> None:
     )
 
     assert entity._get_hvac_mode() is HVACMode.HEAT_COOL
+
+
+@pytest.mark.parametrize("power_value", [None, "unknown"])
+def test_unknown_power_characteristic_uses_unknown_hvac_mode(
+    power_value: str | None,
+) -> None:
+    """Preserve an omitted or invalid power value as an unknown HVAC state."""
+    entity = object.__new__(DaikinClimate)
+    operation_mode = SimpleNamespace(value="heating")
+    entity._climate_control = MagicMock(
+        return_value=SimpleNamespace(
+            on_off_mode=SimpleNamespace(value=power_value),
+            operation_mode=operation_mode,
+        )
+    )
+
+    assert entity._get_hvac_mode() is None
 
 
 @pytest.mark.parametrize("power_settable", [False, None])
@@ -1353,6 +1380,14 @@ async def test_climate_service_updates_entity_state(
     [
         pytest.param(lambda point: setattr(point, "on_off_mode", None), id="removed"),
         pytest.param(
+            lambda point: setattr(point.on_off_mode, "value", None),
+            id="omitted",
+        ),
+        pytest.param(
+            lambda point: setattr(point.on_off_mode, "value", "unknown"),
+            id="invalid",
+        ),
+        pytest.param(
             lambda point: setattr(point.on_off_mode, "settable", False),
             id="read-only",
         ),
@@ -1367,7 +1402,7 @@ async def test_climate_service_rejects_unavailable_power(
     initial_power: str,
     invalidate_power: Callable[[ManagementPoint], None],
 ) -> None:
-    """Reject lost or read-only power controls without sending a cloud command."""
+    """Reject unavailable power controls without sending a cloud command."""
     await _async_setup_fixture(hass, config_entry, "ururu")
     coordinator = config_entry.runtime_data
     assert coordinator.data is not None
@@ -1397,6 +1432,29 @@ async def test_climate_service_rejects_unavailable_power(
     assert err.value.translation_key == "climate_power_unavailable"
     command.assert_not_awaited()
     assert coordinator.last_patch_call is None
+
+
+@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
+async def test_climate_turn_rejects_unknown_power_state(method: str) -> None:
+    """Reject turn actions when Daikin omits the current power value."""
+    entity = object.__new__(DaikinClimate)
+    device = MagicMock(id="device", name="Device")
+    coordinator = MagicMock()
+    climate_control = SimpleNamespace(
+        on_off_mode=SimpleNamespace(value=None, settable=True)
+    )
+    object.__setattr__(entity, "_device", device)
+    object.__setattr__(entity, "_embedded_id", "zone")
+    entity.coordinator = coordinator
+    entity._climate_control = MagicMock(return_value=climate_control)
+    entity._async_execute_climate_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)()
+
+    assert err.value.translation_key == "climate_power_unavailable"
+    entity._async_execute_climate_command.assert_not_awaited()
+    coordinator.async_update_listeners.assert_not_called()
 
 
 async def test_climate_platform_services_and_management_points(
