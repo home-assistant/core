@@ -1,6 +1,6 @@
 """Test Grandstream sensor platform."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -31,7 +31,7 @@ async def test_sensors(
 async def test_sensor_unavailable_mapping(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gds_api,
+    mock_gds_api: MagicMock,
 ) -> None:
     """Test sensor maps unavailable to no_available_account."""
     mock_config_entry.add_to_hass(hass)
@@ -52,7 +52,7 @@ async def test_sensor_unavailable_mapping(
 async def test_sensor_unknown_returns_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gds_api,
+    mock_gds_api: MagicMock,
 ) -> None:
     """Test sensor returns None for unknown state."""
     mock_config_entry.add_to_hass(hass)

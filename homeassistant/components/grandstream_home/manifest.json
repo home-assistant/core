@@ -5,7 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/grandstream_home",
   "integration_type": "device",
-  "iot_class": "local_push",
+  "iot_class": "local_polling",
   "quality_scale": "bronze",
   "requirements": ["grandstream-home-api==0.1.7"],
   "zeroconf": [

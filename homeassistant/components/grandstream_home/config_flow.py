@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -50,6 +51,24 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         self._firmware_version: str | None = None
         self._device_model: str = DEVICE_TYPE_GDS
         self._product_model: str | None = None
+
+    @callback
+    def _adopt_fallback_entry(self, mac_unique_id: str) -> None:
+        """Rewrite a host:port fallback entry to the discovered MAC unique id.
+
+        An entry created while the device had no reachable MAC is keyed by
+        host:port; adopting it keeps a single entry once the MAC is known.
+        """
+        for entry in self._async_current_entries():
+            stored_port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+            if (
+                entry.data.get(CONF_HOST) == self._host
+                and entry.unique_id == f"{self._host}:{stored_port}"
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=mac_unique_id
+                )
+                return
 
     @override
     async def async_step_user(
@@ -130,7 +149,9 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         self._mac = extract_mac_from_name(self._name) if self._name else None
         # Set unique_id and check if already configured
         if self._mac:
-            await self.async_set_unique_id(format_mac(self._mac))
+            mac_unique_id = format_mac(self._mac)
+            self._adopt_fallback_entry(mac_unique_id)
+            await self.async_set_unique_id(mac_unique_id)
         else:
             # For devices without MAC, use host+port to check for duplicates
             self._async_abort_entries_match(
@@ -175,7 +196,10 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         if error_type == "ha_control_disabled":
             return None, "ha_control_disabled"
 
-        if error_type == "offline":
+        # login() swallows connection errors and returns False, so an unreachable
+        # device surfaces as auth_failed; the online flag is the reliable signal
+        # that the device could not be reached at all.
+        if error_type == "offline" or not api.is_online:
             return None, "cannot_connect"
 
         if not success:
@@ -216,6 +240,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         # Set unique_id before creating entry (prefer MAC if available)
         if not self.unique_id:
             if self._mac:
+                self._adopt_fallback_entry(format_mac(self._mac))
                 await self.async_set_unique_id(format_mac(self._mac))
                 self._abort_if_unique_id_configured()
             else:

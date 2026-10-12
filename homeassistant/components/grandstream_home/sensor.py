@@ -96,8 +96,8 @@ class GrandstreamDeviceSensor(CoordinatorEntity[GrandstreamCoordinator], SensorE
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
-    @override
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
