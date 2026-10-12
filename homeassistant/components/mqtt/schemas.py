@@ -47,6 +47,7 @@ from .const import (
     CONF_QOS,
     CONF_SERIAL_NUMBER,
     CONF_STATE_TOPIC,
+    CONF_SUB_DEVICE,
     CONF_SUGGESTED_AREA,
     CONF_SUPPORT_URL,
     CONF_SW_VERSION,
@@ -130,32 +131,53 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     )
 
 
+MQTT_ENTITY_SUB_DEVICE_INFO_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_IDENTIFIERS): probatio.All(
+            probatio.EnsureList(), [cv.string], probatio.Length(min=1)
+        ),
+        probatio.Optional(CONF_NAME): cv.string,
+    },
+)
+
+_MQTT_DEVICE_INFO_SCHEMA_BASE = probatio.Schema(
+    {
+        probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_CONNECTIONS, default=list): probatio.All(
+            probatio.EnsureList(), [probatio.All(probatio.Length(2), [cv.string])]
+        ),
+        probatio.Optional(CONF_MANUFACTURER): cv.string,
+        probatio.Optional(CONF_MODEL): cv.string,
+        probatio.Optional(CONF_MODEL_ID): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_HW_VERSION): cv.string,
+        probatio.Optional(CONF_SERIAL_NUMBER): cv.string,
+        probatio.Optional(CONF_SW_VERSION): cv.string,
+        probatio.Optional(CONF_VIA_DEVICE): cv.string,
+        probatio.Optional(CONF_SUGGESTED_AREA): cv.string,
+        probatio.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
+    }
+)
+
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = probatio.All(
     # Remove in HA Core 2027.4, together with CONF_DEPRECATED_VIA_HUB
     cv.removed(CONF_DEPRECATED_VIA_HUB, raise_if_present=False),
-    probatio.Schema(
-        {
-            probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(CONF_CONNECTIONS, default=list): probatio.All(
-                probatio.EnsureList(), [probatio.All(probatio.Length(2), [cv.string])]
-            ),
-            probatio.Optional(CONF_MANUFACTURER): cv.string,
-            probatio.Optional(CONF_MODEL): cv.string,
-            probatio.Optional(CONF_MODEL_ID): cv.string,
-            probatio.Optional(CONF_NAME): cv.string,
-            probatio.Optional(CONF_HW_VERSION): cv.string,
-            probatio.Optional(CONF_SERIAL_NUMBER): cv.string,
-            probatio.Optional(CONF_SW_VERSION): cv.string,
-            probatio.Optional(CONF_VIA_DEVICE): cv.string,
-            probatio.Optional(CONF_SUGGESTED_AREA): cv.string,
-            probatio.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
-        }
+    _MQTT_DEVICE_INFO_SCHEMA_BASE.extend(
+        {probatio.Optional(CONF_SUB_DEVICE): MQTT_ENTITY_SUB_DEVICE_INFO_SCHEMA}
     ),
     validate_device_has_at_least_one_identifier,
 )
 
+# Without sub device, as device triggers and tags do not support sub devices,
+# and in device based discovery the sub device is set per component
+MQTT_DEVICE_INFO_SCHEMA = probatio.All(
+    # Remove in HA Core 2027.4, together with CONF_DEPRECATED_VIA_HUB
+    cv.removed(CONF_DEPRECATED_VIA_HUB, raise_if_present=False),
+    _MQTT_DEVICE_INFO_SCHEMA_BASE,
+    validate_device_has_at_least_one_identifier,
+)
 
 MQTT_ORIGIN_INFO_SCHEMA = probatio.All(
     probatio.Schema(
@@ -192,6 +214,16 @@ MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     }
 )
 
+
+def validate_sub_device_has_unique_id(config: ConfigType) -> ConfigType:
+    """Validate that a unique ID is set when a sub device is configured."""
+    if CONF_SUB_DEVICE in config.get(CONF_DEVICE, {}) and CONF_UNIQUE_ID not in config:
+        raise probatio.Invalid(
+            f"'{CONF_UNIQUE_ID}' is required when a '{CONF_SUB_DEVICE}' is configured"
+        )
+    return config
+
+
 _UNIQUE_ID_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_UNIQUE_ID): cv.string},
 ).extend({}, extra=True)
@@ -214,7 +246,7 @@ _COMPONENT_CONFIG_SCHEMA = probatio.All(
 
 DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
-        probatio.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Required(CONF_DEVICE): MQTT_DEVICE_INFO_SCHEMA,
         probatio.Required(CONF_COMPONENTS): probatio.Schema(
             {str: _COMPONENT_CONFIG_SCHEMA}
         ),

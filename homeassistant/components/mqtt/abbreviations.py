@@ -220,6 +220,7 @@ ABBREVIATIONS = {
     "strt_mw_cmd_t": "start_mowing_command_topic",
     "strt_mw_cmd_tpl": "start_mowing_command_template",
     "stype": "subtype",
+    "sub_dev": "sub_device",
     "sug_dsp_prc": "suggested_display_precision",
     "sup_dur": "support_duration",
     "sup_vol": "support_volume_set",
@@ -290,6 +291,7 @@ DEVICE_ABBREVIATIONS = {
     "sw": "sw_version",
     "sa": "suggested_area",
     "sn": "serial_number",
+    "sub_dev": "sub_device",
 }
 
 ORIGIN_ABBREVIATIONS = {
