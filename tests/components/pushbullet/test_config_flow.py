@@ -39,7 +39,10 @@ async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Some name"
-    assert result["data"] == {CONF_NAME: "Some name", CONF_API_KEY: "MYAPIKEY"}
+    assert result["data"] == {
+        CONF_NAME: "Some name ujpah72o0",
+        CONF_API_KEY: "MYAPIKEY",
+    }
     assert result["result"].unique_id == "ujpah72o0"
 
 
@@ -62,10 +65,36 @@ async def test_flow_user_name_falls_back_to_email(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "example@email.com"
     assert result["data"] == {
-        CONF_NAME: "example@email.com",
+        CONF_NAME: "example@email.com ujpah72o0",
         CONF_API_KEY: "MYAPIKEY",
     }
     assert result["result"].unique_id == "ujpah72o0"
+
+
+async def test_flow_user_same_name_unique_notify_name(hass: HomeAssistant) -> None:
+    """Test accounts sharing a display name get different notify names."""
+    names = []
+    for iden in ("ujpah72o0", "ujxpklasd"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        with patch(
+            "homeassistant.components.pushbullet.config_flow.PushBullet",
+            return_value=MagicMock(
+                user_info={"iden": iden, "name": "Some name", "email": "a@b.com"}
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=USER_INPUT,
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Some name"
+        assert result["result"].unique_id == iden
+        names.append(result["data"][CONF_NAME])
+
+    assert names == ["Some name ujpah72o0", "Some name ujxpklasd"]
 
 
 async def test_flow_user_already_configured(

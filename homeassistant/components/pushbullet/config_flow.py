@@ -45,7 +45,8 @@ class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
                 name = user_info.get("name") or user_info["email"]
                 return self.async_create_entry(
                     title=name,
-                    data={CONF_NAME: name, **user_input},
+                    # Display names are not unique, the notify action name must be
+                    data={CONF_NAME: f"{name} {user_info['iden']}", **user_input},
                 )
 
         return self.async_show_form(
