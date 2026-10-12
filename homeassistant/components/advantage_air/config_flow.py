@@ -10,6 +10,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
+from .helpers import get_system_id
 
 ADVANTAGE_AIR_DEFAULT_PORT = 2025
 
@@ -48,7 +49,11 @@ class AdvantageAirConfigFlow(ConfigFlow, domain=DOMAIN):
             except ApiError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(data["system"]["rid"])
+                try:
+                    unique_id = get_system_id(data["system"])
+                except KeyError:
+                    return self.async_abort(reason="no_system_id")
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
