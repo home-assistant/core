@@ -300,7 +300,13 @@ async def test_reload(
 
 
 @pytest.mark.freeze_time("2026-09-11T16:59:00Z")
-@pytest.mark.parametrize("event_type", ["start", "end"])
+@pytest.mark.parametrize(
+    ("event_type", "calls_after_start"),
+    [
+        pytest.param("start", 1, id="start"),
+        pytest.param("end", 0, id="end"),
+    ],
+)
 async def test_calendar_trigger(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -308,6 +314,7 @@ async def test_calendar_trigger(
     mock_event: GridEvent,
     freezer: FrozenDateTimeFactory,
     event_type: str,
+    calls_after_start: int,
 ) -> None:
     """The standard calendar automation fires at the event boundary."""
     mock_client.get_status.return_value = AxleStatus(
@@ -340,7 +347,7 @@ async def test_calendar_trigger(
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == (event_type == "start")
+    assert len(calls) == calls_after_start
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
