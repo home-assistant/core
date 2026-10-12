@@ -47,6 +47,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_API_KEY: SUBSCRIPTION_KEY,
     }
+    assert result2["result"].unique_id == TEST_USER_EMAIL
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -103,9 +104,15 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         return_value=TEST_USER_EMAIL,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
                 CONF_API_KEY: SUBSCRIPTION_KEY,
             },
         )
@@ -136,6 +143,21 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch(
+            "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
+            return_value=TEST_USER_EMAIL,
+        ),
+        patch(
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: SUBSCRIPTION_KEY},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_exception_on_subscription_key_check(
     hass: HomeAssistant,
@@ -160,3 +182,18 @@ async def test_user_flow_exception_on_subscription_key_check(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with (
+        patch(
+            "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
+            return_value=TEST_USER_EMAIL,
+        ),
+        patch(
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: SUBSCRIPTION_KEY},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

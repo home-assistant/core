@@ -83,7 +83,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
     _attr_min_humidity = 10
     _attr_max_humidity = 50
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
 
     @property
@@ -165,7 +165,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Get current temperature."""
         return self.coordinator.data.get(
             Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
@@ -173,15 +173,15 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Get the target temperature."""
 
         hvac_mode = self.hvac_mode
 
         if hvac_mode == HVACMode.COOL:
-            return self.target_temperature_high
+            return self.native_target_temperature_high
         if hvac_mode == HVACMode.HEAT:
-            return self.target_temperature_low
+            return self.native_target_temperature_low
 
         return None
 
@@ -197,13 +197,13 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Get cool setpoint."""
         return self.coordinator.data.get(Attribute.COOL_SETPOINT)
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Get heat setpoint."""
         return self.coordinator.data.get(Attribute.HEAT_SETPOINT)
 

@@ -25,7 +25,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     media = await media_source.async_browse_media(hass, "")
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert media.title == "media"
-    assert len(media.children) == 2
+    assert len(media.children) == 3
 
     # Test content filter
     media = await media_source.async_browse_media(
@@ -37,7 +37,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     assert media.title == "media"
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
-    assert media.not_shown == 1
+    assert media.not_shown == 2
 
     # Test content filter adds to original not_shown
     orig_browse = models.MediaSourceItem.async_browse
@@ -61,7 +61,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     assert media.title == "media"
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
-    assert media.not_shown == 11
+    assert media.not_shown == 12
 
     # Test invalid media content
     with pytest.raises(BrowseError):

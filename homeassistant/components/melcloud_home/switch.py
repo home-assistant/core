@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action, unit_ids
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
@@ -30,6 +30,7 @@ class MelCloudHomeSwitchEntityDescription[_UnitT: ATAUnit | ATWUnit](
 
     available_fn: Callable[[_UnitT], bool]
     is_on_fn: Callable[[_UnitT], bool | None]
+    supported_fn: Callable[[_UnitT], bool] = lambda _: True
     turn_on_fn: Callable[[MELCloudHome, _UnitT], Coroutine[Any, Any, None]]
     turn_off_fn: Callable[[MELCloudHome, _UnitT], Coroutine[Any, Any, None]]
 
@@ -91,6 +92,26 @@ def _switch_descriptions[_UnitT: ATAUnit | ATWUnit](
                 **unit_ids(unit),
             ),
         ),
+        MelCloudHomeSwitchEntityDescription(
+            key="standby",
+            translation_key="standby",
+            device_class=SwitchDeviceClass.SWITCH,
+            supported_fn=lambda unit: bool(
+                unit.capabilities and unit.capabilities.has_standby_mode
+            ),
+            available_fn=lambda _: True,
+            is_on_fn=lambda unit: unit.in_standby_mode,
+            turn_on_fn=lambda client, unit: (
+                client.control_ata_unit(unit.id, in_standby_mode=True)
+                if isinstance(unit, ATAUnit)
+                else client.control_atw_unit(unit.id, in_standby_mode=True)
+            ),
+            turn_off_fn=lambda client, unit: (
+                client.control_ata_unit(unit.id, in_standby_mode=False)
+                if isinstance(unit, ATAUnit)
+                else client.control_atw_unit(unit.id, in_standby_mode=False)
+            ),
+        ),
     )
 
 
@@ -108,19 +129,22 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home switches."""
+    coordinator = entry.runtime_data.coordinator
 
     async_setup_unit_entities(
-        entry.runtime_data,
+        coordinator,
         async_add_entities,
         lambda units: (
-            ATASwitch(entry.runtime_data, entity_description, unit)
+            ATASwitch(coordinator, entity_description, unit)
             for entity_description in ATA_SWITCHES
             for unit in units
+            if entity_description.supported_fn(unit)
         ),
         lambda units: (
-            ATWSwitch(entry.runtime_data, entity_description, unit)
+            ATWSwitch(coordinator, entity_description, unit)
             for entity_description in ATW_SWITCHES
             for unit in units
+            if entity_description.supported_fn(unit)
         ),
     )
 
@@ -129,17 +153,6 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
     """Representation of a MELCloud Home ATA switch."""
 
     entity_description: MelCloudHomeSwitchEntityDescription[ATAUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeSwitchEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
     @override
@@ -155,7 +168,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable the protection."""
+        """Turn the switch on."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
@@ -163,7 +176,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable the protection."""
+        """Turn the switch off."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
@@ -175,17 +188,6 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
 
     entity_description: MelCloudHomeSwitchEntityDescription[ATWUnit]
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeSwitchEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
-
     @property
     @override
     def available(self) -> bool:
@@ -200,7 +202,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable the protection."""
+        """Turn the switch on."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
@@ -208,7 +210,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable the protection."""
+        """Turn the switch off."""
         await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),

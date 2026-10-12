@@ -39,9 +39,9 @@ async def test_nexia_sensor_switch(
 
     await setup_integration(hass, patch_nexia_home)
 
-    sw1_id = f"{Platform.SWITCH}.center_nativezone_center_nativezone_include_center"
+    sw1_id = f"{Platform.SWITCH}.zone3_zone3_include_center"
     sw1 = {ATTR_ENTITY_ID: sw1_id}
-    sw2_id = f"{Platform.SWITCH}.center_nativezone_center_nativezone_include_upstairs"
+    sw2_id = f"{Platform.SWITCH}.zone3_zone3_include_upstairs"
     sw2 = {ATTR_ENTITY_ID: sw2_id}
 
     # Switch starts out on

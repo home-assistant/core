@@ -144,11 +144,10 @@ async def async_migrate_entry(
             # (plant selection happens in config flow)
             # If it does, this indicates a corrupted config entry
             if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
-                _LOGGER.error(
-                    "V1 API config entry has DEFAULT_PLANT_ID, which indicates a "
-                    "corrupted configuration. Please reconfigure the integration"
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="migration_invalid_plant_id",
                 )
-                return False
 
             # Classic API with DEFAULT_PLANT_ID - resolve to actual plant_id
             if config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
@@ -157,11 +156,10 @@ async def async_migrate_entry(
                 url = config.get(CONF_URL, DEFAULT_URL)
 
                 if not username or not password:
-                    # Credentials missing - cannot migrate
-                    _LOGGER.error(
-                        "Cannot migrate DEFAULT_PLANT_ID due to missing credentials"
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_missing_credentials",
                     )
-                    return False
 
                 try:
                     # Create API instance and login
@@ -174,20 +172,20 @@ async def async_migrate_entry(
                         api.plant_list, login_response["user"]["id"]
                     )
                 except (ConfigEntryError, RequestException, JSONDecodeError) as ex:
-                    # API failure during migration - return False to retry later
-                    _LOGGER.error(
-                        "Failed to resolve plant_id during migration: %s. "
-                        "Migration will retry on next restart",
-                        ex,
-                    )
-                    return False
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_plant_id_failed",
+                    ) from ex
 
-                if not plant_info or "data" not in plant_info or not plant_info["data"]:
-                    _LOGGER.error(
-                        "No plants found for this account. "
-                        "Migration will retry on next restart"
+                # plant_list() is annotated as list, but the classic API returns
+                # {"data": [...]}. Remove once the annotation is fixed upstream:
+                # https://github.com/indykoning/PyPi_GrowattServer/issues/157
+                if not isinstance(plant_info, dict) or not plant_info.get("data"):
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_no_plants",
+                        translation_placeholders={"username": username},
                     )
-                    return False
 
                 first_plant_id = plant_info["data"][0]["plantId"]
 
@@ -333,6 +331,7 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
+    api: growattServer.GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]

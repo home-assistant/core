@@ -7,7 +7,7 @@ from typing import Final
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -15,7 +15,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
@@ -27,9 +27,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -53,6 +56,7 @@ from .const import (
 )
 from .coordinator import (
     ShellyBlockCoordinator,
+    ShellyBluTrvUpdateCoordinator,
     ShellyConfigEntry,
     ShellyEntryData,
     ShellyRestCoordinator,
@@ -64,6 +68,7 @@ from .repairs import (
     async_manage_deprecated_firmware_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_rtsp_disabled_issue,
 )
 from .services import async_setup_services
 from .utils import (
@@ -73,6 +78,7 @@ from .utils import (
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
+    get_rpc_key_ids,
     get_rpc_scripts_event_types,
     get_ws_context,
     is_rpc_ble_scanner_supported,
@@ -83,6 +89,7 @@ from .utils import (
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
@@ -110,12 +117,14 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.UPDATE,
 ]
 
-COAP_SCHEMA: Final = vol.Schema(
+COAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): probatio.Port(),
     }
 )
-CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = probatio.Schema(
+    {DOMAIN: COAP_SCHEMA}, extra=probatio.ALLOW_EXTRA
+)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
@@ -157,14 +166,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bo
     # error. The config entry data for this custom component doesn't contain host
     # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
-        LOGGER.warning(
-            (
-                "The config entry %s probably comes from a custom integration, please"
-                " remove it if you want to use core Shelly integration"
-            ),
-            entry.title,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="custom_integration_entry",
+            translation_placeholders={"title": entry.title},
         )
-        return False
 
     if get_device_entry_gen(entry) in RPC_GENERATIONS:
         return await _async_setup_rpc_entry(hass, entry)
@@ -379,6 +385,17 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 )
 
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+        if get_rpc_key_ids(device.status, BLU_TRV_IDENTIFIER):
+            runtime_data.rpc_blu_trv_update = ShellyBluTrvUpdateCoordinator(
+                hass, entry, device
+            )
+            # Checking the firmware repository reaches out to the internet, so it must
+            # not hold up setup; the update entities pick the result up when it lands.
+            entry.async_create_background_task(
+                hass,
+                runtime_data.rpc_blu_trv_update.async_refresh(),
+                "blu trv firmware check",
+            )
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
@@ -392,6 +409,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             entry,
         )
         async_manage_open_wifi_ap_issue(hass, entry)
+        async_manage_rtsp_disabled_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

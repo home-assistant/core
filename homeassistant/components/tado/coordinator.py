@@ -24,6 +24,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
+    TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,11 +69,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
+        self.heating_circuits: dict[str, dict[str, Any]] = {}
+        self._heating_circuits_loaded = False
         self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
+            "zone_control": {},
         }
 
         self._current_interval: float = 0
@@ -113,6 +117,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
+
+        # Heating circuits are configuration, so fetching them once is enough.
+        if not self._heating_circuits_loaded:
+            await self._async_fetch_heating_circuits()
+            self._heating_circuits_loaded = True
 
         devices = await self._async_update_devices()
         zones = await self._async_update_zones()
@@ -213,11 +222,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             devices = await self.hass.async_add_executor_job(self._tado.get_devices)
         except RequestException as err:
-            _LOGGER.error("Error updating Tado devices: %s", err)
             raise UpdateFailed(f"Error updating Tado devices: {err}") from err
 
         if not devices:
-            _LOGGER.error("No linked devices found for home ID %s", self.home_id)
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
         return await self.hass.async_add_executor_job(self._update_device_info, devices)
@@ -261,7 +268,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             zone_states = zone_states_call["zoneStates"]
         except RequestException as err:
-            _LOGGER.error("Error updating Tado zones: %s", err)
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
         mapped_zones: dict[int, TadoZone] = {}
@@ -279,7 +285,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._tado.get_zone_overlay_default, zone_id
             )
         except RequestException as err:
-            _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
         data = TadoZone.from_data(zone_id, {**raw_state, **overlay_default})
@@ -294,7 +299,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._tado.get_zone_state, zone_id
             )
         except RequestException as err:
-            _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
         _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
@@ -310,7 +314,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             weather, geofence = await self.hass.async_add_executor_job(_get_home_data)
         except RequestException as err:
-            _LOGGER.error("Error updating Tado home: %s", err)
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
 
         _LOGGER.debug(
@@ -470,6 +473,43 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+
+    async def _async_fetch_heating_circuits(self) -> None:
+        """Fetch the heating circuits and their current per-zone assignment."""
+        heating_zones = [zone for zone in self.zones if zone["type"] == TYPE_HEATING]
+        if not heating_zones:
+            return
+
+        def _load_circuits() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:
+            return self._tado.get_heating_circuits(), {
+                zone["id"]: self._tado.get_zone_control(zone["id"])
+                for zone in heating_zones
+            }
+
+        try:
+            circuits, controls = await self.hass.async_add_executor_job(_load_circuits)
+        except RequestException as err:
+            raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
+
+        self.heating_circuits = {
+            circuit["driverShortSerialNo"]: circuit for circuit in circuits
+        }
+        self.data["zone_control"] = controls
+
+    async def set_heating_circuit(
+        self, zone_id: int, circuit_number: int | None
+    ) -> None:
+        """Assign a heating circuit to a zone, or clear it when None."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_zone_heating_circuit, zone_id, circuit_number
+            )
+        except RequestException as err:
+            raise HomeAssistantError(
+                f"Error setting Tado heating circuit for zone {zone_id}: {err}"
+            ) from err
+
+        self.data["zone_control"][zone_id]["heatingCircuit"] = circuit_number
 
     def get_rate_limit(self) -> dict[str, str]:
         """Get the current rate limit status from Tado."""

@@ -8,9 +8,9 @@ from unittest.mock import ANY, patch
 
 from aiohttp import ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import const, core as ha
 from homeassistant.auth.models import Credentials
@@ -20,6 +20,11 @@ from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -943,6 +948,55 @@ async def test_api_call_service_not_found(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [
+        pytest.param(
+            ServiceValidationError("Bad input"),
+            HTTPStatus.BAD_REQUEST,
+            id="service_validation_error",
+        ),
+        pytest.param(
+            HomeAssistantError("Something failed"),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            id="home_assistant_error",
+        ),
+    ],
+)
+async def test_api_call_service_raises(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    error: HomeAssistantError,
+    status: HTTPStatus,
+) -> None:
+    """Test the API returns a JSON error if the service raises."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Raise the configured error."""
+        raise error
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == status
+    assert await resp.json() == {"message": str(error)}
+
+
+async def test_api_call_service_unauthorized(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test the API returns 401 if the service denies permission."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Deny the call."""
+        raise Unauthorized
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_api_call_service_bad_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -955,7 +1009,7 @@ async def test_api_call_service_bad_data(
         test_value.append(1)
 
     hass.services.async_register(
-        "test_domain", "test_service", listener, schema=vol.Schema({"hello": str})
+        "test_domain", "test_service", listener, schema=probatio.Schema({"hello": str})
     )
 
     resp = await mock_api_client.post(

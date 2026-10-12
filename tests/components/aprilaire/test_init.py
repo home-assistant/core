@@ -1,6 +1,6 @@
 """Tests for the Aprilaire integration setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyaprilaire.const import Attribute
 from syrupy.assertion import SnapshotAssertion
@@ -27,6 +27,7 @@ async def test_device_registry(
     config_entry.add_to_hass(hass)
 
     client = AsyncMock()
+    client.stop_listen = MagicMock()
     client.data = {
         Attribute.MAC_ADDRESS: "1234567890ab",
         Attribute.NAME: "Aprilaire",

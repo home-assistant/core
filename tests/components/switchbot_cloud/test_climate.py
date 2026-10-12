@@ -1,7 +1,8 @@
 """Test for the switchbot_cloud climate."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from switchbot_api import Device, Remote, SmartRadiatorThermostatCommands, SwitchBotAPI
 
 from homeassistant.components.climate import (
@@ -20,6 +21,8 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import configure_integration
 
@@ -130,6 +133,101 @@ async def test_air_conditioner_set_temperature(
     assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 25
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected_command", "expected_state"),
+    [
+        pytest.param(
+            {ATTR_TEMPERATURE: 27, ATTR_HVAC_MODE: HVACMode.DRY},
+            "27,3,1,on",
+            HVACMode.DRY,
+            id="with_hvac_mode",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 27},
+            "27,4,1,off",
+            HVACMode.OFF,
+            id="without_hvac_mode",
+        ),
+    ],
+)
+async def test_air_conditioner_set_temperature_while_off(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    service_data: dict[str, float | HVACMode],
+    expected_command: str,
+    expected_state: HVACMode,
+) -> None:
+    """Test setting the temperature of an air conditioner that is off."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entity_id = "climate.climate_1"
+    mock_restore_cache(hass, (State(entity_id, HVACMode.OFF),))
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+        mock_send_command.assert_called_once()
+        assert expected_command in str(mock_send_command.call_args)
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+    assert state.attributes[ATTR_TEMPERATURE] == 27
+
+
+async def test_air_conditioner_set_temperature_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+) -> None:
+    """Test setting the temperature with an hvac mode the air conditioner lacks."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "climate.climate_1"
+
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TEMPERATURE: 27,
+                ATTR_HVAC_MODE: HVACMode.AUTO,
+            },
+            blocking=True,
+        )
+
+    mock_send_command.assert_not_called()
+    assert hass.states.get(entity_id).state == HVACMode.FAN_ONLY
+
+
 async def test_air_conditioner_restore_state(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
@@ -160,6 +258,44 @@ async def test_air_conditioner_restore_state(
     assert state.state == "cool"
     assert state.attributes[ATTR_FAN_MODE] == "high"
     assert state.attributes[ATTR_TEMPERATURE] == 25
+
+
+@pytest.mark.parametrize(
+    ("restored_temperature", "expected_temperature"),
+    [
+        pytest.param(75, 75, id="restored_as_published"),
+        pytest.param(19381607032619749376, 70, id="corrupted_falls_back_to_default"),
+    ],
+)
+async def test_air_conditioner_restore_state_in_fahrenheit(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    restored_temperature: float,
+    expected_temperature: float,
+) -> None:
+    """Test the target temperature is restored in the unit it was published in."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entity_id = "climate.climate_1"
+    mock_restore_cache(
+        hass,
+        (State(entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}),),
+    )
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
 
 
 async def test_air_conditioner_no_last_state(

@@ -68,6 +68,17 @@ class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
         friendly_name = slug_name.replace("_", " ")
         self._attr_name = friendly_name[0:1].upper() + friendly_name[1:].lower()
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""

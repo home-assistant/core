@@ -1,5 +1,7 @@
 """Base entity for the Ridder HortiMaX Pro (HortOS) integration."""
 
+from typing import override
+
 from aiohortos import Readout
 
 from homeassistant.helpers import device_registry as dr
@@ -45,6 +47,12 @@ class HortimaxEntity(CoordinatorEntity[HortimaxCoordinator]):
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the controller this readout belongs to is known."""
+        return super().available and self._device_id in self.coordinator.data
 
     @property
     def readout(self) -> Readout | None:

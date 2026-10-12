@@ -5,7 +5,7 @@ import binascii
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -70,7 +70,7 @@ class BLEDeviceTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_IRK: irk_bytes.hex()},
                 )
 
-        data_schema = vol.Schema({CONF_IRK: str})
+        data_schema = probatio.Schema({probatio.Required(CONF_IRK): str})
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )

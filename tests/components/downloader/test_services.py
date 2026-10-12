@@ -3,10 +3,10 @@
 import asyncio
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 
+import probatio
 import pytest
 import requests
 from requests_mock import Mocker
-import voluptuous as vol
 
 from homeassistant.components.downloader.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -84,17 +84,17 @@ async def test_download_headers_passed_through(
 @pytest.mark.parametrize(
     ("headers", "expected_result"),
     [
-        (1, pytest.raises(vol.error.Invalid)),  # Not a dictionary
+        (1, pytest.raises(probatio.error.Invalid)),  # Not a dictionary
         ({"Accept": "application/json"}, does_not_raise()),
         ({123: 456.789}, does_not_raise()),  # Convert numbers to strings
         (
             {"Accept": ["application/json"]},
-            pytest.raises(vol.error.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
         ),  # Value is not a string
-        ({1: None}, pytest.raises(vol.error.MultipleInvalid)),  # Value is None
+        ({1: None}, pytest.raises(probatio.error.MultipleInvalid)),  # Value is None
         (
             {None: "application/json"},
-            pytest.raises(vol.error.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
         ),  # Key is None
     ],
 )

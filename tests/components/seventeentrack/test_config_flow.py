@@ -54,6 +54,7 @@ async def test_create_entry(
         CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
         CONF_USERNAME: "someemail@gmail.com",
     }
+    assert result2["result"].unique_id == ACCOUNT_ID
 
 
 @pytest.mark.parametrize(
@@ -81,10 +82,16 @@ async def test_flow_fails(
     """Test that the user step fails."""
     mock_seventeentrack.return_value.profile.login.return_value = return_value
     mock_seventeentrack.return_value.profile.login.side_effect = side_effect
-    failed_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    failed_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        VALID_CONFIG,
     )
 
     assert failed_result["errors"] == {"base": error}

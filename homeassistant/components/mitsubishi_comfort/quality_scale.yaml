@@ -33,9 +33,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: No service actions registered.
+  action-exceptions: done
   reauthentication-flow: todo
   parallel-updates: todo
   test-coverage: todo
@@ -63,7 +61,7 @@ rules:
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: done
-  repair-issues: todo
+  repair-issues: done
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done

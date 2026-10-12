@@ -395,9 +395,7 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
                 ),
             ],
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -522,7 +520,7 @@ async def test_firmware_options_flow_thread(
     }
 
 
-@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.usefixtures("addon_store_info", "supervisor_client")
 async def test_options_flow_multipan_uninstall(hass: HomeAssistant) -> None:
     """Test options flow for when multi-PAN firmware is installed."""
     mock_integration(hass, MockModule("hassio"))

@@ -887,12 +887,23 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.update_time: float | None = None
         self._attr_native_value = self.entity_description.value_fn(self)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.entity_id)
+        ].add(self._attr_unique_id)
         return await super().async_added_to_hass()
 
     @override
@@ -900,7 +911,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         """When removed from hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].remove(self.entity_id)
+        ].remove(self._attr_unique_id)
         return await super().async_will_remove_from_hass()
 
     @callback

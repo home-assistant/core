@@ -2059,7 +2059,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     utility_meter_config_entry = MockConfigEntry(
         data={},
@@ -2071,7 +2071,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": ["peak", "offpeak"],
         },
         title="Energy",
@@ -2082,11 +2082,11 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    utility_meter_entity = entity_registry.async_get("sensor.energy_peak")
+    utility_meter_entity = entity_registry.async_get("sensor.mock_title_energy_peak")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
 
-    utility_meter_entity = entity_registry.async_get("sensor.energy_offpeak")
+    utility_meter_entity = entity_registry.async_get("sensor.mock_title_energy_offpeak")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
 
@@ -2100,7 +2100,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": [],
         },
         title="Energy",
@@ -2113,7 +2113,9 @@ async def test_device_id(
     )
     await hass.async_block_till_done()
 
-    utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
+    utility_meter_no_tariffs_entity = entity_registry.async_get(
+        "sensor.mock_title_energy"
+    )
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
 

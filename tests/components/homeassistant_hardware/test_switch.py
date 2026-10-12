@@ -181,6 +181,7 @@ async def test_switch_default_off_state(
 )
 async def test_switch_restore_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     switch_config_entry: ConfigEntry,
     mock_firmware_client,
     initial_state: str,
@@ -204,7 +205,6 @@ async def test_switch_restore_state(
     ]
 
     # Verify entity registry attributes
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_entry = entity_registry.async_get(TEST_SWITCH_ENTITY_ID)
     assert entity_entry is not None
     assert entity_entry.entity_category == EntityCategory.CONFIG

@@ -62,7 +62,9 @@ async def async_setup_platform(
     json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     value_template: ValueTemplate | None = sensor_config.get(CONF_VALUE_TEMPLATE)
-    data = CommandSensorData(hass, command, command_timeout)
+    data = CommandSensorData(
+        hass, command, command_timeout, SENSOR_DOMAIN, sensor_config[CONF_NAME]
+    )
 
     trigger_entity_config = {
         CONF_NAME: Template(sensor_config[CONF_NAME], hass),
@@ -205,15 +207,28 @@ class CommandSensor(ManualTriggerSensorEntity):
 class CommandSensorData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, hass: HomeAssistant, command: str, command_timeout: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        command: str,
+        command_timeout: int,
+        platform: str,
+        name: str,
+    ) -> None:
         """Initialize the data object."""
         self.value: str | None = None
         self.hass = hass
         self.command = command
         self.timeout = command_timeout
+        self.platform = platform
+        self.name = name
 
     async def async_update(self) -> None:
         """Get the latest data with a shell command."""
-        if not (command := render_template_args(self.hass, self.command)):
+        if not (
+            command := render_template_args(
+                self.hass, self.command, self.platform, self.name
+            )
+        ):
             return
         self.value = await async_check_output_or_log(command, self.timeout)

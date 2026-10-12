@@ -734,7 +734,36 @@ DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
-async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
+def _device_payload(device_entry: dr.AnyDeviceEntry) -> dict[str, Any]:
+    """Return the analytics payload for a device or child device."""
+    if isinstance(device_entry, dr.ChildDeviceEntry):
+        # A child device carries no hardware or firmware metadata of its own;
+        # it is reported with its parent referenced as via_device.
+        return {
+            "entry_type": None,
+            "has_configuration_url": False,
+            "hw_version": None,
+            "manufacturer": None,
+            "model": None,
+            "model_id": None,
+            "sw_version": None,
+            "via_device": device_entry.parent_device_id,
+            "entities": [],
+        }
+    return {
+        "entry_type": device_entry.entry_type,
+        "has_configuration_url": device_entry.configuration_url is not None,
+        "hw_version": device_entry.hw_version,
+        "manufacturer": device_entry.manufacturer,
+        "model": device_entry.model,
+        "model_id": device_entry.model_id,
+        "sw_version": device_entry.sw_version,
+        "via_device": device_entry.via_device_id,
+        "entities": [],
+    }
+
+
+async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     """Return detailed information about entities and devices for a snapshot."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -745,13 +774,17 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
     removed_devices: set[str] = set()
 
     # Get device list
-    for device_entry in dev_reg.devices.values():
+    for device_entry in (*dev_reg.devices, *dev_reg.child_devices):
         config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:
             continue
 
-        if device_entry.entry_type is dr.DeviceEntryType.SERVICE:
+        # Only full devices can be service devices; child devices never are.
+        if (
+            isinstance(device_entry, dr.DeviceEntry)
+            and device_entry.entry_type is dr.DeviceEntryType.SERVICE
+        ):
             removed_devices.add(device_entry.id)
             continue
 
@@ -849,23 +882,15 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
                 removed_devices.add(device_id)
                 continue
 
-            device_entry = dev_reg.devices[device_id]
+            resolved_device = dev_reg.async_get(device_id)
+            if resolved_device is None:
+                # The device was removed while we were awaiting above
+                removed_devices.add(device_id)
+                continue
 
             device_id_mapping[device_id] = (integration_domain, len(devices_info))
 
-            devices_info.append(
-                {
-                    "entry_type": device_entry.entry_type,
-                    "has_configuration_url": device_entry.configuration_url is not None,
-                    "hw_version": device_entry.hw_version,
-                    "manufacturer": device_entry.manufacturer,
-                    "model": device_entry.model,
-                    "model_id": device_entry.model_id,
-                    "sw_version": device_entry.sw_version,
-                    "via_device": device_entry.via_device_id,
-                    "entities": [],
-                }
-            )
+            devices_info.append(_device_payload(resolved_device))
 
     # Fill out via_device with new device ids
     for integration_info in integrations_info.values():

@@ -64,6 +64,7 @@ async def test_state_district(hass: HomeAssistant) -> None:
         "region": "2.2",
         "name": result4["title"],
     }
+    assert result4["result"].unique_id == "2.2"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -113,6 +114,7 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
         "region": "3.2.1",
         "name": result5["title"],
     }
+    assert result5["result"].unique_id == "3.2.1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

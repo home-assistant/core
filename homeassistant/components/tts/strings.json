@@ -1,4 +1,15 @@
 {
+  "exceptions": {
+    "invalid_provider": {
+      "message": "The selected text-to-speech provider is not available."
+    },
+    "language_not_supported": {
+      "message": "Language {language} is not supported."
+    },
+    "unsupported_options": {
+      "message": "Unsupported options: {options}."
+    }
+  },
   "services": {
     "clear_cache": {
       "description": "Removes all cached text-to-speech files and purges the memory.",

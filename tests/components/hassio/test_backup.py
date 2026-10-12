@@ -456,6 +456,25 @@ async def _setup_backup_platform(
             ),
             [mock_backup_agent("local", DOMAIN)],
         ),
+        pytest.param(
+            MountsInfo(
+                default_backup_mount=None,
+                mounts=[
+                    supervisor_mounts.DiskMountResponse(
+                        uuid="0a1b2c3d-4e5f-6789-abcd-ef0123456789",
+                        filesystem="ext4",
+                        name="test",
+                        read_only=False,
+                        state=supervisor_mounts.MountState.ACTIVE,
+                        user_path=None,
+                        usage=supervisor_mounts.MountUsage.BACKUP,
+                        type=supervisor_mounts.MountType.DISK,
+                    )
+                ],
+            ),
+            [mock_backup_agent("local", DOMAIN), mock_backup_agent("test", DOMAIN)],
+            id="disk_backup_mount",
+        ),
     ],
 )
 async def test_agent_info(
@@ -1122,6 +1141,7 @@ async def test_reader_writer_create(
 )
 async def test_reader_writer_create_addon_folder_error(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     hass_supervisor_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
@@ -1146,7 +1166,6 @@ async def test_reader_writer_create_addon_folder_error(
         ),
     ]
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert not issue_registry.issues
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})

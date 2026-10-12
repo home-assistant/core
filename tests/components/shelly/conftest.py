@@ -367,6 +367,10 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
 }
 
 
+# Firmware ID of the newest BLU TRV firmware in the Shelly repository
+MOCK_BLU_TRV_AVAILABLE_FIRMWARE = "20250321-100000/v1.3.0@abcdef01"
+
+
 MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
     "auth": False,
@@ -464,6 +468,25 @@ MOCK_STATUS_RPC = {
     },
     "voltmeter:100": {"voltage": 4.321, "xvoltage": 12.34},
     "wifi": {"rssi": -63},
+}
+
+MOCK_CAMERA_CONFIG = {
+    "camera:0": {
+        "id": 0,
+        "rtsp": {"enable": True},
+    }
+}
+
+MOCK_CAMERA_STATUS = {
+    "camera:0": {
+        "id": 0,
+        "privacy": False,
+        "arm": True,
+        "streamer": "running",
+        "motion": False,
+        "streams": 0,
+        "recordings": None,
+    }
 }
 
 MOCK_SCRIPTS = [
@@ -584,6 +607,7 @@ def _mock_rpc_device(version: str | None = None):
         zigbee_firmware=False,
         ip_address="10.10.10.10",
         wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
     )
@@ -611,7 +635,12 @@ def _mock_blu_rtv_device(version: str | None = None):
         ),
         xmod_info={},
         wifi_setconfig=AsyncMock(return_value={}),
+        ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={}),
+        blu_trv_check_for_updates=AsyncMock(
+            return_value=MOCK_BLU_TRV_AVAILABLE_FIRMWARE
+        ),
+        blu_trv_update_firmware=AsyncMock(),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -688,9 +717,15 @@ async def mock_blu_trv():
                 {}, RpcUpdateType.STATUS
             )
 
+        def event():
+            blu_trv_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.EVENT
+            )
+
         device = _mock_blu_rtv_device()
         blu_trv_device_mock.return_value = device
         blu_trv_device_mock.return_value.mock_update = Mock(side_effect=update)
+        blu_trv_device_mock.return_value.mock_event = Mock(side_effect=event)
 
         yield blu_trv_device_mock.return_value
 
@@ -821,3 +856,14 @@ def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
         "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
     ):
         yield
+
+
+@pytest.fixture
+def mock_camera_rpc_device(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
+) -> Mock:
+    """Set up mock RPC device with camera component data."""
+    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CAMERA_CONFIG)
+    monkeypatch.setattr(mock_rpc_device, "status", MOCK_CAMERA_STATUS)
+
+    return mock_rpc_device
