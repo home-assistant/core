@@ -68,9 +68,6 @@
             }
           }
         }
-      },
-      "setpoint": {
-        "name": "Setpoint {setpoint}"
       }
     }
   },

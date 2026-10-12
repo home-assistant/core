@@ -111,9 +111,15 @@ def _create_climate_entities(
             continue
         entities.extend(
             DaikinClimate(
-                device, setpoint_type, coordinator, management_point.embedded_id
+                device,
+                setpoint_type,
+                coordinator,
+                management_point.embedded_id,
+                description,
             )
             for setpoint_type in climate_control.setpoint_types
+            if (description := CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type))
+            is not None
         )
     return entities
 
@@ -133,20 +139,14 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         setpoint: str,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
+        description: ClimateEntityDescription,
     ) -> None:
         """Initialize the climate device."""
         super().__init__(coordinator, device)
         self._embedded_id = embedded_id
         self._setpoint = setpoint
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._setpoint}"
-        self.entity_description = CLIMATE_ENTITY_DESCRIPTIONS.get(
-            setpoint,
-            ClimateEntityDescription(
-                key=setpoint,
-                translation_key="setpoint",
-                translation_placeholders={"setpoint": setpoint},
-            ),
-        )
+        self.entity_description = description
         self._update_state()
 
     def _update_state(self) -> None:

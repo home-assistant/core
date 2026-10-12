@@ -25,10 +25,12 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.daikin_onecta.climate import (
+    CLIMATE_ENTITY_DESCRIPTIONS,
     DaikinClimate,
     _create_climate_entities,
 )
@@ -109,6 +111,7 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
                 "roomTemperature",
                 "leavingWaterOffset",
                 "leavingWaterTemperature",
+                "unknownTemperature",
             ]
         ),
     )
@@ -122,9 +125,36 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
         _create_climate_entities(device, coordinator)
 
     assert climate.call_args_list == [
-        ((device, "roomTemperature", coordinator, "main_zone"), {}),
-        ((device, "leavingWaterOffset", coordinator, "main_zone"), {}),
-        ((device, "leavingWaterTemperature", coordinator, "main_zone"), {}),
+        (
+            (
+                device,
+                "roomTemperature",
+                coordinator,
+                "main_zone",
+                CLIMATE_ENTITY_DESCRIPTIONS["roomTemperature"],
+            ),
+            {},
+        ),
+        (
+            (
+                device,
+                "leavingWaterOffset",
+                coordinator,
+                "main_zone",
+                CLIMATE_ENTITY_DESCRIPTIONS["leavingWaterOffset"],
+            ),
+            {},
+        ),
+        (
+            (
+                device,
+                "leavingWaterTemperature",
+                coordinator,
+                "main_zone",
+                CLIMATE_ENTITY_DESCRIPTIONS["leavingWaterTemperature"],
+            ),
+            {},
+        ),
     ]
 
 
@@ -1498,6 +1528,7 @@ async def test_setup_creates_entities_per_management_point(
             setpoint: str,
             coordinator: MagicMock,
             embedded_id: str,
+            description: ClimateEntityDescription,
         ) -> None:
             """Initialize the test entity."""
             self._attr_unique_id = f"{device.id}_{embedded_id}_{setpoint}"
