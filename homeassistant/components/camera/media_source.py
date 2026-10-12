@@ -95,6 +95,9 @@ class CameraMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
+        if not camera.is_on:
+            raise Unresolvable(f"Camera {item.identifier} is off")
+
         snapshot = await _async_get_image(camera)
         return MediaImage(snapshot.content, snapshot.content_type)
 

@@ -167,3 +167,20 @@ async def test_get_media_image_non_existing_camera(hass: HomeAssistant) -> None:
         await media_source.async_get_media_image(
             hass, "media-source://camera/camera.non_existing"
         )
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_get_media_image_camera_off(hass: HomeAssistant) -> None:
+    """Test getting a snapshot of a camera that is off."""
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.is_on",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        pytest.raises(
+            media_source.Unresolvable, match="Camera camera.demo_camera is off"
+        ),
+    ):
+        await media_source.async_get_media_image(
+            hass, "media-source://camera/camera.demo_camera"
+        )
