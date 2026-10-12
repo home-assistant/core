@@ -142,8 +142,6 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         except ValueError, TypeError:
             return
         self._attr_native_value = val
-        if (total_fn := self.entity_description.total_fn) is not None:
-            total_fn(self.coordinator.device).seed(val)
 
     @property
     @override
