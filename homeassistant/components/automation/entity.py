@@ -633,23 +633,30 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 "service": service,
                 "entity_id": self.entity_id,
                 "name": self._attr_name or self.entity_id,
-                "edit": f"/config/automation/edit/{self.unique_id}",
+                "edit": self._edit_path,
             },
         )
         return issue_id
+
+    @property
+    def _edit_path(self) -> str:
+        """Return the frontend path for editing the automation."""
+        return f"/config/automation/edit/{self.unique_id}"
 
     @callback
     def _async_move_service_not_found_issues(self, old_entity_id: str) -> None:
         """Move missing service issues, their id and placeholders use entity_id."""
         issue_registry = ir.async_get(self.hass)
         for (domain, issue_id), issue in list(issue_registry.issues.items()):
-            # Matched on the placeholder, an issue_id prefix can match another
-            # automation's entity_id
+            # Matched on the placeholders, an issue_id prefix can match another
+            # automation's entity_id, and a deleted automation's issue can have
+            # the same entity_id
             if (
                 domain != DOMAIN
                 or issue.translation_key != "service_not_found"
                 or issue.translation_placeholders is None
                 or issue.translation_placeholders["entity_id"] != old_entity_id
+                or issue.translation_placeholders["edit"] != self._edit_path
             ):
                 continue
             async_delete_issue(self.hass, DOMAIN, issue_id)

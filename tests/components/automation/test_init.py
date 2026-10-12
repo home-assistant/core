@@ -1932,6 +1932,24 @@ async def test_automation_changed_entity_id_moves_service_not_found_issue(
     entity_registry.async_get_or_create(
         "automation", "automation", "hello_2", suggested_object_id="hello_2"
     )
+    # Left by a deleted automation which had the same entity_id
+    deleted_issue_id = "automation.hello_service_not_found_test.other"
+    ir.async_create_issue(
+        hass,
+        automation.DOMAIN,
+        deleted_issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="service_not_found",
+        translation_placeholders={
+            "service": "test.other",
+            "entity_id": "automation.hello",
+            "name": "Deleted",
+            "edit": "/config/automation/edit/deleted",
+        },
+    )
+    deleted_issue = issue_registry.async_get_issue(automation.DOMAIN, deleted_issue_id)
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1982,6 +2000,17 @@ async def test_automation_changed_entity_id_moves_service_not_found_issue(
     # Another automation's issue is not moved, its id starts with the old entity_id
     assert (
         issue_registry.async_get_issue(automation.DOMAIN, other_issue_id) == other_issue
+    )
+    # A deleted automation's issue is not moved, it has the old entity_id
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, deleted_issue_id)
+        == deleted_issue
+    )
+    assert (
+        issue_registry.async_get_issue(
+            automation.DOMAIN, "automation.renamed_service_not_found_test.other"
+        )
+        is None
     )
 
 
