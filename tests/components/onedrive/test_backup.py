@@ -244,7 +244,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_onedrive_client.delete_drive_item.call_count == 2
 
 
@@ -442,7 +442,8 @@ async def test_delete_error(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{mock_config_entry.unique_id}": error}
+        "agent_error_translations": {},
+        "agent_errors": {f"{DOMAIN}.{mock_config_entry.unique_id}": error},
     }
 
 
@@ -464,7 +465,7 @@ async def test_agents_delete_not_found_does_not_throw(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_agents_backup_not_found(
