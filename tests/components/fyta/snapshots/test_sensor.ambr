@@ -105,6 +105,57 @@
     'state': 'unknown',
   })
 # ---
+# name: test_all_entities[sensor.gummibaum_last_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gummibaum_last_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last update',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last update',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_update',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-last_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_last_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Last update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_last_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-10T18:10:00+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.gummibaum_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1009,6 +1060,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_last_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.kakaobaum_last_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last update',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last update',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_update',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-last_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_last_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Last update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_last_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-02T18:10:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.kakaobaum_light-entry]

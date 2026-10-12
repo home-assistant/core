@@ -1,11 +1,14 @@
 {
+  "common": {
+    "deprecated_version": "Your version of Libre Hardware Monitor is no longer supported. Please update to version 0.9.5 or later."
+  },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "deprecated_version": "[%key:component::libre_hardware_monitor::common::deprecated_version%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "[%key:common::config_flow::abort::no_devices_found%]"
     },
@@ -34,10 +37,9 @@
       }
     }
   },
-  "issues": {
-    "deprecated_api": {
-      "description": "Your version of Libre Hardware Monitor is deprecated and may not provide stable sensor data. To fix this issue:\n\n1. Download version 0.9.5 or later from {lhm_releases_url}\n2. Close Libre Hardware Monitor on your computer\n3. Install or extract the new version and start Libre Hardware Monitor again (you might have to re-enable the remote web server)\n4. Home Assistant will detect the new version and this issue will clear automatically",
-      "title": "Deprecated Libre Hardware Monitor version"
+  "exceptions": {
+    "deprecated_version": {
+      "message": "[%key:component::libre_hardware_monitor::common::deprecated_version%]"
     }
   }
 }

@@ -4,7 +4,7 @@ from typing import Any, override
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -24,10 +24,10 @@ class SensorCommunityFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                    vol.Optional(CONF_SHOW_ON_MAP, default=False): bool,
+                    probatio.Required(CONF_SENSOR_ID): cv.positive_int,
+                    probatio.Optional(CONF_SHOW_ON_MAP, default=False): bool,
                 }
             ),
             errors=errors or {},

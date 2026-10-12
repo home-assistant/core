@@ -318,12 +318,8 @@ async def test_migrate_from_version_1_to_2(
             unique_id=None,
         ),
     }
-    assert device.config_entries == {"01JZN04ZJ9BQXXGXDS05WS7D6P"}
-    assert device.config_entries_subentries == {
-        "01JZN04ZJ9BQXXGXDS05WS7D6P": {
-            "01JZQ1G63X2DX66GZ9ZTFY9PEH",
-        },
-    }
+    assert device.config_entry_id == "01JZN04ZJ9BQXXGXDS05WS7D6P"
+    assert device.config_subentry_id == "01JZQ1G63X2DX66GZ9ZTFY9PEH"
     assert entity.config_entry_id == config_entry.entry_id
     assert entity.config_subentry_id == "01JZQ1G63X2DX66GZ9ZTFY9PEH"
 
