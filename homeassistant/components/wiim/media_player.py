@@ -35,9 +35,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -82,6 +81,8 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.GROUPING
 )
+
+_ENTITY_ID_CHANGED_SIGNAL = "wiim_entity_id_changed"
 
 
 def _group_member_state_signal(member_udn: str) -> str:
@@ -639,19 +640,21 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     @callback
     @override
-    def _async_registry_updated(
-        self, event: Event[er.EventEntityRegistryUpdatedData]
-    ) -> None:
-        """Keep the entity-to-UDN map in sync with entity registry updates."""
-        if (
-            event.data["action"] == "update"
-            and (old_entity_id := event.data.get("old_entity_id"))
-            and old_entity_id != (entity_id := event.data["entity_id"])
-        ):
-            self._wiim_data.entity_id_to_udn_map.pop(old_entity_id, None)
-            self._wiim_data.entity_id_to_udn_map[entity_id] = self._device.udn
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Keep the entity-to-UDN map in sync with the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._wiim_data.entity_id_to_udn_map.pop(old_entity_id, None)
+        self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
+        # Every player's group members are resolved through the map
+        async_dispatcher_send(self.hass, _ENTITY_ID_CHANGED_SIGNAL)
 
-        super()._async_registry_updated(event)
+    @callback
+    def _async_handle_entity_id_changed(self) -> None:
+        """Refresh the group members, which may list a renamed player."""
+        self._update_ha_state_from_sdk_cache(
+            write_state=False, update_supported_features=False
+        )
+        self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -663,6 +666,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self.hass,
                 _group_member_state_signal(self._device.udn),
                 self._async_handle_group_member_state_refresh,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                _ENTITY_ID_CHANGED_SIGNAL,
+                self._async_handle_entity_id_changed,
             )
         )
         LOGGER.debug(

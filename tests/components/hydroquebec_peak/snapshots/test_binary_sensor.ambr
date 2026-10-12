@@ -1,0 +1,501 @@
+# serializer version: 1
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_in_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_in_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event in progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event in progress',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_active',
+    'unique_id': 'CPC-D_peak_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_in_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event in progress',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_in_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_today_am-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_am',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event today AM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event today AM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_today_am',
+    'unique_id': 'CPC-D_peak_today_am',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_today_am-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event today AM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_am',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_today_pm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_pm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event today PM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event today PM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_today_pm',
+    'unique_id': 'CPC-D_peak_today_pm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_today_pm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event today PM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_pm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_am-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_am',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event tomorrow AM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event tomorrow AM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_tomorrow_am',
+    'unique_id': 'CPC-D_peak_tomorrow_am',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_am-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event tomorrow AM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_am',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_pm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_pm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event tomorrow PM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event tomorrow PM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_tomorrow_pm',
+    'unique_id': 'CPC-D_peak_tomorrow_pm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T17:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_pm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event tomorrow PM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_pm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_in_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_in_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event in progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event in progress',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_active',
+    'unique_id': 'CPC-D_peak_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_in_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event in progress',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_in_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_today_am-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_am',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event today AM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event today AM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_today_am',
+    'unique_id': 'CPC-D_peak_today_am',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_today_am-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event today AM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_am',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_today_pm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_pm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event today PM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event today PM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_today_pm',
+    'unique_id': 'CPC-D_peak_today_pm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_today_pm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event today PM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_today_pm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_am-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_am',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event tomorrow AM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event tomorrow AM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_tomorrow_am',
+    'unique_id': 'CPC-D_peak_tomorrow_am',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_am-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event tomorrow AM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_am',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_pm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_pm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Peak event tomorrow PM',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Peak event tomorrow PM',
+    'platform': 'hydroquebec_peak',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_tomorrow_pm',
+    'unique_id': 'CPC-D_peak_tomorrow_pm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[2026-01-09T22:00:00+00:00][binary_sensor.cpc_d_peak_event_tomorrow_pm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CPC-D Peak event tomorrow PM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cpc_d_peak_event_tomorrow_pm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

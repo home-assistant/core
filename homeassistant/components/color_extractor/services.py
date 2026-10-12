@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Extend the existing light.turn_on service schema
 TURN_ON_SERVICE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
+    probatio.AtLeastOne(ATTR_URL, ATTR_PATH),
     cv.make_entity_service_schema(
         {
             **LIGHT_TURN_ON_SCHEMA,
@@ -38,7 +38,7 @@ TURN_ON_SERVICE_SCHEMA = probatio.All(
 )
 
 GET_COLOR_SERVICE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
+    probatio.AtLeastOne(ATTR_URL, ATTR_PATH),
     {
         probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
         probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,

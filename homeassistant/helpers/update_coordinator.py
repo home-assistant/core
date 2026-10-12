@@ -17,7 +17,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -274,12 +281,20 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._retry_after = None
 
         next_refresh = int(loop.time()) + self._microsecond + update_interval
+        # Cancelled when Home Assistant stops so a refresh can't fire during
+        # the close stage, after shared resources like aiohttp sessions are closed
+        refresh_job = HassJob(
+            self.__wrap_handle_refresh_interval,
+            f"{self.name} refresh interval",
+            job_type=HassJobType.Callback,
+            cancel_on_shutdown=True,
+        )
         self._unsub_refresh = loop.call_at(
-            next_refresh, self.__wrap_handle_refresh_interval
+            next_refresh, self.__wrap_handle_refresh_interval, refresh_job
         ).cancel
 
     @callback
-    def __wrap_handle_refresh_interval(self) -> None:
+    def __wrap_handle_refresh_interval(self, _: HassJob) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
             self.config_entry.async_create_background_task(
@@ -674,6 +689,15 @@ class BaseCoordinatorEntity[
                 self._handle_coordinator_update, self.coordinator_context
             )
         )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes, the listener is not keyed on it.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @callback
     def _handle_coordinator_update(self) -> None:

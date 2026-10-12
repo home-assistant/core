@@ -8,8 +8,9 @@ from unittest.mock import AsyncMock, patch
 from lifx import Device, DiscoveredDevice
 
 from homeassistant.components.lifx.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -70,6 +71,25 @@ async def async_setup_lifx_entries(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
     return entries
+
+
+async def async_enable_components(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device: Device,
+    keys: tuple[str, ...],
+) -> None:
+    """Enable a device's component entities and reload so they are added."""
+    for key in keys:
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.LIGHT, DOMAIN, f"{SERIAL}_{key}"
+        )
+        assert entity_id
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+    with patch("homeassistant.components.lifx.Device.connect", return_value=device):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 async def async_trigger_update(hass: HomeAssistant) -> None:

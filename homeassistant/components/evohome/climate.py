@@ -122,7 +122,7 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
     """Base for any evohome-compatible climate entity (controller, zone)."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     async def async_clear_zone_override(self) -> None:
         """Clear the zone override; only supported by zones."""
@@ -218,15 +218,15 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """Return the current operating mode of a Zone."""
         if self._evo_tcs.mode in (EvoSystemMode.AWAY, EvoSystemMode.HEATING_OFF):
             return HVACMode.AUTO
-        if self.target_temperature is None:
+        if self.native_target_temperature is None:
             return None
-        if self.target_temperature <= self.min_temp:
+        if self.native_target_temperature <= self.min_temp:
             return HVACMode.OFF
         return HVACMode.HEAT
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature of a Zone."""
         return self._evo_device.target_heat_temperature
 
@@ -430,7 +430,7 @@ class EvoController(EvoClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the average current temperature of the heating Zones.
 
         Controllers do not have a current temp, but one is expected by HA.

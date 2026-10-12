@@ -91,7 +91,9 @@ PLATFORM_SCHEMA = probatio.All(
     SENSOR_PLATFORM_SCHEMA.extend(
         {
             probatio.Required(CONF_ENTITY_ID): cv.entity_id,
-            probatio.Required(CONF_STATE): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(CONF_STATE): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(CONF_START): cv.template,
             probatio.Optional(CONF_END): cv.template,
             probatio.Optional(CONF_DURATION): cv.time_period,

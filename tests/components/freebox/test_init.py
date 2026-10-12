@@ -206,6 +206,26 @@ async def test_unique_id_migration(
     )
 
 
+async def test_unique_id_migration_cannot_connect(
+    hass: HomeAssistant, router: Mock
+) -> None:
+    """Test migration is retried when the router cannot be reached."""
+    router.return_value.open.side_effect = HttpRequestError("Boom")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == f"Failed to connect to the Freebox router at {MOCK_HOST}"
+    assert entry.version == 1
+
+
 @pytest.mark.usefixtures("router")
 async def test_home_device_via_device(
     hass: HomeAssistant,

@@ -10,6 +10,7 @@ from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
 from dsmr_parser.objects import DSMRObject
 import probatio
+from serialx import SerialException
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -120,7 +121,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await reader_factory()
-        except OSError:
+        except OSError, SerialException:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -246,7 +247,9 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
             errors=errors,
         )
 

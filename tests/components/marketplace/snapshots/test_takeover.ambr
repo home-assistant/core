@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_takeover_of_a_hacs_install[False][registries]
+  tuple(
+    list([
+      dict({
+        'device': 'device 0',
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+        'entity_id': 'new switch',
+        'hidden_by': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'platform': 'marketplace',
+        'unique_id': '1296266',
+      }),
+      dict({
+        'device': 'device 0',
+        'disabled_by': None,
+        'entity_id': 'update.proxy_manifest_update_3',
+        'hidden_by': <RegistryEntryHider.USER: 'user'>,
+        'labels': list([
+          'favorites',
+        ]),
+        'name': None,
+        'platform': 'marketplace',
+        'unique_id': '1296266',
+      }),
+      dict({
+        'device': 'device 1',
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+        'entity_id': 'new switch',
+        'hidden_by': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'platform': 'marketplace',
+        'unique_id': '1296267',
+      }),
+      dict({
+        'device': 'device 1',
+        'disabled_by': <RegistryEntryDisabler.USER: 'user'>,
+        'entity_id': 'update.proxy_manifest_update_2',
+        'hidden_by': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'platform': 'marketplace',
+        'unique_id': '1296267',
+      }),
+      dict({
+        'device': 'device 2',
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+        'entity_id': 'new switch',
+        'hidden_by': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'platform': 'marketplace',
+        'unique_id': '1296269',
+      }),
+      dict({
+        'device': 'device 2',
+        'disabled_by': None,
+        'entity_id': 'update.my_example_integration',
+        'hidden_by': None,
+        'labels': list([
+        ]),
+        'name': 'My example integration',
+        'platform': 'marketplace',
+        'unique_id': '1296269',
+      }),
+    ]),
+    list([
+      dict({
+        'area_id': None,
+        'configuration_url': 'homeassistant://marketplace/repository/1296266',
+        'device': 'device 0',
+        'identifiers': list([
+          tuple(
+            'marketplace',
+            '1296266',
+          ),
+        ]),
+        'name': 'Proxy manifest',
+        'name_by_user': None,
+      }),
+      dict({
+        'area_id': None,
+        'configuration_url': 'homeassistant://marketplace/repository/1296267',
+        'device': 'device 1',
+        'identifiers': list([
+          tuple(
+            'marketplace',
+            '1296267',
+          ),
+        ]),
+        'name': 'Proxy manifest',
+        'name_by_user': None,
+      }),
+      dict({
+        'area_id': 'office',
+        'configuration_url': 'homeassistant://marketplace/repository/1296269',
+        'device': 'device 2',
+        'identifiers': list([
+          tuple(
+            'marketplace',
+            '1296269',
+          ),
+        ]),
+        'name': 'Proxy manifest',
+        'name_by_user': 'Example',
+      }),
+    ]),
+  )
+# ---

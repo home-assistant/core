@@ -42,7 +42,7 @@ from .const import (
 
 CONFIG_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY, default=""): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY), default=""): str,
     }
 )
 

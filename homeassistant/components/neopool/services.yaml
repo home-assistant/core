@@ -1,0 +1,15 @@
+get_device_time:
+  fields:
+    device_id:
+      example: "abc123device456"
+      selector:
+        device:
+          integration: neopool
+
+set_device_time:
+  fields:
+    device_id:
+      example: "abc123device456"
+      selector:
+        device:
+          integration: neopool

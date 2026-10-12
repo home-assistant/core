@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 from pizone import Controller, Zone
-import probatio
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -26,13 +25,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN
+from .const import ATTR_AIRFLOW, DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .entity import IZoneCoordinatorEntity
 
@@ -46,20 +44,6 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.AUTO: FAN_AUTO,
 }
 
-ATTR_AIRFLOW = "airflow"
-
-IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
-IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
-
-IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_AIRFLOW): probatio.All(
-        probatio.Coerce(float),
-        probatio.In(range(0, 101, 5)),
-        probatio.Coerce(int),
-        msg="invalid airflow",
-    ),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -71,24 +55,12 @@ async def async_setup_entry(
     controller_device = ControllerDevice(coordinator)
     async_add_entities([controller_device, *controller_device.zones.values()])
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        IZONE_SERVICE_AIRFLOW_MIN,
-        IZONE_SERVICE_AIRFLOW_SCHEMA,
-        "async_set_airflow_min",
-    )
-    platform.async_register_entity_service(
-        IZONE_SERVICE_AIRFLOW_MAX,
-        IZONE_SERVICE_AIRFLOW_SCHEMA,
-        "async_set_airflow_max",
-    )
-
 
 class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     """Representation of iZone Controller."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
     _attr_target_temperature_step = 0.5
@@ -161,13 +133,13 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             "supply_temperature": show_temp(
                 self.hass,
                 self.supply_temperature,
-                self.temperature_unit,
+                self.native_temperature_unit,
                 self.precision,
             ),
             "temp_setpoint": show_temp(
                 self.hass,
                 self.controller.temp_setpoint,
-                self.temperature_unit,
+                self.native_temperature_unit,
                 PRECISION_HALVES,
             ),
             "control_zone": self.controller.zone_ctrl,
@@ -178,7 +150,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             "control_zone_setpoint": show_temp(
                 self.hass,
                 self.control_zone_setpoint,
-                self.temperature_unit,
+                self.native_temperature_unit,
                 PRECISION_HALVES,
             ),
         }
@@ -234,7 +206,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.controller.free_air:
             return self.controller.temp_supply
@@ -270,7 +242,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
 
         Either from control zone or master unit.
@@ -369,7 +341,7 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
     _attr_supported_features = (
         ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -439,13 +411,13 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.temp_current
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._zone.type is not Zone.Type.AUTO:
             return None

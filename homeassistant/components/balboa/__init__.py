@@ -40,11 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bo
     _LOGGER.debug("Attempting to connect to %s", host)
     spa = SpaClient(host)
     if not await spa.connect():
-        _LOGGER.error("Failed to connect to spa at %s", host)
-        raise ConfigEntryNotReady("Unable to connect")
+        raise ConfigEntryNotReady(f"Failed to connect to spa at {host}")
     if not await spa.async_configuration_loaded():
-        _LOGGER.error("Failed to get spa info at %s", host)
-        raise ConfigEntryNotReady("Unable to configure")
+        raise ConfigEntryNotReady(f"Failed to get spa info at {host}")
 
     entry.runtime_data = spa
 
