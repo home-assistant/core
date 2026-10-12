@@ -393,7 +393,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'occupied_setback',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -453,7 +453,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-TemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -514,7 +514,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'occupied_setback',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -533,7 +533,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.5',
+    'state': '0.0',
   })
 # ---
 # name: test_numbers[aqara_thermostat_w500_presets][number.floor_heating_thermostat_temperature_offset_2-entry]
@@ -574,7 +574,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-TemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

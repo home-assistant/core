@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_display_mode',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -96,7 +96,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_display_mode',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
     'unit_of_measurement': None,
   })
 # ---

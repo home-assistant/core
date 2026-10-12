@@ -4055,7 +4055,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -4118,7 +4118,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_reason',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -4186,7 +4186,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4241,7 +4241,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-2-HumiditySensor-1029-0',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-2-HumiditySensor-1029-0',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -4296,7 +4296,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot_count',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4352,7 +4352,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4405,7 +4405,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_channel',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -4455,7 +4455,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_network_name',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -4516,7 +4516,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_routing_role',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4577,7 +4577,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -4595,7 +4595,7 @@
     'state': '2025-01-01T13:57:05+00:00',
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_active_current_2-entry]
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_active_current_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4611,7 +4611,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.floor_heating_thermostat_active_current_2',
+    'entity_id': 'sensor.floor_heating_thermostat_active_current_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4619,7 +4619,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Active current',
+    'object_id_base': 'Active current (0)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4630,26 +4630,87 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Active current',
+    'original_name': 'Active current (0)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_active_current_2-state]
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_active_current_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Active current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Active current (0)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.floor_heating_thermostat_active_current_2',
+    'entity_id': 'sensor.floor_heating_thermostat_active_current_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_active_current_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_active_current_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active current (3)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Active current (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_current',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-3-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_active_current_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Active current (3)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_active_current_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4699,7 +4760,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_reason',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -4723,10 +4784,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'power_on_reboot',
+    'state': 'software_reset',
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_energy_2-entry]
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_energy_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4742,7 +4803,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.floor_heating_thermostat_energy_2',
+    'entity_id': 'sensor.floor_heating_thermostat_energy_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4750,7 +4811,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Energy',
+    'object_id_base': 'Energy (0)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -4761,30 +4822,91 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy (0)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_energy_2-state]
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_energy_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Energy (0)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.floor_heating_thermostat_energy_2',
+    'entity_id': 'sensor.floor_heating_thermostat_energy_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_energy_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.floor_heating_thermostat_energy_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy (3)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-3-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_energy_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Energy (3)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_energy_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0498',
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_humidity_2-entry]
@@ -4822,7 +4944,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-2-HumiditySensor-1029-0',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-2-HumiditySensor-1029-0',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -4839,7 +4961,68 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '59.0',
+    'state': '57.0',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_power_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.floor_heating_thermostat_power_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power (3)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-3-ElectricalPowerMeasurementWatt-144-8',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_power_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Power (3)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_power_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_reboot_count_2-entry]
@@ -4877,7 +5060,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot_count',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4892,7 +5075,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '20',
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500_presets][sensor.floor_heating_thermostat_temperature_2-entry]
@@ -4933,7 +5116,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4986,7 +5169,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_channel',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -5036,7 +5219,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_network_name',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -5097,7 +5280,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thread_routing_role',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -5158,7 +5341,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -5173,7 +5356,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-01-01T13:57:05+00:00',
+    'state': '2025-01-01T13:59:29+00:00',
   })
 # ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
