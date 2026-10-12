@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # ruff: noqa: T201, D103, BLE001
-"""Sync HACS default custom integrations (default branch HEAD, installed text files only).
+"""Sync HACS default custom integrations as partial git clones of default branch HEAD.
 
 Usage: python3 .claude/skills/custom-integration-sources/scripts/sync.py
     [--dest DIR] [--force] [--workers N] [REPO ...]
 
-Commit SHAs are recorded in DIR/.state.json so only changed repos are downloaded.
+Each repo is a blobless clone (full history, file contents fetched on demand)
+with a sparse checkout of what HACS installs. Commit SHAs are recorded in
+DIR/.state.json so only changed repos are fetched.
 Repos dropped from the HACS list are removed. Requires an authenticated `gh`.
 """
 
@@ -14,12 +16,12 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import fcntl
 import json
-from pathlib import Path, PurePosixPath
+import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 from typing import BinaryIO
@@ -32,15 +34,58 @@ HACS_LIST = "https://raw.githubusercontent.com/hacs/default/master/integration"
 GRAPHQL = "https://api.github.com/graphql"
 BATCH = 50
 RETRIES = 4
-CHUNK = 1 << 20
-# Same binary heuristic as git: a NUL byte in the first 8000 bytes
-BINARY_PROBE = 8000
+GIT_TIMEOUT = 600
+# Never prompt for credentials (deleted or private repos) or pull LFS objects
+GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_LFS_SKIP_SMUDGE": "1"}
+# Kept out of the checkout; sparse patterns filter by path, not by content
+BINARY_GLOBS = (
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.webp",
+    "*.ico",
+    "*.bmp",
+    "*.ttf",
+    "*.otf",
+    "*.woff",
+    "*.woff2",
+    "*.eot",
+    "*.glb",
+    "*.bin",
+    "*.onnx",
+    "*.tflite",
+    "*.pt",
+    "*.pkl",
+    "*.npy",
+    "*.bsp",
+    "*.zip",
+    "*.gz",
+    "*.tgz",
+    "*.tar",
+    "*.7z",
+    "*.whl",
+    "*.pdf",
+    "*.mp3",
+    "*.mp4",
+    "*.wav",
+    "*.ogg",
+    ".DS_Store",
+    "*.wasm",
+    "*.xcf",
+    "*.so",
+    "*.dll",
+    "*.dylib",
+    "*.exe",
+    "*.pyc",
+    "*.db",
+    "*.sqlite",
+)
 # Characters GitHub allows in owner and repo names; slugs become paths under root
 REPO_SLUG = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+")
 LOCK_FILE = ".lock"
 # Marks a state file as written by this script; anything else is not ours
 STATE_FORMAT = "custom-integration-sources/1"
-HACS_JSON_MAX = 1 << 16
 # Exit status when the sync completed but some repos could not be downloaded
 # (argparse already uses 2 for usage errors)
 EXIT_PARTIAL = 3
@@ -93,18 +138,6 @@ def _get(url: str, token: str | None = None, data: bytes | None = None) -> bytes
     return _retry(fetch)
 
 
-def _download_to(url: str, out: BinaryIO) -> None:
-    """Stream url into out, restarting from scratch on each retry."""
-
-    def fetch() -> None:
-        out.seek(0)
-        out.truncate()
-        with urllib.request.urlopen(url, timeout=120) as resp:
-            shutil.copyfileobj(resp, out, CHUNK)
-
-    _retry(fetch)
-
-
 def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
     """Return default-branch HEAD SHA per repo (None if missing/empty)."""
 
@@ -144,77 +177,76 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
     return heads
 
 
+def _git(*args: str, cwd: Path | None = None) -> str:
+    """Run git non-interactively, raising with the tail of stderr on failure."""
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        env=GIT_ENV,
+        timeout=GIT_TIMEOUT,
+        check=False,
+    )
+    if proc.returncode:
+        raise RuntimeError(f"git {args[0]}: {proc.stderr.strip()[-300:]}")
+    return proc.stdout
+
+
+def _content_in_root(dest: Path, sha: str) -> bool:
+    """Return the content_in_root flag from the root hacs.json at sha, if any."""
+    try:
+        manifest = json.loads(_git("show", f"{sha}:hacs.json", cwd=dest))
+    except RuntimeError, ValueError:
+        return False
+    return isinstance(manifest, dict) and manifest.get("content_in_root") is True
+
+
+def _checkout(dest: Path, sha: str) -> None:
+    """Check out what HACS installs at sha: custom_components, or the whole repo."""
+    try:
+        _git("cat-file", "-e", f"{sha}^{{commit}}", cwd=dest)
+    except RuntimeError:
+        _git("fetch", "--quiet", "--filter=blob:none", "origin", sha, cwd=dest)
+    # Whole repo too when there is no custom_components, as a fallback
+    whole = _content_in_root(dest, sha) or not _git(
+        "ls-tree", "-d", "--name-only", sha, "custom_components", cwd=dest
+    )
+    patterns = ["/*"] if whole else ["/custom_components/", "/hacs.json"]
+    patterns += [f"!{glob}" for glob in BINARY_GLOBS]
+    patterns += [f"!{glob.upper()}" for glob in BINARY_GLOBS]
+    _git("sparse-checkout", "set", "--no-cone", *patterns, cwd=dest)
+    _git("reset", "--quiet", "--hard", sha, cwd=dest)
+
+
 def download(root: Path, repo: str, sha: str) -> None:
-    """Replace root/repo with the filtered contents of the tarball at sha."""
+    """Bring root/repo to sha, updating the clone in place or cloning afresh."""
     dest = root / repo
+    if (dest / ".git").is_dir():
+        try:
+            _checkout(dest, sha)
+        except RuntimeError, subprocess.TimeoutExpired:
+            pass  # Broken or interrupted clone: replace it below
+        else:
+            return
     dest.parent.mkdir(parents=True, exist_ok=True)
     # Hidden and uniquely named: searches skip it and no repo name can clash
     tmp = Path(tempfile.mkdtemp(prefix=f".{dest.name}.", dir=dest.parent))
     try:
-        # Spooled to disk, so memory stays flat whatever the archive or file sizes
-        with tempfile.TemporaryFile(dir=root) as archive:
-            _download_to(f"https://codeload.github.com/{repo}/tar.gz/{sha}", archive)
-            archive.seek(0)
-            _extract(archive, tmp)
+        _git(
+            "clone",
+            "--quiet",
+            "--filter=blob:none",
+            "--no-checkout",
+            f"https://github.com/{repo}.git",
+            str(tmp),
+        )
+        _checkout(tmp, sha)
         shutil.rmtree(dest, ignore_errors=True)
         tmp.rename(dest)
     except BaseException:
         shutil.rmtree(tmp, ignore_errors=True)
         raise
-
-
-def _content_in_root(
-    tar: tarfile.TarFile, files: list[tuple[tarfile.TarInfo, PurePosixPath]]
-) -> bool:
-    """Return the content_in_root flag from the root hacs.json, if any."""
-    for member, rel in files:
-        if rel == PurePosixPath("hacs.json"):
-            fobj = tar.extractfile(member)
-            try:
-                manifest = json.loads(fobj.read(HACS_JSON_MAX)) if fobj else None
-            except ValueError:
-                return False
-            return (
-                isinstance(manifest, dict) and manifest.get("content_in_root") is True
-            )
-    return False
-
-
-def _extract(archive: BinaryIO, tmp: Path) -> None:
-    """Extract the installed text files of a repo tarball into tmp."""
-    with tarfile.open(fileobj=archive, mode="r:gz") as tar:
-        files = []
-        for member in tar.getmembers():
-            if not member.isfile():
-                continue
-            # Strip the "<repo>-<sha>/" prefix
-            rel = PurePosixPath(*PurePosixPath(member.name).parts[1:])
-            if rel.parts and ".." not in rel.parts and not rel.is_absolute():
-                files.append((member, rel))
-        # Keep what HACS installs: the whole repo for content_in_root, else
-        # custom_components (whole repo too when there is none, as a fallback)
-        keep_all = _content_in_root(tar, files) or not any(
-            len(rel.parts) > 1 and rel.parts[0] == "custom_components"
-            for _, rel in files
-        )
-        for member, rel in files:
-            if (
-                not keep_all
-                and rel.parts[0] != "custom_components"
-                and rel != PurePosixPath("hacs.json")
-            ):
-                continue
-            fobj = tar.extractfile(member)
-            if fobj is None:
-                continue
-            head = fobj.read(BINARY_PROBE)
-            if b"\0" in head:
-                continue
-            target = tmp / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            with target.open("wb") as out:
-                out.write(head)
-                shutil.copyfileobj(fobj, out, CHUNK)
 
 
 def prune(root: Path, wanted: set[str]) -> list[str]:
@@ -348,7 +380,9 @@ def main() -> None:
     todo = {
         r: sha
         for r, sha in heads.items()
-        if sha and (args.force or state.get(r) != sha or not (root / r).is_dir())
+        # No .git also covers copies made by the earlier tarball-based version
+        if sha
+        and (args.force or state.get(r) != sha or not (root / r / ".git").is_dir())
     }
     print(f"{len(todo)} to download, {len(missing)} unavailable", file=sys.stderr)
 
