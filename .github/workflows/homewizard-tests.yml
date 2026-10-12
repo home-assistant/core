@@ -25,10 +25,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r requirements_test.txt
-          uv pip install -e .
-          uv pip install "python-homewizard-energy==10.2.0"
-          uv pip install paho-mqtt
+          uv pip install \
+            -e . \
+            -r requirements_all.txt \
+            -r requirements_test.txt \
+            colorlog \
+            --config-settings editable_mode=compat
 
       - name: Generate HomeWizard translations
         run: |
