@@ -30,8 +30,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import DOMAIN, REFRESH_BREAKS_IN_HA_VERSION, EvoService
-from .coordinator import EvoDataUpdateCoordinator
+from .const import DOMAIN, EVOHOME_DATA, REFRESH_BREAKS_IN_HA_VERSION, EvoService
 from .helpers import async_create_deprecation_issue_once
 
 
@@ -180,9 +179,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
 
 @callback
-def async_setup_services(
-    hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Evohome services."""
 
     @verify_domain_control(DOMAIN)
@@ -193,20 +190,16 @@ def async_setup_services(
             "deprecated_refresh_system_service",
             REFRESH_BREAKS_IN_HA_VERSION,
         )
-        await coordinator.async_refresh()
+        await hass.data[EVOHOME_DATA].coordinator.async_refresh()
 
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the Evohome system mode."""
 
-        # We can rely upon coordinator.tcs being non-None here, since:
-        # - services are registered only if coordinator.async_first_refresh() succeeds
-        # - without config flow, the controller entity will never be de-registered
+        tcs = hass.data[EVOHOME_DATA].tcs
 
-        assert coordinator.tcs is not None  # mypy
-
-        _validate_set_system_mode_params(coordinator.tcs, call.data)
-        unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
+        _validate_set_system_mode_params(tcs, call.data)
+        unique_id = _resolve_ctl_unique_id(hass, call, tcs.id)
 
         payload = {
             "unique_id": unique_id,
