@@ -140,6 +140,12 @@ async def _async_ffmpeg_stderr(
             del diagnostic[:-_FFMPEG_ERROR_TAIL]
 
 
+async def _async_ffmpeg_discard_stdout(stdout: asyncio.StreamReader) -> None:
+    """Discard abandoned output until EOF so a paused pipe can disconnect."""
+    while await stdout.read(FFMPEG_CHUNK_SIZE):
+        pass
+
+
 def _ffmpeg_late_result(task: asyncio.Task) -> None:
     """Retrieve a task that could not finish within the cleanup deadline."""
     if task.cancelled():
@@ -616,6 +622,16 @@ async def _async_convert_audio(  # noqa: C901
             )
             await _async_ffmpeg_join(cleanup_task)
             await _async_ffmpeg_join(read_task)
+            # A cancelled read must relinquish StreamReader ownership first.
+            # Otherwise a second reader would race it on the same stdout pipe.
+            if read_task is None or read_task.done():
+                drain_task = hass.async_create_background_task(
+                    _async_ffmpeg_discard_stdout(process.stdout),
+                    "tts_ffmpeg_stdout_discard",
+                )
+                await _async_ffmpeg_join(drain_task)
+            else:
+                _LOGGER.warning("TTS ffmpeg stdout reader is still closing")
             await _async_ffmpeg_join(wait_task)
             await _async_ffmpeg_join(stderr_task)
             if process.returncode is None:
