@@ -10,6 +10,7 @@ from bsblan import (
     BSBLANConnectionError,
     BSBLANError,
     BSBLANMalformedResponseError,
+    BSBLANUnsupportedFeatureError,
     Device,
     HeatingTimeSwitchPrograms,
     HotWaterConfig,
@@ -161,7 +162,9 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                 translation_placeholders={"host": host},
             ) from err
         except BSBLANError as err:
-            if not self._uses_pps_bus or isinstance(err, BSBLANMalformedResponseError):
+            if not self._uses_pps_bus or not isinstance(
+                err, BSBLANUnsupportedFeatureError
+            ):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="coordinator_sensor_error",

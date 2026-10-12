@@ -4,7 +4,13 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError, Device, HeatingCircuitStatus, StaticState
+from bsblan import (
+    BSBLANError,
+    BSBLANUnsupportedFeatureError,
+    Device,
+    HeatingCircuitStatus,
+    StaticState,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -214,7 +220,7 @@ async def test_pps_climate_entity_without_sensor_data(
     mock_bsblan.device.return_value = Device.model_validate_json(
         await async_load_fixture(hass, "device_pps.json", DOMAIN)
     )
-    mock_bsblan.sensor.side_effect = BSBLANError("No sensor data")
+    mock_bsblan.sensor.side_effect = BSBLANUnsupportedFeatureError("No sensor data")
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 

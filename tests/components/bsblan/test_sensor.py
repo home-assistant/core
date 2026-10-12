@@ -7,6 +7,7 @@ from bsblan import (
     BSBLANConnectionError,
     BSBLANError,
     BSBLANMalformedResponseError,
+    BSBLANUnsupportedFeatureError,
     Device,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -73,7 +74,7 @@ async def test_sensors_not_created_when_sensor_request_fails(
     mock_bsblan.device.return_value = Device.model_validate(
         {**mock_bsblan.device.return_value.model_dump(), "bus": "PPS"}
     )
-    mock_bsblan.sensor.side_effect = BSBLANError("No sensor data")
+    mock_bsblan.sensor.side_effect = BSBLANUnsupportedFeatureError("No sensor data")
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
@@ -90,11 +91,17 @@ async def test_sensors_not_created_when_sensor_request_fails(
     assert len(sensor_entities) == 0
 
 
+@pytest.mark.parametrize("bus", ["BSB", "LPB", "PPS"])
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
         pytest.param(
             BSBLANError("Sensor failed"), ConfigEntryState.SETUP_RETRY, id="generic"
+        ),
+        pytest.param(
+            BSBLANMalformedResponseError("Malformed sensor response"),
+            ConfigEntryState.SETUP_RETRY,
+            id="malformed",
         ),
         pytest.param(
             BSBLANConnectionError("Connection failed"),
@@ -114,8 +121,12 @@ async def test_sensor_errors_fail_setup(
     mock_config_entry: MockConfigEntry,
     exception: BSBLANError,
     expected_state: ConfigEntryState,
+    bus: str,
 ) -> None:
     """Test sensor failures are not treated as successful updates."""
+    mock_bsblan.device.return_value = Device.model_validate(
+        {**mock_bsblan.device.return_value.model_dump(), "bus": bus}
+    )
     mock_bsblan.sensor.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -127,6 +138,7 @@ async def test_sensor_errors_fail_setup(
     ("bus", "exception"),
     [
         pytest.param("BSB", BSBLANError("Sensor failed"), id="bsb-generic"),
+        pytest.param("PPS", BSBLANError("Sensor failed"), id="pps-generic"),
         pytest.param(
             "PPS",
             BSBLANMalformedResponseError("Malformed sensor response"),
