@@ -76,6 +76,9 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "energy_saving_enter_duration": {
+        "name": "Energy-saving enter duration"
+      },
       "energy_saving_power_threshold": {
         "name": "Energy-saving power threshold"
       },
