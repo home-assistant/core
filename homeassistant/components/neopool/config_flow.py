@@ -52,9 +52,9 @@ _MORE_OPTIONS = {
     probatio.Required(SECTION_MORE_OPTIONS): section(
         probatio.Schema(
             {
-                probatio.Optional(
-                    CONF_UNIT_ID, default=DEFAULT_UNIT_ID
-                ): probatio.Coerce(int),
+                probatio.Optional(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1, max=247)
+                ),
             }
         ),
         SectionConfig(collapsed=True),

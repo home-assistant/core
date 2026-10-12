@@ -125,6 +125,22 @@ async def test_user_flow_serial_rejects_non_positive_baudrate(
         )
 
 
+@pytest.mark.parametrize("unit_id", [0, 248])
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_user_flow_rejects_out_of_range_unit_id(
+    hass: HomeAssistant,
+    unit_id: int,
+) -> None:
+    """A unit ID outside the Modbus 1-247 range is rejected by the schema."""
+    result = await _advance_to_step(hass, TYPE_TCP)
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**TCP_INPUT, SECTION_MORE_OPTIONS: {CONF_UNIT_ID: unit_id}},
+        )
+
+
 @pytest.mark.parametrize(
     ("exc", "expected_error"),
     [

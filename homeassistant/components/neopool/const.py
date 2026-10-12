@@ -26,7 +26,6 @@ CONF_UNIT_ID = "unit_id"
 CONF_MODBUS_FRAMER = "modbus_framer"
 CONF_BAUDRATE = "baudrate"
 
-# How the device is reached. CONF_TYPE/CONF_DEVICE come from homeassistant.const.
 TYPE_TCP = "tcp"
 TYPE_SERIAL = "serial"
 
