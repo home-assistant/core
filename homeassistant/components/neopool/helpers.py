@@ -45,22 +45,11 @@ def build_modbus_params(
 ) -> ModbusTcpParams | ModbusSerialParams:
     """Build the shared-connection link parameters from config entry data.
 
-    A direct serial link uses ModbusSerialParams on the device path; NeoPool
-    RS485 is RTU-framed at 8N1 (the library default), so only the baud rate is
-    carried. The baud rate sets the serial inter-frame timing; 19200 is NeoPool's
-    RS485 rate, giving the spec's 3.5-character gap (~2 ms) for that line.
-
-    Otherwise the link is reached over the network. A Modbus TCP link is always
-    MBAP-framed, so it uses ModbusTcpParams with the framer omitted (passing
-    it is deprecated). RTU/ASCII framing over a socket (an ESPHome stream-server
-    gateway) is a serial link reached through a socket:// device, so it uses
-    ModbusSerialParams directly; that is what the modbus integration would
-    canonicalise an RTU ModbusTcpParams to anyway, built here to avoid the
-    deprecation warning. Its baud rate matches the modbus integration's
-    canonical 115200, so consumers sharing a gateway compare equal.
-
-    Entries predating the connection-type choice carry no CONF_TYPE; they are
-    all network entries, so a missing type reads as TCP.
+    RTU/ASCII over a socket (an ESPHome stream-server gateway) is built as
+    ModbusSerialParams, not ModbusTcpParams with a framer (deprecated); its baud
+    rate is the modbus integration's canonical 115200 so a shared gateway
+    compares equal. A missing CONF_TYPE predates the connection-type choice and
+    reads as a network (TCP) entry.
     """
     if data.get(CONF_TYPE, TYPE_TCP) == TYPE_SERIAL:
         return ModbusSerialParams(
