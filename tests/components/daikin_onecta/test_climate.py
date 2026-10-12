@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     SWING_OFF,
@@ -224,8 +225,10 @@ async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     fan_speed = SimpleNamespace(
-        current_mode=SimpleNamespace(value=FANMODE_FIXED, values=[FANMODE_FIXED]),
-        modes={FANMODE_FIXED: SimpleNamespace(value=1)},
+        current_mode=SimpleNamespace(
+            settable=True, value=FANMODE_FIXED, values=[FANMODE_FIXED]
+        ),
+        modes={FANMODE_FIXED: SimpleNamespace(value=1, settable=True)},
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -887,8 +890,8 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     device.patch = AsyncMock(side_effect=[True, False])
     coordinator = MagicMock()
     fan_speed = SimpleNamespace(
-        current_mode=SimpleNamespace(value="auto"),
-        modes={FANMODE_FIXED: SimpleNamespace(value=1)},
+        current_mode=SimpleNamespace(settable=True, value="auto"),
+        modes={FANMODE_FIXED: SimpleNamespace(value=1, settable=True)},
     )
     climate_control = SimpleNamespace(operation_mode=SimpleNamespace(value="heating"))
     object.__setattr__(entity, "_device", device)
@@ -975,13 +978,19 @@ async def test_set_fan_mode_updates_captured_operation_mode() -> None:
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     previous_fan = SimpleNamespace(
-        fan_speed=SimpleNamespace(current_mode=SimpleNamespace(value="auto"), modes={})
+        fan_speed=SimpleNamespace(
+            current_mode=SimpleNamespace(settable=True, value="auto"), modes={}
+        )
     )
     captured_fan = SimpleNamespace(
-        fan_speed=SimpleNamespace(current_mode=SimpleNamespace(value="auto"), modes={})
+        fan_speed=SimpleNamespace(
+            current_mode=SimpleNamespace(settable=True, value="auto"), modes={}
+        )
     )
     active_fan = SimpleNamespace(
-        fan_speed=SimpleNamespace(current_mode=SimpleNamespace(value="auto"), modes={})
+        fan_speed=SimpleNamespace(
+            current_mode=SimpleNamespace(settable=True, value="auto"), modes={}
+        )
     )
     previous_management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="heating"),
@@ -1030,21 +1039,27 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     previous_fan = SimpleNamespace(
         fan_direction=SimpleNamespace(
             vertical=SimpleNamespace(
-                current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+                current_mode=SimpleNamespace(
+                    settable=True, value="stop", values=["stop", "swing"]
+                )
             )
         )
     )
     captured_fan = SimpleNamespace(
         fan_direction=SimpleNamespace(
             vertical=SimpleNamespace(
-                current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+                current_mode=SimpleNamespace(
+                    settable=True, value="stop", values=["stop", "swing"]
+                )
             )
         )
     )
     active_fan = SimpleNamespace(
         fan_direction=SimpleNamespace(
             vertical=SimpleNamespace(
-                current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+                current_mode=SimpleNamespace(
+                    settable=True, value="stop", values=["stop", "swing"]
+                )
             )
         )
     )
@@ -1097,7 +1112,7 @@ async def test_set_swing_mode_rejects_unsupported_value() -> None:
             fan_direction=SimpleNamespace(
                 vertical=SimpleNamespace(
                     current_mode=SimpleNamespace(
-                        value="swing", values=["stop", "swing"]
+                        settable=True, value="swing", values=["stop", "swing"]
                     )
                 )
             )
@@ -1401,12 +1416,16 @@ async def test_climate_platform_services_and_management_points(
         )
         fan_operation = SimpleNamespace(
             fan_speed=SimpleNamespace(
-                current_mode=SimpleNamespace(value="auto", values=["auto", "quiet"]),
+                current_mode=SimpleNamespace(
+                    settable=True, value="auto", values=["auto", "quiet"]
+                ),
                 modes={},
             ),
             fan_direction=SimpleNamespace(
                 vertical=SimpleNamespace(
-                    current_mode=SimpleNamespace(value="stop", values=["stop", "swing"])
+                    current_mode=SimpleNamespace(
+                        settable=True, value="stop", values=["stop", "swing"]
+                    )
                 ),
                 horizontal=None,
             ),
@@ -1589,6 +1608,7 @@ def test_swing_modes_translate_standard_values(
     entity = object.__new__(DaikinClimate)
     axis = SimpleNamespace(
         current_mode=SimpleNamespace(
+            settable=True,
             value=native_mode,
             values=["stop", "swing", "floorHeatingAirflow", "windNice"],
         )
@@ -1612,3 +1632,101 @@ def test_swing_modes_translate_standard_values(
         "floorheatingairflow",
         "windnice",
     ]
+
+
+@pytest.mark.parametrize(
+    ("control", "service", "service_data", "feature"),
+    [
+        (
+            "speed",
+            SERVICE_SET_FAN_MODE,
+            {"fan_mode": "quiet"},
+            ClimateEntityFeature.FAN_MODE,
+        ),
+        (
+            "vertical",
+            SERVICE_SET_SWING_MODE,
+            {"swing_mode": SWING_ON},
+            ClimateEntityFeature.SWING_MODE,
+        ),
+        (
+            "horizontal",
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {"swing_horizontal_mode": SWING_ON},
+            ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+        ),
+    ],
+)
+async def test_read_only_fan_controls_do_not_call_cloud(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    control: str,
+    service: str,
+    service_data: dict[str, str],
+    feature: ClimateEntityFeature,
+) -> None:
+    """Do not advertise or write read-only fan and swing telemetry."""
+    await _async_setup_fixture(hass, config_entry, "ururu")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    point = next(iter(device.device.management_points_by_type("climateControl")))
+    fan = point.climate_control.fan_operation()
+    characteristic = {
+        "speed": fan.fan_speed.current_mode,
+        "vertical": fan.fan_direction.vertical.current_mode,
+        "horizontal": fan.fan_direction.horizontal.current_mode,
+    }[control]
+    characteristic.settable = False
+    coordinator.client.patch_characteristic = AsyncMock()
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, f"{device.id}_{point.embedded_id}_roomTemperature"
+    )
+    state = hass.states.get(entity_id)
+    assert not state.attributes["supported_features"] & feature
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+    coordinator.client.patch_characteristic.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("current_mode", "mode_settable", "speed_settable", "expected_modes"),
+    [
+        ("quiet", False, True, []),
+        ("fixed", False, True, ["1", "2"]),
+        ("quiet", True, False, ["quiet"]),
+    ],
+)
+def test_fan_modes_respect_writable_characteristics(
+    current_mode: str,
+    mode_settable: bool,
+    speed_settable: bool,
+    expected_modes: list[str],
+) -> None:
+    """Treat mode selection and fixed-speed control as independent capabilities."""
+    entity = object.__new__(DaikinClimate)
+    fan = SimpleNamespace(
+        fan_speed=SimpleNamespace(
+            current_mode=SimpleNamespace(
+                value=current_mode, values=["quiet", "fixed"], settable=mode_settable
+            ),
+            modes={
+                "fixed": SimpleNamespace(
+                    value=1,
+                    min_value=1,
+                    max_value=2,
+                    step_value=1,
+                    settable=speed_settable,
+                )
+            },
+        )
+    )
+    entity._fan_operation = MagicMock(return_value=fan)
+    assert entity._get_fan_modes() == expected_modes

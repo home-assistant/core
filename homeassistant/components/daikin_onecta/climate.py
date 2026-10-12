@@ -245,12 +245,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 )
             fan_operation = self._fan_operation()
             if fan_operation is not None:
-                if fan_operation.fan_speed is not None:
+                if self._get_fan_modes():
                     supported_features |= ClimateEntityFeature.FAN_MODE
                 if fan_operation.fan_direction is not None:
-                    if fan_operation.fan_direction.vertical is not None:
+                    if self._get_swing_modes():
                         supported_features |= ClimateEntityFeature.SWING_MODE
-                    if fan_operation.fan_direction.horizontal is not None:
+                    if self._get_swing_horizontal_modes():
                         supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         return supported_features
@@ -459,7 +459,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             return []
         fan_speed = fan_operation.fan_speed
         fan_modes: list[str] = []
-        for mode in fan_speed.current_mode.values or []:
+        modes = fan_speed.current_mode.values or []
+        if not fan_speed.current_mode.settable:
+            modes = (
+                [FANMODE_FIXED] if fan_speed.current_mode.value == FANMODE_FIXED else []
+            )
+        for mode in modes:
             if (
                 mode == FANMODE_FIXED
                 and fan_speed.modes
@@ -467,7 +472,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             ):
                 fixed = fan_speed.modes[FANMODE_FIXED]
                 if (
-                    fixed.min_value is not None
+                    fixed.settable
+                    and fixed.min_value is not None
                     and fixed.max_value is not None
                     and fixed.step_value is not None
                 ):
@@ -501,6 +507,16 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
         if fan_mode.isnumeric():
+            fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
+            if (
+                fixed is None
+                or not fixed.settable
+                or (
+                    fan_speed.current_mode.value != FANMODE_FIXED
+                    and not fan_speed.current_mode.settable
+                )
+            ):
+                self._raise_service_validation_error("fan_control_unavailable")
             if fan_speed.current_mode.value != FANMODE_FIXED:
                 if not await self._async_execute_climate_command(
                     lambda climate: climate.set_fan_mode(operation_mode, FANMODE_FIXED)
@@ -533,6 +549,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                     return
                 fixed.value = new_fixed_mode
         elif fan_speed.current_mode.value != fan_mode:
+            if not fan_speed.current_mode.settable:
+                self._raise_service_validation_error("fan_control_unavailable")
             if not await self._async_execute_climate_command(
                 lambda climate: climate.set_fan_mode(operation_mode, fan_mode)
             ):
@@ -579,7 +597,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         axis = cast(
             "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
         )
-        if axis is None:
+        if axis is None or not axis.current_mode.settable:
             return []
         # Daikin also exposes comfort and floor-heating airflow direction modes.
         return [
@@ -611,7 +629,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         axis = cast(
             "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
         )
-        if axis is None:
+        if axis is None or not axis.current_mode.settable:
             return False
         new_mode = next(
             (
