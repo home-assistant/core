@@ -1,3 +1,4 @@
+
 {
   "config": {
     "abort": {
@@ -48,6 +49,20 @@
         },
         "description": "Enter the IP address of your HomeWizard device to integrate with Home Assistant.",
         "title": "Configure device"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HomeWizard settings",
+        "description": "Configure how often data is retrieved from the device.",
+        "data": {
+          "update_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "update_interval": "Time between updates, from 1 to 60 seconds."
+        }
       }
     }
   },
