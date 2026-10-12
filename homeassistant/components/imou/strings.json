@@ -176,23 +176,17 @@
     "alarm_arm_disarm_failed": {
       "message": "Imou rejected the arming change"
     },
+    "fetch_devices_failed": {
+      "message": "Could not list devices from Imou"
+    },
     "get_image_failed": {
       "message": "Could not get a snapshot from Imou"
     },
     "get_stream_failed": {
       "message": "Could not get the live stream URL from Imou"
     },
-    "fetch_devices_failed": {
-      "message": "Could not list devices from Imou"
-    },
     "invalid_auth": {
       "message": "Imou rejected the App ID and App secret"
-    },
-    "update_devices_failed": {
-      "message": "Could not refresh device status from Imou"
-    },
-    "update_timeout": {
-      "message": "Timed out while contacting Imou"
     },
     "press_button_failed": {
       "message": "Imou rejected the button press"
@@ -202,6 +196,12 @@
     },
     "switch_operation_failed": {
       "message": "Imou rejected the switch change"
+    },
+    "update_devices_failed": {
+      "message": "Could not refresh device status from Imou"
+    },
+    "update_timeout": {
+      "message": "Timed out while contacting Imou"
     }
   },
   "selector": {
