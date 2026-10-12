@@ -32,9 +32,9 @@ jobs:
             colorlog \
             --config-settings editable_mode=compat
 
-      - name: Generate HomeWizard translations
+      - name: Generate all translations
         run: |
-          .venv/bin/python -m script.translations develop --integration homewizard
+          .venv/bin/python -m script.translations develop --all
 
       - name: Run HomeWizard tests
         run: |
