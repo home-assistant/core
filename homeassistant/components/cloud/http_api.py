@@ -47,7 +47,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
-from .alexa_config import entity_supported as entity_supported_by_alexa
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
@@ -1329,7 +1328,7 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_id: str = msg["entity_id"]
 
-    if not entity_supported_by_alexa(hass, entity_id):
+    if not alexa_entities.entity_supported(hass, entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,

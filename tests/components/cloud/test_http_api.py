@@ -2476,7 +2476,7 @@ async def test_get_alexa_entity(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
     entity_registry.async_get_or_create(
-        "water_heater", "test", "unique", suggested_object_id="basement"
+        "device_tracker", "test", "unique", suggested_object_id="phone"
     )
 
     await client.send_json_auto_id(
@@ -2488,14 +2488,14 @@ async def test_get_alexa_entity(
     assert response["result"] is None
 
     await client.send_json_auto_id(
-        {"type": "cloud/alexa/entities/get", "entity_id": "water_heater.basement"}
+        {"type": "cloud/alexa/entities/get", "entity_id": "device_tracker.phone"}
     )
     response = await client.receive_json()
 
     assert not response["success"]
     assert response["error"] == {
         "code": "not_supported",
-        "message": "water_heater.basement not supported by Alexa",
+        "message": "device_tracker.phone not supported by Alexa",
     }
 
 

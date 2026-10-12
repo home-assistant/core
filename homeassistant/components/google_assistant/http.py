@@ -42,7 +42,7 @@ from .const import (
     STORE_ENTITY_SETTINGS_VERSION,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from .helpers import AbstractConfig
+from .helpers import AbstractConfig, entity_supported
 from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +109,9 @@ class GoogleConfig(AbstractConfig):
             return
         # v2: preserve the pre-migration name of exposed entities as an alias
         for entity_id in list(er.async_get(self.hass).entities):
-            if CONF_NAME in self.entity_config.get(entity_id, {}):
+            if CONF_NAME in self.entity_config.get(
+                entity_id, {}
+            ) or not entity_supported(self.hass, entity_id):
                 continue
             if self.should_expose(entity_id):
                 er.async_preserve_compat_name_as_alias(self.hass, entity_id)

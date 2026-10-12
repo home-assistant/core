@@ -719,7 +719,7 @@ async def test_async_get_users(
                     },
                 }
             },
-            [call(ANY, "light.exposed")],
+            [call(ANY, "light.exposed"), call(ANY, "valve.valve")],
             id="existing_store_migrates",
         ),
         pytest.param({}, [], id="new_store_has_nothing_to_migrate"),
@@ -742,11 +742,17 @@ async def test_google_config_migrate_entity_names(
     entity_registry.async_get_or_create(
         "switch", "test", "not_exposed", suggested_object_id="not_exposed"
     )
+    entity_registry.async_get_or_create(
+        "device_tracker", "test", "unsupported", suggested_object_id="unsupported"
+    )
+    entity_registry.async_get_or_create(
+        "valve", "test", "valve", suggested_object_id="valve"
+    )
     hass_storage.update(storage)
     config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
-            "exposed_domains": ["light"],
+            "exposed_domains": ["light", "device_tracker", "valve"],
             "entity_config": {"light.yaml_name": {"name": "Configured"}},
         }
     )

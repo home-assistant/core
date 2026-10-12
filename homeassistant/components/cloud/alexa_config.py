@@ -24,22 +24,15 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_assistant_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
-from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
@@ -67,85 +60,6 @@ CLOUD_ALEXA = f"{DOMAIN}.{ALEXA_DOMAIN}"
 SYNC_DELAY = 1
 
 
-SUPPORTED_DOMAINS = {
-    "alarm_control_panel",
-    "alert",
-    "automation",
-    "button",
-    "camera",
-    "climate",
-    "cover",
-    "fan",
-    "group",
-    "humidifier",
-    "image_processing",
-    "input_boolean",
-    "input_button",
-    "input_number",
-    "light",
-    "lock",
-    "media_player",
-    "number",
-    "scene",
-    "script",
-    "switch",
-    "timer",
-    "vacuum",
-}
-
-SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES = {
-    BinarySensorDeviceClass.DOOR,
-    BinarySensorDeviceClass.GARAGE_DOOR,
-    BinarySensorDeviceClass.MOTION,
-    BinarySensorDeviceClass.OPENING,
-    BinarySensorDeviceClass.PRESENCE,
-    BinarySensorDeviceClass.WINDOW,
-}
-
-SUPPORTED_SENSOR_DEVICE_CLASSES = {
-    SensorDeviceClass.TEMPERATURE,
-}
-
-
-def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the entity is supported.
-
-    This is called when migrating from legacy config format to avoid exposing
-    all binary sensors and sensors.
-    """
-    domain = split_entity_id(entity_id)[0]
-    if domain in SUPPORTED_DOMAINS:
-        return True
-
-    try:
-        device_class = get_device_class(hass, entity_id)
-    except HomeAssistantError:
-        # The entity no longer exists
-        return False
-    if (
-        domain == BINARY_SENSOR_DOMAIN
-        and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
-    ):
-        return True
-
-    if domain == SENSOR_DOMAIN and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
-        return True
-
-    return False
-
-
-@callback
-def _async_should_expose(
-    hass: HomeAssistant, config: dict[str, Any], entity_id: str
-) -> bool:
-    """Return if an entity should be exposed."""
-    entity_filter: EntityFilter = config[CONF_FILTER]
-    if not entity_filter.empty_filter:
-        return entity_filter(entity_id)
-
-    return async_should_expose(hass, CLOUD_ALEXA, entity_id)
-
-
 @callback
 def _async_should_expose_legacy(
     hass: HomeAssistant, prefs: CloudPreferences, entity_id: str
@@ -168,12 +82,12 @@ def _async_should_expose_legacy(
 
     # Backwards compat
     if (default_expose := prefs.alexa_default_expose) is None:
-        return not auxiliary_entity and entity_supported(hass, entity_id)
+        return not auxiliary_entity and alexa_entities.entity_supported(hass, entity_id)
 
     return (
         not auxiliary_entity
         and split_entity_id(entity_id)[0] in default_expose
-        and entity_supported(hass, entity_id)
+        and alexa_entities.entity_supported(hass, entity_id)
     )
 
 
@@ -204,10 +118,18 @@ def _async_migrate_entity_settings_v2(
 ) -> None:
     """Preserve the pre-migration name of exposed entities as an alias."""
     entity_config = config.get(CONF_ENTITY_CONFIG) or {}
+    entity_filter: EntityFilter = config[CONF_FILTER]
     for entity_id in list(er.async_get(hass).entities):
         if CONF_NAME in entity_config.get(entity_id, {}):
             continue
-        if _async_should_expose(hass, config, entity_id):
+        # The UI only offers supported entities, a YAML filter does not
+        if entity_filter.empty_filter:
+            exposed = async_should_expose(hass, CLOUD_ALEXA, entity_id)
+        else:
+            exposed = entity_filter(entity_id) and alexa_entities.entity_supported(
+                hass, entity_id
+            )
+        if exposed:
             er.async_preserve_compat_name_as_alias(hass, entity_id)
 
 
@@ -359,7 +281,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
     @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
-        return _async_should_expose(self.hass, self._config, entity_id)
+        entity_filter: EntityFilter = self._config[CONF_FILTER]
+        if not entity_filter.empty_filter:
+            return entity_filter(entity_id)
+
+        return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
 
     @callback
     @override

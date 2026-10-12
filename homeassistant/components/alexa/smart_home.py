@@ -31,6 +31,7 @@ from .const import (
     EVENT_ALEXA_SMART_HOME,
 )
 from .diagnostics import async_redact_auth_data
+from .entities import entity_supported
 from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
@@ -66,7 +67,9 @@ class AlexaConfig(AbstractConfig):
             return
         # v2: preserve the pre-migration name of exposed entities as an alias
         for entity_id in list(er.async_get(self.hass).entities):
-            if CONF_NAME in self.entity_config.get(entity_id, {}):
+            if CONF_NAME in self.entity_config.get(
+                entity_id, {}
+            ) or not entity_supported(self.hass, entity_id):
                 continue
             if self.should_expose(entity_id):
                 er.async_preserve_compat_name_as_alias(self.hass, entity_id)

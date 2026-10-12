@@ -5928,8 +5928,12 @@ async def test_alexa_config_migrate_entity_names(
     exposed = entity_registry.async_get_or_create("light", "test", "exposed")
     yaml_name = entity_registry.async_get_or_create("light", "test", "yaml_name")
     entity_registry.async_get_or_create("switch", "test", "not_exposed")
+    entity_registry.async_get_or_create("device_tracker", "test", "unsupported")
+    valve = entity_registry.async_get_or_create("valve", "test", "valve")
     config = {
-        "filter": entityfilter.FILTER_SCHEMA({"include_domains": ["light"]}),
+        "filter": entityfilter.FILTER_SCHEMA(
+            {"include_domains": ["light", "device_tracker", "valve"]}
+        ),
         "entity_config": {yaml_name.entity_id: {"name": "Configured"}},
     }
 
@@ -5937,7 +5941,10 @@ async def test_alexa_config_migrate_entity_names(
         "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
     ) as mock_preserve:
         await smart_home.AlexaConfig(hass, config).async_initialize()
-    assert mock_preserve.mock_calls == [call(hass, exposed.entity_id)]
+    assert mock_preserve.mock_calls == [
+        call(hass, exposed.entity_id),
+        call(hass, valve.entity_id),
+    ]
     assert hass_storage["alexa"]["data"]["entity_settings_version"] == 2
 
     # The migration is not repeated

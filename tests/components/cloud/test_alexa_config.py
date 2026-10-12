@@ -864,11 +864,11 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
         suggested_object_id="unsupported",
     )
 
-    water_heater = entity_registry.async_get_or_create(
-        "water_heater",
+    device_tracker = entity_registry.async_get_or_create(
+        "device_tracker",
         "test",
         "unique",
-        suggested_object_id="water_heater",
+        suggested_object_id="device_tracker",
     )
 
     await cloud_prefs.async_update(
@@ -879,9 +879,9 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
 
     cloud_prefs._prefs[PREF_ALEXA_DEFAULT_EXPOSE] = [
         "binary_sensor",
+        "device_tracker",
         "light",
         "sensor",
-        "water_heater",
     ]
     # The migration runs after start, when registry entities have a state
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -905,7 +905,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
     assert async_get_entity_settings(hass, sensor_unsupported.entity_id) == {
         "cloud.alexa": {"should_expose": False}
     }
-    assert async_get_entity_settings(hass, water_heater.entity_id) == {
+    assert async_get_entity_settings(hass, device_tracker.entity_id) == {
         "cloud.alexa": {"should_expose": False}
     }
 
@@ -966,10 +966,22 @@ async def test_alexa_config_prefs_update_without_linked_skill(
 @pytest.mark.parametrize(
     ("enabled", "logged_in", "subscription_expired", "expected_entity_ids"),
     [
-        pytest.param(True, True, False, ["light.exposed"], id="enabled"),
+        pytest.param(
+            True,
+            True,
+            False,
+            ["light.exposed", "water_heater.water_heater"],
+            id="enabled",
+        ),
         pytest.param(False, True, False, [], id="disabled"),
         pytest.param(True, False, False, [], id="logged_out"),
-        pytest.param(True, True, True, ["light.exposed"], id="subscription_expired"),
+        pytest.param(
+            True,
+            True,
+            True,
+            ["light.exposed", "water_heater.water_heater"],
+            id="subscription_expired",
+        ),
     ],
 )
 async def test_alexa_config_migrate_entity_names(
@@ -998,9 +1010,13 @@ async def test_alexa_config_migrate_entity_names(
     entity_yaml_name = entity_registry.async_get_or_create(
         "light", "test", "light_yaml_name", suggested_object_id="yaml_name"
     )
+    entity_water_heater = entity_registry.async_get_or_create(
+        "water_heater", "test", "water_heater", suggested_object_id="water_heater"
+    )
     expose_entity(hass, entity_exposed.entity_id, True)
     expose_entity(hass, entity_not_exposed.entity_id, False)
     expose_entity(hass, entity_yaml_name.entity_id, True)
+    expose_entity(hass, entity_water_heater.entity_id, True)
 
     await cloud_prefs.async_update(
         alexa_enabled=enabled,
@@ -1022,4 +1038,39 @@ async def test_alexa_config_migrate_entity_names(
     assert mock_preserve.mock_calls == [
         call(hass, entity_id) for entity_id in expected_entity_ids
     ]
+    assert cloud_prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
+
+
+async def test_alexa_config_migrate_entity_names_yaml_filter(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the v4 migration with a YAML filter only preserves supported entities."""
+    entity_valve = entity_registry.async_get_or_create(
+        "valve", "test", "valve", suggested_object_id="valve"
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker", "test", "tracker", suggested_object_id="tracker"
+    )
+    entity_registry.async_get_or_create(
+        "light", "test", "excluded", suggested_object_id="excluded"
+    )
+
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=3,
+    )
+    with patch(
+        "homeassistant.helpers.entity_registry.async_preserve_compat_name_as_alias"
+    ) as mock_preserve:
+        await alexa_config.async_migrate_entity_settings(
+            hass,
+            ALEXA_SCHEMA({"filter": {"include_domains": ["valve", "device_tracker"]}}),
+            cloud_prefs,
+            Mock(is_logged_in=True, subscription_expired=False),
+        )
+
+    assert mock_preserve.mock_calls == [call(hass, entity_valve.entity_id)]
     assert cloud_prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
