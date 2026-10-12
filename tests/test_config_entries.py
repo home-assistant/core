@@ -23,6 +23,7 @@ from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -4046,6 +4047,77 @@ async def test_entry_disable_succeed(
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_entry_disable_entity_state(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity state is removed while an entry is disabled."""
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        return await hass.config_entries.async_unload_platforms(entry, ["light"])
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        async_add_entities([MockEntity(unique_id="1234", name="Test Entity")])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_manager(manager)
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id("light", "test", "1234")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+    assert hass.states.get(entity_id) is None
+
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_entry_disable_without_reload_support(

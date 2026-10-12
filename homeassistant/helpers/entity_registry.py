@@ -34,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
+    Context,
     Event,
     HomeAssistant,
     callback,
@@ -2830,40 +2831,54 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     """Set up the entity restore mechanism."""
 
     @callback
-    def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
-        """Clean up restored states filter."""
-        return (event_data["action"] == "remove") or (
-            event_data["action"] == "update"
-            and "old_entity_id" in event_data
+    def sync_restored_state_filter(event_data: Mapping[str, Any]) -> bool:
+        """Filter registry events that may affect a restored state."""
+        if event_data["action"] == "remove":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return (
+            "old_entity_id" in event_data
             and event_data["entity_id"] != event_data["old_entity_id"]
-        )
+        ) or "disabled_by" in event_data["changes"]
 
     @callback
-    def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
-        """Clean up restored states."""
-        if event.data["action"] == "update":
-            old_entity_id = event.data["old_entity_id"]
-            old_state = hass.states.get(old_entity_id)
-            if old_state is None or not old_state.attributes.get(
-                EntityStateAttribute.RESTORED
-            ):
-                return
-            hass.states.async_remove(old_entity_id, context=event.context)
-            if entry := registry.async_get(event.data["entity_id"]):
-                entry.write_unavailable_state(hass)
-            return
-
-        state = hass.states.get(event.data["entity_id"])
-
+    def remove_restored_state(entity_id: str, context: Context) -> bool:
+        """Remove the restored state of an entity, if it has one."""
+        state = hass.states.get(entity_id)
         if state is None or not state.attributes.get(EntityStateAttribute.RESTORED):
+            return False
+        hass.states.async_remove(entity_id, context=context)
+        return True
+
+    @callback
+    def sync_restored_state(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        """Keep the restored state of an entity in sync with its registry entry."""
+        data = event.data
+        entity_id = data["entity_id"]
+        if data["action"] != "update":  # remove, per the filter
+            remove_restored_state(entity_id, event.context)
             return
 
-        hass.states.async_remove(event.data["entity_id"], context=event.context)
+        had_restored_state = (
+            old_entity_id := data.get("old_entity_id")
+        ) is not None and remove_restored_state(old_entity_id, event.context)
+
+        entry = registry.async_get(entity_id)
+        assert entry is not None
+        if entry.disabled:
+            remove_restored_state(entity_id, event.context)
+            return
+
+        if not had_restored_state and "disabled_by" not in data["changes"]:
+            return
+        if hass.states.get(entity_id) is None:
+            entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
-        cleanup_restored_states,
-        event_filter=cleanup_restored_states_filter,
+        sync_restored_state,
+        event_filter=sync_restored_state_filter,
     )
 
     if hass.is_running:
