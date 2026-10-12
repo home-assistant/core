@@ -152,6 +152,28 @@ async def test_outdoor_temperature_sensor_added_when_reported(
     assert state.state == "19.5"
 
 
+async def test_outdoor_temperature_sensor_restored_without_value(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a previously added outdoor temperature sensor stays without a value."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "ata-unit-uuid-1_outdoor_temperature",
+        config_entry=mock_config_entry,
+        suggested_object_id="living_room_ac_outdoor_temperature",
+    )
+    mock_melcloud_client.get_outdoor_temperature.return_value = None
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(OUTDOOR_TEMPERATURE_ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_outdoor_temperature_not_fetched_without_sensor(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,

@@ -9,6 +9,7 @@ from typing import override
 from aiomelcloudhome import ATAUnit, ATWOperationMode, ATWUnit
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities
@@ -200,6 +202,14 @@ async def async_setup_entry(
     )
 
     outdoor_temperature_units: set[str] = set()
+    # Sensors added before stay, even when the first sample after a restart is empty
+    registered = {
+        registry_entry.unique_id
+        for registry_entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+        if registry_entry.domain == SENSOR_DOMAIN
+    }
 
     @callback
     def _async_add_outdoor_temperature_sensors() -> None:
@@ -207,10 +217,12 @@ async def async_setup_entry(
         outdoor_temperature_units.intersection_update(coordinator.ata_units)
         new_units = [
             unit
-            for unit_id, value in telemetry_coordinator.data.outdoor_temperature.items()
-            if value is not None
-            and unit_id not in outdoor_temperature_units
-            and (unit := coordinator.ata_units.get(unit_id))
+            for unit_id, unit in coordinator.ata_units.items()
+            if unit_id not in outdoor_temperature_units
+            and (
+                telemetry_coordinator.data.outdoor_temperature.get(unit_id) is not None
+                or f"{unit_id}_{OUTDOOR_TEMPERATURE_DESCRIPTION.key}" in registered
+            )
         ]
         outdoor_temperature_units.update(unit.id for unit in new_units)
         async_add_entities(
