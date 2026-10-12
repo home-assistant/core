@@ -7,16 +7,13 @@ from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import (
-    DOMAIN as SIREN_DOMAIN,
-    SirenEntityFeature,
-)
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntityFeature
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    EntityStateAttribute,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import HomeAssistant
