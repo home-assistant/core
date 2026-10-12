@@ -1899,3 +1899,155 @@ async def test_abort_discard_timeout_keeps_late_task_owned_and_error_logged(
                         pass
             await asyncio.wait_for(process.wait(), 5)
         await gen.aclose()
+
+
+@pytest.mark.parametrize("mode", ["failed-child", "stdin-failure", "exhausted-writer"])
+async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
+    ffmpeg_ready: HomeAssistant, mode: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A held second read cannot be replaced or raced by abort discard."""
+    read_entered = asyncio.Event()
+    release_read = asyncio.Event()
+    release_input = asyncio.Event()
+    processes = []
+    tasks = []
+    competing_read = False
+    old_reader = None
+    late_failure = RuntimeError("late stdout read failure")
+    stdin_failure = BrokenPipeError("stdin pipe failed")
+    spawn_os = asyncio.create_subprocess_exec
+    background = ffmpeg_ready.async_create_background_task
+    script = "import os,sys\nos.write(1,b'P'*4096)\nos.read(0,1)\n" + (
+        "os.write(2,b'failed child\\n');sys.exit(7)\n"
+        if mode != "exhausted-writer"
+        else "os.write(1,b'Q'*4096)\n"
+    )
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(sys.executable, "-c", script, **kwargs)
+        processes.append(process)
+        if mode == "stdin-failure":
+            assert process.stdin is not None
+            drain = process.stdin.drain
+
+            async def observed_drain():
+                await drain()
+                if read_entered.is_set():
+                    # Raise at the stdin drain boundary after real child exit.
+                    await asyncio.wait_for(process.wait(), 3)
+                    raise stdin_failure
+
+            process.stdin.drain = observed_drain
+        assert process.stdout is not None
+        read = process.stdout.read
+        read_count = 0
+
+        async def held_read(n: int = -1) -> bytes:
+            nonlocal read_count, old_reader, competing_read
+            read_count += 1
+            if read_count == 2:
+                old_reader = asyncio.current_task()
+                read_entered.set()
+                # Test-only adapter: cancellation need not relinquish the pipe.
+                while not release_read.is_set():
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await release_read.wait()
+                if mode != "exhausted-writer":
+                    raise late_failure
+            elif old_reader is not None and not old_reader.done():
+                competing_read = True
+            return await read(n)
+
+        process.stdout.read = held_read
+        return process
+
+    def tracked_background(target, name, eager_start=True):
+        task = background(target, name, eager_start=eager_start)
+        tasks.append(task)
+        return task
+
+    async def source() -> AsyncGenerator[bytes]:
+        await release_input.wait()
+        yield b"X"
+        if mode == "stdin-failure":
+            yield b"Y"
+        if mode != "exhausted-writer":
+            await asyncio.Event().wait()
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    owner = None
+    try:
+        with (
+            patch(
+                "homeassistant.components.tts.ffmpeg.get_ffmpeg_manager",
+                return_value=SimpleNamespace(binary="os-substitute"),
+            ),
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch.object(
+                ffmpeg_ready, "async_create_background_task", tracked_background
+            ),
+        ):
+            assert await asyncio.wait_for(anext(gen), 3) == b"P" * 4096
+            owner = asyncio.create_task(
+                anext(gen) if mode == "failed-child" else _collect(gen)
+            )
+            await asyncio.wait_for(read_entered.wait(), 3)
+            assert old_reader is not None and not old_reader.done()
+            release_input.set()  # OS child exit follows the held second read.
+            await asyncio.wait_for(processes[0].wait(), 3)
+            if mode != "exhausted-writer":
+                with pytest.raises(HomeAssistantError):
+                    await _observe(owner, 5)
+                assert processes[0].returncode == 7
+            else:
+                writer = next(
+                    task for task in tasks if task.get_name() == "tts_ffmpeg_conversion"
+                )
+                await _observe(writer, 3)
+                await asyncio.wait({owner}, timeout=0.1)
+                assert not owner.done()  # Full output still awaits the held read.
+                assert old_reader.cancelling() == 0
+            assert not old_reader.done() and not release_read.is_set()
+            if mode == "stdin-failure":
+                assert next(
+                    task for task in tasks if task.get_name() == "tts_ffmpeg_conversion"
+                ).done()
+            assert old_reader in ffmpeg_ready._background_tasks
+            assert not competing_read
+            assert not any(
+                task.get_name() == "tts_ffmpeg_stdout_discard" for task in tasks
+            )
+            release_read.set()
+            if mode != "exhausted-writer":
+                with pytest.raises(RuntimeError) as caught:
+                    await _observe(old_reader, 3)
+                assert caught.value is late_failure
+                assert any(
+                    "late stdout read failure" in record.message
+                    for record in caplog.records
+                )
+            else:
+                assert await _observe(owner, 3) == b"Q" * 4096
+                assert not competing_read
+                assert old_reader.cancelled() is False
+                assert not any(
+                    task.get_name() == "tts_ffmpeg_stdout_discard" for task in tasks
+                )
+    finally:
+        release_read.set()
+        release_input.set()
+        if owner is not None and not owner.done():
+            owner.cancel()
+        if owner is not None:
+            await asyncio.gather(owner, return_exceptions=True)
+        if old_reader is not None:
+            await asyncio.gather(old_reader, return_exceptions=True)
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            if process.stdout is not None:
+                while await asyncio.wait_for(process.stdout.read(65536), 3):
+                    pass
+            await asyncio.wait_for(process.wait(), 5)
+        with contextlib.suppress(HomeAssistantError):
+            await gen.aclose()

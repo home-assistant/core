@@ -520,9 +520,10 @@ async def _async_convert_audio(  # noqa: C901
                         break
                     raise stdin_error
                 writer_task.result()
-            read_task = hass.async_create_background_task(
-                process.stdout.read(FFMPEG_CHUNK_SIZE), "tts_ffmpeg_stdout"
-            )
+            if read_task is None:
+                read_task = hass.async_create_background_task(
+                    process.stdout.read(FFMPEG_CHUNK_SIZE), "tts_ffmpeg_stdout"
+                )
             pending = {read_task}
             if not wait_task.done():
                 pending.add(wait_task)
@@ -550,7 +551,8 @@ async def _async_convert_audio(  # noqa: C901
                     if wait_task.done() and wait_task.result() != 0:
                         read_task.cancel()
                         await _async_ffmpeg_join(read_task)
-                        read_task = None
+                        # Keep the reader owned until it actually finishes;
+                        # abort cleanup must not start a competing discard.
                         break
                     raise stdin_error
                 writer_task.result()
@@ -561,11 +563,13 @@ async def _async_convert_audio(  # noqa: C901
                     yield chunk
                     continue
                 break
-            read_task.cancel()
-            await _async_ffmpeg_join(read_task)
-            read_task = None
             if wait_task in done and writer_task is not None and not input_exhausted:
+                read_task.cancel()
+                await _async_ffmpeg_join(read_task)
                 break
+            # A successful writer waking the wait is not an abort: the
+            # pending reader still owns stdout and may contain final output.
+            # Reuse it on the next iteration rather than cancelling it.
 
         if source_read_error is not None:
             raise source_read_error
