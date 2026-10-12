@@ -410,4 +410,5 @@ async def test_device_selection_flow(
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == "device_12345"
         assert result["options"] == {CONF_DEVICES: ["device_12345"]}
