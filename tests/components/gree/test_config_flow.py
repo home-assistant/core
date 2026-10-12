@@ -49,6 +49,7 @@ async def test_scan_finds_devices(
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {}
+        assert result["result"].unique_id == DOMAIN
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
@@ -106,16 +107,31 @@ async def test_manual_step_success(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "test-device"
         assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
+        assert result["result"].unique_id == "aabbcc112233"
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_step_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (DeviceTimeoutError(), "cannot_connect"),
+        (Exception("unexpected"), "unknown"),
+    ],
+)
+async def test_manual_step_bind_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    error: str,
 ) -> None:
-    """Test manual step shows error when device cannot be reached."""
-    with patch(_PATCH_BIND, side_effect=DeviceTimeoutError()):
+    """Test manual step shows an error when binding fails and can recover."""
+    mock_device = build_device_mock(
+        name="test-device", ipAddress="192.168.1.100", mac="aabbcc112233"
+    )
+
+    with patch(_PATCH_BIND, side_effect=side_effect) as mock_bind:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -128,10 +144,20 @@ async def test_manual_step_cannot_connect(
             result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"base": error}
+        assert len(mock_setup_entry.mock_calls) == 0
+
+        mock_bind.side_effect = None
+        mock_bind.return_value = mock_device
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == "aabbcc112233"
 
         await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_manual_step_already_configured(
@@ -187,6 +213,7 @@ async def test_manual_step_no_mac_uses_ip_as_unique_id(
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
+        assert result["result"].unique_id == "192.168.1.100"
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
@@ -236,38 +263,20 @@ async def test_manual_step_allowed_alongside_discovery_entry(
             result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == "aabbcc112233"
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_manual_step_unexpected_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test manual step shows error on unexpected exception during bind."""
-    with patch(_PATCH_BIND, side_effect=Exception("unexpected")):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "manual"}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
-
-        await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 0
-
-
 async def test_manual_step_invalid_ip(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test manual step shows error for invalid IP address."""
+    """Test manual step shows error for invalid IP address and can recover."""
+    mock_device = build_device_mock(
+        name="test-device", ipAddress="192.168.1.100", mac="aabbcc112233"
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -282,3 +291,13 @@ async def test_manual_step_invalid_ip(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"ip_address": "invalid_host"}
+
+    with patch(_PATCH_BIND, return_value=mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "192.168.1.100"}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbcc112233"
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
