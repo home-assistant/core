@@ -1137,6 +1137,13 @@ async def test_camera_capabilities_two_way_audio_native_webrtc(
     )
 
 
+@pytest.mark.usefixtures("mock_camera")
+async def test_additional_stream_sources_default(hass: HomeAssistant) -> None:
+    """Test cameras have no additional stream sources by default."""
+    cam = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert await cam.additional_stream_sources() == []
+
+
 @pytest.mark.usefixtures("mock_test_webrtc_cameras", "register_test_provider")
 async def test_webrtc_provider_not_added_for_native_webrtc(
     hass: HomeAssistant,

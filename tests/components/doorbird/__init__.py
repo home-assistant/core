@@ -70,6 +70,12 @@ def get_mock_doorbird_api(
     api_mock_type.turn_light_on = AsyncMock(return_value=True)
     api_mock_type.delete_favorite = AsyncMock(return_value=True)
     api_mock_type.get_image = AsyncMock(return_value=b"image")
+    api_mock_type.live_audio_url = (
+        "http://friend:password@1.2.3.4:80/bha-api/audio-receive.cgi"
+    )
+    api_mock_type.live_audio_transmit_url = (
+        "http://friend:password@1.2.3.4:80/bha-api/audio-transmit.cgi"
+    )
     api_mock_type.doorbell_state = AsyncMock(side_effect=mock_unauthorized_exception())
     return doorbirdapi_mock
 

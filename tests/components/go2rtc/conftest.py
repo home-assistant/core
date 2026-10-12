@@ -49,6 +49,7 @@ def rest_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.schemes = schemes = Mock(spec_set=_SchemesClient)
         schemes.list.return_value = {
+            "doorbird",
             "onvif",
             "exec",
             "http",

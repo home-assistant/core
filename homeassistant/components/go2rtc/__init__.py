@@ -440,16 +440,31 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case Orientation.ROTATE_RIGHT:
                     stream_source += "#rotate=90"
 
+        sources = [stream_source]
+        for source in await camera.additional_stream_sources():
+            if self.async_is_supported(source):
+                sources.append(source)
+            else:
+                # Sources can contain credentials, so only log the scheme
+                _LOGGER.debug(
+                    "Skipping additional stream source of %s, scheme %s is not"
+                    " supported by go2rtc",
+                    camera.entity_id,
+                    source.partition(":")[0],
+                )
+
         streams = await self._rest_client.streams.list()
         identifier = get_camera_identifier(camera)
 
-        if (stream := streams.get(identifier)) is None or not any(
-            stream_source == producer.url for producer in stream.producers
-        ):
+        stream = streams.get(identifier)
+        producer_urls = (
+            {producer.url for producer in stream.producers} if stream else set()
+        )
+        if not producer_urls.issuperset(sources):
             await self._rest_client.streams.add(
                 identifier,
                 [
-                    stream_source,
+                    *sources,
                     # We are setting any ffmpeg rtsp related logs to debug
                     # Connection problems to the camera will be
                     # logged by the first stream

@@ -1002,6 +1002,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["str", None],
                 ),
                 TypeHintMatch(
+                    function_name="additional_stream_sources",
+                    return_type="list[str]",
+                    mandatory=True,
+                ),
+                TypeHintMatch(
                     function_name="async_handle_web_rtc_offer",
                     arg_types={
                         1: "str",

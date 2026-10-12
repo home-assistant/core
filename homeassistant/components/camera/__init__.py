@@ -509,6 +509,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return None
 
+    async def additional_stream_sources(self) -> list[str]:
+        """Return additional sources to combine with the stream source.
+
+        Used by WebRTC providers for media the stream source does not
+        provide, like a separate audio stream or a two way audio backchannel.
+        """
+        return []
+
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:

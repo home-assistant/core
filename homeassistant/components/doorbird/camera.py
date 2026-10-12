@@ -3,8 +3,10 @@
 import datetime
 import logging
 from typing import override
+from urllib.parse import urlsplit
 
 import aiohttp
+from doorbirdpy import DoorBird
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -19,6 +21,16 @@ _LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
 _LIVE_INTERVAL = datetime.timedelta(seconds=45)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
+
+
+def _get_backchannel_url(device: DoorBird) -> str:
+    """Return the go2rtc doorbird source used to transmit audio to the device."""
+    # go2rtc only takes host and credentials and posts to audio-transmit.cgi itself
+    return (
+        urlsplit(device.live_audio_transmit_url)
+        ._replace(scheme="doorbird", path="")
+        .geturl()
+    )
 
 
 async def async_setup_entry(
@@ -74,6 +86,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._last_image: bytes | None = None
         if self._stream_url:
             self._attr_supported_features = CameraEntityFeature.STREAM
+            self._attr_supports_two_way_audio = True
         self._interval = interval
         self._last_update = datetime.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
@@ -82,6 +95,14 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._stream_url
+
+    @override
+    async def additional_stream_sources(self) -> list[str]:
+        """Return the audio and two way audio sources, as RTSP has no audio."""
+        if not self._stream_url:
+            return []
+        device = self._door_station.device
+        return [device.live_audio_url, _get_backchannel_url(device)]
 
     @override
     async def async_camera_image(

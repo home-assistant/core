@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from pathlib import Path
 from typing import NamedTuple
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, _Call, call, patch
 
 from aiohttp import UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -1073,6 +1073,65 @@ async def test_generic_workaround(
                 f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
             ],
         )
+
+
+_ADDITIONAL_SOURCES_IDENTIFIER = "test_camera_unique_id"
+_ADDITIONAL_SOURCES_EXPECTED = [
+    "rtsp://stream",
+    "doorbird://user:secret@1.2.3.4:80",
+    f"ffmpeg:{_ADDITIONAL_SOURCES_IDENTIFIER}#audio=opus#query=log_level=debug",
+]
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+@pytest.mark.parametrize(
+    ("streams", "expected_add_calls"),
+    [
+        pytest.param(
+            {},
+            [call(_ADDITIONAL_SOURCES_IDENTIFIER, _ADDITIONAL_SOURCES_EXPECTED)],
+            id="no_stream",
+        ),
+        pytest.param(
+            {_ADDITIONAL_SOURCES_IDENTIFIER: Stream([Producer("rtsp://stream")])},
+            [call(_ADDITIONAL_SOURCES_IDENTIFIER, _ADDITIONAL_SOURCES_EXPECTED)],
+            id="additional_source_missing",
+        ),
+        pytest.param(
+            {
+                _ADDITIONAL_SOURCES_IDENTIFIER: Stream(
+                    [Producer(url) for url in _ADDITIONAL_SOURCES_EXPECTED]
+                )
+            },
+            [],
+            id="all_sources_present",
+        ),
+    ],
+)
+async def test_additional_stream_sources(
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    caplog: pytest.LogCaptureFixture,
+    streams: dict[str, Stream],
+    expected_add_calls: list[_Call],
+) -> None:
+    """Test additional stream sources are added to the go2rtc stream."""
+    caplog.set_level(logging.DEBUG)
+    camera = init_test_integration
+    assert get_camera_identifier(camera) == _ADDITIONAL_SOURCES_IDENTIFIER
+    camera.set_additional_stream_sources(
+        ["doorbird://user:secret@1.2.3.4:80", "unsupported://user:secret@1.2.3.4"]
+    )
+    rest_client.streams.list.return_value = streams
+
+    await camera.async_handle_async_webrtc_offer(
+        OFFER_SDP, "session", Mock(spec_set=WebRTCSendMessage)
+    )
+
+    # Unsupported sources are skipped, as go2rtc would reject the whole stream
+    assert rest_client.streams.add.mock_calls == expected_add_calls
+    assert "scheme unsupported is not supported by go2rtc" in caplog.text
+    assert "secret" not in caplog.text
 
 
 async def _test_camera_orientation(
