@@ -1,7 +1,11 @@
 """Test INDI Allsky Media Source."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError, client_exceptions
 from aioindiallsky import ImageItem, IndiAllSkyError, MediaData, MonthItem, VideoItem
 import pytest
 
@@ -14,6 +18,7 @@ from homeassistant.components.media_source import (
     async_browse_media,
     async_resolve_media,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,6 +26,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -43,14 +49,15 @@ async def test_async_resolve_media_success(
         "https://127.0.0.1:443/indi-allsky/images/test.mp4"
     )
 
+    proxy_url = (
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3Rlc3QubXA0"
+    )
     resolved = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/test.mp4",
         None,
     )
-    assert resolved == PlayMedia(
-        "https://127.0.0.1:443/indi-allsky/images/test.mp4", "video/mp4"
-    )
+    assert resolved == PlayMedia(proxy_url, "video/mp4")
 
     # Test resolving JPEG image located within a timelapse directory
     mock_indi_allsky_client.get_media_url.return_value = (
@@ -62,7 +69,7 @@ async def test_async_resolve_media_success(
         None,
     )
     assert resolved_keo == PlayMedia(
-        "https://127.0.0.1:443/indi-allsky/images/timelapse/20261011/keogram.jpg",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3RpbWVsYXBzZS8yMDI2MTAxMS9rZW9ncmFtLmpwZw==",
         "image/jpeg",
     )
 
@@ -141,7 +148,7 @@ async def test_async_resolve_media_redirect_resolution(
         None,
     )
     assert resolved == PlayMedia(
-        "https://127.0.0.1/indi-allsky/images/captured_1234.jpg",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U=",
         "image/jpeg",
     )
 
@@ -159,7 +166,7 @@ async def test_async_resolve_media_redirect_resolution(
         None,
     )
     assert resolved_tl == PlayMedia(
-        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0dGltZWxhcHNl",
         "video/mp4",
     )
 
@@ -179,7 +186,7 @@ async def test_async_resolve_media_redirect_resolution(
         None,
     )
     assert resolved_tl_webm == PlayMedia(
-        "https://127.0.0.1/indi-allsky/videos/timelapse.webm",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0dGltZWxhcHNl",
         "video/webm",
     )
 
@@ -197,7 +204,7 @@ async def test_async_resolve_media_redirect_resolution(
         None,
     )
     assert resolved_fallback == PlayMedia(
-        "https://127.0.0.1:443/indi-allsky/latestkeogram",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0a2VvZ3JhbQ==",
         "image/jpeg",
     )
 
@@ -230,7 +237,7 @@ async def test_async_resolve_media_redirect_resolution(
         assert mock_get_session.call_args.kwargs["verify_ssl"] is False
 
     assert resolved_no_verify == PlayMedia(
-        "https://127.0.0.1/indi-allsky/images/startrail_1234.jpg",
+        f"/api/indi_allsky/media/{entry_no_verify.entry_id}/bGF0ZXN0c3RhcnRyYWls",
         "image/jpeg",
     )
 
@@ -254,7 +261,10 @@ async def test_async_resolve_media_mime_types(
         f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#public/video.webm",
         None,
     )
-    assert res_webm.mime_type == "video/webm"
+    assert res_webm == PlayMedia(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/cHVibGljL3ZpZGVvLndlYm0=",
+        "video/webm",
+    )
 
     # Unknown extension falls back to image/jpeg
     mock_indi_allsky_client.get_media_url.return_value = (
@@ -265,7 +275,10 @@ async def test_async_resolve_media_mime_types(
         f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#unknown.unknownext",
         None,
     )
-    assert res_fallback.mime_type == "image/jpeg"
+    assert res_fallback == PlayMedia(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/dW5rbm93bi51bmtub3duZXh0",
+        "image/jpeg",
+    )
 
 
 async def test_async_browse_media_root(
@@ -323,6 +336,23 @@ async def test_async_browse_media_root(
         await async_browse_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#invalid_month",
+        )
+
+    # Unsupported / excess path segments raise BrowseError
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#latest#junk",
+        )
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026#10#junk",
+        )
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11#20#extra",
         )
 
 
@@ -513,3 +543,228 @@ async def test_async_browse_catalog_error(
         await async_browse_media(
             hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos"
         )
+
+
+async def test_proxy_view_success_and_headers(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test successful streaming and header handling in proxy view."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Trigger async_get_media_source to register view
+    await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        None,
+    )
+
+    client = await hass_client()
+
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/sample.jpg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+    aioclient_mock.get(
+        upstream_url,
+        content=b"image-bytes-data",
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Length": "16",
+            "Content-Range": "bytes 0-15/16",
+            "Content-Type": "image/jpeg",
+        },
+    )
+
+    # b64 for "sample.jpg" is "c2FtcGxlLmpwZw=="
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/c2FtcGxlLmpwZw==",
+        headers={"Range": "bytes=0-15"},
+    )
+    assert resp.status == 200
+    assert resp.headers.get("Content-Type") == "image/jpeg"
+    assert resp.headers.get("Accept-Ranges") == "bytes"
+    assert resp.headers.get("Content-Length") == "16"
+    assert resp.headers.get("Content-Range") == "bytes 0-15/16"
+    assert await resp.read() == b"image-bytes-data"
+
+
+async def test_proxy_view_content_type_inference(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test proxy view MIME fallback when Content-Type is missing from upstream."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/sample.jpg"
+    )
+    await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        None,
+    )
+
+    client = await hass_client()
+
+    # 1. Inferred from extension in url (e.g. .mp4)
+    upstream_url_mp4 = "https://127.0.0.1:443/indi-allsky/video.mp4"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url_mp4
+    aioclient_mock.get(upstream_url_mp4, content=b"video-bytes")
+
+    resp_mp4 = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/dmlkZW8ubXA0"
+    )
+    assert resp_mp4.status == 200
+    assert resp_mp4.headers.get("Content-Type") == "video/mp4"
+
+    # 2. latesttimelapse fallback to video/mp4 when url has no extension
+    aioclient_mock.clear_requests()
+    upstream_url_tl = "https://127.0.0.1:443/indi-allsky/latesttimelapse"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url_tl
+    aioclient_mock.get(upstream_url_tl, content=b"tl-bytes")
+
+    # b64 for "latesttimelapse" is "bGF0ZXN0dGltZWxhcHNl"
+    resp_tl = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0dGltZWxhcHNl"
+    )
+    assert resp_tl.status == 200
+    assert resp_tl.headers.get("Content-Type") == "video/mp4"
+
+    # 3. other paths fallback to image/jpeg when url has no extension
+    aioclient_mock.clear_requests()
+    upstream_url_other = "https://127.0.0.1:443/indi-allsky/noext"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url_other
+    aioclient_mock.get(upstream_url_other, content=b"img-bytes")
+
+    # b64 for "noext" is "bm9leHQ="
+    resp_other = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bm9leHQ="
+    )
+    assert resp_other.status == 200
+    assert resp_other.headers.get("Content-Type") == "image/jpeg"
+
+
+async def test_proxy_view_errors(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test proxy view error handling."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        None,
+    )
+
+    client = await hass_client()
+
+    # 1. Non-existent entry ID -> 404
+    resp = await client.get("/api/indi_allsky/media/nonexistent/c2FtcGxl")
+    assert resp.status == 404
+
+    # 2. Invalid base64 path -> 400
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/!invalid_base64!"
+    )
+    assert resp.status == 400
+
+    # 3. Path traversal (..) -> 400
+    # b64 for "images/../secret" is "aW1hZ2VzLy4uL3NlY3JldA=="
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzLy4uL3NlY3JldA=="
+    )
+    assert resp.status == 400
+
+    # 4. Absolute path -> 400
+    # b64 for "/etc/passwd" is "L2V0Yy9wYXNzd2Q="
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/L2V0Yy9wYXNzd2Q="
+    )
+    assert resp.status == 400
+
+    # 5. Upstream connection failure / client error -> 502
+    upstream_url = "https://127.0.0.1:443/indi-allsky/error.jpg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+    aioclient_mock.get(upstream_url, exc=TimeoutError())
+
+    # b64 for "error.jpg" is "ZXJyb3IuanBn"
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/ZXJyb3IuanBn"
+    )
+    assert resp.status == 502
+
+    # 6. Entry from another domain -> 404
+    foreign_entry = MockConfigEntry(
+        domain="other_domain",
+        state=ConfigEntryState.LOADED,
+    )
+    foreign_entry.add_to_hass(hass)
+    resp = await client.get(f"/api/indi_allsky/media/{foreign_entry.entry_id}/c2FtcGxl")
+    assert resp.status == 404
+
+
+async def test_proxy_view_streaming_error_mid_stream(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test proxy view handling when upstream errors after response is prepared."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        None,
+    )
+
+    client = await hass_client()
+
+    class FailingStreamContent:
+        async def iter_chunked(self, size: int) -> AsyncIterator[bytes]:
+            yield b"initial_chunk"
+            raise ClientError("Stream broken")
+
+    @asynccontextmanager
+    async def mock_get(*args, **kwargs):
+        yield SimpleNamespace(
+            status=200,
+            headers={"Content-Type": "image/jpeg"},
+            content=FailingStreamContent(),
+        )
+
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/failing.jpg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+
+    with patch(
+        "homeassistant.components.indi_allsky.media_source.async_get_clientsession"
+    ) as mock_session_getter:
+        mock_session = MagicMock()
+        mock_session.get = MagicMock(side_effect=mock_get)
+        mock_session_getter.return_value = mock_session
+
+        # b64 for "failing.jpg" is "ZmFpbGluZy5qcGc="
+        resp = await client.get(
+            f"/api/indi_allsky/media/{mock_config_entry.entry_id}/ZmFpbGluZy5qcGc="
+        )
+        assert resp.status == 200
+        assert await resp.content.readexactly(13) == b"initial_chunk"
+        with pytest.raises(client_exceptions.ClientPayloadError):
+            await resp.content.read()

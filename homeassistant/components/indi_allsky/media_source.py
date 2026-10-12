@@ -1,13 +1,16 @@
 """INDI Allsky Media Source Implementation."""
 
+import base64
 import logging
 import mimetypes
+from pathlib import PurePath
 from typing import override
 
-from aiohttp import ClientError, ClientTimeout
+from aiohttp import ClientError, ClientTimeout, web
 from aioindiallsky import IndiAllSkyError
 import yarl
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
@@ -27,6 +30,7 @@ from .coordinator import IndiAllSkyConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 REDIRECT_TIMEOUT = ClientTimeout(total=10)
+MEDIA_STREAM_CHUNK_SIZE = 64 * 1024
 
 CATEGORY_LATEST = "latest"
 CATEGORY_VIDEOS = "videos"
@@ -38,9 +42,115 @@ CATEGORY_NAMES = {
     CATEGORY_IMAGES: "Captured Images History",
 }
 
+MEDIA_PROXY_URL = "/api/indi_allsky/media/{entry_id}/{path}"
+
+
+def _encode_media_path(path: str) -> str:
+    """Encode an INDI Allsky media path for use in a Home Assistant proxy URL."""
+    return base64.urlsafe_b64encode(path.encode("utf-8")).decode("ascii")
+
+
+def _build_media_proxy_path(entry_id: str, path: str) -> str:
+    """Build a Home Assistant proxy path for INDI Allsky media."""
+    return MEDIA_PROXY_URL.format(
+        entry_id=entry_id,
+        path=_encode_media_path(path),
+    )
+
+
+class IndiAllSkyMediaProxyView(HomeAssistantView):
+    """Proxy INDI Allsky media assets through Home Assistant."""
+
+    requires_auth = True
+    url = MEDIA_PROXY_URL
+    name = "api:indi_allsky:media"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the proxy view."""
+        self.hass = hass
+
+    async def get(
+        self,
+        request: web.Request,
+        entry_id: str,
+        path: str,
+    ) -> web.StreamResponse:
+        """Stream media assets from the INDI Allsky device."""
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if (
+            not entry
+            or entry.domain != DOMAIN
+            or entry.state is not ConfigEntryState.LOADED
+        ):
+            return web.Response(status=404)
+
+        try:
+            media_path = base64.urlsafe_b64decode(path.encode("ascii")).decode("utf-8")
+        except ValueError, UnicodeDecodeError:
+            return web.Response(status=400)
+
+        media_path_obj = PurePath(media_path)
+        if media_path_obj.is_absolute() or ".." in media_path_obj.parts:
+            return web.Response(status=400)
+
+        url = entry.runtime_data.client.get_media_url(media_path)
+        verify_ssl: bool = entry.data.get(CONF_VERIFY_SSL, True)
+        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
+
+        headers: dict[str, str] = {}
+        if range_header := request.headers.get("Range"):
+            headers["Range"] = range_header
+
+        response: web.StreamResponse | None = None
+        try:
+            async with session.get(
+                url,
+                headers=headers,
+                timeout=REDIRECT_TIMEOUT,
+                allow_redirects=True,
+            ) as upstream:
+                resp_headers: dict[str, str] = {}
+                for header in (
+                    "Accept-Ranges",
+                    "Content-Length",
+                    "Content-Range",
+                    "Content-Type",
+                ):
+                    if val := upstream.headers.get(header):
+                        resp_headers[header] = val
+
+                response = web.StreamResponse(
+                    status=upstream.status,
+                    headers=resp_headers,
+                )
+
+                if "Content-Type" not in resp_headers:
+                    clean_url = str(upstream.url).split("?", maxsplit=1)[0].lower()
+                    if mime := mimetypes.guess_type(clean_url)[0]:
+                        response.content_type = mime
+                    elif media_path == "latesttimelapse":
+                        response.content_type = "video/mp4"
+                    else:
+                        response.content_type = "image/jpeg"
+
+                await response.prepare(request)
+
+                async for chunk in upstream.content.iter_chunked(
+                    MEDIA_STREAM_CHUNK_SIZE
+                ):
+                    await response.write(chunk)
+
+                await response.write_eof()
+                return response
+        except ClientError, TimeoutError:
+            if response is not None and response.prepared:
+                raise
+            return web.Response(status=502)
+
 
 async def async_get_media_source(hass: HomeAssistant) -> IndiAllSkyMediaSource:
     """Set up INDI Allsky media source."""
+    hass.http.register_view(IndiAllSkyMediaProxyView(hass))
     return IndiAllSkyMediaSource(hass)
 
 
@@ -86,14 +196,15 @@ class IndiAllSkyMediaSource(MediaSource):
                     "Could not resolve redirect location for %s: %s", url, err
                 )
 
-        clean_url = url.split("?")[0].lower()
+        clean_url = url.split("?", maxsplit=1)[0].lower()
         if mime := mimetypes.guess_type(clean_url)[0]:
             mime_type = mime
         elif path == "latesttimelapse":
             mime_type = "video/mp4"
         else:
             mime_type = "image/jpeg"
-        return PlayMedia(url, mime_type)
+        proxy_path = _build_media_proxy_path(entry.entry_id, path)
+        return PlayMedia(proxy_path, mime_type)
 
     @override
     async def async_browse_media(
@@ -119,15 +230,16 @@ class IndiAllSkyMediaSource(MediaSource):
             return self._build_instance_categories(entry)
 
         category = parts[1]
+        extra_parts = parts[2:]
         try:
-            if category == CATEGORY_LATEST:
+            if category == CATEGORY_LATEST and not extra_parts:
                 return self._build_latest_media(entry)
 
-            if category == CATEGORY_VIDEOS:
-                return await self._browse_videos(entry, parts[2:])
+            if category == CATEGORY_VIDEOS and len(extra_parts) <= 2:
+                return await self._browse_videos(entry, extra_parts)
 
-            if category == CATEGORY_IMAGES:
-                return await self._browse_images(entry, parts[2:])
+            if category == CATEGORY_IMAGES and len(extra_parts) <= 4:
+                return await self._browse_images(entry, extra_parts)
         except ValueError as err:
             raise BrowseError(
                 translation_domain=DOMAIN,
