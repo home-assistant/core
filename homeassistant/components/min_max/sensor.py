@@ -123,7 +123,7 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
 
     def make_hash(config: dict[str, Any]) -> str:
-        d = hashlib.sha1(json.dumps(config, sort_keys=True).encode())
+        d = hashlib.sha256(json.dumps(config, sort_keys=True).encode())
         return d.hexdigest()
 
     issue_id = f"yaml_deprecated-{make_hash(platform_config)}"
