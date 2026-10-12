@@ -471,6 +471,34 @@
       "lamp_life": {
         "name": "Lamp life"
       },
+      "last_command_source": {
+        "name": "Last command source",
+        "state": {
+          "button": "Button",
+          "http_in": "HTTP",
+          "init": "Initialization",
+          "limit_switch": "Limit switch",
+          "local": "Local",
+          "loopback": "Device action",
+          "rpc_set": "RPC set",
+          "timer": "Timer",
+          "ws_in": "WebSocket"
+        }
+      },
+      "last_command_source_with_channel_name": {
+        "name": "{channel_name} last command source",
+        "state": {
+          "button": "[%key:component::shelly::entity::sensor::last_command_source::state::button%]",
+          "http_in": "[%key:component::shelly::entity::sensor::last_command_source::state::http_in%]",
+          "init": "[%key:component::shelly::entity::sensor::last_command_source::state::init%]",
+          "limit_switch": "[%key:component::shelly::entity::sensor::last_command_source::state::limit_switch%]",
+          "local": "[%key:component::shelly::entity::sensor::last_command_source::state::local%]",
+          "loopback": "[%key:component::shelly::entity::sensor::last_command_source::state::loopback%]",
+          "rpc_set": "[%key:component::shelly::entity::sensor::last_command_source::state::rpc_set%]",
+          "timer": "[%key:component::shelly::entity::sensor::last_command_source::state::timer%]",
+          "ws_in": "[%key:component::shelly::entity::sensor::last_command_source::state::ws_in%]"
+        }
+      },
       "last_seen": {
         "name": "Last seen"
       },
