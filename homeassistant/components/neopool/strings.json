@@ -9,37 +9,91 @@
       "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check unit ID and framer settings."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "modbus_framer": "[%key:component::neopool::config::step::user::data::modbus_framer%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::neopool::config::step::user::data::unit_id%]"
-        },
-        "data_description": {
-          "host": "[%key:component::neopool::config::step::user::data_description::host%]",
-          "modbus_framer": "[%key:component::neopool::config::step::user::data_description::modbus_framer%]",
-          "port": "[%key:component::neopool::config::step::user::data_description::port%]",
-          "unit_id": "[%key:component::neopool::config::step::user::data_description::unit_id%]"
-        },
-        "description": "Update the connection settings for your NeoPool controller.",
-        "title": "Reconfigure NeoPool Connection"
-      },
       "user": {
+        "menu_options": {
+          "tcp": "Network (Modbus TCP / RTU-over-socket)",
+          "serial": "Serial (USB RS485 adapter or ESPHome serial proxy)"
+        }
+      },
+      "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_framer": "Modbus framer",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "Unit ID"
+          "more_options": "More options"
         },
         "data_description": {
           "host": "Enter the IP address of the Modbus TCP gateway connected to your pool controller.",
           "modbus_framer": "Wire protocol used by the gateway. Select TCP for MBAP framing (default for Ethernet-native gateways). Select RTU for RTU framing tunnelled through a TCP socket, used by passthrough serial-to-TCP bridges like ESPHome's stream_server.",
           "port": "Standard Modbus TCP port (default: 502). Change only if your gateway uses a non-standard port.",
-          "unit_id": "Modbus device address (1-247). Identifies the specific device on a shared bus. Most direct-connected devices use 1. Gateways may route requests to different addresses."
+          "more_options": ""
         },
-        "description": "Configure the connection to your NeoPool controller.",
-        "title": "NeoPool Connection"
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "Unit ID"
+            },
+            "data_description": {
+              "unit_id": "Modbus device address (1-247). Identifies the specific device on a shared bus. Most direct-connected devices use 1. Gateways may route requests to different addresses."
+            }
+          }
+        },
+        "description": "Configure the network connection to your NeoPool controller.",
+        "title": "NeoPool - Network Connection"
+      },
+      "serial": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]",
+          "baudrate": "Baud rate",
+          "more_options": "More options"
+        },
+        "data_description": {
+          "device": "Serial port or USB device path for the RS485 adapter connected to your pool controller.",
+          "baudrate": "RS485 baud rate. NeoPool controllers use 19200 baud.",
+          "more_options": ""
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data::unit_id%]"
+            },
+            "data_description": {
+              "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data_description::unit_id%]"
+            }
+          }
+        },
+        "description": "Configure the serial connection to your NeoPool controller.",
+        "title": "NeoPool - Serial Connection"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:component::neopool::config::step::tcp::data::host%]",
+          "modbus_framer": "[%key:component::neopool::config::step::tcp::data::modbus_framer%]",
+          "port": "[%key:component::neopool::config::step::tcp::data::port%]",
+          "device": "[%key:component::neopool::config::step::serial::data::device%]",
+          "baudrate": "[%key:component::neopool::config::step::serial::data::baudrate%]",
+          "more_options": "[%key:component::neopool::config::step::tcp::data::more_options%]"
+        },
+        "data_description": {
+          "host": "[%key:component::neopool::config::step::tcp::data_description::host%]",
+          "modbus_framer": "[%key:component::neopool::config::step::tcp::data_description::modbus_framer%]",
+          "port": "[%key:component::neopool::config::step::tcp::data_description::port%]",
+          "device": "[%key:component::neopool::config::step::serial::data_description::device%]",
+          "baudrate": "[%key:component::neopool::config::step::serial::data_description::baudrate%]",
+          "more_options": ""
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data::unit_id%]"
+            },
+            "data_description": {
+              "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data_description::unit_id%]"
+            }
+          }
+        },
+        "description": "Update the connection settings for your NeoPool controller.",
+        "title": "Reconfigure NeoPool Connection"
       }
     }
   },
