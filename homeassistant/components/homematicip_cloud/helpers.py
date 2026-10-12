@@ -25,9 +25,10 @@ def get_error_code(response: Any) -> str | None:
             return None
         # the library keeps the cloud's error body as text on failed calls
         try:
-            return str(json.loads(response.text)["errorCode"])
+            error_code = json.loads(response.text)["errorCode"]
         except ValueError, KeyError, TypeError:
-            return response.status_text
+            error_code = None
+        return response.status_text if error_code in ("", None) else str(error_code)
     if isinstance(response, dict) and response.get("errorCode") not in ("", None):
         return str(response["errorCode"])
     return None
@@ -47,11 +48,14 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
         """Handle errors from async call."""
         result = await func(self, *args, **kwargs)
         if (error_code := get_error_code(result)) is not None:
+            response = (
+                result.text if isinstance(result, RestResult) else json.dumps(result)
+            )
             # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Error while execute function %s: %s",
                 __name__,
-                error_code,
+                response or error_code,
             )
             raise HomeAssistantError(
                 f"Error while execute function {func.__name__}:"

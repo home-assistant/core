@@ -73,7 +73,9 @@ async def test_hmip_doorlockdrive(
 
 
 async def test_hmip_doorlockdrive_handle_errors(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test HomematicipDoorLockDrive."""
     entity_id = "lock.haustuer"
@@ -115,3 +117,5 @@ async def test_hmip_doorlockdrive_handle_errors(
                 {"entity_id": entity_id},
                 blocking=True,
             )
+
+    assert '{"errorCode": "CLIENT_ACCESS_DENIED"}' in caplog.text

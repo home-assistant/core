@@ -34,4 +34,8 @@ async def test_get_error_code_rest_result() -> None:
         == "CLIENT_ACCESS_DENIED"
     )
     assert get_error_code(RestResult(status=503, text="")) == "Service Unavailable"
+    assert (
+        get_error_code(RestResult(status=403, text='{"errorCode": null}'))
+        == "Forbidden"
+    )
     assert get_error_code(RestResult(status=-1)) == "No status code"
