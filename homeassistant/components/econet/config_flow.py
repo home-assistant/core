@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+from aiohttp import ClientError
 import probatio
 from pyeconet import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
@@ -54,7 +55,7 @@ class EcoNetFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         except InvalidCredentialsError:
             errors["base"] = "invalid_auth"
-        except PyeconetError:
+        except ClientError, TimeoutError, PyeconetError:
             errors["base"] = "cannot_connect"
 
         if errors:
@@ -92,7 +93,7 @@ class EcoNetFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except InvalidCredentialsError:
                 errors["base"] = "invalid_auth"
-            except PyeconetError:
+            except ClientError, TimeoutError, PyeconetError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(

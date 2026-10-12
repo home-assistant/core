@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from aiohttp import ClientConnectionError
 from pyeconet.api import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import pytest
@@ -57,7 +58,17 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_generic_error_from_library(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(PyeconetError(), id="pyeconet_error"),
+        pytest.param(ClientConnectionError(), id="client_connection_error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
+async def test_generic_error_from_library(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
     """Test when connection fails."""
 
     result = await hass.config_entries.flow.async_init(
@@ -69,7 +80,7 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
     with (
         patch(
             "pyeconet.EcoNetApiInterface.login",
-            side_effect=PyeconetError(),
+            side_effect=side_effect,
         ) as mock_login,
         patch("homeassistant.components.econet.async_setup_entry", return_value=True),
     ):
@@ -205,6 +216,10 @@ async def test_reauth(hass: HomeAssistant) -> None:
     [
         pytest.param(InvalidCredentialsError(), "invalid_auth", id="invalid_auth"),
         pytest.param(PyeconetError(), "cannot_connect", id="cannot_connect"),
+        pytest.param(
+            ClientConnectionError(), "cannot_connect", id="client_connection_error"
+        ),
+        pytest.param(TimeoutError(), "cannot_connect", id="timeout"),
     ],
 )
 async def test_reauth_errors(
