@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ruff: noqa: T201, D103, BLE001
-"""Sync HACS default custom integrations (default branch HEAD, *.py + manifest.json only).
+"""Sync HACS default custom integrations (default branch HEAD, installed text files only).
 
 Usage: python3 .claude/skills/custom-integration-sources/scripts/sync.py
     [--dest DIR] [--force] [--workers N] [REPO ...]
@@ -26,8 +26,6 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_DEST = REPO_ROOT / ".custom_integration_sources"
 HACS_LIST = "https://raw.githubusercontent.com/hacs/default/master/integration"
 GRAPHQL = "https://api.github.com/graphql"
-KEEP_SUFFIXES = {".py"}
-KEEP_NAMES = {"manifest.json"}
 BATCH = 50
 RETRIES = 4
 
@@ -102,20 +100,36 @@ def download(root: Path, repo: str, sha: str) -> None:
     tmp = dest.with_name(dest.name + ".tmp")
     shutil.rmtree(tmp, ignore_errors=True)
     with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tar:
-        for member in tar:
+        files = []
+        for member in tar.getmembers():
             if not member.isfile():
                 continue
             # Strip the "<repo>-<sha>/" prefix
             rel = PurePosixPath(*PurePosixPath(member.name).parts[1:])
-            if not rel.parts or ".." in rel.parts or rel.is_absolute():
+            if rel.parts and ".." not in rel.parts and not rel.is_absolute():
+                files.append((member, rel))
+        # Keep what HACS installs; content_in_root repos have no custom_components
+        has_components = any(
+            len(rel.parts) > 1 and rel.parts[0] == "custom_components"
+            for _, rel in files
+        )
+        for member, rel in files:
+            if (
+                has_components
+                and rel.parts[0] != "custom_components"
+                and rel != PurePosixPath("hacs.json")
+            ):
                 continue
-            if rel.suffix not in KEEP_SUFFIXES and rel.name not in KEEP_NAMES:
+            fobj = tar.extractfile(member)
+            if fobj is None:
+                continue
+            content = fobj.read()
+            # Same binary heuristic as git: a NUL byte in the first 8 KB
+            if b"\0" in content[:8000]:
                 continue
             target = tmp / rel
             target.parent.mkdir(parents=True, exist_ok=True)
-            fobj = tar.extractfile(member)
-            if fobj is not None:
-                target.write_bytes(fobj.read())
+            target.write_bytes(content)
     tmp.mkdir(parents=True, exist_ok=True)
     shutil.rmtree(dest, ignore_errors=True)
     tmp.rename(dest)
