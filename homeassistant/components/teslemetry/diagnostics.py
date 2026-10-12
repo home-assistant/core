@@ -23,6 +23,8 @@ VEHICLE_REDACT = [
     "drive_state_native_longitude",
     "charge_schedule_data_charge_schedule_window_latitude",
     "charge_schedule_data_charge_schedule_window_longitude",
+    "preconditioning_schedule_data_preconditioning_schedule_window_latitude",
+    "preconditioning_schedule_data_preconditioning_schedule_window_longitude",
     # Schedule lists are not flattened, so their entries keep plain keys
     "latitude",
     "longitude",

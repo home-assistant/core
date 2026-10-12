@@ -99,6 +99,13 @@
     },
     "preconditioning_schedule_data": {
       "max_num_precondition_schedules": 10,
+      "preconditioning_schedule_window": {
+        "enabled": false,
+        "end_time": 0,
+        "latitude": -30.222626,
+        "longitude": -97.6236871,
+        "start_time": 0
+      },
       "precondition_schedules": [
         {
           "days_of_week": 31,
