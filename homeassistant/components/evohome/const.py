@@ -22,8 +22,6 @@ SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
 # Support for the refresh_system service is being deprecated
 REFRESH_BREAKS_IN_HA_VERSION: Final = "2027.1.0"
-# Support for the reset service calls/presets is being deprecated
-RESET_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
 # Support for untargeted service calls to controllers is being deprecated
 SERVICE_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
 
@@ -34,7 +32,5 @@ class EvoService(StrEnum):
 
     REFRESH_SYSTEM = "refresh_system"
     SET_SYSTEM_MODE = "set_system_mode"
-    RESET_SYSTEM = "reset_system"
     SET_ZONE_OVERRIDE = "set_zone_override"
-    CLEAR_ZONE_OVERRIDE = "clear_zone_override"
     SET_DHW_OVERRIDE = "set_dhw_override"
