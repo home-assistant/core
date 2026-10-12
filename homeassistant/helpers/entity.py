@@ -1688,7 +1688,7 @@ class Entity(
         self.entity_id.
 
         Work which needs the state under the new entity_id, e.g. templates
-        rendering `this`, may optionally write the state be calling
+        rendering `this`, may optionally write the state by calling
         self.async_write_ha_state() first.
 
         After the method returns, core will write the state under the new entity_id
