@@ -11,7 +11,10 @@ from zwave_js_server.model.node import Node
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zwave_js import DOMAIN, device_action
-from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.components.zwave_js.helpers import (
+    get_device_id,
+    get_endpoint_device_id,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -547,7 +550,7 @@ async def test_reset_meter_action(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 1), entry
+                get_device_id(driver, node, 2), entry
             ),
             id="child_device",
         ),
@@ -556,19 +559,19 @@ async def test_reset_meter_action(
 async def test_set_value_action_endpoint_child_device(
     hass: HomeAssistant,
     client: Client,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     get_device: object,
 ) -> None:
     """Test set_value action for a value moved to an endpoint child device.
 
-    The Binary Switch value on endpoint 1 now lives on a child device. Automations
+    The air temperature value on endpoint 2 now lives on a child device. Automations
     created before this change stored the node device_id. Verify the action targets the
     correct endpoint value whether it references the node device_id (backward
     compatibility) or the endpoint child device_id.
     """
-    node = vision_security_zl7432
+    node = climate_heatit_z_trm3
     driver = client.driver
     assert driver
     device = get_device(device_registry, driver, node, integration.entry_id)
@@ -588,10 +591,10 @@ async def test_set_value_action_endpoint_child_device(
                         "domain": DOMAIN,
                         "type": "set_value",
                         "device_id": device.id,
-                        "command_class": CommandClass.SWITCH_BINARY.value,
-                        "property": "targetValue",
-                        "endpoint": 1,
-                        "value": True,
+                        "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                        "property": "Air temperature",
+                        "endpoint": 2,
+                        "value": 21,
                     },
                 },
             ]
@@ -604,26 +607,26 @@ async def test_set_value_action_endpoint_child_device(
         mock_call.assert_called_once()
         args = mock_call.call_args_list[0][0]
         assert len(args) == 2
-        assert args[0] == f"{node.node_id}-37-1-targetValue"
-        assert args[1] is True
+        assert args[0] == f"{node.node_id}-49-2-Air temperature"
+        assert args[1] == 21
 
 
 async def test_reset_meter_action_endpoint_child_device(
     hass: HomeAssistant,
     client: Client,
-    shelly_qnsh_001P10_shutter: Node,
+    aeotec_zwa046: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test reset_meter action for a meter entity moved to an endpoint child device.
 
-    The meter values on endpoints 1 and 2 collide, so meter sensors live on child
-    devices. An automation stored the node device_id and entity registry id before the
-    child device change. Verify it still executes: the entity service resolves by
-    entity_id, which is unchanged by the device move.
+    The clamp endpoints form endpoint groups, so meter sensors live on child devices.
+    An automation stored the node device_id and entity registry id before the child
+    device change. Verify it still executes: the entity service resolves by entity_id,
+    which is unchanged by the device move.
     """
-    node = shelly_qnsh_001P10_shutter
+    node = aeotec_zwa046
     driver = client.driver
     assert driver
 
@@ -632,7 +635,8 @@ async def test_reset_meter_action_endpoint_child_device(
     )
     assert node_device
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 1), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
     )
     assert child_device
 
@@ -689,7 +693,7 @@ async def test_reset_meter_action_endpoint_child_device(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 1), entry
+                get_device_id(driver, node, 2), entry
             ),
             id="child_device",
         ),
@@ -698,7 +702,7 @@ async def test_reset_meter_action_endpoint_child_device(
 async def test_refresh_value_action_endpoint_child_device(
     hass: HomeAssistant,
     client: Client,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -706,20 +710,21 @@ async def test_refresh_value_action_endpoint_child_device(
 ) -> None:
     """Test refresh_value action for an entity moved to an endpoint child device.
 
-    The switch on endpoint 1 now lives on a child device. An automation stored the node
-    device_id and entity registry id before the child device change. Verify it still
-    executes: the entity service resolves by entity_id, which is unchanged by the move.
+    The air temperature sensor on endpoint 2 now lives on a child device. An automation
+    stored the node device_id and entity registry id before the child device change.
+    Verify it still executes: the entity service resolves by entity_id, which is
+    unchanged by the move.
     """
-    node = vision_security_zl7432
+    node = climate_heatit_z_trm3
     driver = client.driver
     assert driver
     device = get_device(device_registry, driver, node, integration.entry_id)
     assert device
 
-    switch_entity = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_endpoint_1"
+    sensor_entity = entity_registry.async_get(
+        "sensor.floor_thermostat_room_sensor_air_temperature"
     )
-    assert switch_entity
+    assert sensor_entity
 
     assert await async_setup_component(
         hass,
@@ -735,7 +740,7 @@ async def test_refresh_value_action_endpoint_child_device(
                         "domain": DOMAIN,
                         "type": "refresh_value",
                         "device_id": device.id,
-                        "entity_id": switch_entity.id,
+                        "entity_id": sensor_entity.id,
                     },
                 },
             ]
@@ -748,7 +753,7 @@ async def test_refresh_value_action_endpoint_child_device(
         mock_call.assert_called_once()
         args = mock_call.call_args_list[0][0]
         assert len(args) == 1
-        assert args[0].value_id == f"{node.node_id}-37-1-currentValue"
+        assert args[0].value_id == f"{node.node_id}-49-2-Air temperature"
 
 
 async def test_lock_actions_endpoint_child_device(
@@ -836,7 +841,7 @@ async def test_lock_actions_endpoint_child_device(
 async def test_get_actions_endpoint_child_device(
     hass: HomeAssistant,
     client: Client,
-    shelly_qnsh_001P10_shutter: Node,
+    aeotec_zwa046: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -849,7 +854,7 @@ async def test_get_actions_endpoint_child_device(
     they store the entity registry id, but newly created automations list the entity
     action under the child device.
     """
-    node = shelly_qnsh_001P10_shutter
+    node = aeotec_zwa046
     driver = client.driver
     assert driver
 
@@ -858,7 +863,8 @@ async def test_get_actions_endpoint_child_device(
     )
     assert node_device
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 1), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
     )
     assert child_device
 

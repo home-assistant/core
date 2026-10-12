@@ -15,7 +15,8 @@ from zwave_js_server.exceptions import (
     NotConnected,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.endpoint import Endpoint
+from zwave_js_server.model.node import EndpointGroup, Node as ZwaveNode
 from zwave_js_server.model.notification import (
     BatteryNotification,
     EntryControlNotification,
@@ -124,10 +125,11 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
-    endpoint_device_value_ids,
+    endpoint_devices,
     format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
+    get_endpoint_device_id,
     get_network_identifier_for_notification,
     get_unique_id,
     get_valueless_base_unique_id,
@@ -797,9 +799,11 @@ class NodeEvents:
         self.value_updates_disc_info: dict[
             int, dict[str, PlatformZwaveDiscoveryInfo]
         ] = {}
-        # per-node cache of primary value IDs that require an endpoint child device,
+        # per-node cache mapping primary value IDs to their endpoint child device,
         # keyed by node_id; used by the late-value path to resolve child-device placement
-        self.endpoint_device_value_ids_by_node: dict[int, set[str]] = {}
+        self.endpoint_devices_by_node: dict[
+            int, dict[str, Endpoint | EndpointGroup]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -828,20 +832,18 @@ class NodeEvents:
             )
         )
         real_disc_infos = [i for i in all_disc_infos if not i.discovery_suppressed]
-        value_ids_needing_endpoint_device = endpoint_device_value_ids(real_disc_infos)
-        self.endpoint_device_value_ids_by_node[node.node_id] = (
-            value_ids_needing_endpoint_device
-        )
+        endpoint_device_by_value_id = endpoint_devices(node, real_disc_infos)
+        self.endpoint_devices_by_node[node.node_id] = endpoint_device_by_value_id
 
-        # Pass 2: set the resolved placement flag on each disc_info and dispatch.
+        # Pass 2: set the resolved placement on each disc_info and dispatch.
         for disc_info in real_disc_infos:
             primary_value = disc_info.primary_value
-            disc_info.requires_endpoint_device = (
-                primary_value.value_id in value_ids_needing_endpoint_device
+            disc_info.endpoint_device = endpoint_device_by_value_id.get(
+                primary_value.value_id
             )
-            if disc_info.requires_endpoint_device:
+            if disc_info.endpoint_device is not None:
                 endpoint_device_ids.add(
-                    get_device_id(driver, node, primary_value.endpoint)
+                    get_endpoint_device_id(driver, node, disc_info.endpoint_device)
                 )
             else:
                 rediscovered_on_parent.add(
@@ -1013,14 +1015,14 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-        cached_endpoint_device_value_ids = self.endpoint_device_value_ids_by_node.get(
-            value.node.node_id, set()
+        cached_endpoint_devices = self.endpoint_devices_by_node.get(
+            value.node.node_id, {}
         )
         for disc_info in async_discover_single_value(
             value, device, self.controller_events.discovered_value_ids
         ):
-            disc_info.requires_endpoint_device = (
-                disc_info.primary_value.value_id in cached_endpoint_device_value_ids
+            disc_info.endpoint_device = cached_endpoint_devices.get(
+                disc_info.primary_value.value_id
             )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 

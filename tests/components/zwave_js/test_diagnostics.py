@@ -273,22 +273,22 @@ async def test_device_diagnostics_secret_value(
     assert test_value["value"] == REDACTED
 
 
-@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_device_diagnostics_includes_child_device_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client,
-    vision_security_zl7432,
+    climate_heatit_z_trm3,
     integration,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test device diagnostics includes entities on endpoint child devices.
 
-    When a node has colliding endpoint values, those entities live on endpoint child
+    When a node has labeled, colliding endpoints, those entities live on endpoint child
     devices. They must still appear in the node device's diagnostics dump.
     """
     node_device = device_registry.async_get_device_by_identifier(
-        get_device_id(client.driver, vision_security_zl7432), integration.entry_id
+        get_device_id(client.driver, climate_heatit_z_trm3), integration.entry_id
     )
     assert node_device
 
@@ -298,6 +298,7 @@ async def test_device_diagnostics_includes_child_device_entities(
 
     diagnostics_entities = cast(list[dict[str, Any]], diagnostics_data["entities"])
     entity_ids = [e["entity_id"] for e in diagnostics_entities]
-    # Both colliding endpoint switches (living on child devices) appear in the dump.
-    assert "switch.in_wall_dual_relay_switch_endpoint_1" in entity_ids
-    assert "switch.in_wall_dual_relay_switch_endpoint_2" in entity_ids
+    # The air temperature sensors living on endpoint child devices appear in the dump.
+    assert "sensor.floor_thermostat_room_sensor_air_temperature" in entity_ids
+    assert "sensor.floor_thermostat_external_sensor_air_temperature" in entity_ids
+    assert "sensor.floor_thermostat_floor_sensor_air_temperature" in entity_ids

@@ -18,6 +18,7 @@ from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     get_device_id,
+    get_endpoint_device_id,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -1230,7 +1231,7 @@ async def test_get_triggers_endpoint_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test that only the value_updated trigger is exposed for endpoint child devices.
@@ -1241,7 +1242,7 @@ async def test_get_triggers_endpoint_child_device(
     the child device_id back to the node when attaching.
     """
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, vision_security_zl7432, 1), integration.entry_id
+        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
     )
     assert child_device
     expected_zwave_trigger = {
@@ -1271,7 +1272,7 @@ async def test_get_triggers_endpoint_child_device(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 1), entry
+                get_device_id(driver, node, 2), entry
             ),
             id="child_device",
         ),
@@ -1281,21 +1282,21 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
     service_calls: list[ServiceCall],
     get_device: object,
 ) -> None:
     """Test value_updated.value trigger for a value moved to an endpoint child device.
 
-    The Binary Switch values on endpoints 1 and 2 collide, so their entities now live
-    on endpoint child devices. Verify the trigger fires whether it references the node
+    The air temperature values on endpoints 2-4 collide, so their entities now live on
+    endpoint child devices. Verify the trigger fires whether it references the node
     device_id (backward compatibility) or the endpoint child device_id, and that it
     stays scoped to its own endpoint.
     """
-    node = vision_security_zl7432
+    node = climate_heatit_z_trm3
     device = get_device(
-        device_registry, client.driver, vision_security_zl7432, integration.entry_id
+        device_registry, client.driver, climate_heatit_z_trm3, integration.entry_id
     )
     assert device
 
@@ -1310,11 +1311,11 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
                         "domain": DOMAIN,
                         "device_id": device.id,
                         "type": "zwave_js.value_updated.value",
-                        "command_class": CommandClass.SWITCH_BINARY.value,
-                        "property": "currentValue",
+                        "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                        "property": "Air temperature",
                         "property_key": None,
-                        "endpoint": 1,
-                        "from": False,
+                        "endpoint": 2,
+                        "from": 18.8,
                     },
                     "action": {
                         "service": "test.automation",
@@ -1331,7 +1332,7 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
         },
     )
 
-    # A value update on the colliding endpoint 2 value must not fire the endpoint 1
+    # A value update on the colliding endpoint 3 value must not fire the endpoint 2
     # trigger.
     node.receive_event(
         Event(
@@ -1341,13 +1342,13 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
                 "event": "value updated",
                 "nodeId": node.node_id,
                 "args": {
-                    "commandClassName": "Binary Switch",
-                    "commandClass": 37,
-                    "endpoint": 2,
-                    "property": "currentValue",
-                    "newValue": True,
-                    "prevValue": False,
-                    "propertyName": "currentValue",
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 3,
+                    "property": "Air temperature",
+                    "newValue": 19.0,
+                    "prevValue": 18.8,
+                    "propertyName": "Air temperature",
                 },
             },
         )
@@ -1363,13 +1364,13 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
                 "event": "value updated",
                 "nodeId": node.node_id,
                 "args": {
-                    "commandClassName": "Binary Switch",
-                    "commandClass": 37,
-                    "endpoint": 1,
-                    "property": "currentValue",
-                    "newValue": True,
-                    "prevValue": False,
-                    "propertyName": "currentValue",
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Air temperature",
+                    "newValue": 19.0,
+                    "prevValue": 18.8,
+                    "propertyName": "Air temperature",
                 },
             },
         )
@@ -1378,7 +1379,7 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
     assert len(service_calls) == 1
     assert (
         service_calls[0].data["some"]
-        == "zwave_js.value_updated.value - zwave_js.value_updated - False"
+        == "zwave_js.value_updated.value - zwave_js.value_updated - 18.8"
     )
 
 
@@ -1872,6 +1873,78 @@ async def test_get_trigger_capabilities_value_updated_value(
         {"name": "from", "optional": True, "required": False, "type": "string"},
         {"name": "to", "optional": True, "required": False, "type": "string"},
     ]
+
+
+async def test_get_trigger_capabilities_value_updated_value_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    climate_heatit_z_trm3,
+    integration,
+) -> None:
+    """Test the endpoint is pinned for a value_updated trigger on a child device."""
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
+    )
+    assert child_device
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": child_device.id,
+            "type": "zwave_js.value_updated.value",
+            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+            "property": "Air temperature",
+            "property_key": None,
+            "endpoint": 2,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+    fields = to_field_list(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    )
+    endpoint_field = next(field for field in fields if field["name"] == "endpoint")
+    # The endpoint is required and restricted to the child device's own endpoint.
+    assert endpoint_field["required"] is True
+    assert [option[0] for option in endpoint_field["options"]] == ["2"]
+
+
+async def test_get_trigger_capabilities_value_updated_value_group_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    aeotec_zwa046,
+    integration,
+) -> None:
+    """Test the endpoint is pinned to the group's endpoints for a group child device."""
+    node = aeotec_zwa046
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert child_device
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": child_device.id,
+            "type": "zwave_js.value_updated.value",
+            "command_class": CommandClass.METER.value,
+            "property": "value",
+            "property_key": 65537,
+            "endpoint": 1,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+    fields = to_field_list(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    )
+    endpoint_field = next(field for field in fields if field["name"] == "endpoint")
+    # The endpoint is restricted to both endpoints of the "Clamp 1" group.
+    assert endpoint_field["required"] is True
+    assert sorted(option[0] for option in endpoint_field["options"]) == ["1", "2"]
 
 
 async def test_get_value_updated_config_parameter_triggers(

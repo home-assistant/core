@@ -24,8 +24,12 @@ from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
-from homeassistant.components.zwave_js.switch import ZWaveSwitch
+from homeassistant.components.zwave_js.helpers import (
+    get_device_id,
+    get_device_id_ext,
+    get_endpoint_device_id,
+)
+from homeassistant.components.zwave_js.sensor import ZWaveNumericSensor
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -1659,11 +1663,11 @@ async def test_endpoint_child_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     client: MagicMock,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that colliding endpoint values are split into endpoint child devices."""
-    node = vision_security_zl7432
+    """Test that labeled, colliding endpoints are split into endpoint child devices."""
+    node = climate_heatit_z_trm3
     driver = client.driver
 
     node_device = device_registry.async_get_device_by_identifier(
@@ -1671,44 +1675,100 @@ async def test_endpoint_child_device(
     )
     assert node_device
 
-    # The relays on endpoints 1 and 2 collide, so each gets its own child device.
-    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 1), integration.entry_id
-    )
-    assert endpoint_1_device
-    assert isinstance(endpoint_1_device, dr.ChildDeviceEntry)
-    assert endpoint_1_device.parent_device_id == node_device.id
-    assert endpoint_1_device.name == "Endpoint 1"
+    # The air temperature sensors on endpoints 2-4 collide and each endpoint is labeled,
+    # so each endpoint gets its own child device named by its endpoint label.
+    expected_labels = {2: "Room Sensor", 3: "External Sensor", 4: "Floor Sensor"}
+    child_devices: dict[int, dr.ChildDeviceEntry] = {}
+    for endpoint, label in expected_labels.items():
+        child_device = device_registry.async_get_child_device_by_identifier(
+            get_device_id(driver, node, endpoint), integration.entry_id
+        )
+        assert child_device
+        assert isinstance(child_device, dr.ChildDeviceEntry)
+        assert child_device.parent_device_id == node_device.id
+        assert child_device.name == label
+        child_devices[endpoint] = child_device
 
-    endpoint_2_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 2), integration.entry_id
-    )
-    assert endpoint_2_device
-    assert isinstance(endpoint_2_device, dr.ChildDeviceEntry)
-    assert endpoint_2_device.parent_device_id == node_device.id
-    assert endpoint_2_device.name == "Endpoint 2"
-
-    # Both child devices appear in the parent's children list.
+    # The child devices appear in the parent's children list.
     children = dr.async_entries_for_parent_device(device_registry, node_device.id)
     assert {child.id for child in children} == {
-        endpoint_1_device.id,
-        endpoint_2_device.id,
+        child.id for child in child_devices.values()
     }
 
-    # Each relay lives on its endpoint child device, not on the node device.
-    entity_1 = entity_registry.async_get("switch.in_wall_dual_relay_switch_endpoint_1")
-    assert entity_1
-    assert entity_1.device_id == endpoint_1_device.id
-    entity_2 = entity_registry.async_get("switch.in_wall_dual_relay_switch_endpoint_2")
-    assert entity_2
-    assert entity_2.device_id == endpoint_2_device.id
+    # Each air temperature sensor lives on its endpoint child device.
+    for endpoint, slug in (
+        (2, "room_sensor"),
+        (3, "external_sensor"),
+        (4, "floor_sensor"),
+    ):
+        entity = entity_registry.async_get(
+            f"sensor.floor_thermostat_{slug}_air_temperature"
+        )
+        assert entity
+        assert entity.device_id == child_devices[endpoint].id
+
+    # The thermostat endpoint is labeled but does not collide, so the climate entity
+    # stays on the node device.
+    climate = entity_registry.async_get("climate.floor_thermostat")
+    assert climate
+    assert climate.device_id == node_device.id
 
     # Removing the node cascades and removes the child devices along with the node device.
     client.driver.controller.emit("node removed", {"node": node, "reason": 0})
     await hass.async_block_till_done()
     assert device_registry.async_get(node_device.id) is None
-    assert device_registry.async_get(endpoint_1_device.id) is None
-    assert device_registry.async_get(endpoint_2_device.id) is None
+    for child_device in child_devices.values():
+        assert device_registry.async_get(child_device.id) is None
+
+
+async def test_endpoint_group_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that endpoints in a non-main group share one endpoint child device."""
+    node = aeotec_zwa046
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+
+    # Each non-main endpoint group (the three clamps) becomes one child device.
+    clamp_devices: list[dr.ChildDeviceEntry] = []
+    for group_id, label in ((1, "Clamp 1"), (2, "Clamp 2"), (3, "Clamp 3")):
+        group = node.endpoint_groups[group_id]
+        child_device = device_registry.async_get_child_device_by_identifier(
+            get_endpoint_device_id(driver, node, group), integration.entry_id
+        )
+        assert child_device
+        assert isinstance(child_device, dr.ChildDeviceEntry)
+        assert child_device.parent_device_id == node_device.id
+        assert child_device.name == label
+        clamp_devices.append(child_device)
+
+    # Only the three clamp groups produce child devices; the main-device "Total" group
+    # stays on the node device.
+    children = dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert {child.id for child in children} == {child.id for child in clamp_devices}
+
+    # Clamp 1 holds the entities of both its endpoints (consumption and production).
+    clamp_1_entities = er.async_entries_for_device(
+        entity_registry, clamp_devices[0].id, include_disabled_entities=True
+    )
+    clamp_1_endpoints = {entry.unique_id.split("-")[2] for entry in clamp_1_entities}
+    assert clamp_1_endpoints == {"1", "2"}
+
+    # The main-device "Total" group endpoints (7-10) stay on the node device. Endpoint 7
+    # carries meter (command class 50) values, so its value IDs contain "-50-7-".
+    node_entities = er.async_entries_for_device(
+        entity_registry, node_device.id, include_disabled_entities=True
+    )
+    assert any("-50-7-" in entry.unique_id for entry in node_entities)
 
 
 async def test_endpoint_child_device_pruned_on_reinterview(
@@ -1716,43 +1776,45 @@ async def test_endpoint_child_device_pruned_on_reinterview(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     client: MagicMock,
-    vision_security_zl7432: Node,
-    vision_security_zl7432_state: NodeDataType,
+    climate_heatit_z_trm3: Node,
+    climate_heatit_z_trm3_state: NodeDataType,
     integration: MockConfigEntry,
 ) -> None:
     """Test stale endpoint child devices are pruned and surviving entities move to parent.
 
-    When endpoint 2's values disappear on re-interview, endpoint 1 no longer collides so
-    both child devices are pruned. The endpoint 1 switch entity must end up on the parent
-    node device while preserving its entity registry entry (entity_id, any customizations).
+    When the air temperature sensors on endpoints 3 and 4 disappear on re-interview,
+    endpoint 2 no longer collides, so its child device is pruned. The endpoint 2 sensor
+    entity must end up on the parent node device while preserving its entity registry
+    entry (entity_id, any customizations).
     """
-    node = vision_security_zl7432
+    node = climate_heatit_z_trm3
     driver = client.driver
 
     node_device = device_registry.async_get_device_by_identifier(
         get_device_id(driver, node), integration.entry_id
     )
     assert node_device
-    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 1), integration.entry_id
-    )
-    assert endpoint_1_device
-    endpoint_2_device = device_registry.async_get_child_device_by_identifier(
+    room_sensor_device = device_registry.async_get_child_device_by_identifier(
         get_device_id(driver, node, 2), integration.entry_id
     )
-    assert endpoint_2_device
+    assert room_sensor_device
 
-    # The endpoint 1 switch entity lives on the endpoint 1 child device before re-interview.
-    endpoint_1_switch = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_endpoint_1"
-    )
-    assert endpoint_1_switch
-    assert endpoint_1_switch.device_id == endpoint_1_device.id
+    # The endpoint 2 sensor lives on its child device before re-interview.
+    entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+    room_sensor = entity_registry.async_get(entity_id)
+    assert room_sensor
+    assert room_sensor.device_id == room_sensor_device.id
 
-    # Re-interview the node without any values on endpoint 2.
-    new_state = deepcopy(vision_security_zl7432_state)
+    # Re-interview with the air temperature sensors on endpoints 3 and 4 removed, so
+    # endpoint 2 no longer collides.
+    new_state = deepcopy(climate_heatit_z_trm3_state)
+    # The ready event model requires string name/location (the fixture leaves them null).
+    new_state["name"] = new_state.get("name") or ""
+    new_state["location"] = new_state.get("location") or ""
     new_state["values"] = [
-        value for value in new_state["values"] if value["endpoint"] != 2
+        value
+        for value in new_state["values"]
+        if not (value["commandClass"] == 49 and value["endpoint"] in (3, 4))
     ]
     node.receive_event(
         Event(
@@ -1767,28 +1829,24 @@ async def test_endpoint_child_device_pruned_on_reinterview(
     )
     await hass.async_block_till_done()
 
-    # Both child devices are removed since endpoint 1 no longer collides.
-    assert device_registry.async_get(endpoint_1_device.id) is None
-    assert device_registry.async_get(endpoint_2_device.id) is None
-    # Endpoint 1's switch entity was moved to the parent node device before the child
-    # device was removed, preserving the registry entry (same entity_id).
-    endpoint_1_switch = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_endpoint_1"
-    )
-    assert endpoint_1_switch is not None
-    assert endpoint_1_switch.device_id == node_device.id
+    # The endpoint 2 child device is pruned since it no longer collides.
+    assert device_registry.async_get(room_sensor_device.id) is None
+    # Its sensor entity was moved to the parent node device before the child device was
+    # removed, preserving the registry entry (same entity_id).
+    room_sensor = entity_registry.async_get(entity_id)
+    assert room_sensor is not None
+    assert room_sensor.device_id == node_device.id
     # The live state is still present — the ready handler re-discovered the value on the
     # parent node device.
-    assert hass.states.get("switch.in_wall_dual_relay_switch_endpoint_1") is not None
+    assert hass.states.get(entity_id) is not None
 
 
-@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
 async def test_child_device_entity_metadata_rediscovery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     client: MagicMock,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test that entities on endpoint child devices are re-created after rediscovery.
@@ -1797,27 +1855,24 @@ async def test_child_device_entity_metadata_rediscovery(
     node device id, so the discard in _async_remove_and_rediscover was a no-op and
     async_on_value_added early-returned, leaving the entity gone until reload.
     """
-    node = vision_security_zl7432
+    node = climate_heatit_z_trm3
 
-    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node, 1), integration.entry_id
+    room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, node, 2), integration.entry_id
     )
-    assert endpoint_1_device
+    assert room_sensor_device
 
-    # switch.in_wall_dual_relay_switch_endpoint_1 lives on the endpoint 1 child device.
-    switch_entry = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_endpoint_1"
-    )
-    assert switch_entry is not None
-    assert switch_entry.device_id == endpoint_1_device.id
-    assert hass.states.get("switch.in_wall_dual_relay_switch_endpoint_1") is not None
+    entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+    sensor_entry = entity_registry.async_get(entity_id)
+    assert sensor_entry is not None
+    assert sensor_entry.device_id == room_sensor_device.id
+    assert hass.states.get(entity_id) is not None
 
-    # Trigger metadata-based rediscovery for the endpoint 1 currentValue.
-    # ZWaveSwitch.should_rediscover_on_metadata_update normally returns False; patch
-    # it to True so the rediscovery path is exercised without needing a real metadata
-    # change that qualifies.
+    # Trigger metadata-based rediscovery for the endpoint 2 air temperature sensor.
+    # should_rediscover_on_metadata_update normally returns False; patch it to True so
+    # the rediscovery path is exercised without a real qualifying metadata change.
     with patch.object(
-        ZWaveSwitch, "should_rediscover_on_metadata_update", return_value=True
+        ZWaveNumericSensor, "should_rediscover_on_metadata_update", return_value=True
     ):
         node.receive_event(
             Event(
@@ -1827,16 +1882,18 @@ async def test_child_device_entity_metadata_rediscovery(
                     "event": "metadata updated",
                     "nodeId": node.node_id,
                     "args": {
-                        "commandClassName": "Switch Binary",
-                        "commandClass": 37,
-                        "endpoint": 1,
-                        "property": "currentValue",
-                        "propertyName": "currentValue",
+                        "commandClassName": "Multilevel Sensor",
+                        "commandClass": 49,
+                        "endpoint": 2,
+                        "property": "Air temperature",
+                        "propertyName": "Air temperature",
                         "metadata": {
-                            "type": "boolean",
+                            "type": "number",
                             "readable": True,
                             "writeable": False,
-                            "label": "Current value",
+                            "label": "Air temperature",
+                            "ccSpecific": {"sensorType": 1, "scale": 0},
+                            "unit": "°C",
                             "stateful": True,
                             "secret": False,
                         },
@@ -1847,10 +1904,10 @@ async def test_child_device_entity_metadata_rediscovery(
         await hass.async_block_till_done()
 
     # The entity must be re-created on the same child device (not gone until reload).
-    assert hass.states.get("switch.in_wall_dual_relay_switch_endpoint_1") is not None
-    new_entry = entity_registry.async_get("switch.in_wall_dual_relay_switch_endpoint_1")
+    assert hass.states.get(entity_id) is not None
+    new_entry = entity_registry.async_get(entity_id)
     assert new_entry is not None
-    assert new_entry.device_id == endpoint_1_device.id
+    assert new_entry.device_id == room_sensor_device.id
 
 
 async def test_replace_same_node(

@@ -90,7 +90,7 @@ async def test_get_conditions(
 async def test_get_conditions_endpoint_child_device(
     hass: HomeAssistant,
     client: MagicMock,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -100,7 +100,7 @@ async def test_get_conditions_endpoint_child_device(
     duplicate the parent node device's list if exposed on child devices.
     """
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, vision_security_zl7432, 1), integration.entry_id
+        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
     )
     assert child_device
     conditions = await async_get_device_automations(
@@ -466,7 +466,7 @@ async def test_value_state(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 1), entry
+                get_device_id(driver, node, 2), entry
             ),
             id="child_device",
         ),
@@ -475,29 +475,29 @@ async def test_value_state(
 @pytest.mark.parametrize(
     ("condition_value", "expected_calls"),
     [
-        pytest.param(False, 1, id="matches"),
-        pytest.param(True, 0, id="no_match"),
+        pytest.param(18.8, 1, id="matches"),
+        pytest.param(0, 0, id="no_match"),
     ],
 )
 async def test_value_state_endpoint_child_device(
     hass: HomeAssistant,
     client: MagicMock,
-    vision_security_zl7432: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     get_device: object,
-    condition_value: bool,
+    condition_value: float,
     expected_calls: int,
 ) -> None:
     """Test value condition for a value moved to an endpoint child device.
 
-    The Binary Switch value on endpoint 1 now lives on a child device. Verify the
+    The air temperature value on endpoint 2 now lives on a child device. Verify the
     condition reads the correct endpoint value whether it references the node device_id
     (backward compatibility) or the endpoint child device_id.
     """
     device = get_device(
-        device_registry, client.driver, vision_security_zl7432, integration.entry_id
+        device_registry, client.driver, climate_heatit_z_trm3, integration.entry_id
     )
     assert device
 
@@ -514,9 +514,9 @@ async def test_value_state_endpoint_child_device(
                             "domain": DOMAIN,
                             "device_id": device.id,
                             "type": "value",
-                            "command_class": CommandClass.SWITCH_BINARY.value,
-                            "property": "currentValue",
-                            "endpoint": 1,
+                            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                            "property": "Air temperature",
+                            "endpoint": 2,
                             "value": condition_value,
                         }
                     ],

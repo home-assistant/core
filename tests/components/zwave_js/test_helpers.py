@@ -6,14 +6,16 @@ import probatio
 import pytest
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.model.controller import ProvisioningEntry
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.endpoint import Endpoint
+from zwave_js_server.model.node import EndpointGroup, Node
+from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     async_get_nodes_from_area_id,
     async_get_provisioning_entry_from_device_id,
-    endpoint_device_value_ids,
+    endpoint_devices,
     format_home_id_for_display,
     get_device_id,
     get_home_and_node_id_from_device_entry,
@@ -196,45 +198,89 @@ async def test_get_device_id_with_endpoint(
     )
 
 
-async def test_endpoint_device_value_ids(
-    client: MagicMock,
-    vision_security_zl7432: Node,
-    fibaro_fgr223_shutter: Node,
-) -> None:
-    """Test endpoint_device_value_ids detects collisions from discovered entities."""
-
-    def make_info(node: Node, value_id: str) -> PlatformZwaveDiscoveryInfo:
-        return PlatformZwaveDiscoveryInfo(
-            node=node,
-            primary_value=node.values[value_id],
-            assumed_state=False,
-            platform=Platform.SWITCH,
-            additional_value_ids_to_watch=set(),
-        )
-
-    # ZL7432: root-endpoint value never triggers a split.
-    zl7432 = vision_security_zl7432
-    root_id = f"{zl7432.node_id}-114-0-manufacturerId"
-    ep1_id = f"{zl7432.node_id}-37-1-currentValue"
-    ep2_id = f"{zl7432.node_id}-37-2-currentValue"
-    result = endpoint_device_value_ids(
-        [
-            make_info(zl7432, root_id),
-            make_info(zl7432, ep1_id),
-            make_info(zl7432, ep2_id),
-        ]
+def _make_disc_info(node: Node, value: ZwaveValue) -> PlatformZwaveDiscoveryInfo:
+    """Build a minimal discovery info for a node value."""
+    return PlatformZwaveDiscoveryInfo(
+        node=node,
+        primary_value=value,
+        assumed_state=False,
+        platform=Platform.SENSOR,
+        additional_value_ids_to_watch=set(),
     )
-    # Both non-root endpoints share the same signature and get their own child device.
-    assert ep1_id in result
-    assert ep2_id in result
-    assert root_id not in result
 
-    # FGR-223: endpoint 2 is suppressed (not included in disc_infos), so endpoint 1
-    # has no collision partner and must NOT get its own child device.
-    fgr223 = fibaro_fgr223_shutter
-    fgr223_ep1_id = f"{fgr223.node_id}-38-1-currentValue"
-    result = endpoint_device_value_ids([make_info(fgr223, fgr223_ep1_id)])
-    assert fgr223_ep1_id not in result
+
+def _find_value(
+    node: Node,
+    command_class: int,
+    endpoint: int,
+    property_: str,
+    property_key: int | None = None,
+) -> ZwaveValue:
+    """Find a node value by command class, endpoint, property and property key."""
+    return next(
+        value
+        for value in node.values.values()
+        if value.command_class == command_class
+        and value.endpoint == endpoint
+        and value.property_ == property_
+        and value.property_key == property_key
+    )
+
+
+async def test_endpoint_devices_groups(client: MagicMock, aeotec_zwa046: Node) -> None:
+    """Test endpoint_devices groups endpoints by their non-main endpoint group."""
+    node = aeotec_zwa046
+    # Meter values on an endpoint in the non-main "Clamp 1" group and on an endpoint
+    # in the main-device "Total" group.
+    clamp1_value = _find_value(node, 50, 1, "value", 65537)
+    total_value = _find_value(node, 50, 7, "value", 66049)
+
+    result = endpoint_devices(
+        node, [_make_disc_info(node, clamp1_value), _make_disc_info(node, total_value)]
+    )
+
+    # Endpoints in a non-main group are placed on one child device for that group.
+    clamp1 = result[clamp1_value.value_id]
+    assert isinstance(clamp1, EndpointGroup)
+    assert clamp1.label == "Clamp 1"
+    # Endpoints in a main-device group stay on the node device.
+    assert total_value.value_id not in result
+
+
+async def test_endpoint_devices_labels(
+    client: MagicMock, climate_heatit_z_trm3: Node, vision_security_zl7432: Node
+) -> None:
+    """Test endpoint_devices splits labeled, colliding endpoints without groups."""
+    node = climate_heatit_z_trm3
+    air2 = _find_value(node, 49, 2, "Air temperature")
+    air3 = _find_value(node, 49, 3, "Air temperature")
+    air4 = _find_value(node, 49, 4, "Air temperature")
+    # The labeled "Thermostat" endpoint carries a setpoint that does not collide.
+    setpoint = _find_value(node, 67, 1, "setpoint", 1)
+
+    result = endpoint_devices(
+        node,
+        [_make_disc_info(node, value) for value in (air2, air3, air4, setpoint)],
+    )
+
+    # Labeled endpoints whose air temperature collides get a per-endpoint child device.
+    assert isinstance(result[air2.value_id], Endpoint)
+    assert result[air2.value_id].endpoint_label == "Room Sensor"
+    assert result[air3.value_id].endpoint_label == "External Sensor"
+    assert result[air4.value_id].endpoint_label == "Floor Sensor"
+    # A labeled endpoint with no colliding value stays on the node device.
+    assert setpoint.value_id not in result
+
+    # ZL7432: two endpoints collide but have no labels and no groups, so no split.
+    zl7432 = vision_security_zl7432
+    zl_ep1 = _find_value(zl7432, 37, 1, "currentValue")
+    zl_ep2 = _find_value(zl7432, 37, 2, "currentValue")
+    assert (
+        endpoint_devices(
+            zl7432, [_make_disc_info(zl7432, zl_ep1), _make_disc_info(zl7432, zl_ep2)]
+        )
+        == {}
+    )
 
 
 async def test_get_home_and_node_id_from_device_entry(

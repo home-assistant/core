@@ -23,7 +23,7 @@ from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.log_config import LogConfig
-from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.node import EndpointGroup, Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
     Value as ZwaveValue,
@@ -256,38 +256,72 @@ def get_device_id(
     return device_id
 
 
-def endpoint_device_value_ids(
-    disc_infos: Sequence[PlatformZwaveDiscoveryInfo],
-) -> set[str]:
-    """Return the set of primary value IDs that require their own endpoint child device.
+def get_endpoint_device_id(
+    driver: Driver, node: ZwaveNode, endpoint_device: Endpoint | EndpointGroup
+) -> tuple[str, str]:
+    """Get the device registry identifier for an endpoint child device.
 
-    A value on a non-root endpoint requires a child device when 2 or more distinct
-    non-root endpoints produce a discovered (non-suppressed) entity with the same value
-    signature (command class, property, property key). The collision is determined from
-    actual discovered entities, not raw node values, so suppressed endpoint values do
-    not trigger a false split.
+    A child device is identified either by a single endpoint index or, when the
+    device config groups several endpoints together, by ``g`` plus the group id.
     """
+    domain, dev_id = get_device_id(driver, node)
+    if isinstance(endpoint_device, EndpointGroup):
+        return (domain, f"{dev_id}-g{endpoint_device.id}")
+    return (domain, f"{dev_id}-{endpoint_device.index}")
+
+
+def endpoint_devices(
+    node: ZwaveNode,
+    disc_infos: Sequence[PlatformZwaveDiscoveryInfo],
+) -> dict[str, Endpoint | EndpointGroup]:
+    """Map primary value IDs to the endpoint child device their entity belongs on.
+
+    Values that belong on the main node device are absent from the result. Only
+    endpoints that the device config explicitly describes produce child devices:
+
+    - If the node defines endpoint groups, every value on an endpoint that belongs
+      to a non-main group is placed on a single child device for that group (so, for
+      example, the import and export endpoints of one meter clamp share one device).
+      Values on endpoints in a main-device group, or in no group, stay on the node.
+    - Otherwise, values on a labeled non-root endpoint are placed on a per-endpoint
+      child device, but only when that endpoint has a value whose signature (command
+      class, property, property key) also appears on another endpoint. The collision
+      is determined from discovered (non-suppressed) values, so a suppressed endpoint
+      value does not trigger a split.
+    """
+    result: dict[str, Endpoint | EndpointGroup] = {}
+
+    if node.endpoint_groups:
+        for info in disc_infos:
+            endpoint_index = info.primary_value.endpoint
+            if not endpoint_index:
+                continue
+            group = node.get_endpoint_group(endpoint_index)
+            if group is not None and not group.is_main_device:
+                result[info.primary_value.value_id] = group
+        return result
+
     endpoints_by_signature: dict[tuple, set[int]] = defaultdict(set)
     for info in disc_infos:
         pv = info.primary_value
         if pv.endpoint:
             sig = (pv.command_class, pv.property_, pv.property_key)
             endpoints_by_signature[sig].add(pv.endpoint)
-    return {
-        info.primary_value.value_id
-        for info in disc_infos
-        if info.primary_value.endpoint
-        and len(
-            endpoints_by_signature[
-                (
-                    info.primary_value.command_class,
-                    info.primary_value.property_,
-                    info.primary_value.property_key,
-                )
-            ]
-        )
-        > 1
+    colliding_endpoints = {
+        endpoint
+        for endpoints in endpoints_by_signature.values()
+        if len(endpoints) > 1
+        for endpoint in endpoints
     }
+    for info in disc_infos:
+        endpoint_index = info.primary_value.endpoint
+        if (
+            endpoint_index
+            and endpoint_index in colliding_endpoints
+            and (endpoint := node.endpoints[endpoint_index]).endpoint_label
+        ):
+            result[info.primary_value.value_id] = endpoint
+    return result
 
 
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
@@ -320,9 +354,35 @@ def get_home_and_node_id_from_device_entry(
     if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
-    # A third segment, if present, is the endpoint index of a child device and is
-    # intentionally ignored here so that child devices resolve to their node.
+    # A third segment, if present, identifies a child device (an endpoint index, or
+    # ``g`` plus a group id) and is intentionally ignored here so that child devices
+    # resolve to their node.
     return (id_[0], int(id_[1]))
+
+
+def get_endpoint_indices_from_child_device(
+    device_entry: dr.ChildDeviceEntry, node: ZwaveNode
+) -> list[int]:
+    """Return the endpoint indices an endpoint child device covers.
+
+    A child device identifier is ``{home_id}-{node_id}-{endpoint}`` for a single
+    endpoint or ``{home_id}-{node_id}-g{group_id}`` for an endpoint group.
+    """
+    device_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if device_id is None:
+        return []
+    suffix = device_id.split("-")[-1]
+    if suffix.startswith("g"):
+        group = node.endpoint_groups.get(int(suffix[1:]))
+        return list(group.endpoint_indices) if group is not None else []
+    return [int(suffix)]
 
 
 class DriverNotReadyError(ValueError):
@@ -676,7 +736,7 @@ def get_device_info(
 def get_device_info(
     driver: Driver,
     node: ZwaveNode,
-    endpoint: Endpoint,
+    endpoint_device: Endpoint | EndpointGroup,
     parent_device_id: str,
 ) -> ChildDeviceInfo: ...
 
@@ -684,12 +744,12 @@ def get_device_info(
 def get_device_info(
     driver: Driver,
     node: ZwaveNode,
-    endpoint: Endpoint | None = None,
+    endpoint_device: Endpoint | EndpointGroup | None = None,
     parent_device_id: str | None = None,
 ) -> DeviceInfo | ChildDeviceInfo:
     """Get DeviceInfo for a node or one of its endpoint child devices."""
     node_name = node.name or node.device_config.description or f"Node {node.node_id}"
-    if endpoint is None or endpoint.index == 0:
+    if endpoint_device is None:
         return DeviceInfo(
             identifiers={get_device_id(driver, node)},
             sw_version=node.firmware_version,
@@ -700,9 +760,13 @@ def get_device_info(
         )
 
     assert parent_device_id is not None
+    if isinstance(endpoint_device, EndpointGroup):
+        name = endpoint_device.label
+    else:
+        name = endpoint_device.endpoint_label or f"Endpoint {endpoint_device.index}"
     return ChildDeviceInfo(
-        identifiers={get_device_id(driver, node, endpoint.index)},
-        name=endpoint.endpoint_label or f"Endpoint {endpoint.index}",
+        identifiers={get_endpoint_device_id(driver, node, endpoint_device)},
+        name=name,
         parent_device_id=parent_device_id,
     )
 
