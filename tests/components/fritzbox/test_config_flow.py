@@ -632,7 +632,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None
         pytest.param(
             "http://10.0.0.2",
             MOCK_SSDP_DATA["hostname_valid"],
-            "http://fritz-new.repeater",
+            "http://10.0.0.2",
             id="ip-entry-hostname-discovery",
         ),
     ],

@@ -184,6 +184,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 and existing_entry.source != SOURCE_IGNORE
                 and (existing_host := URL(existing_entry.data[CONF_HOST]).host)
                 and _is_ip(existing_host)
+                and _is_ip(host)
             ):
                 # keep user-configured hostnames
                 updates = {CONF_HOST: self._url}
