@@ -9,7 +9,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .const import DOMAIN
+from .const import DEPRECATION_BREAKS_IN_HA_VERSION, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         DOMAIN,
         f"migrate_to_group_sensor-{entry.entry_id}",
-        breaks_in_ha_version="2026.12.0",
+        breaks_in_ha_version=DEPRECATION_BREAKS_IN_HA_VERSION,
         is_fixable=True,
         is_persistent=False,
         severity=IssueSeverity.WARNING,

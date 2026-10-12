@@ -42,7 +42,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.util import yaml as yaml_util
 
 from . import PLATFORMS
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import (
+    CONF_ENTITY_IDS,
+    CONF_ROUND_DIGITS,
+    DEPRECATION_BREAKS_IN_HA_VERSION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,7 +139,7 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
         hass,
         DOMAIN,
         issue_id,
-        breaks_in_ha_version="2026.12.0",
+        breaks_in_ha_version=DEPRECATION_BREAKS_IN_HA_VERSION,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         learn_more_url="https://www.home-assistant.io/integrations/group/",

@@ -72,6 +72,7 @@ async def test_deprecation_warning(
     ]
     assert len(issues) == 2
     assert all(issue.severity == ir.IssueSeverity.WARNING for issue in issues)
+    assert all(issue.breaks_in_ha_version == "2027.5.0" for issue in issues)
 
 
 @pytest.mark.parametrize(

@@ -63,7 +63,7 @@ async def test_setup_migrates_to_groups(
     )
     assert issue is not None
     assert issue.is_fixable is True
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
@@ -200,7 +200,7 @@ async def test_migrate_helper_is_manually_removed(
     )
     assert issue is not None
     assert issue.is_fixable is True
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
@@ -269,7 +269,7 @@ async def test_migrate_helper_broken_config(
     )
     assert issue is not None
     assert issue.is_fixable is True
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
@@ -334,7 +334,7 @@ async def test_issue_is_deleted_on_removal(
     )
     assert issue is not None
     assert issue.is_fixable is True
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -385,7 +385,7 @@ async def test_issue_is_aborted_on_could_not_start_group(
     )
     assert issue is not None
     assert issue.is_fixable is True
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
@@ -466,7 +466,7 @@ async def test_issue_is_aborted_on_could_not_start_group_entry_remains(
     )
     assert issue is not None
     assert issue.is_fixable is True
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
