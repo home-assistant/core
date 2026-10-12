@@ -52,18 +52,8 @@ async def _resolve_attachments(
     hass: HomeAssistant,
     session: ChatSession,
     attachments: list[dict] | None = None,
-    *,
-    max_attachments: int | None = None,
 ) -> list[conversation.Attachment]:
     """Resolve attachments for a task."""
-    if (
-        attachments
-        and max_attachments is not None
-        and len(attachments) > max_attachments
-    ):
-        raise HomeAssistantError(
-            f"Too many attachments; maximum allowed: {max_attachments}"
-        )
     resolved_attachments: list[conversation.Attachment] = []
     created_files: list[Path] = []
 
@@ -152,9 +142,7 @@ async def async_generate_data(
         )
 
     with async_get_chat_session(hass) as session:
-        resolved_attachments = await _resolve_attachments(
-            hass, session, attachments, max_attachments=entity.max_attachments
-        )
+        resolved_attachments = await _resolve_attachments(hass, session, attachments)
 
         return await entity.internal_async_generate_data(
             session,
@@ -205,9 +193,7 @@ async def async_generate_image(
         )
 
     with async_get_chat_session(hass) as session:
-        resolved_attachments = await _resolve_attachments(
-            hass, session, attachments, max_attachments=entity.max_attachments
-        )
+        resolved_attachments = await _resolve_attachments(hass, session, attachments)
 
         task_result = await entity.internal_async_generate_image(
             session,
@@ -399,9 +385,7 @@ async def async_evaluate(
             f"AI Task entity {entity_id} does not support attachments"
         )
     with async_get_chat_session(hass) as session:
-        resolved_attachments = await _resolve_attachments(
-            hass, session, attachments, max_attachments=entity.max_attachments
-        )
+        resolved_attachments = await _resolve_attachments(hass, session, attachments)
         return await entity.internal_async_evaluate(
             EvaluationTask(
                 name=task_name,

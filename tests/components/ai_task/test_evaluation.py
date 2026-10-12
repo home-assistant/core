@@ -373,36 +373,6 @@ async def test_failed_task_cleans_snapshots(
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_attachment_limit(
-    hass: HomeAssistant,
-    mock_ai_task_entity: MockAITaskEntity,
-    mock_evaluate: AsyncMock,
-) -> None:
-    """Reject excessive attachments before capturing any snapshots."""
-    mock_ai_task_entity._attr_max_attachments = 1
-    with (
-        patch(
-            "homeassistant.components.media_source.async_get_media_image"
-        ) as get_image,
-        pytest.raises(
-            HomeAssistantError, match="Too many attachments; maximum allowed: 1"
-        ),
-    ):
-        await ai_task.async_evaluate(
-            hass,
-            task_name="Delivery",
-            entity_id=TEST_ENTITY_ID,
-            questions=QUESTIONS,
-            attachments=[
-                {"media_content_id": "media-source://camera/camera.front_door"},
-                {"media_content_id": "media-source://camera/camera.back_door"},
-            ],
-        )
-    get_image.assert_not_called()
-    mock_evaluate.assert_not_called()
-
-
-@pytest.mark.usefixtures("init_components")
 async def test_explicit_entity_permission(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
