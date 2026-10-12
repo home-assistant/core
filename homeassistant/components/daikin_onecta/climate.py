@@ -339,7 +339,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         cc = self._climate_control()
         if cc is not None:
             onoff = cc.on_off_mode
-            if operationmode is not None and (onoff is None or onoff.value != "off"):
+            if onoff is not None:
+                if onoff.value == "off":
+                    return HVACMode.OFF
+                if onoff.value != "on":
+                    return None
+            if operationmode is not None:
                 mode = operationmode.value
         return DAIKIN_HVAC_TO_HA.get(mode)
 
@@ -386,6 +391,13 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
+        cc = self._climate_control()
+        if (
+            cc is not None
+            and cc.on_off_mode is not None
+            and cc.on_off_mode.value not in {"on", "off"}
+        ):
+            self._raise_service_validation_error("climate_power_unavailable")
 
         operation_mode = None
         if hvac_mode != HVACMode.OFF:
@@ -400,8 +412,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 on_off_mode = "off"
         elif self.hvac_mode == HVACMode.OFF:
             on_off_mode = "on"
-
-        cc = self._climate_control()
 
         # Only set the on/off to Daikin when we need to change it
         if on_off_mode is not None:

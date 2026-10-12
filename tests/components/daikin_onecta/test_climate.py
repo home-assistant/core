@@ -420,6 +420,7 @@ async def test_set_hvac_mode_rejects_unavailable_native_mode() -> None:
     entity = object.__new__(DaikinClimate)
     object.__setattr__(entity, "_device", MagicMock(name="Device"))
     entity._native_hvac_mode = MagicMock(return_value=None)
+    entity._climate_control = MagicMock(return_value=None)
     entity._async_execute_climate_command = AsyncMock()
 
     with pytest.raises(ServiceValidationError) as err:
@@ -868,6 +869,23 @@ def test_missing_power_characteristic_uses_operation_mode() -> None:
     )
 
     assert entity._get_hvac_mode() is HVACMode.HEAT_COOL
+
+
+@pytest.mark.parametrize("power_value", [None, "unknown"])
+def test_unknown_power_characteristic_uses_unknown_hvac_mode(
+    power_value: str | None,
+) -> None:
+    """Preserve an omitted or invalid power value as an unknown HVAC state."""
+    entity = object.__new__(DaikinClimate)
+    operation_mode = SimpleNamespace(value="heating")
+    entity._climate_control = MagicMock(
+        return_value=SimpleNamespace(
+            on_off_mode=SimpleNamespace(value=power_value),
+            operation_mode=operation_mode,
+        )
+    )
+
+    assert entity._get_hvac_mode() is None
 
 
 @pytest.mark.parametrize("power_settable", [False, None])
@@ -1360,6 +1378,14 @@ async def test_climate_service_updates_entity_state(
     "invalidate_power",
     [
         pytest.param(lambda point: setattr(point, "on_off_mode", None), id="removed"),
+        pytest.param(
+            lambda point: setattr(point.on_off_mode, "value", None),
+            id="omitted",
+        ),
+        pytest.param(
+            lambda point: setattr(point.on_off_mode, "value", "unknown"),
+            id="invalid",
+        ),
         pytest.param(
             lambda point: setattr(point.on_off_mode, "settable", False),
             id="read-only",
