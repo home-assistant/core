@@ -39,6 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import get_hub
 from .const import (
@@ -314,13 +315,23 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state and state.attributes.get(
-            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-        ):
-            self._attr_native_target_temperature = float(
-                state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+        if (state := await self.async_get_last_state()) is None or (
+            target := state.attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
+        ) is None:
+            return
+        # States written before 2026.11 lack temperature_unit and are in the
+        # current system unit
+        unit = state.attributes.get(
+            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+            self.hass.config.units.temperature_unit,
+        )
+        if unit not in TemperatureConverter.VALID_UNITS:
+            return
+        self._attr_native_target_temperature = TemperatureConverter.convert(
+            float(target), unit, self.native_temperature_unit
+        )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

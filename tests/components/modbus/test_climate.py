@@ -1,5 +1,8 @@
 """The tests for the Modbus climate component."""
 
+from collections.abc import Generator
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.climate import (
@@ -32,10 +35,12 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.modbus.climate import ModbusThermostat
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_CURRENT_TEMP_OFFSET,
@@ -101,11 +106,18 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    CONF_TEMPERATURE_UNIT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
 
@@ -1618,42 +1630,220 @@ async def test_service_set_swing_mode(
     )
 
 
-test_value = State(ENTITY_ID, 35)
-test_value.attributes = {ATTR_TEMPERATURE: 37}
+@pytest.fixture(name="restore_unit_system")
+def restore_unit_system_fixture(
+    hass: HomeAssistant, unit_system: UnitSystem
+) -> Generator[None]:
+    """Set the unit system and keep the first read from overwriting restored state."""
+    hass.config.units = unit_system
+    with patch.object(ModbusThermostat, "async_await_connection"):
+        yield
 
 
-# Due to fact that modbus now reads imidiatly after connect and the
-# fixture do not return until connected, it is not possible to
-# test the restore.
-# THIS IS WORK TBD.
-@pytest.mark.skip
+@pytest.mark.usefixtures("restore_unit_system", "mock_test_state", "mock_modbus")
 @pytest.mark.parametrize(
-    "mock_test_state",
-    [(test_value,)],
-    indirect=True,
-)
-@pytest.mark.parametrize(
-    "do_config",
+    ("unit_system", "do_config", "mock_test_state", "expected"),
     [
-        {
-            CONF_CLIMATES: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_TARGET_TEMP: 117,
-                    CONF_ADDRESS: 117,
-                    CONF_SCAN_INTERVAL: 0,
-                }
-            ],
-        },
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (State(ENTITY_ID, HVACMode.AUTO, {ATTR_TEMPERATURE: 37}),),
+            37,
+            id="legacy",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (State(ENTITY_ID, HVACMode.AUTO, {ATTR_TEMPERATURE: 68}),),
+            68,
+            id="legacy_fahrenheit_system",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 68,
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    },
+                ),
+            ),
+            68,
+            id="fahrenheit_system_celsius_native",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "F",
+                    }
+                ],
+            },
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 20,
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                    },
+                ),
+            ),
+            20,
+            id="celsius_system_fahrenheit_native",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 20,
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                    },
+                ),
+            ),
+            68,
+            id="stored_celsius_on_fahrenheit_system",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 68,
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    },
+                ),
+            ),
+            20,
+            id="stored_fahrenheit_on_celsius_system",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 0,
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                    },
+                ),
+            ),
+            0,
+            id="zero",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 37,
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+                    },
+                ),
+            ),
+            None,
+            id="invalid_unit",
+        ),
     ],
+    indirect=["mock_test_state"],
 )
 async def test_restore_state_climate(
-    hass: HomeAssistant, mock_test_state, mock_modbus
+    hass: HomeAssistant, expected: float | None
 ) -> None:
-    """Run test for sensor restore state."""
+    """Test the target temperature is restored in the native unit."""
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
-    assert state.attributes[ATTR_TEMPERATURE] == 37
+    assert state.attributes[ATTR_TEMPERATURE] == expected
 
 
 @pytest.mark.parametrize(
