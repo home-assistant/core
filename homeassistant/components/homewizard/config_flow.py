@@ -1,3 +1,4 @@
+
 """Config flow for HomeWizard."""
 
 from collections.abc import Mapping
@@ -21,7 +22,6 @@ import probatio
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -46,6 +46,7 @@ from .const import (
     MIN_UPDATE_INTERVAL,
     UPDATE_INTERVAL,
 )
+from .coordinator import HomeWizardConfigEntry
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -57,7 +58,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeWizardConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow for HomeWizard."""
         return HomeWizardOptionsFlow()
