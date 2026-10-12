@@ -595,9 +595,9 @@ async def test_proxy_view_success_and_headers(
         },
     )
 
-    # b64 for "sample.jpg" is "c2FtcGxlLmpwZw=="
+    # b64 for "images/sample.jpg" is "aW1hZ2VzL3NhbXBsZS5qcGc="
     resp = await client.get(
-        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/c2FtcGxlLmpwZw==",
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3NhbXBsZS5qcGc=",
         headers={"Range": "bytes=0-15"},
     )
     assert resp.status == 200
@@ -632,12 +632,13 @@ async def test_proxy_view_content_type_inference(
     client = await hass_client()
 
     # 1. Inferred from extension in url (e.g. .mp4)
-    upstream_url_mp4 = "https://127.0.0.1:443/indi-allsky/video.mp4"
+    upstream_url_mp4 = "https://127.0.0.1:443/indi-allsky/public/video.mp4"
     mock_indi_allsky_client.get_media_url.return_value = upstream_url_mp4
     aioclient_mock.get(upstream_url_mp4, content=b"video-bytes")
 
+    # b64 for "public/video.mp4" is "cHVibGljL3ZpZGVvLm1wNA=="
     resp_mp4 = await client.get(
-        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/dmlkZW8ubXA0"
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/cHVibGljL3ZpZGVvLm1wNA=="
     )
     assert resp_mp4.status == 200
     assert resp_mp4.headers.get("Content-Type") == "video/mp4"
@@ -657,13 +658,13 @@ async def test_proxy_view_content_type_inference(
 
     # 3. other paths fallback to image/jpeg when url has no extension
     aioclient_mock.clear_requests()
-    upstream_url_other = "https://127.0.0.1:443/indi-allsky/noext"
+    upstream_url_other = "https://127.0.0.1:443/indi-allsky/public/noext"
     mock_indi_allsky_client.get_media_url.return_value = upstream_url_other
     aioclient_mock.get(upstream_url_other, content=b"img-bytes")
 
-    # b64 for "noext" is "bm9leHQ="
+    # b64 for "public/noext" is "cHVibGljL25vZXh0"
     resp_other = await client.get(
-        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bm9leHQ="
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/cHVibGljL25vZXh0"
     )
     assert resp_other.status == 200
     assert resp_other.headers.get("Content-Type") == "image/jpeg"
@@ -725,18 +726,25 @@ async def test_proxy_view_errors(
     )
     assert resp.status == 400
 
-    # 5. Upstream connection failure / client error -> 502
-    upstream_url = "https://127.0.0.1:443/indi-allsky/error.jpg"
+    # 5. Arbitrary relative path (SSRF prevention, e.g. "api/admin") -> 400
+    # b64 for "api/admin" is "YXBpL2FkbWlu"
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/YXBpL2FkbWlu"
+    )
+    assert resp.status == 400
+
+    # 6. Upstream connection failure / client error -> 502
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/error.jpg"
     mock_indi_allsky_client.get_media_url.return_value = upstream_url
     aioclient_mock.get(upstream_url, exc=TimeoutError())
 
-    # b64 for "error.jpg" is "ZXJyb3IuanBn"
+    # b64 for "images/error.jpg" is "aW1hZ2VzL2Vycm9yLmpwZw=="
     resp = await client.get(
-        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/ZXJyb3IuanBn"
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2Vycm9yLmpwZw=="
     )
     assert resp.status == 502
 
-    # 6. Entry from another domain -> 404
+    # 7. Entry from another domain -> 404
     foreign_entry = MockConfigEntry(
         domain="other_domain",
         state=ConfigEntryState.LOADED,
@@ -788,9 +796,9 @@ async def test_proxy_view_streaming_error_mid_stream(
         mock_session.get = MagicMock(side_effect=mock_get)
         mock_session_getter.return_value = mock_session
 
-        # b64 for "failing.jpg" is "ZmFpbGluZy5qcGc="
+        # b64 for "images/failing.jpg" is "aW1hZ2VzL2ZhaWxpbmcuanBn"
         resp = await client.get(
-            f"/api/indi_allsky/media/{mock_config_entry.entry_id}/ZmFpbGluZy5qcGc="
+            f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2ZhaWxpbmcuanBn"
         )
         assert resp.status == 200
         assert await resp.content.readexactly(13) == b"initial_chunk"

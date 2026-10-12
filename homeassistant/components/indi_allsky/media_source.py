@@ -45,6 +45,25 @@ CATEGORY_NAMES = {
 
 MEDIA_PROXY_URL = "/api/indi_allsky/media/{entry_id}/{path}"
 
+VALID_PROXY_MEDIA_EXACT_PATHS = {
+    "latestimage",
+    "latestkeogram",
+    "lateststartrail",
+    "latesttimelapse",
+}
+
+VALID_PROXY_MEDIA_PREFIXES = (
+    "images/",
+    "public/",
+)
+
+
+def _is_valid_media_path(media_path: str) -> bool:
+    """Validate that the media path targets an allowed INDI Allsky media route."""
+    if media_path in VALID_PROXY_MEDIA_EXACT_PATHS:
+        return True
+    return media_path.startswith(VALID_PROXY_MEDIA_PREFIXES)
+
 
 def _encode_media_path(path: str) -> str:
     """Encode an INDI Allsky media path for use in a Home Assistant proxy URL."""
@@ -93,7 +112,11 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
             return web.Response(status=400)
 
         media_path_obj = PurePath(media_path)
-        if media_path_obj.is_absolute() or ".." in media_path_obj.parts:
+        if (
+            media_path_obj.is_absolute()
+            or ".." in media_path_obj.parts
+            or not _is_valid_media_path(media_path)
+        ):
             return web.Response(status=400)
 
         url = entry.runtime_data.client.get_media_url(media_path)
