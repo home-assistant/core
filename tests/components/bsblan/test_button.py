@@ -1,6 +1,6 @@
 """Tests for the BSB-Lan button platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from bsblan import BSBLANError, Device, DeviceTime
 from freezegun.api import FrozenDateTimeFactory
@@ -160,6 +160,50 @@ async def test_button_press_set_time_error(
         "device_name": "BSB-LAN",
         "error": "Write failed",
     }
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "expected_entity"),
+    [
+        pytest.param("device_pps.json", False, id="pps"),
+        pytest.param("device.json", True, id="bsb"),
+    ],
+)
+async def test_existing_sync_time_button(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_fixture: str,
+    expected_entity: bool,
+) -> None:
+    """Test existing sync time buttons follow the device capability on upgrade."""
+    device = Device.model_validate_json(
+        await async_load_fixture(hass, device_fixture, DOMAIN)
+    )
+    mock_bsblan.device.return_value = device
+    mock_config_entry.add_to_hass(hass)
+    unique_id = f"{device.MAC}-sync_time"
+    registry_entry = entity_registry.async_get_or_create(
+        BUTTON_DOMAIN,
+        DOMAIN,
+        unique_id,
+        config_entry=mock_config_entry,
+    )
+    unrelated_entry = entity_registry.async_get_or_create(
+        BUTTON_DOMAIN, DOMAIN, "other-device-sync_time"
+    )
+
+    with patch("homeassistant.components.bsblan.PLATFORMS", [Platform.BUTTON]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(BUTTON_DOMAIN, DOMAIN, unique_id)
+        is not None
+    ) is expected_entity
+    assert (hass.states.get(registry_entry.entity_id) is not None) is expected_entity
+    assert entity_registry.async_get(unrelated_entry.entity_id) == unrelated_entry
 
 
 async def test_sync_time_button_not_created_for_pps_bus(

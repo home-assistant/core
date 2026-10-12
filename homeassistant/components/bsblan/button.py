@@ -3,11 +3,13 @@
 from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
+from .const import DOMAIN
 from .coordinator import BSBLanFastCoordinator
 from .entity import BSBLanEntity
 from .helpers import async_sync_device_time
@@ -31,10 +33,17 @@ async def async_setup_entry(
     """Set up BSB-Lan button entities from a config entry."""
     data = entry.runtime_data
 
+    if not data.device.supports_time_sync:
+        entity_registry = er.async_get(hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            Platform.BUTTON, DOMAIN, f"{data.device.MAC}-sync_time"
+        ):
+            entity_registry.async_remove(entity_id)
+        return
+
     async_add_entities(
         BSBLanButtonEntity(data.fast_coordinator, data, description)
         for description in BUTTON_DESCRIPTIONS
-        if data.device.supports_time_sync
     )
 
 
