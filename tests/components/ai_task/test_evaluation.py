@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task
 from homeassistant.components.ai_task.const import DATA_PREFERENCES
-from homeassistant.components.camera import Image
+from homeassistant.components.media_source import MediaImage
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import chat_session
@@ -215,8 +215,8 @@ async def test_camera_only(hass: HomeAssistant, mock_evaluate: AsyncMock) -> Non
 
     mock_evaluate.side_effect = evaluate
     with patch(
-        "homeassistant.components.camera.async_get_image",
-        return_value=Image("image/jpeg", b"camera image"),
+        "homeassistant.components.media_source.async_get_media_image",
+        return_value=MediaImage(mime_type="image/jpeg", content=b"camera image"),
     ) as get_image:
         await hass.services.async_call(
             "ai_task",
@@ -306,26 +306,29 @@ async def test_invalid_questions(
 @pytest.mark.usefixtures("init_components")
 @pytest.mark.parametrize(
     "second_image",
-    [Image("image/jpeg", b"camera image"), HomeAssistantError("Task failed")],
+    [
+        MediaImage(mime_type="image/jpeg", content=b"camera image"),
+        HomeAssistantError("Task failed"),
+    ],
 )
 async def test_failed_task_cleans_snapshots(
     hass: HomeAssistant,
     mock_evaluate: AsyncMock,
     tmp_path: Path,
-    second_image: Image | HomeAssistantError,
+    second_image: MediaImage | HomeAssistantError,
 ) -> None:
     """Clean temporary camera files when resolution or evaluation fails."""
     snapshot_path = tmp_path / "snapshot.jpg"
     snapshot_path.write_bytes(b"camera image")
     mock_evaluate.side_effect = HomeAssistantError("Task failed")
-    image = Image("image/jpeg", b"camera image")
+    image = MediaImage(mime_type="image/jpeg", content=b"camera image")
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
+            "homeassistant.components.media_source.async_get_media_image",
             side_effect=[image, second_image],
         ),
         patch(
-            "homeassistant.components.ai_task.task._save_camera_snapshot",
+            "homeassistant.components.ai_task.task._save_media_image",
             return_value=snapshot_path,
         ),
         pytest.raises(HomeAssistantError, match="Task failed"),
@@ -358,7 +361,9 @@ async def test_attachment_limit(
     """Reject excessive attachments before capturing any snapshots."""
     mock_ai_task_entity._attr_max_attachments = 1
     with (
-        patch("homeassistant.components.camera.async_get_image") as get_image,
+        patch(
+            "homeassistant.components.media_source.async_get_media_image"
+        ) as get_image,
         pytest.raises(HomeAssistantError, match="supports at most 1 attachments"),
     ):
         await ai_task.async_evaluate(

@@ -5,6 +5,9 @@
     }
   },
   "services": {
+    "clear_images": {
+      "service": "mdi:delete"
+    },
     "evaluate": {
       "service": "mdi:check-decagram-outline"
     },

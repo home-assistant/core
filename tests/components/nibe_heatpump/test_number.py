@@ -1,5 +1,6 @@
 """Test the Nibe Heat Pump number entities."""
 
+from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -63,6 +64,29 @@ async def test_update(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state == snapshot
+
+
+@pytest.mark.parametrize(
+    ("address", "entity_id"),
+    [
+        (48044, "number.holiday_start_date_48044"),
+        (48045, "number.holiday_end_date_48045"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_date_coils_not_created(
+    hass: HomeAssistant,
+    address: int,
+    entity_id: str,
+    coils: dict[int, Any],
+) -> None:
+    """Test writable date coils do not become number entities."""
+    coils[address] = date(2025, 6, 28)
+
+    await async_add_model(hass, Model.F1255)
+
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.parametrize(

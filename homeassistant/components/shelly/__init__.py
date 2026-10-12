@@ -27,7 +27,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -162,14 +166,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bo
     # error. The config entry data for this custom component doesn't contain host
     # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
-        LOGGER.warning(
-            (
-                "The config entry %s probably comes from a custom integration, please"
-                " remove it if you want to use core Shelly integration"
-            ),
-            entry.title,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="custom_integration_entry",
+            translation_placeholders={"title": entry.title},
         )
-        return False
 
     if get_device_entry_gen(entry) in RPC_GENERATIONS:
         return await _async_setup_rpc_entry(hass, entry)

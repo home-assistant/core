@@ -16,7 +16,7 @@ from homeassistant.components.airthings_ble.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -251,6 +251,50 @@ async def test_sensors_unavailable_while_update_fails(
         await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "85"
+
+
+async def test_sensor_unknown_while_value_missing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor is unknown while a successful read lacks its value."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(WAVE_DEVICE_INFO),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    battery = "sensor.airthings_wave_123456_battery"
+    humidity = "sensor.airthings_wave_123456_humidity"
+    assert hass.states.get(battery).state == "85"
+    assert hass.states.get(humidity).state == "60.0"
+
+    without_battery = deepcopy(WAVE_DEVICE_INFO)
+    del without_battery.sensors["battery"]
+    with patch_airthings_ble(without_battery):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(battery).state == STATE_UNKNOWN
+    assert hass.states.get(humidity).state == "60.0"
+
+    with patch_airthings_ble(WAVE_DEVICE_INFO):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(battery).state == "85"
 
 
 async def test_no_migration_when_device_model_exists(

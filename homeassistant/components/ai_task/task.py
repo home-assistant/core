@@ -10,7 +10,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components import camera, conversation, image, media_source
+from homeassistant.components import conversation, media_source
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import Context, HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -37,11 +37,11 @@ from .evaluation import (
 from .permissions import async_check_permissions
 
 
-def _save_camera_snapshot(image_data: camera.Image | image.Image) -> Path:
-    """Save camera snapshot to temp file."""
+def _save_media_image(image_data: media_source.MediaImage) -> Path:
+    """Save media image to temp file."""
     with tempfile.NamedTemporaryFile(
         mode="wb",
-        suffix=mimetypes.guess_extension(image_data.content_type, False),
+        suffix=mimetypes.guess_extension(image_data.mime_type, False),
         delete=False,
     ) as temp_file:
         temp_file.write(image_data.content)
@@ -73,45 +73,33 @@ async def _resolve_attachments(
     for attachment in attachments or []:
         media_content_id = attachment["media_content_id"]
 
-        # Special case for certain media sources
-        for integration in camera, image:
-            media_source_prefix = f"media-source://{integration.DOMAIN}/"
-            if not media_content_id.startswith(media_source_prefix):
-                continue
-
-            # Extract entity_id from the media content ID
-            entity_id = media_content_id.removeprefix(media_source_prefix)
-
-            # Get snapshot from entity
-            image_data = await integration.async_get_image(hass, entity_id)
-
+        if image_data := await media_source.async_get_media_image(
+            hass, media_content_id
+        ):
             temp_filename = await hass.async_add_executor_job(
-                _save_camera_snapshot, image_data
+                _save_media_image, image_data
             )
             created_files.append(temp_filename)
 
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    mime_type=image_data.content_type,
+                    mime_type=image_data.mime_type,
                     path=temp_filename,
                 )
             )
-            break
-        else:
-            # Handle regular media sources
-            media = await media_source.async_resolve_media(hass, media_content_id, None)
-            if media.path is None:
-                raise HomeAssistantError(
-                    "Only local attachments are currently supported"
-                )
-            resolved_attachments.append(
-                conversation.Attachment(
-                    media_content_id=media_content_id,
-                    mime_type=attachment.get("media_content_type") or media.mime_type,
-                    path=media.path,
-                )
+            continue
+
+        media = await media_source.async_resolve_media(hass, media_content_id, None)
+        if media.path is None:
+            raise HomeAssistantError("Only local attachments are currently supported")
+        resolved_attachments.append(
+            conversation.Attachment(
+                media_content_id=media_content_id,
+                mime_type=attachment.get("media_content_type") or media.mime_type,
+                path=media.path,
             )
+        )
 
     return resolved_attachments
 
@@ -128,6 +116,8 @@ async def async_generate_data(
     context: Context | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+
     if entity_id is None:
         entity_id = hass.data[DATA_PREFERENCES].gen_data_entity_id
 
@@ -177,6 +167,8 @@ async def async_generate_image(
     context: Context | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+
     if entity_id is None:
         entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
 

@@ -118,10 +118,17 @@ async def async_get_api(
     else:
         api = MergedAPI([apis[key] for key in api_id])
 
+    return await async_get_authorized_api_instance(api, llm_context)
+
+
+async def async_get_authorized_api_instance(
+    api: API, llm_context: LLMContext
+) -> APIInstance:
+    """Get an API instance, requiring an admin user if the API requires it."""
     if api.requires_admin and (
         not llm_context.context
         or not llm_context.context.user_id
-        or not (user := await hass.auth.async_get_user(llm_context.context.user_id))
+        or not (user := await api.hass.auth.async_get_user(llm_context.context.user_id))
         or not user.is_admin
     ):
         raise Unauthorized(context=llm_context.context)

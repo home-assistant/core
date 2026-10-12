@@ -337,6 +337,7 @@ async def _create_script_entities(
                 UnavailableScriptEntity(
                     script_config.key,
                     script_config.raw_config,
+                    script_config.raw_blueprint_inputs,
                     cast(str, script_config.validation_error),
                     script_config.validation_status,
                 )
@@ -470,6 +471,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self,
         key: str,
         raw_config: ConfigType | None,
+        raw_blueprint_inputs: ConfigType | None,
         validation_error: str,
         validation_status: ValidationStatus,
     ) -> None:
@@ -477,6 +479,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
+        self._raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -502,6 +505,15 @@ class UnavailableScriptEntity(BaseScriptEntity):
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
+        # The config is invalid, but it can still point at its blueprint. Once
+        # the blueprint was applied, only its inputs hold that reference.
+        for config in (self._raw_blueprint_inputs, self.raw_config):
+            if (
+                config is not None
+                and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
+                and isinstance(path := blueprint.get(CONF_PATH), str)
+            ):
+                return path
         return None
 
     @cached_property
@@ -753,17 +765,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         if service.return_response:
             return response or {}
         return None
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

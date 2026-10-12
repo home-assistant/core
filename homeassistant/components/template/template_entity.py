@@ -618,12 +618,13 @@ class TemplateEntity(AbstractTemplateEntity):
 
     @callback
     @override
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
         """Re-track the templates, `this` was bound to the old entity_id.
 
-        Runs after the state is written, `this.state` must exist when rendering.
+        The state is written first, `this.state` must exist when rendering.
         """
-        super().async_entity_id_change_finished(old_entity_id)
+        super().async_entity_id_changed(old_entity_id)
+        self.async_write_ha_state()
         if self._template_result_info is None:
             # Not started yet, the startup will use the new entity_id
             return

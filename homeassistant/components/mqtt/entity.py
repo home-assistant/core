@@ -1062,8 +1062,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         debug_info.add_entity_discovery_data(
             self.hass, self._discovery_data, self.entity_id
         )
-        # Set in case the entity has been removed and is re-added,
-        # for example when changing entity_id
+        # Set in case the entity has been removed and is re-added
         set_discovery_hash(self.hass, discovery_hash)
         self._remove_discovery_updated = async_dispatcher_connect(
             self.hass,
@@ -1650,6 +1649,20 @@ class MqttEntity(
         )
         await super().async_will_remove_from_hass()
         debug_info.remove_entity_data(self.hass, self.entity_id)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move debug info and subscriptions to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        debug_info.rename_entity_data(self.hass, old_entity_id, self.entity_id)
+        for sub_state in (
+            self._sub_state,
+            self._attributes_sub_state,
+            self._availability_sub_state,
+        ):
+            for sub in sub_state.values():
+                sub.entity_id = self.entity_id
 
     async def async_publish_with_config(
         self, topic: str, payload: PublishPayloadType
