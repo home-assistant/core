@@ -22,9 +22,10 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import TeslemetryConfigEntry
 from .const import TeslemetryClimateSide
@@ -58,6 +59,22 @@ POLLING_PRESET_MODES = {
 
 
 PARALLEL_UPDATES = 0
+
+
+def _restore_temperature(
+    entity: ClimateEntity, state: State, attribute: ClimateEntityStateAttribute
+) -> float | None:
+    """Return a restored temperature converted to the entity's native unit."""
+    if (temperature := state.attributes.get(attribute)) is None:
+        return None
+    return TemperatureConverter.convert(
+        temperature,
+        state.attributes.get(
+            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+            entity.hass.config.units.temperature_unit,
+        ),
+        entity.native_temperature_unit,
+    )
 
 
 async def async_setup_entry(
@@ -311,11 +328,11 @@ class TeslemetryStreamingClimateEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_native_current_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+            self._attr_native_current_temperature = _restore_temperature(
+                self, state, ClimateEntityStateAttribute.CURRENT_TEMPERATURE
             )
-            self._attr_native_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            self._attr_native_target_temperature = _restore_temperature(
+                self, state, ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
             self._attr_preset_mode = state.attributes.get(
                 ClimateEntityStateAttribute.PRESET_MODE
@@ -552,11 +569,11 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_native_current_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+            self._attr_native_current_temperature = _restore_temperature(
+                self, state, ClimateEntityStateAttribute.CURRENT_TEMPERATURE
             )
-            self._attr_native_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            self._attr_native_target_temperature = _restore_temperature(
+                self, state, ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
 
         self.async_on_remove(

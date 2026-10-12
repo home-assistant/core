@@ -27,11 +27,16 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
     Platform,
+    UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import (
@@ -42,6 +47,8 @@ from .const import (
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
+
+from tests.common import mock_restore_cache
 
 VIN = "LRW3F7EK4NC700000"
 
@@ -587,3 +594,95 @@ async def test_climate_streaming_hvac_power(
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.test_climate").state == expected
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    ["climate.test_climate", "climate.test_cabin_overheat_protection"],
+)
+@pytest.mark.parametrize(
+    ("restored_attributes", "unit_system", "expected_temperatures"),
+    [
+        pytest.param(
+            {
+                "current_temperature": 25,
+                "temperature": 20,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
+            METRIC_SYSTEM,
+            (25, 20),
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {
+                "current_temperature": 25,
+                "temperature": 20,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
+            US_CUSTOMARY_SYSTEM,
+            (77, 68),
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {
+                "current_temperature": 77,
+                "temperature": 68,
+                "temperature_unit": UnitOfTemperature.FAHRENHEIT,
+            },
+            METRIC_SYSTEM,
+            (25, 20),
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {
+                "current_temperature": 77,
+                "temperature": 68,
+                "temperature_unit": UnitOfTemperature.FAHRENHEIT,
+            },
+            US_CUSTOMARY_SYSTEM,
+            (77, 68),
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param(
+            {"current_temperature": 25, "temperature": 20},
+            METRIC_SYSTEM,
+            (25, 20),
+            id="legacy_celsius",
+        ),
+        pytest.param(
+            {"current_temperature": 77, "temperature": 68},
+            US_CUSTOMARY_SYSTEM,
+            (77, 68),
+            id="legacy_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            METRIC_SYSTEM,
+            (None, None),
+            id="missing_temperatures",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_streaming_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    entity_id: str,
+    restored_attributes: dict[str, int | str],
+    unit_system: UnitSystem,
+    expected_temperatures: tuple[int | None, int | None],
+) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["config"] = {"cop_user_set_temp_supported": True}
+    mock_metadata.return_value = metadata
+    hass.config.units = unit_system
+    mock_restore_cache(hass, [State(entity_id, HVACMode.OFF, restored_attributes)])
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    state = hass.states.get(entity_id)
+    assert (
+        state.attributes["current_temperature"],
+        state.attributes[ATTR_TEMPERATURE],
+    ) == expected_temperatures
