@@ -10,6 +10,7 @@ import attr
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -3693,14 +3694,13 @@ async def test_restore_states(
 
 
 @pytest.mark.parametrize(
-    ("initial_disabled_by", "new_disabled_by", "expect_state"),
+    ("initial_disabled_by", "new_disabled_by"),
     [
-        pytest.param(None, er.RegistryEntryDisabler.USER, False, id="disable"),
-        pytest.param(er.RegistryEntryDisabler.USER, None, True, id="enable"),
+        pytest.param(None, er.RegistryEntryDisabler.USER, id="disable"),
+        pytest.param(er.RegistryEntryDisabler.USER, None, id="enable"),
         pytest.param(
             er.RegistryEntryDisabler.USER,
             er.RegistryEntryDisabler.HASS,
-            False,
             id="change_disabler",
         ),
     ],
@@ -3708,9 +3708,9 @@ async def test_restore_states(
 async def test_restore_states_disabled_by_changed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     initial_disabled_by: er.RegistryEntryDisabler | None,
     new_disabled_by: er.RegistryEntryDisabler | None,
-    expect_state: bool,
 ) -> None:
     """Test a restored state follows the disabled state of its registry entry."""
     hass.set_state(CoreState.not_running)
@@ -3730,13 +3730,7 @@ async def test_restore_states_disabled_by_changed(
     entity_registry.async_update_entity("light.simple", disabled_by=new_disabled_by)
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.simple")
-    assert (state is not None) is expect_state
-    assert state is None or state.state == STATE_UNAVAILABLE
-    assert state is None or state.attributes == {
-        "restored": True,
-        "supported_features": 0,
-    }
+    assert hass.states.get("light.simple") == snapshot
 
 
 async def test_restore_states_disabled_by_changed_keeps_live_state(
@@ -3759,19 +3753,19 @@ async def test_restore_states_disabled_by_changed_keeps_live_state(
 
 
 @pytest.mark.parametrize(
-    ("initial_disabled_by", "new_disabled_by", "expect_state"),
+    ("initial_disabled_by", "new_disabled_by"),
     [
-        pytest.param(None, UNDEFINED, True, id="rename"),
-        pytest.param(None, er.RegistryEntryDisabler.USER, False, id="rename_disable"),
-        pytest.param(er.RegistryEntryDisabler.USER, None, True, id="rename_enable"),
+        pytest.param(None, UNDEFINED, id="rename"),
+        pytest.param(None, er.RegistryEntryDisabler.USER, id="rename_disable"),
+        pytest.param(er.RegistryEntryDisabler.USER, None, id="rename_enable"),
     ],
 )
 async def test_restore_states_renamed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     initial_disabled_by: er.RegistryEntryDisabler | None,
     new_disabled_by: er.RegistryEntryDisabler | UndefinedType | None,
-    expect_state: bool,
 ) -> None:
     """Test a restored state follows a registry entry rename."""
     hass.set_state(CoreState.not_running)
@@ -3791,13 +3785,7 @@ async def test_restore_states_renamed(
     await hass.async_block_till_done()
 
     assert hass.states.get("light.simple") is None
-    state = hass.states.get("light.renamed")
-    assert (state is not None) is expect_state
-    assert state is None or state.state == STATE_UNAVAILABLE
-    assert state is None or state.attributes == {
-        "restored": True,
-        "supported_features": 0,
-    }
+    assert hass.states.get("light.renamed") == snapshot
 
 
 @pytest.mark.parametrize(
