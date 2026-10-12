@@ -1,5 +1,6 @@
 """Tests for the homeassistant LLM tools platform."""
 
+from typing import Any
 from unittest.mock import patch
 
 from probatio import to_openapi
@@ -65,7 +66,9 @@ async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
     assert result.prompt is None
 
 
-async def _async_render_template(hass: HomeAssistant, template: str) -> llm.ToolResult:
+async def _async_render_template(
+    hass: HomeAssistant, tool_args: dict[str, Any]
+) -> llm.ToolResult:
     """Render a template with the render template tool."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(
@@ -74,38 +77,59 @@ async def _async_render_template(hass: HomeAssistant, template: str) -> llm.Tool
     tool = next(tool for tool in result.tools if tool.name == RENDER_TEMPLATE_TOOL)
     return await tool.async_call(
         hass,
-        llm.ToolInput(RENDER_TEMPLATE_TOOL, {"template": template}),
+        llm.ToolInput(RENDER_TEMPLATE_TOOL, tool_args),
         llm_context,
     )
 
 
 @pytest.mark.parametrize(
-    ("template", "expected"),
+    ("tool_args", "expected"),
     [
-        pytest.param("{{ states('light.kitchen') }}", "on", id="state"),
-        pytest.param("{{ [1, 2] }}", "[1, 2]", id="not_parsed"),
-        pytest.param("static text", "static text", id="static"),
+        pytest.param(
+            {"template": "{{ states('light.kitchen') }}"},
+            {"result": "on"},
+            id="state",
+        ),
+        pytest.param(
+            {"template": "{{ [1, 2] }}"}, {"result": "[1, 2]"}, id="not_parsed"
+        ),
+        pytest.param(
+            {"template": "static text"}, {"result": "static text"}, id="static"
+        ),
+        pytest.param(
+            {
+                "template": "{{ trigger.to_state.state }}",
+                "variables": {"trigger": {"to_state": {"state": "on"}}},
+            },
+            {"result": "on"},
+            id="variables",
+        ),
+        pytest.param(
+            {"template": "{{ undefined_variable }}"},
+            {"result": "", "warnings": ["'undefined_variable' is undefined"]},
+            id="undefined_variable",
+        ),
     ],
 )
 async def test_render_template(
-    hass: HomeAssistant, template: str, expected: str
+    hass: HomeAssistant, tool_args: dict[str, Any], expected: dict[str, Any]
 ) -> None:
     """Test the render template tool returns the rendered template as a string."""
-    response = await _async_render_template(hass, template)
-    assert response == llm.ToolResult(data={"result": expected})
+    response = await _async_render_template(hass, tool_args)
+    assert response == llm.ToolResult(data=expected)
 
 
 @pytest.mark.parametrize(
     "template",
     [
         pytest.param("{{ states('light.kitchen') ", id="syntax_error"),
-        pytest.param("{{ undefined_variable }}", id="undefined_variable"),
+        pytest.param("{{ undefined_variable.attribute }}", id="undefined_attribute"),
         pytest.param("{{ 1 / 0 }}", id="render_error"),
     ],
 )
 async def test_render_template_error(hass: HomeAssistant, template: str) -> None:
     """Test the render template tool reports template errors."""
-    response = await _async_render_template(hass, template)
+    response = await _async_render_template(hass, {"template": template})
     assert response.error is True
     assert response.data["error"]
 
@@ -116,7 +140,7 @@ async def test_render_template_timeout(hass: HomeAssistant) -> None:
         "homeassistant.components.homeassistant.llm.Template.async_render_will_timeout",
         return_value=True,
     ):
-        response = await _async_render_template(hass, "{{ 1 }}")
+        response = await _async_render_template(hass, {"template": "{{ 1 }}"})
     assert response == llm.ToolResult(
         data={"error": "Template rendering exceeded the maximum time of 3 seconds"},
         error=True,
