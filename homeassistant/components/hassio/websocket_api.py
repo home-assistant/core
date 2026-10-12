@@ -2,9 +2,11 @@
 
 import logging
 from numbers import Number
+import re
 from typing import Any
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import CreateSessionOptions
 import probatio
 
 from homeassistant.components import websocket_api
@@ -20,7 +22,6 @@ from homeassistant.helpers.dispatcher import (
 
 from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
-    ATTR_ADMIN,
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
@@ -50,6 +51,17 @@ from .update_helper import update_addon, update_core
 SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
     {probatio.Required(ATTR_WS_EVENT): cv.string},
     extra=probatio.ALLOW_EXTRA,
+)
+
+# Endpoints needed for ingress can't require admin because
+# add-ons can set `panel_admin: false`
+RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
+WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
+WS_NO_ADMIN_ENDPOINTS = re.compile(
+    r"^(?:"
+    r"/ingress/(session|validate_session)"
+    f"|{RE_ADDONS_INFO_ENDPOINT}"
+    r")$"
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -105,7 +117,6 @@ def websocket_supervisor_event(
     async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
 
 
-@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required(WS_TYPE): WS_TYPE_API,
@@ -121,13 +132,20 @@ async def websocket_supervisor_api(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Websocket handler to call Supervisor API."""
+    if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
+        msg[ATTR_ENDPOINT]
+    ):
+        raise Unauthorized
     supervisor = hass.data[DATA_COMPONENT]
 
     command = msg[ATTR_ENDPOINT]
     payload = msg.get(ATTR_DATA, {})
 
     if command == "/ingress/session":
-        payload.update(_ingress_session_payload(connection))
+        # Send user ID on session creation, so the supervisor can
+        # correlate session tokens with users for every request that
+        # is authenticated with the given ingress session token.
+        payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
 
     try:
         result = await supervisor.send_command(
@@ -144,19 +162,12 @@ async def websocket_supervisor_api(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
     else:
-        connection.send_result(msg[WS_ID], result.get(ATTR_DATA, {}))
-
-
-def _ingress_session_payload(connection: ActiveConnection) -> dict[str, Any]:
-    """Return the user context Supervisor stores with an ingress session.
-
-    Supervisor forwards the user to the add-on and refuses non-admin sessions
-    for add-ons whose panel is admin-only.
-    """
-    return {
-        ATTR_SESSION_DATA_USER_ID: connection.user.id,
-        ATTR_ADMIN: connection.user.is_admin,
-    }
+        data = result.get(ATTR_DATA, {})
+        # Remove options from add-on info for non-admin users, as options can contain
+        # sensitive information and the frontend does not require it for ingress.
+        if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
+            data.pop("options", None)
+        connection.send_result(msg[WS_ID], data)
 
 
 async def _async_check_ingress_access(
@@ -182,8 +193,8 @@ async def websocket_ingress_info(
 ) -> None:
     """Return the add-on details the ingress panel needs."""
     slug = msg[ATTR_SLUG]
-    await _async_check_ingress_access(hass, connection, slug)
     try:
+        await _async_check_ingress_access(hass, connection, slug)
         addon = await get_supervisor_client(hass).addons.addon_info(slug)
     except SupervisorError as err:
         connection.send_error(
@@ -213,21 +224,20 @@ async def websocket_ingress_session(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create an ingress session for the add-on."""
-    await _async_check_ingress_access(hass, connection, msg[ATTR_SLUG])
+    client = get_supervisor_client(hass)
     try:
-        result = await hass.data[DATA_COMPONENT].send_command(
-            "/ingress/session",
-            payload=_ingress_session_payload(connection),
-            source="core.websocket_api",
+        await _async_check_ingress_access(hass, connection, msg[ATTR_SLUG])
+        # Supervisor resolves the user's role from the ID and forwards the
+        # identity to the add-on
+        session = await client.ingress.create_session(
+            CreateSessionOptions(user_id=connection.user.id)
         )
-    except HassioAPIError as err:
+    except SupervisorError as err:
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
         return
-    connection.send_result(
-        msg[WS_ID], {ATTR_SESSION: result.get(ATTR_DATA, {}).get(ATTR_SESSION)}
-    )
+    connection.send_result(msg[WS_ID], {ATTR_SESSION: session})
 
 
 @websocket_api.websocket_command(
