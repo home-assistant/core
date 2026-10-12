@@ -33,7 +33,7 @@ class YaleXSBLEData:
     last_activity: LockActivity | None = None
     last_activity_context: Context | None = None
     main_lock_entity_id: str | None = None
-    expected_operation: ExpectedOperation | None = None
+    expected_operations: list[ExpectedOperation] = field(default_factory=list)
     operation_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     credential_operations: dict[
         tuple[str, str, tuple[tuple[str, Any], ...]], asyncio.Task[Any]

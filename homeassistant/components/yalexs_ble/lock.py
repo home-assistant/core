@@ -196,20 +196,20 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     def _matches_expected_operation(self, new_state: LockState) -> bool:
         """Return if the state is the outcome of a pending Home Assistant operation."""
-        data = self._data
-        if (operation := data.expected_operation) is None:
-            return False
-        if (
-            operation.matched_state is not None
-            and operation.matched_state is not new_state
-        ) or time.monotonic() > operation.deadline:
-            data.expected_operation = None
-            return False
-        if new_state.lock not in operation.statuses:
-            data.expected_operation = None
-            return False
-        operation.matched_state = new_state
-        return True
+        operations = self._data.expected_operations
+        now = time.monotonic()
+        operations[:] = [op for op in operations if now <= op.deadline]
+        if any(op.matched_state is new_state for op in operations):
+            return True
+        operations[:] = [op for op in operations if op.matched_state is None]
+        for index, operation in enumerate(operations):
+            if new_state.lock in operation.statuses:
+                operation.matched_state = new_state
+                # Older commands were superseded by this outcome.
+                del operations[:index]
+                return True
+        operations.clear()
+        return False
 
     @asynccontextmanager
     async def _expect_operation(
@@ -217,21 +217,22 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     ) -> AsyncGenerator[None]:
         """Expect a lock operation for the duration of the library call.
 
-        Commands for one physical lock run one at a time so they cannot
-        overwrite each other's expectation.
+        Commands for one physical lock run one at a time, but a command can
+        return before its state arrives, so expectations queue up in order.
         """
         data = self._data
         async with data.operation_lock:
             expected = ExpectedOperation(
                 statuses, time.monotonic() + HA_OPERATION_TIMEOUT_SECONDS
             )
-            data.expected_operation = expected
+            data.expected_operations.append(expected)
             try:
                 yield
             except BaseException:
                 # Includes cancellation, which would otherwise leave the expectation active.
-                if data.expected_operation is expected:
-                    data.expected_operation = None
+                data.expected_operations[:] = [
+                    op for op in data.expected_operations if op is not expected
+                ]
                 raise
 
     @callback

@@ -824,6 +824,60 @@ async def test_slow_ha_unlock_not_held(
     assert hass.states.get(ENTITY_ID).state == "unlocked"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")
+async def test_back_to_back_ha_operations_with_late_callbacks_not_held(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test commands returning before their callbacks keep every outcome HA initiated."""
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert (
+        len(
+            hass.config_entries.async_entries(DOMAIN)[
+                0
+            ].runtime_data.expected_operations
+        )
+        == 2
+    )
+
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "unlocked"
+    assert hass.states.get(SECURE_ENTITY_ID).state == "unlocked"
+
+    mock_lock.push(LockStatus.LOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    assert hass.states.get(SECURE_ENTITY_ID).state == "unlocked"
+    assert not activity_events
+
+
+@pytest.mark.usefixtures("entry")
+async def test_external_change_clears_all_pending_operations(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test a non-matching transition drops every pending expectation."""
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    mock_lock.push(LockStatus.SECUREMODE)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(DOMAIN)[
+        0
+    ].runtime_data.expected_operations
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+
+
 @pytest.mark.usefixtures("entry")
 async def test_expected_operation_expires(
     hass: HomeAssistant, mock_lock: MockLock, freezer: FrozenDateTimeFactory
@@ -946,7 +1000,7 @@ async def test_failed_ha_operation_keeps_next_expectation(
         raise BleakError("gone")
 
     async def _lock() -> None:
-        seen.append(mock_lock_data().expected_operation is not None)
+        seen.append(bool(mock_lock_data().expected_operations))
 
     def mock_lock_data() -> YaleXSBLEData:
         return hass.config_entries.async_entries(DOMAIN)[0].runtime_data
@@ -971,7 +1025,7 @@ async def test_failed_ha_operation_keeps_next_expectation(
     assert isinstance(results[0], BleakError)
     assert results[1] is None
     assert seen == [True]
-    assert mock_lock_data().expected_operation is not None
+    assert len(mock_lock_data().expected_operations) == 1
 
 
 @pytest.mark.usefixtures("entry")
@@ -990,7 +1044,7 @@ async def test_failed_ha_operation_after_expectation_consumed(
             "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
         )
     data = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
-    assert data.expected_operation is None
+    assert not data.expected_operations
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")
