@@ -151,7 +151,10 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
                         location = upstream.headers.get("Location")
                         if not location:
                             return web.Response(status=502)
-                        target_url = yarl.URL(current_url).join(yarl.URL(location))
+                        try:
+                            target_url = yarl.URL(current_url).join(yarl.URL(location))
+                        except ValueError:
+                            return web.Response(status=502)
                         if not _is_same_origin(url_obj, target_url):
                             return web.Response(status=502)
                         current_url = str(target_url)
@@ -242,9 +245,12 @@ class IndiAllSkyMediaSource(MediaSource):
                     if resp.status in (301, 302, 303, 307, 308):
                         location = resp.headers.get("Location")
                         if location:
-                            target_url = url_obj.join(yarl.URL(location))
-                            if _is_same_origin(url_obj, target_url):
-                                url = str(target_url)
+                            try:
+                                target_url = url_obj.join(yarl.URL(location))
+                                if _is_same_origin(url_obj, target_url):
+                                    url = str(target_url)
+                            except ValueError:
+                                pass
                     elif resp.status == 200:
                         content_type = resp.headers.get("Content-Type")
             except (ClientError, TimeoutError) as err:

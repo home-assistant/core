@@ -224,6 +224,23 @@ async def test_async_resolve_media_redirect_resolution(
         "video/mp4",
     )
 
+    # Malformed redirect Location header in resolve is ignored safely
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        status=302,
+        headers={"Location": "http://[invalid-ipv6/path"},
+    )
+    resolved_malformed_loc = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latesttimelapse",
+        None,
+    )
+    assert resolved_malformed_loc == PlayMedia(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0dGltZWxhcHNl",
+        "video/mp4",
+    )
+
     # Redirect error fallback (ClientError or TimeoutError) keeps original url
     mock_indi_allsky_client.get_media_url.return_value = (
         "https://127.0.0.1:443/indi-allsky/latestkeogram"
@@ -798,6 +815,18 @@ async def test_proxy_view_errors(
     # 8. Upstream redirect without Location header -> 502
     aioclient_mock.clear_requests()
     aioclient_mock.get(latest_url, status=302)
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
+    )
+    assert resp.status == 502
+
+    # Upstream redirect with malformed Location header -> 502
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        latest_url,
+        status=302,
+        headers={"Location": "http://[invalid-ipv6/path"},
+    )
     resp = await client.get(
         f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
     )
