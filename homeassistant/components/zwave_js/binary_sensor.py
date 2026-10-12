@@ -805,7 +805,6 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             get_device_id(self.driver, self.info.node),
             config_entry_id=self.config_entry.entry_id,
         )
-        assert node_device_id is not None
         controller_events.discovered_value_ids[node_device_id].discard(value.value_id)
         node_events = controller_events.node_events
         value_updates_disc_info = node_events.value_updates_disc_info[

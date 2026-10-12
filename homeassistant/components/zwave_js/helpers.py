@@ -381,7 +381,9 @@ def get_endpoint_indices_from_child_device(
     suffix = device_id.split("-")[-1]
     if suffix.startswith("g"):
         group = node.endpoint_groups.get(int(suffix[1:]))
-        return list(group.endpoint_indices) if group is not None else []
+        # group.endpoints filters to endpoints that actually exist on the node, unlike
+        # the raw endpoint_indices which are taken as-is from the device config.
+        return [endpoint.index for endpoint in group.endpoints] if group else []
     return [int(suffix)]
 
 

@@ -627,6 +627,7 @@ class ControllerEvents:
             )
 
         self.node_events.value_updates_disc_info.pop(node.node_id, None)
+        self.node_events.endpoint_devices_by_node.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
