@@ -15,6 +15,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import create_offline_device, create_online_device, default_mock_devices
 
@@ -43,15 +44,20 @@ async def test_setup_and_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    ("exception", "expected_state", "translation_key"),
     [
         (
             InvalidAppIdOrSecretException("bad credentials"),
             ConfigEntryState.SETUP_ERROR,
+            "invalid_auth",
         ),
-        (ImouException("cloud failure"), ConfigEntryState.SETUP_RETRY),
-        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
-        (RuntimeError("unexpected"), ConfigEntryState.SETUP_RETRY),
+        (
+            ImouException("cloud failure"),
+            ConfigEntryState.SETUP_RETRY,
+            "fetch_devices_failed",
+        ),
+        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY, "update_timeout"),
+        (RuntimeError("unexpected"), ConfigEntryState.SETUP_RETRY, None),
     ],
 )
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
@@ -61,6 +67,7 @@ async def test_setup_entry_exceptions(
     mock_imou_ha_device_manager: AsyncMock,
     exception: Exception,
     expected_state: ConfigEntryState,
+    translation_key: str | None,
 ) -> None:
     """Test the coordinator errors while listing devices during setup."""
     mock_imou_ha_device_manager.async_get_devices.side_effect = exception
@@ -70,6 +77,9 @@ async def test_setup_entry_exceptions(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    if translation_key is not None:
+        assert mock_config_entry.error_reason_translation_key == translation_key
+        assert mock_config_entry.error_reason_translation_domain == DOMAIN
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -353,6 +363,59 @@ async def test_coordinator_update_fails_when_all_devices_fail(
 
     assert mock_config_entry.runtime_data.last_update_success is False
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+    last_exception = mock_config_entry.runtime_data.last_exception
+    assert isinstance(last_exception, UpdateFailed)
+    assert last_exception.translation_domain == DOMAIN
+    assert last_exception.translation_key == "update_devices_failed"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        (TimeoutError("timeout"), "update_timeout"),
+        (ImouException("cloud failure"), "fetch_devices_failed"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_poll_list_devices_translation(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    side_effect: Exception,
+    translation_key: str,
+) -> None:
+    """Scheduled refresh uses translatable errors when listing devices fails."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = side_effect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    last_exception = mock_config_entry.runtime_data.last_exception
+    assert isinstance(last_exception, UpdateFailed)
+    assert last_exception.translation_domain == DOMAIN
+    assert last_exception.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_poll_status_refresh_timeout_translation(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Scheduled refresh uses a translatable timeout when status refresh stalls."""
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = TimeoutError(
+        "timeout"
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    last_exception = mock_config_entry.runtime_data.last_exception
+    assert isinstance(last_exception, UpdateFailed)
+    assert last_exception.translation_domain == DOMAIN
+    assert last_exception.translation_key == "update_timeout"
 
 
 @pytest.mark.usefixtures("init_integration")
