@@ -318,6 +318,7 @@ def test_time_remaining() -> None:
         (timedelta(hours=23, minutes=59, seconds=45), 2, "1 day"),
         (timedelta(days=1, minutes=59, seconds=45), 2, "1 day 1 hour"),
         (timedelta(days=29, hours=13), 1, "1 month"),
+        (timedelta(days=364, hours=13), 2, "1 year"),
     ],
 )
 def test_timedelta_string(delta: timedelta, precision: int, expected: str) -> None:
