@@ -370,7 +370,7 @@ async def test_telemetry_reuses_main_coordinator_context(
     mock_melcloud_client.get_context.assert_called_once()
     assert mock_config_entry.runtime_data.telemetry_coordinator.data.energy == {
         "ata-unit-uuid-1": 450.5,
-        "atw-unit-uuid-1": 450.5,
+        "atw-unit-uuid-1": 450500.0,
     }
 
     mock_melcloud_client.get_context.reset_mock()

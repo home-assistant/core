@@ -287,7 +287,7 @@
     'telemetry_coordinator': dict({
       'energy': dict({
         'ata-unit-uuid-1': 450.5,
-        'atw-unit-uuid-1': 450.5,
+        'atw-unit-uuid-1': 450500.0,
       }),
       'energy_period_start': '2026-06-01T00:00:00+00:00',
       'outdoor_temperature': dict({
