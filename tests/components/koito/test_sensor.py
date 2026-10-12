@@ -10,6 +10,7 @@ from aiokoito import (
     MusicItem,
     NowPlaying,
     RankedItem,
+    SimpleArtist,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -213,3 +214,50 @@ async def test_empty_music_labels(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.koito_top_artist").state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("artists", "title", "expected"),
+    [
+        (("Artist",), "Song", "Artist - Song"),
+        (("A" * 300,), "Song", "A" * 248 + " - Song"),
+        (("A" * 200, "B" * 200), "Song", "A" * 200 + ", " + "B" * 46 + " - Song"),
+        (("Artist",), "T" * 300, "A - " + "T" * 251),
+        (("A",), "T" * 251, "A - " + "T" * 251),
+        ((), "T" * 300, "T" * 255),
+    ],
+)
+async def test_music_states_preserve_title(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    artists: tuple[str, ...],
+    title: str,
+    expected: str,
+) -> None:
+    """Long artist prefixes must not crowd the item title out of bounded states."""
+    item = MusicItem(
+        title=title, artists=tuple(SimpleArtist(name=name) for name in artists)
+    )
+    data = mock_client.async_fetch_data.return_value
+    mock_client.async_fetch_data.return_value = replace(
+        data,
+        summary=replace(
+            data.summary,
+            top_albums=(RankedItem(rank=1, item=item),),
+            top_tracks=(RankedItem(rank=1, item=item),),
+        ),
+        now_playing=NowPlaying(currently_playing=True, track=item),
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    for entity_id in (
+        "sensor.koito_currently_playing_track",
+        "sensor.koito_top_track",
+        "sensor.koito_top_album",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == expected
+        assert len(state.state) <= 255
+        assert state.attributes["title"] == title[:256]

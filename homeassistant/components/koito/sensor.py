@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import UnitOfTime
+from homeassistant.const import MAX_LENGTH_STATE_STATE, UnitOfTime
 
 from .entity import KoitoEntity
 from .models import KoitoData, MusicItem
@@ -35,8 +35,11 @@ def _display_item(item: MusicItem | None) -> str | None:
     if label is None:
         return None
     if item.title is not None and item.artists:
-        label = f"{', '.join(item.artists)} - {label}"
-    return label[:255]
+        # Reserve the separator and at least one artist character before the title.
+        label = label[: MAX_LENGTH_STATE_STATE - 4]
+        artist_length = MAX_LENGTH_STATE_STATE - len(label) - 3
+        return f"{', '.join(item.artists)[:artist_length]} - {label}"
+    return label[:MAX_LENGTH_STATE_STATE]
 
 
 @dataclass(frozen=True, kw_only=True)
