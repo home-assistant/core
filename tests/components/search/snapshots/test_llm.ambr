@@ -1,0 +1,260 @@
+# serializer version: 1
+# name: test_parameters_openapi
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'offset': dict({
+        'default': 0,
+        'description': 'Number of results to skip. Requires type.',
+        'minimum': 0,
+        'type': 'integer',
+      }),
+      'query': dict({
+        'description': 'Text to find, case-insensitive.',
+        'minLength': 1,
+        'type': 'string',
+      }),
+      'type': dict({
+        'description': 'Return only results of this type.',
+        'enum': list([
+          'entity',
+          'device',
+          'area',
+          'label',
+          'automation',
+          'script',
+          'scene',
+        ]),
+        'type': 'string',
+      }),
+    }),
+    'required': list([
+      'query',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_search[all_types]
+  dict({
+    'area': dict({
+      'results': list([
+        list([
+          'kitchen',
+          'Kitchen',
+        ]),
+      ]),
+      'total': 1,
+    }),
+    'automation': dict({
+      'results': list([
+        list([
+          'automation.kitchen_lights',
+          'Kitchen lights',
+        ]),
+      ]),
+      'total': 1,
+    }),
+    'device': dict({
+      'results': list([
+        list([
+          '<sensor device>',
+          'Kitchen sensor',
+        ]),
+        list([
+          '<hub device>',
+          'Main hub',
+        ]),
+      ]),
+      'total': 2,
+    }),
+    'entity': dict({
+      'results': list([
+        list([
+          'sensor.kitchen',
+          'Kitchen',
+        ]),
+        list([
+          'light.kitchen_1',
+          'Kitchen 1',
+        ]),
+        list([
+          'light.kitchen_2',
+          'Kitchen 2',
+        ]),
+        list([
+          'light.kitchen_3',
+          'Kitchen 3',
+        ]),
+        list([
+          'light.kitchen_4',
+          'Kitchen 4',
+        ]),
+      ]),
+      'total': 7,
+    }),
+    'instructions': 'Each type shows at most 5 results. To get the next results of one type, call this tool again with the same query, set type to that type, and set offset to 5.',
+    'label': dict({
+      'results': list([
+        list([
+          'kitchen_appliances',
+          'Kitchen appliances',
+        ]),
+      ]),
+      'total': 1,
+    }),
+    'scene': dict({
+      'results': list([
+        list([
+          'scene.kitchen_cooking',
+          'Kitchen cooking',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[area_alias]
+  dict({
+    'area': dict({
+      'results': list([
+        list([
+          'kitchen',
+          'Kitchen',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[description]
+  dict({
+    'automation': dict({
+      'results': list([
+        list([
+          'automation.wake_up',
+          'Wake up',
+        ]),
+      ]),
+      'total': 1,
+    }),
+    'script': dict({
+      'results': list([
+        list([
+          'script.morning_news',
+          'Play news',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[device_manufacturer]
+  dict({
+    'device': dict({
+      'results': list([
+        list([
+          '<sensor device>',
+          'Kitchen sensor',
+        ]),
+        list([
+          '<hub device>',
+          'Main hub',
+        ]),
+      ]),
+      'total': 2,
+    }),
+  })
+# ---
+# name: test_search[device_model]
+  dict({
+    'device': dict({
+      'results': list([
+        list([
+          '<sensor device>',
+          'Kitchen sensor',
+        ]),
+        list([
+          '<hub device>',
+          'Main hub',
+        ]),
+      ]),
+      'total': 2,
+    }),
+  })
+# ---
+# name: test_search[entity_alias]
+  dict({
+    'entity': dict({
+      'results': list([
+        list([
+          'light.lamp',
+          'Lamp',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[entity_id]
+  dict({
+    'automation': dict({
+      'results': list([
+        list([
+          'automation.kitchen_lights',
+          'Kitchen lights',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[no_match]
+  dict({
+  })
+# ---
+# name: test_search[offset]
+  dict({
+    'entity': dict({
+      'results': list([
+        list([
+          'light.kitchen_5',
+          'Kitchen 5',
+        ]),
+        list([
+          'light.kitchen_6',
+          'Kitchen 6',
+        ]),
+      ]),
+      'total': 7,
+    }),
+  })
+# ---
+# name: test_search[one_type]
+  dict({
+    'entity': dict({
+      'results': list([
+        list([
+          'sensor.kitchen',
+          'Kitchen',
+        ]),
+        list([
+          'light.kitchen_1',
+          'Kitchen 1',
+        ]),
+        list([
+          'light.kitchen_2',
+          'Kitchen 2',
+        ]),
+        list([
+          'light.kitchen_3',
+          'Kitchen 3',
+        ]),
+        list([
+          'light.kitchen_4',
+          'Kitchen 4',
+        ]),
+      ]),
+      'total': 7,
+    }),
+  })
+# ---
