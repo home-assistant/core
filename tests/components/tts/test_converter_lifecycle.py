@@ -894,6 +894,184 @@ async def test_cancel_during_normal_exit_wait_reaps_child(
             await asyncio.gather(owner, return_exceptions=True)
 
 
+@pytest.mark.parametrize("failure", [BrokenPipeError, ConnectionResetError])
+async def test_stdin_transport_failure_keeps_child_diagnostic(
+    ffmpeg_ready: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    failure: type[OSError],
+) -> None:
+    """A failed large stdin write cannot hide the real child's failed exit."""
+    original = asyncio.create_subprocess_exec
+    processes = []
+    source_closed = asyncio.Event()
+
+    async def spawn(*args, **kwargs):
+        process = await original(
+            sys.executable,
+            "-c",
+            "import os,sys;os.read(0,1);os.write(2,b'child pipe detail\\n');sys.exit(7)",
+            **kwargs,
+        )
+        processes.append(process)
+        assert process.stdin is not None
+        if failure is ConnectionResetError:
+            # The OS normally raises BrokenPipeError here. Exercise the other
+            # real StreamWriter transport failure at the same drain boundary.
+            original_drain = process.stdin.drain
+
+            async def reset_after_drain():
+                try:
+                    await original_drain()
+                except BrokenPipeError as err:
+                    raise ConnectionResetError("stdin reset") from err
+
+            process.stdin.drain = reset_after_drain
+        return process
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"R" * (8 * 1024 * 1024)
+        finally:
+            source_closed.set()
+
+    owner = None
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        ):
+            owner = asyncio.create_task(
+                _collect(tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav"))
+            )
+            with pytest.raises(
+                HomeAssistantError, match="Unexpected error while running ffmpeg"
+            ):
+                await _observe(owner, 4)
+            assert processes[0].returncode == 7
+            assert source_closed.is_set()
+            assert any("child pipe detail" in r.message for r in caplog.records)
+    finally:
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+
+
+@pytest.mark.parametrize("paused", [False, True], ids=["eager", "paused-yield"])
+async def test_completed_writer_source_error_interrupts_held_child(
+    ffmpeg_ready: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    paused: bool,
+) -> None:
+    """An already failed writer must wake the reader without stdout or exit."""
+
+    class SourceFailed(Exception):
+        pass
+
+    failure = SourceFailed("source failed while child held")
+    allow_failure = asyncio.Event()
+    source_closed = asyncio.Event()
+    original = asyncio.create_subprocess_exec
+    processes = []
+
+    async def spawn(*args, **kwargs):
+        script = (
+            "import os,time;os.write(1,b'PREFIX');time.sleep(30)"
+            if paused
+            else "import time;time.sleep(30)"
+        )
+        process = await original(
+            sys.executable,
+            "-c",
+            script,
+            **kwargs,
+        )
+        processes.append(process)
+        return process
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            if paused:
+                yield b"R" * 100
+                await allow_failure.wait()
+            raise failure
+        finally:
+            source_closed.set()
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    owner = None
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        ):
+            if paused:
+                assert await asyncio.wait_for(gen.__anext__(), 3) == b"PREFIX"
+                allow_failure.set()
+                await asyncio.wait_for(source_closed.wait(), 3)
+            owner = asyncio.create_task(gen.__anext__())
+            with pytest.raises(SourceFailed) as caught:
+                await _observe(owner, 1.5)
+            assert caught.value is failure
+            assert processes[0].returncode is not None
+            assert source_closed.is_set()
+    finally:
+        allow_failure.set()
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        with contextlib.suppress(SourceFailed, HomeAssistantError):
+            await gen.aclose()
+
+
+async def test_provider_transport_class_error_remains_primary(
+    ffmpeg_ready: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A producer's BrokenPipeError is not a subprocess stdin failure."""
+    failure = BrokenPipeError("provider's own broken pipe")
+    original = asyncio.create_subprocess_exec
+    processes = []
+
+    async def spawn(*args, **kwargs):
+        process = await original(*args, **kwargs)
+        processes.append(process)
+        return process
+
+    async def source() -> AsyncGenerator[bytes]:
+        if failure is not None:
+            raise failure
+        yield b""
+
+    owner = None
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec", spawn
+        ):
+            owner = asyncio.create_task(
+                _collect(tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav"))
+            )
+            with pytest.raises(BrokenPipeError) as caught:
+                await _observe(owner)
+            assert caught.value is failure
+            assert processes[0].returncode is not None
+    finally:
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+
+
 async def test_stdout_eof_before_child_exit_interrupts_source_and_reaps(
     ffmpeg_ready: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -932,7 +1110,8 @@ async def test_stdout_eof_before_child_exit_interrupts_source_and_reaps(
             )
             await asyncio.wait_for(entered.wait(), 3)
             with pytest.raises(
-                HomeAssistantError, match="before TTS input was exhausted"
+                HomeAssistantError,
+                match="ffmpeg output closed before TTS input was exhausted",
             ):
                 await _observe(owner, 1.5)
             assert closed.is_set()

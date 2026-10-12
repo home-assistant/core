@@ -413,6 +413,7 @@ async def _async_convert_audio(  # noqa: C901
     writer_task: asyncio.Task | None = None
     input_exhausted = False
     source_read_error: BaseException | None = None
+    stdin_error: OSError | None = None
 
     if is_input_gen:
         # Input is a generator, so we must manually feed in chunks
@@ -420,17 +421,27 @@ async def _async_convert_audio(  # noqa: C901
         assert process.stdin
 
         async def write_input() -> None:
-            nonlocal input_exhausted, source_read_error
+            nonlocal input_exhausted, source_read_error, stdin_error
             assert process.stdin
             primary: BaseException | None = None
             try:
-                async for chunk in audio_input:
-                    process.stdin.write(chunk)
-                    await process.stdin.drain()
-                input_exhausted = True
+                while True:
+                    try:
+                        chunk = await anext(audio_input)
+                    except StopAsyncIteration:
+                        input_exhausted = True
+                        break
+                    except BaseException as err:
+                        source_read_error = err
+                        raise
+                    try:
+                        process.stdin.write(chunk)
+                        await process.stdin.drain()
+                    except (BrokenPipeError, ConnectionResetError) as err:
+                        stdin_error = err
+                        raise
             except BaseException as err:
                 primary = err
-                source_read_error = err
                 raise
             finally:
                 process.stdin.close()
@@ -467,6 +478,18 @@ async def _async_convert_audio(  # noqa: C901
     complete = False
     try:
         while True:
+            if source_read_error is not None:
+                raise source_read_error
+            if writer_task is not None and writer_task.done() and not input_exhausted:
+                if stdin_error is not None:
+                    # A broken stdin is a child transport failure, not a
+                    # provider error. Give its exit task a bounded chance to
+                    # expose a nonzero status and the concurrently drained stderr.
+                    if not wait_task.done():
+                        await asyncio.wait({wait_task}, timeout=0.1)
+                    if wait_task.done() and wait_task.result() != 0:
+                        break
+                writer_task.result()
             read_task = hass.async_create_background_task(
                 process.stdout.read(FFMPEG_CHUNK_SIZE), "tts_ffmpeg_stdout"
             )
@@ -481,6 +504,14 @@ async def _async_convert_audio(  # noqa: C901
                 # error already observed while reading input.
                 raise source_read_error
             if writer_task is not None and writer_task.done() and not input_exhausted:
+                if stdin_error is not None:
+                    if not wait_task.done():
+                        await asyncio.wait({wait_task}, timeout=0.1)
+                    if wait_task.done() and wait_task.result() != 0:
+                        read_task.cancel()
+                        await _async_ffmpeg_join(read_task)
+                        read_task = None
+                        break
                 writer_task.result()
             if read_task in done:
                 chunk = read_task.result()
@@ -510,7 +541,9 @@ async def _async_convert_audio(  # noqa: C901
         if source_read_error is not None:
             raise source_read_error
         if not wait_task.done():
-            raise HomeAssistantError("ffmpeg exited before TTS input was exhausted")
+            raise HomeAssistantError(
+                "ffmpeg output closed before TTS input was exhausted"
+            )
         retcode = wait_task.result()
         if retcode != 0:
             # A known child failure is primary over source finalization. The
