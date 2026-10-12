@@ -10,15 +10,17 @@ Repos dropped from the HACS list are removed. Requires an authenticated `gh`.
 """
 
 import argparse
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import io
 import json
 from pathlib import Path, PurePosixPath
 import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import time
+from typing import BinaryIO
 import urllib.error
 import urllib.request
 
@@ -28,6 +30,9 @@ HACS_LIST = "https://raw.githubusercontent.com/hacs/default/master/integration"
 GRAPHQL = "https://api.github.com/graphql"
 BATCH = 50
 RETRIES = 4
+CHUNK = 1 << 20
+# Same binary heuristic as git: a NUL byte in the first 8000 bytes
+BINARY_PROBE = 8000
 
 
 def _token() -> str:
@@ -36,16 +41,11 @@ def _token() -> str:
     ).stdout.strip()
 
 
-def _get(url: str, token: str | None = None, data: bytes | None = None) -> bytes:
-    req = urllib.request.Request(url, data=data)
-    if data is not None:
-        req.add_header("Content-Type", "application/json")
-    if token:
-        req.add_header("Authorization", f"bearer {token}")
+def _retry[T](func: Callable[[], T]) -> T:
+    """Call func, retrying server errors and network failures with backoff."""
     for attempt in range(RETRIES):
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                return resp.read()
+            return func()
         except urllib.error.HTTPError as err:
             if err.code < 500 or attempt == RETRIES - 1:
                 raise
@@ -54,6 +54,32 @@ def _get(url: str, token: str | None = None, data: bytes | None = None) -> bytes
                 raise
         time.sleep(2**attempt)
     raise AssertionError
+
+
+def _get(url: str, token: str | None = None, data: bytes | None = None) -> bytes:
+    req = urllib.request.Request(url, data=data)
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    if token:
+        req.add_header("Authorization", f"bearer {token}")
+
+    def fetch() -> bytes:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return resp.read()
+
+    return _retry(fetch)
+
+
+def _download_to(url: str, out: BinaryIO) -> None:
+    """Stream url into out, restarting from scratch on each retry."""
+
+    def fetch() -> None:
+        out.seek(0)
+        out.truncate()
+        with urllib.request.urlopen(url, timeout=120) as resp:
+            shutil.copyfileobj(resp, out, CHUNK)
+
+    _retry(fetch)
 
 
 def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
@@ -97,11 +123,22 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
 
 def download(root: Path, repo: str, sha: str) -> None:
     """Replace root/repo with the filtered contents of the tarball at sha."""
-    raw = _get(f"https://codeload.github.com/{repo}/tar.gz/{sha}")
     dest = root / repo
     tmp = dest.with_name(dest.name + ".tmp")
     shutil.rmtree(tmp, ignore_errors=True)
-    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tar:
+    # Spooled to disk, so memory stays flat whatever the archive or file sizes
+    with tempfile.TemporaryFile(dir=root) as archive:
+        _download_to(f"https://codeload.github.com/{repo}/tar.gz/{sha}", archive)
+        archive.seek(0)
+        _extract(archive, tmp)
+    tmp.mkdir(parents=True, exist_ok=True)
+    shutil.rmtree(dest, ignore_errors=True)
+    tmp.rename(dest)
+
+
+def _extract(archive: BinaryIO, tmp: Path) -> None:
+    """Extract the installed text files of a repo tarball into tmp."""
+    with tarfile.open(fileobj=archive, mode="r:gz") as tar:
         files = []
         for member in tar.getmembers():
             if not member.isfile():
@@ -125,16 +162,14 @@ def download(root: Path, repo: str, sha: str) -> None:
             fobj = tar.extractfile(member)
             if fobj is None:
                 continue
-            content = fobj.read()
-            # Same binary heuristic as git: a NUL byte in the first 8 KB
-            if b"\0" in content[:8000]:
+            head = fobj.read(BINARY_PROBE)
+            if b"\0" in head:
                 continue
             target = tmp / rel
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
-    tmp.mkdir(parents=True, exist_ok=True)
-    shutil.rmtree(dest, ignore_errors=True)
-    tmp.rename(dest)
+            with target.open("wb") as out:
+                out.write(head)
+                shutil.copyfileobj(fobj, out, CHUNK)
 
 
 def prune(root: Path, wanted: set[str]) -> list[str]:
