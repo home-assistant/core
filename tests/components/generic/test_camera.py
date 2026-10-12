@@ -546,14 +546,14 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_timeout_cancelled(
+async def test_timeout(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     fakeimgbytes_jpg: bytes,
 ) -> None:
-    """Test that timeouts and cancellations return last image."""
+    """Test that timeouts return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
@@ -579,7 +579,7 @@ async def test_timeout_cancelled(
 
     with patch(
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        side_effect=asyncio.CancelledError(),
+        side_effect=TimeoutError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == 1
