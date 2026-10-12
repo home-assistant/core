@@ -9,7 +9,7 @@ import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -46,6 +46,16 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
             ATTR_UPNP_PRESENTATION_URL: "http://10.0.0.1",
+        },
+    ),
+    "hostname_valid": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://fritz-new.repeater:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://fritz-new.repeater",
         },
     ),
     "ip4_ssdp_fallback": SsdpServiceInfo(
@@ -377,8 +387,13 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
     ("test_data", "expected_host", "expected_result"),
     [
         (MOCK_SSDP_DATA["ip4_valid"], "http://10.0.0.1", FlowResultType.FORM),
+        (
+            MOCK_SSDP_DATA["hostname_valid"],
+            "http://fritz-new.repeater",
+            FlowResultType.FORM,
+        ),
         (MOCK_SSDP_DATA["ip4_ssdp_fallback"], "http://10.0.0.1", FlowResultType.FORM),
-        (MOCK_SSDP_DATA["ip4_hostname"], "http://fritz.repeater", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip4_hostname"], "http://10.0.0.1", FlowResultType.FORM),
         (
             MOCK_SSDP_DATA["ip4_relative_presentation_url"],
             "http://10.0.0.1",
@@ -591,3 +606,77 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
     assert mock_config.unique_id == "only-a-test"
+
+
+@pytest.mark.parametrize(
+    ("existing_host", "discovery_info", "expected_host"),
+    [
+        pytest.param(
+            "http://fritz.repeater",
+            MOCK_SSDP_DATA["ip4_valid"],
+            "http://fritz.repeater",
+            id="hostname-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://fritz.repeater",
+            MOCK_SSDP_DATA["hostname_valid"],
+            "http://fritz.repeater",
+            id="hostname-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://10.0.0.2",
+            MOCK_SSDP_DATA["ip4_valid"],
+            "http://10.0.0.1",
+            id="ip-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://10.0.0.2",
+            MOCK_SSDP_DATA["hostname_valid"],
+            "http://fritz-new.repeater",
+            id="ip-entry-hostname-discovery",
+        ),
+    ],
+)
+async def test_ssdp_already_configured_unique_id(
+    hass: HomeAssistant,
+    fritz: Mock,
+    existing_host: str,
+    discovery_info: SsdpServiceInfo,
+    expected_host: str,
+) -> None:
+    """Test discovery for an existing entry with the same unique ID."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="only-a-test",
+        data={
+            CONF_HOST: existing_host,
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == expected_host
+
+
+async def test_ssdp_ignored_entry(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test discovery of an ignored device is aborted without updating it."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id="only-a-test", source=SOURCE_IGNORE, data={}
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data == {}

@@ -9,7 +9,7 @@ from pyfritzhome import Fritzhome, LoginError
 from requests.exceptions import HTTPError
 from yarl import URL
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -25,7 +25,6 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
@@ -60,13 +59,15 @@ RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
 
-def _is_ipv6_link_local(host: str) -> bool:
-    """Return True if host is an IPv6 link-local address."""
+def _is_ip(host: str, ipv6_link_local: bool = False) -> bool:
+    """Return whether host is an IP address, optionally requiring IPv6 link-local."""
     try:
         ip = ipaddress.ip_address(host)
     except ValueError:
         return False
-    return ip.version == 6 and ip.is_link_local
+    if ipv6_link_local:
+        return ip.version == 6 and ip.is_link_local
+    return True
 
 
 class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -170,21 +171,23 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         host = URL(discovery_info.ssdp_location).host
         assert isinstance(host, str)
 
-        # presentationURL may be relative according to the UPnP spec
-        presentation_url = discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
-        if presentation_url and (presentation_host := URL(presentation_url).host):
-            self._url = presentation_url
-        else:
-            presentation_host = host
-            self._url = str(URL.build(scheme="http", host=host))
+        self._url = str(URL.build(scheme="http", host=host))
 
-        if _is_ipv6_link_local(host) or _is_ipv6_link_local(presentation_host):
+        if _is_ip(host, ipv6_link_local=True):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
             uuid = uuid.removeprefix("uuid:")
-            await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: self._url})
+            updates = None
+            if (
+                (existing_entry := await self.async_set_unique_id(uuid))
+                and existing_entry.source != SOURCE_IGNORE
+                and (existing_host := URL(existing_entry.data[CONF_HOST]).host)
+                and _is_ip(existing_host)
+            ):
+                # keep user-configured hostnames
+                updates = {CONF_HOST: self._url}
+            self._abort_if_unique_id_configured(updates)
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(
