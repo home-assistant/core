@@ -1194,18 +1194,17 @@ async def test_browse_media_failure_returns_empty_without_changing_state(
     getattr(mock_wiim_device, sdk_method).side_effect = error
 
     caplog.clear()
-    with caplog.at_level(logging.INFO, logger="homeassistant.components.wiim"):
-        result = await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_BROWSE_MEDIA,
-            {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-                ATTR_MEDIA_CONTENT_ID: media_content_id,
-            },
-            blocking=True,
-            return_response=True,
-        )
+    result = await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
 
     browse = result[MEDIA_PLAYER_ENTITY_ID]
     assert browse.media_content_id == media_content_id
