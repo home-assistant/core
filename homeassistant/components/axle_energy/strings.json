@@ -52,6 +52,11 @@
         }
       }
     },
+    "calendar": {
+      "events": {
+        "name": "Events"
+      }
+    },
     "sensor": {
       "end": {
         "name": "Event end"
