@@ -12,17 +12,24 @@ from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import Characteristic, GatewayDevice
 import pytest
 
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE as CLIMATE_SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
+from homeassistant.components.daikin_onecta.binary_sensor import (
+    DaikinBinarySensor,
+    async_setup_entry as async_setup_binary_sensors,
+)
 from homeassistant.components.daikin_onecta.const import DOMAIN, SENSOR_PERIOD_DAILY
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity_descriptions import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    BUTTON_DESCRIPTIONS,
+    SELECT_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
+    SWITCH_DESCRIPTIONS,
+    UPDATE_DESCRIPTIONS,
 )
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
@@ -31,7 +38,10 @@ from homeassistant.components.daikin_onecta.sensor import (
     DaikinValueSensor,
     add_energy_sensors,
 )
-from homeassistant.components.daikin_onecta.switch import DaikinSwitch
+from homeassistant.components.daikin_onecta.switch import (
+    DaikinSwitch,
+    async_setup_entry as async_setup_switches,
+)
 from homeassistant.components.daikin_onecta.update import DaikinFirmwareUpdateEntity
 from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.fan import (
@@ -239,6 +249,30 @@ def test_diagnostic_sensor_descriptions_are_disabled_by_default(key: str) -> Non
     description = SENSOR_DESCRIPTIONS[key]
     assert description.entity_category is EntityCategory.DIAGNOSTIC
     assert description.entity_registry_enabled_default is False
+
+
+@pytest.mark.parametrize(
+    "descriptions",
+    [
+        BINARY_SENSOR_DESCRIPTIONS,
+        BUTTON_DESCRIPTIONS,
+        SELECT_DESCRIPTIONS,
+        SENSOR_DESCRIPTIONS,
+        SWITCH_DESCRIPTIONS,
+        UPDATE_DESCRIPTIONS,
+    ],
+)
+def test_entity_descriptions_have_translation_keys(descriptions: dict) -> None:
+    """Every described entity has a translated name."""
+    assert all(
+        description.translation_key is not None for description in descriptions.values()
+    )
+
+
+def test_primary_entities_use_device_name() -> None:
+    """Primary device entities intentionally use the device name directly."""
+    assert object.__new__(DaikinAirPurifier).name is None
+    assert object.__new__(DaikinWaterTank).name is None
 
 
 async def test_diagnostic_entities_are_registered_but_disabled(
@@ -1361,20 +1395,33 @@ async def test_air_purifier_does_not_expose_read_only_preset_modes() -> None:
         await entity.async_set_preset_mode("manualFan")
 
 
-def test_unknown_binary_sensor_uses_generic_description() -> None:
-    """A new boolean cloud characteristic must not prevent platform setup."""
-    device = MagicMock(id="device", name="Device")
-    device.management_point.return_value = SimpleNamespace(
-        scalar_characteristic=MagicMock(return_value=SimpleNamespace(value=True))
+@pytest.mark.parametrize(
+    ("setup_platform", "characteristic"),
+    [
+        (async_setup_binary_sensors, Characteristic(value=True)),
+        (
+            async_setup_switches,
+            Characteristic(value="on", settable=True, values=["on", "off"]),
+        ),
+    ],
+)
+async def test_unknown_characteristics_are_skipped(
+    setup_platform: Callable[..., Awaitable[None]], characteristic: Characteristic
+) -> None:
+    """Do not create untranslated entities for unknown characteristics."""
+    management_point = SimpleNamespace(
+        embedded_id="point",
+        management_point_type="futureType",
+        scalar_characteristics=lambda: {"futureCharacteristic": characteristic},
     )
-
-    entity = DaikinBinarySensor(
-        device,
-        MagicMock(),
-        "point",
-        BinarySensorEntityDescription(key="futureBoolean"),
-        "futureBoolean",
+    device = SimpleNamespace(
+        device=SimpleNamespace(management_points=[management_point])
     )
+    config_entry = SimpleNamespace(
+        runtime_data=SimpleNamespace(data={"gateway": device})
+    )
+    async_add_entities = MagicMock()
 
-    assert entity.entity_description.key == "futureBoolean"
-    assert entity.is_on is True
+    await setup_platform(MagicMock(), config_entry, async_add_entities)
+
+    async_add_entities.assert_called_once_with([])

@@ -67,7 +67,11 @@ rules:
     comment: >-
       Diagnostic identifiers, network information, clock settings, and the
       account rate-limit counter are disabled by default.
-  entity-translations: todo
+  entity-translations:
+    status: done
+    comment: >-
+      Entity descriptions use translation keys. Primary fan and water-heater
+      entities intentionally use the device name directly.
   exception-translations: done
   icon-translations:
     status: done

@@ -34,17 +34,18 @@ async def async_setup_entry(
                 value,
                 characteristic,
             ) in management_point.scalar_characteristics().items():
-                if characteristic.values is None and isinstance(
-                    characteristic.value, bool
+                if (
+                    characteristic.values is None
+                    and isinstance(characteristic.value, bool)
+                    and (description := BINARY_SENSOR_DESCRIPTIONS.get(value))
+                    is not None
                 ):
                     sensors.append(
                         DaikinBinarySensor(
                             device,
                             coordinator,
                             management_point.embedded_id,
-                            BINARY_SENSOR_DESCRIPTIONS.get(
-                                value, BinarySensorEntityDescription(key=value)
-                            ),
+                            description,
                             value,
                         )
                     )

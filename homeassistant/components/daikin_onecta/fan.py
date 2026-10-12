@@ -48,6 +48,8 @@ async def async_setup_entry(
 class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     """Representation of a Daikin air purifier."""
 
+    _attr_name = None
+
     def __init__(
         self,
         device: DaikinOnectaDevice,

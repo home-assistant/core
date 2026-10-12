@@ -45,6 +45,7 @@ async def async_setup_entry(
                     and characteristic.settable
                     and "on" in values
                     and "off" in values
+                    and (description := SWITCH_DESCRIPTIONS.get(value)) is not None
                 ):
                     if (
                         value == "onOffMode"
@@ -61,9 +62,7 @@ async def async_setup_entry(
                             device,
                             coordinator,
                             management_point.embedded_id,
-                            SWITCH_DESCRIPTIONS.get(
-                                value, SwitchEntityDescription(key=value)
-                            ),
+                            description,
                             value,
                         )
                     )

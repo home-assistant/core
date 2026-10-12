@@ -55,11 +55,11 @@ def _add_setpoint(devices: list[GatewayDevice]) -> tuple[str, str]:
 
 
 def _add_boolean(devices: list[GatewayDevice]) -> tuple[str, str]:
-    """Expose a newly reported boolean characteristic."""
+    """Expose a newly reported supported boolean characteristic."""
     gateway = devices[0]
     point = gateway.management_points_by_type("climateControl")[0]
-    point.characteristics["newBoolean"] = Characteristic(value=True)
-    return "binary_sensor", f"{gateway.id}_{point.embedded_id}_newBoolean"
+    point.characteristics["ledEnabled"] = Characteristic(value=True)
+    return "binary_sensor", f"{gateway.id}_{point.embedded_id}_ledEnabled"
 
 
 def _add_scalar(devices: list[GatewayDevice]) -> tuple[str, str]:

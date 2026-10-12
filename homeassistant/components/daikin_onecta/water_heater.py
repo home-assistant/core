@@ -57,6 +57,8 @@ async def async_setup_entry(
 class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     """Representation of a Daikin Water Tank."""
 
+    _attr_name = None
+
     def __init__(
         self,
         device: DaikinOnectaDevice,
