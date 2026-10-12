@@ -34,7 +34,7 @@ rg -l --glob '*.py' '<pattern>'
 
 Fall back to `grep -rlE --include='*.py' '<pattern>' .` if `rg` is unavailable.
 
-- Results include `tests/`, `scripts/` and vendored code. Restrict to shipped code with `--glob '*/custom_components/**'` when the question is about runtime impact.
+- Results include `tests/`, `scripts/` and vendored code. Restrict to shipped code with `--glob '**/custom_components/**'` when the question is about runtime impact.
 - Text search over-matches (comments, strings, unrelated attributes with the same name). For anything that will be reported or used as a number, confirm each match with Python's `ast` module: for example, check that a name is used as an attribute of an entity subclass, or that a call actually passes the argument in question.
 - One repo can contain several integrations; read the `domain` from `custom_components/<domain>/manifest.json` when reporting.
 

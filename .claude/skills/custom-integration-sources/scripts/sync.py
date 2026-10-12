@@ -68,7 +68,17 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
                 " { defaultBranchRef { target { oid } } }"
             )
         payload = json.dumps({"query": "query {" + " ".join(parts) + "}"}).encode()
-        data = json.loads(_get(GRAPHQL, token, payload)).get("data") or {}
+        body = json.loads(_get(GRAPHQL, token, payload))
+        # Only per-repo NOT_FOUND is expected; anything else (rate limit, bad
+        # query) must abort, or the prune step would delete every cached repo
+        unexpected = [
+            err
+            for err in body.get("errors", [])
+            if err.get("type") != "NOT_FOUND" or len(err.get("path", [])) != 1
+        ]
+        if unexpected or body.get("data") is None:
+            raise RuntimeError(f"GraphQL query failed: {unexpected or body}")
+        data = body["data"]
         result = {}
         for n, repo in enumerate(chunk):
             ref = (data.get(f"r{n}") or {}).get("defaultBranchRef")
