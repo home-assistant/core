@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.homewizard import get_main_device
 from homeassistant.components.homewizard.const import (
+    CONF_UPDATE_INTERVAL,
     DOMAIN,
     battery_mode_cloud_issue_id,
 )
@@ -357,3 +358,63 @@ async def test_main_device_registered_before_platform_forwarding(
     )
     assert gas_meter_device is not None
     assert gas_meter_device.via_device_id == main_device.id
+
+@pytest.mark.parametrize(
+    ("configured_interval", "expected_interval"),
+    [
+        (None, 5),
+        (1, 1),
+        (10, 10),
+        (30, 30),
+        (60, 60),
+    ],
+)
+async def test_configurable_update_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    configured_interval: int | None,
+    expected_interval: int,
+) -> None:
+    """Test the configured HomeWizard update interval."""
+    mock_config_entry.add_to_hass(hass)
+
+    if configured_interval is not None:
+        hass.config_entries.async_update_entry(
+            mock_config_entry,
+            options={CONF_UPDATE_INTERVAL: configured_interval},
+        )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.update_interval == timedelta(
+        seconds=expected_interval
+    )
+
+
+async def test_update_interval_options_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test changing the interval reloads the integration."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    original_coordinator = mock_config_entry.runtime_data
+    assert original_coordinator.update_interval == timedelta(seconds=5)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_UPDATE_INTERVAL: 1},
+    )
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is not original_coordinator
+    assert mock_config_entry.runtime_data.update_interval == timedelta(seconds=1)
+
