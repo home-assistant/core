@@ -304,6 +304,14 @@
         }
       }
     },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "Infrared emitter"
+      },
+      "infrared_receiver": {
+        "name": "Infrared receiver"
+      }
+    },
     "light": {
       "ledstrip": {
         "state_attributes": {
@@ -326,14 +334,6 @@
             }
           }
         }
-      }
-    },
-    "infrared": {
-      "infrared_emitter": {
-        "name": "Infrared emitter"
-      },
-      "infrared_receiver": {
-        "name": "Infrared receiver"
       }
     },
     "number": {
