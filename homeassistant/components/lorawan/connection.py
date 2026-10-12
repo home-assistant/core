@@ -75,15 +75,12 @@ async def async_register_connection(
 
     @callback
     def handle_event(event: DeviceEvent) -> None:
-        if (
-            disconnected
-            or event.type != EventType.ADDED
-            or event.network_id != entry_id
-        ):
+        if disconnected or event.type != EventType.ADDED:
             return
         descriptor = event.descriptor
+        key = (descriptor.stack, descriptor.brand_id)
         for domain, brands in registry.integrations.items():
-            if (descriptor.stack, descriptor.brand_id) in brands:
+            if key in brands:
                 if active:
                     discover(domain)
                 else:
