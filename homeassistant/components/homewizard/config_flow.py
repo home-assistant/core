@@ -19,9 +19,15 @@ from homewizard_energy.models import Device
 import probatio
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import instance_id
@@ -29,7 +35,17 @@ from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN, LOGGER
+from .const import (
+    CONF_PRODUCT_NAME,
+    CONF_PRODUCT_TYPE,
+    CONF_SERIAL,
+    CONF_UPDATE_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
+    UPDATE_INTERVAL,
+)
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -37,6 +53,15 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Return the options flow for HomeWizard."""
+        return HomeWizardOptionsFlow()
+    
     ip_address: str | None = None
     product_name: str | None = None
     product_type: str | None = None
@@ -314,6 +339,44 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 "title": reconfigure_entry.title,
             },
             errors=errors,
+        )
+
+
+class HomeWizardOptionsFlow(OptionsFlow):
+    """Handle HomeWizard options."""
+
+    @override
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the update interval."""
+
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current_interval = self.config_entry.options.get(
+            CONF_UPDATE_INTERVAL,
+            int(UPDATE_INTERVAL.total_seconds()),
+        )
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_UPDATE_INTERVAL,
+                    default=current_interval,
+                ): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(
+                        min=MIN_UPDATE_INTERVAL,
+                        max=MAX_UPDATE_INTERVAL,
+                    ),
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
         )
 
 
