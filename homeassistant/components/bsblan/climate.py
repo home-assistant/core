@@ -124,7 +124,9 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                 )
             ) is not None:
                 self._attr_max_temp = max_temp
-        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
+        self._attr_native_temperature_unit = (
+            data.fast_coordinator.client.get_temperature_unit
+        )
 
     @property
     def _circuit_state(self) -> State:
@@ -133,7 +135,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._circuit_state.current_temperature) is None:
             return None
@@ -141,7 +143,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._circuit_state.target_temperature) is None:
             return None

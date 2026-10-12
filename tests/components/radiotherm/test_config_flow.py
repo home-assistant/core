@@ -57,6 +57,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -80,6 +81,26 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    with (
+        patch(
+            "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
+            return_value=_mock_radiotherm(),
+        ),
+        patch(
+            "homeassistant.components.radiotherm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.2.3.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -100,6 +121,26 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_HOST: "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
+            return_value=_mock_radiotherm(),
+        ),
+        patch(
+            "homeassistant.components.radiotherm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.2.3.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
@@ -143,6 +184,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

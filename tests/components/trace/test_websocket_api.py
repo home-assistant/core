@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
 
-from tests.common import async_load_json_object_fixture
+from tests.common import async_capture_events, async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -1663,6 +1663,87 @@ async def test_trace_blueprint_automation(
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
     assert trace.get("trigger", UNDEFINED) == "event 'blueprint_event'"
+
+
+async def test_automation_without_id_does_not_store_trace(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Automations without an id do not create an invalid trace."""
+    await _setup_automation_or_script(
+        hass,
+        "automation",
+        [
+            {
+                "triggers": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                },
+                "actions": {"event": "automation_ran"},
+            }
+        ],
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+    assert "automation.None" not in hass.data[DATA_TRACE]
+
+
+async def test_automation_without_id_is_not_linked_as_child(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A step that triggers an automation without an id does not link to it."""
+    await _setup_automation_or_script(
+        hass,
+        "automation",
+        [
+            {
+                "id": "sun",
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": {
+                    "action": "automation.trigger",
+                    "target": {"entity_id": "automation.no_id"},
+                },
+            },
+            {
+                "alias": "No id",
+                "triggers": {"platform": "event", "event_type": "never_fired"},
+                "actions": {"event": "automation_ran"},
+            },
+        ],
+    )
+    events = async_capture_events(hass, "automation_ran")
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+    assert response["success"]
+    sun_run_id = _find_run_id(response["result"], "automation", "sun")
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "sun",
+            "run_id": sun_run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "child_id" not in response["result"]["trace"]["action/0"][0]
 
 
 class _DiagnosticActionTrace(ActionTrace):
