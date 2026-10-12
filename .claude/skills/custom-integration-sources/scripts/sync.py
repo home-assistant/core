@@ -38,6 +38,8 @@ BINARY_PROBE = 8000
 # Characters GitHub allows in owner and repo names; slugs become paths under root
 REPO_SLUG = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+")
 LOCK_FILE = ".lock"
+# Marks a state file as written by this script; anything else is not ours
+STATE_FORMAT = "custom-integration-sources/1"
 HACS_JSON_MAX = 1 << 16
 # Exit status when the sync completed but some repos could not be downloaded
 # (argparse already uses 2 for usage errors)
@@ -145,16 +147,20 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
 def download(root: Path, repo: str, sha: str) -> None:
     """Replace root/repo with the filtered contents of the tarball at sha."""
     dest = root / repo
-    tmp = dest.with_name(dest.name + ".tmp")
-    shutil.rmtree(tmp, ignore_errors=True)
-    # Spooled to disk, so memory stays flat whatever the archive or file sizes
-    with tempfile.TemporaryFile(dir=root) as archive:
-        _download_to(f"https://codeload.github.com/{repo}/tar.gz/{sha}", archive)
-        archive.seek(0)
-        _extract(archive, tmp)
-    tmp.mkdir(parents=True, exist_ok=True)
-    shutil.rmtree(dest, ignore_errors=True)
-    tmp.rename(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    # Hidden and uniquely named: searches skip it and no repo name can clash
+    tmp = Path(tempfile.mkdtemp(prefix=f".{dest.name}.", dir=dest.parent))
+    try:
+        # Spooled to disk, so memory stays flat whatever the archive or file sizes
+        with tempfile.TemporaryFile(dir=root) as archive:
+            _download_to(f"https://codeload.github.com/{repo}/tar.gz/{sha}", archive)
+            archive.seek(0)
+            _extract(archive, tmp)
+        shutil.rmtree(dest, ignore_errors=True)
+        tmp.rename(dest)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
 
 
 def _content_in_root(
@@ -237,20 +243,25 @@ def load_state(root: Path) -> dict[str, str]:
     if not any(path.name != LOCK_FILE for path in root.iterdir()):
         return {}
     try:
-        state = json.loads(state_file.read_text())
+        data = json.loads(state_file.read_text())
     except OSError, ValueError:
-        state = None
-    if not isinstance(state, dict) or not all(
-        isinstance(k, str) and isinstance(v, str) for k, v in state.items()
+        data = None
+    repos = data.get("repos") if isinstance(data, dict) else None
+    if (
+        not isinstance(data, dict)
+        or data.get("format") != STATE_FORMAT
+        or not isinstance(repos, dict)
+        or not all(isinstance(k, str) and isinstance(v, str) for k, v in repos.items())
     ):
         sys.exit(f"{root} is not empty and has no valid {state_file.name}; refusing")
-    return state
+    return repos
 
 
 def save_state(root: Path, state: dict[str, str]) -> None:
     """Write the state file atomically, so an interrupted run never truncates it."""
     tmp = root / ".state.json.tmp"
-    tmp.write_text(json.dumps(state, indent=0, sort_keys=True))
+    data = {"format": STATE_FORMAT, "repos": state}
+    tmp.write_text(json.dumps(data, indent=0, sort_keys=True))
     tmp.replace(root / ".state.json")
 
 
