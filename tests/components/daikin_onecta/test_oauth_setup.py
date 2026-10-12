@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import RequestInfo
 from daikin_onecta import OnectaAuthenticationError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
@@ -21,7 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from .test_climate_snapshots import _async_setup_fixture
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("status", [401, 403])
@@ -58,6 +59,7 @@ async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     status: int,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Report authentication failure without adding a reauthentication flow."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -68,8 +70,10 @@ async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
             status=status, method="GET", path="/v1/gateway-devices"
         ),
     ):
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)

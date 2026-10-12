@@ -16,6 +16,7 @@ from daikin_onecta import (
 )
 from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.daikin_onecta import coordinator as coordinator_module
@@ -34,7 +35,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
@@ -166,6 +167,7 @@ async def test_poll_refreshes_changed_metadata_once(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Refresh renamed gateways and firmware only after changed cloud metadata."""
     await _async_setup_fixture(hass, config_entry, "ururu")
@@ -190,10 +192,15 @@ async def test_poll_refreshes_changed_metadata_once(
             coordinator.api, "get_cloud_device_details", return_value=[replacement]
         ),
     ):
-        await coordinator.async_refresh()
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         update_registry.assert_called_once_with(hass, config_entry)
         coordinator.async_update_listeners()
-        await coordinator.async_refresh()
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
         update_registry.assert_called_once_with(hass, config_entry)
 
     entry = device_registry.async_get_device_by_identifier(
@@ -208,6 +215,7 @@ async def test_poll_failure_logged_once(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Leave failure/recovery logging to the coordinator, without duplicate warnings."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -220,8 +228,13 @@ async def test_poll_failure_logged_once(
             RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
         ),
     ):
-        await coordinator.async_refresh()
-        await coordinator.async_refresh()
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     failures = [
         record
