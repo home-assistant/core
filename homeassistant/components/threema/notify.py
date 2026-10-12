@@ -14,7 +14,7 @@ from . import ThreemaConfigEntry
 from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
 from .const import DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
