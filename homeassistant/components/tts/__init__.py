@@ -461,7 +461,7 @@ async def _async_convert_audio(  # noqa: C901
         )
 
     async def stop_writer() -> None:
-        """Cancel the writer and close its source even if cancellation is suppressed."""
+        """Cancel the writer and briefly supervise its source closure."""
         if writer_task is None:
             return
         if not writer_task.done():
