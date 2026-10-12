@@ -53,8 +53,15 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                 OSError,
             ):
                 errors["base"] = "cannot_connect"
-            except mpd.CommandError:
-                errors["base"] = "invalid_auth"
+            except mpd.CommandError as err:
+                if err.errno in (
+                    mpd.FailureResponseCode.PASSWORD,
+                    mpd.FailureResponseCode.PERMISSION,
+                ):
+                    errors["base"] = "invalid_auth"
+                else:
+                    LOGGER.warning("Unexpected MPD error: %s", err)
+                    errors["base"] = "unknown"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"

@@ -55,6 +55,16 @@ async def test_full_flow(
             "invalid_auth",
             id="CommandError-invalid_auth",
         ),
+        pytest.param(
+            mpd.CommandError("[5@0] {password} unknown command"),
+            "unknown",
+            id="CommandError-unknown",
+        ),
+        pytest.param(
+            mpd.CommandError("unparseable error"),
+            "unknown",
+            id="CommandError-unparseable",
+        ),
         (Exception, "unknown"),
     ],
 )
