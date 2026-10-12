@@ -93,7 +93,9 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 if existing_entry and existing_entry.entry_id != reauth_entry.entry_id:
                     return self.async_abort(reason="already_configured")
                 return self.async_update_reload_and_abort(
-                    reauth_entry, unique_id=user_input[CONF_API_TOKEN], data=user_input
+                    reauth_entry,
+                    unique_id=user_input[CONF_API_TOKEN],
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(

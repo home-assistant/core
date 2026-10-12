@@ -226,6 +226,29 @@ async def test_setup_entry_fails_when_refreshing(
     mock_get_status.assert_called()
 
 
+async def test_refresh_auth_failed_starts_reauth(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test an authentication error when refreshing a device starts a reauth flow."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="test-id",
+            deviceName="test-name",
+            deviceType="Plug",
+            hubDeviceId="test-hub-id",
+        )
+    ]
+    mock_get_status.side_effect = SwitchBotAuthenticationError
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+
+
 async def test_posting_to_webhook(
     hass: HomeAssistant,
     mock_list_devices,

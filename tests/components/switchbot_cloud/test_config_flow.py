@@ -9,8 +9,12 @@ from homeassistant.components.switchbot_cloud.config_flow import (
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
 )
-from homeassistant.components.switchbot_cloud.const import DOMAIN, ENTRY_TITLE
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
+from homeassistant.components.switchbot_cloud.const import (
+    CONF_CLOUDHOOK_URL,
+    DOMAIN,
+    ENTRY_TITLE,
+)
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -97,8 +101,16 @@ async def test_form_fails(
 
 
 async def test_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test reauth updates the credentials and unique ID."""
-    entry = MockConfigEntry(domain=DOMAIN, data=OLD_CREDENTIALS, unique_id="old-token")
+    """Test reauth updates the credentials and unique ID and keeps webhook data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **OLD_CREDENTIALS,
+            CONF_WEBHOOK_ID: "webhook-id",
+            CONF_CLOUDHOOK_URL: "https://hooks.nabu.casa/webhook",
+        },
+        unique_id="old-token",
+    )
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
@@ -116,7 +128,11 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data == NEW_CREDENTIALS
+    assert entry.data == {
+        **NEW_CREDENTIALS,
+        CONF_WEBHOOK_ID: "webhook-id",
+        CONF_CLOUDHOOK_URL: "https://hooks.nabu.casa/webhook",
+    }
     assert entry.unique_id == "new-token"
 
 
