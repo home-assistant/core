@@ -846,6 +846,34 @@ async def test_mcp_tool_call(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the read-only option only exposes tools that do not change anything."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+        tool_names = {tool.name for tool in result.tools}
+        assert "homeassistant__GetLiveContext" in tool_names
+        assert "intent__HassTurnOn" not in tool_names
+        assert all(tool.annotations.readOnlyHint for tool in result.tools)
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.isError
+    assert "not found" in result.content[0].text
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
 async def test_mcp_tool_call_failed(
     hass: HomeAssistant,
     setup_integration: None,

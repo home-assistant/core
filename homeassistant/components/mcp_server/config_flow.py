@@ -21,7 +21,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ def _options_schema(
     all_llm_apis: bool,
     default: list[str],
     require_admin: bool,
+    read_only: bool,
 ) -> probatio.Schema:
     """Return the schema for the options flow."""
     schema: dict[probatio.Marker, Any] = {
@@ -77,6 +78,7 @@ def _options_schema(
     schema[probatio.Required(CONF_REQUIRE_ADMIN, default=require_admin)] = (
         BooleanSelector()
     )
+    schema[probatio.Required(CONF_READ_ONLY, default=read_only)] = BooleanSelector()
     return probatio.Schema(schema)
 
 
@@ -84,7 +86,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Model Context Protocol Server."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     @staticmethod
     @callback
@@ -111,6 +113,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ALL_LLM_APIS: True,
                 CONF_LLM_HASS_API: [],
                 CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
             },
         )
 
@@ -130,6 +133,7 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         # A disabled config entry has not migrated yet
         current_all = self.config_entry.data.get(CONF_ALL_LLM_APIS, False)
         require_admin = self.config_entry.data.get(CONF_REQUIRE_ADMIN, False)
+        read_only = self.config_entry.data.get(CONF_READ_ONLY, False)
 
         if user_input is None:
             self.last_rendered_all_llm_apis = current_all
@@ -137,6 +141,7 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
             # Re-render the form to show or hide the LLM API picker
             self.last_rendered_all_llm_apis = user_input[CONF_ALL_LLM_APIS]
             require_admin = user_input[CONF_REQUIRE_ADMIN]
+            read_only = user_input[CONF_READ_ONLY]
         elif not user_input[CONF_ALL_LLM_APIS] and not user_input[CONF_LLM_HASS_API]:
             errors[CONF_LLM_HASS_API] = "llm_api_required"
         else:
@@ -162,6 +167,7 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
                 self.last_rendered_all_llm_apis,
                 current,
                 require_admin,
+                read_only,
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,
