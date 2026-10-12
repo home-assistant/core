@@ -1,5 +1,4 @@
 """Support for RFXtrx services."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any
 
@@ -9,7 +8,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_EVENT, DATA_RFXOBJECT, DOMAIN, SERVICE_SEND
+from .const import ATTR_EVENT, DOMAIN, SERVICE_SEND
 
 
 def _bytearray_string(data: Any) -> bytearray:
@@ -30,9 +29,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the RFXtrx services."""
 
     def send(call: ServiceCall) -> None:
-        rfx_object = hass.data.get(DOMAIN, {}).get(DATA_RFXOBJECT)
-        if rfx_object is None:
+        if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
             raise HomeAssistantError("RFXtrx is not connected, cannot send event")
-        rfx_object.transport.send(call.data[ATTR_EVENT])
+        entries[0].runtime_data.transport.send(call.data[ATTR_EVENT])
 
     hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)

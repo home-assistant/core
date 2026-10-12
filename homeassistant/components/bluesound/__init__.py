@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
@@ -17,7 +16,6 @@ from .coordinator import (
     BluesoundCoordinator,
     BluesoundRuntimeData,
 )
-from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -25,12 +23,6 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.MEDIA_PLAYER,
 ]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Bluesound."""
-    async_setup_services(hass)
-    return True
 
 
 async def async_setup_entry(

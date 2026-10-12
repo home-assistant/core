@@ -124,6 +124,8 @@ class RecorderOutput(StreamOutput):
             # Add output streams if necessary
             if not output_v:
                 output_v = output.add_stream_from_template(source_v)
+                if source_v.name == "hevc":
+                    output_v.codec_context.codec_tag = "hvc1"
             if source_a and not output_a:
                 output_a = output.add_stream_from_template(source_a)
 

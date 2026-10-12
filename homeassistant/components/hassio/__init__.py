@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery_flow,
     issue_registry as ir,
+    system_state,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -61,6 +62,7 @@ from .const import (
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
@@ -463,6 +465,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             IssueSubscription(
                 event_callback=_refresh_main_coordinator_on_mount_issue,
                 key=ISSUE_MOUNT_MOUNT_FAILED,
+            )
+        )
+    )
+
+    @callback
+    def _mirror_host_reboot_required(_: IssueSubscriptionEvent) -> None:
+        system_state.async_set_host_reboot_required(
+            hass,
+            any(
+                issue.key == ISSUE_KEY_SYSTEM_REBOOT_REQUIRED
+                for issue in issues_coordinator.issues
+            ),
+        )
+
+    entry.async_on_unload(
+        issues_coordinator.subscribe(
+            IssueSubscription(
+                event_callback=_mirror_host_reboot_required,
+                key=ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
             )
         )
     )

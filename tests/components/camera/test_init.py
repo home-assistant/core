@@ -4,6 +4,7 @@ from collections.abc import Callable
 import errno
 from http import HTTPStatus
 import io
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 from aiohttp import hdrs
@@ -18,13 +19,14 @@ from homeassistant.components.camera.const import (
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera.prefs import get_dynamic_camera_stream_settings
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -292,48 +294,56 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_camera")
 @pytest.mark.parametrize(
-    ("target", "side_effect", "message"),
+    ("error", "translation_key"),
     [
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EACCES, "Permission denied"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
         ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EPERM, "Operation not permitted"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
-        ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.ENOSPC, "No space left on device"),
-            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
-        ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EROFS, "Read-only file system"),
-            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
-        ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EIO, "Input/output error"),
-            "Cannot write image to /test/snapshot.jpg$",
-        ),
-        (
-            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-            TimeoutError,
-            "Unable to get snapshot: timed out after 10 seconds",
-        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
     ],
 )
-async def test_snapshot_service_error(
-    hass: HomeAssistant, target: str, side_effect: Exception, message: str
+async def test_snapshot_service_write_error(
+    hass: HomeAssistant, error: int, translation_key: str
 ) -> None:
-    """Test snapshot service with error."""
+    """Test snapshot service when the image can't be written."""
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch(target, side_effect=side_effect),
-        pytest.raises(HomeAssistantError, match=message),
+        patch(
+            "homeassistant.components.camera.services.os.makedirs",
+            side_effect=OSError(error, "Error"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": "/test/snapshot.jpg"}
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_snapshot_service_timeout(hass: HomeAssistant) -> None:
+    """Test snapshot service when getting the image times out."""
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+            side_effect=TimeoutError,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Unable to get snapshot: timed out after 10 seconds",
+        ),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -525,6 +535,64 @@ async def test_websocket_update_orientation_prefs(
     msg = await client.receive_json()
     # orientation entry for this camera should have been added
     assert msg["result"]["orientation"] == camera.Orientation.ROTATE_180
+
+
+@pytest.mark.usefixtures("mock_camera_with_device", "mock_camera")
+async def test_prefs_follow_entity_id_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test camera preferences move with the camera when its entity_id changes."""
+    old_entity_id = entity_registry.async_get_entity_id(DOMAIN, "demo", "Demo camera")
+    assert old_entity_id
+    new_entity_id = "camera.renamed"
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "camera/update_prefs",
+            "entity_id": old_entity_id,
+            "preload_stream": True,
+            "orientation": camera.Orientation.ROTATE_180,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    # The same object is handed to the camera's Stream
+    stream_settings = await get_dynamic_camera_stream_settings(hass, old_entity_id)
+
+    entity_registry.async_update_entity(old_entity_id, new_entity_id=new_entity_id)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(new_entity_id)
+
+    await client.send_json_auto_id(
+        {"type": "camera/get_prefs", "entity_id": new_entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["result"] == {
+        PREF_PRELOAD_STREAM: True,
+        PREF_ORIENTATION: camera.Orientation.ROTATE_180,
+    }
+    assert hass_storage[DOMAIN]["data"] == {new_entity_id: {PREF_PRELOAD_STREAM: True}}
+
+    await client.send_json_auto_id(
+        {
+            "type": "camera/update_prefs",
+            "entity_id": new_entity_id,
+            "preload_stream": False,
+            "orientation": camera.Orientation.ROTATE_LEFT,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    # Updates through the new entity_id reach the running stream
+    assert stream_settings == camera.DynamicStreamSettings(
+        preload_stream=False, orientation=camera.Orientation.ROTATE_LEFT
+    )
+    assert (
+        await get_dynamic_camera_stream_settings(hass, new_entity_id) is stream_settings
+    )
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -842,38 +910,77 @@ async def test_entity_picture_url_changes_on_token_update(hass: HomeAssistant) -
     assert "token=" in new_entity_picture
 
 
+class _RenameCamera(Camera):
+    """Camera running no add or remove code of its own, renamed in place."""
+
+    _attr_name = "Rename me"
+    _attr_supported_features = camera.CameraEntityFeature.STREAM
+    _attr_unique_id = "rename_me"
+
+    async def stream_source(self) -> str | None:
+        """Return the stream source."""
+        return STREAM_SOURCE
+
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes:
+        """Return an image."""
+        return b"Test"
+
+
+class _ReAddedRenameCamera(_RenameCamera):
+    """Camera extending async_added_to_hass, removed and re-added on rename."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+@pytest.mark.parametrize(
+    ("camera_class", "re_added"),
+    [
+        pytest.param(_RenameCamera, False, id="in_place"),
+        pytest.param(_ReAddedRenameCamera, True, id="remove_and_add"),
+    ],
+)
 async def test_entity_picture_url_changes_on_entity_id_change(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
+    camera_class: type[_RenameCamera],
+    re_added: bool,
 ) -> None:
-    """Test the entity picture follows an entity_id change."""
-
-    class RenameCamera(Camera):
-        _attr_name = "Rename me"
-        _attr_unique_id = "rename_me"
-
-        async def async_camera_image(
-            self, width: int | None = None, height: int | None = None
-        ) -> bytes:
-            return b"Test"
-
-    setup_test_component_platform(hass, DOMAIN, [RenameCamera()])
+    """Test the entity picture, proxy and WebRTC provider follow an entity_id change."""
+    camera_obj = camera_class()
+    setup_test_component_platform(hass, DOMAIN, [camera_obj])
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
     await hass.async_block_till_done()
+    provider = SomeTestProvider()
+    async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
+    assert camera_obj.webrtc_provider is provider
 
     old_picture = hass.states.get("camera.rename_me").attributes["entity_picture"]
     assert old_picture.startswith("/api/camera_proxy/camera.rename_me?token=")
 
-    entity_registry.async_update_entity(
-        "camera.rename_me", new_entity_id="camera.renamed"
-    )
-    await hass.async_block_till_done()
+    with (
+        patch.object(provider, "async_register_camera", AsyncMock()) as mock_register,
+        patch.object(
+            provider, "async_unregister_camera", AsyncMock()
+        ) as mock_unregister,
+    ):
+        entity_registry.async_update_entity(
+            "camera.rename_me", new_entity_id="camera.renamed"
+        )
+        await hass.async_block_till_done()
 
     assert hass.states.get("camera.rename_me") is None
     new_picture = hass.states.get("camera.renamed").attributes["entity_picture"]
     # The token is unchanged, only the entity_id in the URL follows the rename
     assert new_picture == old_picture.replace("camera.rename_me", "camera.renamed")
+    # The WebRTC provider is only registered again when re-added
+    assert camera_obj.webrtc_provider is provider
+    assert mock_register.call_count == int(re_added)
+    assert mock_unregister.call_count == int(re_added)
 
     client = await hass_client()
     resp = await client.get(new_picture)

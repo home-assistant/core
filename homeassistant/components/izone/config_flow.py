@@ -57,6 +57,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow: user, YAML import, HomeKit, and integration discovery."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     _discovered_controller_host: str | None = None
     _discovered_controller_uid: str | None = None

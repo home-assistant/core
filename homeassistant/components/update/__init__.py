@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, system_state
 from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -108,6 +108,7 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: UpdateDeviceClass | None = None
     display_precision: int = 0
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+    restart_required: bool = False
 
 
 @lru_cache(maxsize=256)
@@ -125,6 +126,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "latest_version",
     "release_summary",
     "release_url",
+    "restart_required",
     "supported_features",
     "title",
     "update_percentage",
@@ -157,6 +159,7 @@ class UpdateEntity(
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
+    _attr_restart_required: bool
     _attr_state: None = None
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
@@ -253,6 +256,15 @@ class UpdateEntity(
         return self._attr_release_url
 
     @cached_property
+    def restart_required(self) -> bool:
+        """Return if Home Assistant needs a restart after installing the update."""
+        if hasattr(self, "_attr_restart_required"):
+            return self._attr_restart_required
+        if hasattr(self, "entity_description"):
+            return self.entity_description.restart_required
+        return False
+
+    @cached_property
     @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
@@ -347,6 +359,22 @@ class UpdateEntity(
         return _version_is_newer(latest_version, installed_version)
 
     @property
+    def has_update(self) -> bool:
+        """Return True if there is an update available.
+
+        Integrations can override this property to implement custom logic.
+        """
+        if (installed_version := self.installed_version) is None:
+            return False
+        if (latest_version := self.latest_version) is None:
+            return False
+        try:
+            return self.version_is_newer(latest_version, installed_version)
+        except AwesomeVersionCompareException:
+            # Can't compare versions, already tried exact match
+            return True
+
+    @property
     @final
     @override
     def state(self) -> str | None:
@@ -361,12 +389,8 @@ class UpdateEntity(
         if latest_version == installed_version:
             return STATE_OFF
 
-        try:
-            newer = self.version_is_newer(latest_version, installed_version)
-        except AwesomeVersionCompareException:
-            # Can't compare versions, already tried exact match
-            return STATE_ON
-        return STATE_ON if newer else STATE_OFF
+        has_update = self.has_update
+        return STATE_ON if has_update else STATE_OFF
 
     @final
     @property
@@ -432,6 +456,11 @@ class UpdateEntity(
             self._attr_in_progress = False
             self.__in_progress = False
             self.async_write_ha_state()
+
+        if self.restart_required:
+            system_state.async_set_home_assistant_restart_required(
+                self.hass, self.platform.platform_name
+            )
 
     @override
     async def async_internal_added_to_hass(self) -> None:

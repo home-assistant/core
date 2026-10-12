@@ -6,7 +6,7 @@ from functools import cache
 from os import environ
 import ssl
 
-import certifi
+from .ca_certs import certifi_ca_data
 
 # Type alias for ALPN protocols tuple (None means no ALPN protocols set)
 type SSLALPNProtocols = tuple[str, ...] | None
@@ -16,8 +16,9 @@ type SSLALPNProtocols = tuple[str, ...] | None
 SSL_ALPN_NONE: SSLALPNProtocols = None
 # HTTP/1.1 only - used by default and for aiohttp (which doesn't support HTTP/2)
 SSL_ALPN_HTTP11: SSLALPNProtocols = ("http/1.1",)
-# HTTP/1.1 with HTTP/2 support - used when httpx http2=True
-SSL_ALPN_HTTP11_HTTP2: SSLALPNProtocols = ("http/1.1", "h2")
+# HTTP/1.1 with HTTP/2 support - used when httpx2 http2=True
+# Must match the order httpcore2 sets, so it never mutates the cached context
+SSL_ALPN_HTTP11_HTTP2: SSLALPNProtocols = ("h2", "http/1.1")
 
 
 class SSLCipherList(StrEnum):
@@ -109,11 +110,16 @@ def _create_client_context(
     # Reuse environment variable definition from requests, since it's already a
     # requirement. If the environment variable has no value, fall back to using
     # certs from certifi package.
-    cafile = environ.get("REQUESTS_CA_BUNDLE", certifi.where())
-
-    sslcontext = ssl.create_default_context(
-        purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
-    )
+    if (cafile := environ.get("REQUESTS_CA_BUNDLE")) is not None:
+        # Load custom bundles from the file, as they may contain trusted
+        # non-CA certificates that get_ca_certs() would not export.
+        sslcontext = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
+        )
+    else:
+        sslcontext = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cadata=certifi_ca_data()
+        )
     if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
     # Set ALPN protocols to prevent downstream libraries (e.g., httpx/httpcore)
