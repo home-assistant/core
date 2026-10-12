@@ -56,8 +56,10 @@ async def test_full_user_flow(
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
-        (TailscaleAuthenticationError, "invalid_auth"),
-        (TailscaleConnectionError, "cannot_connect"),
+        pytest.param(
+            TailscaleAuthenticationError, "invalid_auth", id="authentication_error"
+        ),
+        pytest.param(TailscaleConnectionError, "cannot_connect", id="connection_error"),
     ],
 )
 async def test_full_flow_with_error(
@@ -144,11 +146,10 @@ async def test_reauth_flow(
     assert len(mock_tailscale_config_flow.close.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_tailscale_config_flow", "mock_setup_entry")
 async def test_reauth_flow_migrates_api_key_entry(
     hass: HomeAssistant,
     mock_config_entry_api_key: MockConfigEntry,
-    mock_tailscale_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauthentication migrates a legacy API access token entry to OAuth."""
     mock_config_entry_api_key.add_to_hass(hass)
@@ -174,8 +175,10 @@ async def test_reauth_flow_migrates_api_key_entry(
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
-        (TailscaleAuthenticationError, "invalid_auth"),
-        (TailscaleConnectionError, "cannot_connect"),
+        pytest.param(
+            TailscaleAuthenticationError, "invalid_auth", id="authentication_error"
+        ),
+        pytest.param(TailscaleConnectionError, "cannot_connect", id="connection_error"),
     ],
 )
 async def test_reauth_with_error(
