@@ -28,7 +28,12 @@ OVERVIEW = [
                 "smartLocks": [
                     {"device": {"deviceLabel": "lock-1"}, "status": "LOCKED"}
                 ],
-                "smartplugs": [{"device": {"deviceLabel": "plug-1"}, "status": "on"}],
+                "smartplugs": [
+                    {
+                        "device": {"deviceLabel": "plug-1", "area": "Living room"},
+                        "currentState": "ON",
+                    }
+                ],
             }
         }
     }

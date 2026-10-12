@@ -12,9 +12,12 @@ from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.imap.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.imap.async_unload_entry", return_value=True),
+        patch(
+            "homeassistant.components.imap.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         yield mock_setup_entry
 
 
@@ -121,4 +124,5 @@ async def mock_imap_protocol(
         imap_mock.fetch.return_value = Response(*imap_fetch)
         imap_mock.wait_hello_from_server.side_effect = wait_hello_from_server
         imap_mock.timeout = 3
+        imap_mock.idle_start.return_value.done = MagicMock(return_value=True)
         yield imap_mock

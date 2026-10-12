@@ -1,4 +1,24 @@
 {
+  "conditions": {
+    "is_phase": {
+      "description": "Tests if the moon is in a specific phase.",
+      "fields": {
+        "phase": {
+          "description": "The moon phase to test for.",
+          "name": "Phase"
+        }
+      },
+      "name": "Moon phase"
+    },
+    "is_waning": {
+      "description": "Tests if the moon is waning.",
+      "name": "Moon is waning"
+    },
+    "is_waxing": {
+      "description": "Tests if the moon is waxing.",
+      "name": "Moon is waxing"
+    }
+  },
   "config": {
     "step": {
       "user": {

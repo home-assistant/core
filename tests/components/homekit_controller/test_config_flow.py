@@ -11,6 +11,7 @@ from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.testing import FakeController
 from bleak.exc import BleakError
 import pytest
 
@@ -392,6 +393,44 @@ async def test_discovery_ignored_hk_bridge(
     assert result["reason"] == "ignored_model"
 
 
+async def test_discovery_ignored_hk_bridge_shared_mac(
+    hass: HomeAssistant, controller: FakeController, device_registry: dr.DeviceRegistry
+) -> None:
+    """Ignore a homekit bridge even when another config entry shares its MAC.
+
+    Several config entries can each own a device for the same MAC; the bridge must be
+    found among them, not just the first matching device.
+    """
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
+
+    # A non-bridge entry owns a device with the MAC, registered first so it is the first
+    # match; the bridge's device is registered second.
+    other_entry = MockConfigEntry(domain="not_homekit", data={})
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
+    )
+    bridge_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
+    bridge_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=bridge_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
+    )
+
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ignored_model"
+
+
 async def test_discovery_does_not_ignore_non_homekit(
     hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -764,7 +803,10 @@ async def test_pair_abort_errors_on_finish(
 
 @pytest.mark.parametrize(("exception", "expected"), PAIRING_FINISH_FORM_ERRORS)
 async def test_pair_form_errors_on_finish(
-    hass: HomeAssistant, controller, exception, expected
+    hass: HomeAssistant,
+    controller: FakeController,
+    exception: type[Exception],
+    expected: str,
 ) -> None:
     """Test various pairing errors."""
     device = setup_mock_accessory(controller)
@@ -811,8 +853,16 @@ async def test_pair_form_errors_on_finish(
         "source": config_entries.SOURCE_ZEROCONF,
     }
 
+    finish_pairing.side_effect = await device.async_start_pairing(device.description.id)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
+
+async def test_pair_unknown_errors(
+    hass: HomeAssistant, controller: FakeController
+) -> None:
     """Test describing unknown errors."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -862,6 +912,11 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_works(hass: HomeAssistant, controller) -> None:

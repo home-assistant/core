@@ -3,8 +3,8 @@
 import asyncio
 from typing import Any, override
 
+import probatio
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
-import voluptuous as vol
 
 from homeassistant.components.radio_frequency import (
     async_get_transmitters,
@@ -104,13 +104,15 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_test_light()
 
         schema: dict[Any, Any] = {
-            vol.Required(
+            probatio.Required(
                 CONF_TRANSMITTER,
-                default=self._transmitter_entity_id or vol.UNDEFINED,
+                default=self._transmitter_entity_id or probatio.UNDEFINED,
             ): selector.EntitySelector(
                 selector.EntitySelectorConfig(include_entities=transmitters),
             ),
-            vol.Required(CONF_CODE, default=str(self._code)): selector.SelectSelector(
+            probatio.Required(
+                CONF_CODE, default=str(self._code)
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=_CODE_OPTIONS,
                     mode=selector.SelectSelectorMode.DROPDOWN,
@@ -120,7 +122,7 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
         )
 
     async def async_step_test_light(

@@ -9,6 +9,7 @@ from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -64,7 +65,11 @@ class DeconzBase[_DeviceT: _DeviceType]:
             model=self._device.model_id,
             name=self._device.name,
             sw_version=self._device.software_version,
-            via_device=(DOMAIN, self.hub.api.config.bridge_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hub.hass,
+                (DOMAIN, self.hub.api.config.bridge_id),
+                config_entry_id=self.hub.config_entry.entry_id,
+            ),
         )
 
 
@@ -116,6 +121,13 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         self._device.remove_callback(self.async_update_callback)
         del self.hub.deconz_ids[self.entity_id]
         self.hub.entities[self.TYPE].remove(self.unique_id)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-key the deCONZ id mapping on the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self.hub.deconz_ids[self.entity_id] = self.hub.deconz_ids.pop(old_entity_id)
 
     @callback
     def async_update_connection_state(self) -> None:
@@ -185,5 +197,9 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
             manufacturer="dresden elektronik",
             model="deCONZ group",
             name=self.deconz_group.name,
-            via_device=(DOMAIN, self.hub.api.config.bridge_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hub.hass,
+                (DOMAIN, self.hub.api.config.bridge_id),
+                config_entry_id=self.hub.config_entry.entry_id,
+            ),
         )

@@ -79,7 +79,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # once every hours get all lock details, otherwise use the sync endpoint
         if self._next_get_locks <= time.time():
             _LOGGER.debug("Updating through /my/lock endpoint")
-            await self._async_update(self.tedee_client.get_locks)
+            await self._async_update(self._async_get_locks)
             self._next_get_locks = time.time() + GET_LOCKS_INTERVAL_SECONDS
         else:
             _LOGGER.debug("Updating through /sync endpoint")
@@ -93,12 +93,23 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self._async_add_remove_locks()
         return self.tedee_client.locks_dict
 
+    async def _async_get_locks(self) -> None:
+        """Get all locks paired with the bridge."""
+        try:
+            await self.tedee_client.get_locks()
+        except TedeeClientException as ex:
+            if self.tedee_client.locks_dict:
+                raise
+            # aiotedee raises a generic exception when the bridge reports no locks
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="no_locks"
+            ) from ex
+
     async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:
         """Update locks based on update function."""
         try:
             await update_fn()
         except TedeeLocalAuthException as ex:
-            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
@@ -148,13 +159,10 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
             device_registry = dr.async_get(self.hass)
             for lock_id in removed_locks:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(lock_id))}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(lock_id)), self.config_entry.entry_id
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         # add new locks
         if new_locks := current_locks - self._locks_last_update:

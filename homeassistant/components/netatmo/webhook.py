@@ -199,7 +199,6 @@ async def async_register_webhook(
     try:
         await entry.runtime_data.auth.async_addwebhook(webhook_url)
         _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     except pyatmo.ApiError as err:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         _LOGGER.error("Error during webhook registration - %s", err)

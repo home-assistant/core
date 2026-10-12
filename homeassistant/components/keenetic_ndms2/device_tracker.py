@@ -62,7 +62,9 @@ async def async_setup_entry(
 
     async_add_entities(restored)
 
-    async_dispatcher_connect(hass, router.signal_update, update_from_router)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, router.signal_update, update_from_router)
+    )
 
 
 @callback

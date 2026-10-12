@@ -5,13 +5,24 @@ import logging
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
-from .const import HARMONY_OPTIONS_UPDATE, PLATFORMS
+from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .data import HarmonyConfigEntry, HarmonyData
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Logitech Harmony Hub integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> bool:

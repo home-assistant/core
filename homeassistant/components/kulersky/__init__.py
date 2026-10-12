@@ -6,7 +6,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -45,11 +45,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     # supports core bluetooth discovery
     if config_entry.version == 1:
         dev_reg = dr.async_get(hass)
-        devices = dev_reg.devices.get_devices_for_config_entry_id(config_entry.entry_id)
+        devices = dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id)
 
         if len(devices) == 0:
-            _LOGGER.error("Unable to migrate; No devices registered")
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="no_devices_registered",
+            )
 
         first_device = devices[0]
         domain_identifiers = [i for i in first_device.identifiers if i[0] == DOMAIN]

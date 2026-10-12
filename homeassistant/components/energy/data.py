@@ -5,10 +5,16 @@ from collections import Counter
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal, NotRequired, TypedDict, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.core import HomeAssistant, callback, valid_entity_id
-from homeassistant.helpers import config_validation as cv, singleton, storage
+from homeassistant.const import Platform
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    singleton,
+    storage,
+)
 
 from .const import DOMAIN
 
@@ -172,6 +178,9 @@ class BatterySourceType(TypedDict):
     # statistic_id of a sensor (unit %) reporting the battery state of charge
     stat_soc: NotRequired[str]
 
+    # usable capacity in kWh, used to weight the combined state of charge
+    capacity: NotRequired[float]
+
     # An optional custom name for display in energy graphs
     name: NotRequired[str]
 
@@ -283,7 +292,7 @@ def _reject_price_for_external_stat(
                 val.get(entity_price_key) is not None
                 or val.get(number_price_key) is not None
             ):
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "Entity or number price is not supported for external"
                     f" statistics. Use {cost_stat_key} instead"
                 )
@@ -300,20 +309,24 @@ def _flow_from_ensure_single_price(
         val["entity_energy_price"] is not None
         and val["number_energy_price"] is not None
     ):
-        raise vol.Invalid("Define either an entity or a fixed number for the price")
+        raise probatio.Invalid(
+            "Define either an entity or a fixed number for the price"
+        )
 
     return val
 
 
-FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+FLOW_FROM_GRID_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required("stat_energy_from"): str,
-            vol.Optional("stat_cost"): vol.Any(str, None),
+            probatio.Required("stat_energy_from"): str,
+            probatio.Optional("stat_cost"): probatio.Any(str, None),
             # entity_energy_from was removed in HA Core 2022.10
-            vol.Remove("entity_energy_from"): vol.Any(str, None),
-            vol.Optional("entity_energy_price"): vol.Any(str, None),
-            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            probatio.Remove("entity_energy_from"): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price"): probatio.Any(str, None),
+            probatio.Optional("number_energy_price"): probatio.Any(
+                probatio.Coerce(float), None
+            ),
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -321,15 +334,17 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
 )
 
 
-FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+FLOW_TO_GRID_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required("stat_energy_to"): str,
-            vol.Optional("stat_compensation"): vol.Any(str, None),
+            probatio.Required("stat_energy_to"): str,
+            probatio.Optional("stat_compensation"): probatio.Any(str, None),
             # entity_energy_to was removed in HA Core 2022.10
-            vol.Remove("entity_energy_to"): vol.Any(str, None),
-            vol.Optional("entity_energy_price"): vol.Any(str, None),
-            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            probatio.Remove("entity_energy_to"): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price"): probatio.Any(str, None),
+            probatio.Optional("number_energy_price"): probatio.Any(
+                probatio.Coerce(float), None
+            ),
         }
     ),
     _reject_price_for_external_stat(
@@ -341,7 +356,7 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
 def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
     """Validate power_config has exactly one configuration method."""
     if not val:
-        raise vol.Invalid("power_config must have at least one option")
+        raise probatio.Invalid("power_config must have at least one option")
 
     # Ensure only one configuration method is used
     has_single = "stat_rate" in val
@@ -350,7 +365,7 @@ def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
 
     methods_count = sum([has_single, has_inverted, has_combined])
     if methods_count > 1:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "power_config must use only one configuration method: "
             "stat_rate, stat_rate_inverted, or stat_rate_from/stat_rate_to"
         )
@@ -358,33 +373,33 @@ def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
     return val
 
 
-POWER_CONFIG_SCHEMA = vol.All(
-    vol.Schema(
+POWER_CONFIG_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Exclusive("stat_rate", "power_source"): str,
-            vol.Exclusive("stat_rate_inverted", "power_source"): str,
+            probatio.Exclusive("stat_rate", "power_source"): str,
+            probatio.Exclusive("stat_rate_inverted", "power_source"): str,
             # stat_rate_from/stat_rate_to: two sensors for bidirectional power
             # Battery: from=discharge (out), to=charge (in)
             # Grid: from=consumption, to=return
-            vol.Inclusive("stat_rate_from", "two_sensors"): str,
-            vol.Inclusive("stat_rate_to", "two_sensors"): str,
+            probatio.Inclusive("stat_rate_from", "two_sensors"): str,
+            probatio.Inclusive("stat_rate_to", "two_sensors"): str,
         }
     ),
     _validate_power_config,
 )
 
 
-GRID_POWER_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+GRID_POWER_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
             # stat_rate and power_config are both optional
             # schema keys, but the validator requires that at
             # least one is provided; power_config takes precedence
-            vol.Optional("stat_rate"): str,
-            vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+            probatio.Optional("stat_rate"): str,
+            probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
     ),
-    cv.has_at_least_one_key("stat_rate", "power_config"),
+    probatio.AtLeastOne("stat_rate", "power_config"),
 )
 
 
@@ -399,7 +414,7 @@ def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[di
 
         for value, count in counts.items():
             if count > 1:
-                raise vol.Invalid(f"Cannot specify {value} more than once")
+                raise probatio.Invalid(f"Cannot specify {value} more than once")
 
         return val
 
@@ -414,7 +429,9 @@ def _grid_ensure_single_price_import(
         val.get("entity_energy_price") is not None
         and val.get("number_energy_price") is not None
     ):
-        raise vol.Invalid("Define either an entity or a fixed number for import price")
+        raise probatio.Invalid(
+            "Define either an entity or a fixed number for import price"
+        )
     return val
 
 
@@ -426,7 +443,9 @@ def _grid_ensure_single_price_export(
         val.get("entity_energy_price_export") is not None
         and val.get("number_energy_price_export") is not None
     ):
-        raise vol.Invalid("Define either an entity or a fixed number for export price")
+        raise probatio.Invalid(
+            "Define either an entity or a fixed number for export price"
+        )
     return val
 
 
@@ -440,40 +459,46 @@ def _grid_ensure_at_least_one_stat(
         and val.get("stat_rate") is None
         and val.get("power_config") is None
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Grid must have at least one of: import meter,"
             " export meter, or power sensor"
         )
     return val
 
 
-GRID_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+GRID_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required("type"): "grid",
+            probatio.Required("type"): "grid",
             # Import meter (can be None for export-only grids from legacy migration)
-            vol.Optional("stat_energy_from", default=None): vol.Any(str, None),
-            # Export meter (optional)
-            vol.Optional("stat_energy_to", default=None): vol.Any(str, None),
-            # Import cost tracking
-            vol.Optional("stat_cost", default=None): vol.Any(str, None),
-            vol.Optional("entity_energy_price", default=None): vol.Any(str, None),
-            vol.Optional("number_energy_price", default=None): vol.Any(
-                vol.Coerce(float), None
-            ),
-            # Export compensation tracking
-            vol.Optional("stat_compensation", default=None): vol.Any(str, None),
-            vol.Optional("entity_energy_price_export", default=None): vol.Any(
+            probatio.Optional("stat_energy_from", default=None): probatio.Any(
                 str, None
             ),
-            vol.Optional("number_energy_price_export", default=None): vol.Any(
-                vol.Coerce(float), None
+            # Export meter (optional)
+            probatio.Optional("stat_energy_to", default=None): probatio.Any(str, None),
+            # Import cost tracking
+            probatio.Optional("stat_cost", default=None): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price", default=None): probatio.Any(
+                str, None
+            ),
+            probatio.Optional("number_energy_price", default=None): probatio.Any(
+                probatio.Coerce(float), None
+            ),
+            # Export compensation tracking
+            probatio.Optional("stat_compensation", default=None): probatio.Any(
+                str, None
+            ),
+            probatio.Optional("entity_energy_price_export", default=None): probatio.Any(
+                str, None
+            ),
+            probatio.Optional("number_energy_price_export", default=None): probatio.Any(
+                probatio.Coerce(float), None
             ),
             # Power measurement (optional)
-            vol.Optional("stat_rate"): str,
-            vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
-            vol.Required("cost_adjustment_day"): vol.Coerce(float),
-            vol.Optional("name"): str,
+            probatio.Optional("stat_rate"): str,
+            probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
+            probatio.Required("cost_adjustment_day"): probatio.Coerce(float),
+            probatio.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -487,56 +512,63 @@ GRID_SOURCE_SCHEMA = vol.All(
     _grid_ensure_single_price_export,
     _grid_ensure_at_least_one_stat,
 )
-SOLAR_SOURCE_SCHEMA = vol.Schema(
+SOLAR_SOURCE_SCHEMA = probatio.Schema(
     {
-        vol.Required("type"): "solar",
-        vol.Required("stat_energy_from"): str,
-        vol.Optional("stat_rate"): str,
-        vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
-        vol.Optional("name"): str,
+        probatio.Required("type"): "solar",
+        probatio.Required("stat_energy_from"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("config_entry_solar_forecast"): probatio.Any([str], None),
+        probatio.Optional("name"): str,
     }
 )
-BATTERY_SOURCE_SCHEMA = vol.Schema(
+BATTERY_SOURCE_SCHEMA = probatio.Schema(
     {
-        vol.Required("type"): "battery",
-        vol.Required("stat_energy_from"): str,
-        vol.Required("stat_energy_to"): str,
+        probatio.Required("type"): "battery",
+        probatio.Required("stat_energy_from"): str,
+        probatio.Required("stat_energy_to"): str,
         # Both stat_rate and power_config are optional
         # If power_config is provided, it takes precedence and stat_rate is overwritten
-        vol.Optional("stat_rate"): str,
-        vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
-        vol.Optional("stat_soc"): str,
-        vol.Optional("name"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
+        probatio.Optional("stat_soc"): str,
+        probatio.Optional("capacity"): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, min_included=False)
+        ),
+        probatio.Optional("name"): str,
     }
 )
 
 
-GAS_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+GAS_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required("type"): "gas",
-            vol.Required("stat_energy_from"): str,
-            vol.Optional("stat_rate"): str,
-            vol.Optional("stat_cost"): vol.Any(str, None),
+            probatio.Required("type"): "gas",
+            probatio.Required("stat_energy_from"): str,
+            probatio.Optional("stat_rate"): str,
+            probatio.Optional("stat_cost"): probatio.Any(str, None),
             # entity_energy_from was removed in HA Core 2022.10
-            vol.Remove("entity_energy_from"): vol.Any(str, None),
-            vol.Optional("entity_energy_price"): vol.Any(str, None),
-            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
-            vol.Optional("name"): str,
+            probatio.Remove("entity_energy_from"): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price"): probatio.Any(str, None),
+            probatio.Optional("number_energy_price"): probatio.Any(
+                probatio.Coerce(float), None
+            ),
+            probatio.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
 )
-WATER_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+WATER_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required("type"): "water",
-            vol.Required("stat_energy_from"): str,
-            vol.Optional("stat_rate"): str,
-            vol.Optional("stat_cost"): vol.Any(str, None),
-            vol.Optional("entity_energy_price"): vol.Any(str, None),
-            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
-            vol.Optional("name"): str,
+            probatio.Required("type"): "water",
+            probatio.Required("stat_energy_from"): str,
+            probatio.Optional("stat_rate"): str,
+            probatio.Optional("stat_cost"): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price"): probatio.Any(str, None),
+            probatio.Optional("number_energy_price"): probatio.Any(
+                probatio.Coerce(float), None
+            ),
+            probatio.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -565,7 +597,7 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
         # Check import meter uniqueness
         if (stat_from := grid_source.get("stat_energy_from")) is not None:
             if stat_from in seen_import:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Import meter {stat_from} is used in multiple grid connections"
                 )
             seen_import.add(stat_from)
@@ -573,7 +605,7 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
         # Check export meter uniqueness
         if (stat_to := grid_source.get("stat_energy_to")) is not None:
             if stat_to in seen_export:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Export meter {stat_to} is used in multiple grid connections"
                 )
             seen_export.add(stat_to)
@@ -581,7 +613,7 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
         # Check power stat uniqueness
         if (stat_rate := grid_source.get("stat_rate")) is not None:
             if stat_rate in seen_rate:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Power stat {stat_rate} is used in multiple grid connections"
                 )
             seen_rate.add(stat_rate)
@@ -589,8 +621,8 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
     return value
 
 
-ENERGY_SOURCE_SCHEMA = vol.All(
-    vol.Schema(
+ENERGY_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
         [
             cv.key_value_schemas(
                 "type",
@@ -608,12 +640,12 @@ ENERGY_SOURCE_SCHEMA = vol.All(
     _validate_grid_stat_uniqueness,
 )
 
-DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
+DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
     {
-        vol.Required("stat_consumption"): str,
-        vol.Optional("stat_rate"): str,
-        vol.Optional("name"): str,
-        vol.Optional("included_in_stat"): str,
+        probatio.Required("stat_consumption"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("included_in_stat"): str,
     }
 )
 
@@ -740,6 +772,46 @@ class EnergyManager:
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
         self.data = await self._store.async_load()
+        # The power sensors may have been renamed while energy was not loaded
+        self._async_refresh_power_stat_rates()
+        self._hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_entity_registry_updated,
+            event_filter=self._async_filter_power_sensor_registry_updated,
+        )
+
+    @callback
+    def _async_filter_power_sensor_registry_updated(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
+        """Filter for power sensors being created or getting a new entity_id."""
+        if event_data["action"] == "update":
+            if "entity_id" not in event_data["changes"]:
+                return False
+        elif event_data["action"] != "create":
+            return False
+        entry = er.async_get(self._hass).async_get(event_data["entity_id"])
+        return entry is not None and entry.platform == DOMAIN
+
+    @callback
+    def _async_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle a power sensor being created or getting a new entity_id."""
+        self._async_refresh_power_stat_rates()
+
+    @callback
+    def _async_refresh_power_stat_rates(self) -> None:
+        """Point stat_rate of power transform configs at the actual entity_id."""
+        if self.data is None:
+            return
+        energy_sources = self._process_energy_sources(self.data["energy_sources"])
+        if energy_sources == self.data["energy_sources"]:
+            return
+        data = self.data.copy()
+        data["energy_sources"] = energy_sources
+        self.data = data
+        self._store.async_delay_save(lambda: data, 60)
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
@@ -779,20 +851,34 @@ class EnergyManager:
 
         await asyncio.gather(*(listener() for listener in self._update_listeners))
 
+    def _power_sensor_entity_id(self, source_type: str, config: PowerConfig) -> str:
+        """Return the entity_id of a power transform sensor.
+
+        The generated entity_id is only a suggestion, the sensor may have been
+        renamed or registered with another entity_id.
+        """
+        from .helpers import (  # noqa: PLC0415
+            generate_power_sensor_entity_id,
+            generate_power_sensor_unique_id,
+        )
+
+        unique_id = generate_power_sensor_unique_id(source_type, config)
+        if entity_id := er.async_get(self._hass).async_get_entity_id(
+            Platform.SENSOR, DOMAIN, unique_id
+        ):
+            return entity_id
+        return generate_power_sensor_entity_id(source_type, config)
+
     def _process_energy_sources(self, sources: list[SourceType]) -> list[SourceType]:
         """Process energy sources and set stat_rate for power configs."""
-        from .helpers import generate_power_sensor_entity_id  # noqa: PLC0415
-
         processed: list[SourceType] = []
         for source in sources:
             if source["type"] == "battery":
                 source = self._process_battery_power(
-                    source, generate_power_sensor_entity_id
+                    source, self._power_sensor_entity_id
                 )
             elif source["type"] == "grid":
-                source = self._process_grid_power(
-                    source, generate_power_sensor_entity_id
-                )
+                source = self._process_grid_power(source, self._power_sensor_entity_id)
             processed.append(source)
         return processed
 
@@ -811,7 +897,7 @@ class EnergyManager:
         if "stat_rate" in config:
             return {**source, "stat_rate": config["stat_rate"]}
 
-        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        # For inverted or two-sensor config, set stat_rate to the power sensor
         return {**source, "stat_rate": generate_entity_id("battery", config)}
 
     def _process_grid_power(
@@ -829,7 +915,7 @@ class EnergyManager:
         if "stat_rate" in config:
             return {**source, "stat_rate": config["stat_rate"]}
 
-        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        # For inverted or two-sensor config, set stat_rate to the power sensor
         return {**source, "stat_rate": generate_entity_id("grid", config)}
 
     @callback

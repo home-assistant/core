@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -11,7 +12,6 @@ from systembridgeconnector.exceptions import (
 )
 from systembridgeconnector.version import Version
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ENTITY_ID,
@@ -23,7 +23,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
@@ -70,7 +74,6 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except AuthenticationException as exception:
-        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
@@ -128,7 +131,6 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
-        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
@@ -155,6 +157,16 @@ async def async_setup_entry(
                 "host": entry.data[CONF_HOST],
             },
         ) from exception
+
+    if coordinator.data.system is None:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
@@ -187,16 +199,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator = entry.runtime_data
-
-        # Ensure disconnected and cleanup stop sub
-        await coordinator.websocket_client.close()
-        if coordinator.unsub:
-            coordinator.unsub()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(
@@ -206,7 +209,9 @@ async def async_reload_entry(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SystemBridgeConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -216,6 +221,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.minor_version < 2:
         # Migrate to CONF_TOKEN, which was added in 1.2
+
         new_data = dict(config_entry.data)
         new_data.setdefault(CONF_TOKEN, config_entry.data.get(CONF_API_KEY))
 
@@ -230,5 +236,28 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.version,
             config_entry.minor_version,
         )
+
+    if config_entry.minor_version < 3:
+        # Migrate entity unique id
+
+        if TYPE_CHECKING:
+            assert config_entry.unique_id
+
+        ent_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            ent_reg, config_entry.entry_id
+        ):
+            if not entity_entry.unique_id.startswith(config_entry.data[CONF_HOST]):
+                continue
+
+            ent_reg.async_update_entity(
+                entity_entry.entity_id,
+                new_unique_id=(
+                    config_entry.unique_id
+                    + entity_entry.unique_id[len(config_entry.data[CONF_HOST]) :]
+                ),
+            )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     return True

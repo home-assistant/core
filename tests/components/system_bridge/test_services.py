@@ -86,8 +86,8 @@ async def test_services(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, FIXTURE_UUID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -104,6 +104,34 @@ async def test_services(
 
     getattr(mock_websocket_client, call_method).assert_awaited_once_with(*call_args)
     assert resp == snapshot
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_command_without_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a power command can be called without asking for a response."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
+    )
+    assert device_entry
+
+    resp = await hass.services.async_call(
+        DOMAIN,
+        "power_command",
+        {CONF_BRIDGE: device_entry.id, CONF_COMMAND: "shutdown"},
+        blocking=True,
+    )
+
+    mock_websocket_client.power_shutdown.assert_awaited_once_with()
+    assert resp is None
 
 
 @pytest.mark.parametrize(
@@ -136,8 +164,8 @@ async def test_get_process_services(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, FIXTURE_UUID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
     )
     assert device_entry
 

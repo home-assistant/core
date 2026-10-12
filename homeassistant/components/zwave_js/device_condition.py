@@ -1,10 +1,7 @@
 """Provide the device conditions for Z-Wave JS."""
 
-from typing import cast
-
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
@@ -21,11 +18,11 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
     DOMAIN,
+    NODE_STATUSES,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
-    NODE_STATUSES,
     async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
 )
@@ -34,7 +31,9 @@ from .helpers import (
     check_type_schema_map,
     get_value_state_schema,
     get_zwave_value_from_config,
+    node_status_matches,
     remove_keys_with_empty_values,
+    value_matches_state,
 )
 
 CONF_STATUS = "status"
@@ -46,28 +45,30 @@ CONDITION_TYPES = {NODE_STATUS_TYPE, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
 
 NODE_STATUS_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): NODE_STATUS_TYPE,
-        vol.Required(CONF_STATUS): vol.In(NODE_STATUSES),
+        probatio.Required(CONF_TYPE): NODE_STATUS_TYPE,
+        probatio.Required(CONF_STATUS): probatio.In(NODE_STATUSES),
     }
 )
 
 CONFIG_PARAMETER_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): CONFIG_PARAMETER_TYPE,
-        vol.Required(CONF_VALUE_ID): cv.string,
-        vol.Required(CONF_SUBTYPE): cv.string,
-        vol.Optional(ATTR_VALUE): vol.Coerce(int),
+        probatio.Required(CONF_TYPE): CONFIG_PARAMETER_TYPE,
+        probatio.Required(CONF_VALUE_ID): cv.string,
+        probatio.Required(CONF_SUBTYPE): cv.string,
+        probatio.Optional(ATTR_VALUE): probatio.Coerce(int),
     }
 )
 
 VALUE_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): VALUE_TYPE,
-        vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
-        vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
-        vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-        vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-        vol.Required(ATTR_VALUE): VALUE_SCHEMA,
+        probatio.Required(CONF_TYPE): VALUE_TYPE,
+        probatio.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
+        probatio.Required(ATTR_PROPERTY): probatio.Any(probatio.Coerce(int), cv.string),
+        probatio.Optional(ATTR_PROPERTY_KEY): probatio.Any(
+            probatio.Coerce(int), cv.string
+        ),
+        probatio.Optional(ATTR_ENDPOINT): probatio.Coerce(int),
+        probatio.Required(ATTR_VALUE): VALUE_SCHEMA,
     }
 )
 
@@ -78,11 +79,12 @@ TYPE_SCHEMA_MAP = {
 }
 
 
-CONDITION_TYPE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_TYPE): vol.In(TYPE_SCHEMA_MAP)}, extra=vol.ALLOW_EXTRA
+CONDITION_TYPE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_TYPE): probatio.In(TYPE_SCHEMA_MAP)},
+    extra=probatio.ALLOW_EXTRA,
 )
 
-CONDITION_SCHEMA = vol.All(
+CONDITION_SCHEMA = probatio.All(
     remove_keys_with_empty_values,
     CONDITION_TYPE_SCHEMA,
     check_type_schema_map(TYPE_SCHEMA_MAP),
@@ -113,7 +115,7 @@ async def async_validate_condition_config(
         try:
             node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
             get_zwave_value_from_config(node, config)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise InvalidDeviceAutomationConfig(err.msg) from err
 
     return config
@@ -168,7 +170,7 @@ def async_condition_from_config(
     def test_node_status(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if node status is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        return bool(node.status.name.lower() == config[CONF_STATUS])
+        return node_status_matches(node, config[CONF_STATUS])
 
     if condition_type == NODE_STATUS_TYPE:
         return test_node_status
@@ -177,8 +179,9 @@ def async_condition_from_config(
     def test_config_parameter(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if config parameter is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        config_value = cast(ConfigurationValue, node.values[config[CONF_VALUE_ID]])
-        return bool(config_value.value == config[ATTR_VALUE])
+        return value_matches_state(
+            node.values[config[CONF_VALUE_ID]], config[ATTR_VALUE]
+        )
 
     if condition_type == CONFIG_PARAMETER_TYPE:
         return test_config_parameter
@@ -187,8 +190,9 @@ def async_condition_from_config(
     def test_value(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if value is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        value = get_zwave_value_from_config(node, config)
-        return bool(value.value == config[ATTR_VALUE])
+        return value_matches_state(
+            get_zwave_value_from_config(node, config), config[ATTR_VALUE]
+        )
 
     if condition_type == VALUE_TYPE:
         return test_value
@@ -198,7 +202,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     device_id = config[CONF_DEVICE_ID]
     node = async_get_node_from_device_id(hass, device_id)
@@ -209,15 +213,19 @@ async def async_get_condition_capabilities(
         value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
-        return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
+        return {
+            "extra_fields": probatio.Schema(
+                {probatio.Required(ATTR_VALUE): value_schema}
+            )
+        }
 
     if config[CONF_TYPE] == VALUE_TYPE:
         # Only show command classes on this node and exclude Configuration CC since it
         # is already covered
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Required(ATTR_COMMAND_CLASS): vol.In(
+                    probatio.Required(ATTR_COMMAND_CLASS): probatio.In(
                         {
                             str(CommandClass(cc.id).value): cc.name
                             for cc in sorted(
@@ -226,18 +234,18 @@ async def async_get_condition_capabilities(
                             if cc.id != CommandClass.CONFIGURATION
                         }
                     ),
-                    vol.Required(ATTR_PROPERTY): cv.string,
-                    vol.Optional(ATTR_PROPERTY_KEY): cv.string,
-                    vol.Optional(ATTR_ENDPOINT): cv.string,
-                    vol.Required(ATTR_VALUE): cv.string,
+                    probatio.Required(ATTR_PROPERTY): cv.string,
+                    probatio.Optional(ATTR_PROPERTY_KEY): cv.string,
+                    probatio.Optional(ATTR_ENDPOINT): cv.string,
+                    probatio.Required(ATTR_VALUE): cv.string,
                 }
             )
         }
 
     if config[CONF_TYPE] == NODE_STATUS_TYPE:
         return {
-            "extra_fields": vol.Schema(
-                {vol.Required(CONF_STATUS): vol.In(NODE_STATUSES)}
+            "extra_fields": probatio.Schema(
+                {probatio.Required(CONF_STATUS): probatio.In(NODE_STATUSES)}
             )
         }
 

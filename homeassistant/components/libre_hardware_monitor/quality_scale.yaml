@@ -62,16 +62,16 @@ rules:
   discovery:
     status: exempt
     comment: Device can't be discovered
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo

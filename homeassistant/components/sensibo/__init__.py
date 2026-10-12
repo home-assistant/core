@@ -6,12 +6,18 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
+from .entity import get_device_info
 from .services import async_setup_services
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
@@ -34,6 +40,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
+    device_registry = dr.async_get(hass)
+
+    def _async_register_devices() -> None:
+        """Register parent AC devices so motion sensors can resolve via_device_id.
+
+        Registered before the platforms so it runs first on every coordinator
+        update, ensuring a parent device exists before the (concurrently set up)
+        motion sensors resolve it, including devices added dynamically at runtime.
+        """
+        for device in coordinator.data.parsed.values():
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id, **get_device_info(device)
+            )
+
+    _async_register_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_register_devices))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -52,8 +75,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
 
         try:
             new_unique_id = await async_validate_api(hass, api_key)
-        except AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError:
-            return False
+        except AuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="auth_error"
+            ) from err
+        except ConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        except NoDevicesError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="no_data"
+            ) from err
+        except NoUsernameError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="no_username"
+            ) from err
 
         LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)
         hass.config_entries.async_update_entry(
@@ -66,7 +103,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: SensiboConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: SensiboConfigEntry, device: AnyDeviceEntry
 ) -> bool:
     """Remove Sensibo config entry from a device."""
     entity_registry = er.async_get(hass)

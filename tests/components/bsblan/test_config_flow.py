@@ -4,8 +4,8 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -69,12 +69,11 @@ def zeroconf_discovery_info_different_mac() -> ZeroconfServiceInfo:
 # Helper functions to reduce repetition
 
 
-async def _init_user_flow(hass: HomeAssistant, user_input: dict | None = None):
+async def _init_user_flow(hass: HomeAssistant):
     """Initialize a user config flow."""
     return await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=user_input,
     )
 
 
@@ -248,27 +247,7 @@ async def test_circuit_discovery_empty_result_falls_back_to_default(
     )
 
 
-async def test_connection_error(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-) -> None:
-    """Test we show user form on BSBLan connection error."""
-    mock_bsblan.device.side_effect = BSBLANConnectionError
-
-    result = await _init_user_flow(
-        hass,
-        {
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 80,
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-    )
-
-    _assert_form_result(result, "user", {"base": "cannot_connect"})
-
-
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_authentication_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
@@ -284,10 +263,13 @@ async def test_authentication_error(
         CONF_PASSWORD: "wrongpassword",
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        user_input,
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -321,9 +303,20 @@ async def test_authentication_error(
     assert passkey_field.default() == "secret"
     assert username_field.default() == "testuser"
     # Password should never be pre-filled for security reasons
-    assert password_field.default is vol.UNDEFINED
+    assert password_field.default is probatio.UNDEFINED
+
+    mock_bsblan.device.side_effect = None
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {**user_input, CONF_PASSWORD: "admin1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_authentication_error_vs_connection_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
@@ -332,8 +325,12 @@ async def test_authentication_error_vs_connection_error(
     # Test connection error first
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -345,8 +342,12 @@ async def test_authentication_error_vs_connection_error(
     # Reset and test authentication error
     mock_bsblan.device.side_effect = BSBLANAuthError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -357,6 +358,21 @@ async def test_authentication_error_vs_connection_error(
 
     _assert_form_result(result, "user", {"base": "invalid_auth"})
 
+    mock_bsblan.device.side_effect = None
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_device_exists_abort(
     hass: HomeAssistant,
@@ -366,8 +382,12 @@ async def test_user_device_exists_abort(
     """Test we abort flow if BSBLAN device already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -521,30 +541,6 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     assert len(mock_bsblan.device.mock_calls) == 1
 
 
-async def test_zeroconf_discovery_connection_error(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    zeroconf_discovery_info: ZeroconfServiceInfo,
-) -> None:
-    """Test connection error during zeroconf discovery shows the correct form."""
-    mock_bsblan.device.side_effect = BSBLANConnectionError
-
-    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
-    _assert_form_result(result, "discovery_confirm")
-
-    result = await _configure_flow(
-        hass,
-        result["flow_id"],
-        {
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-    )
-
-    _assert_form_result(result, "discovery_confirm", {"base": "cannot_connect"})
-
-
 async def test_zeroconf_discovery_updates_host_port_on_existing_entry(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
@@ -591,8 +587,12 @@ async def test_user_flow_can_update_existing_host_port(
     entry.add_to_hass(hass)
 
     # Try to configure the same device with different host/port via user flow
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "10.0.2.60",  # Different IP
             CONF_PORT: 80,  # Different port
@@ -675,8 +675,12 @@ async def test_connection_error_recovery(
     # First attempt fails with connection error
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    result = await _init_user_flow(
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
         hass,
+        result["flow_id"],
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
@@ -796,6 +800,7 @@ async def test_reauth_flow_success(
     assert mock_config_entry.data[CONF_PORT] == 80
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_auth_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
@@ -846,7 +851,22 @@ async def test_reauth_flow_auth_error(
     assert passkey_field.default() == "wrong_passkey"
     assert username_field.default() == "wrong_admin"
 
+    mock_bsblan.device.side_effect = None
 
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_abort_result(result, "reauth_successful")
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_connection_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
@@ -881,6 +901,20 @@ async def test_reauth_flow_connection_error(
     )
 
     _assert_form_result(result, "reauth_confirm", {"base": "cannot_connect"})
+
+    mock_bsblan.device.side_effect = None
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_abort_result(result, "reauth_successful")
 
 
 async def test_reauth_flow_preserves_existing_values(
@@ -1115,6 +1149,7 @@ async def test_reauth_flow_partial_clear_credentials(
     assert entry.data[CONF_PORT] == 80
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_auth_error_during_confirm(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
@@ -1150,6 +1185,20 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
 
     # Should show the discovery_confirm form again with auth error
     _assert_form_result(result, "discovery_confirm", {"base": "invalid_auth"})
+
+    mock_bsblan.device.side_effect = None
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_flow_success(

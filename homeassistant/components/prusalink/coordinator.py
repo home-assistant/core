@@ -7,7 +7,7 @@ import logging
 from time import monotonic
 from typing import TypeVar, override
 
-from httpx import ConnectError
+from httpx2 import ConnectError
 from pyprusalink import (
     JobInfo,
     LegacyPrinterStatus,
@@ -41,9 +41,9 @@ T = TypeVar(
     bound=PrinterStatus
     | LegacyPrinterStatus
     | JobInfo
-    | None
     | PrinterInfo
-    | VersionInfo,
+    | VersionInfo
+    | None,
 )
 
 

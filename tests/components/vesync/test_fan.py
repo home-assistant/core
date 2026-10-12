@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
 )
 from homeassistant.const import (
@@ -217,6 +218,46 @@ async def test_out_of_range_fan_level(
     assert state.attributes[ATTR_PERCENTAGE] is None
 
 
+async def test_set_preset_mode_eco(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the eco preset is exposed, reflected, and sets the mode via set_mode."""
+    mock_devices_response(
+        aioclient_mock, "CoreBreeze 432S", details_override={"workMode": "eco"}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_PEDESTAL_FAN)
+    assert state is not None
+    assert "eco" in state.attributes[ATTR_PRESET_MODES]
+    assert state.attributes[ATTR_PRESET_MODE] == "eco"
+
+    with (
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan.set_mode",
+            new_callable=AsyncMock,
+            return_value=True,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+        ) as update_mock,
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, ATTR_PRESET_MODE: "eco"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    method_mock.assert_awaited_once_with("eco")
+    update_mock.assert_called_once()
+
+
 @pytest.mark.parametrize(
     ("action", "api_response", "expectation"),
     [
@@ -313,3 +354,52 @@ async def test_oscillation_success(
         await hass.async_block_till_done()
         method_mock.assert_called_once()
         update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("device_name", "entity_id", "details", "expected_percentage"),
+    [
+        (
+            "Air Purifier Vital 200S",
+            "fan.air_purifier_vital_200s",
+            {"workMode": "pet", "fanSpeedLevel": 3},
+            75,
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "fan.air_purifier_vital_200s",
+            {"workMode": "auto", "fanSpeedLevel": 2},
+            50,
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "fan.air_purifier_vital_200s",
+            {"workMode": "sleep", "fanSpeedLevel": 255},
+            None,
+        ),
+        (
+            "Air Purifier 200s",
+            "fan.air_purifier_200s",
+            {"mode": "sleep", "level": 3},
+            None,
+        ),
+    ],
+)
+async def test_percentage_in_preset_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+    entity_id: str,
+    details: dict[str, int | str],
+    expected_percentage: int | None,
+) -> None:
+    """Test the running level is reported in presets only where the API has it."""
+    mock_devices_response(aioclient_mock, device_name, details_override=details)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PERCENTAGE] == expected_percentage

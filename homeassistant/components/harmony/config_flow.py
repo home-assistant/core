@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -16,6 +16,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -37,11 +38,9 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    # Name field is no longer allowed in config flow schemas
-    # pylint: disable-next=home-assistant-config-flow-name-field
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str},
-    extra=vol.ALLOW_EXTRA,
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_HOST): str},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -199,21 +198,24 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         remote = self.config_entry.runtime_data
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     ATTR_DELAY_SECS,
                     default=self.config_entry.options.get(
                         ATTR_DELAY_SECS, DEFAULT_DELAY_SECS
                     ),
-                ): vol.Coerce(float),
-                vol.Optional(
+                ): probatio.Coerce(float),
+                probatio.Optional(
                     ATTR_ACTIVITY,
                     default=self.config_entry.options.get(
                         ATTR_ACTIVITY, PREVIOUS_ACTIVE_ACTIVITY
                     ),
-                ): vol.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
+                ): probatio.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

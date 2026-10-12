@@ -5,11 +5,14 @@ import dataclasses
 from itertools import chain
 from typing import Any, TypedDict
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -318,12 +321,15 @@ class ExposedEntities:
             # The entity no longer exists
             return False
         if (
-            domain == "binary_sensor"
+            domain == BINARY_SENSOR_DOMAIN
             and device_class in DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES
         ):
             return True
 
-        if domain == "sensor" and device_class in DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES:
+        if (
+            domain == SENSOR_DOMAIN
+            and device_class in DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES
+        ):
             return True
 
         return False
@@ -390,10 +396,10 @@ class ExposedEntities:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_entity",
-        vol.Required("assistants"): [vol.In(KNOWN_ASSISTANTS)],
-        vol.Required("entity_ids"): [str],
-        vol.Required("should_expose"): bool,
+        probatio.Required("type"): "homeassistant/expose_entity",
+        probatio.Required("assistants"): [probatio.In(KNOWN_ASSISTANTS)],
+        probatio.Required("entity_ids"): [str],
+        probatio.Required("should_expose"): bool,
     }
 )
 def ws_expose_entity(
@@ -412,7 +418,7 @@ def ws_expose_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_entity/list",
+        probatio.Required("type"): "homeassistant/expose_entity/list",
     }
 )
 def ws_list_exposed_entities(
@@ -440,8 +446,8 @@ def ws_list_exposed_entities(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_new_entities/get",
-        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
+        probatio.Required("type"): "homeassistant/expose_new_entities/get",
+        probatio.Required("assistant"): probatio.In(KNOWN_ASSISTANTS),
     }
 )
 def ws_expose_new_entities_get(
@@ -457,9 +463,9 @@ def ws_expose_new_entities_get(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "homeassistant/expose_new_entities/set",
-        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
-        vol.Required("expose_new"): bool,
+        probatio.Required("type"): "homeassistant/expose_new_entities/set",
+        probatio.Required("assistant"): probatio.In(KNOWN_ASSISTANTS),
+        probatio.Required("expose_new"): bool,
     }
 )
 def ws_expose_new_entities_set(

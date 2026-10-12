@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
 from .utils import async_update_unique_id
@@ -32,7 +32,7 @@ class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Alexa Devices binary sensor entity description."""
 
     is_on_fn: Callable[[AmazonDevice, str], bool]
-    is_supported: Callable[[AmazonDevice, str], bool] = lambda device, key: True
+    is_supported_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: True
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: True
 
 
@@ -49,7 +49,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda device, key: bool(
             device.sensors[key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda device, key: device.sensors.get(key) is not None,
+        is_supported_fn=lambda device, key: device.sensors.get(key) is not None,
         is_available_fn=lambda device, key: (
             device.online
             and (sensor := device.sensors.get(key)) is not None
@@ -120,13 +120,14 @@ async def async_setup_entry(
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.BINARY_SENSOR, DOMAIN, unique_id
             ):
-                _LOGGER.debug("Removing deprecated entity %s", entity_id)
+                LOGGER.debug("Removing deprecated entity %s", entity_id)
                 entity_registry.async_remove(entity_id)
 
     known_devices: set[str] = set()
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
@@ -134,7 +135,7 @@ async def async_setup_entry(
                 AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
                 for sensor_desc in BINARY_SENSORS
                 for serial_num in new_devices
-                if sensor_desc.is_supported(
+                if sensor_desc.is_supported_fn(
                     coordinator.data[serial_num], sensor_desc.key
                 )
             )

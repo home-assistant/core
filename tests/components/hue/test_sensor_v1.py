@@ -380,7 +380,9 @@ async def test_unsupported_sensors(hass: HomeAssistant, mock_bridge_v1: Mock) ->
     assert len(hass.states.async_all()) == 7
 
 
-async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
+async def test_new_sensor_discovered(
+    hass: HomeAssistant, mock_bridge_v1: Mock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test if 2nd update has a new sensor."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -401,9 +403,9 @@ async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) 
 
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
-    # Force updates to run again
-    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 10
@@ -416,7 +418,9 @@ async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) 
     assert temperature.state == "17.75"
 
 
-async def test_sensor_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
+async def test_sensor_removed(
+    hass: HomeAssistant, mock_bridge_v1: Mock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test if 2nd update has removed sensor."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -430,11 +434,9 @@ async def test_sensor_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None
     keys = ("1", "2", "3")
     mock_bridge_v1.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
 
-    # Force updates to run again
-    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
-
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 3
@@ -485,9 +487,16 @@ async def test_hue_events(
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
-    hue_tap_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+    hue_tap_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "00:00:00:00:00:44:23:08"),
+        mock_bridge_v1.config_entry.entry_id,
     )
+    # The sensor device is linked to the bridge device as its via_device.
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, mock_bridge_v1.api.config.bridgeid),
+        mock_bridge_v1.config_entry.entry_id,
+    )
+    assert hue_tap_device.via_device_id == bridge_device.id
 
     mock_bridge_v1.api.sensors["7"].last_event = {"type": "button"}
     mock_bridge_v1.api.sensors["8"].last_event = {"type": "button"}
@@ -516,8 +525,9 @@ async def test_hue_events(
         "last_updated": "2019-12-28T22:58:03",
     }
 
-    hue_dimmer_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+    hue_dimmer_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "00:17:88:01:10:3e:3a:dc"),
+        mock_bridge_v1.config_entry.entry_id,
     )
 
     new_sensor_response = dict(new_sensor_response)
@@ -615,8 +625,9 @@ async def test_hue_events(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    hue_aurora_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+    hue_aurora_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7"),
+        mock_bridge_v1.config_entry.entry_id,
     )
 
     assert len(mock_bridge_v1.mock_requests) == 6

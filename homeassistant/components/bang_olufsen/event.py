@@ -55,9 +55,7 @@ async def async_setup_entry(
     # As it has to be removed from the device on the app.
 
     device_registry = dr.async_get(hass)
-    devices = device_registry.devices.get_devices_for_config_entry_id(
-        config_entry.entry_id
-    )
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     for device in devices:
         if device.model == BeoModel.BEOREMOTE_ONE and device.serial_number not in {
             remote.serial_number for remote in remotes

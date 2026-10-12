@@ -30,6 +30,13 @@ class TailscaleBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
     TailscaleBinarySensorEntityDescription(
+        key="connected_to_control",
+        translation_key="connected_to_control",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.connected_to_control,
+    ),
+    TailscaleBinarySensorEntityDescription(
         key="update_available",
         translation_key="client",
         device_class=BinarySensorDeviceClass.UPDATE,

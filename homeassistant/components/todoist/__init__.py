@@ -7,8 +7,12 @@ from todoist_api_python.api_async import TodoistAPIAsync
 
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import TodoistConfigEntry, TodoistCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,6 +20,14 @@ SCAN_INTERVAL = datetime.timedelta(minutes=1)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> bool:

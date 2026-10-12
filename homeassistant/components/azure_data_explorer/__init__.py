@@ -8,7 +8,7 @@ import json
 import logging
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -33,15 +33,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 DATA_COMPONENT: HassKey[EntityFilter] = HassKey(DOMAIN)
 
@@ -78,8 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError(
             "Could not find Azure Data Explorer database or table"
         ) from exp
-    except KustoAuthenticationError:
-        return False
+    except KustoAuthenticationError as exp:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exp
 
     entry.async_on_unload(adx.async_stop)
     await adx.async_start()

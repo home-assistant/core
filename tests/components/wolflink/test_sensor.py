@@ -24,7 +24,9 @@ async def test_device_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(mock_config_entry.domain, "1234")})
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, "1234"), mock_config_entry.entry_id
+    )
     assert device == snapshot
 
 

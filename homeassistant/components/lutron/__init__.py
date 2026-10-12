@@ -70,7 +70,10 @@ async def async_setup_entry(
     try:
         await hass.async_add_executor_job(lutron_client.load_xml_db)
         lutron_client.connect()
-    except LutronException as ex:
+    except (LutronException, OSError) as ex:
+        # load_xml_db() fetches the XML database with urllib, and connect() re-raises
+        # whatever the reader thread caught, so an unreachable repeater surfaces as
+        # OSError rather than LutronException.
         raise ConfigEntryNotReady(f"Failed to connect to Lutron repeater: {ex}") from ex
 
     _LOGGER.debug("Connected to main repeater at %s", host)
@@ -94,12 +97,24 @@ async def async_setup_entry(
         _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
             _setup_output(
-                hass, entry_data, output, area.name, entity_registry, device_registry
+                hass,
+                entry_data,
+                output,
+                area.name,
+                entity_registry,
+                device_registry,
+                config_entry.entry_id,
             )
 
         for keypad in area.keypads:
             _setup_keypad(
-                hass, entry_data, keypad, area.name, entity_registry, device_registry
+                hass,
+                entry_data,
+                keypad,
+                area.name,
+                entity_registry,
+                device_registry,
+                config_entry.entry_id,
             )
 
         if area.occupancy_group is not None:
@@ -119,6 +134,7 @@ async def async_setup_entry(
                 area.occupancy_group.uuid,
                 area.occupancy_group.legacy_uuid,
                 entry_data.client.guid,
+                config_entry.entry_id,
             )
 
     device_registry.async_get_or_create(
@@ -142,6 +158,7 @@ def _setup_output(
     area_name: str,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
 ) -> None:
     """Set up a Lutron output."""
     _LOGGER.debug("Working on output %s", output.type)
@@ -172,6 +189,7 @@ def _setup_output(
         output.uuid,
         output.legacy_uuid,
         entry_data.client.guid,
+        config_entry_id,
     )
 
 
@@ -182,6 +200,7 @@ def _setup_keypad(
     area_name: str,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
 ) -> None:
     """Set up a Lutron keypad."""
 
@@ -192,6 +211,7 @@ def _setup_keypad(
         keypad.uuid,
         keypad.legacy_uuid,
         entry_data.client.guid,
+        config_entry_id,
     )
     leds_by_number = {led.number: led for led in keypad.leds}
     for button in keypad.buttons:
@@ -259,6 +279,7 @@ def _async_check_device_identifiers(
     uuid: str,
     legacy_uuid: str,
     controller_guid: str,
+    config_entry_id: str,
 ) -> None:
     """If uuid becomes available update to use it."""
 
@@ -266,7 +287,9 @@ def _async_check_device_identifiers(
         return
 
     unique_id = f"{controller_guid}_{legacy_uuid}"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, unique_id), config_entry_id
+    )
     if device:
         new_unique_id = f"{controller_guid}_{uuid}"
         _LOGGER.debug("Updating device id from %s to %s", unique_id, new_unique_id)
@@ -282,14 +305,15 @@ def _async_check_keypad_identifiers(
     uuid: str,
     legacy_uuid: str,
     controller_guid: str,
+    config_entry_id: str,
 ) -> None:
     """Migrate from integer based keypad.ids to proper uuids."""
 
     # First check for the very old integer-based ID
     # We use cast(Any, ...) here because legacy devices may have integer identifiers
     # in the registry, but modern Home Assistant expects strings.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, cast(Any, keypad_id))}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cast(Any, keypad_id)), config_entry_id
     )
     if device:
         new_unique_id = f"{controller_guid}_{uuid or legacy_uuid}"
@@ -301,7 +325,7 @@ def _async_check_keypad_identifiers(
 
     # Now handle legacy_uuid to uuid migration if needed
     _async_check_device_identifiers(
-        hass, device_registry, uuid, legacy_uuid, controller_guid
+        hass, device_registry, uuid, legacy_uuid, controller_guid, config_entry_id
     )
 
 

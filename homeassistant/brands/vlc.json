@@ -1,5 +1,0 @@
-{
-  "domain": "vlc",
-  "name": "VideoLAN",
-  "integrations": ["vlc", "vlc_telnet"]
-}

@@ -26,8 +26,8 @@ from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -710,9 +710,34 @@ async def test_devices(
     await hass.async_block_till_done()
 
     for device_id in ("12345", "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"):
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), webhook_config_entry.entry_id
+        )
         assert device is not None
         assert device == snapshot(name=device_id)
+
+
+@pytest.mark.usefixtures("withings")
+async def test_device_via_device_id(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the physical device is linked to the account device via via_device_id."""
+    await setup_integration(hass, webhook_config_entry)
+    await hass.async_block_till_done()
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(webhook_config_entry.unique_id)), webhook_config_entry.entry_id
+    )
+    assert account_device is not None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        webhook_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.via_device_id == account_device.id
 
 
 async def test_oauth_implementation_not_available(
@@ -830,6 +855,30 @@ async def test_webhook_subscription_auth_failure(
         flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
         for flow in flows
     )
+
+
+async def test_webhook_subscription_waits_for_start(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the webhook is only subscribed once Home Assistant has started."""
+    hass.set_state(CoreState.not_running)
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Withings validates the callback URL by calling it, which cannot work
+    # while our own HTTP server is still starting up
+    assert withings.subscribe_notification.call_count == 0
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    await prepare_webhook_setup(hass, freezer)
+
+    assert withings.subscribe_notification.call_count == 6
 
 
 async def test_webhook_subscription_invalid_params(

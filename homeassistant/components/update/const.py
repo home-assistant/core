@@ -1,9 +1,19 @@
 """Constants for the update component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+import probatio
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import UpdateEntity
 
 DOMAIN: Final = "update"
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 
 
 class UpdateEntityStateAttribute(StrEnum):
@@ -46,3 +56,12 @@ ATTR_SKIPPED_VERSION: Final = "skipped_version"
 ATTR_TITLE: Final = "title"
 ATTR_UPDATE_PERCENTAGE: Final = "update_percentage"
 ATTR_VERSION: Final = "version"
+
+
+class UpdateDeviceClass(StrEnum):
+    """Device class for update."""
+
+    FIRMWARE = "firmware"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(UpdateDeviceClass))

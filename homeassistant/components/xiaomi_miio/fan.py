@@ -40,7 +40,6 @@ from homeassistant.util.percentage import (
 
 from .const import (
     CONF_FLOW_TYPE,
-    FAN_DATA_KEY as DATA_KEY,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
@@ -82,6 +81,7 @@ from .const import (
     MODEL_FAN_P10,
     MODEL_FAN_P11,
     MODEL_FAN_P18,
+    MODEL_FAN_P33,
     MODEL_FAN_ZA5,
     MODELS_FAN_MIIO,
     MODELS_FAN_MIOT,
@@ -191,8 +191,6 @@ async def async_setup_entry(
     if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
-    hass.data.setdefault(DATA_KEY, {})
-
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     device = config_entry.runtime_data.device
@@ -232,8 +230,6 @@ async def async_setup_entry(
         entity = XiaomiFanMiot(device, config_entry, unique_id, coordinator)
     else:
         return
-
-    hass.data[DATA_KEY][unique_id] = entity
 
     entities.append(entity)
 
@@ -503,21 +499,24 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         if self._device_features & FEATURE_SET_EXTRA_FEATURES == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Setting the extra features of the miio device failed.",
             self._device.set_extra_features,  # type: ignore[attr-defined]
             features,
-        )
+        ):
+            self._attr_extra_state_attributes[ATTR_EXTRA_FEATURES] = features
+            self.async_write_ha_state()
 
     async def async_reset_filter(self):
         """Reset the filter lifetime and usage."""
         if self._device_features & FEATURE_RESET_FILTER == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter,
-        )
+        ):
+            await self.coordinator.async_request_refresh()
 
 
 class XiaomiAirPurifierMiot(XiaomiAirPurifier):
@@ -767,21 +766,24 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         if self._device_features & FEATURE_SET_EXTRA_FEATURES == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Setting the extra features of the miio device failed.",
             self._device.set_extra_features,  # type: ignore[attr-defined]
             features,
-        )
+        ):
+            self._attr_extra_state_attributes[ATTR_EXTRA_FEATURES] = features
+            self.async_write_ha_state()
 
     async def async_reset_filter(self):
         """Reset the filter lifetime and usage."""
         if self._device_features & FEATURE_RESET_FILTER == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter,
-        )
+        ):
+            await self.coordinator.async_request_refresh()
 
 
 class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
@@ -909,7 +911,12 @@ class XiaomiGenericFan(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_FAN_1C
         elif self._model == MODEL_FAN_P9:
             self._device_features = FEATURE_FLAGS_FAN_P9
-        elif self._model in (MODEL_FAN_P10, MODEL_FAN_P11, MODEL_FAN_P18):
+        elif self._model in (
+            MODEL_FAN_P10,
+            MODEL_FAN_P11,
+            MODEL_FAN_P18,
+            MODEL_FAN_P33,
+        ):
             self._device_features = FEATURE_FLAGS_FAN_P10_P11_P18
         else:
             self._device_features = FEATURE_FLAGS_FAN

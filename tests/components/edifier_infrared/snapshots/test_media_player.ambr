@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[media_player.edifier_r1700bt-entry]
+# name: test_entities[media_player.edifier_r1700bts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.edifier_r1700bt',
+    'entity_id': 'media_player.edifier_r1700bts',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -37,16 +37,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[media_player.edifier_r1700bt-state]
+# name: test_entities[media_player.edifier_r1700bts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BT',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Edifier R1700BTs',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 17849>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.edifier_r1700bt',
+    'entity_id': 'media_player.edifier_r1700bts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

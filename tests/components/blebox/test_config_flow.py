@@ -1,7 +1,15 @@
 """Test Home Assistant config flow for BleBox devices."""
 
+from contextlib import AbstractContextManager
 from ipaddress import ip_address
-from unittest.mock import DEFAULT, AsyncMock, PropertyMock, create_autospec, patch
+from unittest.mock import (
+    DEFAULT,
+    AsyncMock,
+    MagicMock,
+    PropertyMock,
+    create_autospec,
+    patch,
+)
 
 import blebox_uniapi
 import blebox_uniapi.box
@@ -64,6 +72,7 @@ def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
 
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
+    type(product).product = PropertyMock(return_value="gateController")
     type(product).type = PropertyMock(return_value="gateBox")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
@@ -98,10 +107,9 @@ async def test_flow_works(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -120,8 +128,11 @@ def product_class_mock_fixture():
     return patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_with_connection_failure(
-    hass: HomeAssistant, product_class_mock
+    hass: HomeAssistant,
+    product_class_mock: AbstractContextManager[MagicMock],
+    valid_feature_mock: MagicMock,
 ) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
@@ -130,14 +141,32 @@ async def test_flow_with_connection_failure(
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
+        products_class.async_from_host = AsyncMock(
+            return_value=valid_feature_mock.product
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) -> None:
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_with_api_failure(
+    hass: HomeAssistant,
+    product_class_mock: AbstractContextManager[MagicMock],
+    valid_feature_mock: MagicMock,
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -145,29 +174,61 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
+        products_class.async_from_host = AsyncMock(
+            return_value=valid_feature_mock.product
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_with_unknown_failure(
-    hass: HomeAssistant, product_class_mock
+    hass: HomeAssistant,
+    product_class_mock: AbstractContextManager[MagicMock],
+    valid_feature_mock: MagicMock,
 ) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "unknown"}
 
+        products_class.async_from_host = AsyncMock(
+            return_value=valid_feature_mock.product
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_with_unsupported_version(
-    hass: HomeAssistant, product_class_mock
+    hass: HomeAssistant,
+    product_class_mock: AbstractContextManager[MagicMock],
+    valid_feature_mock: MagicMock,
 ) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
@@ -176,14 +237,32 @@ async def test_flow_with_unsupported_version(
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "unsupported_version"}
 
+        products_class.async_from_host = AsyncMock(
+            return_value=valid_feature_mock.product
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -> None:
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_with_auth_failure(
+    hass: HomeAssistant,
+    product_class_mock: AbstractContextManager[MagicMock],
+    valid_feature_mock: MagicMock,
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -191,11 +270,24 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
         assert result["errors"] == {"base": "invalid_auth"}
+
+        products_class.async_from_host = AsyncMock(
+            return_value=valid_feature_mock.product
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
@@ -214,9 +306,13 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
@@ -358,7 +454,10 @@ def create_product_mock(unique_id: str = "abcd0123ef5678"):
 
 
 async def test_reconfigure_flow_works(
-    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    product_class_mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that reconfigure flow updates host and port."""
 
@@ -382,12 +481,15 @@ async def test_reconfigure_flow_works(
             },
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[config_flow.CONF_HOST] == "172.2.3.5"
     assert config_entry.data[config_flow.CONF_PORT] == 80
     assert config_entry.data[config_flow.CONF_USERNAME] == "admin"
     assert config_entry.data[config_flow.CONF_PASSWORD] == "secret"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reconfigure_flow_unique_id_mismatch(
@@ -524,6 +626,7 @@ async def test_reconfigure_flow_recovers_after_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     product_class_mock,
+    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     expected_error: str,
 ) -> None:
@@ -552,12 +655,18 @@ async def test_reconfigure_flow_recovers_after_error(
             {config_flow.CONF_HOST: "172.2.3.5", config_flow.CONF_PORT: 80},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_flow_works(
-    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    product_class_mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that reauth flow updates credentials and reloads."""
     config_entry.add_to_hass(hass)
@@ -575,14 +684,17 @@ async def test_reauth_flow_works(
             {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[config_flow.CONF_USERNAME] == "admin"
     assert config_entry.data[config_flow.CONF_PASSWORD] == "secret"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_flow_works_without_credentials(
-    hass: HomeAssistant, product_class_mock
+    hass: HomeAssistant, product_class_mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that reauth flow clears credentials when submitted without them."""
     config_entry = MockConfigEntry(
@@ -608,10 +720,13 @@ async def test_reauth_flow_works_without_credentials(
             {},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[config_flow.CONF_USERNAME] is None
     assert config_entry.data[config_flow.CONF_PASSWORD] is None
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -628,6 +743,7 @@ async def test_reauth_flow_recovers_after_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     product_class_mock,
+    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     expected_error: str,
 ) -> None:
@@ -656,5 +772,8 @@ async def test_reauth_flow_recovers_after_error(
             {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

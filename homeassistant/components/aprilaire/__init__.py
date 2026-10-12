@@ -1,7 +1,5 @@
 """The Aprilaire integration."""
 
-import logging
-
 from pyaprilaire.const import Attribute
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -18,8 +16,6 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) -> bool:
     """Set up a config entry for Aprilaire."""
@@ -27,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
-    coordinator = AprilaireCoordinator(hass, entry.unique_id, host, port)
+    coordinator = AprilaireCoordinator(hass, entry, host, port)
     await coordinator.start_listen()
 
     async def ready_callback(ready: bool) -> None:
@@ -49,11 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
             )
         else:
-            _LOGGER.error("Failed to wait for ready")
-
             coordinator.stop_listen()
 
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady("Failed to wait for ready")
 
     await coordinator.wait_for_ready(ready_callback)
 

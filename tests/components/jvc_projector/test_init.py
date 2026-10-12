@@ -26,7 +26,9 @@ async def test_init(
 ) -> None:
     """Test initialization."""
     mac = format_mac(MOCK_MAC)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, mac)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), mock_integration.entry_id
+    )
     assert device is not None
     assert device.identifiers == {(DOMAIN, mac)}
 
@@ -39,8 +41,8 @@ async def test_device_registry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device registry entry, including the network MAC connection."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, format_mac(MOCK_MAC))}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, format_mac(MOCK_MAC)), mock_integration.entry_id
     )
     assert device_entry == snapshot
 

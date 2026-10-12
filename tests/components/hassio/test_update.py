@@ -1,7 +1,7 @@
 """The tests for the hassio update entities."""
 
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -29,9 +29,14 @@ from homeassistant.components.backup import BackupManagerError, ManagerBackup
 from homeassistant.components.backup.manager import AgentBackupStatus
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.components.hassio.update import (
+    SupervisorCoreUpdateEntity,
+    SupervisorSupervisorUpdateEntity,
+)
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -71,6 +76,7 @@ def mock_all(
         os_info.return_value,
         version="1.0.0dev2221",
         version_latest="1.0.0dev2222",
+        version_pending=None,
         update_available=True,
     )
     supervisor_info.return_value = replace(
@@ -275,7 +281,7 @@ async def test_addon_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 child_jobs=[],
                 extra={"total": 1234567890},
             )
@@ -540,10 +546,11 @@ async def test_update_os(
     await hass.async_block_till_done()
 
     async def mock_os_update(*args: Any) -> None:
-        """Simulate Supervisor reporting the new version after the update."""
+        """Simulate Supervisor keeping version stable while pending version updates."""
         os_info.return_value = replace(
             os_info.return_value,
-            version="1.0.0dev2222",
+            version="1.0.0dev2221",
+            version_pending="1.0.0dev2222",
             update_available=False,
         )
 
@@ -560,8 +567,8 @@ async def test_update_os(
     mock_create_backup.assert_not_called()
     supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
 
-    # The coordinator is refreshed after install so the new version
-    # shows up immediately
+    # The coordinator refresh reflects the new pending version while
+    # the base version remains unchanged.
     state = hass.states.get("update.home_assistant_operating_system_update")
     assert state is not None
     assert state.state == "off"
@@ -851,7 +858,7 @@ async def test_core_update_progress_startup(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                created=dt_util.utcnow(),
                 child_jobs=[],
                 extra={"total": 1234567890},
             )
@@ -2033,3 +2040,78 @@ async def test_setting_up_core_update_when_addon_fails(
     state = hass.states.get("update.home_assistant_core_update")
     assert state
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "entity_id", "job_name"),
+    [
+        pytest.param(
+            SupervisorCoreUpdateEntity,
+            "update.home_assistant_core_update",
+            "home_assistant_core_update",
+            id="core",
+        ),
+        pytest.param(
+            SupervisorSupervisorUpdateEntity,
+            "update.home_assistant_supervisor_update",
+            "supervisor_update",
+            id="supervisor",
+        ),
+    ],
+)
+async def test_update_progress_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    entity_class: type[SupervisorCoreUpdateEntity | SupervisorSupervisorUpdateEntity],
+    entity_id: str,
+    job_name: str,
+) -> None:
+    """Test a renamed update entity keeps its job subscription in place."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    with patch.object(
+        entity_class,
+        "async_added_to_hass",
+        autospec=True,
+        side_effect=entity_class.async_added_to_hass,
+    ) as mock_added_to_hass:
+        entity_registry.async_update_entity(entity_id, new_entity_id="update.renamed")
+        await hass.async_block_till_done()
+
+    # The entity_id is changed in place, the entity is not added again
+    mock_added_to_hass.assert_not_called()
+    assert hass.states.get(entity_id) is None
+
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "uuid": uuid4().hex,
+                    "created": "2025-09-29T00:00:00.000000+00:00",
+                    "name": job_name,
+                    "reference": None,
+                    "progress": 50,
+                    "done": False,
+                    "stage": None,
+                    "extra": None,
+                    "errors": [],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.renamed")
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 50

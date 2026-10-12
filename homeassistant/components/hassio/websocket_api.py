@@ -3,9 +3,9 @@
 import logging
 from numbers import Number
 import re
-from typing import Any, cast
+from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -18,9 +18,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .config import HassioUpdateParametersDict
+from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
@@ -31,7 +30,6 @@ from .const import (
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -44,9 +42,9 @@ from .exceptions import HassioNotReadyError
 from .handler import HassioAPIError
 from .update_helper import update_addon, update_core
 
-SCHEMA_WEBSOCKET_EVENT = vol.Schema(
-    {vol.Required(ATTR_WS_EVENT): cv.string},
-    extra=vol.ALLOW_EXTRA,
+SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
+    {probatio.Required(ATTR_WS_EVENT): cv.string},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Endpoints needed for ingress can't require admin because
@@ -59,10 +57,6 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     f"|{RE_ADDONS_INFO_ENDPOINT}"
     r")$"
 )
-
-# Endpoint that reloads the add-on store. Afterwards the add-on update
-# entities must be refreshed so they don't report stale update information.
-STORE_RELOAD_ENDPOINT = "/store/reload"
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -81,7 +75,7 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
+@websocket_api.websocket_command({probatio.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
 def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
@@ -102,8 +96,8 @@ def websocket_subscribe(
 @websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): WS_TYPE_EVENT,
-        vol.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
+        probatio.Required(WS_TYPE): WS_TYPE_EVENT,
+        probatio.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
     }
 )
 def websocket_supervisor_event(
@@ -116,12 +110,12 @@ def websocket_supervisor_event(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): WS_TYPE_API,
-        vol.Required(ATTR_ENDPOINT): cv.string,
-        vol.Required(ATTR_METHOD): cv.string,
-        vol.Optional(ATTR_DATA): dict,
-        vol.Optional(ATTR_PARAMS): dict,
-        vol.Optional(ATTR_TIMEOUT): vol.Any(Number, None),
+        probatio.Required(WS_TYPE): WS_TYPE_API,
+        probatio.Required(ATTR_ENDPOINT): cv.string,
+        probatio.Required(ATTR_METHOD): cv.string,
+        probatio.Optional(ATTR_DATA): dict,
+        probatio.Optional(ATTR_PARAMS): dict,
+        probatio.Optional(ATTR_TIMEOUT): probatio.Any(Number, None),
     }
 )
 @websocket_api.async_response
@@ -164,24 +158,15 @@ async def websocket_supervisor_api(
         # sensitive information and the frontend does not require it for ingress.
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
-        # Await so the frontend only sees the reload finish once the add-on
-        # update entities reflect the reloaded store.
-        if (
-            command == STORE_RELOAD_ENDPOINT
-            and msg[ATTR_METHOD] == "post"
-            and (coordinator := hass.data.get(ADDONS_COORDINATOR))
-        ):
-            await coordinator.async_refresh_after_store_reload()
-
         connection.send_result(msg[WS_ID], data)
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): "hassio/update/addon",
-        vol.Required("addon"): str,
-        vol.Required("backup"): bool,
+        probatio.Required(WS_TYPE): "hassio/update/addon",
+        probatio.Required("addon"): str,
+        probatio.Required("backup"): bool,
     }
 )
 @websocket_api.async_response
@@ -217,8 +202,8 @@ async def websocket_update_addon(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(WS_TYPE): "hassio/update/core",
-        vol.Required("backup"): bool,
+        probatio.Required(WS_TYPE): "hassio/update/core",
+        probatio.Required("backup"): bool,
     }
 )
 @websocket_api.async_response
@@ -232,26 +217,28 @@ async def websocket_update_core(
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "hassio/update/config/info"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "hassio/update/config/info"}
+)
 def websocket_update_config_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    connection.send_result(
-        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
-    )
+    connection.send_result(msg["id"], async_get_update_options(hass))
 
 
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hassio/update/config/update",
-        vol.Optional("add_on_backup_before_update"): bool,
-        vol.Optional("add_on_backup_retain_copies"): vol.All(int, vol.Range(min=1)),
-        vol.Optional("core_backup_before_update"): bool,
+        probatio.Required("type"): "hassio/update/config/update",
+        probatio.Optional("add_on_backup_before_update"): bool,
+        probatio.Optional("add_on_backup_retain_copies"): probatio.All(
+            int, probatio.Range(min=1)
+        ),
+        probatio.Optional("core_backup_before_update"): bool,
     }
 )
 def websocket_update_config_update(
@@ -260,10 +247,23 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
+    entry = async_get_hassio_entry(hass)
+    if entry is None:
+        connection.send_error(
+            msg["id"],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Hassio config entry is not available",
+        )
+        return
+
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    hass.data[DATA_CONFIG_STORE].update(
-        update_config=cast(HassioUpdateParametersDict, changes)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **async_get_update_options(hass, entry),
+            **changes,
+        },
     )
     connection.send_result(msg["id"])

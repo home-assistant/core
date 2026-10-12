@@ -1,40 +1,40 @@
 """Support for MQTT platform config setup."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import Platform
-from homeassistant.helpers import config_validation as cv
 
-CONFIG_SCHEMA_BASE = vol.Schema(
+CONFIG_SCHEMA_BASE = probatio.Schema(
     {
-        Platform.ALARM_CONTROL_PANEL.value: vol.All(cv.ensure_list, [dict]),
-        Platform.BINARY_SENSOR.value: vol.All(cv.ensure_list, [dict]),
-        Platform.BUTTON.value: vol.All(cv.ensure_list, [dict]),
-        Platform.CAMERA.value: vol.All(cv.ensure_list, [dict]),
-        Platform.CLIMATE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.COVER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.DATE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.DATETIME.value: vol.All(cv.ensure_list, [dict]),
-        Platform.DEVICE_TRACKER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.EVENT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.FAN.value: vol.All(cv.ensure_list, [dict]),
-        Platform.HUMIDIFIER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.IMAGE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LAWN_MOWER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LIGHT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.LOCK.value: vol.All(cv.ensure_list, [dict]),
-        Platform.NOTIFY.value: vol.All(cv.ensure_list, [dict]),
-        Platform.NUMBER.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SCENE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SELECT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SENSOR.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SIREN.value: vol.All(cv.ensure_list, [dict]),
-        Platform.SWITCH.value: vol.All(cv.ensure_list, [dict]),
-        Platform.TEXT.value: vol.All(cv.ensure_list, [dict]),
-        Platform.TIME.value: vol.All(cv.ensure_list, [dict]),
-        Platform.UPDATE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.VACUUM.value: vol.All(cv.ensure_list, [dict]),
-        Platform.VALVE.value: vol.All(cv.ensure_list, [dict]),
-        Platform.WATER_HEATER.value: vol.All(cv.ensure_list, [dict]),
+        Platform.ALARM_CONTROL_PANEL.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.BINARY_SENSOR.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.BUTTON.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.CAMERA.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.CLIMATE.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.COVER.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.DATE.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.DATETIME.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.DEVICE_TRACKER.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.EVENT.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.FAN.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.HUMIDIFIER.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.IMAGE.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.INFRARED.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.LAWN_MOWER.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.LIGHT.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.LOCK.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.NOTIFY.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.NUMBER.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.SCENE.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.SELECT.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.SENSOR.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.SIREN.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.SWITCH.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.TEXT.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.TIME.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.UPDATE.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.VACUUM.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.VALVE.value: probatio.All(probatio.EnsureList(), [dict]),
+        Platform.WATER_HEATER.value: probatio.All(probatio.EnsureList(), [dict]),
     }
 )

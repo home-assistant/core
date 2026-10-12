@@ -32,8 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool
     # We used to use int in device_entry identifiers, convert this to str.
     device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, station_id)
-    device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
-    if device_entry and entry.entry_id in device_entry.config_entries:
+    device_entry = device_registry.async_get_device_by_identifier(
+        old_ids,  # type: ignore[arg-type]
+        entry.entry_id,
+    )
+    if device_entry:
         new_ids = (DOMAIN, str(station_id))
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
 

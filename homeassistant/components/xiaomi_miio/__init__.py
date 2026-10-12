@@ -33,7 +33,11 @@ from miio import (
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -54,6 +58,7 @@ from .const import (
     MODEL_FAN_P10,
     MODEL_FAN_P11,
     MODEL_FAN_P18,
+    MODEL_FAN_P33,
     MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -120,6 +125,7 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P10: FanMiot,
     MODEL_FAN_P11: FanMiot,
     MODEL_FAN_P18: FanMiot,
+    MODEL_FAN_P33: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
@@ -464,7 +470,11 @@ async def async_setup_device_entry(
     await async_create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"model": entry.data[CONF_MODEL]},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 

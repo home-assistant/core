@@ -4,6 +4,7 @@ from typing import override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.media_player import (
@@ -64,7 +65,7 @@ async def async_setup_entry(
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     """Base vehicle media player class."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
 
@@ -191,6 +192,7 @@ class TeslemetryStreamingMediaEntity(
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
+        self._playback_state: MediaPlayerState | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -214,8 +216,8 @@ class TeslemetryStreamingMediaEntity(
             self._attr_media_album_name = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME
             )
-            self._attr_media_playlist = state.attributes.get(
-                MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST
+            self._attr_media_channel = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_CHANNEL
             )
             self._attr_media_duration = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_DURATION
@@ -282,13 +284,23 @@ class TeslemetryStreamingMediaEntity(
 
     def _async_handle_center_display(self, value: str | None) -> None:
         """Update entity attributes."""
-        if value is not None:
-            self._attr_state = DISPLAY_STATES.get(value)
-            self.async_write_ha_state()
+        if value is None:
+            return
+        display_state = DISPLAY_STATES.get(value)
+        if display_state is MediaPlayerState.OFF:
+            self._attr_state = MediaPlayerState.OFF
+        elif self._playback_state is not None:
+            self._attr_state = self._playback_state
+        elif display_state is not None:
+            self._attr_state = display_state
+        self.async_write_ha_state()
 
     def _async_handle_media_playback_status(self, value: str | None) -> None:
         """Update entity attributes."""
-        self._attr_state = MediaPlayerState.OFF if value is None else STATES.get(value)
+        self._playback_state = (
+            MediaPlayerState.OFF if value is None else STATES.get(value)
+        )
+        self._attr_state = self._playback_state
         self.async_write_ha_state()
 
     def _async_handle_media_playback_source(self, value: str | None) -> None:

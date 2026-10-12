@@ -1,6 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
 
-import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -24,7 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -209,7 +207,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
-    _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _sensor_option_unit_of_measurement: str | UndefinedType | None = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
     _get_uptime: Callable[[datetime], datetime] | None = None
 
@@ -225,15 +223,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
         return self._get_uptime(current_uptime)
 
-    @callback
     @override
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform.
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
 
         Allows integrations to remove legacy custom unit conversion which is no longer
         needed without breaking existing sensors. Only works for sensors which are in
@@ -242,7 +234,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         This can be removed once core integrations have dropped unneeded custom unit
         conversion.
         """
-        super().add_to_platform_start(hass, platform, parallel_updates)
+        await super().async_prepare_to_add_to_hass()
 
         # Bail out if the sensor doesn't have a unique_id or a device class
         if self.unique_id is None or self.device_class is None:
@@ -252,7 +244,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Bail out if the entity is not yet registered
         if not (
             entity_id := registry.async_get_entity_id(
-                platform.domain, platform.platform_name, self.unique_id
+                self.platform.domain, self.platform.platform_name, self.unique_id
             )
         ):
             # Prime _sensor_option_unit_of_measurement to ensure the correct unit
@@ -910,7 +902,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _custom_unit_or_undef(
         self, primary_key: str, secondary_key: str
-    ) -> str | None | UndefinedType:
+    ) -> str | UndefinedType | None:
         """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
         assert self.registry_entry
         if (

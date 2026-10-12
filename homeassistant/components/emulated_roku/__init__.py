@@ -1,12 +1,13 @@
 """Support for Roku API emulation."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -22,28 +23,28 @@ from .const import (
     DOMAIN,
 )
 
-SERVER_CONFIG_SCHEMA = vol.Schema(
+SERVER_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_LISTEN_PORT): cv.port,
-        vol.Optional(CONF_HOST_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_PORT): cv.port,
-        vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_LISTEN_PORT): probatio.Port(),
+        probatio.Optional(CONF_HOST_IP): cv.string,
+        probatio.Optional(CONF_ADVERTISE_IP): cv.string,
+        probatio.Optional(CONF_ADVERTISE_PORT): probatio.Port(),
+        probatio.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_SERVERS): vol.All(
-                    cv.ensure_list, [SERVER_CONFIG_SCHEMA]
+                probatio.Required(CONF_SERVERS): probatio.All(
+                    probatio.EnsureList(), [SERVER_CONFIG_SCHEMA]
                 )
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 type EmulatedRokuConfigEntry = ConfigEntry[EmulatedRoku]
@@ -90,7 +91,13 @@ async def async_setup_entry(
         upnp_bind_multicast,
     )
     entry.runtime_data = server
-    return await server.setup()
+    if not await server.setup():
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": name},
+        )
+    return True
 
 
 async def async_unload_entry(

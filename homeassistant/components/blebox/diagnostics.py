@@ -23,6 +23,7 @@ async def async_get_config_entry_diagnostics(
             "name": product.name,
             "type": product.type,
             "model": product.model,
+            "product": product.product,
             "unique_id": product.unique_id,
             "firmware_version": product.firmware_version,
             "hardware_version": product.hardware_version,
