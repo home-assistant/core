@@ -1,7 +1,7 @@
 """Tests for the bosch_shc alarm control panel platform."""
 
 from collections.abc import Callable, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from boschshcpy import SHCIntrusionSystem
 import pytest
@@ -180,29 +180,27 @@ async def test_push_update(
         ),
     ],
 )
-async def test_entity_id_change_keeps_subscription(
+async def test_entity_id_change_in_place(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
     remove_entity: Callable[[er.EntityRegistry], object],
 ) -> None:
-    """The SHC subscription follows an entity_id change and is released on removal."""
+    """The SHC subscription survives an entity_id change and is released on removal."""
     device = intrusion_system_device()
-    callbacks: dict[str, Callable[[], None]] = {}
-    device.subscribe_callback.side_effect = callbacks.__setitem__
-    device.unsubscribe_callback.side_effect = lambda key: callbacks.pop(key, None)
     mock_session.intrusion_system = device
     await setup_integration(hass, mock_config_entry)
 
     entity_registry.async_update_entity(ENTITY_ID, new_entity_id=NEW_ENTITY_ID)
     await hass.async_block_till_done()
 
-    # Keyed on the unique_id, so the subscription survives entity_id changes.
-    assert list(callbacks) == [UNIQUE_ID]
+    # Renamed in place, not removed and re-added.
+    device.subscribe_callback.assert_called_once_with(UNIQUE_ID, ANY)
+    device.unsubscribe_callback.assert_not_called()
 
     device.alarm_state = AlarmState.ALARM_ON
-    callbacks[UNIQUE_ID]()
+    device.subscribe_callback.call_args.args[1]()
     await hass.async_block_till_done()
     assert hass.states.get(NEW_ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
 
@@ -210,4 +208,4 @@ async def test_entity_id_change_keeps_subscription(
     await hass.async_block_till_done()
 
     assert hass.states.get(NEW_ENTITY_ID) is None
-    assert callbacks == {}
+    device.unsubscribe_callback.assert_called_once_with(UNIQUE_ID)
