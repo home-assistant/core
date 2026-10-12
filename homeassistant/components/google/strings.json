@@ -48,7 +48,7 @@
   },
   "exceptions": {
     "invalid_calendar_config": {
-      "message": "Configuration error in {file}: {error}"
+      "message": "Configuration error in {file}"
     }
   },
   "options": {

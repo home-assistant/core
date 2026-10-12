@@ -34,12 +34,12 @@ class BackupCoordinatorData:
 class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
     """Class to retrieve backup status."""
 
-    config_entry: ConfigEntry
+    config_entry: BackupConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BackupConfigEntry,
         backup_manager: BackupManager,
     ) -> None:
         """Initialize coordinator."""

@@ -9,6 +9,7 @@ from aioaxlevpp import GridEvent
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.axle_energy.const import UPDATE_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -54,7 +55,7 @@ async def test_event_notifications(
     mock_client.get_event.assert_awaited_once_with()
 
 
-@pytest.mark.freeze_time("2026-09-11T16:59:00Z")
+@pytest.mark.freeze_time("2026-09-11T16:49:00Z")
 async def test_shutdown_during_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -77,12 +78,14 @@ async def test_shutdown_during_refresh(
         return await response
 
     mock_client.get_event.side_effect = get_event
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    refresh = hass.async_create_task(coordinator.async_refresh())
+    mock_client.get_event.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await started.wait()
+    mock_client.get_event.assert_awaited_once_with()
     await coordinator.async_shutdown()
     response.set_result(mock_event)
-    await refresh
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)

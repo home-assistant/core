@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_calendar_config",
-            translation_placeholders={"file": YAML_DEVICES, "error": str(err)},
+            translation_placeholders={"file": YAML_DEVICES},
         ) from err
 
     implementation = (

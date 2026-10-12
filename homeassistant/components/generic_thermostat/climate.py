@@ -621,7 +621,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         )
                         self._check_callback = async_call_later(
                             self.hass,
-                            now - self._last_toggled_time + self.min_cycle_duration,
+                            self._last_toggled_time + self.min_cycle_duration - now,
                             self._async_timer_control_heating,
                         )
                 elif called_by_timer:
@@ -643,7 +643,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                     self._check_callback = async_call_later(
                         self.hass,
-                        now - self._last_toggled_time + self.cycle_cooldown,
+                        self._last_toggled_time + self.cycle_cooldown - now,
                         self._async_timer_control_heating,
                     )
             elif called_by_timer:

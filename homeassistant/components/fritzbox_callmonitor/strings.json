@@ -98,6 +98,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to FRITZ!Box call monitor at {host}"
+    },
     "insufficient_permissions": {
       "message": "User has insufficient permissions to access FRITZ!Box settings and its phonebooks"
     }
