@@ -1,5 +1,6 @@
 """Deprecation helpers for Home Assistant."""
 
+from annotationlib import Format, get_annotations
 from collections.abc import Callable
 from contextlib import suppress
 from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
@@ -8,7 +9,17 @@ import inspect
 import logging
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, NamedTuple, Self, cast, overload, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    NamedTuple,
+    Self,
+    cast,
+    get_origin,
+    overload,
+    override,
+)
 from warnings import deprecated as mark_deprecated
 
 from propcache.api import cached_property
@@ -457,7 +468,8 @@ class _DeprecatedEntityMember[_T]:
     """Deprecated name of an entity member, forwarding to its replacement.
 
     Declare a DeprecatedEntityProperty and a DeprecatedEntityAttr on the entity base
-    class, annotated Final so type checkers reject subclasses providing them, and
+    class, annotated Final (enforced) so type checkers reject subclasses providing
+    them, and
     call migrate_deprecated_entity_members from the base class' __init_subclass__
     to serve subclasses which still provide the deprecated name at runtime.
 
@@ -483,6 +495,10 @@ class _DeprecatedEntityMember[_T]:
 
     def __set_name__(self, owner: type, name: str) -> None:
         """Store the deprecated name and the domain of the entity base class."""
+        # Final makes type checkers reject subclasses still providing the name
+        annotation = get_annotations(owner, format=Format.FORWARDREF).get(name)
+        if annotation is not Final and get_origin(annotation) is not Final:
+            raise TypeError(f"{owner.__qualname__}.{name} must be annotated Final")
         self.name = name
         module = owner.__module__
         # The base class may live in any module of its integration
