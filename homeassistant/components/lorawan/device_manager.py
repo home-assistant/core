@@ -1,4 +1,24 @@
-"""Manage vendor models and coordinators across registered LoRaWAN connections."""
+"""Support device integrations across all registered LoRaWAN connections.
+
+Device integrations build on DeviceManager by supplying factories for their device
+collection and coordinator. Platforms subscribe once to receive existing and newly
+added device coordinators from all current and future connections.
+
+The manager:
+- Owns a device collection per connection and subscribes it to matching events.
+- Shares one model and coordinator per device across entity platforms, keeping
+  identical DevEUIs on different connections separate.
+- Creates and updates device registry records, and removes them when devices or
+  their provider config entries are deleted.
+- Retains models and coordinators during temporary disconnections, marks affected
+  devices unavailable, and reconciles inventory when a replacement connection
+  registers. Retained models send commands through the replacement connection.
+- Releases subscriptions, collections, coordinators, and tasks on unload while
+  preserving device registry records.
+
+Device libraries decode payloads, and device integrations create entities from
+coordinators. Provider integrations own backend transport setup and reconnection.
+"""
 
 import asyncio
 from collections.abc import Callable
@@ -162,12 +182,7 @@ class _Session[DeviceT: Device]:
 
 
 class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
-    """Own one collection per server and share its models through coordinators.
-
-    Subscribe to current and future registered connections. Keep models and
-    entities on temporary disconnection; reconcile removals when a server returns.
-    Remove registry records when devices or their server config entry are deleted.
-    """
+    """Own one collection per server and share its models through coordinators."""
 
     def __init__(
         self,
