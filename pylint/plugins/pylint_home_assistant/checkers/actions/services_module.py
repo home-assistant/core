@@ -29,6 +29,7 @@ _SETUP_FUNCTIONS = {
 _REGISTRATION_FUNCTIONS = {
     "async_register_admin_service",
     "async_register_batched_entity_service",
+    "async_register_batched_platform_entity_service",
     "async_register_entity_service",
     "async_register_platform_entity_service",
 }
@@ -160,7 +161,8 @@ class ServicesModuleChecker(BaseChecker):
                     node=child,
                     args=(
                         child.name,
-                        " decorated with `@callback`" if callback else "",
+                        (" decorated" if callback else " not decorated")
+                        + " with `@callback`",
                     ),
                 )
 

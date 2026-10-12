@@ -112,6 +112,16 @@ def setup(hass, config):
         ),
         pytest.param(
             """
+async def async_setup(hass, config):
+    service.async_register_batched_platform_entity_service(
+        hass, DOMAIN, "my_action", entity_domain=MP_DOMAIN, func=handler
+    )
+""",
+            "homeassistant.components.test_integration",
+            id="batched_platform_entity_service_in_init",
+        ),
+        pytest.param(
+            """
 async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service("my_action", {}, "async_method")
@@ -216,7 +226,7 @@ def async_setup_services(hass, config):
 def setup_services(hass):
     pass
 """,
-            ("setup_services", ""),
+            ("setup_services", " not decorated with `@callback`"),
             id="setup_services_callback",
         ),
         pytest.param(
@@ -224,7 +234,7 @@ def setup_services(hass):
 def setup_services(hass, *, config):
     pass
 """,
-            ("setup_services", ""),
+            ("setup_services", " not decorated with `@callback`"),
             id="setup_services_extra_argument",
         ),
     ],
