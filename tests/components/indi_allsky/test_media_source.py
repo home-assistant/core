@@ -207,6 +207,23 @@ async def test_async_resolve_media_redirect_resolution(
         "video/webm",
     )
 
+    # Cross-origin redirect in resolve is rejected, retaining original URL/fallback
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/latesttimelapse",
+        status=302,
+        headers={"Location": "http://169.254.169.254/latest/meta-data"},
+    )
+    resolved_ssrf = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#latesttimelapse",
+        None,
+    )
+    assert resolved_ssrf == PlayMedia(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0dGltZWxhcHNl",
+        "video/mp4",
+    )
+
     # Redirect error fallback (ClientError or TimeoutError) keeps original url
     mock_indi_allsky_client.get_media_url.return_value = (
         "https://127.0.0.1:443/indi-allsky/latestkeogram"
@@ -590,17 +607,17 @@ async def test_proxy_view_success_and_headers(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/sample.jpg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+
     # Trigger async_get_media_source to register view
     await async_resolve_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/sample.jpg",
         None,
     )
 
     client = await hass_client()
-
-    upstream_url = "https://127.0.0.1:443/indi-allsky/images/sample.jpg"
-    mock_indi_allsky_client.get_media_url.return_value = upstream_url
     aioclient_mock.get(
         upstream_url,
         content=b"image-bytes-data",
@@ -699,9 +716,12 @@ async def test_proxy_view_errors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/images/sample.jpg"
+    )
     await async_resolve_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/sample.jpg",
         None,
     )
 
@@ -761,7 +781,60 @@ async def test_proxy_view_errors(
     )
     assert resp.status == 502
 
-    # 7. Entry from another domain -> 404
+    # 7. Upstream cross-origin redirect -> 502 (SSRF prevention)
+    latest_url = "https://127.0.0.1:443/indi-allsky/latestimage"
+    mock_indi_allsky_client.get_media_url.return_value = latest_url
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        latest_url,
+        status=302,
+        headers={"Location": "http://169.254.169.254/latest/meta-data"},
+    )
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
+    )
+    assert resp.status == 502
+
+    # 8. Upstream redirect without Location header -> 502
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(latest_url, status=302)
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
+    )
+    assert resp.status == 502
+
+    # 9. Upstream redirect loop (>5 hops) -> 502
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        latest_url,
+        status=302,
+        headers={"Location": "/indi-allsky/latestimage"},
+    )
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
+    )
+    assert resp.status == 502
+
+    # 10. Valid same-origin redirect in proxy view succeeds
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        latest_url,
+        status=302,
+        headers={"Location": "/indi-allsky/images/resolved.jpg"},
+    )
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/images/resolved.jpg",
+        status=200,
+        content=b"resolved-data",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
+    )
+    assert resp.status == 200
+    assert await resp.read() == b"resolved-data"
+
+    # 11. Entry from another domain -> 404
     foreign_entry = MockConfigEntry(
         domain="other_domain",
         state=ConfigEntryState.LOADED,
@@ -782,9 +855,12 @@ async def test_proxy_view_streaming_error_mid_stream(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/failing.jpg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+
     await async_resolve_media(
         hass,
-        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#sample.jpg",
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/failing.jpg",
         None,
     )
 

@@ -65,6 +65,15 @@ def _is_valid_media_path(media_path: str) -> bool:
     return media_path.startswith(VALID_PROXY_MEDIA_PREFIXES)
 
 
+def _is_same_origin(source: yarl.URL, target: yarl.URL) -> bool:
+    """Check that two URLs share the same scheme, host, and port."""
+    return (
+        target.scheme == source.scheme
+        and target.host == source.host
+        and target.port == source.port
+    )
+
+
 def _encode_media_path(path: str) -> str:
     """Encode an INDI Allsky media path for use in a Home Assistant proxy URL."""
     return base64.urlsafe_b64encode(path.encode("utf-8")).decode("ascii")
@@ -127,47 +136,62 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         if range_header := request.headers.get("Range"):
             headers["Range"] = range_header
 
+        url_obj = yarl.URL(url)
         response: web.StreamResponse | None = None
         try:
-            async with session.get(
-                url,
-                headers=headers,
-                timeout=STREAM_TIMEOUT,
-                allow_redirects=True,
-            ) as upstream:
-                resp_headers: dict[str, str] = {}
-                for header in (
-                    "Accept-Ranges",
-                    "Content-Length",
-                    "Content-Range",
-                    "Content-Type",
-                ):
-                    if val := upstream.headers.get(header):
-                        resp_headers[header] = val
+            current_url = url
+            for _ in range(5):
+                async with session.get(
+                    current_url,
+                    headers=headers,
+                    timeout=STREAM_TIMEOUT,
+                    allow_redirects=False,
+                ) as upstream:
+                    if upstream.status in (301, 302, 303, 307, 308):
+                        location = upstream.headers.get("Location")
+                        if not location:
+                            return web.Response(status=502)
+                        target_url = yarl.URL(current_url).join(yarl.URL(location))
+                        if not _is_same_origin(url_obj, target_url):
+                            return web.Response(status=502)
+                        current_url = str(target_url)
+                        continue
 
-                response = web.StreamResponse(
-                    status=upstream.status,
-                    headers=resp_headers,
-                )
+                    resp_headers: dict[str, str] = {}
+                    for header in (
+                        "Accept-Ranges",
+                        "Content-Length",
+                        "Content-Range",
+                        "Content-Type",
+                    ):
+                        if val := upstream.headers.get(header):
+                            resp_headers[header] = val
 
-                if "Content-Type" not in resp_headers:
-                    clean_url = str(upstream.url).split("?", maxsplit=1)[0].lower()
-                    if mime := mimetypes.guess_type(clean_url)[0]:
-                        response.content_type = mime
-                    elif media_path == "latesttimelapse":
-                        response.content_type = "video/mp4"
-                    else:
-                        response.content_type = "image/jpeg"
+                    response = web.StreamResponse(
+                        status=upstream.status,
+                        headers=resp_headers,
+                    )
 
-                await response.prepare(request)
+                    if "Content-Type" not in resp_headers:
+                        clean_url = str(upstream.url).split("?", maxsplit=1)[0].lower()
+                        if mime := mimetypes.guess_type(clean_url)[0]:
+                            response.content_type = mime
+                        elif media_path == "latesttimelapse":
+                            response.content_type = "video/mp4"
+                        else:
+                            response.content_type = "image/jpeg"
 
-                async for chunk in upstream.content.iter_chunked(
-                    MEDIA_STREAM_CHUNK_SIZE
-                ):
-                    await response.write(chunk)
+                    await response.prepare(request)
 
-                await response.write_eof()
-                return response
+                    async for chunk in upstream.content.iter_chunked(
+                        MEDIA_STREAM_CHUNK_SIZE
+                    ):
+                        await response.write(chunk)
+
+                    await response.write_eof()
+                    return response
+
+            return web.Response(status=502)
         except ClientError, TimeoutError:
             if response is not None and response.prepared:
                 raise
@@ -203,6 +227,7 @@ class IndiAllSkyMediaSource(MediaSource):
 
         entry = self._get_config_entry_or_raise(entry_id)
         url = entry.runtime_data.client.get_media_url(path)
+        url_obj = yarl.URL(url)
 
         # Endpoints like latestimage, latestkeogram, lateststartrail, latesttimelapse
         # return a 302 redirect with Location header pointing to the actual media asset file.
@@ -217,7 +242,9 @@ class IndiAllSkyMediaSource(MediaSource):
                     if resp.status in (301, 302, 303, 307, 308):
                         location = resp.headers.get("Location")
                         if location:
-                            url = str(yarl.URL(url).join(yarl.URL(location)))
+                            target_url = url_obj.join(yarl.URL(location))
+                            if _is_same_origin(url_obj, target_url):
+                                url = str(target_url)
                     elif resp.status == 200:
                         content_type = resp.headers.get("Content-Type")
             except (ClientError, TimeoutError) as err:
