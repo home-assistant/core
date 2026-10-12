@@ -133,6 +133,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: RememberTheMilkConfigEntry
 ) -> bool:
     """Set up Remember The Milk from a config entry."""
+    # Temporary: deprecated actions, to be removed in 2027.5
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     # pylint: disable-next=home-assistant-use-runtime-data
     component: EntityComponent[RememberTheMilkEntity] = hass.data[DOMAIN][
         DATA_COMPONENT

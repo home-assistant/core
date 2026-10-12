@@ -193,6 +193,8 @@ class Configurator:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the configurator."""
+        # Temporary: deprecated integration, to be removed in 2027.10
+        # pylint: disable=home-assistant-action-registered-outside-services-module
         self.hass = hass
         self._cur_id = 0
         self._requests: dict[

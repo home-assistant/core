@@ -155,6 +155,8 @@ def _make_handler(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the shell_command component."""
+    # Action names come from the configuration
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config.get(DOMAIN, {})
 
     cache: dict[str, tuple[str, str | None, template.Template | None]] = {}

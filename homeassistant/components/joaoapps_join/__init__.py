@@ -47,6 +47,8 @@ CONFIG_SCHEMA = probatio.Schema(
 def register_device(hass, api_key, name, device_id, device_ids, device_names):
     """Register services for each join device listed."""
 
+    # Action names come from the configuration
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     def ring_service(service: ServiceCall) -> None:
         """Service to ring devices."""
         ring_device(

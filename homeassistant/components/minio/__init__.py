@@ -85,6 +85,8 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MinioClient and event listeners."""
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config[DOMAIN]
 
     host = conf[CONF_HOST]

@@ -56,6 +56,8 @@ SERVICE_CHANNEL_RECORD_SCHEMA = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the QVR Pro component."""
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config[DOMAIN]
     user = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]

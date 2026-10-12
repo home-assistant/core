@@ -273,6 +273,8 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
+        # Actions are registered per legacy platform
+        # pylint: disable=home-assistant-action-registered-outside-services-module
         if self.targets is not None:
             stale_targets = set(self.registered_targets)
 

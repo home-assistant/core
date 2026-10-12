@@ -676,6 +676,8 @@ async def _async_setup_themes(
     hass: HomeAssistant, themes: dict[str, Any] | None
 ) -> None:
     """Set up themes data and services."""
+    # Temporary: move action registration to async_setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.data[DATA_THEMES] = themes or {}
 
     store = hass.data[DATA_THEMES_STORE] = Store(

@@ -68,6 +68,8 @@ COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rest platforms."""
+    # Temporary: move action registration to async_setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     _async_setup_shared_data(hass)
 
     async def reload_service_handler(service: ServiceCall) -> None:

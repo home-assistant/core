@@ -46,6 +46,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Route53 component."""
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     domain = config[DOMAIN][CONF_DOMAIN]
     records = config[DOMAIN][CONF_RECORDS]
     zone = config[DOMAIN][CONF_ZONE]

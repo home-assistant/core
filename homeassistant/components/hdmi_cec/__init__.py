@@ -165,6 +165,8 @@ def parse_mapping(mapping, parents=None):
 def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
 
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.data[DOMAIN] = {}
 
     # Parse configuration into a dict of device name to physical address

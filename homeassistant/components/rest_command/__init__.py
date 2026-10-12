@@ -85,6 +85,8 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
+    # Action names come from the configuration
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all rest_commands and load new ones from config."""
         conf = await async_integration_yaml_config(hass, DOMAIN)

@@ -95,6 +95,8 @@ PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 @callback
 def register_actions(hass: HomeAssistant) -> None:
     """Register custom actions."""
+    # Temporary: rename to async_setup_services
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEARCH,

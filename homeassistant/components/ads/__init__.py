@@ -73,6 +73,8 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = probatio.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
 
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config[DOMAIN]
 
     net_id = conf[CONF_DEVICE]

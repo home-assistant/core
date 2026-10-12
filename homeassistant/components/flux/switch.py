@@ -139,6 +139,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Flux switches."""
+    # Action names come from the configuration
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)

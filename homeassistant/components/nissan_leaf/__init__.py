@@ -103,6 +103,8 @@ START_CHARGE_LEAF_SCHEMA = probatio.Schema({probatio.Required(ATTR_VIN): cv.stri
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nissan Leaf integration."""
 
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     async def async_handle_update(service: ServiceCall) -> None:
         """Handle service to update leaf data from Nissan servers."""
         vin = service.data[ATTR_VIN]

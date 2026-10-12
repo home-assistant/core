@@ -1551,6 +1551,8 @@ def _async_register_service(
     service: UserService,
 ) -> None:
     """Register a service on a node."""
+    # Action names come from the device
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     service_name = build_service_name(device_info, service)
     schema = {}
     fields = {}

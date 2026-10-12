@@ -330,6 +330,8 @@ class ZWaveServices:
     def async_register(self) -> None:
         """Register all our services."""
 
+        # Temporary: move action registration out of the ZWaveServices class
+        # pylint: disable=home-assistant-action-registered-outside-services-module
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""

@@ -93,6 +93,8 @@ class ScriptError(HomeAssistantError):
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Python script component."""
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
@@ -112,6 +114,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def discover_scripts(hass: HomeAssistant) -> None:
     """Discover python scripts in folder."""
+    # Action names come from the script files
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):

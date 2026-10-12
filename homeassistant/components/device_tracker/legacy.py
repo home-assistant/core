@@ -218,6 +218,8 @@ async def async_setup_integration(
     tracker_future: asyncio.Future[DeviceTracker],
 ) -> None:
     """Set up the legacy integration."""
+    # Actions are registered per legacy platform
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     tracker = await get_tracker(hass, config)
     tracker_future.set_result(tracker)
 

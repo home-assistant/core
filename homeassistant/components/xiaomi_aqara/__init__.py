@@ -72,6 +72,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
 
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)

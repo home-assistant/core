@@ -188,6 +188,8 @@ def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
+    # Temporary: move action registration to async_setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.data[DATA_COMPONENT] = component = EntityComponent[BaseAutomationEntity](
         LOGGER, DOMAIN, hass
     )

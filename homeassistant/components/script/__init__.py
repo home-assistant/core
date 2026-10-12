@@ -209,6 +209,8 @@ def blueprint_in_script(hass: HomeAssistant, entity_id: str) -> str | None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
+    # Temporary: move action registration to async_setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     hass.data[DOMAIN] = component = EntityComponent[BaseScriptEntity](
         LOGGER, DOMAIN, hass
     )
@@ -769,6 +771,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
+        # Each script is also registered as its own action
+        # pylint: disable=home-assistant-action-registered-outside-services-module
         if TYPE_CHECKING:
             assert self.unique_id is not None
             assert self.registry_entry is not None

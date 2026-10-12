@@ -61,6 +61,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the eBusd component."""
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     _LOGGER.debug("Integration setup started")
     conf: ConfigType = config[DOMAIN]
     name: str = conf[CONF_NAME]

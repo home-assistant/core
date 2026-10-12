@@ -170,6 +170,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Home Assistant scene entries."""
+    # Scene actions are registered by the scene platform
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     _process_scenes_config(hass, async_add_entities, config)
 
     # This platform can be loaded multiple times. Only first time register the service.

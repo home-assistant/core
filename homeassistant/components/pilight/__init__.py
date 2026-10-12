@@ -71,6 +71,8 @@ CONFIG_SCHEMA = probatio.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pilight component."""
 
+    # Integration is disabled
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     send_throttler = CallRateDelayThrottle(hass, config[DOMAIN][CONF_SEND_DELAY])

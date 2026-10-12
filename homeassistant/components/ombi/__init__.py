@@ -91,6 +91,8 @@ CONFIG_SCHEMA = probatio.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ombi component platform."""
 
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     ombi = pyombi.Ombi(
         ssl=config[DOMAIN][CONF_SSL],
         host=config[DOMAIN][CONF_HOST],

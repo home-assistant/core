@@ -222,6 +222,8 @@ SCHEMA_SERVICE_PUT_PARAMSET = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Homematic component."""
+    # Temporary: move action registration to setup_services in services.py
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}
     hass.data[DATA_STORE] = set()

@@ -99,6 +99,8 @@ async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy text-to-speech providers."""
+    # Actions are registered per legacy platform
+    # pylint: disable=home-assistant-action-registered-outside-services-module
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
     services_dict = await hass.async_add_executor_job(
