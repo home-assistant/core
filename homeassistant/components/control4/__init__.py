@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
     Platform,
@@ -22,12 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
-from .const import (
-    API_RETRY_TIMES,
-    CONF_CONTROLLER_UNIQUE_ID,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import API_RETRY_TIMES, CONF_CONTROLLER_UNIQUE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +38,6 @@ class Control4RuntimeData:
     director_all_items: list[dict[str, Any]]
     director_model: str
     director_sw_version: str
-    scan_interval: int
     ui_configuration: dict[str, Any] | None
 
 
@@ -139,9 +132,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 f" Control4 controller at {config[CONF_HOST]}"
             ) from err
 
-    # Load options from config entry
-    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
     entry.runtime_data = Control4RuntimeData(
         account=account,
         controller_unique_id=controller_unique_id,
@@ -149,7 +139,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         director_all_items=director_all_items,
         director_model=director_model,
         director_sw_version=director_sw_version,
-        scan_interval=scan_interval,
         ui_configuration=ui_configuration,
     )
 
