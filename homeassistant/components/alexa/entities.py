@@ -424,7 +424,10 @@ SUPPORTED_SENSOR_DEVICE_CLASSES = {
 
 
 def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the entity domain and device class are supported."""
+    """Return if the entity domain and device class are supported.
+
+    This approximates discovery from the registry, without needing a state.
+    """
     domain = split_entity_id(entity_id)[0]
     if domain not in ENTITY_ADAPTERS:
         return False

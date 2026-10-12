@@ -911,59 +911,6 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
 
 
 @pytest.mark.parametrize(
-    "lib_exception",
-    [
-        pytest.param(
-            AlexaApiNeedsRelinkError("RefreshTokenNotFound"), id="needs_relink"
-        ),
-        pytest.param(AlexaApiNoTokenError("OtherReason"), id="no_token"),
-    ],
-)
-async def test_alexa_config_prefs_update_without_linked_skill(
-    hass: HomeAssistant,
-    cloud_prefs: CloudPreferences,
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
-    lib_exception: Exception,
-) -> None:
-    """Test updating prefs when the Alexa skill was never linked.
-
-    A freshly registered account has no Alexa refresh token, so syncing
-    entities must not raise out of the preferences listener.
-    """
-    assert await async_setup_component(hass, "homeassistant", {})
-    expose_new(hass, True)
-    entity_entry = entity_registry.async_get_or_create(
-        "fan", "test", "unique", suggested_object_id="test_fan"
-    )
-    hass.states.async_set(entity_entry.entity_id, "off")
-
-    await cloud_prefs.async_update(alexa_enabled=False, alexa_report_state=False)
-    conf = alexa_config.CloudAlexaConfig(
-        hass,
-        ALEXA_SCHEMA({}),
-        "mock-user-id",
-        cloud_prefs,
-        Mock(
-            servicehandlers_server="example",
-            auth=Mock(async_check_token=AsyncMock()),
-            websession=async_get_clientsession(hass),
-            alexa_api=Mock(access_token=AsyncMock(side_effect=lib_exception)),
-        ),
-    )
-    await conf.async_initialize()
-    await conf.set_authorized(True)
-    assert conf.authorized is True
-
-    await cloud_prefs.async_update(alexa_enabled=True)
-    await hass.async_block_till_done()
-
-    # The sync could not authenticate, so the skill is marked as needing a relink.
-    assert conf.authorized is False
-    assert "RequireRelink" not in caplog.text
-
-
-@pytest.mark.parametrize(
     ("enabled", "logged_in", "subscription_expired", "expected_entity_ids"),
     [
         pytest.param(
@@ -1074,3 +1021,56 @@ async def test_alexa_config_migrate_entity_names_yaml_filter(
 
     assert mock_preserve.mock_calls == [call(hass, entity_valve.entity_id)]
     assert cloud_prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
+
+
+@pytest.mark.parametrize(
+    "lib_exception",
+    [
+        pytest.param(
+            AlexaApiNeedsRelinkError("RefreshTokenNotFound"), id="needs_relink"
+        ),
+        pytest.param(AlexaApiNoTokenError("OtherReason"), id="no_token"),
+    ],
+)
+async def test_alexa_config_prefs_update_without_linked_skill(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    lib_exception: Exception,
+) -> None:
+    """Test updating prefs when the Alexa skill was never linked.
+
+    A freshly registered account has no Alexa refresh token, so syncing
+    entities must not raise out of the preferences listener.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
+    expose_new(hass, True)
+    entity_entry = entity_registry.async_get_or_create(
+        "fan", "test", "unique", suggested_object_id="test_fan"
+    )
+    hass.states.async_set(entity_entry.entity_id, "off")
+
+    await cloud_prefs.async_update(alexa_enabled=False, alexa_report_state=False)
+    conf = alexa_config.CloudAlexaConfig(
+        hass,
+        ALEXA_SCHEMA({}),
+        "mock-user-id",
+        cloud_prefs,
+        Mock(
+            servicehandlers_server="example",
+            auth=Mock(async_check_token=AsyncMock()),
+            websession=async_get_clientsession(hass),
+            alexa_api=Mock(access_token=AsyncMock(side_effect=lib_exception)),
+        ),
+    )
+    await conf.async_initialize()
+    await conf.set_authorized(True)
+    assert conf.authorized is True
+
+    await cloud_prefs.async_update(alexa_enabled=True)
+    await hass.async_block_till_done()
+
+    # The sync could not authenticate, so the skill is marked as needing a relink.
+    assert conf.authorized is False
+    assert "RequireRelink" not in caplog.text

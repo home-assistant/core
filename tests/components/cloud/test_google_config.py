@@ -925,62 +925,6 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     }
 
 
-@pytest.mark.usefixtures("mock_cloud_login")
-async def test_google_config_get_agent_user_id(
-    hass: HomeAssistant, cloud_prefs: CloudPreferences
-) -> None:
-    """Test overridden get_agent_user_id_from_webhook method."""
-    config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
-    )
-    assert (
-        config.get_agent_user_id_from_webhook(cloud_prefs.google_local_webhook_id)
-        == config.agent_user_id
-    )
-    assert config.get_agent_user_id_from_webhook("other_id") != config.agent_user_id
-
-
-@pytest.mark.usefixtures("mock_cloud_login")
-async def test_google_config_get_agent_users(
-    hass: HomeAssistant, cloud_prefs: CloudPreferences
-) -> None:
-    """Test overridden async_get_agent_users method."""
-    username_mock = PropertyMock(return_value="blah")
-
-    # We should not call Cloud.username when not logged in
-    cloud_prefs._prefs["google_connected"] = True
-    assert cloud_prefs.google_connected
-    mock_cloud = Mock(is_logged_in=False)
-    type(mock_cloud).username = username_mock
-    config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
-    )
-    assert config.async_get_agent_users() == ()
-    username_mock.assert_not_called()
-
-    # We should not call Cloud.username when not connected
-    cloud_prefs._prefs["google_connected"] = False
-    assert not cloud_prefs.google_connected
-    mock_cloud = Mock(is_logged_in=True)
-    type(mock_cloud).username = username_mock
-    config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
-    )
-    assert config.async_get_agent_users() == ()
-    username_mock.assert_not_called()
-
-    # Logged in and connected
-    cloud_prefs._prefs["google_connected"] = True
-    assert cloud_prefs.google_connected
-    mock_cloud = Mock(is_logged_in=True)
-    type(mock_cloud).username = username_mock
-    config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
-    )
-    assert config.async_get_agent_users() == ("blah",)
-    username_mock.assert_called()
-
-
 @pytest.mark.parametrize(
     ("enabled", "logged_in", "subscription_expired", "expected_entity_ids"),
     [
@@ -1094,3 +1038,59 @@ async def test_google_config_migrate_entity_names_yaml_filter(
 
     assert mock_preserve.mock_calls == [call(hass, entity_valve.entity_id)]
     assert cloud_prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
+
+
+@pytest.mark.usefixtures("mock_cloud_login")
+async def test_google_config_get_agent_user_id(
+    hass: HomeAssistant, cloud_prefs: CloudPreferences
+) -> None:
+    """Test overridden get_agent_user_id_from_webhook method."""
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
+    )
+    assert (
+        config.get_agent_user_id_from_webhook(cloud_prefs.google_local_webhook_id)
+        == config.agent_user_id
+    )
+    assert config.get_agent_user_id_from_webhook("other_id") != config.agent_user_id
+
+
+@pytest.mark.usefixtures("mock_cloud_login")
+async def test_google_config_get_agent_users(
+    hass: HomeAssistant, cloud_prefs: CloudPreferences
+) -> None:
+    """Test overridden async_get_agent_users method."""
+    username_mock = PropertyMock(return_value="blah")
+
+    # We should not call Cloud.username when not logged in
+    cloud_prefs._prefs["google_connected"] = True
+    assert cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=False)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ()
+    username_mock.assert_not_called()
+
+    # We should not call Cloud.username when not connected
+    cloud_prefs._prefs["google_connected"] = False
+    assert not cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=True)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ()
+    username_mock.assert_not_called()
+
+    # Logged in and connected
+    cloud_prefs._prefs["google_connected"] = True
+    assert cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=True)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ("blah",)
+    username_mock.assert_called()
