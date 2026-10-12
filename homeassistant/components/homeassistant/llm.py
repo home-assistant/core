@@ -35,7 +35,6 @@ from homeassistant.helpers.llm import (
 )
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
 from .exposed_entities import async_should_expose
@@ -378,16 +377,11 @@ class RenderTemplateTool(Tool):
         """Render the template."""
         args = self.parameters(tool_input.tool_args)
         variables = args.get("variables")
-        messages: list[JsonValueType] = []
-
-        def _log_fn(level: int, message: str) -> None:
-            messages.append(message)
-
         template = Template(args["template"], hass)
         try:
             # Renders in a thread first, so a slow template cannot block the event loop.
             if await template.async_render_will_timeout(
-                TEMPLATE_RENDER_TIMEOUT, variables, log_fn=_log_fn
+                TEMPLATE_RENDER_TIMEOUT, variables, strict=True
             ):
                 return ToolResult(
                     data={
@@ -396,17 +390,10 @@ class RenderTemplateTool(Tool):
                     },
                     error=True,
                 )
-            # Drop the duplicate messages of the test render.
-            messages.clear()
-            result = template.async_render(
-                variables, parse_result=False, log_fn=_log_fn
-            )
+            result = template.async_render(variables, parse_result=False, strict=True)
         except TemplateError as err:
             return ToolResult(data={"error": str(err)}, error=True)
-        data: JsonObjectType = {"result": result}
-        if messages:
-            data["warnings"] = messages
-        return ToolResult(data=data)
+        return ToolResult(data={"result": result})
 
 
 @callback

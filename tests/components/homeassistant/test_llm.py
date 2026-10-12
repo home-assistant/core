@@ -104,11 +104,6 @@ async def _async_render_template(
             {"result": "on"},
             id="variables",
         ),
-        pytest.param(
-            {"template": "{{ undefined_variable }}"},
-            {"result": "", "warnings": ["'undefined_variable' is undefined"]},
-            id="undefined_variable",
-        ),
     ],
 )
 async def test_render_template(
@@ -123,7 +118,7 @@ async def test_render_template(
     "template",
     [
         pytest.param("{{ states('light.kitchen') ", id="syntax_error"),
-        pytest.param("{{ undefined_variable.attribute }}", id="undefined_attribute"),
+        pytest.param("{{ undefined_variable }}", id="undefined_variable"),
         pytest.param("{{ 1 / 0 }}", id="render_error"),
     ],
 )
