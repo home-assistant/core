@@ -270,10 +270,6 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
     ),
     DeviceCategory.GGQ: (
         TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="switch",
-        ),
-        TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},
