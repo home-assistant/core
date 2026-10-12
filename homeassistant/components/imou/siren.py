@@ -1,5 +1,6 @@
 """Support for Imou siren controls."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from pyimouapi.const import PARAM_SIREN_START, PARAM_SIREN_STOP
@@ -20,15 +21,19 @@ from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 0
 
-SIREN_DESCRIPTION = SirenEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class ImouSirenEntityDescription(SirenEntityDescription):
+    """Describes an Imou siren entity."""
+
+    start_param: str = PARAM_SIREN_START
+    stop_param: str = PARAM_SIREN_STOP
+
+
+SIREN_DESCRIPTION = ImouSirenEntityDescription(
     key="siren",
     translation_key="siren",
 )
-
-
-def _device_has_siren(device: ImouHaDevice) -> bool:
-    """Return whether the device can start or stop the siren."""
-    return PARAM_SIREN_START in device.buttons or PARAM_SIREN_STOP in device.buttons
 
 
 async def async_setup_entry(
@@ -45,7 +50,10 @@ async def async_setup_entry(
             ImouSiren(coordinator, device)
             for device in coordinator.devices
             if imou_device_identifier(device) in device_keys
-            and _device_has_siren(device)
+            and (
+                PARAM_SIREN_START in device.buttons
+                or PARAM_SIREN_STOP in device.buttons
+            )
         )
 
     entry.async_on_unload(coordinator.register_new_device_callback(_add_sirens))
@@ -56,11 +64,10 @@ class ImouSiren(ImouEntity, SirenEntity):
     """Manual siren control for an Imou device.
 
     The cloud API does not report whether the siren is currently sounding, so
-    the entity state stays unknown. Supported turn on and turn off features
-    follow whichever siren start or stop commands the device exposes.
+    the entity state stays unknown until a turn on or turn off command succeeds.
     """
 
-    entity_description = SIREN_DESCRIPTION
+    entity_description: ImouSirenEntityDescription
 
     def __init__(
         self,
@@ -69,10 +76,11 @@ class ImouSiren(ImouEntity, SirenEntity):
     ) -> None:
         """Initialize the siren entity."""
         super().__init__(coordinator, SIREN_DESCRIPTION, device)
+        description = self.entity_description
         features = SirenEntityFeature(0)
-        if PARAM_SIREN_START in device.buttons:
+        if description.start_param in device.buttons:
             features |= SirenEntityFeature.TURN_ON
-        if PARAM_SIREN_STOP in device.buttons:
+        if description.stop_param in device.buttons:
             features |= SirenEntityFeature.TURN_OFF
         self._attr_supported_features = features
 
@@ -82,9 +90,10 @@ class ImouSiren(ImouEntity, SirenEntity):
         """Sound the siren."""
         await self.coordinator.device_manager.async_press_button(
             self.device,
-            PARAM_SIREN_START,
+            self.entity_description.start_param,
             0,
         )
+        self._attr_is_on = True
 
     @override
     @async_wrap_imou_command("siren_operation_failed")
@@ -92,6 +101,7 @@ class ImouSiren(ImouEntity, SirenEntity):
         """Silence the siren."""
         await self.coordinator.device_manager.async_press_button(
             self.device,
-            PARAM_SIREN_STOP,
+            self.entity_description.stop_param,
             0,
         )
+        self._attr_is_on = False

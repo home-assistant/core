@@ -11,8 +11,10 @@ from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntityFe
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     EntityStateAttribute,
     Platform,
 )
@@ -171,6 +173,45 @@ async def test_siren_partial_controls(
     call = mock_imou_ha_device_manager.async_press_button.await_args
     assert call is not None
     assert call.args[1] == button_type
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SIREN]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SIREN_DEVICES], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_siren_toggle_alternates_start_and_stop(
+    hass: HomeAssistant,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Toggle turns the siren on and off using the matching cloud commands."""
+    entity_id = "siren.device_1_siren"
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    call = mock_imou_ha_device_manager.async_press_button.await_args
+    assert call is not None
+    assert call.args[1] == PARAM_SIREN_START
+
+    mock_imou_ha_device_manager.async_press_button.reset_mock()
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+    call = mock_imou_ha_device_manager.async_press_button.await_args
+    assert call is not None
+    assert call.args[1] == PARAM_SIREN_STOP
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SIREN]], indirect=True)
