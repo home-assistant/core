@@ -3,7 +3,7 @@
 from operator import attrgetter
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN, trigger as zone
@@ -33,9 +33,9 @@ TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Required(CONF_ZONE): cv.entity_domain(ZONE_DOMAIN),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Required(CONF_ZONE): cv.entity_domain(ZONE_DOMAIN),
     }
 )
 
@@ -102,16 +102,16 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     zones = {
         ent.entity_id: ent.name
         for ent in sorted(hass.states.async_all(ZONE_DOMAIN), key=attrgetter("name"))
     }
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Required(CONF_ZONE): vol.In(zones),
+                probatio.Required(CONF_ZONE): probatio.In(zones),
             }
         )
     }

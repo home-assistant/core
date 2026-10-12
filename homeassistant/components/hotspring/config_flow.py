@@ -3,8 +3,14 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
-import voluptuous as vol
+from hotspring import (
+    HotSpring,
+    HotSpringConnectionError,
+    HotSpringError,
+    HotSpringSNADetectedError,
+    Spa,
+)
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -19,9 +25,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_HOST): TextSelector(),
     }
 )
 
@@ -52,6 +58,8 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 spa = await validate_input(self.hass, user_input)
+            except HotSpringSNADetectedError:
+                errors["base"] = "sna_device"
             except HotSpringConnectionError, HotSpringError:
                 errors["base"] = "cannot_connect"
             else:
@@ -101,6 +109,8 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovered_spa = await validate_input(
                 self.hass, {CONF_HOST: discovery_info.host}
             )
+        except HotSpringSNADetectedError:
+            return self.async_abort(reason="sna_device")
         except HotSpringConnectionError, HotSpringError:
             return self.async_abort(reason="cannot_connect")
 

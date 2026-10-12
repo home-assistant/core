@@ -89,7 +89,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
@@ -113,12 +113,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Let HA know there has been an update from the ViCare API."""
         with self.vicare_api_handler():
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_current_temperature = (
+                self._attr_native_current_temperature = (
                     self._api.getDomesticHotWaterStorageTemperature()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_target_temperature = (
+                self._attr_native_target_temperature = (
                     self._api.getDomesticHotWaterDesiredTemperature()
                 )
 
@@ -133,7 +133,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)
-            self._attr_target_temperature = temp
+            self._attr_native_target_temperature = temp
 
     @property
     @override

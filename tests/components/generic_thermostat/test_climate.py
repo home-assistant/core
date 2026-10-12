@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
@@ -317,7 +317,7 @@ async def test_set_target_temp(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 30)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await common.async_set_temperature(hass, None)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0
@@ -1402,6 +1402,74 @@ async def test_cycle_cooldown_schedules_restart_after_cooldown(
 
     assert len(calls) == 1
     assert calls[0].service == SERVICE_TURN_ON
+
+
+@pytest.mark.parametrize(
+    (
+        "min_cycle_duration",
+        "cycle_cooldown",
+        "initial_switch_state",
+        "sensor_temperature",
+        "expected_service",
+    ),
+    [
+        pytest.param(10, 0, True, 30, SERVICE_TURN_OFF, id="min_cycle_duration"),
+        pytest.param(0, 10, False, 20, SERVICE_TURN_ON, id="cycle_cooldown"),
+    ],
+)
+async def test_recheck_scheduled_for_remaining_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    min_cycle_duration: int,
+    cycle_cooldown: int,
+    initial_switch_state: bool,
+    sensor_temperature: float,
+    expected_service: str,
+) -> None:
+    """Test the recheck fires when the remaining cycle time is up."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=min_cycle_duration),
+                "cycle_cooldown": datetime.timedelta(minutes=cycle_cooldown),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, initial_switch_state)
+    await hass.async_block_till_done()
+    thermostats = hass.data[entity_platform.DATA_DOMAIN_PLATFORM_ENTITIES][
+        (CLIMATE_DOMAIN, "generic_thermostat")
+    ]
+    thermostats[ENTITY]._last_toggled_time = now
+
+    # The reading arrives halfway, so the switch has to wait 5 more minutes
+    freezer.move_to(now + datetime.timedelta(minutes=5))
+    _setup_sensor(hass, sensor_temperature)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    freezer.move_to(now + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, now + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].service == expected_service
 
 
 @pytest.fixture

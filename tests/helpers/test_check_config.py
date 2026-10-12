@@ -3,8 +3,8 @@
 import logging
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
@@ -316,8 +316,10 @@ async def test_platform_schema_error(
     config: dict | None,
 ) -> None:
     """Test schema error in platform."""
-    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
-    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({probatio.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend(
+        {}, extra=probatio.ALLOW_EXTRA
+    )
     mock_integration(
         hass,
         MockModule("blah", platform_schema_base=comp_platform_schema_base),

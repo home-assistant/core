@@ -241,7 +241,9 @@ class SongpalEntity(MediaPlayerEntity):
         async def handle_stop(event):
             await self._dev.stop_listen_notifications()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+        self.async_on_remove(
+            self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_stop)
+        )
 
         entry.async_create_background_task(
             self.hass, self._dev.listen_notifications(), "songpal-listen-notifications"
@@ -403,7 +405,7 @@ class SongpalEntity(MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        volume = int(volume * self._volume_max)
+        volume = round(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
 

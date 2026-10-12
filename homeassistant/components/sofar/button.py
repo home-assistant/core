@@ -53,13 +53,13 @@ async def async_setup_entry(
     entry: SofarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Sofar Inverter Modbus button platform."""
+    """Set up the Sofar button platform."""
     runtime_data = entry.runtime_data
     inverter_type = runtime_data.readings.device.inverter_type
     async_add_entities(
         SofarButton(runtime_data, description)
         for description in BUTTON_DESCRIPTIONS
-        if inverter_type is not None and matches(inverter_type, description.applies_to)
+        if matches(inverter_type, description.applies_to)
     )
 
 

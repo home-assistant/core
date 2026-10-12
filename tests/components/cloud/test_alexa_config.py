@@ -484,6 +484,16 @@ async def test_alexa_entity_registry_sync(
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": entry.entity_id, "changes": ["area_id"]},
+        )
+        await hass.async_block_till_done()
+
+    assert to_update == [entry.entity_id]
+    assert to_remove == []
+
+    with patch_sync_helper() as (to_update, to_remove):
+        hass.bus.async_fire(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "update", "entity_id": entry.entity_id, "changes": ["icon"]},
         )
         await hass.async_block_till_done()
@@ -958,3 +968,51 @@ async def test_alexa_config_prefs_update_without_linked_skill(
     # The sync could not authenticate, so the skill is marked as needing a relink.
     assert conf.authorized is False
     assert "RequireRelink" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "lib_exception",
+    [
+        pytest.param(
+            AlexaApiNeedsRelinkError("RefreshTokenNotFound"), id="needs_relink"
+        ),
+        pytest.param(AlexaApiNoTokenError("OtherReason"), id="no_token"),
+    ],
+)
+async def test_alexa_entity_registry_sync_without_linked_skill(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    lib_exception: Exception,
+) -> None:
+    """Test entity registry updates when the Alexa skill is not linked."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    expose_new(hass, True)
+
+    await cloud_prefs.async_update(alexa_enabled=True, alexa_report_state=False)
+    conf = alexa_config.CloudAlexaConfig(
+        hass,
+        ALEXA_SCHEMA({}),
+        "mock-user-id",
+        cloud_prefs,
+        Mock(
+            is_logged_in=True,
+            subscription_expired=False,
+            servicehandlers_server="example",
+            auth=Mock(async_check_token=AsyncMock()),
+            websession=async_get_clientsession(hass),
+            alexa_api=Mock(access_token=AsyncMock(side_effect=lib_exception)),
+        ),
+    )
+    await conf.async_initialize()
+    await hass.async_block_till_done()
+
+    entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    await hass.async_block_till_done()
+
+    conf._cloud.alexa_api.access_token.assert_awaited()
+    assert "RequireRelink" not in caplog.text
+    assert "NoTokenAvailable" not in caplog.text

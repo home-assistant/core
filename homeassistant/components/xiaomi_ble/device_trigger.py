@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -300,8 +300,8 @@ async def async_validate_trigger_config(
     if model_data := _async_trigger_model_data(hass, device_id):
         schema = DEVICE_TRIGGER_BASE_SCHEMA.extend(
             {
-                vol.Required(CONF_TYPE): vol.In(model_data.event_types),
-                vol.Required(CONF_SUBTYPE): vol.In(model_data.triggers),
+                probatio.Required(CONF_TYPE): probatio.In(model_data.event_types),
+                probatio.Required(CONF_SUBTYPE): probatio.In(model_data.triggers),
             }
         )
         return schema(config)  # type: ignore[no-any-return]

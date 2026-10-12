@@ -4,7 +4,7 @@
 from functools import wraps
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -53,9 +53,9 @@ def _ensure_webhook_access(func):
 @_ensure_webhook_access
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "mobile_app/push_notification_confirm",
-        vol.Required("webhook_id"): str,
-        vol.Required("confirm_id"): str,
+        probatio.Required("type"): "mobile_app/push_notification_confirm",
+        probatio.Required("webhook_id"): str,
+        probatio.Required("confirm_id"): str,
     }
 )
 def handle_push_notification_confirm(
@@ -87,9 +87,9 @@ def handle_push_notification_confirm(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "mobile_app/push_notification_channel",
-        vol.Required("webhook_id"): str,
-        vol.Optional("support_confirm", default=False): bool,
+        probatio.Required("type"): "mobile_app/push_notification_channel",
+        probatio.Required("webhook_id"): str,
+        probatio.Optional("support_confirm", default=False): bool,
     }
 )
 @_ensure_webhook_access
