@@ -115,6 +115,9 @@
       "gas_usage_to_date": {
         "name": "Current bill gas usage to date"
       },
+      "last_bill_electricity_rate": {
+        "name": "Last bill electricity rate"
+      },
       "last_changed": {
         "name": "Last changed"
       },
