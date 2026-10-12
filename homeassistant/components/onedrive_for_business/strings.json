@@ -92,7 +92,7 @@
       "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
     },
     "hash_mismatch": {
-      "message": "Hash validation failed, backup file might be corrupt"
+      "message": "[%key:component::onedrive::exceptions::hash_mismatch::message%]"
     },
     "update_failed": {
       "message": "[%key:component::onedrive::exceptions::update_failed::message%]"
