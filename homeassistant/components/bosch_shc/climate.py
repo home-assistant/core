@@ -276,6 +276,14 @@ class HeatingCircuit(SHCEntity, ClimateEntity):
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            if hvac_mode not in self.hvac_modes:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_hvac_mode",
+                    translation_placeholders={"hvac_mode": hvac_mode},
+                )
+            self.set_hvac_mode(hvac_mode)
         self._device.setpoint_temperature = kwargs[ATTR_TEMPERATURE]
 
     @override

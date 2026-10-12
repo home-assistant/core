@@ -494,3 +494,55 @@ async def test_heating_circuit_set_temperature(
     )
 
     assert device.setpoint_temperature == 24.0
+
+
+async def test_heating_circuit_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """A combined call applies the mode and the setpoint."""
+    device = heating_circuit_device(operation_mode=HC_AUTOMATIC)
+    mock_session.device_helper.heating_circuits = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: HC_ENTITY_ID,
+            ATTR_TEMPERATURE: 24.0,
+            "hvac_mode": HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    assert device.operation_mode == HC_MANUAL
+    assert device.setpoint_temperature == 24.0
+
+
+async def test_heating_circuit_set_temperature_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """An unsupported mode in a combined call changes nothing."""
+    device = heating_circuit_device(operation_mode=HC_AUTOMATIC)
+    mock_session.device_helper.heating_circuits = [device]
+    await setup_integration(hass, mock_config_entry)
+    setpoint = device.setpoint_temperature
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: HC_ENTITY_ID,
+                ATTR_TEMPERATURE: 24.0,
+                "hvac_mode": HVACMode.COOL,
+            },
+            blocking=True,
+        )
+
+    assert device.operation_mode == HC_AUTOMATIC
+    assert device.setpoint_temperature == setpoint
