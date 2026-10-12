@@ -85,7 +85,12 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 # Device families the public API alone provides; the private bootstrap has no
 # store for them, so hybrid has no adopt path either and their add always goes
 # through the public add signal.
-_PUBLIC_ONLY_MODELS = {ModelType.FOB, ModelType.RELAY, ModelType.SIREN}
+_PUBLIC_ONLY_MODELS = {
+    ModelType.FOB,
+    ModelType.LINK_STATION,
+    ModelType.RELAY,
+    ModelType.SIREN,
+}
 
 
 def _pair_public_private[
@@ -403,7 +408,8 @@ class ProtectData:
 
         DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
         as "all models", so messages are not pre-filtered. NVR messages signal
-        the mode's NVR object so alarm entities pick up the new arm state.
+        the mode's NVR object so alarm entities pick up the new arm state, and
+        re-signal the cameras when the doorbell messages change.
         Every other public device inherits ``PublicDeviceModel`` and is
         dispatched by mac.
         Frames without a merged object dispatch ``None`` and subscribers re-read
@@ -419,6 +425,8 @@ class ProtectData:
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_nvr_update()
+            if "doorbellSettings" in message.changed_data:
+                self._async_signal_public_doorbell_settings()
             return
         if isinstance(new_obj, PublicDeviceModel):
             if new_obj.model is ModelType.CAMERA:
@@ -546,6 +554,12 @@ class ProtectData:
                     self._async_dispatch_new_public_device(device)
             for relay in list(self.api.public_bootstrap.relays.values()):
                 async_dispatcher_send(self._hass, self.relay_signal, relay)
+
+    @callback
+    def _async_signal_public_doorbell_settings(self) -> None:
+        """Signal the public cameras so the doorbell text options follow the NVR."""
+        for camera in list(self.api.public_bootstrap.cameras.values()):
+            self._async_signal_public_update(camera.mac, camera)
 
     @callback
     def _async_signal_nvr_update(self) -> None:
@@ -707,17 +721,6 @@ class ProtectData:
         ):
             self._pending_camera_ids.remove(device.id)
             async_dispatcher_send(self._hass, self.channels_signal, device)
-
-        # trigger update for all Cameras with LCD screens
-        # when NVR Doorbell settings updates
-        if "doorbell_settings" in changed_data:
-            _LOGGER.debug(
-                "Doorbell messages updated. Updating devices with LCD screens"
-            )
-            self.api.bootstrap.nvr.update_all_messages()
-            for camera in self.get_cameras():
-                if camera.feature_flags.has_lcd_screen:
-                    self._async_signal_device_update(camera)
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:

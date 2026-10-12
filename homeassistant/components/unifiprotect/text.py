@@ -21,7 +21,7 @@ from .entity import (
     T,
     async_all_device_entities,
 )
-from .utils import async_ufp_instance_command
+from .utils import async_get_doorbell_settings_public, async_ufp_instance_command
 
 PARALLEL_UPDATES = 0
 
@@ -33,7 +33,7 @@ class ProtectTextEntityDescription(ProtectSettableKeysMixin[T], TextEntityDescri
 
 def _get_doorbell_current(obj: PublicDeviceModel) -> str | None:
     if (text := cast(PublicCamera, obj).lcd_message_text) is None:
-        return obj.api.bootstrap.nvr.doorbell_settings.default_message_text
+        return async_get_doorbell_settings_public(obj.api).default_message_text
     return text
 
 

@@ -27,6 +27,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -85,6 +86,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+def _async_check_loaded(hass: HomeAssistant) -> None:
+    """Raise if the Insteon config entry is not loaded."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="not_loaded"
+        )
+
+
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Register services used by insteon component."""
 
@@ -92,6 +102,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     async def async_srv_add_all_link(service: ServiceCall) -> None:
         """Add an INSTEON All-Link between two devices."""
+        _async_check_loaded(hass)
         group = service.data[SRV_ALL_LINK_GROUP]
         mode = service.data[SRV_ALL_LINK_MODE]
         link_mode = mode.lower() == SRV_CONTROLLER
@@ -99,11 +110,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     async def async_srv_del_all_link(service: ServiceCall) -> None:
         """Delete an INSTEON All-Link between two devices."""
+        _async_check_loaded(hass)
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_enter_unlinking_mode(group)
 
     async def async_srv_load_aldb(service: ServiceCall) -> None:
         """Load the device All-Link database."""
+        _async_check_loaded(hass)
         entity_id = service.data[CONF_ENTITY_ID]
         reload = service.data[SRV_LOAD_DB_RELOAD]
         if entity_id.lower() == ENTITY_MATCH_ALL:
@@ -129,6 +142,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     def print_aldb(service: ServiceCall) -> None:
         """Print the All-Link Database for a device."""
+        _async_check_loaded(hass)
         # For now this sends logs to the log file.
         # Future direction is to create an INSTEON control panel.
         entity_id = service.data[CONF_ENTITY_ID]
@@ -137,38 +151,45 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     def print_im_aldb(service: ServiceCall) -> None:
         """Print the All-Link Database for a device."""
+        _async_check_loaded(hass)
         # For now this sends logs to the log file.
         # Future direction is to create an INSTEON control panel.
         print_aldb_to_log(devices.modem.aldb)
 
     async def async_srv_x10_all_units_off(service: ServiceCall) -> None:
         """Send the X10 All Units Off command."""
+        _async_check_loaded(hass)
         housecode = service.data.get(SRV_HOUSECODE)
         await async_x10_all_units_off(housecode)
 
     async def async_srv_x10_all_lights_off(service: ServiceCall) -> None:
         """Send the X10 All Lights Off command."""
+        _async_check_loaded(hass)
         housecode = service.data.get(SRV_HOUSECODE)
         await async_x10_all_lights_off(housecode)
 
     async def async_srv_x10_all_lights_on(service: ServiceCall) -> None:
         """Send the X10 All Lights On command."""
+        _async_check_loaded(hass)
         housecode = service.data.get(SRV_HOUSECODE)
         await async_x10_all_lights_on(housecode)
 
     async def async_srv_scene_on(service: ServiceCall) -> None:
         """Trigger an INSTEON scene ON."""
+        _async_check_loaded(hass)
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_trigger_scene_on(group)
 
     async def async_srv_scene_off(service: ServiceCall) -> None:
         """Trigger an INSTEON scene ON."""
+        _async_check_loaded(hass)
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_trigger_scene_off(group)
 
     @callback
     def async_add_default_links(service: ServiceCall) -> None:
         """Add the default All-Link entries to a device."""
+        _async_check_loaded(hass)
         entity_id = service.data[CONF_ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
         async_dispatcher_send(hass, signal)
