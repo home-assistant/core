@@ -198,7 +198,8 @@ class _DeviceInfoMapping:
         if other is self:
             return True
         if isinstance(other, _DeviceInfoMapping):
-            return type(other) is type(self) and self._field_values(
+            # A subclass, such as a read-only cached device info, shares the fields
+            return other._field_names is self._field_names and self._field_values(
                 self
             ) == other._field_values(other)
         if isinstance(other, Mapping):
@@ -239,10 +240,9 @@ class _DeviceInfoMapping:
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
-        try:
-            return self[key]
-        except KeyError:
-            return default
+        if key in self._field_set and (value := getattr(self, key)) is not UNDEFINED:
+            return value
+        return default
 
     def update(self, other: _DeviceInfoLike) -> None:
         """Set the fields another device info or mapping has set."""

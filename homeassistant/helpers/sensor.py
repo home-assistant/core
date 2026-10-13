@@ -1,7 +1,7 @@
 """Common functions related to sensor device management."""
 
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
 from .device_registry import DeviceInfo
 
@@ -12,12 +12,27 @@ if TYPE_CHECKING:
     from sensor_state_data import SensorDeviceInfo
 
 
+class _SharedDeviceInfo(DeviceInfo):
+    """A cached device info, which is shared and so cannot be modified."""
+
+    __slots__ = ()
+
+    @override
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Refuse to modify a shared device info."""
+        raise TypeError(
+            "The device info returned by sensor_device_info_to_hass_device_info is"
+            " shared and cannot be modified; copy it first with"
+            " DeviceInfo(**device_info)"
+        )
+
+
 def sensor_device_info_to_hass_device_info(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
     """Convert a sensor_state_data sensor device info to a HA device info.
 
-    The same device info is returned for the same values, so it must not be modified.
+    The same device info is returned for the same values, so it cannot be modified.
     """
     return _device_info(
         sensor_device_info.name,
@@ -40,4 +55,6 @@ def _device_info(
         device_info.manufacturer = manufacturer
     if model is not None:
         device_info.model = model
+    # Made read-only once built; the subclass adds no slots, so the class can change
+    device_info.__class__ = _SharedDeviceInfo
     return device_info

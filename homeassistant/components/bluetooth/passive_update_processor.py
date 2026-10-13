@@ -154,9 +154,13 @@ class PassiveBluetoothDataUpdate[_T]:
         device_change = False
         changed_entity_keys: set[PassiveBluetoothEntityKey] = set()
         for device_key, device_info in new_data.devices.items():
-            if device_change or self.devices.get(device_key, UNDEFINED) != device_info:
+            if (
+                not device_change
+                and self.devices.get(device_key, UNDEFINED) != device_info
+            ):
                 device_change = True
-                self.devices[device_key] = device_info
+            # Stored even when equal, so the next comparison is with the same object
+            self.devices[device_key] = device_info
         for incoming, current in (
             (new_data.entity_descriptions, self.entity_descriptions),
             (new_data.entity_names, self.entity_names),

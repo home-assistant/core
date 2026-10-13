@@ -2007,3 +2007,20 @@ def test_restore_data_device_info_round_trip() -> None:
     restored = PassiveBluetoothDataUpdate()
     restored.async_set_restore_data(stored, EntityDescription)
     assert restored.devices == devices
+
+
+def test_update_stores_equal_device_info() -> None:
+    """Test an equal incoming device info replaces the stored one, without a change.
+
+    After a restore, the next comparison is then with the same object.
+    """
+    restored = DeviceInfo(name="Main")
+    data = PassiveBluetoothDataUpdate(devices={None: restored})
+    incoming = DeviceInfo(name="Main")
+
+    assert data.update(PassiveBluetoothDataUpdate(devices={None: incoming})) == set()
+    assert data.devices[None] is incoming
+
+    changed = DeviceInfo(name="Renamed")
+    assert data.update(PassiveBluetoothDataUpdate(devices={None: changed})) is None
+    assert data.devices[None] is changed
