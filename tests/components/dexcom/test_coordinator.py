@@ -7,7 +7,9 @@ from freezegun.api import FrozenDateTimeFactory
 from pydexcom import GlucoseReading
 import pytest
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import CONFIG, TEST_ACCOUNT_ID, TEST_SESSION_ID
 
@@ -123,8 +125,13 @@ async def test_early_refresh_keeps_schedule(
 
     # Manual refresh 60 s later returns the same reading, as it is not due yet
     await _advance(hass, freezer, 60)
-    coordinator = hass.config_entries.async_entries("dexcom")[0].runtime_data
-    await coordinator.async_refresh()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "sensor.test_username_glucose_value"},
+        blocking=True,
+    )
     assert mock_reading.call_count == 2
 
     # The next poll still follows the reading time (+5 min 20 s), not a retry
