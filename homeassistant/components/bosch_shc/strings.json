@@ -76,6 +76,9 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "energy_saving_enter_duration": {
+        "name": "Energy-saving enter duration"
+      },
       "energy_saving_power_threshold": {
         "name": "Energy-saving power threshold"
       },
@@ -98,6 +101,14 @@
           "high": "Loud",
           "low": "Reduced",
           "medium": "Medium"
+        }
+      },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "middle": "Medium"
         }
       },
       "vibration_sensitivity": {
@@ -222,6 +233,11 @@
       "valve": {
         "name": "Valve"
       }
+    }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "This room does not support the HVAC mode {hvac_mode}."
     }
   }
 }

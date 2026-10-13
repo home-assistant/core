@@ -1,5 +1,6 @@
 """The tests for the image component."""
 
+import asyncio
 import errno
 from http import HTTPStatus
 import ssl
@@ -460,6 +461,26 @@ async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) 
 
     with pytest.raises(HomeAssistantError, match="not found"):
         await image.async_get_image(hass, "image.unknown")
+
+
+async def test_get_image_cancelled(
+    hass: HomeAssistant, mock_image_platform: None
+) -> None:
+    """Test cancelling fetching an image propagates the cancellation."""
+    started = asyncio.Event()
+
+    async def _async_image() -> bytes:
+        started.set()
+        await asyncio.Event().wait()
+        return b"Test"
+
+    with patch.object(MockImageEntity, "async_image", side_effect=_async_image):
+        task = hass.async_create_task(image.async_get_image(hass, "image.test"))
+        await started.wait()
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
 
 
 async def test_snapshot_service(hass: HomeAssistant) -> None:

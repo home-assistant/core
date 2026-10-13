@@ -20,7 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, INVALID_COMMAND_CHARS
 from .coordinator import ImapMessage, connect_to_server, get_parts
 from .errors import InvalidAuth, InvalidFolder
 
@@ -32,10 +32,19 @@ CONF_PART = "part"
 CONF_UID = "uid"
 CONF_TARGET_FOLDER = "target_folder"
 
+
+def _command_argument(value: Any) -> str:
+    """Validate a string that is passed as an IMAP command argument."""
+    command_argument = cv.string(value)
+    if INVALID_COMMAND_CHARS.search(command_argument):
+        raise probatio.Invalid("NUL, CR and LF characters are not allowed")
+    return command_argument
+
+
 _SERVICE_UID_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ENTRY): cv.string,
-        probatio.Required(CONF_UID): cv.string,
+        probatio.Required(CONF_UID): _command_argument,
     }
 )
 
@@ -43,7 +52,7 @@ SERVICE_SEEN_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
         probatio.Optional(CONF_SEEN): cv.boolean,
-        probatio.Required(CONF_TARGET_FOLDER): cv.string,
+        probatio.Required(CONF_TARGET_FOLDER): _command_argument,
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
@@ -75,7 +84,7 @@ async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="invalid_folder"
         ) from exc
-    except (TimeoutError, AioImapException) as exc:
+    except (OSError, AioImapException) as exc:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="imap_server_fail",

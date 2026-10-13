@@ -9,6 +9,7 @@
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_mac_address": "Could not get the MAC address of the device",
       "not_admin": "User needs to be admin, user \"{username}\" has authorization level \"{userlevel}\"",
       "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}. The streaming protocols necessitate these additional password restrictions.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -934,11 +935,20 @@
     "api_error": {
       "message": "The device responded with an error: {err}"
     },
+    "authentication_failed": {
+      "message": "Authentication failed for {host}"
+    },
+    "config_entry_not_found": {
+      "message": "Could not find Reolink config entry ID \"{config_entry_id}\""
+    },
     "config_entry_not_ready": {
       "message": "Error while trying to set up {host}: {err}"
     },
     "connection_error": {
       "message": "Could not connect to the device: {err}"
+    },
+    "firmware_check_failed": {
+      "message": "Error checking Reolink firmware update from {name}, if the camera is blocked from accessing the internet, disable the update entity"
     },
     "firmware_install_error": {
       "message": "Error trying to update Reolink firmware: {err}"
@@ -964,8 +974,14 @@
     "no_data": {
       "message": "Device returned no data: {err}"
     },
+    "no_mac_address": {
+      "message": "Could not get the MAC address of the device"
+    },
     "not_supported": {
       "message": "Function not supported by this device: {err}"
+    },
+    "password_incompatible": {
+      "message": "Reolink password contains an incompatible special character or is too long; please change the password to only contain characters a-z, A-Z, 0-9, or {special_chars} and not be longer than 31 characters"
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"
@@ -985,8 +1001,26 @@
     "unexpected_data": {
       "message": "Device returned unexpected data: {err}"
     },
+    "unknown_media_item": {
+      "message": "Unknown media item \"{identifier}\""
+    },
     "update_already_running": {
       "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "update_api_error": {
+      "message": "The device {host} responded with an error while updating its state"
+    },
+    "update_connection_error": {
+      "message": "Could not connect to {host} while updating its state"
+    },
+    "update_failed": {
+      "message": "Error updating the state of {host}"
+    },
+    "update_timeout": {
+      "message": "Timeout while updating the state of {host}"
+    },
+    "user_not_admin": {
+      "message": "User \"{username}\" has authorization level \"{userlevel}\", only admin users can change camera settings"
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
