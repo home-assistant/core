@@ -1834,7 +1834,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "tplink_lte",
     "traccar",
     "traccar_server",
-    "tractive",
     "tradfri",
     "trafikverket_camera",
     "trafikverket_ferry",

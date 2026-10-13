@@ -25,7 +25,7 @@ rules:
     comment: Integration does not provide any custom triggers.
   entity-event-setup:
     status: exempt
-    comment: Entities of this integration does not explicitly subscribe to events.
+    comment: Entities of this integration do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -42,9 +42,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: The loss of the push connection is logged, but its recovery is not.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
