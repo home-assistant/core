@@ -41,7 +41,7 @@
                 'has_fan_operation_mode': None,
                 'has_half_degree_increments': True,
                 'has_heat_operation_mode': True,
-                'has_outdoor_temperature_sensor': True,
+                'has_outdoor_temperature_sensor': None,
                 'has_standby_mode': True,
                 'has_swing': True,
                 'has_vane_horizontal': True,

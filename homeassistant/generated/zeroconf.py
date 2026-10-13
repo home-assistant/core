@@ -256,6 +256,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "sensibo",
     },
+    "Slide": {
+        "always_discover": True,
+        "domain": "slide_local",
+    },
     "Smart Bridge": {
         "always_discover": False,
         "domain": "lutron_caseta",
