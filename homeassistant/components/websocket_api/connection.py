@@ -151,6 +151,17 @@ class ActiveConnection:
         self.pending_state_diff_batches.append(flush)
 
     @callback
+    def async_is_newest_state_diff_batch(self, flush: StateDiffBatchFlush) -> bool:
+        """Return whether nothing has been queued behind this batch.
+
+        A batch may only keep collecting while it is the newest. Queued once on its
+        first change, it would otherwise carry a later change in an earlier message
+        than a subscription that collected in between.
+        """
+        batches = self.pending_state_diff_batches
+        return bool(batches) and batches[-1] == flush
+
+    @callback
     def async_discard_pending_state_diff_batch(
         self, flush: StateDiffBatchFlush
     ) -> None:

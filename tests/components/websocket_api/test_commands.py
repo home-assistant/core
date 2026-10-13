@@ -4396,6 +4396,59 @@ async def test_subscribe_entities_sent_early_does_not_overtake_another_subscript
     await hass.async_block_till_done()
 
 
+async def test_subscribe_entities_does_not_keep_collecting_once_another_has(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A batch stops collecting once another subscription has collected after it.
+
+    A batch is queued on its first change, so without this a later change folded into
+    it would be sent in that earlier message - ahead of a change another subscription
+    collected in between, reversing the order the two events happened in.
+    """
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_entities", "entity_ids": ["light.first", "light.third"]}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    first_subscription = msg["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_entities", "entity_ids": ["light.second"]}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    second_subscription = msg["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    # All in one iteration, and interleaved: the first subscription collects, the
+    # second collects, then the first collects again. Different entities, so the
+    # duplicate rule is not what separates them.
+    hass.states.async_set("light.first", "on")
+    hass.states.async_set("light.second", "on")
+    hass.states.async_set("light.third", "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == first_subscription
+    assert set(msg["event"]["a"]) == {"light.first"}, (
+        "the later change should not have joined this message"
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == second_subscription
+    assert set(msg["event"]["a"]) == {"light.second"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == first_subscription
+    assert set(msg["event"]["a"]) == {"light.third"}
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
 async def test_subscribe_entities_at_the_cap_does_not_overtake_another_subscription(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,

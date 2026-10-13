@@ -444,14 +444,19 @@ class _StateDiffBatch:
 
     @callback
     def async_add(self, entity_id: str, event: Event[EventStateChangedData]) -> None:
-        """Add a change, sending what is already collected if it supersedes it."""
+        """Add a change, sending what is already collected if it cannot join it."""
         connection = self._connection
-        if entity_id in self._entity_ids:
+        if self._entity_ids and (
             # Two updates for one entity cannot share a message. A diff is relative to
             # the state before it, and the client applies additions, removals and
             # changes in a fixed order that need not match the order they happened in -
-            # so an entity removed and then added back would be left removed. Sending
-            # what we have keeps the order the events actually occurred in.
+            # so an entity removed and then added back would be left removed.
+            entity_id in self._entity_ids
+            # Another subscription has collected since this batch did, so a change
+            # added now would be sent ahead of one that happened before it.
+            or not connection.async_is_newest_state_diff_batch(self.async_flush)
+        ):
+            # Sending what is collected keeps the order the events occurred in.
             connection.async_flush_state_diff_batches()
         if not self._entity_ids:
             connection.async_add_pending_state_diff_batch(self.async_flush)
