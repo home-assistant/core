@@ -40,7 +40,7 @@ async def _reauth_flow_wrapper(
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> None:
     """Handle migration of a previous version config entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
     data = {**entry.data}
@@ -64,8 +64,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
         if "device_id" in data:
             data["hardware_id"] = data.pop("device_id")
             hass.config_entries.async_update_entry(entry, data=data, version=4)
-        return True
-    return True
+        return
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -76,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> None:
     """Set up Blink via config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
     session = async_get_clientsession(hass)
@@ -96,8 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> boo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 @callback
@@ -120,6 +117,6 @@ def _async_import_options_from_data_if_missing(
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> None:
     """Unload Blink entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

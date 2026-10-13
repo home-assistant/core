@@ -69,7 +69,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> None:
     """Set up La Marzocco as config entry."""
 
     assert entry.unique_id
@@ -225,17 +225,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: LaMarzoccoConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
 
     if entry.version in (1, 2):
@@ -273,8 +271,6 @@ async def async_migrate_entry(
             version=4,
         )
         _LOGGER.debug("Migrated La Marzocco config entry to version 4")
-
-    return True
 
 
 def create_client_session(hass: HomeAssistant) -> ClientSession:

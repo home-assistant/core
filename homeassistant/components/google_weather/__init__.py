@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleWeatherConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Weather from a config entry."""
 
     api = GoogleWeatherApi(
@@ -86,14 +86,12 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleWeatherConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
 
 
 async def async_update_options(

@@ -19,7 +19,7 @@ type AveaConfigEntry = ConfigEntry[avea.Bulb]
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> None:
     """Set up Avea from a config entry."""
     address = entry.data[CONF_ADDRESS]
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
@@ -39,9 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool
 
     entry.runtime_data = avea.Bulb(ble_device)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> None:
     """Unload an Avea config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
