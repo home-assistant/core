@@ -22,9 +22,10 @@ from homeassistant.helpers.trigger_template_entity import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import async_get_config_and_coordinator, create_rest_data_from_config
+from . import async_get_config_and_coordinator
 from .coordinator import RestCoordinator
 from .data import RestData
+from .util import create_rest_data_from_config
 
 TRIGGER_ENTITY_OPTIONS = (
     CONF_AVAILABILITY,

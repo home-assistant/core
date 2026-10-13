@@ -102,7 +102,7 @@
       ]),
       'user_account': dict({
         'email': '**REDACTED**',
-        'first_name': '**REDACTED**',
+        'first_name': None,
         'full_name': '**REDACTED**',
         'initials': '',
         'is_representative': False,
