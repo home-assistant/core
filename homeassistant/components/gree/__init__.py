@@ -3,13 +3,22 @@
 from datetime import timedelta
 import logging
 
+from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
+
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_SCAN_INTERVAL
-from .coordinator import DiscoveryService, GreeConfigEntry, GreeRuntimeData
+from .const import DISCOVERY_SCAN_INTERVAL, DOMAIN
+from .coordinator import (
+    DeviceDataUpdateCoordinator,
+    DiscoveryService,
+    GreeConfigEntry,
+    GreeRuntimeData,
+    async_create_and_bind_device,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,23 +27,50 @@ PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
     """Set up Gree Climate from a config entry."""
-    gree_discovery = DiscoveryService(hass, entry)
-    entry.runtime_data = GreeRuntimeData(
-        discovery_service=gree_discovery, coordinators=[]
-    )
+    if CONF_IP_ADDRESS in entry.data:
+        ip_address = entry.data[CONF_IP_ADDRESS]
+        try:
+            device = await async_create_and_bind_device(ip_address)
+        except (DeviceNotBoundError, DeviceTimeoutError, OSError) as err:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to Gree device at {ip_address}"
+            ) from err
+        if device.device_info.mac != entry.unique_id:
+            raise ConfigEntryNotReady(
+                f"Gree device at {ip_address} has MAC {device.device_info.mac},"
+                f" expected {entry.unique_id}"
+            )
+        coordinator = DeviceDataUpdateCoordinator(hass, entry, device)
+        await coordinator.async_config_entry_first_refresh()
 
-    async def _async_scan_update(_=None):
-        bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
-        await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
-
-    _LOGGER.debug("Scanning network for Gree devices")
-    await _async_scan_update()
-
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+        # Reload a discovery entry that already owns this device, so it drops it.
+        for other_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            if other_entry.runtime_data.discovery_service is not None and any(
+                other.device.device_info.mac == device.device_info.mac
+                for other in other_entry.runtime_data.coordinators
+            ):
+                await hass.config_entries.async_reload(other_entry.entry_id)
+        entry.runtime_data = GreeRuntimeData(
+            discovery_service=None, coordinators=[coordinator]
         )
-    )
+    else:
+        gree_discovery = DiscoveryService(hass, entry)
+        entry.runtime_data = GreeRuntimeData(
+            discovery_service=gree_discovery, coordinators=[]
+        )
+
+        async def _async_scan_update(_=None):
+            bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
+            await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
+
+        _LOGGER.debug("Scanning network for Gree devices")
+        await _async_scan_update()
+
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+            )
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -43,4 +79,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and CONF_IP_ADDRESS in entry.data and entry.disabled_by is not None:
+        _async_reload_discovery_entries(hass)
+    return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    if CONF_IP_ADDRESS in entry.data:
+        _async_reload_discovery_entries(hass)
+
+
+@callback
+def _async_reload_discovery_entries(hass: HomeAssistant) -> None:
+    """Reload discovery entries so they pick up devices no longer set up by IP."""
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.runtime_data.discovery_service is not None:
+            hass.config_entries.async_schedule_reload(entry.entry_id)

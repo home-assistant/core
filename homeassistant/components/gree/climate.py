@@ -121,7 +121,9 @@ async def async_setup_entry(
         init_device(coordinator)
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
+        async_dispatcher_connect(
+            hass, f"{DISPATCH_DEVICE_DISCOVERED}_{entry.entry_id}", init_device
+        )
     )
 
 
