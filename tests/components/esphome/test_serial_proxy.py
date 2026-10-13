@@ -305,6 +305,54 @@ async def test_scan_serial_ports_usb(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_identity_without_usb_descriptor(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A device with no USB descriptor gets no `udev_id` and is matched on the rest."""
+    _mock_identities(
+        mock_client,
+        [
+            SerialProxyIdentity(
+                instance=0,
+                source=SerialProxyIdentitySource.CONFIGURED,
+                flags=SerialProxyIdentityFlag.CONNECTED,
+                manufacturer="Nabu Casa",
+                product="ZBT-2",
+                serial_number="10B41DE58F10",
+            )
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES[:1]},
+    )
+
+    url = str(
+        serial_proxy.build_url(
+            device.entry.entry_id,
+            port_name="USB (Zigbee)",
+            port_manufacturer="Nabu Casa",
+            port_product="ZBT-2",
+            port_serial_number="10B41DE58F10",
+        )
+    )
+    assert "port_usb" not in url
+    assert _async_scan_serial_ports(hass) == [
+        SerialDevice(
+            device=url,
+            resolved_device=url,
+            serial_number="10B41DE58F10",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+            interface_description=None,
+            interface_num=None,
+        )
+    ]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_serial_proxy_identity_hotplug(
     hass: HomeAssistant,
     mock_client: APIClient,
