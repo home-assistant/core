@@ -36,7 +36,10 @@ from homeassistant.helpers.frame import ReportBehavior
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from .const import (  # noqa: F401
     ATTR_CURRENT_HUMIDITY,
@@ -893,7 +896,7 @@ class RestoreClimate(ClimateEntity, RestoreEntity):
                 return temperature
             min_temp = self.min_temp
             max_temp = self.max_temp
-            tolerance = TemperatureConverter.convert_interval(0.5, unit, native_unit)
+            tolerance = TemperatureDeltaConverter.convert(0.5, unit, native_unit)
             if not min_temp - tolerance < temperature < max_temp + tolerance:
                 return None
             return min(max(temperature, min_temp), max_temp)
