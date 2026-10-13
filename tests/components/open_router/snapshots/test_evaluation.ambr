@@ -1,0 +1,104 @@
+# serializer version: 1
+# name: test_evaluate
+  dict({
+    'extra_body': dict({
+      'provider': dict({
+        'require_parameters': True,
+      }),
+    }),
+    'extra_headers': dict({
+      'HTTP-Referer': 'https://www.home-assistant.io/integrations/open_router',
+      'X-Title': 'Home Assistant',
+    }),
+    'messages': list([
+      dict({
+        'content': 'You evaluate questions about the provided state and attachments. For every question, estimate a calibrated probability for each possible answer based only on the provided information. Probabilities are numbers between 0 and 1.',
+        'role': 'system',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'text': '''
+              Question delivered: Has the package arrived?
+              Answer with the probability that the answer is yes.
+              
+              Question location: Where was the package left?
+              Answer with the probability of each option:
+              - door: At the front door
+              - garage: In the garage
+              
+              Question urgency: How urgent is it to collect the package?
+              Answer with the probability of each level:
+              - 0: Not urgent
+              - 1: Somewhat urgent
+              - 2: Very urgent
+              
+              State:
+              {"message":"Your package was left at the front door."}
+            ''',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'user',
+      }),
+    ]),
+    'model': 'openai/gpt-4',
+    'response_format': dict({
+      'json_schema': dict({
+        'name': 'check_delivery',
+        'schema': dict({
+          'additionalProperties': False,
+          'properties': dict({
+            'delivered': dict({
+              'type': 'number',
+            }),
+            'location': dict({
+              'additionalProperties': False,
+              'properties': dict({
+                'door': dict({
+                  'type': 'number',
+                }),
+                'garage': dict({
+                  'type': 'number',
+                }),
+              }),
+              'required': list([
+                'door',
+                'garage',
+              ]),
+              'type': 'object',
+            }),
+            'urgency': dict({
+              'additionalProperties': False,
+              'properties': dict({
+                '0': dict({
+                  'type': 'number',
+                }),
+                '1': dict({
+                  'type': 'number',
+                }),
+                '2': dict({
+                  'type': 'number',
+                }),
+              }),
+              'required': list([
+                '0',
+                '1',
+                '2',
+              ]),
+              'type': 'object',
+            }),
+          }),
+          'required': list([
+            'delivered',
+            'location',
+            'urgency',
+          ]),
+          'type': 'object',
+        }),
+        'strict': True,
+      }),
+      'type': 'json_schema',
+    }),
+  })
+# ---

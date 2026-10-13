@@ -59,6 +59,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": ConversationFlowHandler,
             "ai_task_data": AITaskDataFlowHandler,
+            "ai_task_evaluate": AITaskDataFlowHandler,
         }
 
     @override
