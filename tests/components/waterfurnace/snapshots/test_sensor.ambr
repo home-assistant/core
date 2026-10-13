@@ -1039,6 +1039,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
@@ -1049,7 +1052,7 @@
     'supported_features': 0,
     'translation_key': 'water_flow_rate',
     'unique_id': 'TEST_GWID_12345_waterflowrate',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[sensor.test_abc_type_water_flow_rate-state]
@@ -1058,7 +1061,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test ABC Type Water flow rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_abc_type_water_flow_rate',
