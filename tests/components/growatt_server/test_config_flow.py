@@ -967,6 +967,15 @@ async def test_reauth_token_non_auth_api_error(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
+    mock_growatt_v1_api.plant_list.side_effect = None
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 async def test_reauth_password_invalid_response(
     hass: HomeAssistant,

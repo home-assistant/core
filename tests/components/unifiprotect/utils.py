@@ -37,6 +37,7 @@ from uiprotect.data.public_devices import (
     PublicCameraFeatureFlags,
     PublicCameraLedSettings,
     PublicChime,
+    PublicDeviceModel,
     PublicHdrMode,
     PublicLcdMessage,
     PublicLight,
@@ -290,6 +291,16 @@ def public_rtsps_for(camera: Camera) -> RTSPSStreams:
     return RTSPSStreams(**urls)
 
 
+def bind_public_device_properties(public: Mock, model: type[PublicDeviceModel]) -> None:
+    """Evaluate the model's own reachability and model name.
+
+    A spec mock would otherwise return truthy mocks for these properties.
+    """
+    mock_type = type(public)
+    mock_type.is_reachable = model.is_reachable
+    mock_type.model_name = property(lambda obj: obj.type or model._MODEL_NAME)
+
+
 _PUBLIC_STORE_ATTRS: dict[ModelType, str] = {
     ModelType.CAMERA: "cameras",
     ModelType.LIGHT: "lights",
@@ -297,6 +308,9 @@ _PUBLIC_STORE_ATTRS: dict[ModelType, str] = {
     ModelType.CHIME: "chimes",
     ModelType.VIEWPORT: "viewers",
     ModelType.FOB: "fobs",
+    ModelType.LINK_STATION: "alarm_hubs",
+    ModelType.SIREN: "sirens",
+    ModelType.RELAY: "relays",
 }
 
 
@@ -307,7 +321,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens", "arm_profiles"):
+    for attr in (*_PUBLIC_STORE_ATTRS.values(), "arm_profiles"):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -326,7 +340,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     def _all_devices(*, include_nvr: bool = False) -> Iterator[Any]:
         if include_nvr and pb.nvr is not None:
             yield pb.nvr
-        for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens"):
+        for attr in _PUBLIC_STORE_ATTRS.values():
             yield from getattr(pb, attr).values()
 
     pb.store_for = Mock(side_effect=_store_for)
@@ -384,6 +398,8 @@ def make_public_sensor(
     light_value: float | None = None,
     humidity_value: float | None = None,
     temperature_value: float | None = None,
+    open_status_changed_at: datetime | None = None,
+    motion_detected_at: datetime | None = None,
     tampering_detected_at: datetime | None = None,
     signal_strength: int | None = None,
     signal_quality: int | None = None,
@@ -400,6 +416,7 @@ def make_public_sensor(
     advertises every capability.
     """
     public = Mock(spec=PublicSensor)
+    bind_public_device_properties(public, PublicSensor)
     public.id = sensor.id
     public.mac = sensor.mac
     public.name = sensor.name
@@ -469,13 +486,9 @@ def make_public_sensor(
             ),
             is_low=sensor.battery_status.is_low if is_low is None else is_low,
         ),
-        # The private sensor has no signal quality to mirror.
+        # Signal strength as in the sensor fixture.
         signal_state=PublicSignalState(
-            signal_strength=(
-                sensor.bluetooth_connection_state.signal_strength
-                if signal_strength is None
-                else signal_strength
-            ),
+            signal_strength=-50 if signal_strength is None else signal_strength,
             signal_quality=signal_quality,
         ),
     )
@@ -493,15 +506,11 @@ def make_public_sensor(
             )
         }
     )
-    # The public API reports these as a JS epoch; the fixture leaves tampering
-    # unset, so a test asserting that path passes its own instant.
-    public.open_status_changed_at = to_js_time(sensor.open_status_changed_at)
-    public.motion_detected_at = to_js_time(sensor.motion_detected_at)
-    public.tampering_detected_at = to_js_time(
-        sensor.tampering_detected_at
-        if tampering_detected_at is None
-        else tampering_detected_at
-    )
+    # The public API reports these as a JS epoch; a test asserting one of them
+    # passes its own instant.
+    public.open_status_changed_at = to_js_time(open_status_changed_at)
+    public.motion_detected_at = to_js_time(motion_detected_at)
+    public.tampering_detected_at = to_js_time(tampering_detected_at)
     # Mocks do not evaluate properties, so derive them with the library's own
     # logic: a wrong assumption about what gates a metric, or about how the
     # epoch fields convert, fails the test.
@@ -547,6 +556,7 @@ def make_public_light(
     lds = light.light_device_settings
     lms = light.light_mode_settings
     public = Mock(spec=PublicLight)
+    bind_public_device_properties(public, PublicLight)
     public.id = light.id
     public.mac = light.mac
     public.name = light.name
@@ -569,8 +579,11 @@ def make_public_light(
         public.last_motion = None
     public.light_mode_settings = PublicLightModeSettings(
         mode=lms.mode if light_mode is None else light_mode,
+        # The light fixture enables the mode at all times.
         enable_at=(
-            lms.enable_at if light_mode_enable_at is None else light_mode_enable_at
+            LightModeEnableType.ALWAYS
+            if light_mode_enable_at is None
+            else light_mode_enable_at
         ),
     )
     public.light_device_settings = PublicLightDeviceSettings(
@@ -579,12 +592,9 @@ def make_public_light(
             if is_indicator_enabled is None
             else is_indicator_enabled
         ),
-        led_level=lds.led_level if led_level is None else led_level,
-        pir_duration=(
-            round(lds.pir_duration.total_seconds() * 1000)
-            if pir_duration_ms is None
-            else pir_duration_ms
-        ),
+        # LED level and PIR duration as in the light fixture.
+        led_level=6 if led_level is None else led_level,
+        pir_duration=45000 if pir_duration_ms is None else pir_duration_ms,
         pir_sensitivity=(
             lds.pir_sensitivity if pir_sensitivity is None else pir_sensitivity
         ),
@@ -651,6 +661,7 @@ def make_public_camera(
     the test. ``lcd_message`` defaults to none for the same reason.
     """
     public = Mock(spec=PublicCamera)
+    bind_public_device_properties(public, PublicCamera)
     public.id = camera.id
     public.mac = camera.mac
     public.name = camera.name
@@ -722,7 +733,7 @@ def make_public_camera(
     public.has_package_camera = flags.has_package_camera
     # Spec'd so a private-only flag reads as absent.
     public.feature_flags = Mock(spec=PublicCameraFeatureFlags)
-    public.feature_flags.support_full_hd_snapshot = flags.support_full_hd_snapshot
+    public.feature_flags.support_full_hd_snapshot = False
     public.feature_flags.has_hdr = flags.has_hdr
     public.feature_flags.has_mic = flags.has_mic
     public.feature_flags.has_led_status = flags.has_led_status
@@ -773,17 +784,21 @@ def setup_public_sensor(
     pb.get = _get
     _mirror_on_update_public(ufp, "sensors", public_bootstrap.sensors, make)
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 
-def setup_public_light(ufp: MockUFPFixture) -> None:
+def setup_public_light(ufp: MockUFPFixture, **mirror_overrides: Any) -> None:
     """Expose private lights over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_sensor`` for ``ModelType.LIGHT`` so the migrated
-    FloodLight duration number reads from the public object.
+    FloodLight duration number reads from the public object. Keyword arguments
+    are handed to ``make_public_light``.
     """
     public_bootstrap = PublicBootstrap()
     pb = make_public_bootstrap(lights=public_bootstrap.lights)
+    make = partial(make_public_light, **mirror_overrides)
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
         # One mock per id so command assertions hit the entity's cached object.
@@ -792,14 +807,16 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
             and obj_id not in public_bootstrap.lights
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
-            public_bootstrap.lights[obj_id] = make_public_light(private)
+            public_bootstrap.lights[obj_id] = make(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
     _mirror_on_update_public(
-        ufp, "lights", public_bootstrap.lights, make_public_light, keep_existing=True
+        ufp, "lights", public_bootstrap.lights, make, keep_existing=True
     )
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 
@@ -822,6 +839,8 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
 
     pb.get = _get
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 
@@ -833,6 +852,7 @@ def make_public_chime(
 ) -> Mock:
     """Build a public-API chime mirroring the private fixture's ring settings."""
     public = Mock(spec=PublicChime)
+    bind_public_device_properties(public, PublicChime)
     public.id = chime.id
     public.mac = chime.mac
     public.name = chime.name
@@ -880,6 +900,8 @@ def setup_public_chime(ufp: MockUFPFixture) -> None:
         ufp, "chimes", public_bootstrap.chimes, make_public_chime, keep_existing=True
     )
     ufp.api.has_public_bootstrap = True
+    # Keep the fixture's public NVR (identity and doorbell settings).
+    pb.nvr = ufp.api.public_bootstrap.nvr
     ufp.api.public_bootstrap = pb
 
 

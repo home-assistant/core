@@ -35,7 +35,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AnglianWaterConfigEntry
-) -> bool:
+) -> None:
     """Set up Anglian Water from a config entry."""
     auth = MSOB2CAuth(
         username=entry.data[CONF_USERNAME],
@@ -83,11 +83,10 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AnglianWaterConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

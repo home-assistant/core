@@ -831,6 +831,7 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
     try:
         addon_info: AddonInfo = await multipan_manager.async_get_addon_info()
     except AddonError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(err)
         raise HomeAssistantError from err
 

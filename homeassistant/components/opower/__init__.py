@@ -4,6 +4,7 @@ from opower import select_utility
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_UTILITY, DOMAIN
@@ -17,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bo
     utility_name = entry.data[CONF_UTILITY]
     try:
         select_utility(utility_name)
-    except ValueError:
+    except ValueError as err:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -32,7 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bo
                 "title": entry.title,
             },
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_utility",
+            translation_placeholders={"utility": utility_name},
+        ) from err
 
     coordinator = OpowerCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
