@@ -2261,6 +2261,26 @@ async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> Non
         CONF_ADDRESS: ADDRESS,
     }
 
+    # Once the vehicle is discoverable again, the same flow finishes.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(_mock_vehicle(on_whitelist=True)),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_reload.assert_called_once_with(entry.entry_id)
+
 
 SITE_ID = 123456
 WALL_CONNECTOR_SITE_ID = 555555
