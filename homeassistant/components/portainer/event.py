@@ -12,6 +12,7 @@ from . import PortainerConfigEntry
 from .const import CONTAINER_STATE_EVENT_TYPES
 from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import PortainerContainerEntity, PortainerCoordinatorData
+from .util import async_add_entities_by_subentry
 
 PARALLEL_UPDATES = 0
 
@@ -35,11 +36,18 @@ async def async_setup_entry(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container event entities."""
-        async_add_entities(
-            PortainerContainerEventEntity(
-                coordinator, CONTAINER_EVENT_DESCRIPTION, container, endpoint
-            )
-            for (endpoint, container) in containers
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerEventEntity(
+                        coordinator, CONTAINER_EVENT_DESCRIPTION, container, endpoint
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+            ),
         )
 
     coordinator.new_containers_callbacks.append(_async_add_new_containers)

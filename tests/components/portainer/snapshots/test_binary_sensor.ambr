@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_out_of_memory',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_out_of_memory',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_status',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_out_of_memory',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_out_of_memory',
     'unit_of_measurement': None,
   })
 # ---
@@ -236,7 +236,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_status',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -287,7 +287,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_out_of_memory',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_out_of_memory',
     'unit_of_measurement': None,
   })
 # ---
@@ -338,7 +338,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_status',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -440,7 +440,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_out_of_memory',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_out_of_memory',
     'unit_of_measurement': None,
   })
 # ---
@@ -491,7 +491,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_practical_morse_status',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -542,7 +542,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_out_of_memory',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_out_of_memory',
     'unit_of_measurement': None,
   })
 # ---
@@ -593,7 +593,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_serene_banach_status',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -644,7 +644,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_out_of_memory',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_out_of_memory',
     'unit_of_measurement': None,
   })
 # ---
@@ -695,7 +695,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_status',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_status',
     'unit_of_measurement': None,
   })
 # ---

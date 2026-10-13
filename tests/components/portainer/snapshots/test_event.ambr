@@ -47,7 +47,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'docker_event',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_docker_event',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_docker_event',
     'unit_of_measurement': None,
   })
 # ---
@@ -127,7 +127,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'docker_event',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_docker_event',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_docker_event',
     'unit_of_measurement': None,
   })
 # ---
@@ -207,7 +207,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'docker_event',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_docker_event',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_docker_event',
     'unit_of_measurement': None,
   })
 # ---
@@ -287,7 +287,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'docker_event',
-    'unique_id': 'portainer_test_entry_123_practical_morse_docker_event',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_docker_event',
     'unit_of_measurement': None,
   })
 # ---
@@ -367,7 +367,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'docker_event',
-    'unique_id': 'portainer_test_entry_123_serene_banach_docker_event',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_docker_event',
     'unit_of_measurement': None,
   })
 # ---
@@ -447,7 +447,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'docker_event',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_docker_event',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_docker_event',
     'unit_of_measurement': None,
   })
 # ---
