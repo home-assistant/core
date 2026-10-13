@@ -41,17 +41,21 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("method", "exception", "error"),
     [
-        (ZinvoltAuthenticationError, "invalid_auth"),
-        (ZinvoltError, "cannot_connect"),
-        (Exception, "unknown"),
+        pytest.param(
+            "login", ZinvoltAuthenticationError, "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param("login", ZinvoltError, "cannot_connect", id="cannot_connect"),
+        pytest.param("login", Exception, "unknown", id="unknown"),
+        pytest.param("get_user_id", ZinvoltError, "cannot_connect", id="invalid_token"),
     ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
     mock_zinvolt_client: AsyncMock,
     mock_setup_entry: AsyncMock,
+    method: str,
     exception: Exception,
     error: str,
 ) -> None:
@@ -60,7 +64,7 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_zinvolt_client.login.side_effect = exception
+    getattr(mock_zinvolt_client, method).side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -73,7 +77,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_zinvolt_client.login.side_effect = None
+    getattr(mock_zinvolt_client, method).side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

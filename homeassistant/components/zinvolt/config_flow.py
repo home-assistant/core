@@ -36,6 +36,7 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
             token = await client.login(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
+            user_id = client.get_user_id()
         except ZinvoltAuthenticationError:
             errors["base"] = "invalid_auth"
         except ZinvoltError:
@@ -44,7 +45,7 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(client.get_user_id())
+            await self.async_set_unique_id(user_id)
             return token
         return None
 
