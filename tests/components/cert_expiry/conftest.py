@@ -11,6 +11,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 import pytest
 
+from tests.patch_time import ha_datetime_to_fakedatetime
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -33,6 +35,18 @@ def certificate_dates() -> tuple[datetime, datetime]:
     return datetime(2020, 1, 1, tzinfo=UTC), datetime(2100, 1, 1, tzinfo=UTC)
 
 
+def _certificate_builder(
+    certificate_dates: tuple[datetime, datetime],
+) -> x509.CertificateBuilder:
+    """Use consistent datetime types when signing test certificates."""
+    # Cryptography can cache a fake datetime type while the clock is frozen.
+    return (
+        x509.CertificateBuilder()
+        .not_valid_before(ha_datetime_to_fakedatetime(certificate_dates[0]))
+        .not_valid_after(ha_datetime_to_fakedatetime(certificate_dates[1]))
+    )
+
+
 @pytest.fixture
 def certificate(
     certificate_key: ec.EllipticCurvePrivateKey,
@@ -45,13 +59,11 @@ def certificate(
         return ca_signed_certificate
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
     return (
-        x509.CertificateBuilder()
+        _certificate_builder(certificate_dates)
         .subject_name(name)
         .issuer_name(name)
         .public_key(certificate_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(certificate_dates[0])
-        .not_valid_after(certificate_dates[1])
         .add_extension(
             x509.SubjectAlternativeName([x509.DNSName("localhost")]), critical=False
         )
@@ -105,13 +117,13 @@ def _create_ca_certificate(ca_key: ec.EllipticCurvePrivateKey) -> x509.Certifica
     """Build a private root CA with the extensions needed for strict validation."""
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Private test CA")])
     return (
-        x509.CertificateBuilder()
+        _certificate_builder(
+            (datetime(2020, 1, 1, tzinfo=UTC), datetime(2100, 1, 1, tzinfo=UTC))
+        )
         .subject_name(name)
         .issuer_name(name)
         .public_key(ca_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime(2020, 1, 1, tzinfo=UTC))
-        .not_valid_after(datetime(2100, 1, 1, tzinfo=UTC))
         .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
         .add_extension(
             x509.KeyUsage(
@@ -144,13 +156,11 @@ def ca_signed_certificate(
 ) -> x509.Certificate:
     """Create a server certificate issued by the private CA."""
     return (
-        x509.CertificateBuilder()
+        _certificate_builder(certificate_dates)
         .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")]))
         .issuer_name(ca_certificate.subject)
         .public_key(certificate_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(certificate_dates[0])
-        .not_valid_after(certificate_dates[1])
         .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
         .add_extension(
             x509.KeyUsage(
