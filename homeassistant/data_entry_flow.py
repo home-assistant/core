@@ -33,7 +33,9 @@ from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
 
-_current_step_id: ContextVar[str | None] = ContextVar("current_step_id", default=None)
+_current_step: ContextVar[tuple[FlowHandler[Any, Any, Any], str] | None] = ContextVar(
+    "current_step", default=None
+)
 
 
 class FlowResultType(StrEnum):
@@ -733,11 +735,18 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     @contextmanager
     def _as_step(self, step_id: str) -> Generator[None]:
         """Default the step id of results built inside the block."""
-        token = _current_step_id.set(step_id)
+        token = _current_step.set((self, step_id))
         try:
             yield
         finally:
-            _current_step_id.reset(token)
+            _current_step.reset(token)
+
+    def _inferred_step_id(self) -> str | None:
+        """Return the id of the step running on this handler, if any."""
+        current = _current_step.get()
+        if current is None or current[0] is not self:
+            return None
+        return current[1]
 
     @callback
     def async_show_form(
@@ -762,7 +771,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             preview=preview,  # Display preview component in frontend
         )
         if step_id is None:
-            step_id = _current_step_id.get()
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -831,7 +840,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
         )
         if step_id is None:
-            step_id = _current_step_id.get()
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -883,7 +892,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             progress_task=progress_task,
         )
         if step_id is None:
-            step_id = _current_step_id.get()
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -941,7 +950,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if sort:
             flow_result["sort"] = sort
         if step_id is None:
-            step_id = _current_step_id.get()
+            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result

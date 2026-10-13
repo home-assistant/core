@@ -243,6 +243,29 @@ async def test_flow_step_concurrent_configure(
     assert (await confirming)["step_id"] == "confirm"
 
 
+async def test_flow_step_does_not_leak_into_nested_flow(
+    manager: MockFlowManager,
+) -> None:
+    """Test a step that starts another flow does not leak its id into it."""
+    inner_results: list[data_entry_flow.FlowResult] = []
+
+    @manager.mock_reg_handler("inner")
+    class InnerFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    @manager.mock_reg_handler("outer")
+    class OuterFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_start(self, user_input=None):
+            inner_results.append(await manager.async_init("inner"))
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    outer = await manager.async_init("outer", context={"init_step": "start"})
+    assert outer["step_id"] == "start"
+    assert inner_results[0]["step_id"] == "init"
+
+
 async def test_flow_step_explicit_step_id_wins(manager: MockFlowManager) -> None:
     """Test an explicit step_id overrides the decorated step's id."""
 
