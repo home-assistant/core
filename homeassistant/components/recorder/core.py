@@ -566,6 +566,9 @@ class Recorder(threading.Thread):
 
         With a time range, only the statistics which overlap the range are cleared.
         """
+        # A one-sided range would otherwise clear the complete statistics.
+        if (start_time is None) != (end_time is None):
+            raise ValueError("start_time and end_time must be provided together")
         self.queue_task(
             ClearStatisticsTask(on_done, statistic_ids, start_time, end_time)
         )

@@ -2917,6 +2917,22 @@ async def test_clear_statistics_range_incomplete(
     run_mock.assert_not_called()
 
 
+@pytest.mark.parametrize("time_key", ["start_time", "end_time"])
+async def test_async_clear_statistics_range_incomplete(
+    hass: HomeAssistant, recorder_mock: Recorder, time_key: str
+) -> None:
+    """Test the recorder refuses a range with only one end."""
+    with (
+        patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock,
+        pytest.raises(ValueError, match="must be provided together"),
+    ):
+        recorder_mock.async_clear_statistics(
+            ["sensor.test"], **{time_key: dt_util.utcnow()}
+        )
+    await async_recorder_block_till_done(hass)
+    run_mock.assert_not_called()
+
+
 @pytest.mark.usefixtures("recorder_mock")
 async def test_clear_statistics_requires_admin(
     hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
