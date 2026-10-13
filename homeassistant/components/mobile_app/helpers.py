@@ -33,6 +33,7 @@ from .const import (
     CONF_USER_ID,
     DATA_DELETED_IDS,
     DATA_LIVE_ACTIVITY_TOKENS,
+    DATA_PUSH_SUBSCRIPTIONS,
     DOMAIN,
 )
 
@@ -176,6 +177,7 @@ def savable_state(hass: HomeAssistant) -> dict:
     return {
         DATA_DELETED_IDS: domain_data[DATA_DELETED_IDS],
         DATA_LIVE_ACTIVITY_TOKENS: domain_data[DATA_LIVE_ACTIVITY_TOKENS],
+        DATA_PUSH_SUBSCRIPTIONS: domain_data[DATA_PUSH_SUBSCRIPTIONS],
     }
 
 
