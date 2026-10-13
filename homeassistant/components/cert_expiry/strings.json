@@ -13,16 +13,16 @@
     "step": {
       "reconfigure": {
         "data": {
-          "ca_certificates": "Additional trusted certificates",
+          "ca_certificates": "[%key:component::cert_expiry::config::step::user::data::ca_certificates%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "Verify certificate"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "ca_certificates": "Additional certificates in PEM format to trust when verification is enabled. Paste certificates only, without private keys. Leave empty to use Home Assistant's normal trust bundle.",
-          "host": "The hostname or IP address of the server to monitor.",
-          "port": "The port to connect to on the server.",
-          "verify_ssl": "Validate the certificate's trust chain and hostname. Turn this off to monitor self-signed or expired certificates. When verification is off, the certificate is not authenticated and its is_valid attribute is false."
+          "ca_certificates": "[%key:component::cert_expiry::config::step::user::data_description::ca_certificates%]",
+          "host": "[%key:component::cert_expiry::config::step::user::data_description::host%]",
+          "port": "[%key:component::cert_expiry::config::step::user::data_description::port%]",
+          "verify_ssl": "[%key:component::cert_expiry::config::step::user::data_description::verify_ssl%]"
         },
         "title": "Reconfigure the certificate to test"
       },
@@ -32,7 +32,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "name": "The name of the certificate",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "Verify certificate"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "ca_certificates": "Additional certificates in PEM format to trust when verification is enabled. Paste certificates only, without private keys. Leave empty to use Home Assistant's normal trust bundle.",
