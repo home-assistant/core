@@ -3,7 +3,6 @@
 import logging
 from typing import Any, override
 
-import jwt
 import probatio
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltAuthenticationError, ZinvoltError
@@ -41,10 +40,7 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Extract the user ID from the JWT token's 'sub' field
-                decoded_token = jwt.decode(token, options={"verify_signature": False})
-                user_id = decoded_token["sub"]
-                await self.async_set_unique_id(user_id)
+                await self.async_set_unique_id(client.get_user_id())
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data={CONF_ACCESS_TOKEN: token}
