@@ -216,18 +216,11 @@ async def test_text_camera_default_from_public_nvr(
     assert hass.states.get(entity_id).state == "Changed"
 
 
-@pytest.mark.parametrize(
-    "key",
-    [
-        pytest.param("doorbell", id="doorbell"),
-    ],
-)
 async def test_text_camera_read_only_user(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
-    key: str,
 ) -> None:
     """A read-only local user gets the doorbell text, which writes publicly."""
     ufp.api.bootstrap.auth_user.all_permissions = [
@@ -238,5 +231,5 @@ async def test_text_camera_read_only_user(
     await init_entry(hass, ufp, [doorbell])
 
     assert entity_registry.async_get_entity_id(
-        Platform.TEXT, DOMAIN, f"{doorbell.mac}_{key}"
+        Platform.TEXT, DOMAIN, f"{doorbell.mac}_doorbell"
     )

@@ -305,8 +305,8 @@ def async_remove_sense_setting_mirrors(
 LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
 
 # Mirrors keyed by their own (platform, key), pointing at the (platform, key) of
-# the control that replaces them and the repair text. A ``None`` key is the
-# device entity itself, whose unique_id is the bare MAC.
+# the control that replaces them and the repair text. A ``None`` replacement
+# key is the device entity itself, whose unique_id is the bare MAC.
 type _MirrorReplacements = dict[tuple[str, str], tuple[Platform, str | None, str]]
 
 _LIGHT_MIRROR_REPLACEMENTS: _MirrorReplacements = {
