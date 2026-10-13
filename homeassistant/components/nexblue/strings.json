@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This NexBlue account is already configured.",
-      "wrong_account": "The credentials belong to a different NexBlue account than the one originally configured."
+      "unique_id_mismatch": "The credentials belong to a different NexBlue account than the one originally configured."
     },
     "error": {
       "cannot_connect": "Cannot connect to NexBlue.",

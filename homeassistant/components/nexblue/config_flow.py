@@ -89,7 +89,7 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 account_id, refresh_token = result
                 await self.async_set_unique_id(account_id)
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={
