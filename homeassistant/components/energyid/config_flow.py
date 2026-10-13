@@ -187,7 +187,9 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_PROVISIONING_KEY): str,
-                    probatio.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    probatio.Required(
+                        probatio.Secret(CONF_PROVISIONING_SECRET)
+                    ): cv.string,
                 }
             ),
             errors=errors,
@@ -293,7 +295,9 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_PROVISIONING_KEY): str,
-                    probatio.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    probatio.Required(
+                        probatio.Secret(CONF_PROVISIONING_SECRET)
+                    ): cv.string,
                 }
             ),
             errors=errors,

@@ -451,6 +451,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             self.async_set_update_error(ex)
             raise UpdateFailed from ex
         except InvalidFolder as ex:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning("Selected mailbox folder is invalid")
             await self._cleanup()
             self.async_set_update_error(ex)

@@ -10,13 +10,25 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import DEFAULT_RTSP_PORT
-from .const import CONF_RTSP_PORT, LOGGER
+from .const import CONF_RTSP_PORT, DOMAIN, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.CAMERA, Platform.NUMBER, Platform.SWITCH]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Foscam integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:

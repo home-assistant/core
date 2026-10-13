@@ -44,7 +44,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_GITLAB_ID): cv.string,
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
     }

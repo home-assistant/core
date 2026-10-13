@@ -74,6 +74,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # legacy platforms to finish setting up.
         hass.async_create_task(setup, eager_start=True)
 
+    # Reloading legacy platforms runs async_setup again; keep the existing
+    # component so config entry entities stay tracked.
+    if DATA_COMPONENT in hass.data:
+        return True
+
     hass.data[DATA_COMPONENT] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
     async_setup_services(hass)
 

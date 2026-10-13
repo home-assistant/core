@@ -33,7 +33,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_CLIENT_ID): cv.string,
-                probatio.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
             }
         )
     },

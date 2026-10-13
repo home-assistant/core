@@ -29,7 +29,7 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_PROFILE_ID, DOMAIN, SUBENTRY_TYPE_PROFILE
 
-AUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+AUTH_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_API_KEY)): str})
 
 _LOGGER = logging.getLogger(__name__)
 

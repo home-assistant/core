@@ -18,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -119,7 +120,7 @@ BOARD_CONFIG_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [BOARD_CONFIG_SCHEMA])},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [BOARD_CONFIG_SCHEMA])},
     extra=probatio.ALLOW_EXTRA,
 )
 
@@ -175,7 +176,11 @@ async def async_setup_entry(
     board = FirmataBoard(config_entry.data)
 
     if not await board.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": board.name},
+        )
 
     config_entry.runtime_data = board
 

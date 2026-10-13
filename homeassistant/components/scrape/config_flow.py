@@ -15,7 +15,7 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import CONF_STATE_CLASS, DEVICE_CLASS_UNITS
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -63,6 +63,8 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
@@ -107,7 +109,7 @@ RESOURCE_SETUP = probatio.Schema(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -158,19 +160,14 @@ SENSOR_SETTINGS = probatio.Schema(
                         DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
-                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                        SelectSelectorConfig(
-                            options=list(
-                                {
-                                    str(unit)
-                                    for units in DEVICE_CLASS_UNITS.values()
-                                    for unit in units
-                                    if unit is not None
-                                }
-                            ),
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                            sort=True,
+                    probatio.Optional(
+                        CONF_UNIT_OF_MEASUREMENT
+                    ): UnitOfMeasurementSelector(
+                        UnitOfMeasurementSelectorConfig(
+                            context={
+                                "filter_device_class": CONF_DEVICE_CLASS,
+                                "filter_state_class": CONF_STATE_CLASS,
+                            }
                         )
                     ),
                 }

@@ -23,13 +23,13 @@ USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
         probatio.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
     }
 )
@@ -91,7 +91,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_HOST, default=discovery_info.ip): str,
                 probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                probatio.Required(CONF_TOKEN): str,
+                probatio.Required(probatio.Secret(CONF_TOKEN)): str,
             }
         )
 
@@ -178,6 +178,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=bridge_id, data=user_input)
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),

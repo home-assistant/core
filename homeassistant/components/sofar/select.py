@@ -40,7 +40,9 @@ SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
         options=_enum_options(ChargerUseMode),
         options_enum=ChargerUseMode,
         value_fn=lambda device: device.charger.charger_use_mode,
-        write_fn=lambda device, value: device.charger.write("charger_use_mode", value),
+        write_fn=lambda device, value: device.charger.async_write_mode(
+            ChargerUseMode(value)
+        ),
     ),
     SofarSelectEntityDescription(
         key="eps_control",

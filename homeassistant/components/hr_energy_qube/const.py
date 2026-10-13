@@ -13,3 +13,5 @@ PLATFORMS = (
 
 DEFAULT_PORT = 502
 DEFAULT_SCAN_INTERVAL = 15
+# Cap on the mDNS lookup of the controller's advertisement (seconds)
+MDNS_LOOKUP_TIMEOUT = 3.0

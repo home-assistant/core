@@ -1,0 +1,49 @@
+{
+  "contracts": [
+    {
+      "uuid": "00000000-0000-4000-8000-000000000201",
+      "label": "Thuisbatterij",
+      "type": "home_battery_installation",
+      "start_date": "2026-04-09T22:00:00.000000Z",
+      "end_date": null,
+      "meta": {
+        "identifier": "SERIAL0000003",
+        "host_device_model_name": "Example Battery 5",
+        "first_measured_at": "2026-04-10T12:30:00.000000Z",
+        "last_measured_at": "2026-09-29T11:55:00.000000Z",
+        "state_of_charge": 655,
+        "power_ac": -800,
+        "inverter_state": "Discharging",
+        "battery_state": "Discharging",
+        "dynamic_charging_enabled": false,
+        "home_optimization_enabled": false,
+        "home_optimization_active": false,
+        "dynamic_load_balancing_enabled": true,
+        "dynamic_load_balancing_overload_active": false,
+        "grid_congestion_active": true,
+        "manual_control_enabled": false,
+        "manual_control_state": null,
+        "self_consumption_enabled": true,
+        "cycle_count": 100,
+        "show_in_contract_screen": true,
+        "reserve_discharge_cutoff_wh": 1000,
+        "backup_power_capable": true,
+        "backup_power_usable_capacity_wh": 4000,
+        "backup_power_active": false,
+        "total_earned": 1000000000,
+        "total_day": 5000000,
+        "delivery_day": 3000,
+        "production_day": 2500,
+        "average_day": 4000000,
+        "production_month": null
+      }
+    }
+  ],
+  "measurement_groups": [
+    {
+      "date": "2026-09-28T22:00:00.000000Z",
+      "total": 5000000,
+      "measurements": []
+    }
+  ]
+}
