@@ -2520,6 +2520,7 @@ async def test_rpc_storage_fs_free_sensor_removal(
     assert entity_registry.async_get(entity_id) is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("source", "expected_state"),
     [

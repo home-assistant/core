@@ -1819,6 +1819,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "light_source": RpcSensorDescription(
         key="light",
@@ -1827,6 +1828,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "cct_source": RpcSensorDescription(
         key="cct",
@@ -1835,6 +1837,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "rgb_source": RpcSensorDescription(
         key="rgb",
@@ -1843,6 +1846,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "rgbw_source": RpcSensorDescription(
         key="rgbw",
@@ -1851,6 +1855,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "rgbcct_source": RpcSensorDescription(
         key="rgbcct",
@@ -1859,6 +1864,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "cb_source": RpcSensorDescription(
         key="cb",
@@ -1867,6 +1873,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         value=lambda status, _: normalize_command_source(status),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
 
