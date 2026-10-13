@@ -85,8 +85,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                     "all components failed to refresh", list(report.failed.values())
                 )
         except ModbusError as err:
-            # ModbusConnectionError (dead link) and ModbusTimeoutError reach
-            # here; per-block failures once alive land in report.failed instead.
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
@@ -96,13 +94,12 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     async def _async_observed_poll(self) -> UpdateReport:
         """Poll once; a timeout either attempt hit must reach the tuner."""
-        attempted: dict[str, ModbusError] = {}
         try:
             report = await self._poll()
             attempted = dict(report.failed)
             report = await self._retry_failed(report)
         except ModbusError as err:
-            self._tuner.observe_failure(_timed_out(attempted) or err)
+            self._tuner.observe_failure(err)
             raise
         self._tuner.observe(
             UpdateReport(report.updated, _both_attempts(attempted, report.failed))
@@ -140,13 +137,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 _LOGGER.info("%s: %s is available again", self.name, name)
 
         return report
-
-
-def _timed_out(failures: Mapping[str, ModbusError]) -> ModbusTimeoutError | None:
-    """Whichever of these failures timed out, if any of them did."""
-    return next(
-        (err for err in failures.values() if isinstance(err, ModbusTimeoutError)), None
-    )
 
 
 def _both_attempts(
