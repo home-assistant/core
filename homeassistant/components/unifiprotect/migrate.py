@@ -304,10 +304,12 @@ def async_remove_sense_setting_mirrors(
 # Release that removes the deprecated light mirrors.
 LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
 
-# Light mirrors keyed by their own (platform, key), pointing at the (platform,
-# key) of the control that replaces them and the repair text. ``None`` is the
-# light entity itself, whose unique_id is the bare MAC.
-_LIGHT_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+# Mirrors keyed by their own (platform, key), pointing at the (platform, key) of
+# the control that replaces them and the repair text. A ``None`` key is the
+# device entity itself, whose unique_id is the bare MAC.
+type _MirrorReplacements = dict[tuple[str, str], tuple[Platform, str | None, str]]
+
+_LIGHT_MIRROR_REPLACEMENTS: _MirrorReplacements = {
     (Platform.BINARY_SENSOR, "light"): (
         Platform.LIGHT,
         None,
@@ -358,7 +360,7 @@ def async_deprecate_light_setting_mirrors(
 # Release that removes the deprecated camera mirrors.
 CAMERA_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
 
-_CAMERA_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+_CAMERA_MIRROR_REPLACEMENTS: _MirrorReplacements = {
     **{
         (Platform.BINARY_SENSOR, key): (
             Platform.SWITCH,
@@ -417,6 +419,8 @@ def async_deprecate_camera_setting_mirrors(
     These controls write through the public API, so every user gets them and
     the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
 
+    Runs after platform setup so the repair can name the replacement.
+
     Added in 2026.11.0
     """
     _async_deprecate_setting_mirrors(
@@ -433,7 +437,7 @@ def _async_deprecate_setting_mirrors(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
     macs: set[str],
-    replacements: dict[tuple[str, str], tuple[Platform, str | None, str]],
+    replacements: _MirrorReplacements,
     breaks_in: str,
 ) -> None:
     """Raise a repair for each used mirror, pointing at its replacement.

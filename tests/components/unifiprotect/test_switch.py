@@ -144,40 +144,100 @@ async def test_switch_setup_no_perm(
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
-    doorbell: Camera,
 ) -> None:
-    """A read-only local user only gets the switches that write publicly.
+    """A read-only local user still gets the light status light switch.
 
-    They write through the API key; the other switches still use private
+    It writes through the API key; the other light switches still use private
     setters and stay behind PermRequired.WRITE.
     """
 
     ufp.api.bootstrap.auth_user.all_permissions = [
-        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"}),
-        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"}),
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
     ]
 
-    await init_entry(hass, ufp, [light, doorbell])
+    await init_entry(hass, ufp, [light])
 
-    assert_entity_counts(hass, Platform.SWITCH, 11, 11)
+    assert_entity_counts(hass, Platform.SWITCH, 1, 1)
     assert entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, f"{light.mac}_status_light"
     )
-    for key in (
-        "status_light",
-        "high_fps",
-        "osd_name",
-        "osd_date",
-        "osd_logo",
-        "osd_bitrate",
-        "smart_person",
-        "smart_vehicle",
-        "smart_animal",
-        "smart_package",
-    ):
-        assert entity_registry.async_get_entity_id(
+
+
+_CAMERA_PUBLIC_SWITCHES = (
+    "status_light",
+    "high_fps",
+    "osd_name",
+    "osd_date",
+    "osd_logo",
+    "osd_bitrate",
+    "smart_person",
+    "smart_vehicle",
+    "smart_animal",
+    "smart_package",
+    "smart_licenseplate",
+    "smart_smoke",
+    "smart_cmonx",
+    "smart_siren",
+    "smart_baby_cry",
+    "smart_speak",
+    "smart_bark",
+    "smart_car_alarm",
+    "smart_car_horn",
+    "smart_glass_break",
+)
+
+
+@pytest.mark.parametrize("key", _CAMERA_PUBLIC_SWITCHES)
+async def test_switch_camera_read_only_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+) -> None:
+    """A read-only local user gets the camera switches that write publicly."""
+    doorbell.feature_flags.smart_detect_types = [
+        t for t in SmartDetectObjectType if t.audio_type is None
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = list(SmartDetectAudioType)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_{key}"
+    )
+
+
+@pytest.mark.parametrize("key", ["ssh", "system_sounds", "motion"])
+async def test_switch_camera_read_only_user_private_setters(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+) -> None:
+    """Camera switches with private setters stay behind the write permission."""
+    doorbell.feature_flags.smart_detect_types = [
+        t for t in SmartDetectObjectType if t.audio_type is None
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = list(SmartDetectAudioType)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert (
+        entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, f"{doorbell.mac}_{key}"
-        ), key
+        )
+        is None
+    )
 
 
 async def test_switch_setup_light(
@@ -1464,35 +1524,3 @@ async def test_public_only_switch_sense_registry_cleanup(
     await setup_public_only()
 
     assert entity_registry.async_get(stale.entity_id) is None
-
-
-@pytest.mark.parametrize(
-    ("platform", "key"),
-    [
-        pytest.param(Platform.NUMBER, "mic_level", id="mic_level"),
-        pytest.param(Platform.SELECT, "hdr_mode", id="hdr_mode"),
-        pytest.param(Platform.SELECT, "doorbell_text", id="doorbell_text_select"),
-        pytest.param(Platform.TEXT, "doorbell", id="doorbell_text"),
-        pytest.param(Platform.SWITCH, "smart_cmonx", id="smart_cmonx"),
-    ],
-)
-async def test_camera_public_controls_read_only_user(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-    platform: Platform,
-    key: str,
-) -> None:
-    """A read-only local user gets the camera controls that write publicly."""
-    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.CMONX]
-    ufp.api.bootstrap.auth_user.all_permissions = [
-        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
-    ]
-    setup_public_camera(ufp)
-
-    await init_entry(hass, ufp, [doorbell])
-
-    assert entity_registry.async_get_entity_id(
-        platform, DOMAIN, f"{doorbell.mac}_{key}"
-    )

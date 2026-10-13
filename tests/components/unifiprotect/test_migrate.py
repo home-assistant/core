@@ -717,14 +717,13 @@ async def test_migrate_light_setting_mirror_without_replacement(
 
 
 @pytest.mark.parametrize(
-    ("platform", "replacement_platform", "device", "key", "in_scope"),
+    ("platform", "replacement_platform", "device", "key"),
     [
         pytest.param(
             Platform.BINARY_SENSOR,
             Platform.SWITCH,
             "light",
             "high_fps",
-            False,
             id="camera_key_on_light",
         ),
         pytest.param(
@@ -732,31 +731,22 @@ async def test_migrate_light_setting_mirror_without_replacement(
             Platform.NUMBER,
             "doorbell",
             "sensitivity",
-            False,
             id="light_key_on_camera",
-        ),
-        pytest.param(
-            Platform.BINARY_SENSOR,
-            Platform.SWITCH,
-            "doorbell",
-            "high_fps",
-            True,
-            id="camera_key_on_camera",
         ),
     ],
 )
-async def test_migrate_setting_mirror_keys_scoped_to_device_type(
+async def test_migrate_setting_mirror_key_out_of_scope(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
     light: Light,
+    request: pytest.FixtureRequest,
     platform: Platform,
     replacement_platform: Platform,
     device: str,
     key: str,
-    in_scope: bool,
 ) -> None:
     """A mirror key only counts on the device type it belongs to.
 
@@ -764,7 +754,7 @@ async def test_migrate_setting_mirror_keys_scoped_to_device_type(
     """
     setup_public_light(ufp)
     setup_public_camera(ufp)
-    mac = {"doorbell": doorbell, "light": light}[device].mac
+    mac = request.getfixturevalue(device).mac
     unique_id = f"{mac}_{key}"
     entity_registry.async_get_or_create(
         replacement_platform, DOMAIN, unique_id, config_entry=ufp.entry
@@ -778,8 +768,67 @@ async def test_migrate_setting_mirror_keys_scoped_to_device_type(
 
     assert (
         issue_registry.async_get_issue(DOMAIN, f"setting_mirror_deprecated_{unique_id}")
-        is not None
-    ) is in_scope
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "replacement_platform", "device", "key"),
+    [
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            Platform.SWITCH,
+            "doorbell",
+            "high_fps",
+            id="camera_key_on_camera",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            Platform.SWITCH,
+            "doorbell",
+            "status_light",
+            id="shared_key_on_camera",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            Platform.SWITCH,
+            "light",
+            "status_light",
+            id="shared_key_on_light",
+        ),
+    ],
+)
+async def test_migrate_setting_mirror_key_in_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    light: Light,
+    request: pytest.FixtureRequest,
+    platform: Platform,
+    replacement_platform: Platform,
+    device: str,
+    key: str,
+) -> None:
+    """A mirror key on its own device type gets the repair."""
+    setup_public_light(ufp)
+    setup_public_camera(ufp)
+    mac = request.getfixturevalue(device).mac
+    unique_id = f"{mac}_{key}"
+    entity_registry.async_get_or_create(
+        replacement_platform, DOMAIN, unique_id, config_entry=ufp.entry
+    )
+    mirror = entity_registry.async_get_or_create(
+        platform, DOMAIN, unique_id, config_entry=ufp.entry
+    )
+    await _load_automation(hass, mirror.entity_id)
+
+    await init_entry(hass, ufp, [doorbell, light], regenerate_ids=False)
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{unique_id}"
+    )
 
 
 _CAMERA_SWITCH_MIRRORS = (
