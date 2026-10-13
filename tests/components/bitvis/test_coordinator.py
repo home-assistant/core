@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant.components.bitvis.const import DEFAULT_PORT
+from homeassistant.components.bitvis.coordinator import async_get_listener_registry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -27,6 +29,8 @@ async def test_setup_oserror_results_in_setup_retry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_shared_listener.stop.assert_not_called()
+    assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
 
 
 async def test_setup_runtime_error_results_in_setup_error(
@@ -43,3 +47,5 @@ async def test_setup_runtime_error_results_in_setup_error(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_shared_listener.unregister.assert_not_called()
+    mock_shared_listener.stop.assert_awaited_once()
+    assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
