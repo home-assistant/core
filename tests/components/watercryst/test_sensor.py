@@ -1,7 +1,9 @@
 """Tests for WATERCryst BIOCAT sensors."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyocat.models import StateResponse
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,11 +15,16 @@ from homeassistant.components.watercryst.sensor import (
     WatercrystSensor,
     WatercrystSensorEntityDescription,
 )
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from tests.common import MockConfigEntry, patch, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 
 
 @pytest.mark.usefixtures("mock_api_client")
@@ -35,6 +42,49 @@ async def test_all_entities(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test all sensor entities."""
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.watercryst._PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_device_pressure")
+
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "3.68"
+
+    mock_api_client.get_state.side_effect = Exception()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_device_pressure")
+
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_api_client.get_state.side_effect = None
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_device_pressure")
+
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "3.68"
 
 
 async def test_missing_data(
