@@ -29,6 +29,13 @@ class FakeDiscovery:
         """Add an event listener."""
         self._listeners.append(listener)
 
+    def remove_listener(self, listener: Listener) -> bool:
+        """Remove an event listener."""
+        if listener in self._listeners:
+            self._listeners.remove(listener)
+            return True
+        return False
+
     async def initialize(self) -> None:
         """Initialize socket server."""
         self.sock = Mock()

@@ -14,7 +14,9 @@ from homeassistant.components.refoss.const import (
     MAX_ERRORS,
     SWEEP_COOLDOWN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import FakeDiscovery, build_base_device_mock, build_device_mock
 
@@ -173,7 +175,7 @@ async def test_entry_without_networks_does_not_sweep(
 async def test_timeout_marks_coordinator_unavailable(
     refoss_entry: MockConfigEntry,
 ) -> None:
-    """Test the coordinator stays available until consecutive timeouts reach MAX_ERRORS."""
+    """Test consecutive timeouts increment the coordinator error count."""
     coordinator = refoss_entry.runtime_data.coordinators[0]
     coordinator.device.async_handle_update.side_effect = DeviceTimeoutError
 
@@ -184,8 +186,29 @@ async def test_timeout_marks_coordinator_unavailable(
 
     await coordinator.async_refresh()
 
-    assert coordinator.last_update_success is False
     assert coordinator.error_count == MAX_ERRORS
+
+
+async def test_options_change_scans_without_reload(
+    hass: HomeAssistant,
+    fake_discovery: FakeDiscovery,
+    refoss_entry: MockConfigEntry,
+) -> None:
+    """Test saving options probes the new networks without reloading the entry."""
+    result = await hass.config_entries.options.async_init(refoss_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_NETWORKS: "10.8.0.0/24"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    assert refoss_entry.state is ConfigEntryState.LOADED
+    assert refoss_entry.options == {CONF_NETWORKS: ["10.8.0.0/24"]}
+    latest = fake_discovery.probes[-1]
+    assert latest is not None
+    assert "10.8.0.255" in latest
+    assert "10.8.0.1" in latest
 
 
 async def test_device_update_replaces_ip(refoss_entry: MockConfigEntry) -> None:

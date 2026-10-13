@@ -7,9 +7,10 @@ import probatio
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    OptionsFlow,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
@@ -28,7 +29,7 @@ def _networks_schema(default: str) -> probatio.Schema:
     )
 
 
-class RefossOptionsFlow(OptionsFlowWithReload):
+class RefossOptionsFlow(OptionsFlow):
     """Handle Refoss options."""
 
     async def async_step_init(
@@ -44,10 +45,13 @@ class RefossOptionsFlow(OptionsFlowWithReload):
             if networks is None:
                 errors[CONF_NETWORKS] = "invalid_networks"
             else:
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_NETWORKS: networks} if networks else {},
+                options = {CONF_NETWORKS: networks} if networks else {}
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, options=options
                 )
+                if self.config_entry.state is ConfigEntryState.LOADED:
+                    await self.config_entry.runtime_data.async_scan(force_sweep=True)
+                return self.async_create_entry(title="", data=options)
 
         return self.async_show_form(
             step_id="init",
@@ -104,22 +108,19 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_discover(self, networks: list[str]) -> bool:
         """Return whether a probe found at least one device."""
         discovery = await refoss_discovery_server(self.hass)
-        if networks:
-            local_broadcasts = [
-                str(address)
-                for address in await async_get_ipv4_broadcast_addresses(self.hass)
-            ]
-            addresses = build_probe_addresses(
-                networks,
-                local_broadcasts=local_broadcasts,
-                known_ips=(),
-                include_hosts=True,
-            )
-            devices = await discovery.broadcast_msg(
-                wait_for=DISCOVERY_TIMEOUT, addresses=addresses
-            )
-        else:
-            devices = await discovery.broadcast_msg(wait_for=DISCOVERY_TIMEOUT)
+        local_broadcasts = [
+            str(address)
+            for address in await async_get_ipv4_broadcast_addresses(self.hass)
+        ]
+        addresses = build_probe_addresses(
+            networks,
+            local_broadcasts=local_broadcasts,
+            known_ips=(),
+            include_hosts=bool(networks),
+        )
+        devices = await discovery.broadcast_msg(
+            wait_for=DISCOVERY_TIMEOUT, addresses=addresses
+        )
 
         LOGGER.debug(
             "Discovered devices: [%s]",

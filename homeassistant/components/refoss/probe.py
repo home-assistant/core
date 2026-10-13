@@ -4,7 +4,7 @@ from collections.abc import Iterable, Mapping
 from ipaddress import IPv4Address, IPv4Network, ip_address, ip_network
 from typing import Any
 
-from .const import CONF_NETWORKS, LIMITED_BROADCAST, NETWORK_PREFIX
+from .const import CONF_NETWORKS, LIMITED_BROADCAST, MAX_NETWORKS, NETWORK_PREFIX
 
 
 def normalize_networks(raw: str) -> list[str] | None:
@@ -24,6 +24,8 @@ def normalize_networks(raw: str) -> list[str] | None:
         if parsed is None:
             return None
         normalized.add(parsed)
+    if len(normalized) > MAX_NETWORKS:
+        return None
     return sorted(normalized)
 
 

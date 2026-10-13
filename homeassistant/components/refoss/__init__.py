@@ -41,5 +41,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
     """Unload a config entry."""
-    entry.runtime_data.discovery.clean_up()
+    entry.runtime_data.discovery.remove_listener(entry.runtime_data)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
