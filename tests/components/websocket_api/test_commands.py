@@ -4458,19 +4458,12 @@ async def test_subscribe_entities_caps_how_much_one_message_can_carry(
     for index in range(changes):
         hass.states.async_set(f"light.bulb_{index}", "on")
 
-    seen = 0
-    messages_received = 0
-    while seen < changes:
-        msg = await websocket_client.receive_json()
-        carried = len(msg["event"].get("a", {}))
-        assert carried <= _MAX_BATCHED_STATE_CHANGES, (
-            f"one message carried {carried} changes"
-        )
-        seen += carried
-        messages_received += 1
-
-    assert seen == changes
-    assert messages_received == 3
+    # Two messages at the cap and the remainder, rather than one carrying all 257.
+    carried = [
+        len((await websocket_client.receive_json())["event"]["a"]) for _ in range(3)
+    ]
+    assert carried == [_MAX_BATCHED_STATE_CHANGES, _MAX_BATCHED_STATE_CHANGES, 1]
+    assert sum(carried) == changes
 
     await websocket_client.close()
     await hass.async_block_till_done()
