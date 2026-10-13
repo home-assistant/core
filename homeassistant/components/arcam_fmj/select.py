@@ -1,6 +1,9 @@
 """Arcam FMJ select entities."""
 
-from typing import override
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Generic, TypeVar, override
 
 from arcam.fmj.codecs import RoomEqMode
 
@@ -15,24 +18,52 @@ from .entity import ArcamFmjEntity, convert_exception
 
 PARALLEL_UPDATES = 1
 
-_ROOM_EQ_MODES = (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3)
+_EnumT = TypeVar("_EnumT", bound=Enum)
 
-ROOM_EQ_DESCRIPTION = SelectEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class ArcamFmjEnumSelectEntityDescription(
+    SelectEntityDescription, Generic[_EnumT]
+):
+    """Description for a select entity backed by enum values."""
+
+    options_fn: Callable[[ArcamFmjCoordinator], dict[str, _EnumT]]
+    current_value_fn: Callable[[ArcamFmjCoordinator], _EnumT | None]
+    set_value_fn: Callable[
+        [ArcamFmjCoordinator, _EnumT], Coroutine[Any, Any, None]
+    ]
+    invalid_option_translation_key: str
+    invalid_option_placeholder: str
+    read_only_values: frozenset[_EnumT] = frozenset()
+
+
+ROOM_EQ_DESCRIPTION = ArcamFmjEnumSelectEntityDescription[RoomEqMode](
     key="room_equalization",
     translation_key="room_equalization",
+    options_fn=lambda coordinator: _room_eq_options(coordinator),
+    current_value_fn=lambda coordinator: coordinator.state.get_room_equalization(),
+    set_value_fn=lambda coordinator, mode: coordinator.state.set_room_equalization(
+        mode
+    ),
+    read_only_values=frozenset({RoomEqMode.NOT_CALCULATED}),
+    invalid_option_translation_key="unsupported_room_equalization",
+    invalid_option_placeholder="room_equalization",
 )
 
 
-def _room_eq_options(
-    coordinator: ArcamFmjCoordinator,
-) -> tuple[tuple[RoomEqMode, str], ...]:
-    """Return uniquely labelled Room EQ profile options."""
+def _room_eq_options(coordinator: ArcamFmjCoordinator) -> dict[str, RoomEqMode]:
+    """Map Room EQ option labels to their enum values."""
     names = coordinator.state.get_room_eq_names() or []
-    options: list[tuple[RoomEqMode, str]] = []
-    for index, mode in enumerate(_ROOM_EQ_MODES):
+    options = {"Off": RoomEqMode.OFF}
+    for index, mode in enumerate((RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3)):
         name = names[index] if index < len(names) else None
-        options.append((mode, f"{mode.name}: {name}" if name else mode.name))
-    return tuple(options)
+        option = f"{mode.name}: {name}" if name else mode.name
+        options[option] = mode
+
+    if coordinator.state.get_room_equalization() == RoomEqMode.NOT_CALCULATED:
+        options["Not calculated"] = RoomEqMode.NOT_CALCULATED
+
+    return options
 
 
 async def async_setup_entry(
@@ -42,78 +73,64 @@ async def async_setup_entry(
 ) -> None:
     """Set up Arcam FMJ select entities from a config entry."""
     async_add_entities(
-        ArcamFmjRoomEqSelect(coordinator)
+        ArcamFmjEnumSelectEntity(coordinator, ROOM_EQ_DESCRIPTION)
         for coordinator in config_entry.runtime_data.coordinators.values()
     )
 
 
-class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
-    """Enable or disable the receiver's Dirac room equalization."""
+class ArcamFmjEnumSelectEntity(
+    ArcamFmjEntity, SelectEntity, Generic[_EnumT]
+):
+    """A select entity whose options map to enum values."""
 
-    entity_description = ROOM_EQ_DESCRIPTION
+    entity_description: ArcamFmjEnumSelectEntityDescription[_EnumT]
 
-    def __init__(self, coordinator: ArcamFmjCoordinator) -> None:
-        """Initialize the room-EQ selector."""
-        super().__init__(coordinator, ROOM_EQ_DESCRIPTION)
+    def __init__(
+        self,
+        coordinator: ArcamFmjCoordinator,
+        description: ArcamFmjEnumSelectEntityDescription[_EnumT],
+    ) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator, description)
 
     @property
     @override
     def options(self) -> list[str]:
-        """Return available room-EQ options."""
-        options = [
-            "Off",
-            *(option for _mode, option in _room_eq_options(self.coordinator)),
-        ]
-        if self.coordinator.state.get_room_equalization() == RoomEqMode.NOT_CALCULATED:
-            options.append("Not calculated")
-        return options
+        """Return the available select options."""
+        return list(self.entity_description.options_fn(self.coordinator))
 
     @property
     @override
     def current_option(self) -> str | None:
-        """Return the currently active room-EQ option."""
-        mode = self.coordinator.state.get_room_equalization()
-        if mode is None:
-            return None
-        if mode in _ROOM_EQ_MODES:
-            return dict(_room_eq_options(self.coordinator))[mode]
-        return {
-            RoomEqMode.OFF: "Off",
-            RoomEqMode.NOT_CALCULATED: "Not calculated",
-        }.get(mode)
+        """Return the option matching the current enum value."""
+        current_value = self.entity_description.current_value_fn(self.coordinator)
+        return next(
+            (
+                option
+                for option, value in self.entity_description.options_fn(
+                    self.coordinator
+                ).items()
+                if value == current_value
+            ),
+            None,
+        )
 
     @convert_exception
     @override
     async def async_select_option(self, option: str) -> None:
-        """Select a Dirac room-EQ profile on the receiver."""
-        mode: RoomEqMode | None = None
-        if option == "Off":
-            mode = RoomEqMode.OFF
-        elif option == "Not calculated":
+        """Select the enum value represented by an option."""
+        values = self.entity_description.options_fn(self.coordinator)
+        if (
+            option not in values
+            or values[option] in self.entity_description.read_only_values
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="unsupported_room_equalization",
-                translation_placeholders={"room_equalization": option},
-            )
-        else:
-            mode = next(
-                (
-                    profile_mode
-                    for profile_mode, profile_option in _room_eq_options(
-                        self.coordinator
-                    )
-                    if profile_option == option
-                ),
-                None,
+                translation_key=self.entity_description.invalid_option_translation_key,
+                translation_placeholders={
+                    self.entity_description.invalid_option_placeholder: option
+                },
             )
 
-        if mode is not None:
-            await self.coordinator.state.set_room_equalization(mode)
-            self.async_write_ha_state()
-            return
-
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_room_equalization",
-            translation_placeholders={"room_equalization": option},
-        )
+        await self.entity_description.set_value_fn(self.coordinator, values[option])
+        self.async_write_ha_state()
