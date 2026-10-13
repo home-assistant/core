@@ -166,11 +166,16 @@ async def test_setup_success_with_devices(
     with patch.object(account, "_schedule_next_fetch"):
         account.setup()
 
-    assert account.api is not None
-    assert account.owner_fullname == "user name"
-    assert "johntravolta" in account.family_members_fullname
-    assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
-    # An active locate must be requested on every poll (pyicloud >= 2.3.0
-    # only locates at service creation, so the account has to ask for it)
-    assert mock_icloud_service.devices.refresh_calls == [True]
-    assert "device1" in account.devices
+        assert account.api is not None
+        assert account.owner_fullname == "user name"
+        assert "johntravolta" in account.family_members_fullname
+        assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+        # The FindMyiPhoneServiceManager constructor already requested an active
+        # locate (pyicloud >= 2.3.0 only locates at service creation), so the
+        # first update must not ask Apple for another one.
+        assert mock_icloud_service.devices.refresh_calls == []
+        assert "device1" in account.devices
+
+        # Later updates request a fresh GPS fix on every poll.
+        account.update_devices()
+        assert mock_icloud_service.devices.refresh_calls == [True]
