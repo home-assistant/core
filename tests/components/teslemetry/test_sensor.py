@@ -1678,6 +1678,37 @@ async def test_local_status_sensors_missing_signal(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_status_sensors_first_refresh_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors from a failed first local refresh recover without a reload."""
+    mock_powerwall_status.side_effect = PowerwallConnectionError("offline")
+
+    entry = await setup_paired_platform(hass, [Platform.SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
+    entity_ids = _local_status_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = POWERWALL_STATUS
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_ids["solar_rgm_power"]))
+    assert state.state == "2.84"
+    assert (state := hass.states.get(entity_ids["conductor_power"]))
+    assert state.state == "0.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_local_status_sensors_poll_failure(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
