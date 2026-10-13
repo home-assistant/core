@@ -54,6 +54,8 @@ ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
 # Assistant runs on US/Pacific in tests, so a last_reset derived from its clock
 # or from the event's created_at cannot produce this.
 SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
+WALL_CONNECTOR_ENERGY_ENTITY = "sensor.wall_connector_energy_delivered"
+WALL_CONNECTOR_ENERGY_ENTITY_2 = "sensor.wall_connector_energy_delivered_2"
 
 # Per-tire TPMS warning objects including the Tesla Semi.
 TPMS_NO_WARNINGS = {
@@ -167,6 +169,7 @@ async def test_sensors(
     mock_vehicle_data: AsyncMock,
     mock_legacy: AsyncMock,
     mock_energy_totals_stream: MagicMock,
+    mock_wall_connector_totals_stream: MagicMock,
 ) -> None:
     """Tests that the sensor entities with the legacy polling are correct."""
 
@@ -177,6 +180,7 @@ async def test_sensors(
     entry = await setup_platform(hass, [Platform.SENSOR])
 
     mock_energy_totals_stream.send()
+    mock_wall_connector_totals_stream.send()
     await hass.async_block_till_done()
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
@@ -1338,3 +1342,73 @@ async def test_location_sensors_require_location_scope(
             )
             is not None
         ) is expected
+
+
+async def test_wall_connector_totals_stream_updates(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_wall_connector_totals_stream: MagicMock,
+) -> None:
+    """Streamed wall_connector_totals drive each Wall Connector's daily energy sensor."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    mock_wall_connector_totals_stream.assert_called_once()
+
+    # Nothing has streamed yet, so the sensors are available but hold no value.
+    assert (state := hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY))
+    assert state.state == STATE_UNKNOWN
+    assert "last_reset" not in state.attributes
+
+    # The connect-time snapshot replay populates the sensors; a Wall Connector
+    # absent from the totals had no session that day.
+    mock_wall_connector_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY))
+    assert state.state == "7.25"
+    assert state.attributes["state_class"] == "total"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert (state := hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY_2))
+    assert state.state == "0.0"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+    # A live update while charging, including a DIN the site has no device for.
+    mock_wall_connector_totals_stream.send(
+        {"abd-123": 8100, "bcd-234": 1200, "zzz-999": 500},
+        created_at="2024-09-18T09:20:00.000Z",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "8.1"
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY_2).state == "1.2"
+    assert not any(
+        "zzz" in entity.unique_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+
+    # A replay read before the applied update is rejected.
+    mock_wall_connector_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "8.1"
+
+
+async def test_wall_connector_totals_unavailable_while_stream_disconnected(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_wall_connector_totals_stream: MagicMock,
+) -> None:
+    """A dropped stream makes the totals sensors unavailable until a snapshot returns."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_wall_connector_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "7.25"
+
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == STATE_UNAVAILABLE
+
+    mock_wall_connector_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "7.25"

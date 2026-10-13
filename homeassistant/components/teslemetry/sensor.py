@@ -41,7 +41,7 @@ from homeassistant.util.variance import ignore_variance
 
 from . import TeslemetryConfigEntry
 from .const import ENERGY_HISTORY_FIELDS
-from .coordinator import PERIOD_START
+from .coordinator import PERIOD_START, WALL_CONNECTOR_TOTALS
 from .entity import (
     TeslemetryEnergyHistoryEntity,
     TeslemetryEnergyInfoEntity,
@@ -49,6 +49,7 @@ from .entity import (
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
+    TeslemetryWallConnectorTotalsEntity,
 )
 from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
@@ -1635,6 +1636,15 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     ),
 )
 
+WALL_CONNECTOR_TOTALS_DESCRIPTION = SensorEntityDescription(
+    key="wall_connector_energy",
+    device_class=SensorDeviceClass.ENERGY,
+    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=2,
+    state_class=SensorStateClass.TOTAL,
+)
+
 ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="vpp_backup_reserve_percent",
@@ -1719,6 +1729,16 @@ async def async_setup_entry(
         if energysite.live_coordinator
         for din in energysite.live_coordinator.data.get("wall_connectors", {})
         for description in WALL_CONNECTOR_DESCRIPTIONS
+    )
+
+    entities.extend(
+        TeslemetryWallConnectorTotalsSensorEntity(
+            energysite, din, WALL_CONNECTOR_TOTALS_DESCRIPTION
+        )
+        for energysite in entry.runtime_data.energysites
+        if energysite.live_coordinator
+        and energysite.wall_connector_totals_coordinator is not None
+        for din in energysite.live_coordinator.data.get("wall_connectors", {})
     )
 
     entities.extend(
@@ -1980,6 +2000,37 @@ class TeslemetryEnergyHistorySensorEntity(TeslemetryEnergyHistoryEntity, SensorE
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
         self._attr_last_reset = self.coordinator.data.get(PERIOD_START)
+
+
+class TeslemetryWallConnectorTotalsSensorEntity(
+    TeslemetryWallConnectorTotalsEntity, SensorEntity
+):
+    """Daily energy delivered by a Wall Connector."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        din: str,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, din, description.key)
+
+    @override
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        if PERIOD_START not in self.coordinator.data:
+            self._attr_native_value = None
+            self._attr_last_reset = None
+            return
+        # A Wall Connector with no session that day is absent from the totals.
+        self._attr_native_value = self.coordinator.data[WALL_CONNECTOR_TOTALS].get(
+            self.din, 0
+        )
+        self._attr_last_reset = self.coordinator.data[PERIOD_START]
 
 
 class TeslemetryCreditBalanceSensor(RestoreSensor):

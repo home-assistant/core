@@ -2112,6 +2112,7 @@ def test_stream_topic_allowlist() -> None:
         "site_info",
         "tariff_content_v2",
         "energy_totals",
+        "wall_connector_totals",
     ]
 
 
