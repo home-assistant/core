@@ -63,6 +63,16 @@ ZONE_COMFORT_COOLING_TARGET_TEMPERATURE = FixtureDevice(
     "io://1234-1234-5752/960379#2",
     "number.somfy_tahoma_switch_living_room_comfort_cooling_target_temperature",
 )
+ZONE_ECO_COOLING_TARGET_TEMPERATURE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch_zone_control.json",
+    "io://1234-1234-5752/960379#2",
+    "number.somfy_tahoma_switch_living_room_eco_cooling_target_temperature",
+)
+ZONE_COMFORT_HEATING_TARGET_TEMPERATURE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch_zone_control.json",
+    "io://1234-1234-5752/960379#2",
+    "number.somfy_tahoma_switch_living_room_comfort_heating_target_temperature",
+)
 ZONE_ECO_HEATING_TARGET_TEMPERATURE = FixtureDevice(
     "setup/cloud_atlantic_cozytouch_zone_control.json",
     "io://1234-1234-5752/960379#2",
@@ -127,6 +137,18 @@ async def test_number_entities_snapshot(
             25.5,
             "setComfortCoolingTargetTemperature",
             id="zone_comfort_cooling_target_temperature",
+        ),
+        pytest.param(
+            ZONE_ECO_COOLING_TARGET_TEMPERATURE,
+            28,
+            "setEcoCoolingTargetTemperature",
+            id="zone_eco_cooling_target_temperature",
+        ),
+        pytest.param(
+            ZONE_COMFORT_HEATING_TARGET_TEMPERATURE,
+            20.5,
+            "setComfortHeatingTargetTemperature",
+            id="zone_comfort_heating_target_temperature",
         ),
         pytest.param(
             ZONE_ECO_HEATING_TARGET_TEMPERATURE,

@@ -1419,7 +1419,7 @@
         {
           "name": "core:DeviceSerialNumberState",
           "type": 3,
-          "value": "30A66BA9"
+          "value": "12345678"
         },
         {
           "name": "io:PassAPCProductTypeState",
