@@ -58,7 +58,8 @@ class MockLocationFlow(ConfigFlow):
     [
         pytest.param(*AMSTERDAM, ["test"], id="inside_region"),
         pytest.param(*ANTWERP, [], id="outside_region"),
-        pytest.param(0, 0, [], id="default_location"),
+        pytest.param(0, 0, [], id="core_config_default_location"),
+        pytest.param(52.3731339, 4.8903147, [], id="onboarding_default_location"),
     ],
 )
 async def test_discovery_at_start(

@@ -20,7 +20,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_locations
 
-from .const import DOMAIN
+from .const import DEFAULT_LOCATIONS, DOMAIN
 from .region import available_regions, match_regions
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,8 +98,7 @@ class LocationDiscovery:
         self._location = (latitude, longitude)
         self._async_abort_stale_flows()
 
-        # The location is only at its default before it is set during onboarding
-        if not latitude and not longitude:
+        if (latitude, longitude) in DEFAULT_LOCATIONS:
             return
 
         matched = await self.hass.async_add_executor_job(
