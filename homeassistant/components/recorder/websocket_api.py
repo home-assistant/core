@@ -426,6 +426,7 @@ async def ws_clear_statistics(
     connection.send_result(msg["id"])
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "recorder/clear_statistics_range",

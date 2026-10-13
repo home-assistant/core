@@ -53,7 +53,7 @@ from .common import (
 )
 from .conftest import InstrumentedMigration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
@@ -2845,6 +2845,30 @@ async def test_clear_statistics_range_invalid_range(
         "code": "invalid_time_range",
         "message": "start_time must be before end_time",
     }
+    run_mock.assert_not_called()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_requires_admin(
+    hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test removing statistics in a time range requires an admin user."""
+    hass_admin_user.groups = []
+    client = await hass_ws_client()
+    now = dt_util.utcnow()
+
+    with patch.object(recorder.tasks.ClearStatisticsRangeTask, "run") as run_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics_range",
+                "statistic_ids": ["sensor.test"],
+                "start_time": now.isoformat(),
+                "end_time": (now + timedelta(hours=1)).isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
     run_mock.assert_not_called()
 
 
