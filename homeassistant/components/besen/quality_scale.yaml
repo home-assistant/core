@@ -50,9 +50,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -76,11 +74,13 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      The Bluetooth address is the unique ID, and a changed PIN is handled by the reauthentication flow.
   repair-issues:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      A rejected PIN is handled by the reauthentication flow, and Bluetooth outages are retried automatically.
   stale-devices:
     status: exempt
     comment: |

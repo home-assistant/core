@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
     Unauthorized,
@@ -77,7 +78,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SENSOR_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(cv.ensure_list)}
+    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(probatio.EnsureList())}
 )
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -85,13 +86,13 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_CLIENT_ID): cv.string,
-                probatio.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
                 # Required to use the new API (optional for compatibility)
                 probatio.Optional(CONF_PROJECT_ID): cv.string,
                 probatio.Optional(CONF_SUBSCRIBER_ID): cv.string,
                 # Config that only currently works on the old API
                 probatio.Optional(CONF_STRUCTURE): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
                 probatio.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
@@ -243,7 +244,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="legacy_entry",
+        )
 
     if entry.unique_id != entry.data[CONF_PROJECT_ID]:
         hass.config_entries.async_update_entry(
@@ -255,7 +259,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_create_failed",
+        )
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
@@ -279,14 +286,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
             translation_key="reauth_required",
         ) from err
     except ConfigurationException as err:
-        _LOGGER.error("Configuration error: %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_configuration_error",
+        ) from err
     except SubscriberTimeoutException as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="subscriber_timeout",
         ) from err
     except SubscriberException as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Subscriber error: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

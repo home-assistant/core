@@ -62,7 +62,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = CLIMATE_TRANSLATION_KEY
 
     def __init__(
@@ -75,6 +75,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._thermostat = nasweb_thermostat
         self._attr_available = False
         self._attr_name = nasweb_thermostat.name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
@@ -101,9 +102,9 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_temperature = self._thermostat.current_temp
-        self._attr_target_temperature_low = self._thermostat.temp_target_min
-        self._attr_target_temperature_high = self._thermostat.temp_target_max
+        self._attr_native_current_temperature = self._thermostat.current_temp
+        self._attr_native_target_temperature_low = self._thermostat.temp_target_min
+        self._attr_native_target_temperature_high = self._thermostat.temp_target_max
         self._attr_hvac_mode = self._get_current_hvac_mode()
         self._attr_hvac_action = self._get_current_action()
         self._attr_name = self._thermostat.name or None
@@ -143,8 +144,9 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         if (
             self._thermostat.temp_target_min is not None
             and self._thermostat.temp_target_max is not None
-            and self._thermostat.current_temp >= self._thermostat.temp_target_min
-            and self._thermostat.current_temp <= self._thermostat.temp_target_max
+            and self._thermostat.temp_target_min
+            <= self._thermostat.current_temp
+            <= self._thermostat.temp_target_max
             and self._thermostat.enabled_inrange_output
         ):
             return HVACAction.FAN

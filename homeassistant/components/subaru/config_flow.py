@@ -31,7 +31,7 @@ from .coordinator import SubaruConfigEntry
 _LOGGER = logging.getLogger(__name__)
 CONF_CONTACT_METHOD = "contact_method"
 CONF_VALIDATION_CODE = "validation_code"
-PIN_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN): str})
+PIN_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_PIN)): str})
 
 
 class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -82,7 +82,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_USERNAME) if user_input else "",
                     ): str,
                     probatio.Required(
-                        CONF_PASSWORD,
+                        probatio.Secret(CONF_PASSWORD),
                         default=user_input.get(CONF_PASSWORD) if user_input else "",
                     ): str,
                     probatio.Required(

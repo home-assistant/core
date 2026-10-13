@@ -26,7 +26,7 @@ def get_data_schema(
     """Return a form schema."""
     return probatio.Schema(
         {
-            probatio.Required(CONF_API_KEY): str,
+            probatio.Required(probatio.Secret(CONF_API_KEY)): str,
             probatio.Optional(
                 CONF_BASE, default=existing_data.get(CONF_BASE) or DEFAULT_BASE
             ): probatio.In(currencies),

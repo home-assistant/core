@@ -62,8 +62,7 @@ async def async_create_client(
     client = openai.AsyncOpenAI(
         api_key=api_key,
         base_url=config_entry_data[CONF_BASE_URL],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
     # Cache current platform data which gets added to each request
     # (caching done by library)
@@ -144,6 +143,7 @@ def api_error_handler() -> Generator[None]:
     try:
         yield
     except openai.APITimeoutError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Timeout talking to API: %s", err)
         error_message = err.message or str(err)
         raise HomeAssistantError(
@@ -152,6 +152,7 @@ def api_error_handler() -> Generator[None]:
             translation_placeholders={"message": error_message},
         ) from err
     except openai.APIConnectionError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Connection error talking to API: %s", err)
         error_message = err.message or str(err)
         raise HomeAssistantError(
@@ -160,6 +161,7 @@ def api_error_handler() -> Generator[None]:
             translation_placeholders={"message": error_message},
         ) from err
     except openai.AuthenticationError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Authentication error talking to API: %s", err)
         error_message = _extract_error_message(err)
         raise HomeAssistantError(
@@ -168,6 +170,7 @@ def api_error_handler() -> Generator[None]:
             translation_placeholders={"message": error_message},
         ) from err
     except openai.APIStatusError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Status error talking to API: %s", err)
         error_message = _extract_error_message(err)
 
@@ -184,6 +187,7 @@ def api_error_handler() -> Generator[None]:
             translation_placeholders={"message": error_message},
         ) from err
     except openai.OpenAIError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Generic error talking to API: %s", err)
         error_message = getattr(err, "message", None) or str(err)
         raise HomeAssistantError(

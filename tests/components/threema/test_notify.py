@@ -6,10 +6,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.threema.client import (
     ThreemaAuthError,
     ThreemaConnectionError,
+    ThreemaNoCreditsError,
+    ThreemaRateLimitError,
     ThreemaSendError,
 )
 from homeassistant.components.threema.const import SUBENTRY_TYPE_RECIPIENT
@@ -209,8 +212,16 @@ async def test_send_message_e2e(
             "Error sending message: Connection error",
         ),
         (ThreemaAuthError("Invalid credentials"), "Invalid authentication"),
+        (
+            ThreemaNoCreditsError("No credits"),
+            "The Threema Gateway account has no credits left",
+        ),
+        (
+            ThreemaRateLimitError("Rate limit exceeded", retry_after=60),
+            "The Threema Gateway rate limit was exceeded",
+        ),
     ],
-    ids=["send_error", "connection_error", "auth_error"],
+    ids=["send_error", "connection_error", "auth_error", "no_credits", "rate_limited"],
 )
 async def test_send_message_error(
     hass: HomeAssistant,
@@ -243,3 +254,46 @@ async def test_send_message_error(
             },
             blocking=True,
         )
+
+
+async def test_send_message_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ThreemaAuthError during send raises error and starts reauth flow."""
+    mock_send_message.side_effect = ThreemaAuthError("Token expired")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "send_message",
+            {
+                "entity_id": notify_entities[0].entity_id,
+                "message": "Hello!",
+            },
+            blocking=True,
+        )
+
+    # async_start_reauth() schedules a separate task; the service call
+    # above only waits for the notify handler itself, so the reauth flow
+    # may not be registered yet without waiting for pending tasks too.
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        f["context"]["source"] == config_entries.SOURCE_REAUTH
+        and f["context"]["entry_id"] == mock_config_entry.entry_id
+        for f in flows
+    )

@@ -25,7 +25,7 @@ CONFIG_SCHEMA = probatio.Schema(
                         ): cv.boolean,
                         probatio.Optional("title"): cv.template,
                         probatio.Required("items"): probatio.All(
-                            cv.ensure_list,
+                            probatio.EnsureList(),
                             [
                                 {
                                     probatio.Optional("title"): cv.template,

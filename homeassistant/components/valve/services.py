@@ -34,7 +34,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_VALVE_POSITION,
         {
             probatio.Required(ATTR_POSITION): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             )
         },
         "async_set_valve_position",

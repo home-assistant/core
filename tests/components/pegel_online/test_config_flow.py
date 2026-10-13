@@ -57,6 +57,7 @@ async def test_user(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_STATION] == "70272185-xxxx-xxxx-xxxx-43bea330dcae"
         assert result["title"] == "DRESDEN ELBE"
+        assert result["result"].unique_id == MOCK_USER_DATA_STEP2[CONF_STATION]
 
         await hass.async_block_till_done()
 
