@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# ruff: noqa: T201, D103, BLE001
 """Sync HACS default custom integrations as partial git clones of default branch HEAD.
 
-Usage: python3 .claude/skills/custom-integration-sources/scripts/sync.py
+Usage: python3 -m script.sync_custom_integrations
     [--dest DIR] [--force] [--workers N] [REPO ...]
 
 Each repo is a blobless clone (full history, file contents fetched on demand)
@@ -28,7 +27,7 @@ from typing import BinaryIO
 import urllib.error
 import urllib.request
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DEST = REPO_ROOT / ".custom_integration_sources"
 HACS_LIST = "https://raw.githubusercontent.com/hacs/default/master/integration"
 GRAPHQL = "https://api.github.com/graphql"
@@ -333,6 +332,7 @@ def ensure_ignored(root: Path) -> None:
 
 
 def main() -> None:
+    """Sync the destination with the HACS default integration list."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "repos", nargs="*", type=_repo_arg, help="only sync these owner/repo"
@@ -393,7 +393,7 @@ def main() -> None:
             repo = futures[fut]
             try:
                 fut.result()
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001
                 failed.append(f"{repo}: {err}")
             else:
                 state[repo] = todo[repo]

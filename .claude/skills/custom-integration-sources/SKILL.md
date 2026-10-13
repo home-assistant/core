@@ -1,20 +1,27 @@
 ---
 name: custom-integration-sources
-description: Keep a local, searchable copy of the latest code of every HACS default custom integration, and use it to measure how a core change (deprecation, removal, rename, signature change) affects custom integrations. Use when the user asks which or how many custom integrations use something, wants to check custom integration impact, or asks to sync/update the custom integration sources.
+description: Use a local copy of the latest code of every HACS default custom integration to measure how a core change (deprecation, removal, rename, signature change) affects custom integrations. Use when the user asks which or how many custom integrations use something, wants to check custom integration impact, or asks to sync/update the custom integration sources.
 ---
 
 # Custom integration sources
 
 A local snapshot of every repository in the [HACS default integration list](https://github.com/hacs/default/blob/master/integration), at the HEAD of each default branch. Each repo is a blobless git clone: full commit history, with file contents downloaded only when needed. Its sparse checkout holds what HACS installs (`custom_components/`, plus the root `hacs.json`), minus common binary file types (~3.3 GB for ~3,250 repos, about 1.9 GB of it git history). Repos with `content_in_root` set in `hacs.json` (or with no `custom_components/` at all) are checked out whole.
 
-Layout: `.custom_integration_sources/<owner>/<repo>/...`, each a git repository with an `origin` remote, and `.custom_integration_sources/.state.json` mapping each `owner/repo` to the synced commit SHA under `repos`. Repos can be opened in an editor for blame and GitHub permalinks.
+The copy is made by `script/sync_custom_integrations.py`. Layout: `<copy>/<owner>/<repo>/...`, each a git repository with an `origin` remote, and `<copy>/.state.json` mapping each `owner/repo` to the synced commit SHA under `repos`. Repos can be opened in an editor for blame and GitHub permalinks.
+
+## Locate the copy
+
+- Use the directory the user names, if any. Otherwise use `.custom_integration_sources/` at the repo root.
+- A directory is a valid copy only if its `.state.json` has `"format": "custom-integration-sources/1"`.
+- If there is no valid copy, ask the user where theirs is, or whether to create one (a first sync takes about 5 minutes). Never start a sync unprompted.
+- Before searching, state how old the snapshot is (the modification time of `.state.json`). Do not refresh it unless the user asks; suggest a refresh if it is more than a few days old.
 
 ## Sync
 
-Always sync before answering an impact question, so results reflect current code:
+Only when the user asks, or agrees to create or refresh the copy:
 
 ```bash
-python3 .claude/skills/custom-integration-sources/scripts/sync.py
+python3 -m script.sync_custom_integrations [--dest DIR]
 ```
 
 - Requires an authenticated `gh` (`gh auth status`), used only to resolve commit SHAs via GraphQL.
@@ -23,14 +30,14 @@ python3 .claude/skills/custom-integration-sources/scripts/sync.py
 - Exit status 3 means the sync completed but some downloads failed: the listed repos are stale or missing. Rerun, or name them in the report.
 - Any other non-zero exit means the sync did not complete (authentication, refused destination, network or GraphQL error, another sync already running). Fix the cause and rerun before searching.
 - The directory is added to `.git/info/exclude` automatically; it must never be committed.
-- Options: `owner/repo ...` to sync only some repos, `--force` to re-fetch every repo, `--dest DIR` to use another location (for example a directory shared between worktrees), `--workers N` for download concurrency.
+- Options: `owner/repo ...` to sync only some repos, `--force` to re-fetch every repo, `--dest DIR` for a copy outside `.custom_integration_sources/` (for example one shared between worktrees), `--workers N` for download concurrency.
 
 ## Search
 
-Run searches from the sources directory, so paths start with `<owner>/<repo>/`:
+Run searches from the copy, so paths start with `<owner>/<repo>/`:
 
 ```bash
-cd .custom_integration_sources
+cd <copy>
 rg -l --glob '*.py' '<pattern>'
 ```
 
