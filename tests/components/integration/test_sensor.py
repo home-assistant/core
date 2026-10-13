@@ -750,49 +750,31 @@ async def test_units(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("source_config", "device_config", "expected_class"),
+    ("source_config", "extra_config", "expected_class"),
     [
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.cubic_meters_per_hour",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                    "device_class": SensorDeviceClass.WATER,
-                }
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.WATER,
             },
             SensorDeviceClass.WATER,
         ),
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.cubic_meters_per_hour",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                    "device_class": SensorDeviceClass.ENERGY,
-                }
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.ENERGY,
             },
             None,
         ),
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.cubic_meters_per_hour",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                }
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
             },
             None,
         ),
@@ -802,15 +784,9 @@ async def test_units(hass: HomeAssistant) -> None:
                 ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             },
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.power",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                    "device_class": SensorDeviceClass.WATER,
-                }
+                "source": "sensor.power",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.WATER,
             },
             SensorDeviceClass.ENERGY,
         ),
@@ -820,44 +796,26 @@ async def test_units(hass: HomeAssistant) -> None:
                 ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             },
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.power",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                }
+                "source": "sensor.power",
+                "unit_time": UnitOfTime.HOURS,
             },
             SensorDeviceClass.ENERGY,
         ),
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.cubic_meters_per_hour",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                    "device_class": SensorDeviceClass.DATE,
-                }
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.DATE,
             },
             None,
         ),
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.cubic_meters_per_hour",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                    "device_class": SensorDeviceClass.MONETARY,
-                }
+                "source": "sensor.cubic_meters_per_hour",
+                "unit_time": UnitOfTime.HOURS,
+                "device_class": SensorDeviceClass.MONETARY,
             },
             SensorDeviceClass.MONETARY,
         ),
@@ -867,14 +825,8 @@ async def test_units(hass: HomeAssistant) -> None:
                 ATTR_DEVICE_CLASS: "NotADeviceClass",
             },
             {
-                "sensor": {
-                    "platform": "integration",
-                    "name": "integration",
-                    "source": "sensor.bad_sensor_class",
-                    "round": 2,
-                    "method": "trapezoidal",
-                    "unit_time": UnitOfTime.HOURS,
-                }
+                "source": "sensor.bad_sensor_class",
+                "unit_time": UnitOfTime.HOURS,
             },
             None,
         ),
@@ -883,14 +835,24 @@ async def test_units(hass: HomeAssistant) -> None:
 async def test_device_class_user(
     hass: HomeAssistant,
     source_config: dict[str, Any],
-    device_config: dict[str, dict[str, Any]],
+    extra_config: dict[str, Any],
     expected_class: SensorDeviceClass | None,
 ) -> None:
     """Test the user-supplied device class hint is applied based on unit and state class compatibility."""
 
-    assert await async_setup_component(hass, "sensor", device_config)
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "method": "trapezoidal",
+            "round": 2,
+        }
+        | extra_config,
+    }
 
-    entity_id = device_config["sensor"]["source"]
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
 
     await _setup_device_class_test(hass, entity_id)
 
