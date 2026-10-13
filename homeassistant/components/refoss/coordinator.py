@@ -37,11 +37,6 @@ class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device = device
         self._error_count = 0
 
-    @property
-    def error_count(self) -> int:
-        """Return consecutive update timeouts."""
-        return self._error_count
-
     @override
     async def _async_update_data(self) -> None:
         """Update the state of the device."""

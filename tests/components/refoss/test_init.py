@@ -182,11 +182,11 @@ async def test_timeout_marks_coordinator_unavailable(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is True
-    assert coordinator.error_count == 1
+    assert coordinator._error_count == 1
 
     await coordinator.async_refresh()
 
-    assert coordinator.error_count == MAX_ERRORS
+    assert coordinator._error_count == MAX_ERRORS
 
 
 async def test_options_change_scans_without_reload(
