@@ -61,7 +61,7 @@ async def test_auth_error_during_update_starts_reauth(
     getattr(mock_paj_gps_api, method).side_effect = exception
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
