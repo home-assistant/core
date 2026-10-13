@@ -83,6 +83,8 @@ BINARY_GLOBS = (
 # Characters GitHub allows in owner and repo names; slugs become paths under root
 REPO_SLUG = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+")
 LOCK_FILE = ".lock"
+# Full error messages of the last sync, for the user (not for an AI session)
+ERROR_LOG = ".sync-errors.log"
 # Marks a state file as written by this script; anything else is not ours
 STATE_FORMAT = "custom-integration-sources/1"
 # Exit status when the sync completed but some repos could not be downloaded
@@ -192,6 +194,24 @@ def fetch_heads(repos: list[str], token: str) -> dict[str, str | None]:
     return heads
 
 
+class GitError(RuntimeError):
+    """A git command failed; stderr may quote third-party repository content."""
+
+    def __init__(self, command: str, stderr: str) -> None:
+        """Keep the command name apart from the untrusted stderr text."""
+        super().__init__(f"git {command}: {stderr}")
+        self.command = command
+
+
+def _failure_kind(err: BaseException) -> str:
+    """Describe a failure without any text that came from the repository."""
+    if isinstance(err, GitError):
+        return f"git {err.command} failed"
+    if isinstance(err, subprocess.TimeoutExpired):
+        return "timed out"
+    return type(err).__name__
+
+
 def _git(*args: str, cwd: Path | None = None) -> str:
     """Run git non-interactively, raising with the tail of stderr on failure."""
     proc = subprocess.run(
@@ -204,7 +224,7 @@ def _git(*args: str, cwd: Path | None = None) -> str:
         check=False,
     )
     if proc.returncode:
-        raise RuntimeError(f"git {args[0]}: {proc.stderr.strip()[-300:]}")
+        raise GitError(args[0], proc.stderr.strip()[-300:])
     return proc.stdout
 
 
@@ -431,6 +451,7 @@ def main() -> None:
     print(f"{len(todo)} to download, {len(missing)} unavailable", file=sys.stderr)
 
     failed = []
+    errors = []
     with ThreadPoolExecutor(args.workers) as pool:
         futures = {pool.submit(download, root, r, sha): r for r, sha in todo.items()}
         for done, fut in enumerate(as_completed(futures), 1):
@@ -438,8 +459,10 @@ def main() -> None:
             try:
                 fut.result()
             except Exception as err:  # noqa: BLE001
-                # One line per repo, even for multi-line git errors
-                failed.append(f"{repo}: {' '.join(str(err).split())}")
+                # Full errors can quote repository content (such as file names),
+                # so they go to a log for the user; the output only gets a kind
+                failed.append(f"{repo}: {_failure_kind(err)}")
+                errors.append(f"{repo}: {' '.join(str(err).split())}")
             else:
                 state[repo] = todo[repo]
             if done % 100 == 0 or done == len(todo):
@@ -462,6 +485,11 @@ def main() -> None:
             state.pop(repo, None)
     save_state(root, state)
 
+    error_log = root / ERROR_LOG
+    if errors:
+        error_log.write_text("\n".join(errors) + "\n")
+    else:
+        error_log.unlink(missing_ok=True)
     # Per-repo lines first, so the summary is always the last line of output
     for repo in missing:
         print(f"unavailable {repo}")
