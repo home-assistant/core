@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pyicloud.exceptions import (
     PyiCloudAPIResponseException,
+    PyiCloudConnectionException,
     PyiCloudFailedLoginException,
 )
 import pytest
@@ -320,6 +321,53 @@ async def test_login_failed(hass: HomeAssistant) -> None:
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("service_authenticated")
+async def test_connection_error(hass: HomeAssistant) -> None:
+    """Test when iCloud is unreachable during login."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=PyiCloudConnectionException(reason="Connection error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_disables_pyicloud_monitor(
+    hass: HomeAssistant, service_authenticated: MagicMock
+) -> None:
+    """Test the config flow disables pyicloud's own Find My monitor."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    assert service_authenticated.call_args.kwargs["refresh_interval"] is None
 
 
 @pytest.mark.usefixtures("service_authenticated_no_device")
