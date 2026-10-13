@@ -216,6 +216,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "Skipping shell_command entry '%s': name is reserved", name
                 )
                 continue
+            # Cannot be moved: action names come from the configuration
             # pylint: disable-next=home-assistant-action-registered-outside-services-module
             hass.services.async_register(
                 DOMAIN,
@@ -224,6 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 supports_response=SupportsResponse.OPTIONAL,
             )
 
+    # Should be adjusted to register actions in async_setup_services in services.py
     # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service_helper.async_register_admin_service(
         hass,
