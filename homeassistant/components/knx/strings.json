@@ -177,6 +177,7 @@
       "group_address": "Group address",
       "group_addresses": "Group addresses",
       "monitor_x_group_addresses": "Monitor {count} group addresses",
+      "read_value": "Read value",
       "sort": {
         "ascending": "Ascending",
         "ascending_tooltip": "Sorted ascending",
