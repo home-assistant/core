@@ -15,6 +15,7 @@ from homeassistant.const import (
     TEMPERATURE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
+    VOLUME_FLOW_RATE,
     WIND_SPEED,
     UnitOfArea,
     UnitOfLength,
@@ -25,6 +26,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 
@@ -35,6 +37,7 @@ from .unit_conversion import (
     SpeedConverter,
     TemperatureConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 if TYPE_CHECKING:
@@ -59,6 +62,8 @@ PRESSURE_UNITS = PressureConverter.VALID_UNITS
 
 VOLUME_UNITS = VolumeConverter.VALID_UNITS
 
+VOLUME_FLOW_RATE_UNITS = VolumeFlowRateConverter.VALID_UNITS
+
 WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
 
 TEMPERATURE_UNITS: set[str] = {UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS}
@@ -70,6 +75,7 @@ _VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
     TEMPERATURE: TEMPERATURE_UNITS,
     MASS: MASS_UNITS,
     VOLUME: VOLUME_UNITS,
+    VOLUME_FLOW_RATE: VOLUME_FLOW_RATE_UNITS,
     PRESSURE: PRESSURE_UNITS,
     AREA: AREA_UNITS,
 }
@@ -94,6 +100,7 @@ class UnitSystem:
     pressure_unit: UnitOfPressure
     temperature_unit: UnitOfTemperature
     volume_unit: UnitOfVolume
+    volume_flow_rate_unit: UnitOfVolumeFlowRate
     wind_speed_unit: UnitOfSpeed
     _conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str]
 
@@ -109,6 +116,7 @@ class UnitSystem:
         pressure: UnitOfPressure,
         temperature: UnitOfTemperature,
         volume: UnitOfVolume,
+        volume_flow_rate: UnitOfVolumeFlowRate,
         wind_speed: UnitOfSpeed,
     ) -> None:
         """Initialize the unit system object."""
@@ -121,6 +129,7 @@ class UnitSystem:
                 (length, LENGTH),
                 (wind_speed, WIND_SPEED),
                 (volume, VOLUME),
+                (volume_flow_rate, VOLUME_FLOW_RATE),
                 (mass, MASS),
                 (pressure, PRESSURE),
             )
@@ -138,6 +147,7 @@ class UnitSystem:
         super().__setattr__("pressure_unit", pressure)
         super().__setattr__("temperature_unit", temperature)
         super().__setattr__("volume_unit", volume)
+        super().__setattr__("volume_flow_rate_unit", volume_flow_rate)
         super().__setattr__("wind_speed_unit", wind_speed)
         super().__setattr__("_conversions", conversions)
 
@@ -208,6 +218,16 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return VolumeConverter.convert(  # type: ignore[unreachable]
             volume, from_unit, self.volume_unit
+        )
+
+    def volume_flow_rate(self, volume_flow_rate: float | None, from_unit: str) -> float:
+        """Convert the given volume_flow_rate to this unit system."""
+        if not isinstance(volume_flow_rate, Number):
+            raise TypeError(f"{volume_flow_rate!s} is not a numeric value.")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return VolumeFlowRateConverter.convert(  # type: ignore[unreachable]
+            volume_flow_rate, from_unit, self.volume_unit
         )
 
     def as_dict(self) -> dict[str, str]:
@@ -319,6 +339,19 @@ METRIC_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         ("volume", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        # Convert non-metric volume flow rates
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
@@ -337,6 +370,7 @@ METRIC_SYSTEM = UnitSystem(
     pressure=UnitOfPressure.PA,
     temperature=UnitOfTemperature.CELSIUS,
     volume=UnitOfVolume.LITERS,
+    volume_flow_rate=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
     wind_speed=UnitOfSpeed.METERS_PER_SECOND,
 )
 
@@ -409,6 +443,31 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("volume", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
         ("volume", UnitOfVolume.MILLILITERS): UnitOfVolume.FLUID_OUNCES,
+        # Convert non-USCS volume flow rates
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         # Convert non-USCS volumes of water meters
         ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
@@ -425,6 +484,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     pressure=UnitOfPressure.PSI,
     temperature=UnitOfTemperature.FAHRENHEIT,
     volume=UnitOfVolume.GALLONS,
+    volume_flow_rate=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
     wind_speed=UnitOfSpeed.MILES_PER_HOUR,
 )
 
