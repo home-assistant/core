@@ -5,9 +5,10 @@ rules:
     comment: |
       This integration does not provide additional actions.
   appropriate-polling:
-    status: exempt
+    status: done
     comment: |
-      This integration works via push.
+      The integration is push based. An hourly status refresh reconciles the
+      entities when the event stream silently stops delivering updates.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
