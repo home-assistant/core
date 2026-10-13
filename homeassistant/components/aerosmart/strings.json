@@ -41,428 +41,249 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "aggregate_fault_stoerung_summenstoerung": {
-        "name": "Störung: Summenstörung"
-      },
-      "aggregate_fault_stoerung_summenstoerung2": {
-        "name": "Störung: Summenstörung 2"
-      },
-      "carbon_dioxide_co2_sensor_available": {
-        "name": "CO2-Sensor vorhanden?"
-      },
-      "carbon_dioxide_stoerung_co2_sensor": {
-        "name": "Störung: CO2 Sensor"
-      },
-      "coarse_dust_filter_grobstaubfilter_vorhanden": {
-        "name": "grobstaubfilter_vorhanden"
-      },
-      "coarse_dust_filter_grobstaubfilter_wechseln": {
-        "name": "Grobstaubfilter wechseln?"
-      },
-      "cooling_kuehlung_vorhanden": {
-        "name": "Kühlung vorhanden?"
-      },
-      "fans_anforderung_ventilatoren_durch_waermepumpe": {
-        "name": "Anforderung der Ventilatoren durch Wärmepumpe (read)"
-      },
-      "fans_anforderung_ventilatoren_durch_zonenregelung": {
-        "name": "Anforderung der Ventilatoren durch Zonenregelung (read)"
-      },
-      "fans_stoerung_abluftventilator": {
-        "name": "Störung: Abluftventilator"
-      },
-      "fans_stoerung_zuluftventilator": {
-        "name": "Störung: Zuluftventilator"
-      },
-      "fine_dust_filter_feinstaubfilter_vorhanden": {
-        "name": "Feinstaubfilter vorhanden?"
-      },
-      "fine_dust_filter_feinstaubfilter_wechseln": {
-        "name": "Feinstaubfilter wechseln?"
-      },
-      "fire_alarm_brandmeldealarm": {
-        "name": "Brandmeldealarm"
-      },
-      "fire_alarm_brandmeldealarm_vorhanden": {
-        "name": "Brandmeldeanlage vorhanden?"
-      },
-      "fire_alarm_kontakt_brandmeldealarm": {
-        "name": "Kontakt: Brandmeldealarm"
-      },
-      "general_relaykontakt_ext_lu": {
-        "name": "Relaiskontakt: EXT (LU)"
-      },
-      "heat_pump_wp_kontakt_evu": {
-        "name": "Kontakt (EVU)"
-      },
-      "heat_pump_wp_relaiskontakt_ext": {
-        "name": "Relaiskontakt: EXT (WP)"
-      },
-      "hot_water_heat_pump_wp_elektroheizstab_vorhanden": {
-        "name": "Elektroheizstab vorhanden?"
-      },
-      "hot_water_ventilation_anforderung_brauchwasserheizung_elektroheizstab": {
-        "name": "Anforderung: Brauchwasserheizung Elektoheizstab (read)"
-      },
-      "hot_water_ventilation_anforderung_brauchwasserheizung_waermepumpe": {
-        "name": "Anforderung: Brauchwasserheizung Wärmepumpe (read)"
-      },
-      "hot_water_ventilation_anforderung_disbalance_boilerueberwaermung": {
-        "name": "Anforderung Disbalance (Boilerüberwärmung) (read)"
-      },
-      "hot_water_ventilation_stoerung_boiler_uebertemperatur": {
-        "name": "Störung: Boilerübertemperatur"
-      },
-      "hot_water_ventilation_stoerung_boilerfuehler_waermepumpe": {
-        "name": "Störung: Boilerfühler Wärmepumpe"
-      },
-      "hot_water_ventilation_stoerung_elektroheizstab": {
-        "name": "Störung: Boilerfühler Elektroheizstab"
-      },
-      "outside_temperature_aussenluftfuehler_vorhanden": {
-        "name": "Außenluftfühler vorhanden?"
-      },
-      "outside_temperature_stoerung_temperaturfuehler_aussenluft": {
-        "name": "Störung: Temperaturfühler Außenluft"
-      },
-      "outside_temperature_stoerung_temperaturfuehler_sole_aussenluft": {
-        "name": "Störung: Temperaturfühler Sole Außenluft"
-      },
-      "room_temperature_anforderung_raum_heizstufe_1": {
-        "name": "Anforderung: Raum-Heizstufe 1 (read)"
-      },
-      "room_temperature_anforderung_raum_heizstufe_2": {
-        "name": "Anforderung: Raum-Heizstufe 2 (read)"
-      },
-      "room_temperature_stoerung_temperaturfuehler_raum": {
-        "name": "Störung: Temperaturfühler Raum"
-      },
-      "room_temperature_timeout_soll_temp_raum": {
-        "name": "Time-Out: Solltemperatur Raum"
-      },
-      "room_temperature_timeout_temp_fuehler_raum": {
-        "name": "Time-Out: Temperaturfühler Raum"
-      },
-      "summer_bypass_anforderung_sommerautomatik": {
-        "name": "Anforderung: Sommerautomatik (read)"
-      },
-      "summer_bypass_function_sommerautomatik": {
-        "name": "Funktion „Sommerautomatik“"
-      },
-      "utility_lockout_evu_sperre_brauchwasser_aktiv": {
-        "name": "EVU-Sperre Brauchwasser aktiv?"
-      },
-      "utility_lockout_evu_sperre_elektroheizstab_aktiv": {
-        "name": "EVU-Sperre Elektroheizstab aktiv?"
-      },
-      "utility_lockout_evu_sperre_raumheizung_aktiv": {
-        "name": "EVU-Sperre Raumheizung aktiv?"
-      },
-      "utility_lockout_evu_vorhanden": {
-        "name": "EVU Anlage vorhanden?"
-      },
-      "ventilation_anforderung_abtauen": {
-        "name": "Anforderung: Abtauen (read)"
-      },
-      "ventilation_anforderung_beschattung": {
-        "name": "Anforderung: Beschattung (read)"
-      },
-      "ventilation_anforderung_st3_ext": {
-        "name": "Anforderung: LST3_EXT (read)"
-      },
-      "ventilation_stoerung_teilnehmer_nicht_erreichbar": {
-        "name": "Störung: Teilnehmer nicht erreichbar!"
-      },
-      "ventilation_stoerung_temperaturfuehler_verdampferregister": {
-        "name": "Störung: Temperaturfühler Verdampferregister"
-      },
-      "ventilation_stoerung_waermepumpe_hochdruck": {
-        "name": "Störung: Wärmepumpe Hochdruck"
-      },
-      "ventilation_stoerung_waermepumpe_niederdruck": {
-        "name": "Störung: Wärmepumpe Niederdruck"
-      },
-      "ventilation_stoerung_wert_nicht_zulaessig": {
-        "name": "Störung: Wert nicht zulässig"
-      }
-    },
-    "number": {
-      "boost_functions_ventilation_sollwert_erhoehung_function_heizung_plus": {
-        "name": "Sollwert-Erhöhung Funktion HEIZUNG+"
-      },
-      "boost_functions_ventilation_zeitspanne_function_heizung_plus": {
-        "name": "Zeitspanne Funktion HEIZUNG+"
-      },
-      "boost_functions_ventilation_zeitspanne_function_party": {
-        "name": "Zeitspanne Funktion PARTY"
-      },
-      "hot_water_heat_pump_wp_brauchwasser_soll_temp": {
-        "name": "Brauchwasser Solltemperatur"
-      },
-      "room_temperature_temp_raumluft_soll": {
-        "name": "Temperatur Raumluft Soll"
-      },
-      "summer_bypass_sommerautomatik_schaltpunkt1": {
-        "name": "Sommerautomatik Schaltpunkt 1"
-      },
-      "summer_bypass_sommerautomatik_schaltpunkt2": {
-        "name": "Sommerautomatik Schaltpunkt 2"
-      },
-      "summer_bypass_sommerautomatik_schaltpunkt3": {
-        "name": "Sommerautomatik Schaltpunkt 3"
-      },
-      "summer_bypass_sommerautomatik_schaltpunkt4": {
-        "name": "Sommerautomatik Schaltpunkt 4"
-      },
-      "ventilation_erhoehung_luefterstufe_3": {
-        "name": "Erhöhung der Lüfterstufe 3 (R/W)"
-      },
-      "ventilation_soll_volumenstrom_luefterstufe2": {
-        "name": "Soll-Volumenstrom Lüfterstufe 2 (read/write)"
-      }
-    },
-    "select": {
-      "ventilation_betriebsart": {
-        "name": "Betriebsart"
-      }
-    },
     "sensor": {
       "carbon_dioxide_co2": {
         "name": "CO2"
       },
       "carbon_dioxide_co2_measurement": {
-        "name": "CO2-Messung"
+        "name": "CO2 measurement"
       },
       "coarse_dust_filter_betriebsstunden_grobstaubfilter": {
-        "name": "betriebsstunden_grobstaubfilter"
+        "name": "Coarse dust filter operating hours"
       },
       "coarse_dust_filter_grobstaubfilter_betriebsart_filterueberwachung": {
-        "name": "Grobstaubfilter: Betriebsart Filterüberwachung"
+        "name": "Coarse dust filter monitoring mode"
       },
       "coarse_dust_filter_grobstaubfilter_max_foerdervolume": {
-        "name": "Grobstaubfilter: Maximales Fördervolumen"
+        "name": "Coarse dust filter maximum conveyed volume"
       },
       "coarse_dust_filter_grobstaubfilter_standzeit": {
-        "name": "Grobstaubfilter Standzeit"
+        "name": "Coarse dust filter service life"
       },
       "cooling_aussenluft_temp_kuehlung_aus": {
-        "name": "Temperatur Außenluft: Kühlung aus"
+        "name": "Outdoor air temperature cooling off"
       },
       "cooling_aussenluft_temp_kuehlung_ein": {
-        "name": "Temperatur Außenluft: Kühlung ein"
+        "name": "Outdoor air temperature cooling on"
       },
       "fans_betriebsstunden_abluftventilator": {
-        "name": "betriebsstunden_abluftventilator"
+        "name": "Extract air fan operating hours"
       },
       "fans_betriebsstunden_zuluftventilator": {
-        "name": "betriebsstunden_zuluftventilator"
+        "name": "Supply air fan operating hours"
       },
       "fans_drehzahl_abluftventilator": {
-        "name": "Drehzahl Abluftventilator"
+        "name": "Extract air fan speed"
       },
       "fans_drehzahl_zuluftventilator": {
-        "name": "Drehzahl Zuluftventilator"
+        "name": "Supply air fan speed"
       },
       "fans_ist_ventilator_abluft": {
-        "name": "ist_ventilator_abluft"
+        "name": "Extract air fan actual speed"
       },
       "fans_ist_ventilator_zuluft": {
-        "name": "ist_ventilator_zuluft"
+        "name": "Supply air fan actual speed"
       },
       "fans_max_permissible_exhaust_air_fan_speed": {
-        "name": "Maximal zulässige Drehzahl Abluftventilator"
+        "name": "Maximum permissible extract air fan speed"
       },
       "fans_max_permissible_supply_air_fan_speed": {
-        "name": "Maximal zulässige Drehzahl Zuluftventilator"
+        "name": "Maximum permissible supply air fan speed"
       },
       "fine_dust_filter_betriebsstunden_feinstaubfilter": {
-        "name": "betriebsstunden_feinstaubfilter"
+        "name": "Fine dust filter operating hours"
       },
       "fine_dust_filter_feinstaubfilter_standzeit": {
-        "name": "Feinstaubfilter Standzeit"
+        "name": "Fine dust filter service life"
       },
       "general_date": {
-        "name": "Datum"
+        "name": "Date"
       },
       "general_device_type": {
-        "name": "Gerätetyp"
+        "name": "Device type"
       },
       "general_revisionstuer": {
-        "name": "Revisionstüre"
+        "name": "Revision door"
       },
       "general_send_date_time": {
-        "name": "Uhrzeit und Datum verschicken"
+        "name": "Send date and time"
       },
       "general_software_version": {
-        "name": "Software Version"
+        "name": "Software version"
       },
       "general_time": {
-        "name": "Uhrzeit"
+        "name": "Time"
       },
       "general_wochentag": {
-        "name": "wochentag"
+        "name": "Day of week"
       },
       "heat_pump_waermepumpe": {
-        "name": "Wärmepumpe"
+        "name": "Heat pump"
       },
       "heat_pump_wp_betriebsstunden_kompressormotor": {
-        "name": "Betriebsstunden: Kompressormotor"
+        "name": "Compressor motor operating hours"
       },
       "heat_pump_wp_betriebsstunden_magnetventil_fluessiggas": {
-        "name": "Betriebsstunden: Magnetventil Flüssiggas"
+        "name": "Liquid refrigerant solenoid valve operating hours"
       },
       "heat_pump_wp_betriebsstunden_magnetventil_heissgas": {
-        "name": "Betriebsstunden: Magnetventil Heißgas"
+        "name": "Hot gas solenoid valve operating hours"
       },
       "heat_pump_wp_betriebsstunden_magnetventil_luftkondensator": {
-        "name": "Betriebsstunden: Magnetventil Luftkondensator"
+        "name": "Air condenser solenoid valve operating hours"
       },
       "heat_pump_wp_hochdruck": {
-        "name": "Hochdruck Wärmepumpe"
+        "name": "Heat pump high pressure"
       },
       "heat_pump_wp_niederdruck": {
-        "name": "Niederdruck Wärmepumpe"
+        "name": "Heat pump low pressure"
       },
       "heat_pump_wp_status": {
-        "name": "Status Wärmepumpe"
+        "name": "Heat pump status",
+        "state": {
+          "brine_pump_lead_time": "Brine pump lead time",
+          "defrosting": "Defrosting",
+          "draining_after_defrost": "Draining after defrost",
+          "fan_lead_time": "Fan lead time",
+          "minimum_runtime": "Minimum runtime",
+          "off": "Off",
+          "on": "On",
+          "opening_hot_gas_valve": "Opening hot gas valve",
+          "opening_liquid_refrigerant_valve": "Opening liquid refrigerant valve",
+          "pumping_down_for_defrost": "Pumping down for defrost",
+          "pumping_down_refrigerant": "Pumping down refrigerant",
+          "restart_lockout": "Restart lockout",
+          "starting_compressor": "Starting compressor"
+        }
       },
       "heat_pump_wp_status_restlaufzeit": {
-        "name": "Status Wärmepumpe (Restzeit des aktuellen Status)"
+        "name": "Heat pump status remaining time"
       },
       "heat_pump_wp_verdamperregister": {
-        "name": "Verdampferregister"
+        "name": "Evaporator coil temperature"
       },
       "heat_pump_wp_zentralgeraet_adresse": {
-        "name": "Zentralgerät Adresse (WP)"
+        "name": "Heat pump central unit address"
       },
       "hot_water_heat_pump_ueberschreitung_boilertemp": {
-        "name": "Überschreitung Boilertemperatur"
+        "name": "Boiler temperature overshoot"
       },
       "hot_water_heat_pump_warmwasser_speicher_oben": {
-        "name": "Temperatur: Warmwasserspeicher oben (T_BW_EHZ)"
+        "name": "Hot water tank upper temperature"
       },
       "hot_water_heat_pump_warmwasser_warmepumpe": {
-        "name": "Temperatur: Warmwasserspeicher Wärmepumpe (T_BW_WP)"
+        "name": "Hot water heat pump temperature"
       },
       "hot_water_heat_pump_wp_betriebsstunden_elektroheizstab": {
-        "name": "Betriebsstunden: Elektroheizstab"
+        "name": "Electric heating element operating hours"
       },
       "hot_water_heat_pump_wp_brauchwasser_temp_raumheizungssperre": {
-        "name": "Brauchwassertemperatur: Raumheizungssperre"
+        "name": "Domestic hot water temperature space heating lockout"
       },
       "hot_water_heat_pump_wp_verzoegerung_brauchwasserheizung": {
-        "name": "Verzögerung Brauchwassererheizung"
+        "name": "Domestic hot water heating delay"
       },
       "hot_water_heat_pump_wp_vorruebergehende_boilertemperatur": {
-        "name": "Vorübergehende Boilerübertemperatur"
+        "name": "Temporary boiler temperature"
       },
       "outside_temperature_aussenluft_temp_beschattung": {
-        "name": "Temperatur Aussenluft: Beschattung"
+        "name": "Outdoor air temperature shading"
       },
       "outside_temperature_aussenluft_temp_frostschutz": {
-        "name": "Temperatur Außenluft: Frostschutz"
+        "name": "Outdoor air temperature frost protection"
       },
       "outside_temperature_aussenluft_temp_frostschutz_aus": {
-        "name": "Temperatur Außenluft: Frostschutz aus"
+        "name": "Outdoor air temperature frost protection off"
       },
       "outside_temperature_aussenluft_temp_frostschutz_ein": {
-        "name": "Temperatur Außenluft: Frostschutz ein"
+        "name": "Outdoor air temperature frost protection on"
       },
       "outside_temperature_aussenluft_temp_reduktion_luftmenge_10_percent": {
-        "name": "Temperatur Außenluft: Reduktion Luftmenge 10%"
+        "name": "Outdoor air temperature airflow reduction 10%"
       },
       "outside_temperature_aussenluft_temp_reduktion_luftmenge_20_percent": {
-        "name": "Temperatur Außenluft: Reduktion Luftmenge 20%"
+        "name": "Outdoor air temperature airflow reduction 20%"
       },
       "outside_temperature_aussenluft_temp_schwelle_heizen_kuehlen": {
-        "name": "Temperaturschwelle Außenluft \\\\ Heizen / Kühlen"
+        "name": "Outdoor air temperature heating and cooling threshold"
       },
       "outside_temperature_aussenluft_temp_sole_nach_aussenluftvorwaermung": {
-        "name": "Temperatur: Sole nach Außenluftvorwärmung"
+        "name": "Brine temperature after outdoor air preheating"
       },
       "outside_temperature_aussenluft_temp_sommerautomatik_aktivieren": {
-        "name": "Temperatur Außenluft: Sommerautomatik aktivieren"
+        "name": "Outdoor air temperature summer mode on"
       },
       "outside_temperature_aussenluft_temp_sommerautomatik_deaktivieren": {
-        "name": "Temperatur Außenluft: Sommerautomatik deaktivieren"
+        "name": "Outdoor air temperature summer mode off"
       },
       "outside_temperature_betriebsstunden_sole_kreis_aussenluft": {
-        "name": "Betriebsstunden Solekreis Außenluft"
+        "name": "Outdoor air brine circuit operating hours"
       },
       "outside_temperature_temp_aussenluft": {
-        "name": "Temperatur Aussenluft"
+        "name": "Outdoor air temperature"
       },
       "outside_temperature_vereisungsschutz": {
-        "name": "Vereisungsschutz"
+        "name": "Freeze protection"
       },
       "room_temperature_raum_temp_beschattung": {
-        "name": "Temperatur Raum Beschattung"
+        "name": "Room temperature shading"
       },
       "room_temperature_temp_raumluft": {
-        "name": "Temperatur Raumluft"
+        "name": "Room air temperature"
       },
       "summer_bypass_betriebsart_sommerautomatik": {
-        "name": "Betriebsart Sommerautomatik"
+        "name": "Summer mode"
       },
       "ventilation_absenkung_aktive_luefterstufe": {
-        "name": "Absenkung der Lüfterstufe 1"
+        "name": "Fan level reduction"
       },
       "ventilation_aktive_luefterstufe": {
-        "name": "Aktive Lüfterstufe"
+        "name": "Active fan level"
       },
       "ventilation_befoerderte_kubikmeter": {
-        "name": "Gesamt beförderte Kubikmeter"
+        "name": "Total conveyed air volume"
       },
       "ventilation_befoerderte_luftmenge_seit_filterwechsel": {
-        "name": "Gesamt beförderte Luftmenge seit Filterwechsel"
+        "name": "Conveyed air volume since filter change"
       },
       "ventilation_beschattungsfunktion": {
-        "name": "Beschattungsfunktion"
+        "name": "Shading function"
       },
       "ventilation_betriebsart": {
-        "name": "Betriebsart"
+        "name": "Operating mode"
       },
       "ventilation_betriebsstunden_beschattung": {
-        "name": "betriebsstunden_beschattung"
+        "name": "Shading operating hours"
       },
       "ventilation_betriebsstunden_frostschutzeinrichtung": {
-        "name": "betriebsstunden_frostschutzeinrichtung"
+        "name": "Frost protection operating hours"
       },
       "ventilation_betriebsstunden_heizstufe1": {
-        "name": "betriebsstunden_heizstufe1"
+        "name": "Heating stage 1 operating hours"
       },
       "ventilation_betriebsstunden_heizstufe2": {
-        "name": "betriebsstunden_heizstufe2"
+        "name": "Heating stage 2 operating hours"
       },
       "ventilation_betriebsstunden_luefterstufe0": {
-        "name": "betriebsstunden_luefterstufe0"
+        "name": "Fan level 0 operating hours"
       },
       "ventilation_betriebsstunden_luefterstufe1": {
-        "name": "betriebsstunden_luefterstufe1"
+        "name": "Fan level 1 operating hours"
       },
       "ventilation_betriebsstunden_luefterstufe2": {
-        "name": "betriebsstunden_luefterstufe2"
+        "name": "Fan level 2 operating hours"
       },
       "ventilation_betriebsstunden_luefterstufe3": {
-        "name": "betriebsstunden_luefterstufe3"
+        "name": "Fan level 3 operating hours"
       },
       "ventilation_soll_volumenstrom_abluft": {
-        "name": "Soll-Volumenstrom Abluft"
+        "name": "Target extract airflow"
       },
       "ventilation_soll_volumenstrom_zuluft": {
-        "name": "Soll-Volumenstrom Zuluft"
+        "name": "Target supply airflow"
       },
       "ventilation_volumenstrombalance_zuluftabluft": {
-        "name": "Volumenstrombalance ZuluftAbluft"
-      }
-    },
-    "switch": {
-      "boost_functions_heat_pump_function_bad_plus": {
-        "name": "Funktion BAD+"
-      },
-      "boost_functions_ventilation_function_heizung_plus": {
-        "name": "Funktion HEIZUNG+"
+        "name": "Supply and extract airflow balance"
       }
     }
   },

@@ -70,37 +70,22 @@ rules:
   entity-category:
     status: done
     comment: |
-      Diagnostic: device identifiers (software_version, device_type,
-      zentralgeraet_adresse), 9 presence/"_vorhanden" binary_sensors, and 18
-      fault/timeout binary_sensors (Störung*/timeout_*) -- consistent with
-      Platinum-tier precedent (shelly, unifiprotect mark PROBLEM-class
-      binary_sensors diagnostic). Config: all 10 writable number setpoints
-      and both boost-function switches -- matches the CONFIG example in the
-      HA dev docs (a switch enabling a function). Everything else (state/
-      operating-hour/runtime sensors, demand/"Anforderung" flags, the
-      Betriebsart mode select) stays regular, matching how Platinum-tier
-      tplink leaves analogous runtime/remaining-life sensors uncategorized.
+      Controller identifiers, thresholds, operating-hour counters, and other
+      service information are diagnostic. Live temperatures, airflow, fan
+      speeds, and operating state remain regular sensors.
   entity-device-class:
     status: done
     comment: |
-      sensor.py already used TEMPERATURE/DURATION throughout. Added
-      BinarySensorDeviceClass.PROBLEM to the 18 fault/timeout binary_sensors
-      and NumberDeviceClass.TEMPERATURE to the two °C setpoints; the
-      remaining number/switch/select entities have no fitting device class
-      (plain counts, percentages, minutes, or a manufacturer-defined enum).
+      Temperature and duration sensors use their matching device classes, and
+      the heat-pump status uses the enum device class with translated states.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations:
     status: done
     comment: |
-      icons.json covers every entity lacking a device-class-derived icon
-      (following Platinum-tier duco's precedent of targeted, not exhaustive,
-      coverage) -- presence/"_vorhanden" and fault-adjacent binary_sensors,
-      unitless/flow/pressure sensors, both boost-function switches, and the
-      Betriebsart select. Per-option select state icons aren't possible: the
-      option labels are free-text German strings, and icons.json state keys
-      must match ``[a-z0-9-_]+``.
+      icons.json covers sensors without a device-class-derived icon, including
+      airflow, pressure, operating mode, and controller state values.
   reconfiguration-flow: done
   repair-issues:
     status: exempt

@@ -31,10 +31,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# A named tuple, not an inline `except (A, B, C):` -- ruff's formatter has a
-# bug where it strips the required parentheses from a multi-type except
-# clause, producing invalid Python 2-style syntax. Referencing a module-level
-# constant instead sidesteps it.
 _CONNECT_ERRORS = (ModbusError, HomeAssistantError, OSError, ValueError)
 
 STEP_USER = probatio.Schema(

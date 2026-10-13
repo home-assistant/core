@@ -16,9 +16,23 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import AerosmartConfigEntry
 from .entity import AerosmartEntity
 
-# Coordinator-based (all entities share one poll); parallel per-entity
-# writes to the same Modbus link would race, so keep this serialized.
 PARALLEL_UPDATES = 0
+
+HEAT_PUMP_STATUS_OPTIONS = {
+    0: "restart_lockout",
+    1: "off",
+    2: "brine_pump_lead_time",
+    3: "fan_lead_time",
+    4: "opening_hot_gas_valve",
+    5: "opening_liquid_refrigerant_valve",
+    6: "starting_compressor",
+    7: "minimum_runtime",
+    8: "on",
+    9: "pumping_down_refrigerant",
+    10: "pumping_down_for_defrost",
+    11: "defrosting",
+    12: "draining_after_defrost",
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,6 +41,7 @@ class AerosmartSensorEntityDescription(SensorEntityDescription):
 
     component: str
     attribute: str
+    enum_options: dict[int, str] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
@@ -36,7 +51,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="general",
         attribute="wochentag",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="general_software_version",
@@ -44,7 +58,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="general",
         attribute="software_version",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="general_device_type",
@@ -52,7 +65,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="general",
         attribute="device_type",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="general_revisionstuer",
@@ -60,7 +72,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="general",
         attribute="revisionstuer",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="general_time",
@@ -75,7 +86,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="general",
         attribute="send_date_time",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="general_date",
@@ -83,7 +93,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="general",
         attribute="date",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="outside_temperature_temp_aussenluft",
@@ -433,7 +442,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="ventilation",
         attribute="soll_volumenstrom_abluft",
-        native_unit_of_measurement="m³",
+        native_unit_of_measurement="m³/h",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
@@ -442,7 +451,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         component="ventilation",
         attribute="soll_volumenstrom_zuluft",
-        native_unit_of_measurement="m³",
+        native_unit_of_measurement="m³/h",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
@@ -579,7 +588,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         attribute="wp_betriebsstunden_kompressormotor",
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AerosmartSensorEntityDescription(
         key="heat_pump_wp_betriebsstunden_magnetventil_fluessiggas",
@@ -589,7 +598,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         attribute="wp_betriebsstunden_magnetventil_fluessiggas",
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AerosmartSensorEntityDescription(
         key="heat_pump_wp_betriebsstunden_magnetventil_heissgas",
@@ -599,7 +608,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         attribute="wp_betriebsstunden_magnetventil_heissgas",
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AerosmartSensorEntityDescription(
         key="heat_pump_wp_betriebsstunden_magnetventil_luftkondensator",
@@ -609,7 +618,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         attribute="wp_betriebsstunden_magnetventil_luftkondensator",
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AerosmartSensorEntityDescription(
         key="heat_pump_wp_hochdruck",
@@ -629,21 +638,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         component="heat_pump",
         attribute="wp_status",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Wiedereinschaltsperre",
-            "Wärmepumpe aus",
-            "Vorlaufzeit Solepumpe",
-            "Vorlaufzeit Ventilatoren",
-            "Öffnen Heißgasventil",
-            "Öffnen Flüssiggasventil",
-            "Start Kompressor",
-            "Mindestlaufzeit Wärmepumpe",
-            "Wärmepumpe ein",
-            "Kältemittel absaugen",
-            "Beim Abtauen absaugen",
-            "Abtauen ein",
-            "Nach Abtauen abtropfen",
-        ],
+        options=list(HEAT_PUMP_STATUS_OPTIONS.values()),
+        enum_options=HEAT_PUMP_STATUS_OPTIONS,
     ),
     AerosmartSensorEntityDescription(
         key="heat_pump_wp_status_restlaufzeit",
@@ -710,7 +706,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         attribute="wp_betriebsstunden_elektroheizstab",
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -740,12 +736,8 @@ class AerosmartSensor(AerosmartEntity, SensorEntity):
         value = getattr(self._subsystem, self.entity_description.attribute)
         if value is None:
             return None
-        if self.entity_description.device_class is SensorDeviceClass.ENUM:
-            metadata = self._subsystem.require_metadata_for(
-                self.entity_description.attribute
-            )
-            assert metadata.enum is not None
-            return dict(metadata.enum.options).get(int(value))
+        if self.entity_description.enum_options is not None:
+            return self.entity_description.enum_options.get(int(value))
         return cast(
             float | int,
             value,

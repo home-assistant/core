@@ -18,13 +18,7 @@ async def test_update_failed_marks_entities_unavailable(
     mock_modbus_unit_ventilation: MockModbusUnit,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A Modbus read failure fails the update and makes entities unavailable.
-
-    ``mock_modbus_unit_ventilation`` is the same ``MockModbusUnit`` instance
-    the coordinator's ``AerosmartDevice`` was built from (both resolve
-    through the same ``mock_modbus_connection``), so mutating its store here
-    affects the very unit the integration under test reads.
-    """
+    """A Modbus read failure makes entities unavailable."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -44,7 +38,7 @@ async def test_update_failed_marks_entities_unavailable(
     await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False
-    outside = hass.states.get("sensor.aerosmart_temperatur_aussenluft")
+    outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert outside is not None
     assert outside.state == STATE_UNAVAILABLE
 
@@ -79,7 +73,7 @@ async def test_recovers_after_transient_failure(
     await hass.async_block_till_done()
 
     assert coordinator.last_update_success is True
-    outside = hass.states.get("sensor.aerosmart_temperatur_aussenluft")
+    outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert outside.state == "0.123"
 
 
@@ -106,7 +100,7 @@ async def test_partial_failure_only_marks_its_subsystem_unavailable(
     assert "carbon_dioxide" in coordinator.data.failed
 
     co2 = hass.states.get("sensor.aerosmart_co2")
-    outside = hass.states.get("sensor.aerosmart_temperatur_aussenluft")
+    outside = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert co2 is not None
     assert co2.state == STATE_UNAVAILABLE
     assert outside is not None

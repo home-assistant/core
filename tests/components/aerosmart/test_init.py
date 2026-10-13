@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from modbus_connection import ModbusConnectionError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
@@ -38,7 +38,7 @@ async def test_setup_entry_keeps_retrying_after_background_connect_failure(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.readings.last_update_success is False
-    outside_temp = hass.states.get("sensor.aerosmart_temperatur_aussenluft")
+    outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert outside_temp is not None
     assert outside_temp.state == STATE_UNAVAILABLE
 
@@ -65,7 +65,7 @@ async def test_setup_entry_does_not_wait_for_initial_refresh(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
         assert not mock_config_entry.runtime_data.initial_refresh_task.done()
-        outside_temp = hass.states.get("sensor.aerosmart_temperatur_aussenluft")
+        outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
         assert outside_temp is not None
         assert outside_temp.state == STATE_UNAVAILABLE
 
@@ -78,7 +78,7 @@ async def test_setup_entry_creates_entities(
     mock_config_entry: MockConfigEntry,
     mock_modbus_api: MockModbusApi,
 ) -> None:
-    """The entry loads and produces entities across every platform."""
+    """The entry loads and produces sensor entities."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -86,37 +86,38 @@ async def test_setup_entry_creates_entities(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_modbus_api.get_unit.call_count == 2
 
-    wochentag = hass.states.get("sensor.aerosmart_wochentag")
+    wochentag = hass.states.get("sensor.aerosmart_day_of_week")
     assert wochentag is not None
     assert wochentag.state == "3"
 
-    outside_temp = hass.states.get("sensor.aerosmart_temperatur_aussenluft")
+    outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert outside_temp is not None
     assert outside_temp.state == "0.123"
 
-    heat_pump_status = hass.states.get("sensor.aerosmart_status_warmepumpe")
+    heat_pump_status = hass.states.get("sensor.aerosmart_heat_pump_status")
     assert heat_pump_status is not None
-    assert heat_pump_status.state == "Wärmepumpe aus"
+    assert heat_pump_status.state == "off"
     assert heat_pump_status.attributes["options"] == [
-        "Wiedereinschaltsperre",
-        "Wärmepumpe aus",
-        "Vorlaufzeit Solepumpe",
-        "Vorlaufzeit Ventilatoren",
-        "Öffnen Heißgasventil",
-        "Öffnen Flüssiggasventil",
-        "Start Kompressor",
-        "Mindestlaufzeit Wärmepumpe",
-        "Wärmepumpe ein",
-        "Kältemittel absaugen",
-        "Beim Abtauen absaugen",
-        "Abtauen ein",
-        "Nach Abtauen abtropfen",
+        "restart_lockout",
+        "off",
+        "brine_pump_lead_time",
+        "fan_lead_time",
+        "opening_hot_gas_valve",
+        "opening_liquid_refrigerant_valve",
+        "starting_compressor",
+        "minimum_runtime",
+        "on",
+        "pumping_down_refrigerant",
+        "pumping_down_for_defrost",
+        "defrosting",
+        "draining_after_defrost",
     ]
 
 
 async def test_unload_releases_shared_connection(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Unloading lets Home Assistant release its shared connection holds."""
     mock_config_entry.add_to_hass(hass)
@@ -127,6 +128,7 @@ async def test_unload_releases_shared_connection(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_modbus_connection.connected is False
 
 
 async def test_migrates_legacy_shared_connection_entry(hass: HomeAssistant) -> None:

@@ -1,19 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "carbon_dioxide_co2_sensor_available": {
-        "default": "mdi:molecule-co2"
-      },
-      "carbon_dioxide_stoerung_co2_sensor": {
-        "default": "mdi:molecule-co2"
-      },
-      "coarse_dust_filter_grobstaubfilter_wechseln": {
-        "default": "mdi:air-filter"
-      },
-      "fine_dust_filter_feinstaubfilter_wechseln": {
-        "default": "mdi:air-filter"
-      }
-    },
     "sensor": {
       "carbon_dioxide_co2": {
         "default": "mdi:molecule-co2"
@@ -56,17 +42,6 @@
       },
       "ventilation_aktive_luefterstufe": {
         "default": "mdi:fan"
-      }
-    },
-    "switch": {
-      "boost_functions_heat_pump_function_bad_plus": {
-        "default": "mdi:shower-head"
-      },
-      "boost_functions_ventilation_function_heizung_plus": {
-        "default": "mdi:fire",
-        "state": {
-          "off": "mdi:fire-off"
-        }
       }
     }
   }

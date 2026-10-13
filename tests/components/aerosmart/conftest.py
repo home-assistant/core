@@ -1,7 +1,6 @@
 """Fixtures for the aerosmart tests."""
 
-from collections.abc import Generator
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -13,6 +12,7 @@ from homeassistant.components.aerosmart.const import (
     CONF_UNIT_VENTILATION,
     DOMAIN,
 )
+from homeassistant.components.modbus import async_get_temporary_unit, async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -74,26 +74,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_modbus_api(
+async def mock_modbus_api(
     mock_modbus_connection: MockModbusConnection,
-) -> Generator[MockModbusApi]:
+) -> AsyncGenerator[MockModbusApi]:
     """Route Home Assistant's shared Modbus API through the in-memory mock."""
-    get_unit = MagicMock(
-        side_effect=lambda _hass, _entry, _params, unit_id: (
-            mock_modbus_connection.for_unit(unit_id)
-        )
-    )
-
-    @asynccontextmanager
-    async def temporary_unit(_hass, _params, unit_id):
-        yield mock_modbus_connection.for_unit(unit_id)
-
-    temporary_unit_factory = MagicMock(side_effect=temporary_unit)
+    await mock_modbus_connection.connect()
+    get_unit = MagicMock(wraps=async_get_unit)
+    temporary_unit_factory = MagicMock(wraps=async_get_temporary_unit)
     with (
         patch("homeassistant.components.aerosmart.async_get_unit", get_unit),
         patch(
             "homeassistant.components.aerosmart.config_flow.async_get_temporary_unit",
             temporary_unit_factory,
+        ),
+        patch(
+            "homeassistant.components.modbus.connection.ModbusConnection",
+            return_value=mock_modbus_connection,
         ),
     ):
         yield MockModbusApi(get_unit=get_unit, temporary_unit=temporary_unit_factory)

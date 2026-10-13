@@ -6,20 +6,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .binary_sensor import BINARY_SENSOR_DESCRIPTIONS
 from .coordinator import AerosmartConfigEntry
-from .number import NUMBER_DESCRIPTIONS
-from .select import SELECT_DESCRIPTIONS
 from .sensor import SENSOR_DESCRIPTIONS
-from .switch import SWITCH_DESCRIPTIONS
-
-_ALL_DESCRIPTIONS = (
-    SENSOR_DESCRIPTIONS
-    + BINARY_SENSOR_DESCRIPTIONS
-    + NUMBER_DESCRIPTIONS
-    + SELECT_DESCRIPTIONS
-    + SWITCH_DESCRIPTIONS
-)
 
 _TO_REDACT = {CONF_HOST}
 
@@ -49,7 +37,7 @@ async def async_get_config_entry_diagnostics(
         }
 
     registers: dict[str, Any] = {}
-    for description in _ALL_DESCRIPTIONS:
+    for description in SENSOR_DESCRIPTIONS:
         subsystem = getattr(device, description.component)
         registers[description.key] = getattr(subsystem, description.attribute)
 
