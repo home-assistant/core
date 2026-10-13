@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) -> None:
     """Set up a config entry for Aprilaire."""
 
     host = entry.data[CONF_HOST]
@@ -51,9 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
 
     await coordinator.wait_for_ready(ready_callback)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -24,7 +24,7 @@ LB_DEVICES_PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> None:
     """Set up Lektrico Charging Station from a config entry."""
     coordinator = LektricoDeviceDataUpdateCoordinator(hass, entry)
 
@@ -34,13 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, _get_platforms(entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, _get_platforms(entry)
     )
 

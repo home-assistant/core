@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
     """Set up an iCloud account from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -79,11 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_setup_photo_cache(hass, account)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
