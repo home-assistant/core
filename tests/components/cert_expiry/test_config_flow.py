@@ -1,7 +1,9 @@
 """Tests for the Cert Expiry config flow."""
 
+from collections.abc import AsyncGenerator
 import socket
 import ssl
+import threading
 from unittest.mock import ANY, patch
 
 from cryptography import x509
@@ -19,6 +21,22 @@ from .const import HOST, PORT
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+@pytest.fixture
+async def verify_pem_parsing_off_loop() -> AsyncGenerator[None]:
+    """Require real PEM parsing to run outside the event-loop thread."""
+    loop_thread_id = threading.get_ident()
+
+    def load_certificates(data: bytes) -> list[x509.Certificate]:
+        assert threading.get_ident() != loop_thread_id
+        return x509.load_pem_x509_certificates(data)
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.load_pem_x509_certificates",
+        side_effect=load_certificates,
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -59,6 +77,7 @@ async def test_user(
     "whitespace",
     [pytest.param("", id="pem"), pytest.param(" \n\t ", id="outer-whitespace")],
 )
+@pytest.mark.usefixtures("verify_pem_parsing_off_loop")
 async def test_user_with_ca_certificates(
     hass: HomeAssistant, certificate_pem: str, whitespace: str
 ) -> None:
@@ -97,6 +116,7 @@ async def test_user_with_ca_certificates(
         pytest.param("unsupported-version", id="unsupported-version"),
     ],
 )
+@pytest.mark.usefixtures("verify_pem_parsing_off_loop")
 async def test_invalid_ca_certificates_recovers(
     hass: HomeAssistant,
     certificate_pem: str,
@@ -322,6 +342,7 @@ async def test_reconfigure_verification(
         pytest.param("first", "whitespace", "empty", id="clear-with-whitespace"),
     ],
 )
+@pytest.mark.usefixtures("verify_pem_parsing_off_loop")
 async def test_reconfigure_ca_certificates(
     hass: HomeAssistant,
     certificate_pem: str,

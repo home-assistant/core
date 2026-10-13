@@ -41,8 +41,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
-            self._ca_certificates = normalize_ca_certificates(
-                user_input.get(CONF_CA_CERTIFICATES, "")
+            self._ca_certificates = await self.hass.async_add_executor_job(
+                normalize_ca_certificates, user_input.get(CONF_CA_CERTIFICATES, "")
             )
             ssl_context = await async_get_ssl_context(
                 self.hass,
