@@ -42,6 +42,7 @@ from .const import (
     DEFAULT_MAX_MESSAGE_SIZE,
     DEFAULT_PORT,
     DOMAIN,
+    INVALID_COMMAND_CHARS,
     MAX_MESSAGE_SIZE_LIMIT,
     MESSAGE_DATA_OPTIONS,
 )
@@ -109,7 +110,18 @@ async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str]:
     """Validate user input."""
-    errors = {}
+    if errors := {
+        key: "invalid_characters"
+        for key in (
+            CONF_USERNAME,
+            CONF_PASSWORD,
+            CONF_FOLDER,
+            CONF_SEARCH,
+            CONF_CHARSET,
+        )
+        if INVALID_COMMAND_CHARS.search(user_input[key])
+    }:
+        return errors
 
     try:
         imap_client = await connect_to_server(user_input)

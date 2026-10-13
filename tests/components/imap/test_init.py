@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException, Response
+import probatio
 import pytest
 
 from homeassistant.components.imap import DOMAIN
@@ -1200,6 +1201,38 @@ async def test_services(
         assert exc.value.translation_domain == DOMAIN
         assert exc.value.translation_key == patch_error_translation_key[service][1]
         assert exc.value.translation_placeholders == {"error": "Bla"}
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        pytest.param("seen", {"uid": "1\r\nA001 LOGOUT"}, id="seen_uid"),
+        pytest.param("delete", {"uid": "1\x00"}, id="delete_uid"),
+        pytest.param(
+            "move",
+            {"uid": "1", "target_folder": "Trash\nA001 LOGOUT"},
+            id="move_target_folder",
+        ),
+    ],
+)
+async def test_services_invalid_characters(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    service: str,
+    data: dict[str, str],
+) -> None:
+    """Test service arguments that aioimaplib refuses to send are rejected."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN, service, {"entry": config_entry.entry_id, **data}, blocking=True
+        )
+    mock_imap_protocol.store.assert_not_called()
+    mock_imap_protocol.copy.assert_not_called()
 
 
 @pytest.mark.parametrize(
