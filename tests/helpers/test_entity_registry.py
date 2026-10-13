@@ -3275,12 +3275,14 @@ async def test_update_entity_recalculates_original_name_unprefixed(
         "new_config_entry_disabled_by",
         "entity_disabled_by_initial",
         "entity_disabled_by_updated",
+        "expected_disabled_by_change",
     ),
     [
         (
             None,
             None,
             None,
+            {},
         ),
         # Config entry not disabled, entity was disabled by config entry.
         # Entity not disabled when updated.
@@ -3288,26 +3290,31 @@ async def test_update_entity_recalculates_original_name_unprefixed(
             None,
             er.RegistryEntryDisabler.CONFIG_ENTRY,
             None,
+            {"disabled_by": er.RegistryEntryDisabler.CONFIG_ENTRY},
         ),
         (
             None,
             er.RegistryEntryDisabler.DEVICE,
             er.RegistryEntryDisabler.DEVICE,
+            {},
         ),
         (
             None,
             er.RegistryEntryDisabler.HASS,
             er.RegistryEntryDisabler.HASS,
+            {},
         ),
         (
             None,
             er.RegistryEntryDisabler.INTEGRATION,
             er.RegistryEntryDisabler.INTEGRATION,
+            {},
         ),
         (
             None,
             er.RegistryEntryDisabler.USER,
             er.RegistryEntryDisabler.USER,
+            {},
         ),
         # Config entry disabled, entity not disabled.
         # Entity disabled by config entry when updated.
@@ -3315,31 +3322,37 @@ async def test_update_entity_recalculates_original_name_unprefixed(
             config_entries.ConfigEntryDisabler.USER,
             None,
             er.RegistryEntryDisabler.CONFIG_ENTRY,
+            {"disabled_by": None},
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.CONFIG_ENTRY,
             er.RegistryEntryDisabler.CONFIG_ENTRY,
+            {},
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.DEVICE,
             er.RegistryEntryDisabler.DEVICE,
+            {},
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.HASS,
             er.RegistryEntryDisabler.HASS,
+            {},
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.INTEGRATION,
             er.RegistryEntryDisabler.INTEGRATION,
+            {},
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.USER,
             er.RegistryEntryDisabler.USER,
+            {},
         ),
     ],
 )
@@ -3351,8 +3364,10 @@ async def test_update_entity_disabled_by(
     new_config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
     entity_disabled_by_initial: er.RegistryEntryDisabler | None,
     entity_disabled_by_updated: er.RegistryEntryDisabler | None,
+    expected_disabled_by_change: dict[str, er.RegistryEntryDisabler | None],
 ) -> None:
     """Check how the disabled_by flag is treated when updating an entity."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry_1 = MockConfigEntry(domain="light")
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(
@@ -3427,17 +3442,40 @@ async def test_update_entity_disabled_by(
         unit_of_measurement="unit_1",
     )
 
+    await hass.async_block_till_done()
+    assert update_events[-1].data == {
+        "action": "update",
+        "entity_id": entry.entity_id,
+        "changes": {
+            "capabilities": {"key1": "value1"},
+            "config_entry_id": config_entry_1.entry_id,
+            **expected_disabled_by_change,
+        },
+    }
+
 
 @pytest.mark.parametrize(
-    ("entity_disabled_by_initial", "entity_disabled_by_updated"),
+    (
+        "entity_disabled_by_initial",
+        "entity_disabled_by_updated",
+        "expected_disabled_by_change",
+    ),
     [
-        (None, None),
+        (None, None, {}),
         # Entity was disabled by config entry, entity not disabled when updated.
-        (er.RegistryEntryDisabler.CONFIG_ENTRY, None),
-        (er.RegistryEntryDisabler.DEVICE, er.RegistryEntryDisabler.DEVICE),
-        (er.RegistryEntryDisabler.HASS, er.RegistryEntryDisabler.HASS),
-        (er.RegistryEntryDisabler.INTEGRATION, er.RegistryEntryDisabler.INTEGRATION),
-        (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER),
+        (
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+            None,
+            {"disabled_by": er.RegistryEntryDisabler.CONFIG_ENTRY},
+        ),
+        (er.RegistryEntryDisabler.DEVICE, er.RegistryEntryDisabler.DEVICE, {}),
+        (er.RegistryEntryDisabler.HASS, er.RegistryEntryDisabler.HASS, {}),
+        (
+            er.RegistryEntryDisabler.INTEGRATION,
+            er.RegistryEntryDisabler.INTEGRATION,
+            {},
+        ),
+        (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER, {}),
     ],
 )
 @pytest.mark.usefixtures("freezer")
@@ -3447,11 +3485,13 @@ async def test_update_entity_disabled_by_2(
     entity_registry: er.EntityRegistry,
     entity_disabled_by_initial: er.RegistryEntryDisabler | None,
     entity_disabled_by_updated: er.RegistryEntryDisabler | None,
+    expected_disabled_by_change: dict[str, er.RegistryEntryDisabler | None],
 ) -> None:
     """Check how the disabled_by flag is treated when updating an entity.
 
     In this test, the entity is updated without a config entry.
     """
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -3523,6 +3563,17 @@ async def test_update_entity_disabled_by_2(
         translation_key="translation_key_1",
         unit_of_measurement="unit_1",
     )
+
+    await hass.async_block_till_done()
+    assert update_events[-1].data == {
+        "action": "update",
+        "entity_id": entry.entity_id,
+        "changes": {
+            "capabilities": {"key1": "value1"},
+            "config_entry_id": config_entry.entry_id,
+            **expected_disabled_by_change,
+        },
+    }
 
 
 async def test_update_entity_options(
