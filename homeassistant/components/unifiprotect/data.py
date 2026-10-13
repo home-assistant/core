@@ -85,7 +85,12 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 # Device families the public API alone provides; the private bootstrap has no
 # store for them, so hybrid has no adopt path either and their add always goes
 # through the public add signal.
-_PUBLIC_ONLY_MODELS = {ModelType.FOB, ModelType.RELAY, ModelType.SIREN}
+_PUBLIC_ONLY_MODELS = {
+    ModelType.FOB,
+    ModelType.LINK_STATION,
+    ModelType.RELAY,
+    ModelType.SIREN,
+}
 
 
 def _pair_public_private[
@@ -858,10 +863,21 @@ class ProtectData:
             return None
         # Migrated entities target dedicated public device models, which all
         # inherit from PublicDeviceModel (carrying mac/state).
-        return cast(
-            "PublicDeviceModel | None",
-            api.public_bootstrap.get(device.model, device.id),
-        )
+        public_bootstrap = api.public_bootstrap
+        if (public := public_bootstrap.get(device.model, device.id)) is None and (
+            store := public_bootstrap.store_for(device.model)
+        ):
+            # A device re-adopted while the websocket was down is only known
+            # under its new id after the resync.
+            public = next(
+                (
+                    obj
+                    for obj in store.values()
+                    if getattr(obj, "mac", None) == device.mac
+                ),
+                None,
+            )
+        return cast("PublicDeviceModel | None", public)
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:

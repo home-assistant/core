@@ -76,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Set up the UniFi Protect config entries."""
 
     protect = async_create_api_client(hass, entry)
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
 
     if protect.is_public_only:
         await _async_setup_public_only_entry(hass, entry, data_service)
-        return True
+        return
 
     try:
         await protect.update()
@@ -164,8 +164,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
     await _async_setup_entry(hass, entry, data_service, bootstrap)
-
-    return True
 
 
 def _raise_buffered_public_auth_error(
@@ -338,14 +336,13 @@ async def _async_setup_entry(
     hass.http.register_view(VideoEventProxyView(hass))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Unload UniFi Protect config entry."""
     platforms = (
         PUBLIC_ONLY_PLATFORMS if entry.runtime_data.api.is_public_only else PLATFORMS
     )
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        await entry.runtime_data.async_stop()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)
+    await entry.runtime_data.async_stop()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
@@ -397,7 +394,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating configuration from version %s", entry.version)
 
@@ -410,5 +407,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> boo
         )
 
     _LOGGER.debug("Migration to configuration version %s successful", entry.version)
-
-    return True

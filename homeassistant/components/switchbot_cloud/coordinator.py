@@ -4,9 +4,16 @@ from asyncio import timeout
 from logging import getLogger
 from typing import TYPE_CHECKING, Any, override
 
-from switchbot_api import Device, Remote, SwitchBotAPI, SwitchBotConnectionError
+from switchbot_api import (
+    Device,
+    Remote,
+    SwitchBotAPI,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
+)
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -73,5 +80,10 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
                 status: Status = await self._api.get_status(self._device_id)
                 _LOGGER.debug("Refreshing %s with %s", self._device_id, status)
                 return status
+        except SwitchBotAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except SwitchBotConnectionError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
