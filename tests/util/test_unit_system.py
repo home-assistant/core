@@ -861,6 +861,11 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         ),
         (
             SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         ),
@@ -882,11 +887,6 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (
             SensorDeviceClass.VOLUME_FLOW_RATE,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-            None,
-        ),
-        (
-            SensorDeviceClass.VOLUME_FLOW_RATE,
-            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
             None,
         ),
         (SensorDeviceClass.VOLUME_FLOW_RATE, "very_much", None),
@@ -978,7 +978,6 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         UnitOfVolumeFlowRate.GALLONS_PER_DAY,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     ),
     SensorDeviceClass.WATER: (
         UnitOfVolume.CENTUM_CUBIC_FEET,

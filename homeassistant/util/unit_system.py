@@ -431,6 +431,18 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS volume flow rates
         (
             "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         (
@@ -443,16 +455,8 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         (
             "volume_flow_rate",
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
-        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-        (
-            "volume_flow_rate",
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-        (
-            "volume_flow_rate",
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
-        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         # Convert non-USCS volumes of water meters
         ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
