@@ -67,6 +67,8 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_ZONE: user_input[CONF_ZONE]})
+
             if (zone := self.hass.states.get(user_input[CONF_ZONE])) is None:
                 errors[CONF_ZONE] = "zone_not_found"
             else:

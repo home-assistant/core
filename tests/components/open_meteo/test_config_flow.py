@@ -106,6 +106,38 @@ async def test_flow_already_configured(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow aborts when the new zone is already configured."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ZONE: "zone.work"},
+        minor_version=2,
+    )
+    other_entry.add_to_hass(hass)
+    hass.states.async_set(
+        "zone.work",
+        0,
+        {"latitude": 37.3861, "longitude": -122.0839, "friendly_name": "Work"},
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: "zone.work"},
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
@@ -114,6 +146,11 @@ async def test_reconfigure_flow(
 ) -> None:
     """Test the reconfigure flow updates the zone."""
     mock_config_entry.add_to_hass(hass)
+    hass.states.async_set(
+        "zone.work",
+        0,
+        {"latitude": 37.3861, "longitude": -122.0839, "friendly_name": "Work"},
+    )
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -122,13 +159,13 @@ async def test_reconfigure_flow(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_ZONE: ENTITY_ID_HOME},
+        user_input={CONF_ZONE: "zone.work"},
     )
 
     assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "reconfigure_successful"
-    assert mock_config_entry.data == {CONF_ZONE: ENTITY_ID_HOME}
-    assert mock_config_entry.title == "test home"
+    assert mock_config_entry.data == {CONF_ZONE: "zone.work"}
+    assert mock_config_entry.title == "Work"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
