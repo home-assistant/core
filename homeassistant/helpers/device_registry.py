@@ -149,16 +149,10 @@ type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
 
 class _DeviceInfoMapping:
-    """Dict-style access for the device info dataclasses.
+    """Dict-style access for the device info dataclasses, which were TypedDicts.
 
-    Device info used to be a TypedDict, and integrations still set and read it as a
-    mapping, for example by passing it to the device registry with
-    `**device_info`. A field left at UNDEFINED is not part of the mapping, which
-    preserves the TypedDict semantics of an unset key.
-
-    Every method here exists for a usage found in an integration; the set is
-    deliberately closed, as this compatibility layer is meant to be deprecated
-    once integrations read and write the fields directly.
+    A field left at UNDEFINED is not part of the mapping. Each method covers a usage
+    found in integrations, as this compatibility layer is meant to be deprecated.
     """
 
     __slots__ = ()
@@ -240,10 +234,7 @@ class _DeviceInfoMapping:
     def as_dict(self) -> dict[str, Any]:
         """Return the set fields.
 
-        Reads the fields, so a caller does not need the mapping interface the
-        integrations use. Serialize a device info through this method: orjson, and so
-        the Home Assistant JSON helpers, serialize a dataclass field by field, unset
-        ones included, without calling as_dict.
+        Serialize a device info through this method: orjson also writes unset fields.
         """
         return {
             name: value
