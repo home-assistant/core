@@ -44,6 +44,7 @@ async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> N
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("setup_guardian")
 async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that the config entry errors out if the device cannot connect."""
 
@@ -64,6 +65,11 @@ async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> Non
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_get_pin_from_discovery_hostname() -> None:
@@ -99,6 +105,7 @@ async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
         CONF_PORT: 7777,
         CONF_UID: "ABCDEF123456",
     }
+    assert result["result"].unique_id == "guardian_3456"
 
 
 @pytest.mark.usefixtures("setup_guardian")
@@ -130,6 +137,7 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         CONF_PORT: 7777,
         CONF_UID: "ABCDEF123456",
     }
+    assert result["result"].unique_id == "guardian_3456"
 
 
 async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
@@ -182,6 +190,7 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
         CONF_PORT: 7777,
         CONF_UID: "ABCDEF123456",
     }
+    assert result["result"].unique_id == "guardian_3456"
 
 
 async def test_step_dhcp_already_in_progress(hass: HomeAssistant) -> None:

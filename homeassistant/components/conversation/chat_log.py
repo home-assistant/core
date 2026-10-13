@@ -718,7 +718,9 @@ class ChatLog:
         if not user_llm_hass_api:
             pass
         elif isinstance(user_llm_hass_api, llm.API):
-            llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
+            llm_api = await llm.async_get_authorized_api_instance(
+                user_llm_hass_api, llm_context
+            )
         else:
             try:
                 llm_api = await llm.async_get_api(

@@ -44,6 +44,9 @@
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication with the Crownstone cloud failed"
+    },
+    "unknown_login_error": {
+      "message": "Unknown error during login with the Crownstone cloud"
     }
   },
   "options": {

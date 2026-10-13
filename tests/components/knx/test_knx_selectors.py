@@ -1,6 +1,7 @@
 """Test KNX selectors."""
 
 from dataclasses import dataclass
+import re
 from typing import Annotated, Any
 
 import probatio
@@ -11,11 +12,16 @@ from homeassistant.components.knx.storage.knx_selector import (
     AllSerializeFirst,
     GASelector,
     GroupAddressConfig,
-    GroupAddressSelector,
     GroupSelect,
     GroupSelectOption,
+    KnxPayload,
+    KnxPayloadSelector,
     KNXSection,
     KNXSectionFlat,
+    KnxSelectOptionsSelector,
+    PayloadValue,
+    RawPayload,
+    SelectOption,
     SyncStateSelector,
     ga,
     group_select,
@@ -93,33 +99,20 @@ def test_ga_selector(
     data: dict[str, Any],
     expected: dict[str, Any],
 ) -> None:
-    """Test GASelector."""
+    """Test GASelector yields a typed value that renders back to storage."""
     selector = GASelector(**selector_config)
-    result = selector(data)
-    assert result == expected
-
-
-@pytest.mark.parametrize(("selector_config", "data", "expected"), GA_SELECTOR_CASES)
-def test_group_address_selector(
-    selector_config: dict[str, Any],
-    data: dict[str, Any],
-    expected: dict[str, Any],
-) -> None:
-    """Test GroupAddressSelector yields a typed value that renders back to storage."""
-    selector = GroupAddressSelector(**selector_config)
     result = selector(data)
     assert isinstance(result, GroupAddressConfig)
     assert result.write == expected.get("write")
     assert result.state == expected.get("state")
     assert result.passive == expected.get("passive", [])
     assert result.dpt == expected.get("dpt")
-    # storage form is what the dict based GASelector produces
     assert selector.to_storage(result) == expected
 
 
-def test_group_address_selector_none() -> None:
-    """Test GroupAddressSelector passes an absent optional value through."""
-    selector = GroupAddressSelector()
+def test_ga_selector_none() -> None:
+    """Test GASelector passes an absent optional value through."""
+    selector = GASelector()
     assert selector(None) is None
     assert selector.to_storage(None) is None
 
@@ -137,7 +130,7 @@ def test_group_address_config_address_lists() -> None:
 def test_knx_selector_in() -> None:
     """Test finding a selector in annotation metadata."""
     ga_selector = knx_selector_in([str, ga(write_required=True)])
-    assert isinstance(ga_selector, GroupAddressSelector)
+    assert isinstance(ga_selector, GASelector)
     assert ga_selector.write_required is True
     ha_selector = selector.BooleanSelector()
     assert knx_selector_in([bool, ha_selector]) is ha_selector
@@ -465,3 +458,97 @@ def test_write_address() -> None:
     """Test the write address of an optional group address."""
     assert write_address(GroupAddressConfig(write="1/2/3")) == "1/2/3"
     assert write_address(None) is None
+
+
+@pytest.mark.parametrize(
+    ("data", "expected", "stored"),
+    [
+        pytest.param({"value": 50}, PayloadValue(value=50), {"value": 50}, id="value"),
+        pytest.param(
+            {"payload": "1F", "payload_length": 1},
+            RawPayload(payload=0x1F, payload_length=1),
+            {"payload": "0x1f", "payload_length": 1},
+            id="raw",
+        ),
+        pytest.param(
+            {"payload": "0x3f", "payload_length": 0},
+            RawPayload(payload=0x3F, payload_length=0),
+            {"payload": "0x3f", "payload_length": 0},
+            id="raw_6_bit",
+        ),
+    ],
+)
+def test_knx_payload_selector(
+    data: dict[str, Any], expected: KnxPayload, stored: dict[str, Any]
+) -> None:
+    """Test the payload selector yields a typed payload and renders it back."""
+    payload_selector = KnxPayloadSelector(ga_path="ga")
+    assert payload_selector(data) == expected
+    assert KnxPayloadSelector.to_storage(expected) == stored
+
+
+@pytest.mark.parametrize(
+    ("data", "message"),
+    [
+        pytest.param(
+            {"payload": "zz", "payload_length": 1},
+            "Invalid payload format: zz",
+            id="not_hex",
+        ),
+        pytest.param(
+            {"payload": "-1", "payload_length": 1},
+            "Payload cannot be negative: -1",
+            id="negative",
+        ),
+        pytest.param(
+            {"payload": "0x40", "payload_length": 0},
+            "Payload exceeds DPT 1,2,3 limit of 0x3f (63): 0x40",
+            id="exceeds_6_bit",
+        ),
+        pytest.param(
+            {"payload": "0x100", "payload_length": 1},
+            "Payload 0x100 exceeds possible maximum for length 1: 0xff",
+            id="exceeds_length",
+        ),
+    ],
+)
+def test_knx_payload_selector_invalid(data: dict[str, Any], message: str) -> None:
+    """Test invalid raw payloads are rejected."""
+    with pytest.raises(probatio.Invalid, match=re.escape(message)):
+        KnxPayloadSelector(ga_path="ga")(data)
+
+
+def test_knx_select_options_selector() -> None:
+    """Test the options selector yields typed options and renders them back."""
+    options_selector = KnxSelectOptionsSelector(ga_path="ga")
+    stored = [
+        {"option": "a", "value": 1},
+        {"option": "b", "payload": "0x2", "payload_length": 1},
+    ]
+    options = options_selector(stored)
+    assert options == [
+        SelectOption(name="a", data=PayloadValue(value=1)),
+        SelectOption(name="b", data=RawPayload(payload=2, payload_length=1)),
+    ]
+    assert KnxSelectOptionsSelector.to_storage(options) == stored
+
+
+@pytest.mark.parametrize(
+    ("data", "message", "path"),
+    [
+        pytest.param(["a"], "Each option must be a dictionary", [0], id="not_dict"),
+        pytest.param(
+            [{"option": "", "value": 1}],
+            "Option name is required",
+            [0, "option"],
+            id="empty_name",
+        ),
+    ],
+)
+def test_knx_select_options_selector_invalid(
+    data: list[Any], message: str, path: list[Any]
+) -> None:
+    """Test invalid option entries are rejected."""
+    with pytest.raises(probatio.Invalid, match=message) as exc_info:
+        KnxSelectOptionsSelector(ga_path="ga")(data)
+    assert exc_info.value.path == path

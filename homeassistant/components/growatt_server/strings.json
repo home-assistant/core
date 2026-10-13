@@ -653,6 +653,18 @@
     "login_failed": {
       "message": "Growatt login failed: {message}"
     },
+    "migration_invalid_plant_id": {
+      "message": "The configuration contains an invalid plant ID, reconfigure the integration"
+    },
+    "migration_missing_credentials": {
+      "message": "The configuration is missing the username or password, reconfigure the integration"
+    },
+    "migration_no_plants": {
+      "message": "No plants found for Growatt account {username}"
+    },
+    "migration_plant_id_failed": {
+      "message": "Failed to resolve the plant ID from the Growatt API"
+    },
     "mix_settings_empty": {
       "message": "The Growatt Mix device returned no charge/discharge settings."
     },
