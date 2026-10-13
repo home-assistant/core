@@ -100,6 +100,16 @@ class MarantzMediaPlayer(MediaPlayerEntity):
     _attr_translation_key = "receiver"
     _attr_should_poll = False
 
+    _attr_source_list = sorted(INPUT_SOURCE_TO_HA.values())
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     _volume_min = MIN_VOLUME_DB
     _volume_range = VOLUME_DB_RANGE
 
@@ -128,16 +138,6 @@ class MarantzMediaPlayer(MediaPlayerEntity):
             manufacturer="Marantz",
         )
         self._attr_unique_id = f"{config_entry.entry_id}_{zone}"
-
-        self._attr_source_list = sorted(INPUT_SOURCE_TO_HA.values())
-        self._attr_supported_features = (
-            MediaPlayerEntityFeature.TURN_ON
-            | MediaPlayerEntityFeature.TURN_OFF
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_STEP
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.SELECT_SOURCE
-        )
 
         if zone == "main":
             self._attr_name = None

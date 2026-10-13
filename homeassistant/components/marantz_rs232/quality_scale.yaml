@@ -1,6 +1,8 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: The integration does not register custom actions.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -32,9 +34,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: The integration logs disconnections; the library logs successful connections.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: exempt
@@ -43,7 +43,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo # Deferred from the initial contribution.
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: The serial protocol provides no discovery or stable receiver identifier.
@@ -51,7 +51,7 @@ rules:
     status: exempt
     comment: The receiver cannot be discovered through a generic serial adapter.
   docs-data-update: done
-  docs-examples: todo # Deferred from the initial contribution.
+  docs-examples: todo
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
@@ -60,20 +60,14 @@ rules:
   dynamic-devices:
     status: exempt
     comment: "The integration does not create dynamic devices."
-  entity-category:
-    status: done
-    comment: Both entities control receiver outputs, so neither is diagnostic nor configuration-only.
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: done
-    comment: Only the main and responding multi-room outputs are exposed; neither is noisy.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: done
-    comment: The receiver device class supplies the appropriate icon for both outputs.
-  reconfiguration-flow: todo # Deferred from the initial contribution.
-  repair-issues: todo # Deferred from the initial contribution.
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
   stale-devices:
     status: exempt
     comment: "The integration does not create devices that can become stale."

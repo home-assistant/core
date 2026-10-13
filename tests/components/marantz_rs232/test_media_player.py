@@ -1,10 +1,12 @@
 """Tests for Marantz 2007-protocol media players."""
 
+import asyncio
+from collections.abc import Callable
 import math
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from marantz_rs232 import MarantzV2007Receiver, V2007Source
+from marantz_rs232 import V2007ReceiverState, V2007Source
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,6 +18,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_SELECT_SOURCE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -40,6 +43,75 @@ MAIN = "media_player.marantz_receiver"
 MULTI = "media_player.marantz_receiver_multi_room"
 
 
+COMMANDS = [
+    ("main", MAIN, SERVICE_TURN_ON, {}, "power_on", ()),
+    ("main", MAIN, SERVICE_TURN_OFF, {}, "power_off", ()),
+    ("main", MAIN, SERVICE_VOLUME_UP, {}, "volume_up", ()),
+    ("main", MAIN, SERVICE_VOLUME_DOWN, {}, "volume_down", ()),
+    (
+        "main",
+        MAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        "set_volume",
+        (-31.0,),
+    ),
+    ("main", MAIN, SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}, "mute_on", ()),
+    (
+        "main",
+        MAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_MEDIA_VOLUME_MUTED: False},
+        "mute_off",
+        (),
+    ),
+    (
+        "main",
+        MAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: "dvd"},
+        "select_source",
+        (V2007Source.DVD,),
+    ),
+    ("multi_room_a", MULTI, SERVICE_TURN_ON, {}, "power_on", ()),
+    ("multi_room_a", MULTI, SERVICE_TURN_OFF, {}, "power_off", ()),
+    ("multi_room_a", MULTI, SERVICE_VOLUME_UP, {}, "line_volume_up", ()),
+    ("multi_room_a", MULTI, SERVICE_VOLUME_DOWN, {}, "line_volume_down", ()),
+    (
+        "multi_room_a",
+        MULTI,
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        "set_line_volume",
+        (-31.0,),
+    ),
+    (
+        "multi_room_a",
+        MULTI,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_MEDIA_VOLUME_MUTED: True},
+        "mute_on",
+        (),
+    ),
+    (
+        "multi_room_a",
+        MULTI,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_MEDIA_VOLUME_MUTED: False},
+        "mute_off",
+        (),
+    ),
+    (
+        "multi_room_a",
+        MULTI,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: "dvd"},
+        "select_source",
+        (V2007Source.DVD,),
+    ),
+]
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_entities_created(
     hass: HomeAssistant,
@@ -53,11 +125,11 @@ async def test_entities_created(
 
 async def test_missing_multi_room(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """An unanswered multi-room query must not create a ghost player."""
-    mock_receiver.query_multi_room_a.side_effect = None
+    mock_receiver.multi_room_a.power = None
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -71,14 +143,15 @@ async def test_missing_multi_room(
 )
 async def test_push_state(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
     power: bool | None,
     expected: str,
 ) -> None:
     """Follow pushed state for both players."""
-    mock_receiver._state.main.power = power
-    mock_receiver._state.multi_room_a.power = power
-    mock_receiver._notify_subscribers()
+    mock_receiver.main.power = power
+    mock_receiver.multi_room_a.power = power
+    receiver_update(V2007ReceiverState())
     assert hass.states.get(MAIN).state == expected
     assert hass.states.get(MULTI).state == expected
 
@@ -86,15 +159,34 @@ async def test_push_state(
 @pytest.mark.usefixtures("init_integration")
 async def test_disconnect_reloads(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
 ) -> None:
-    """Mark both entities unavailable and request one reload."""
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await mock_receiver.disconnect()
-        reload.assert_called_once_with(mock_config_entry.entry_id)
+    """Mark both entities unavailable, then reconnect through Home Assistant."""
+    reconnect_started = asyncio.Event()
+    reconnect_allowed = asyncio.Event()
+    connect = mock_receiver.connect.side_effect
+
+    async def reconnect() -> None:
+        reconnect_started.set()
+        await reconnect_allowed.wait()
+        await connect()
+
+    mock_receiver.connect.side_effect = reconnect
+    receiver_update(None)
+    await reconnect_started.wait()
     assert hass.states.get(MAIN).state == STATE_UNAVAILABLE
     assert hass.states.get(MULTI).state == STATE_UNAVAILABLE
+    reconnect_allowed.set()
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_receiver.connect.await_count == 2
+    assert mock_receiver.query_state.await_count == 2
+    assert mock_receiver.query_multi_room_a.await_count == 2
+    mock_receiver.disconnect.assert_awaited_once()
+    assert hass.states.get(MAIN).state == STATE_ON
+    assert hass.states.get(MULTI).state == STATE_ON
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -103,97 +195,50 @@ async def test_disconnect_reloads(
 )
 async def test_volume_state(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
     volume: float | None,
     expected: float | None,
 ) -> None:
     """Never expose the protocol's mute sentinel as infinite volume."""
-    mock_receiver._state.main.volume = volume
-    mock_receiver._state.multi_room_a.line_volume = volume
-    mock_receiver._notify_subscribers()
+    mock_receiver.main.volume = volume
+    mock_receiver.multi_room_a.line_volume = volume
+    receiver_update(V2007ReceiverState())
     assert hass.states.get(MAIN).attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == expected
     assert hass.states.get(MULTI).attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == expected
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("source", [None, "?"])
 async def test_unknown_source(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
-    source: str | None,
+    mock_receiver: MagicMock,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
 ) -> None:
     """Unrecognized sources have no selected input."""
-    mock_receiver._state.main.source_audio = source
-    mock_receiver._notify_subscribers()
+    mock_receiver.main.input_source = None
+    receiver_update(V2007ReceiverState())
     assert ATTR_INPUT_SOURCE not in hass.states.get(MAIN).attributes
 
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("entity_id", "service", "data", "expected", "kwargs"),
-    [
-        (MAIN, SERVICE_TURN_ON, {}, ("PWR", "2"), {}),
-        (MAIN, SERVICE_TURN_OFF, {}, ("PWR", "1"), {}),
-        (MAIN, SERVICE_VOLUME_UP, {}, ("VOL", "1"), {}),
-        (MAIN, SERVICE_VOLUME_DOWN, {}, ("VOL", "2"), {}),
-        (
-            MAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
-            ("VOL", "0-310"),
-            {},
-        ),
-        (MAIN, SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}, ("AMT", "2"), {}),
-        (MAIN, SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}, ("AMT", "1"), {}),
-        (MAIN, SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "dvd"}, ("SRC", "2"), {}),
-        (MULTI, SERVICE_TURN_ON, {}, ("MPW", "2"), {"separator": ":"}),
-        (MULTI, SERVICE_TURN_OFF, {}, ("MPW", "1"), {"separator": ":"}),
-        (MULTI, SERVICE_VOLUME_UP, {}, ("MVL", "1"), {"separator": ":"}),
-        (MULTI, SERVICE_VOLUME_DOWN, {}, ("MVL", "2"), {"separator": ":"}),
-        (
-            MULTI,
-            SERVICE_VOLUME_SET,
-            {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
-            ("MVL", "0-310"),
-            {"separator": ":"},
-        ),
-        (
-            MULTI,
-            SERVICE_VOLUME_MUTE,
-            {ATTR_MEDIA_VOLUME_MUTED: True},
-            ("MAM", "2"),
-            {"separator": ":"},
-        ),
-        (
-            MULTI,
-            SERVICE_VOLUME_MUTE,
-            {ATTR_MEDIA_VOLUME_MUTED: False},
-            ("MAM", "1"),
-            {"separator": ":"},
-        ),
-        (
-            MULTI,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_INPUT_SOURCE: "dvd"},
-            ("MSC", "2"),
-            {"separator": ":"},
-        ),
-    ],
+    ("zone", "entity_id", "service", "data", "method", "args"), COMMANDS
 )
 async def test_commands(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
+    zone: str,
     entity_id: str,
     service: str,
     data: dict[str, str | bool | float],
-    expected: tuple[str, str],
-    kwargs: dict[str, str],
+    method: str,
+    args: tuple[float | V2007Source, ...],
 ) -> None:
-    """Send the correct wire command to each output."""
+    """Call the player's public API with the converted service parameters."""
     await hass.services.async_call(
         MP_DOMAIN, service, {ATTR_ENTITY_ID: entity_id, **data}, blocking=True
     )
-    mock_receiver._send_command.assert_awaited_once_with(*expected, **kwargs)
+    getattr(getattr(mock_receiver, zone), method).assert_awaited_once_with(*args)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -223,50 +268,48 @@ def test_source_translations() -> None:
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("entity_id", [MAIN, MULTI])
 @pytest.mark.parametrize("error", [ConnectionError, OSError, TimeoutError])
 @pytest.mark.parametrize(
-    ("service", "data"),
-    [
-        (SERVICE_TURN_ON, {}),
-        (SERVICE_TURN_OFF, {}),
-        (SERVICE_VOLUME_UP, {}),
-        (SERVICE_VOLUME_DOWN, {}),
-        (SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0.5}),
-        (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}),
-        (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}),
-        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "dvd"}),
-    ],
+    ("zone", "entity_id", "service", "data", "method", "args"), COMMANDS
 )
 async def test_command_failure(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
+    zone: str,
     entity_id: str,
     error: type[Exception],
     service: str,
     data: dict[str, str | bool | float],
+    method: str,
+    args: tuple[float | V2007Source, ...],
 ) -> None:
     """Report serial failures as translated action errors for either output."""
-    mock_receiver._send_command.side_effect = error("Connection lost")
+    command = getattr(getattr(mock_receiver, zone), method)
+    command.side_effect = error("Connection lost")
     with pytest.raises(
         HomeAssistantError, match="Unable to communicate with the receiver"
     ) as err:
         await hass.services.async_call(
             MP_DOMAIN, service, {ATTR_ENTITY_ID: entity_id, **data}, blocking=True
         )
+    command.assert_awaited_once_with(*args)
     assert err.value.translation_key == "communication_error"
     assert isinstance(err.value.__cause__, error)
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("entity_id", [MAIN, MULTI])
+@pytest.mark.parametrize(
+    ("zone", "entity_id"), [("main", MAIN), ("multi_room_a", MULTI)]
+)
 @pytest.mark.parametrize(
     ("source", "code"),
     [("bd", "M"), ("usb", "7"), ("cd", "B"), ("am2", "L")],
 )
 async def test_other_model_sources(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+    zone: str,
     entity_id: str,
     source: str,
     code: str,
@@ -279,8 +322,10 @@ async def test_other_model_sources(
         {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: source},
         blocking=True,
     )
-    assert mock_receiver._send_command.call_args.args[1] == code
-    mock_receiver._state.main.source_audio = code
-    mock_receiver._state.multi_room_a.source_audio = code
-    mock_receiver._notify_subscribers()
+    getattr(mock_receiver, zone).select_source.assert_awaited_once_with(
+        V2007Source(code)
+    )
+    mock_receiver.main.input_source = V2007Source(code)
+    mock_receiver.multi_room_a.input_source = V2007Source(code)
+    receiver_update(V2007ReceiverState())
     assert hass.states.get(entity_id).attributes[ATTR_INPUT_SOURCE] == source

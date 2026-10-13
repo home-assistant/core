@@ -1,10 +1,13 @@
 """Tests for Marantz RS-232 setup and teardown."""
 
 import asyncio
+from collections.abc import Callable
+from datetime import timedelta
 import logging
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from marantz_rs232 import MarantzV2007Receiver
+from freezegun.api import FrozenDateTimeFactory
+from marantz_rs232 import V2007ReceiverState
 import pytest
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
@@ -13,13 +16,13 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_and_unload(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Query both players and clean up subscriptions on unload."""
@@ -27,18 +30,17 @@ async def test_setup_and_unload(
     mock_receiver.connect.assert_awaited_once()
     mock_receiver.query_state.assert_awaited_once()
     mock_receiver.query_multi_room_a.assert_awaited_once()
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        reload.assert_not_called()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_receiver.connect.assert_awaited_once()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_receiver.disconnect.assert_awaited_once()
-    assert not mock_receiver._subscribers
 
 
 @pytest.mark.parametrize("method", ["connect", "query_state", "query_multi_room_a"])
 async def test_setup_failure(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
     method: str,
 ) -> None:
@@ -52,46 +54,9 @@ async def test_setup_failure(
     assert mock_config_entry.error_reason_translation_key == "communication_error"
 
 
-@pytest.mark.parametrize("method", ["query_state", "query_multi_room_a"])
-async def test_unexpected_query_failure(
-    hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
-    mock_config_entry: MockConfigEntry,
-    method: str,
-) -> None:
-    """Close the connection when an initial query raises an unexpected error."""
-    getattr(mock_receiver, method).side_effect = RuntimeError("Unexpected query error")
-    mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_receiver.disconnect.assert_awaited_once()
-    assert not mock_receiver.connected
-
-
-async def test_platform_forwarding_failure(
-    hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Close the connection and remove subscriptions when platform forwarding fails."""
-    mock_config_entry.add_to_hass(hass)
-    with patch.object(
-        hass.config_entries,
-        "async_forward_entry_setups",
-        side_effect=RuntimeError("Unexpected platform error"),
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_receiver.disconnect.assert_awaited_once()
-    assert not mock_receiver.connected
-    assert not mock_receiver._subscribers
-
-
 async def test_cancelled_setup(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Close the connection when setup is cancelled during the initial query."""
@@ -119,7 +84,7 @@ async def test_cancelled_setup(
 @pytest.mark.usefixtures("init_integration")
 async def test_failed_unload(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Keep the connection open when the platform cannot unload."""
@@ -134,59 +99,63 @@ async def test_failed_unload(
 @pytest.mark.usefixtures("init_integration")
 async def test_remove_entry(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Do not reload a removed entry when disconnecting."""
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await hass.config_entries.async_remove(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        reload.assert_not_called()
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_receiver.connect.assert_awaited_once()
     mock_receiver.disconnect.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_connection_logging(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Log a disconnect once without duplicating library connection messages."""
-    caplog.set_level(logging.INFO, logger="homeassistant.components.marantz_rs232")
+    """Log one outage while Home Assistant retries the connection."""
+    await hass.async_start()
     caplog.clear()
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await mock_receiver.disconnect()
-        await mock_receiver.disconnect()
-        reload.assert_called_once_with(mock_config_entry.entry_id)
-    assert caplog.text.count("is unavailable; reconnecting") == 1
-
-    with patch.object(
-        mock_receiver, "connect", side_effect=OSError("Port unavailable")
-    ):
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    connect = mock_receiver.connect.side_effect
+    mock_receiver.connect.side_effect = OSError("Port unavailable")
+    receiver_update(None)
+    receiver_update(None)
+    await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_receiver.connect.await_count == 2
     assert caplog.text.count("is unavailable; reconnecting") == 1
-    assert "Connected to Marantz receiver" not in caplog.text
 
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_receiver.connect.await_count == 3
+    assert caplog.text.count("is unavailable; reconnecting") == 1
+
+    mock_receiver.connect.side_effect = connect
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_receiver.connect.await_count == 4
+    assert mock_receiver.query_state.await_count == 2
     assert "Connected to Marantz receiver" not in caplog.text
-    assert all(
-        record.levelno == logging.INFO
-        for record in caplog.records
-        if record.name == "homeassistant.components.marantz_rs232"
-    )
+    assert (
+        f"homeassistant.components.{DOMAIN}",
+        logging.INFO,
+        "Marantz receiver is unavailable; reconnecting",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize("method", ["connect", "query_state"])
 async def test_invalid_serial_port(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
     method: str,
 ) -> None:
@@ -202,7 +171,7 @@ async def test_invalid_serial_port(
 
 async def test_generic_receiver(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:

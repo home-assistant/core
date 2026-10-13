@@ -1,9 +1,8 @@
 """Tests for the Marantz RS-232 config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from marantz_rs232 import MarantzV2007Receiver
 import pytest
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
@@ -28,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 async def test_user_form_creates_entry(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test setup needs only the port for a 2007-protocol receiver."""
@@ -66,7 +65,7 @@ async def test_user_form_creates_entry(
 )
 async def test_user_form_error_recovers(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     exception: Exception,
     error: str,
 ) -> None:

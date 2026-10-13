@@ -1,9 +1,15 @@
 """Test fixtures for the Marantz RS-232 integration."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from collections.abc import Callable, Generator
+from unittest.mock import MagicMock, patch
 
-from marantz_rs232 import MarantzV2007Receiver, V2007Source
+from marantz_rs232 import (
+    MarantzV2007Receiver,
+    V2007MainPlayer,
+    V2007MultiRoomPlayer,
+    V2007ReceiverState,
+    V2007Source,
+)
 import pytest
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
@@ -16,33 +22,63 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_receiver() -> Generator[MarantzV2007Receiver]:
-    """Use real player objects, populating state only when it is queried."""
-    receiver = MarantzV2007Receiver(MOCK_DEVICE)
+def receiver_callbacks() -> list[Callable[[V2007ReceiverState | None], None]]:
+    """Track subscriptions made through the receiver's public API."""
+    return []
+
+
+@pytest.fixture
+def receiver_update(
+    receiver_callbacks: list[Callable[[V2007ReceiverState | None], None]],
+) -> Callable[[V2007ReceiverState | None], None]:
+    """Deliver receiver events to the registered callbacks."""
+
+    def update(state: V2007ReceiverState | None) -> None:
+        for callback in tuple(receiver_callbacks):
+            callback(state)
+
+    return update
+
+
+@pytest.fixture
+def mock_receiver(
+    receiver_callbacks: list[Callable[[V2007ReceiverState | None], None]],
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+) -> Generator[MagicMock]:
+    """Mock the receiver and players at their public API boundary."""
+    receiver = MagicMock(spec=MarantzV2007Receiver, connected=False)
+    receiver.main = MagicMock(
+        spec=V2007MainPlayer,
+        power=True,
+        volume=-40.0,
+        mute=False,
+        input_source=V2007Source.DVD,
+    )
+    receiver.multi_room_a = MagicMock(
+        spec=V2007MultiRoomPlayer,
+        power=True,
+        line_volume=-30.0,
+        mute=False,
+        input_source=V2007Source.TV,
+    )
 
     async def connect() -> None:
-        receiver._connected = True
+        receiver.connected = True
 
-    async def query_state() -> None:
-        main = receiver._state.main
-        main.power = True
-        main.volume = -40.0
-        main.mute = False
-        main.source_audio = V2007Source.DVD.value
+    async def disconnect() -> None:
+        receiver.connected = False
+        receiver_update(None)
 
-    async def query_multi_room() -> None:
-        multi = receiver._state.multi_room_a
-        multi.power = True
-        multi.line_volume = -30.0
-        multi.mute = False
-        multi.source_audio = V2007Source.TV.value
+    def subscribe(
+        callback: Callable[[V2007ReceiverState | None], None],
+    ) -> Callable[[], None]:
+        receiver_callbacks.append(callback)
+        return lambda: receiver_callbacks.remove(callback)
 
+    receiver.connect.side_effect = connect
+    receiver.disconnect.side_effect = disconnect
+    receiver.subscribe.side_effect = subscribe
     with (
-        patch.object(receiver, "connect", side_effect=connect),
-        patch.object(receiver, "query_state", side_effect=query_state),
-        patch.object(receiver, "query_multi_room_a", side_effect=query_multi_room),
-        patch.object(receiver, "_send_command", new_callable=AsyncMock),
-        patch.object(receiver, "disconnect", wraps=receiver.disconnect),
         patch(
             "homeassistant.components.marantz_rs232.MarantzV2007Receiver",
             return_value=receiver,
@@ -75,7 +111,7 @@ def mock_usb_component(hass: HomeAssistant) -> None:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
-    mock_receiver: MarantzV2007Receiver,
+    mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Set up the integration."""
