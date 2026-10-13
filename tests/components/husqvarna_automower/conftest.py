@@ -69,10 +69,36 @@ def mock_values_one_mower(mower_time_zone) -> dict[str, MowerAttributes]:
 
 
 @pytest.fixture
-def mock_config_entry(jwt: str, expires_at: int, scope: str) -> MockConfigEntry:
+def mock_config_entry(
+    jwt: str,
+    expires_at: int,
+    scope: str,
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
+    return _create_mock_config_entry(jwt, expires_at, scope, minor_version=2)
+
+
+@pytest.fixture
+def legacy_mock_config_entry(
+    jwt: str,
+    expires_at: int,
+    scope: str,
+) -> MockConfigEntry:
+    """Return a legacy mocked config entry."""
+    return _create_mock_config_entry(jwt, expires_at, scope, minor_version=1)
+
+
+def _create_mock_config_entry(
+    jwt: str,
+    expires_at: int,
+    scope: str,
+    *,
+    minor_version: int,
+) -> MockConfigEntry:
+    """Create a mocked config entry."""
     return MockConfigEntry(
         version=1,
+        minor_version=minor_version,
         domain=DOMAIN,
         title="Husqvarna Automower of Erika Mustermann",
         data={
