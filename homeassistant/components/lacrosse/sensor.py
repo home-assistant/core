@@ -188,7 +188,10 @@ def _add_sensors(
 
 def sensor_device_name(config: ConfigType) -> str:
     """Return the configured or default sensor device name."""
-    if isinstance(friendly_name := config.get(CONF_FRIENDLY_NAME), str):
+    if (
+        isinstance(friendly_name := config.get(CONF_FRIENDLY_NAME), str)
+        and friendly_name.strip()
+    ):
         return friendly_name
     return f"LaCrosse sensor {config[CONF_ID]}"
 
