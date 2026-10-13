@@ -461,7 +461,7 @@ class DeviceAuthorization:
                 or response["verification_url"],
                 verification_uri_complete=response.get("verification_uri_complete"),
                 expires_in=int(response["expires_in"]),
-                interval=int(response.get("interval", 5)),
+                interval=max(int(response.get("interval", 5)), 5),
             )
         except (KeyError, TypeError, ValueError) as err:
             raise DeviceFlowError("Invalid device authorization response") from err

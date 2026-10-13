@@ -1139,6 +1139,11 @@ async def test_device_flow_invalid_registration(
             _device_authorization(interval=5),
             id="default_interval",
         ),
+        pytest.param(
+            {"json": {**DEVICE_AUTHORIZATION_RESPONSE, "interval": 0}},
+            _device_authorization(interval=5),
+            id="interval_below_minimum",
+        ),
     ],
 )
 async def test_device_flow_register_device(
