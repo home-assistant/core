@@ -25,6 +25,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceResponse,
     State,
+    async_noop,
     callback,
 )
 from homeassistant.exceptions import (
@@ -1093,7 +1094,7 @@ async def handle_subscribe_trigger(
     ) or (
         # Some triggers won't return an unsub function. Since the caller expects
         # a subscription, we're going to fake one.
-        lambda: None
+        async_noop
     )
     connection.send_result(msg["id"])
 

@@ -16,6 +16,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -260,6 +261,44 @@ async def test_any_room_iq_monitors(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert patch_nexia_home.any_room_iq_monitors() is False
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_iq_monitors_removed_after_rename(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, entity_registry: EntityRegistry
+) -> None:
+    """Test RoomIQ monitors are unregistered on unload after renaming entities."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000004).get_zone_by_id(500)
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    room_iq_entity_ids = [
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if "roomiq" in entity_entry.entity_id
+    ]
+    assert room_iq_entity_ids
+    add_calls = zone.add_room_iq_monitor.call_count
+    for entity_id in room_iq_entity_ids:
+        entity_registry.async_update_entity(
+            entity_id, new_entity_id=f"{entity_id}_renamed"
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_temperature_renamed")
+    assert state is not None
+    assert state.state == "22.5"
+    # The monitors are not registered again
+    assert zone.add_room_iq_monitor.call_count == add_calls
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    # The monitors are unregistered with the ids they were registered with
+    assert sorted(zone.remove_room_iq_monitor.call_args_list) == sorted(
+        zone.add_room_iq_monitor.call_args_list
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

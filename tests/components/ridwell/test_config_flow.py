@@ -140,3 +140,4 @@ async def test_successful_config_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == config
+    assert result["result"].unique_id == TEST_USERNAME.lower()

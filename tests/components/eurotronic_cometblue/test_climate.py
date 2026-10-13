@@ -4,6 +4,7 @@ from unittest.mock import patch
 import uuid
 
 from eurotronic_cometblue_ha import const as cometblue_const
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,6 +26,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.eurotronic_cometblue.climate import MAX_TEMP, MIN_TEMP
+from homeassistant.components.eurotronic_cometblue.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -32,7 +34,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.comet_blue_aa_bb_cc_dd_ee_ff"
 
@@ -279,6 +281,7 @@ async def test_set_temperature_errors(
 async def test_update_data_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that update data errors are handled and retried."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -292,8 +295,9 @@ async def test_update_data_error_handling(
         "get_temperature_async",
         side_effect=TimeoutError(),
     ) as mock_get_temperature:
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_temperature.call_count == 3
         assert mock_config_entry.runtime_data.last_update_success is False
@@ -306,8 +310,9 @@ async def test_update_data_error_handling(
         "get_temperature_async",
         side_effect=OSError(),
     ) as mock_get_temperature:
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_temperature.call_count == 1
         assert mock_config_entry.runtime_data.last_update_success is False
@@ -323,8 +328,9 @@ async def test_update_data_error_handling(
         "get_temperature_async",
         side_effect=[TimeoutError(), updated_temperatures],
     ) as mock_get_temperature:
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_temperature.call_count == 2
         assert mock_config_entry.runtime_data.last_update_success is True
