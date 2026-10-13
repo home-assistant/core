@@ -24,7 +24,7 @@ BASE_API_URL = "https://platform.clickatell.com/messages/http/send"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_RECIPIENT): cv.string,
     }
 )

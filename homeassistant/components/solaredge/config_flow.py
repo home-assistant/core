@@ -178,7 +178,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Schema(
                         {
                             probatio.Optional(
-                                CONF_API_KEY,
+                                probatio.Secret(CONF_API_KEY),
                                 default=user_input.get(CONF_SECTION_API_AUTH, {}).get(
                                     CONF_API_KEY, ""
                                 ),
@@ -198,7 +198,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                                 ),
                             ): str,
                             probatio.Inclusive(
-                                CONF_PASSWORD,
+                                probatio.Secret(CONF_PASSWORD),
                                 "web_account",
                                 default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
                                     CONF_PASSWORD, ""
@@ -220,6 +220,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id = "reconfigure"
             description_placeholders["site_id"] = entry.data[CONF_SITE_ID]
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
             data_schema=data_schema,

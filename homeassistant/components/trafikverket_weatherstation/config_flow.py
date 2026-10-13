@@ -74,7 +74,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): cv.string,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
                     probatio.Required(CONF_STATION): cv.string,
                 }
             ),
@@ -115,7 +115,9 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): cv.string}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
+            ),
             errors=errors,
         )
 
@@ -149,7 +151,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                     probatio.Required(CONF_STATION): TextSelector(),

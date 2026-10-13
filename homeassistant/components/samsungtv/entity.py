@@ -84,10 +84,6 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
             return
-        LOGGER.error(
-            "Unable to turn on %s, as it does not have an automation configured",
-            self.entity_id,
-        )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="service_unsupported",

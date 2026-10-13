@@ -408,6 +408,7 @@ async def test_legacy_zeroconf_discovery_zigate(
         },
         CONF_RADIO_TYPE: "zigate",
     }
+    assert result_form["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 async def test_zeroconf_discovery_bad_payload(hass: HomeAssistant) -> None:
@@ -549,6 +550,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "znp",
     }
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(
@@ -1098,6 +1100,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "deconz",
     }
+    assert result2["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(
@@ -1203,8 +1206,11 @@ async def test_detect_radio_type_success_with_settings(
     assert zigate_probe.await_count == 0
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
-async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
+async def test_user_port_config_fail(
+    probe_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test port config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1225,6 +1231,30 @@ async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual_port_config"
     assert result["errors"]["base"] == "cannot_connect"
     assert probe_mock.await_count == 1
+
+    probe_mock.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_PATH: "/dev/ttyUSB33",
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: "none",
+        },
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_setup_strategy"
+
+    result_setup = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
+    )
+
+    result2 = await consume_progress_flow(
+        hass,
+        flow_id=result_setup["flow_id"],
+        valid_step_ids=("form_new_network",),
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -1410,6 +1440,7 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "ezsp",
     }
+    assert result_create["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -1457,6 +1488,7 @@ async def test_hardware_flow_strategy_recommended(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "ezsp",
     }
+    assert result_create["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
@@ -1716,6 +1748,7 @@ async def test_formation_strategy_form_new_network(
     mock_app.form_network.assert_called_once()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 async def test_formation_strategy_form_initial_network(
@@ -1788,7 +1821,9 @@ async def test_onboarding_auto_formation_new_hardware(
     """Test auto network formation with new hardware during onboarding."""
     # Initially, no network is formed
     mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
-    mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
+    mock_app.get_device = MagicMock(
+        return_value=MagicMock(spec=zigpy.device.ZigbeeDevice)
+    )
 
     # After form_network is called, load_network_info should return the network settings
     async def form_network_side_effect(*args, **kwargs):
@@ -1847,6 +1882,7 @@ async def test_formation_strategy_reuse_settings(
     mock_app.write_network_info.assert_not_called()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.config_flow.process_uploaded_file")
@@ -1902,6 +1938,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
@@ -2068,6 +2105,23 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
     assert result3["step_id"] == "upload_manual_backup"
     assert result3["errors"]["base"] == "invalid_backup_json"
 
+    with patch(
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
+        return_value=zigpy.backups.NetworkBackup(),
+    ):
+        result_upload = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+        result4 = await consume_progress_flow(
+            hass,
+            flow_id=result_upload["flow_id"],
+            valid_step_ids=("restore_backup",),
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 def test_format_backup_choice() -> None:
     """Test formatting zigpy NetworkBackup objects."""
@@ -2132,6 +2186,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(
@@ -2194,6 +2249,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", return_value=True)
@@ -3336,6 +3392,7 @@ async def test_plug_in_old_radio_config_entry_removed(
         },
         CONF_RADIO_TYPE: "znp",
     }
+    assert result_recommended["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
     # Verify reset was attempted once on old radio
     assert mock_temp_radio_mgr.async_reset_adapter.call_count == 1

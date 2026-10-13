@@ -1,6 +1,7 @@
 """Helpers for template integration."""
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -10,16 +11,18 @@ from probatio.humanize import humanize_error
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ACTIONS,
     CONF_CONDITIONS,
     CONF_NAME,
     CONF_STATE,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import template
+from homeassistant.helpers import discovery, template
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
@@ -32,13 +35,17 @@ from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ADDITIONAL_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 DATA_BLUEPRINTS = "template_blueprints"
+
+DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,12 +148,6 @@ async def validate_actions_and_conditions_config(
     Returns True when all conditions and actions validate without error.
     When any condition or action fails, return False.
     """
-
-    def _humanize(err: Exception, data: Any) -> str:
-        """Humanize probatio.Invalid, stringify other exceptions."""
-        if isinstance(err, probatio.Invalid):
-            return humanize_error(data, err)
-        return str(err)
 
     breadcrumb: str | None = None
     if (condition_config := config.pop(CONF_CONDITIONS, None)) is not None:
@@ -297,3 +298,80 @@ def async_setup_template_preview[T: TemplateEntity](
 
     validated_config = schema(config | {CONF_NAME: name})
     return state_entity_cls(hass, validated_config, None)
+
+
+def _humanize(err: Exception, data: Any) -> str:
+    """Humanize probatio.Invalid, stringify other exceptions."""
+    if isinstance(err, probatio.Invalid):
+        return humanize_error(data, err)
+    return str(err)
+
+
+async def process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
+    """Process config."""
+    coordinators = hass.data.pop(DATA_COORDINATORS, None)
+
+    # Remove old ones
+    if coordinators:
+        for coordinator in coordinators:
+            await coordinator.async_shutdown()
+
+    async def init_coordinator(
+        hass: HomeAssistant, conf_section: dict[str, Any]
+    ) -> TriggerUpdateCoordinator:
+        coordinator = TriggerUpdateCoordinator(hass, conf_section)
+        await coordinator.async_setup(hass_config)
+        return coordinator
+
+    coordinator_tasks: list[Coroutine[Any, Any, TriggerUpdateCoordinator]] = []
+
+    for conf_section in hass_config[DOMAIN]:
+        if CONF_TRIGGERS in conf_section:
+            if actions_config := conf_section.get(CONF_ACTIONS):
+                try:
+                    conf_section[CONF_ACTIONS] = await async_validate_actions_config(
+                        hass, actions_config
+                    )
+                except (probatio.Invalid, HomeAssistantError) as err:
+                    breadcrumb = "template section"
+                    if (unique_id := conf_section.get(CONF_UNIQUE_ID)) is not None:
+                        breadcrumb = f"template section with unique_id: {unique_id}"
+
+                    _LOGGER.error(
+                        "The 'actions' for %s failed to setup: %s",
+                        breadcrumb,
+                        _humanize(err, actions_config),
+                    )
+
+                    continue
+
+            coordinator_tasks.append(init_coordinator(hass, conf_section))
+            continue
+
+        for platform_domain in PLATFORMS:
+            if platform_domain in conf_section:
+                hass.async_create_task(
+                    discovery.async_load_platform(
+                        hass,
+                        platform_domain,
+                        DOMAIN,
+                        {
+                            "unique_id": conf_section.get(CONF_UNIQUE_ID),
+                            "entities": [
+                                {
+                                    **entity_conf,
+                                    "raw_blueprint_inputs": (
+                                        conf_section.raw_blueprint_inputs
+                                    ),
+                                    "raw_configs": conf_section.raw_config,
+                                }
+                                for entity_conf in conf_section[platform_domain]
+                            ],
+                        },
+                        hass_config,
+                    ),
+                    eager_start=True,
+                )
+
+    if coordinator_tasks:
+        hass.data[DATA_COORDINATORS] = await asyncio.gather(*coordinator_tasks)

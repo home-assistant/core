@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any, override
 
-import httpx
+import httpx2
 import ollama
 import probatio
 
@@ -70,7 +70,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        probatio.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     },
@@ -78,7 +78,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -278,7 +278,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except TimeoutError, httpx.HTTPError, ConnectionError:
+            except TimeoutError, httpx2.HTTPError, ConnectionError:
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 

@@ -50,7 +50,7 @@ async def test_camera_image_and_update(
     mock_indi_allsky_client.fetch_image.return_value = image_bytes
     await setup_integration(hass, mock_config_entry)
 
-    image = await async_get_image(hass, "camera.indi_allsky")
+    image = await async_get_image(hass, "camera.indi_allsky_latest_capture")
     assert image.content == image_bytes
     assert image.content_type == expected_content_type
 
@@ -66,4 +66,4 @@ async def test_camera_image_fetch_failure(
     mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyError("Fetch error")
 
     with pytest.raises(HomeAssistantError, match="Unable to get image"):
-        await async_get_image(hass, "camera.indi_allsky")
+        await async_get_image(hass, "camera.indi_allsky_latest_capture")

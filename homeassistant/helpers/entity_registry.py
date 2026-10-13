@@ -8,6 +8,7 @@ registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Hashable, KeysView, Mapping, Sequence
 import dataclasses
@@ -87,7 +88,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 23
+STORAGE_VERSION_MINOR = 24
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -277,6 +278,7 @@ class RegistryEntry:
 
     # For backwards compatibility, should be removed in the future
     compat_aliases: list[str] = attr.ib(factory=list, eq=False)
+    compat_name: str | None = attr.ib(default=None)
 
     # original_name_unprefixed is used to store the result of stripping
     # the device name prefix from the original_name, if possible.
@@ -299,6 +301,15 @@ class RegistryEntry:
     def hidden(self) -> bool:
         """Return if entry is hidden."""
         return self.hidden_by is not None
+
+    @property
+    def entity_name(self) -> str:
+        """Return the entity's own name, without the device name prefix."""
+        if self.name is not None:
+            return self.name
+        if self.original_name_unprefixed is not None:
+            return self.original_name_unprefixed
+        return self.original_name or ""
 
     @property
     def next_name_part(self) -> NextNamePart | None:
@@ -325,16 +336,7 @@ class RegistryEntry:
             display_dict["hb"] = True
         if self.has_entity_name:
             display_dict["hn"] = True
-        name = (
-            self.name
-            if self.name is not None
-            else (
-                self.original_name_unprefixed
-                if self.original_name_unprefixed is not None
-                else self.original_name
-            )
-        )
-        if name is not None:
+        if name := self.entity_name:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
             if (precision := sensor_options.get("display_precision")) is not None or (
@@ -442,6 +444,7 @@ class RegistryEntry:
                 "area_id": self.area_id,
                 "categories": self.categories,
                 "capabilities": self.capabilities,
+                "compat_name": self.compat_name,
                 "config_entry_id": self.config_entry_id,
                 "config_subentry_id": self.config_subentry_id,
                 "created_at": self.created_at,
@@ -488,8 +491,7 @@ class RegistryEntry:
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
-        name = async_get_full_entity_name(hass, self, use_next_name_part=False)
-        if name:
+        if name := async_get_legacy_friendly_name(hass, self):
             attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
         if self.supported_features is not None:
@@ -499,27 +501,6 @@ class RegistryEntry:
             attrs[EntityStateAttribute.UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
-
-
-@callback
-def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
-    """Get the entity name with device name prefix stripped, if applicable."""
-    name = entry.name
-    if name is not None:
-        if (
-            entry.device_id is not None
-            and (device := dr.async_get(hass).async_get(entry.device_id)) is not None
-        ):
-            device_name = device.name_by_user or device.name
-            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
-            if unprefixed_name is not None:
-                return unprefixed_name
-        return name
-
-    if entry.original_name_unprefixed is not None:
-        return entry.original_name_unprefixed
-
-    return entry.original_name or ""
 
 
 @callback
@@ -536,8 +517,6 @@ def _async_get_full_entity_name(
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED,
     overridden_name: str | None = None,
     parts: Sequence[EntityNamePart],
-    unprefix_name: bool = False,
-    use_legacy_naming: bool = False,
     use_next_name_part: bool = True,
 ) -> str:
     """Get full name for an entity.
@@ -550,7 +529,7 @@ def _async_get_full_entity_name(
     if name is None and overridden_name is not None:
         full_name = overridden_name
 
-    elif not use_legacy_naming or not name:
+    else:
         raw_device_name: str | None = None
         device_name: str | None = None
         parent_device_name: str | None = None
@@ -612,12 +591,6 @@ def _async_get_full_entity_name(
                 if original_name_unprefixed is not None
                 else original_name
             )
-        elif unprefix_name:
-            unprefixed_name = _async_strip_prefix_from_entity_name(
-                name, raw_device_name
-            )
-            if unprefixed_name is not None:
-                entity_name = unprefixed_name
 
         part_names = {
             EntityNamePart.AREA: area_name,
@@ -630,9 +603,6 @@ def _async_get_full_entity_name(
             part_name for part in parts if (part_name := part_names[part])
         )
 
-    else:
-        full_name = name
-
     if not full_name:
         return fallback
 
@@ -640,14 +610,15 @@ def _async_get_full_entity_name(
 
 
 @callback
-def async_get_full_entity_name(
+def async_get_legacy_friendly_name(
     hass: HomeAssistant,
     entry: RegistryEntry,
     original_name: str | UndefinedType | None = UNDEFINED,
-    *,
-    use_next_name_part: bool = True,
 ) -> str:
-    """Get full entity name for an entry."""
+    """Get the legacy friendly name for an entity entry."""
+    if entry.compat_name is not None:
+        return entry.compat_name
+
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED
     if original_name is UNDEFINED or original_name == entry.original_name:
         original_name = entry.original_name
@@ -664,8 +635,29 @@ def async_get_full_entity_name(
         original_name=original_name,
         original_name_unprefixed=original_name_unprefixed,
         parts=(EntityNamePart.DEVICE, EntityNamePart.ENTITY),
-        use_legacy_naming=True,
-        use_next_name_part=use_next_name_part,
+        use_next_name_part=False,
+    )
+
+
+@callback
+def async_get_full_entity_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
+    """Get the computed name for an entity entry."""
+    return _async_get_full_entity_name(
+        hass,
+        area_id=entry.area_id,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        next_name_part=entry.next_name_part,
+        original_name=entry.original_name,
+        original_name_unprefixed=entry.original_name_unprefixed,
+        parts=(
+            EntityNamePart.PARENT_DEVICE,
+            EntityNamePart.DEVICE,
+            EntityNamePart.ENTITY,
+        ),
+        use_next_name_part=True,
     )
 
 
@@ -697,6 +689,25 @@ def async_get_entity_aliases(
         aliases.append(alias.strip())
 
     return aliases
+
+
+@callback
+def async_preserve_compat_name_as_alias(hass: HomeAssistant, entity_id: str) -> None:
+    """Keep the pre-1.24 name as the primary alias.
+
+    Integrations exposing entities by name call this from their own one-time
+    migration. Once the primary alias is no longer the computed name, calls
+    from other integrations are no-ops.
+    """
+    registry = async_get(hass)
+    if (
+        (entry := registry.async_get(entity_id)) is None
+        or (compat_name := entry.compat_name) is None
+        or (entry.aliases and entry.aliases[0] is not COMPUTED_NAME)
+    ):
+        return
+
+    registry.async_update_entity(entity_id, aliases=[compat_name, *entry.aliases[1:]])
 
 
 @callback
@@ -1018,6 +1029,53 @@ class EntityRegistryStore(storage.Store[dict[str, Any]]):
                 # Version 1.23 adds settings
                 data["settings"] = {"entity_id_parts": None}
 
+            if old_minor_version < 24:
+                # Version 1.24 computes the full name dynamically, prefixing the
+                # device name also for user-overridden names, so the device name
+                # prefix is stripped from the stored name. Where the full name
+                # changes, the old name is kept in compat_name for integrations to
+                # preserve it as an alias, and is preserved as the computed name
+                # alias right away for entities exposed to the conversation agent.
+                device_registry = dr.async_get(self.hass)
+
+                for entity in data["entities"]:
+                    entity["compat_name"] = None
+                    name = entity["name"]
+
+                    if (
+                        not name
+                        or (device_id := entity["device_id"]) is None
+                        or (device := device_registry.async_get(device_id)) is None
+                        or not (device_name := device.name_by_user or device.name)
+                    ):
+                        continue
+
+                    # The device is not a name part of an entity with its own area
+                    if (
+                        entity["area_id"] is None
+                        and (
+                            stripped := _async_strip_prefix_from_entity_name(
+                                name, device_name
+                            )
+                        )
+                        is not None
+                    ):
+                        entity["name"] = stripped
+                        continue
+
+                    entity["compat_name"] = name
+                    if (
+                        entity["options"].get("conversation", {}).get("should_expose")
+                        and (aliases := entity["aliases_v2"])
+                        and aliases[0] is None
+                    ):
+                        aliases[0] = name
+
+                for entity in data["deleted_entities"]:
+                    # We don't know what the device name was, so the only thing we can
+                    # do is to clear the overwritten name to not mislead users.
+                    entity["name"] = None
+
         if old_major_version > 1:
             raise NotImplementedError
         return data
@@ -1270,7 +1328,7 @@ def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) ->
     return (
         entry.area_id is not None
         and entry.device_id is not None
-        and not async_get_unprefixed_name(hass, entry)
+        and not entry.entity_name
     )
 
 
@@ -1285,6 +1343,7 @@ class EntityRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -1458,7 +1517,6 @@ class EntityRegistry(BaseRegistry):
             original_name=object_id_base,
             overridden_name=suggested_object_id,
             parts=parts,
-            unprefix_name=True,
         )
         return self.async_get_available_entity_id(
             domain,
@@ -1833,31 +1891,20 @@ class EntityRegistry(BaseRegistry):
             )
             device_name = device.name_by_user or device.name
             for entity in entities:
-                if entity.has_entity_name:
-                    continue
-
-                # When a user renames a device, update entity names to reflect
-                # the new device name.
-                # An empty name_unprefixed means the entity name equals
-                # the device name (e.g. a main sensor); a non-empty one
-                # is appended as a suffix.
                 name: str | UndefinedType | None = UNDEFINED
-                if (
-                    by_user
-                    and entity.name is None
-                    and (name_unprefixed := entity.original_name_unprefixed) is not None
-                ):
-                    if not name_unprefixed:
-                        name = device_name
-                    elif device_name:
-                        name = f"{device_name} {name_unprefixed}"
-
-                original_name_unprefixed = _async_strip_prefix_from_entity_name(
-                    entity.original_name, device_name
-                )
+                original_name_unprefixed: str | UndefinedType | None = UNDEFINED
+                if not entity.has_entity_name:
+                    # When a user renames a device, pin the previously stripped
+                    # original name so the new device name is not prefixed twice.
+                    if by_user and entity.name is None:
+                        name = entity.original_name_unprefixed
+                    original_name_unprefixed = _async_strip_prefix_from_entity_name(
+                        entity.original_name, device_name
+                    )
 
                 self._async_update_entity(
                     entity.entity_id,
+                    compat_name=None if entity.compat_name is not None else UNDEFINED,
                     name=name,
                     original_name_unprefixed=original_name_unprefixed,
                 )
@@ -1931,6 +1978,7 @@ class EntityRegistry(BaseRegistry):
         area_id: str | UndefinedType | None = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | UndefinedType | None = UNDEFINED,
+        compat_name: str | UndefinedType | None = UNDEFINED,
         config_entry_id: str | UndefinedType | None = UNDEFINED,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
         device_class: str | UndefinedType | None = UNDEFINED,
@@ -1969,6 +2017,7 @@ class EntityRegistry(BaseRegistry):
             ("area_id", area_id),
             ("categories", categories),
             ("capabilities", capabilities),
+            ("compat_name", compat_name),
             ("config_entry_id", config_entry_id),
             ("config_subentry_id", config_subentry_id),
             ("device_class", device_class),
@@ -2079,6 +2128,15 @@ class EntityRegistry(BaseRegistry):
             )
             new_values["original_name_unprefixed"] = original_name_unprefixed
 
+        if (
+            compat_name is UNDEFINED
+            and old.compat_name is not None
+            and any(
+                key in new_values for key in ("device_id", "has_entity_name", "name")
+            )
+        ):
+            new_values["compat_name"] = None
+
         new = attr.evolve(old, **new_values)
 
         # Only user edits are rejected, integration updates surface as a repair issue
@@ -2096,6 +2154,7 @@ class EntityRegistry(BaseRegistry):
 
         self.async_schedule_save()
 
+        old_values.pop("compat_name", None)
         old_values.pop("original_name_unprefixed", None)
 
         data: _EventEntityRegistryUpdatedData_Update = {
@@ -2251,6 +2310,9 @@ class EntityRegistry(BaseRegistry):
     @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
+        if self._loaded_event.is_set():
+            raise RuntimeError("Entity registry is already loaded")
+
         # Device registry must be loaded before entity registry because
         # migration and entity processing reference device names, and because entities
         # are moved to the correct device when a pre-migration composite device was
@@ -2353,6 +2415,7 @@ class EntityRegistry(BaseRegistry):
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     compat_aliases=entity["aliases"],
+                    compat_name=entity["compat_name"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
@@ -2465,6 +2528,12 @@ class EntityRegistry(BaseRegistry):
         # Persist entities moved off a split pre-migration composite device
         if migrated_composite_device:
             self.async_schedule_save()
+
+        self._loaded_event.set()
+
+    async def async_wait_loaded(self) -> None:
+        """Wait until the entity registry is fully loaded."""
+        await self._loaded_event.wait()
 
     @override
     def _data_to_save(self) -> dict[str, Any]:
@@ -2595,7 +2664,6 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
-    assert DATA_REGISTRY not in hass.data
     await async_get(hass).async_load(load_empty=load_empty)
 
 

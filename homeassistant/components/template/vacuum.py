@@ -34,8 +34,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -77,7 +78,7 @@ CLEAN_AREA_GROUP = "clean_area_group"
 
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(

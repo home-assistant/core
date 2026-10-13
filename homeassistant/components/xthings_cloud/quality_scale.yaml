@@ -40,8 +40,8 @@ rules:
     status: done
     comment: Offloaded to coordinator.
   action-exceptions:
-    status: exempt
-    comment: No service actions implemented.
+    status: todo
+    comment: XthingsCloudApiError is not handled in lock, switch and light actions
   reauthentication-flow: todo
   parallel-updates: todo
   test-coverage: todo

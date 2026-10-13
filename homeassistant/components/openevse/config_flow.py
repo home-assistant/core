@@ -32,7 +32,7 @@ AUTH_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="username")
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
@@ -46,7 +46,7 @@ RECONFIGURE_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="username")
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 import aiohttp
-from probatio import Required, Schema
+from probatio import Required, Schema, Secret
 from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -19,7 +19,7 @@ STEP_USER_DATA_SCHEMA = Schema(
     {
         Required(CONF_HOST, description={"suggested_value": "192.168.1.200"}): str,
         Required(CONF_USERNAME): str,
-        Required(CONF_PASSWORD): str,
+        Required(Secret(CONF_PASSWORD)): str,
     }
 )
 

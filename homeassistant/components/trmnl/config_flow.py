@@ -18,7 +18,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+STEP_USER_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
 

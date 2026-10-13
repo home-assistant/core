@@ -1,0 +1,1450 @@
+[
+  {
+    "link": "https://github.com/hacs/default/pull/2",
+    "reason": "Security issues, known to steal auth tokens.",
+    "removal_type": "critical",
+    "repository": "test/test"
+  },
+  { "removal_type": "blacklist", "repository": "amaximus/bkk_stop_card" },
+  { "removal_type": "blacklist", "repository": "au190/au190_bkk_stop_card" },
+  { "removal_type": "blacklist", "repository": "au190/au190_lock_entity" },
+  { "removal_type": "blacklist", "repository": "au190/au190_thermostat_card" },
+  { "removal_type": "blacklist", "repository": "basnijholt/media_player.kef" },
+  { "removal_type": "blacklist", "repository": "benleb/ad-batterycheck" },
+  { "removal_type": "blacklist", "repository": "benleb/ad-ench-ad3" },
+  { "removal_type": "blacklist", "repository": "bieniu/ha-ad-airly" },
+  { "removal_type": "blacklist", "repository": "Boosik/discord_game" },
+  { "removal_type": "blacklist", "repository": "boralyl/hass-smartthinq" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-cards/boilerplate-card"
+  },
+  { "removal_type": "blacklist", "repository": "custom-cards/camera-card" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-cards/custom-card-helpers"
+  },
+  { "removal_type": "blacklist", "repository": "custom-cards/information" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-cards/marquee-state-element"
+  },
+  { "removal_type": "blacklist", "repository": "custom-cards/monster-card" },
+  { "removal_type": "blacklist", "repository": "custom-cards/muuri-grid" },
+  { "removal_type": "blacklist", "repository": "custom-cards/timer-card" },
+  { "removal_type": "blacklist", "repository": "custom-cards/tracker-card" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/binary_sensor.hadockermon"
+  },
+  { "removal_type": "blacklist", "repository": "custom-components/blueprint" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/camera.multisource"
+  },
+  { "removal_type": "blacklist", "repository": "custom-components/cloudflare" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/complimentr"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/custom_cards"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/custom_components"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/custom_updater"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/google_keep"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/hassbian_config"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/information"
+  },
+  { "removal_type": "blacklist", "repository": "custom-components/lists" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.ctabustracker"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.custom_aftership"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.custom_cards"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.custom_components"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.geoip"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.launchlibrary"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.ruter"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.syncthing"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.tautulli"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/sensor.versions"
+  },
+  { "removal_type": "blacklist", "repository": "custom-components/sickchill" },
+  {
+    "removal_type": "blacklist",
+    "repository": "custom-components/switch.hadockermon"
+  },
+  { "removal_type": "blacklist", "repository": "custom-components/usps_mail" },
+  { "removal_type": "blacklist", "repository": "eifinger/here_travel_time" },
+  {
+    "removal_type": "blacklist",
+    "repository": "home-assistant-community-themes/template"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "home-assistant-community-themes/theme-request"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "keatontaylor/alexa_media_player"
+  },
+  { "removal_type": "blacklist", "repository": "kethoth/green_slate_theme" },
+  { "removal_type": "blacklist", "repository": "ljmerza/waze-card" },
+  { "removal_type": "blacklist", "repository": "maykar/compact-custom-header" },
+  { "removal_type": "blacklist", "repository": "Michsior14/ha-kaiterra" },
+  { "removal_type": "blacklist", "repository": "Michsior14/ha-laser-egg" },
+  {
+    "removal_type": "blacklist",
+    "repository": "PTST/O365Calendar-HomeAssistant"
+  },
+  { "removal_type": "blacklist", "repository": "Rocka84/dual-gauge-card" },
+  {
+    "removal_type": "blacklist",
+    "repository": "shaonianzhentan/ha-cloud-music"
+  },
+  {
+    "removal_type": "blacklist",
+    "repository": "tenly2000/HomeAssistant-Places"
+  },
+  { "removal_type": "blacklist", "repository": "xaviml/z2m_ikea_controller" },
+  {
+    "repository": "r-renato/hass-xiaomi-mi-flora-and-flower-care",
+    "reason": "Request from author",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/integration/pull/1045"
+  },
+  {
+    "repository": "robmarkcole/HASS-Sighthound",
+    "reason": "Repository is archived",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/default/issues/344"
+  },
+  {
+    "repository": "custom-cards/home-setter",
+    "reason": "Repository is archived",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/default/issues/344"
+  },
+  {
+    "repository": "pippyn/Home-Assistant-Sensor-Ophaalkalender",
+    "reason": "Repository is archived",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/default/issues/347"
+  },
+  {
+    "repository": "robmarkcole/Hue-remotes-HASS",
+    "reason": "archived",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/default/issues/392"
+  },
+  {
+    "repository": "sinclairpaul/ha_purple_theme",
+    "reason": "No longer maintained",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/default/pull/427"
+  },
+  {
+    "repository": "briis/mbweather",
+    "reason": "Repository is archived",
+    "removal_type": "blacklist"
+  },
+  {
+    "repository": "nitobuendia/oura-custom-component",
+    "reason": "Request from author",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/default/pull/509"
+  },
+  {
+    "repository": "custom-cards/button-entity-row",
+    "reason": "Not maintained anymore",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/integration/issues/1315"
+  },
+  {
+    "repository": "heinoldenhuis/home_assistant_area_waste",
+    "reason": "Request from author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/531"
+  },
+  {
+    "repository": "cgarwood/homeassistant-zwave_mqtt",
+    "reason": "deprecated",
+    "removal_type": "deprecated",
+    "link": "https://github.com/hacs/default/pull/547"
+  },
+  {
+    "repository": "custom-components/sensor.wifi-scanner",
+    "reason": "Repository not complete",
+    "removal_type": "removed"
+  },
+  {
+    "repository": "lociii/homeassistant-digitalstrom",
+    "reason": "archived",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/integration/issues/1457"
+  },
+  {
+    "repository": "ReneNulschDE/mbapipy",
+    "reason": "archived",
+    "removal_type": "blacklist",
+    "link": "https://github.com/hacs/integration/issues/1457"
+  },
+  {
+    "repository": "amelchio/logbook_cache",
+    "reason": "Request from author",
+    "removal_type": "removed",
+    "link": "https://github.com/hacs/default/pull/578"
+  },
+  {
+    "repository": "Limych/media_player.linkplay",
+    "reason": "Requested by author",
+    "removal_type": "removed",
+    "link": "https://github.com/hacs/default/pull/577"
+  },
+  {
+    "repository": "cbulock/lovelace-battery-entity",
+    "reason": "Abandoned, not working properly",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/1464"
+  },
+  {
+    "repository": "peternijssen/lovelace-postnl-card",
+    "reason": "Can no longer be used",
+    "removal_type": "removed",
+    "link": "https://github.com/hacs/integration/issues/1533"
+  },
+  {
+    "repository": "ljmerza/calendar-card",
+    "reason": "The repository is archived",
+    "removal_type": "archived"
+  },
+  {
+    "repository": "OpenXbox/xboxone-home-assistant",
+    "reason": "The repository is archived",
+    "removal_type": "archived"
+  },
+  {
+    "repository": "Armaell/home-assistant-custom-icons-loader",
+    "reason": "Not working after Home Assistant 0.110",
+    "removal_type": "removed",
+    "link": "https://github.com/hacs/integration/issues/1548"
+  },
+  {
+    "repository": "custom-components/sensor.kodi_recently_added",
+    "reason": "Repository is archived",
+    "removal_type": "removed"
+  },
+  {
+    "repository": "alryaz/hass-component-yandex-smart-home",
+    "reason": "Does not work after 0.115",
+    "removal_type": "removed",
+    "link": "https://github.com/hacs/integration/issues/1557"
+  },
+  {
+    "repository": "joogps/MQTT-Climate-Sync",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/1562"
+  },
+  {
+    "repository": "maykar/custom-header",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://community.home-assistant.io/t/custom-header/155399/1100"
+  },
+  {
+    "repository": "enriqg9/dual-thermostat",
+    "reason": "Repository is no longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/1587"
+  },
+  {
+    "repository": "fineemb/lynk-co",
+    "reason": "Repository does not exsist",
+    "removal_type": "removal",
+    "link": ""
+  },
+  {
+    "repository": "xMrVizzy/button-toolbar",
+    "reason": "Repository does not exsist",
+    "removal_type": "removal",
+    "link": "https://github.com/hacs/integration/issues/1696"
+  },
+  {
+    "repository": "MatthewFlamm/nwsradar",
+    "reason": "NWS radar server no longer operational",
+    "removal_type": "removal",
+    "link": "https://github.com/MatthewFlamm/nwsradar/issues/16"
+  },
+  {
+    "repository": "futuretense/lock-manager",
+    "reason": "replacing integration",
+    "removal_type": "removal",
+    "link": "https://github.com/FutureTense/keymaster"
+  },
+  {
+    "repository": "custom-components/uilogs",
+    "reason": "Deprecated",
+    "removal_type": "remove",
+    "link": "https://github.com/custom-components/uilogs/issues/17"
+  },
+  {
+    "repository": "custom-components/sensor.rpi_power",
+    "reason": "Repo archived",
+    "removal_type": "removal",
+    "link": "https://github.com/custom-components/sensor.rpi_power"
+  },
+  {
+    "repository": "badguy99/octocost",
+    "reason": "Archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/1809"
+  },
+  {
+    "repository": "edenhaus/ha-prosenic",
+    "reason": "Archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/807"
+  },
+  {
+    "repository": "bratanon/lovelace-conditional-entity-row",
+    "reason": "Repository is archived",
+    "removal_type": "removed",
+    "link": "https://github.com/bratanon/lovelace-conditional-entity-row/issues/2"
+  },
+  {
+    "repository": "Bre77/myair",
+    "reason": "Added to Home Assistant core",
+    "removal_type": "replaced",
+    "link": "https://www.home-assistant.io/integrations/advantage_air/"
+  },
+  {
+    "repository": "bramkragten/lyric",
+    "reason": "Added to Home Assistant Core",
+    "removal_type": "removal",
+    "link": "https://github.com/hacs/default/pull/841"
+  },
+  {
+    "repository": "zha-ng/zha-map",
+    "reason": "Deprecated. Available natively now.",
+    "removal_type": "removal",
+    "link": "https://github.com/zha-ng/zha-map#zha-map-is-deprecated"
+  },
+  {
+    "repository": "ntilley905/faastatus",
+    "reason": "Added to Home Assistant Core",
+    "removal_type": "removal",
+    "link": "https://www.home-assistant.io/integrations/faadelays/"
+  },
+  {
+    "repository": "Petro31/ad_multizone_media_control",
+    "reason": "Repository is archived",
+    "removal_type": "removal",
+    "link": "https://github.com/hacs/integration/issues/2080"
+  },
+  {
+    "repository": "burnnat/ha-polar",
+    "reason": "Abandoned",
+    "removal_type": "removal",
+    "link": "https://github.com/hacs/integration/issues/1960"
+  },
+  {
+    "repository": "nickneos/Appdaemon-ZHA-Xiaomi-Aqara-Switch",
+    "reason": "Repository does not exist",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2080"
+  },
+  {
+    "repository": "nickneos/Appdaemon-Xiaomi-Doorbell",
+    "reason": "Repository does not exist",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2080"
+  },
+  {
+    "repository": "nickneos/Appdaemon-Xiaomi-Smart-Button",
+    "reason": "Repository does not exist",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2080"
+  },
+  {
+    "repository": "jomwells/ambihue",
+    "reason": "It's abandoned",
+    "removal_type": "replaced",
+    "link": "https://github.com/hacs/default/pull/955"
+  },
+  {
+    "repository": "alryaz/hass-mosenergosbyt",
+    "reason": "Superseded by 'alryaz/hass-lkcomu-interrao'",
+    "removal_type": "blacklist",
+    "link": "https://github.com/alryaz/hass-mosenergosbyt/README.md"
+  },
+  {
+    "repository": "azogue/fasthue",
+    "reason": "Not needed anymore. Native Hue integration now has local push access.",
+    "removal_type": "deprecated",
+    "link": "https://github.com/azogue/fasthue/issues/22"
+  },
+  {
+    "repository": "SebuZet/samsungrac",
+    "reason": "Repository has been abandoned and it's not working with current HA versions.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2103"
+  },
+  {
+    "repository": "troykelly/hacs-amberelectric",
+    "reason": "Replaced with a superior version maintained by an Amber Electric employee",
+    "removal_type": "removal",
+    "link": "https://github.com/troykelly/hacs-amberelectric"
+  },
+  {
+    "repository": "bieniu/ha-airly",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2115"
+  },
+  {
+    "repository": "thomasloven/lovelace-dummy-entity-row",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2115"
+  },
+  {
+    "repository": "thomasloven/lovelace-gap-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2115"
+  },
+  {
+    "repository": "thomasloven/lovelace-gui-sandbox",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2115"
+  },
+  {
+    "repository": "robmarkcole/Hue-sensors-HASS",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2115"
+  },
+  {
+    "repository": "xlcnd/meteoalarmeu",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2115"
+  },
+  {
+    "repository": "mammuth/ha-fritzbox-tools",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2121"
+  },
+  {
+    "repository": "brefra/home-assistant-plugwise-stick",
+    "reason": "Replaced by alternative custom integration",
+    "removal_type": "remove",
+    "link": "https://github.com/plugwise/plugwise-beta"
+  },
+  {
+    "repository": "avdeevsv91/ha_generic_hygrostat",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1047"
+  },
+  {
+    "repository": "bieniu/ha-gios",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1047"
+  },
+  {
+    "repository": "DavidFW1960/bom_forecast",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1047"
+  },
+  {
+    "repository": "tellerbop/havistapool",
+    "reason": "The repository has been archived by the author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2152"
+  },
+  {
+    "repository": "reharmsen/hass-youless-component",
+    "link": "https://github.com/hacs/integration/issues/2192",
+    "reason": "Author removed",
+    "removal_type": "removal"
+  },
+  {
+    "repository": "Sholofly/ZiggoNext",
+    "reason": "Request from author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2209"
+  },
+  {
+    "repository": "mampfes/hacs_wiffi",
+    "reason": "Archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1103"
+  },
+  {
+    "repository": "pilotak/homeassistant-mikrotik",
+    "reason": "Archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1103"
+  },
+  {
+    "repository": "PTST/O365-HomeAssistant",
+    "reason": "Archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1103"
+  },
+  {
+    "repository": "atomic7777/atomic_calendar",
+    "reason": "Archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1103"
+  },
+  {
+    "repository": "doudz/homeassistant-zigate",
+    "reason": "Deprecated and not working anymore",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1125"
+  },
+  {
+    "repository": "ppanagiotis/pymusiccast",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1149"
+  },
+  {
+    "repository": "estevez-dev/extended-banner-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1149"
+  },
+  {
+    "repository": "Kraineff/philips-airpurifier",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1149"
+  },
+  {
+    "repository": "jensweimann/awb",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1149"
+  },
+  {
+    "repository": "briis/smartweather",
+    "reason": "Repository is beeing replaced with another repository",
+    "removal_type": "remove",
+    "link": "https://github.com/briis/smartweather"
+  },
+  {
+    "repository": "sdebruyn/homeassistant-bpost-integration",
+    "reason": "Blocked by provider",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1205"
+  },
+  {
+    "repository": "heinoldenhuis/home_assistant_omnik_solar",
+    "reason": "Repository has been archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1221"
+  },
+  {
+    "repository": "abacao/hass_wibeee",
+    "reason": "Superseded by 'luuuis/hass_wibeee'",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1242"
+  },
+  {
+    "repository": "rgruebel/ha_zigbee2mqtt_networkmap",
+    "reason": "Repository looks abandoned and the content is no longer working",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2517"
+  },
+  {
+    "repository": "And3rsL/Deebot-for-Home-Assistant",
+    "reason": "Repository does not follow HACS requirements (Missing issues)",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1258"
+  },
+  {
+    "repository": "briis/unifiprotect",
+    "reason": "Repository does not follow HACS requirements (Missing issues)",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1258"
+  },
+  {
+    "repository": "ericpignet/home-assistant-tplink_router",
+    "reason": "No longer maintained",
+    "removal_type": "Remove",
+    "link": "https://github.com/hacs/integration/issues/2552"
+  },
+  {
+    "repository": "SNoof85/lovelace-tempometer-gauge-card",
+    "reason": "No longer maintained",
+    "removal_type": "Remove",
+    "link": "https://github.com/hacs/default/pull/1356"
+  },
+  {
+    "repository": "maykar/kiosk-mode",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "maykar/lovelace-swipe-navigation",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "custom-cards/upcoming-media-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "maykar/plex_assistant",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "custom-components/sensor.sonarr_upcoming_media",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "custom-components/sensor.radarr_upcoming_media",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "custom-components/sensor.plex_recently_added",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "nagyrobi/home-assistant-custom-components-pfsense-gateways",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "pippyn/Home-Assistant-Sensor-Groningen-Afvalwijzer",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "iantrich/aftership-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "DSorlov/hasl-platform",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "dr1rrb/ha-twinkly",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1373"
+  },
+  {
+    "repository": "custom-components/combined",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-components/breaking_changes",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-components/unsplash",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-components/templatesensor",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-components/sensor.yandex_maps",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-components/config_check",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-cards/favicon-counter",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-cards/text-element",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-cards/state-attribute-element",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-cards/state-element",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-cards/username-element",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "custom-cards/ext-weblink",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1375"
+  },
+  {
+    "repository": "fred-oranje/rituals-genie",
+    "reason": "Repository not available",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1402"
+  },
+  {
+    "repository": "DCSBL/ha-homewizard-energy",
+    "reason": "Added to Home Assistant core",
+    "removal_type": "replaced",
+    "link": "https://www.home-assistant.io/integrations/homewizard/"
+  },
+  {
+    "repository": "mattieha/slider-button-card",
+    "reason": "Abandoned, community fork maintained at custom-cards/slider-button-card",
+    "removal_type": "replaced",
+    "link": "https://github.com/custom-cards/slider-button-card"
+  },
+  {
+    "repository": "eavanvalkenburg/sia",
+    "reason": "Added to Home Assistant core",
+    "removal_type": "replaced",
+    "link": "https://www.home-assistant.io/integrations/sia/"
+  },
+  {
+    "repository": "custom-components/authenticated",
+    "reason": "No longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2769"
+  },
+  {
+    "repository": "opravdin/weback-hass",
+    "reason": "No longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2806"
+  },
+  {
+    "repository": "georgezhao2010/climate_ewelink",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "Cyr-ius/hass-cozytouch",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "Cyr-ius/hass-hue-service-advanced",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "KTibow/lovelace-light-soft-ui-theme",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "KTibow/lovelace-dark-soft-ui-theme",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "GeorgeSG/lovelace-folder-card",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "custom-components/wienerlinien",
+    "reason": "Archived repository",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1482"
+  },
+  {
+    "repository": "thomasprior/EthermineInfo",
+    "reason": "Request from author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2851"
+  },
+  {
+    "repository": "Sholofly/arrisdcx960",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1552"
+  },
+  {
+    "repository": "WolfRevo/climate.spzb0001_thermostat",
+    "reason": "Requested by author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1613"
+  },
+  {
+    "repository": "Ceerbeerus/beerbolaget",
+    "reason": "The integration can no longer be used",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/2863"
+  },
+  {
+    "repository": "frenck/home-assistant-theme-outline",
+    "reason": "Obsolete and now archived",
+    "removal_type": "remove",
+    "link": "https://github.com/frenck/home-assistant-theme-outline/pull/41"
+  },
+  {
+    "repository": "natekspencer/hacs-litterrobot",
+    "reason": "Repository archived",
+    "removal_type": "remove",
+    "link": "https://github.com/natekspencer/hacs-litterrobot/issues/17#issuecomment-1370045529"
+  },
+  {
+    "repository": "DavidMStraub/homeassistant-homeconnect",
+    "reason": "Repository archived",
+    "removal_type": "remove",
+    "link": "https://github.com/DavidMStraub/homeassistant-homeconnect/commit/e7231c522b35e8d571a7317c69b5003bf144f48a"
+  },
+  {
+    "repository": "hacf-fr/hassRenaultZE",
+    "reason": "Repository archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacf-fr/hassRenaultZE/pull/155"
+  },
+  {
+    "repository": "Kraineff/minecraft-version",
+    "link": "https://github.com/hacs/integration/issues/2986",
+    "reason": "Author removed",
+    "removal_type": "removal"
+  },
+  {
+    "repository": "ljmerza/reddit-card",
+    "reason": "Repository can not be used with HACS anymore",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1672"
+  },
+  {
+    "repository": "dummylabs/watchman",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "clayauld/lovelace-darksky-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "marcomow/ble-bulb-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "marrobHD/firetv-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "NemesisRE/lovelace-swipe-navigation",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "lukich48/hass_mqtt_template_switch",
+    "reason": "Repository has been archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "spycle/microbot_push",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1674"
+  },
+  {
+    "repository": "gjohansson-ST/stl",
+    "reason": "Requested by author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1694"
+  },
+  {
+    "repository": "custom-components/sensor.untappd",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/custom-components/sensor.untappd"
+  },
+  {
+    "repository": "jessevl/homeassistant-greenchoice",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/jessevl/homeassistant-greenchoice"
+  },
+  {
+    "repository": "echoromeo/hanobo",
+    "reason": "Replaced by official integration",
+    "removal_type": "remove",
+    "link": "https://www.home-assistant.io/integrations/nobo_hub/"
+  },
+  {
+    "repository": "xannor/ha_reolink_rest",
+    "reason": "No longer actively developed due to built in integration",
+    "removal_type": "remove",
+    "link": "https://github.com/xannor/ha_reolink_rest"
+  },
+  {
+    "repository": "AitorDB/home-assistant-sun-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/AitorDB/home-assistant-sun-card"
+  },
+  {
+    "repository": "nagyrobi/home-assistant-custom-components-cover-rf-time-based",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/nagyrobi/home-assistant-custom-components-cover-rf-time-based"
+  },
+  {
+    "repository": "djtimca/HASpaceX",
+    "reason": "Source data no longer maintained.",
+    "removal_type": "remove",
+    "link": "https://github.com/djtimca/HASpaceX"
+  },
+  {
+    "repository": "JuanMTech/orange_dark",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/JuanMTech/orange_dark"
+  },
+  {
+    "repository": "JuanMTech/orange_light",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/JuanMTech/orange_light"
+  },
+  {
+    "repository": "JuanMTech/amoled_blue",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/JuanMTech/amoled_blue"
+  },
+  {
+    "repository": "JuanMTech/green_dark_mode",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/JuanMTech/green_dark_mode"
+  },
+  {
+    "repository": "JuanMTech/green_light_mode",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/JuanMTech/green_light_mode"
+  },
+  {
+    "repository": "robmarkcole/HASS-Deepstack-face",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/robmarkcole/HASS-Deepstack-face"
+  },
+  {
+    "repository": "robmarkcole/HASS-Deepstack-object",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/robmarkcole/HASS-Deepstack-object"
+  },
+  {
+    "repository": "Raukze/home-assistant-fitx",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/Raukze/home-assistant-fitx"
+  },
+  {
+    "repository": "bruxy70/Garbage-Collection",
+    "reason": "Most of the functionality included in core (local calendar)",
+    "removal_type": "remove",
+    "link": "https://github.com/bruxy70/Garbage-Collection#end-of-support"
+  },
+  {
+    "repository": "bieniu/ha-zadnego-ale",
+    "reason": "zadnego ale API is down",
+    "removal_type": "remove",
+    "link": "https://github.com/bieniu/ha-zadnego-ale/issues/150"
+  },
+  {
+    "repository": "Villhellm/custom-sidebar",
+    "reason": "No longer working and can not be maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3115"
+  },
+  {
+    "repository": "remco770/garbage-bar-homeassistant",
+    "reason": "No longer working and not maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3141"
+  },
+  {
+    "repository": "MTrab/clever",
+    "reason": "Requested removed by author",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3142"
+  },
+  {
+    "repository": "Villhellm/lovelace-animated-background",
+    "reason": "No longer working and can not be maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3149"
+  },
+  {
+    "repository": "ha0y/xiaomi_miot_raw",
+    "reason": "No longer working and not maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3159"
+  },
+  {
+    "repository": "ryannazaretian/hacs-nexia-climate-integration",
+    "reason": "No longer working and not maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3165"
+  },
+  {
+    "repository": "walthowd/ha-automower",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/walthowd/ha-automower"
+  },
+  {
+    "repository": "Petro31/ad_people_tracker",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/Petro31/ad_people_tracker"
+  },
+  {
+    "repository": "cgarwood/homeassistant-fullykiosk",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/cgarwood/homeassistant-fullykiosk"
+  },
+  {
+    "repository": "Kibibit/hass-kibibit-theme",
+    "reason": "Not maintained anymore",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3171"
+  },
+  {
+    "repository": "mlowijs/HomeAssistant-TeslaCustomComponent",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "custom-components/qbo",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "jihao/colorfulclouds-hass",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "custom-components/linksys_ap",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "burnnat/media_player.screenly",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "WillowMist/sensor.mylar",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "custom-components/fedex",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "burnnat/ha-fitness-push",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "cyberjunky/home-assistant-plugwise",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "jihao/traccar-cn-hass",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "elad-bar/ha-dahuavto",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "9rpp/securifi",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "tmechen/ber_status",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "custom-components/srp_energy",
+    "reason": "remove",
+    "removal_type": "Integration is missing a version, and is abandoned.",
+    "link": "https://github.com/hacs/default/pull/1957"
+  },
+  {
+    "repository": "peternijssen/home-assistant-jumbo",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/peternijssen/home-assistant-jumbo"
+  },
+  {
+    "repository": "ericpignet/home-assistant-lg_hombot",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "jomwells/ambilight-yeelight",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "jomwells/ambilights",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "shutupflanders/sensor.moneydashboard",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "burnnat/ha-hdhomerun",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "timvancann/homeassistant-growatt",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "rkoebrugge/hacs-youless-component",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "roberodin/ha-samsungtv-custom",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "safepay/cover.hd_powerview",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "bruxy70/CZ-Public-Transport",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "rsnodgrass/hass-flo-water",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "rsnodgrass/hass-integrations",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "fineemb/Yeelink-ven-fan",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "eyalcha/thermal",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "custom-components/sytadin",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "AdamNaj/linksys_velop",
+    "reason": "Integration is missing a version, and is abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1978"
+  },
+  {
+    "repository": "geertmeersman/telenet",
+    "reason": "Repository has been deleted.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/default/pull/1994"
+  },
+  {
+    "repository": "gerardag/person-entity-card",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/gerardag/person-entity-card"
+  },
+  {
+    "repository": "mac-zhou/midea-ac-py",
+    "reason": "Repository looks abandoned and the content is no longer working",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3225"
+  },
+  {
+    "repository": "thebino/rki_covid",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/thebino/rki_covid"
+  },
+  {
+    "repository": "dmamontov/hass-ledfx",
+    "reason": "No longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3257"
+  },
+  {
+    "repository": "custom-cards/light-entity-row",
+    "reason": "No longer working and not maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3268"
+  },
+  {
+    "repository": "hasscc/petkit",
+    "reason": "Repository has been abandoned.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3336"
+  },
+  {
+    "repository": "battlemoose/waternsw-waterinsights-ha",
+    "reason": "Repository is no longer working",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3335"
+  },
+  {
+    "repository": "tikismoke/home-assistant-nespressoble",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/tikismoke/home-assistant-nespressoble"
+  },
+  {
+    "repository": "ljmerza/ha-our-groceries",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/ljmerza/ha-our-groceries"
+  },
+  {
+    "repository": "ThomasPrior/FlexpoolInfo",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/ThomasPrior/FlexpoolInfo"
+  },
+  {
+    "repository": "ryanbateman/bvg-sensor",
+    "reason": "No longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3375"
+  },
+  {
+    "repository": "PiotrMachowski/Home-Assistant-custom-components-Google-Keep",
+    "reason": "No longer working",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3376"
+  },
+  {
+    "repository": "Tiemooowh/homeassistant-teletask",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/Tiemooowh/homeassistant-teletask"
+  },
+  {
+    "repository": "aijayadams/hass-blueair",
+    "reason": "No longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3382"
+  },
+  {
+    "repository": "briis/hass-weatherflow",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/briis/hass-weatherflow"
+  },
+  {
+    "repository": "rccoleman/lamarzocco",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/rccoleman/lamarzocco"
+  },
+  {
+    "repository": "toringer/home-assistant-sbanken",
+    "reason": "Sbanken API shutdown",
+    "removal_type": "remove",
+    "link": "https://github.com/toringer/home-assistant-sbanken"
+  },
+  {
+    "repository": "perara/systemair-save-connect",
+    "reason": "Repository is archived",
+    "removal_type": "remove",
+    "link": "https://github.com/perara/systemair-save-connect"
+  },
+  {
+    "repository": "djtimca/hagooglewifi",
+    "reason": "Repository is no longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3440"
+  },
+  {
+    "repository": "mauro-midolo/homeassistant_electrolux_status",
+    "reason": "Repository has been deleted.",
+    "removal_type": "remove",
+    "link": "https://github.com/hacs/integration/issues/3500"
+  },
+  {
+    "repository": "Shreyas-R/lovelace-wallpanel-screensaver",
+    "reason": "Repository is no longer maintained",
+    "removal_type": "remove",
+    "link": "https://github.com/Shreyas-R/lovelace-wallpanel-screensaver"
+  },
+  {
+    "repository": "hultenvp/home_assistant_omnik_solar",
+    "reason": "Requested by author",
+    "removal_type": "remove",
+    "link": "https://github.com/hultenvp/home_assistant_omnik_solar"
+  }
+]

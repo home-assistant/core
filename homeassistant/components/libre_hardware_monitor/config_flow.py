@@ -35,7 +35,7 @@ CONFIG_SCHEMA = probatio.Schema(
 REAUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -58,6 +58,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LibreHardwareMonitor."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Init config flow."""

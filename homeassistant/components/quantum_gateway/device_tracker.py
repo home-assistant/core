@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         probatio.Optional(CONF_SSL, default=True): cv.boolean,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 

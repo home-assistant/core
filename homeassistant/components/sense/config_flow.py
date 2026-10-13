@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_EMAIL): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(int),
     }
 )
@@ -156,7 +156,9 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_validate",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
             description_placeholders={
                 CONF_EMAIL: self._auth_data[CONF_EMAIL],

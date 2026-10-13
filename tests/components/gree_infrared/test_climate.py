@@ -30,11 +30,16 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -43,7 +48,7 @@ from tests.common import (
     snapshot_platform,
 )
 from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -75,14 +80,48 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("has_receiver", "source_entity_ids"),
+    [
+        pytest.param(False, [EMITTER_ENTITY_ID], id="emitter"),
+        pytest.param(
+            True, [EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID], id="emitter_and_receiver"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration", "mock_infrared_emitter_entity")
-async def test_availability_follows_emitter(
+async def test_availability_follows_sources(
     hass: HomeAssistant,
+    source_entity_ids: list[str],
 ) -> None:
-    """Test climate entity availability follows the infrared emitter."""
+    """Test climate entity availability follows all configured infrared entities."""
     await assert_availability_follows_source_entity(
-        hass, _CLIMATE_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, _CLIMATE_ENTITY_ID, source_entity_ids
     )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    "unavailable_entity_id",
+    [
+        pytest.param(EMITTER_ENTITY_ID, id="emitter"),
+        pytest.param(RECEIVER_ENTITY_ID, id="receiver"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_initial_availability_requires_emitter_and_receiver(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    unavailable_entity_id: str,
+) -> None:
+    """Test the entity starts unavailable if either emitter or receiver is."""
+    hass.states.async_set(unavailable_entity_id, STATE_UNAVAILABLE)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -772,7 +811,11 @@ async def test_supported_features_always_include_target_temperature(
     [
         pytest.param(
             HVACMode.COOL,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
             (HVACMode.COOL, FAN_HIGH, 29.0),
             id="full_state",
         ),
@@ -784,7 +827,11 @@ async def test_supported_features_always_include_target_temperature(
         ),
         pytest.param(
             HVACMode.HEAT,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
             (HVACMode.OFF, FAN_HIGH, 29.0),
             id="mode_no_longer_configured_is_ignored",
         ),
@@ -815,6 +862,87 @@ async def test_state_restored_on_restart(
     assert state.state == expected_mode
     assert state.attributes["fan_mode"] == expected_fan
     assert state.attributes["temperature"] == expected_temp
+
+
+@pytest.mark.parametrize(
+    ("restored_attributes", "unit_system", "expected_temperature"),
+    [
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            METRIC_SYSTEM,
+            17,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            METRIC_SYSTEM,
+            17,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param({"temperature": 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
+        pytest.param(
+            {"temperature": 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
+        ),
+    ],
+)
+async def test_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    restored_attributes: dict[str, int | str],
+    unit_system: UnitSystem,
+    expected_temperature: int,
+) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    hass.config.units = unit_system
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                _CLIMATE_ENTITY_ID,
+                HVACMode.COOL,
+                restored_attributes,
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == expected_temperature
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL, temperature=17, fan=GreeAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

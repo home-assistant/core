@@ -66,7 +66,8 @@ async def test_exception_handling_for_device_initialization(
         side_effect=exception,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        # The Bluetooth discovery flow reloads the entry in a background task
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert error_message in caplog.text
 
 

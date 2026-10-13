@@ -21,7 +21,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
     async_get_config_entry,
     async_register_admin_service,
@@ -55,7 +54,7 @@ AUTHORIZE_SCHEMA = probatio.All(
             probatio.Exclusive(CONF_DESCRIPTION, "token"): str,
         }
     ),
-    cv.has_at_least_one_key(CONF_UID, CONF_DESCRIPTION),
+    probatio.AtLeastOne(CONF_UID, CONF_DESCRIPTION),
 )
 
 
