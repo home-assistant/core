@@ -1344,6 +1344,49 @@ def test_typed_config_storage_roundtrip(
     assert to_storage_dict(reloaded) == stored
 
 
+def test_binary_sensor_reset_after_accepts_long_duration() -> None:
+    """A heartbeat interval over one day survives validation and storage."""
+    validated = validate_entity_data(
+        {
+            CONF_PLATFORM: Platform.BINARY_SENSOR,
+            CONF_DATA: {
+                "entity": {"name": "In operation"},
+                "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": 90000},
+            },
+        }
+    )[CONF_DATA]
+    stored = to_storage_dict(validated)["knx"]["reset_after"]
+    assert stored == 90000
+
+
+def test_binary_sensor_reset_after_rejects_negative_duration() -> None:
+    """Reset after is never a negative duration."""
+    with pytest.raises(EntityStoreValidationException):
+        validate_entity_data(
+            {
+                CONF_PLATFORM: Platform.BINARY_SENSOR,
+                CONF_DATA: {
+                    "entity": {"name": "In operation"},
+                    "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": -1},
+                },
+            }
+        )
+
+
+def test_binary_sensor_reset_after_accepts_milliseconds() -> None:
+    """A fractional interval survives write validation and storage."""
+    validated = validate_entity_data(
+        {
+            CONF_PLATFORM: Platform.BINARY_SENSOR,
+            CONF_DATA: {
+                "entity": {"name": "In operation"},
+                "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": 1.5},
+            },
+        }
+    )[CONF_DATA]
+    assert to_storage_dict(validated)["knx"]["reset_after"] == 1.5
+
+
 @pytest.mark.parametrize(
     ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
 )

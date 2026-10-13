@@ -112,10 +112,9 @@
         'required': False,
         'selector': dict({
           'number': dict({
-            'max': 600.0,
             'min': 0.0,
-            'mode': 'slider',
-            'step': 0.1,
+            'mode': 'box',
+            'step': 0.001,
             'unit_of_measurement': 's',
           }),
         }),

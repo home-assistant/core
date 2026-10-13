@@ -141,7 +141,7 @@ class BinarySensorKnxConfig:
         probatio.Maybe(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0, max=600, step=0.1, unit_of_measurement="s"
+                    min=0, step=0.001, unit_of_measurement="s"
                 )
             )
         ),
