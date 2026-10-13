@@ -4,11 +4,11 @@ from collections.abc import Iterable, Mapping
 from ipaddress import IPv4Address, IPv4Network, ip_address, ip_network
 from typing import Any
 
-from .const import CONF_NETWORKS, LIMITED_BROADCAST, MIN_NETWORK_PREFIX
+from .const import CONF_NETWORKS, LIMITED_BROADCAST, NETWORK_PREFIX
 
 
 def normalize_networks(raw: str) -> list[str] | None:
-    """Validate comma-separated IPv4 hosts and /24-/32 networks.
+    """Validate comma-separated IPv4 hosts and /24 networks.
 
     English and Chinese commas are accepted. Newlines are treated as commas.
 
@@ -68,13 +68,8 @@ def _normalize_network_line(line: str) -> str | None:
             network = ip_network(line, strict=False)
         except ValueError:
             return None
-        if (
-            not isinstance(network, IPv4Network)
-            or network.prefixlen < MIN_NETWORK_PREFIX
-        ):
+        if not isinstance(network, IPv4Network) or network.prefixlen != NETWORK_PREFIX:
             return None
-        if network.prefixlen == 32:
-            return str(network.network_address)
         return str(network)
 
     try:

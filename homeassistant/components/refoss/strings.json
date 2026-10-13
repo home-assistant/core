@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "invalid_networks": "Enter IPv4 addresses or networks from /24 to /32, separated by commas."
+      "invalid_networks": "Enter IPv4 addresses or /24 networks, separated by commas."
     },
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
@@ -9,7 +9,7 @@
     },
     "step": {
       "user": {
-        "description": "Devices on this network are discovered automatically. To find devices on another VLAN, list its IPv4 addresses or subnets, separated by commas. English and Chinese commas are both accepted. Subnets must be /24 to /32.",
+        "description": "Devices on this network are discovered automatically. To find devices on another VLAN, list its IPv4 addresses or subnets, separated by commas. English and Chinese commas are both accepted. Subnets must be /24.",
         "data": {
           "networks": "Networks"
         },

@@ -81,12 +81,12 @@ async def test_creating_entry_has_no_devices(
 
 @pytest.mark.parametrize(
     "networks",
-    ["10.0.0.0/16", "not-an-ip", "2001:db8::1"],
+    ["10.0.0.0/16", "10.1.2.3/32", "10.1.2.0/25", "not-an-ip", "2001:db8::1"],
 )
 async def test_user_flow_rejects_invalid_networks(
     hass: HomeAssistant, networks: str
 ) -> None:
-    """Test that oversized, malformed, and IPv6 networks are rejected."""
+    """Test that non-/24, malformed, and IPv6 networks are rejected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
