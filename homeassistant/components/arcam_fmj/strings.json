@@ -45,7 +45,11 @@
     },
     "select": {
       "room_equalization": {
-        "name": "Room equalization"
+        "name": "Room equalization",
+        "state": {
+          "not_calculated": "Not calculated",
+          "off": "Off"
+        }
       }
     },
     "sensor": {

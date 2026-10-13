@@ -18,6 +18,7 @@ from .entity import ArcamFmjEntity, convert_exception
 
 PARALLEL_UPDATES = 1
 
+
 @dataclass(frozen=True, kw_only=True)
 class ArcamFmjEnumSelectEntityDescription[EnumT: Enum](SelectEntityDescription):
     """Description for a select entity backed by enum values."""
@@ -47,14 +48,14 @@ ROOM_EQ_DESCRIPTION = ArcamFmjEnumSelectEntityDescription[RoomEqMode](
 def _room_eq_options(coordinator: ArcamFmjCoordinator) -> dict[str, RoomEqMode]:
     """Map Room EQ option labels to their enum values."""
     names = coordinator.state.get_room_eq_names() or []
-    options = {"Off": RoomEqMode.OFF}
+    options = {"off": RoomEqMode.OFF}
     for index, mode in enumerate((RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3)):
         name = names[index] if index < len(names) else None
         option = f"{mode.name}: {name}" if name else mode.name
         options[option] = mode
 
     if coordinator.state.get_room_equalization() == RoomEqMode.NOT_CALCULATED:
-        options["Not calculated"] = RoomEqMode.NOT_CALCULATED
+        options["not_calculated"] = RoomEqMode.NOT_CALCULATED
 
     return options
 
@@ -68,6 +69,7 @@ async def async_setup_entry(
     async_add_entities(
         ArcamFmjEnumSelectEntity(coordinator, ROOM_EQ_DESCRIPTION)
         for coordinator in config_entry.runtime_data.coordinators.values()
+        if coordinator.state.zn == 1
     )
 
 
