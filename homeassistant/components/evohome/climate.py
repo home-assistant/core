@@ -6,6 +6,7 @@ from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_CAN_BE_TEMPORARY,
     SZ_DURATION,
     SZ_MODE,
     SZ_PERIOD,
@@ -13,6 +14,7 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
+    SZ_TIMING_MODE,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -37,7 +39,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
-from .services import as_snake_case, validate_set_system_mode_params
+from .helpers import as_snake_case
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -359,14 +361,48 @@ class EvoController(EvoClimateEntity):
         duration: timedelta | None = None,
         period: timedelta | None = None,
     ) -> None:
-        """Set the system mode, either indefinitely or for a duration/period."""
+        """Set the system mode, either indefinitely or for a duration/period.
 
-        data: dict[str, Any] = {SZ_MODE: mode}
-        if duration is not None:
-            data[SZ_DURATION] = duration
-        if period is not None:
-            data[SZ_PERIOD] = period
-        validate_set_system_mode_params(self._evo_device, data)
+        Validation occurs here, instead of in the library, because the library's
+        method uses a slightly different schema (until instead of duration/period).
+        The service schema ensures that duration and period are not both present.
+        """
+
+        tcs_modes = {
+            m[SZ_SYSTEM_MODE].value: m for m in self._evo_device.allowed_system_modes
+        }
+
+        if (mode_info := tcs_modes.get(as_snake_case(mode))) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mode_not_supported",
+                translation_placeholders={SZ_MODE: mode},
+            )
+
+        if not mode_info[SZ_CAN_BE_TEMPORARY]:
+            if duration is not None or period is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_be_temporary",
+                    translation_placeholders={SZ_MODE: mode},
+                )
+
+        else:  # will have a timing mode, as can_be_temporary
+            timing_mode = mode_info.get(SZ_TIMING_MODE)
+
+            if timing_mode == SZ_DURATION and period is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_have_period",
+                    translation_placeholders={SZ_MODE: mode},
+                )
+
+            if timing_mode == SZ_PERIOD and duration is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_have_duration",
+                    translation_placeholders={SZ_MODE: mode},
+                )
 
         if period is not None:
             until = dt_util.start_of_local_day() + period
@@ -375,7 +411,7 @@ class EvoController(EvoClimateEntity):
         else:
             until = None
 
-        await self._set_tcs_mode(EvoSystemMode(as_snake_case(mode)), until=until)
+        await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None
