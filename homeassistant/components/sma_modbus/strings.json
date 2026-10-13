@@ -1,0 +1,153 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {device}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "Modbus port",
+          "unit_id": "Unit ID"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your SMA device.",
+          "port": "Port of the device's Modbus TCP interface. Only used when Modbus is enabled on the device.",
+          "unit_id": "Only needed if auto-discovery fails. Set to 0 to auto-detect (default). The Modbus unit ID serving the device's Type Label and measurement data."
+        },
+        "description": "Configure your SMA Modbus TCP device."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_apparent_power": { "name": "Apparent power" },
+      "ac_apparent_power_l1": { "name": "Apparent power L1" },
+      "ac_apparent_power_l2": { "name": "Apparent power L2" },
+      "ac_apparent_power_l3": { "name": "Apparent power L3" },
+      "ac_current": { "name": "AC current" },
+      "ac_current_l1": { "name": "AC current L1" },
+      "ac_current_l2": { "name": "AC current L2" },
+      "ac_current_l3": { "name": "AC current L3" },
+      "ac_power": { "name": "AC power" },
+      "ac_power_l1": { "name": "AC power L1" },
+      "ac_power_l2": { "name": "AC power L2" },
+      "ac_power_l3": { "name": "AC power L3" },
+      "ac_reactive_power": { "name": "Reactive power" },
+      "ac_reactive_power_l1": { "name": "Reactive power L1" },
+      "ac_reactive_power_l2": { "name": "Reactive power L2" },
+      "ac_reactive_power_l3": { "name": "Reactive power L3" },
+      "ac_voltage_l1": { "name": "AC voltage L1" },
+      "ac_voltage_l1_l2": { "name": "AC voltage L1-L2" },
+      "ac_voltage_l2": { "name": "AC voltage L2" },
+      "ac_voltage_l2_l3": { "name": "AC voltage L2-L3" },
+      "ac_voltage_l3": { "name": "AC voltage L3" },
+      "ac_voltage_l3_l1": { "name": "AC voltage L3-L1" },
+      "battery_cell_voltage_max": { "name": "Battery cell voltage max" },
+      "battery_cell_voltage_min": { "name": "Battery cell voltage min" },
+      "battery_cell_voltage_sum": { "name": "Battery cell voltage sum" },
+      "battery_charge_energy": { "name": "Battery charge energy" },
+      "battery_charge_power": { "name": "Battery charge power" },
+      "battery_current": { "name": "Battery current" },
+      "battery_current_charge_energy": {
+        "name": "Battery current charge energy"
+      },
+      "battery_current_discharge_energy": {
+        "name": "Battery current discharge energy"
+      },
+      "battery_discharge_energy": { "name": "Battery discharge energy" },
+      "battery_discharge_power": { "name": "Battery discharge power" },
+      "battery_end_of_charge_voltage": {
+        "name": "Battery end-of-charge voltage"
+      },
+      "battery_end_of_discharge_voltage": {
+        "name": "Battery end-of-discharge voltage"
+      },
+      "battery_health": {
+        "name": "Battery health",
+        "state": {
+          "fault": "Fault",
+          "off": "Off",
+          "ok": "OK",
+          "warning": "Warning"
+        }
+      },
+      "battery_max_charge_current": { "name": "Battery max charge current" },
+      "battery_max_discharge_current": {
+        "name": "Battery max discharge current"
+      },
+      "battery_max_voltage": { "name": "Battery max voltage" },
+      "battery_nominal_capacity": { "name": "Battery nominal capacity" },
+      "battery_state_of_charge": { "name": "Battery state of charge" },
+      "battery_temperature": { "name": "Battery temperature" },
+      "battery_temperature_max": { "name": "Battery temperature max" },
+      "battery_temperature_min": { "name": "Battery temperature min" },
+      "battery_voltage": { "name": "Battery voltage" },
+      "bms_operating_status": {
+        "name": "BMS operating status",
+        "state": {
+          "battery_wait": "Battery wait",
+          "device_fault": "Device fault",
+          "off": "Off",
+          "standby": "Standby",
+          "waiting": "Waiting"
+        }
+      },
+      "dc_current_0": { "name": "DC current string 0" },
+      "dc_current_1": { "name": "DC current string 1" },
+      "dc_current_2": { "name": "DC current string 2" },
+      "dc_current_3": { "name": "DC current string 3" },
+      "dc_energy_total_0": { "name": "DC energy total string 0" },
+      "dc_energy_total_1": { "name": "DC energy total string 1" },
+      "dc_energy_total_2": { "name": "DC energy total string 2" },
+      "dc_power_0": { "name": "DC power string 0" },
+      "dc_power_1": { "name": "DC power string 1" },
+      "dc_power_2": { "name": "DC power string 2" },
+      "dc_voltage_0": { "name": "DC voltage string 0" },
+      "dc_voltage_1": { "name": "DC voltage string 1" },
+      "dc_voltage_2": { "name": "DC voltage string 2" },
+      "grid_export_energy": { "name": "Grid export energy" },
+      "grid_export_power": { "name": "Grid export power" },
+      "grid_frequency": { "name": "Grid frequency" },
+      "grid_import_energy": { "name": "Grid import energy" },
+      "grid_import_power": { "name": "Grid import power" },
+      "insulation_residual_current": { "name": "Insulation residual current" },
+      "insulation_resistance": { "name": "Insulation resistance" },
+      "intermediate_circuit_voltage": {
+        "name": "Intermediate circuit voltage"
+      },
+      "internal_temperature": { "name": "Internal temperature" },
+      "power_factor": { "name": "Power factor" },
+      "power_factor_eei": { "name": "Power factor (EEI)" },
+      "pv_energy_total": { "name": "PV energy total" },
+      "pv_power": { "name": "PV power" },
+      "system_status": {
+        "name": "System status",
+        "state": {
+          "fault": "Fault",
+          "off": "Off",
+          "ok": "OK",
+          "warning": "Warning"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the SMA device: {error}"
+    },
+    "device_error": {
+      "message": "Error communicating with SMA device: {error}"
+    },
+    "wrong_device": {
+      "message": "Discovered device does not match config entry."
+    }
+  }
+}
