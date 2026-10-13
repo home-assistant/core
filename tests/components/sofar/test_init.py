@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     ModbusConnectionError,
     ModbusError,
+    ModbusExceptionError,
     ModbusSerialParams,
     ModbusTcpParams,
     ModbusTimeoutError,
@@ -40,8 +41,11 @@ from . import (
     MOCK_SERIAL_ENTRY_DATA,
     MOCK_SW_VERSION,
     MOCK_TCP_INPUT,
+    MOCK_UNRECOGNIZED_SERIAL,
+    declare_pv_in_masks,
     deny_meter_energy,
     seed_hybrid_inverter,
+    seed_pv_inverter,
     serve_meter_energy,
 )
 
@@ -365,51 +369,185 @@ async def test_setup_keeps_meter_sensors_when_no_mask_is_published(
     )
 
 
-async def test_setup_entry_unrecognized_inverter_raises_setup_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test setup fails permanently (no retry) for an unrecognized serial."""
-    # Not reachable via the config flow; covers an existing entry
-    # outliving a sofar-modbus library downgrade. Caught before any
-    # Modbus I/O, so no connection needs mocking here.
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_ENTRY_DATA
+def _unrecognized_entry(connection: MockModbusConnection) -> MockConfigEntry:
+    """An entry whose serial misses the prefix table, seeded as PV."""
+    seed_pv_inverter(connection.for_unit(1), serial=MOCK_UNRECOGNIZED_SERIAL)
+    return MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_UNRECOGNIZED_SERIAL, data=MOCK_ENTRY_DATA
     )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_takes_the_type_from_the_masks(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an unrecognized serial sets up as the type its masks declare."""
+    entry = _unrecognized_entry(mock_connection)
+    declare_pv_in_masks(mock_connection.for_unit(1))
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 36
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_pv_power_1"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2.5"
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_fails_when_the_masks_decline(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test setup fails permanently when no mask settles the type."""
+    entry = _unrecognized_entry(mock_connection)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "unrecognized_inverter_model"
 
 
-async def test_setup_entry_unreachable_link_retries_and_recovers(
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a dead link on first refresh retries setup, then recovers."""
+    """Test a silent inverter loads unavailable, then sets up in full."""
     mock_config_entry.add_to_hass(hass)
-    unit = mock_connection.for_unit(1)
-    unit.fail_requests(ModbusTimeoutError("stuck"))
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    states = hass.states.async_all()
+    assert len(states) == 36
+    assert {state.state for state in states} == {STATE_UNAVAILABLE}
+    assert "inverter is not answering" in caplog.text
+
+    mock_connection.for_unit(1).fail_requests(None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2.5"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == MOCK_SW_VERSION
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_takes_the_type_once_the_masks_answer(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a silent inverter leaves the type to a later poll."""
+    entry = _unrecognized_entry(mock_connection)
+    unit = mock_connection.for_unit(1)
+    declare_pv_in_masks(unit)
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 0
+
+    unit.fail_requests(None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 36
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_keeps_the_device_versions(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test firmware versions read on an earlier setup are not wiped."""
+    mock_config_entry.add_to_hass(hass)
+    device_id = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, MOCK_SERIAL)},
+        hw_version=MOCK_HW_VERSION,
+        sw_version=MOCK_SW_VERSION,
+    ).id
+
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get(device_id)
+    assert device is not None
+    assert device.hw_version == MOCK_HW_VERSION
+    assert device.sw_version == MOCK_SW_VERSION
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ValueError("bug"), id="unexpected_error"),
+        pytest.param(ModbusExceptionError(0x02), id="exception_response"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_retries_unless_the_inverter_is_silent(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Test only a timeout is taken for a sleeping inverter."""
+    mock_config_entry.add_to_hass(hass)
+    mock_connection.for_unit(1).fail_requests(error)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_retries_without_the_adapter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the link itself cannot be opened."""
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        MockModbusConnection,
+        "_connect_client",
+        side_effect=ModbusTimeoutError("no adapter"),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-        unit.fail_requests(None)
-        freezer.tick(timedelta(seconds=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_settings_failure_does_not_block_reading_sensors(

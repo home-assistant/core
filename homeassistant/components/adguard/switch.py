@@ -7,7 +7,6 @@ from typing import Any, override
 from adguardhome import AdGuardHome, AdGuardHomeError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -105,16 +104,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity[AdGuardHomeStateCoordinator], SwitchEn
         super().__init__(coordinator)
         entry = coordinator.config_entry
         self.entity_description = description
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
-            [
-                DOMAIN,
-                entry.data[CONF_HOST],
-                str(entry.data[CONF_PORT]),
-                "switch",
-                description.key,
-            ]
-        )
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:

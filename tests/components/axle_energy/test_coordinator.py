@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioaxlevpp import GridEvent
+from aioaxlevpp import AxleStatus, GridEvent
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -25,8 +25,9 @@ async def test_event_notifications(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Notify listeners without a binary sensor or a change to API polling."""
-    mock_client.get_event.return_value = replace(
-        mock_event, end=mock_event.start + timedelta(minutes=1)
+    mock_client.get_status.return_value = AxleStatus(
+        replace(mock_event, end=mock_event.start + timedelta(minutes=1)),
+        opted_out=False,
     )
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.axle_energy.PLATFORMS", [Platform.SENSOR]):
@@ -34,25 +35,25 @@ async def test_event_notifications(
         await hass.async_block_till_done()
     listener = Mock()
     mock_config_entry.runtime_data.async_add_listener(listener)
-    mock_client.get_event.reset_mock()
+    mock_client.get_status.reset_mock()
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     listener.assert_called_once_with()
-    mock_client.get_event.assert_not_called()
+    mock_client.get_status.assert_not_called()
     listener.reset_mock()
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     listener.assert_called_once_with()
-    mock_client.get_event.assert_not_called()
+    mock_client.get_status.assert_not_called()
 
     freezer.tick(timedelta(minutes=8))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_client.get_event.assert_awaited_once_with()
+    mock_client.get_status.assert_awaited_once_with()
 
 
 @pytest.mark.freeze_time("2026-09-11T16:49:00Z")
@@ -71,20 +72,20 @@ async def test_shutdown_during_refresh(
     listener = Mock()
     coordinator.async_add_listener(listener)
     started = asyncio.Event()
-    response = asyncio.Future[GridEvent]()
+    response = asyncio.Future[AxleStatus]()
 
-    async def get_event() -> GridEvent:
+    async def get_status() -> AxleStatus:
         started.set()
         return await response
 
-    mock_client.get_event.side_effect = get_event
-    mock_client.get_event.reset_mock()
+    mock_client.get_status.side_effect = get_status
+    mock_client.get_status.reset_mock()
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await started.wait()
-    mock_client.get_event.assert_awaited_once_with()
+    mock_client.get_status.assert_awaited_once_with()
     await coordinator.async_shutdown()
-    response.set_result(mock_event)
+    response.set_result(AxleStatus(mock_event, opted_out=False))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     freezer.tick(timedelta(minutes=1))
