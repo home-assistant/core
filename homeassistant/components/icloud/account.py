@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloudConnectionException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -113,7 +114,17 @@ class IcloudAccount:
                 self._password,
                 self._icloud_dir.path,
                 with_family=self._with_family,
+                refresh_interval=None,
             )
+
+        except PyiCloudConnectionException as err:
+            # iCloud is unreachable; this says nothing about the credentials, so
+            # let the config entry retry instead of asking the user to log in.
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         except PyiCloudFailedLoginException:
             self.api = None
