@@ -219,7 +219,7 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
     @property
     def _genai_client(self) -> genai.Client:
         """Return the Google Generative AI client."""
-        return self._get_entry().runtime_data
+        return cast(genai.Client, self._get_entry().runtime_data)
 
     @property
     def _is_new(self) -> bool:

@@ -1083,7 +1083,7 @@ async def async_migrate_entry(
         # Add auth_implementation for OAuth2 flow compatibility
         data["auth_implementation"] = DOMAIN
 
-        return hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry,
             data=data,
             version=2,

@@ -1,8 +1,14 @@
 """Tests for Tankerkoenig config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiotankerkoenig.exceptions import TankerkoenigInvalidKeyError
+from aiotankerkoenig.exceptions import (
+    TankerkoenigConnectionError,
+    TankerkoenigError,
+    TankerkoenigInvalidKeyError,
+)
+import pytest
 
 from homeassistant.components.tankerkoenig.const import CONF_STATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -114,8 +120,24 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_exception_security(hass: HomeAssistant) -> None:
-    """Test starting a flow by user with invalid api key."""
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            TankerkoenigInvalidKeyError,
+            {CONF_API_KEY: "invalid_auth"},
+            id="invalid_key",
+        ),
+        pytest.param(
+            TankerkoenigConnectionError, {"base": "cannot_connect"}, id="connection"
+        ),
+        pytest.param(TankerkoenigError, {"base": "cannot_connect"}, id="api_error"),
+    ],
+)
+async def test_user_errors(
+    hass: HomeAssistant, side_effect: type[Exception], errors: dict[str, Any]
+) -> None:
+    """Test starting a flow by user with an error from the API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -124,14 +146,14 @@ async def test_exception_security(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
-        side_effect=TankerkoenigInvalidKeyError,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"][CONF_API_KEY] == "invalid_auth"
+        assert result["errors"] == errors
 
     with (
         patch(
@@ -194,7 +216,30 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            TankerkoenigInvalidKeyError("Booom!"),
+            {CONF_API_KEY: "invalid_auth"},
+            id="invalid_key",
+        ),
+        pytest.param(
+            TankerkoenigConnectionError("Booom!"),
+            {"base": "cannot_connect"},
+            id="connection",
+        ),
+        pytest.param(
+            TankerkoenigError("Booom!"), {"base": "cannot_connect"}, id="api_error"
+        ),
+    ],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    side_effect: Exception,
+    errors: dict[str, Any],
+) -> None:
     """Test starting a flow by user to re-auth."""
     config_entry.add_to_hass(hass)
     # re-auth initialized
@@ -211,7 +256,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         ) as mock_nearby_stations,
     ):
         # re-auth unsuccessful
-        mock_nearby_stations.side_effect = TankerkoenigInvalidKeyError("Booom!")
+        mock_nearby_stations.side_effect = side_effect
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -220,7 +265,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+        assert result["errors"] == errors
 
         # re-auth successful
         mock_nearby_stations.side_effect = None
@@ -311,3 +356,33 @@ async def test_options_flow_error(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert not mock_config.options[CONF_SHOW_ON_MAP]
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(TankerkoenigConnectionError("Booom!"), id="connection"),
+        pytest.param(TankerkoenigError("Booom!"), id="api_error"),
+    ],
+)
+async def test_options_flow_cannot_connect(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test options flow aborts when the API can't be reached."""
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_OPTIONS_DATA,
+        options={CONF_SHOW_ON_MAP: True},
+        unique_id=f"{DOMAIN}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

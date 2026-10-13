@@ -28,7 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"port": port},
+            # An ESPHome proxy URL can carry the API key in its query string
+            translation_placeholders={"port": port.split("?", 1)[0]},
         ) from err
 
     entry.runtime_data = receiver
