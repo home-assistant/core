@@ -37,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> None:
     """Set up SMLIGHT from a config entry."""
     client = Api2(host=entry.data[CONF_HOST], session=async_get_clientsession(hass))
 
@@ -67,9 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
         entry.async_create_background_task(
             hass, firmware_coordinator.async_refresh(), "smlight-firmware-catalog"
         )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> None:
     """Unload SMLIGHT config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
