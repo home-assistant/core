@@ -241,3 +241,6 @@ class NetatmoServiceArgument(StrEnum):
     TIME_PERIOD = "time_period"
     PERSONS = "persons"
     PERSON = "person"
+
+
+NETATMO_DOORBELLS = ["NDB"]
