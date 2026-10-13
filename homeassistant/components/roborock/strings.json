@@ -135,6 +135,13 @@
       }
     },
     "select": {
+      "cleaning_cycles": {
+        "name": "Cleaning cycles",
+        "state": {
+          "one": "1x",
+          "two": "2x"
+        }
+      },
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
@@ -284,13 +291,6 @@
           "wind_breaker": "Windbreaker",
           "wool": "Wool",
           "yoga": "Yoga wear"
-        }
-      },
-      "repeat_state": {
-        "name": "Repeat state",
-        "state": {
-          "one": "1x",
-          "two": "2x"
         }
       },
       "rinse_times": {

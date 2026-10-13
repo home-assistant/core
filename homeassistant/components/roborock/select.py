@@ -134,8 +134,8 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockB01SelectDescription(
-        key="repeat_state",
-        translation_key="repeat_state",
+        key="cleaning_cycles",
+        translation_key="cleaning_cycles",
         api_fn=lambda api, value: api.set_repeat_state(
             CleanRepeatMapping.from_value(value)
         ),
