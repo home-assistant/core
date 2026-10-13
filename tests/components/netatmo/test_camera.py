@@ -5,6 +5,7 @@
 
 from datetime import timedelta
 from functools import partial
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -41,6 +42,13 @@ from .common import (
     snapshot_platform_entities,
 )
 
+
+# Set the log level for your specific components here
+# This will show all messages from DEBUG level and above for these loggers.
+logging.getLogger("homeassistant.components.netatmo.data_handler").setLevel(
+    logging.DEBUG
+)
+logging.getLogger("homeassistant.components.netatmo.camera").setLevel(logging.DEBUG)
 
 
 async def test_entity(
@@ -1234,7 +1242,12 @@ async def test_camera_image_raises_exception(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity", "expected_motion_detection"),
+    (
+        "camera_type",
+        "camera_id",
+        "camera_entity",
+        "expected_motion_detection",
+    ),
     [
         ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
         ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
