@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-import json
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -11,6 +10,7 @@ from boschshcpy import (
     BatteryLevelService,
     SHCBatteryDevice,
     SHCShutterContact,
+    SHCSmokeDetectionSystem,
     SHCTwinguard,
     ShutterContactService,
     SurveillanceAlarmService,
@@ -96,7 +96,7 @@ async def async_setup_entry(
     if (
         smoke_detection_system := session.device_helper.smoke_detection_system
     ) is not None and session.device_helper.twinguards:
-        tracker = TwinguardAlarmTracker(hass, session, smoke_detection_system)
+        tracker = TwinguardAlarmTracker(hass, smoke_detection_system)
         config_entry.async_on_unload(tracker.async_stop)
         entities.extend(
             TwinguardSmokeSensor(
@@ -167,21 +167,6 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         return self._device.batterylevel is not BatteryLevelService.State.OK
 
 
-def _parse_surveillance_events(raw_events: Any) -> list[dict[str, Any]]:
-    """Return the surveillance events of a message as a list of dicts.
-
-    Some firmware versions send the field as a JSON-encoded string.
-    """
-    if isinstance(raw_events, str):
-        try:
-            raw_events = json.loads(raw_events)
-        except json.JSONDecodeError:
-            return []
-    if not isinstance(raw_events, list):
-        return []
-    return [event for event in raw_events if isinstance(event, dict)]
-
-
 RETRY_DELAY = 30
 
 
@@ -194,11 +179,10 @@ class TwinguardAlarmTracker:
     """
 
     def __init__(
-        self, hass: HomeAssistant, session: Any, smoke_detection_system: Any
+        self, hass: HomeAssistant, smoke_detection_system: SHCSmokeDetectionSystem
     ) -> None:
         """Initialize the tracker and subscribe to the alarm state."""
         self._hass = hass
-        self._session = session
         self._system = smoke_detection_system
         self._callback_id = f"{smoke_detection_system.id}_twinguard_alarm"
         self._listeners: list[CALLBACK_TYPE] = []
@@ -248,16 +232,14 @@ class TwinguardAlarmTracker:
         generation = self._generation
         trigger_ids: set[str] = set()
         available = True
-        if self._system.alarm != SurveillanceAlarmService.State.ALARM_OFF:
+        if self._system.alarm is not SurveillanceAlarmService.State.ALARM_OFF:
             try:
-                messages = await self._hass.async_add_executor_job(
-                    self._session.api.get_messages
+                trigger_ids = await self._hass.async_add_executor_job(
+                    self._system.triggered_device_ids
                 )
             except Exception:
                 _LOGGER.warning("Unable to fetch Bosch SHC messages", exc_info=True)
                 available = False
-            else:
-                trigger_ids = self._trigger_ids(messages)
         if self._stopped or generation < self._applied_generation:
             return
         self._applied_generation = generation
@@ -268,27 +250,6 @@ class TwinguardAlarmTracker:
             self.available = available
             for listener in list(self._listeners):
                 listener()
-
-    def _trigger_ids(self, messages: Any) -> set[str]:
-        """Return the device ids named by open SMOKE_ALARM messages."""
-        trigger_ids: set[str] = set()
-        for message in messages:
-            code = message.get("messageCode")
-            if not isinstance(code, dict) or code.get("name") != "SMOKE_ALARM":
-                continue
-            if message.get("sourceId") != self._system.id:
-                continue
-            arguments = message.get("arguments")
-            if not isinstance(arguments, dict):
-                continue
-            events = _parse_surveillance_events(arguments.get("surveillanceEvents"))
-            if any(event.get("type") == "ALARM_OFF" for event in events):
-                continue
-            # The Bosch app reads this field as "device", the SHC writes "triggerId".
-            for event in events:
-                if trigger_id := event.get("triggerId") or event.get("device"):
-                    trigger_ids.add(trigger_id)
-        return trigger_ids
 
 
 class TwinguardSmokeSensor(SHCEntity, BinarySensorEntity):
