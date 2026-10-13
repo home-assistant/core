@@ -27,6 +27,12 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("socket_enabled")
 
+# Python's ssl module does not expose OpenSSL's verification code constants.
+X509_V_ERR_CERT_NOT_YET_VALID = 9
+X509_V_ERR_CERT_HAS_EXPIRED = 10
+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT = 18
+X509_V_ERR_IP_ADDRESS_MISMATCH = 64
+
 
 @pytest.fixture(autouse=True)
 def allow_loopback() -> None:
@@ -185,8 +191,12 @@ async def test_unverified_tls_unsupported_version(
 @pytest.mark.usefixtures("ignore_tls_client_abort")
 async def test_untrusted_tls_certificate(hass: HomeAssistant, tls_port: int) -> None:
     """Default verification rejects a self-signed certificate."""
-    with pytest.raises(ValidationFailure, match="self-signed certificate"):
+    with pytest.raises(ValidationFailure) as exc:
         await get_cert_expiry_timestamp(hass, "localhost", tls_port)
+
+    cause = exc.value.__cause__
+    assert isinstance(cause, ssl.SSLCertVerificationError)
+    assert cause.verify_code == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
 
 
 async def test_trusted_tls_certificate(
@@ -207,16 +217,16 @@ async def test_trusted_tls_certificate(
 
 
 @pytest.mark.parametrize(
-    ("certificate_dates", "error"),
+    ("certificate_dates", "verify_code"),
     [
         pytest.param(
             (datetime(2010, 1, 1, tzinfo=UTC), datetime(2020, 1, 1, tzinfo=UTC)),
-            "certificate has expired",
+            X509_V_ERR_CERT_HAS_EXPIRED,
             id="expired",
         ),
         pytest.param(
             (datetime(2090, 1, 1, tzinfo=UTC), datetime(2100, 1, 1, tzinfo=UTC)),
-            "certificate is not yet valid",
+            X509_V_ERR_CERT_NOT_YET_VALID,
             id="not-yet-valid",
         ),
     ],
@@ -226,7 +236,7 @@ async def test_verified_tls_invalid_dates(
     hass: HomeAssistant,
     tls_port: int,
     trusted_context: ssl.SSLContext,
-    error: str,
+    verify_code: int,
 ) -> None:
     """Trusting a certificate still enforces its validity period."""
     with (
@@ -234,9 +244,13 @@ async def test_verified_tls_invalid_dates(
             "homeassistant.components.cert_expiry.helper.get_default_context",
             return_value=trusted_context,
         ),
-        pytest.raises(ValidationFailure, match=error),
+        pytest.raises(ValidationFailure) as exc,
     ):
         await get_cert_expiry_timestamp(hass, "localhost", tls_port)
+
+    cause = exc.value.__cause__
+    assert isinstance(cause, ssl.SSLCertVerificationError)
+    assert cause.verify_code == verify_code
 
 
 @pytest.mark.usefixtures("ignore_tls_client_abort")
@@ -249,9 +263,13 @@ async def test_tls_hostname_mismatch(
             "homeassistant.components.cert_expiry.helper.get_default_context",
             return_value=trusted_context,
         ),
-        pytest.raises(ValidationFailure, match="IP address mismatch"),
+        pytest.raises(ValidationFailure) as exc,
     ):
         await get_cert_expiry_timestamp(hass, "127.0.0.1", tls_port)
+
+    cause = exc.value.__cause__
+    assert isinstance(cause, ssl.SSLCertVerificationError)
+    assert cause.verify_code == X509_V_ERR_IP_ADDRESS_MISMATCH
 
 
 @pytest.mark.parametrize("certificate", ["private-ca"], indirect=True)
@@ -300,7 +318,11 @@ async def test_private_ca_hostname_mismatch(
             "ascii"
         ),
     )
-    with pytest.raises(ValidationFailure, match="IP address mismatch"):
+    with pytest.raises(ValidationFailure) as exc:
         await get_cert_expiry_timestamp(
             hass, "127.0.0.1", tls_port, ssl_context=context
         )
+
+    cause = exc.value.__cause__
+    assert isinstance(cause, ssl.SSLCertVerificationError)
+    assert cause.verify_code == X509_V_ERR_IP_ADDRESS_MISMATCH
