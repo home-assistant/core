@@ -383,3 +383,54 @@ async def test_entities(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [
+        pytest.param("32", "fog", id="dense-fog"),
+        pytest.param("33", "snowy", id="snow"),
+        pytest.param("49", "fog", id="strong-dense-fog"),
+        pytest.param("54", "fog", id="moderate-haze"),
+        pytest.param("55", "fog", id="heavy-haze"),
+        pytest.param("56", "fog", id="severe-haze"),
+        pytest.param("57", "fog", id="heavy-fog"),
+        pytest.param("58", "fog", id="severe-dense-fog"),
+        pytest.param("301", "rainy", id="generic-rain"),
+        pytest.param("302", "snowy", id="generic-snow"),
+    ],
+)
+@pytest.mark.parametrize("forecast_type", ["daily", "hourly", "twice_daily"])
+async def test_condition_codes(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    payload: dict[str, Any],
+    code: str,
+    expected: str,
+    forecast_type: str,
+) -> None:
+    """Expose weathercn conditions in observations and all forecast types."""
+    payload["current"]["weather"] = code
+    for period in payload["forecastDaily"]["weather"]["value"]:
+        period.update({"from": code, "to": code})
+    hourly = payload["forecastHourly"]["weather"]
+    hourly["value"] = [code] * len(hourly["value"])
+    client.get_weather.return_value = parse_weather(payload)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+    result = await hass.services.async_call(
+        "weather",
+        "get_forecasts",
+        {"entity_id": ENTITY_ID, "type": forecast_type},
+        blocking=True,
+        return_response=True,
+    )
+    assert result is not None
+    assert {period["condition"] for period in result[ENTITY_ID]["forecast"]} == {
+        expected
+    }
