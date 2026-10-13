@@ -5,7 +5,7 @@ import io
 from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
-import httpx
+import httpx2
 from openai import (
     APIConnectionError,
     AuthenticationError,
@@ -256,8 +256,8 @@ async def test_stt_auth_error_refreshes_coordinator(
     mock_openai_client.audio.transcriptions.create = AsyncMock(
         side_effect=error_cls(
             message="invalid api key",
-            response=httpx.Response(
-                401, request=httpx.Request("POST", "http://localhost")
+            response=httpx2.Response(
+                401, request=httpx2.Request("POST", "http://localhost")
             ),
             body=None,
         )

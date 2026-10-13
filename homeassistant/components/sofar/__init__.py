@@ -4,12 +4,8 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusError
-from sofar_modbus.modern.device import (
-    BATTERY_STRING_COMPONENTS,
-    SofarInverter,
-    identify,
-)
+from modbus_connection import ModbusError, ModbusTimeoutError
+from sofar_modbus.modern.device import BATTERY_STRING_COMPONENTS, SofarInverter
 from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
@@ -20,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -28,6 +24,7 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONF_UNIT_ID,
@@ -106,14 +103,17 @@ def _async_seed_high_water_marks(
 ) -> None:
     """Prime high-water marks before the first poll has nothing to compare."""
     registry = er.async_get(hass)
-    last_states = restore_state.async_get(hass).last_states
+    restore_state_data = restore_state.async_get(hass)
     for description in SENSOR_DESCRIPTIONS:
         if (total_fn := description.total_fn) is None:
             continue
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
-        if entity_id is None or (stored := last_states.get(entity_id)) is None:
+        if (
+            entity_id is None
+            or (stored := restore_state_data.async_get_stored_state(entity_id)) is None
+        ):
             continue
         if stored.extra_data is None:
             continue
@@ -134,13 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     serial = entry.unique_id
     assert serial is not None
     _async_remove_stale_sensors(hass, serial)
-    inverter_type, model = identify(serial)
-    if not inverter_type:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="unrecognized_inverter_model",
-            translation_placeholders={"title": entry.title},
-        )
 
     unit = async_get_unit(
         hass,
@@ -151,12 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
 
     link = TimedUnit(unit)
     tuner = LinkTuner(link)
-    device = SofarInverter(
-        link,
-        serial_number=serial,
-        model=model,
-        inverter_type=inverter_type,
-    )
+    device = SofarInverter(link, serial_number=serial)
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
@@ -175,11 +163,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
         tuner,
     )
-    await readings.async_config_entry_first_refresh()
-    await settings.async_refresh()
+    try:
+        await readings.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        failure = readings.last_exception
+        if not (
+            link.connected
+            and isinstance(failure, UpdateFailed)
+            and isinstance(failure.__cause__, ModbusTimeoutError)
+        ):
+            raise
+        _LOGGER.info(
+            "%s: inverter is not answering, setting up without it: %s",
+            entry.title,
+            err,
+        )
 
-    # Not tied to a coordinator: identity never changes once read.
-    await _async_read_identity(entry, device)
+        @callback
+        def _async_reload_once_answered() -> None:
+            """Set up again in full once the inverter answers."""
+            if readings.last_update_success:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        entry.async_on_unload(readings.async_add_listener(_async_reload_once_answered))
+    else:
+        await settings.async_refresh()
+        # Not tied to a coordinator: identity never changes once read.
+        await _async_read_identity(entry, device)
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create(

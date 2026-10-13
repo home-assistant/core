@@ -161,12 +161,14 @@ async def test_shared_device_mac(
     assert other_device is not None
 
 
-async def test_setup_entry_not_shelly(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_setup_entry_not_shelly(hass: HomeAssistant) -> None:
     """Test not Shelly entry."""
-    await init_integration(hass, 1, data={})
-    assert "probably comes from a custom integration" in caplog.text
+    entry = await init_integration(hass, 1, data={})
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == (
+        "The config entry Test name probably comes from a custom integration, please"
+        " remove it if you want to use core Shelly integration"
+    )
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])

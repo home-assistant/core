@@ -5,6 +5,7 @@ from datetime import timedelta
 import json
 import os
 from pathlib import Path
+import stat
 import threading
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
@@ -30,11 +31,13 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
+from homeassistant.util.json import JsonValueType
 
 from tests.common import (
     async_fire_time_changed,
     async_fire_time_changed_exact,
     async_test_home_assistant,
+    mock_storage,
 )
 
 MOCK_VERSION = 1
@@ -119,16 +122,26 @@ async def test_loading_parallel(
     hass: HomeAssistant,
     store: storage.Store,
     hass_storage: dict[str, Any],
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can save and load data."""
+    """Concurrent readers share one in-flight I/O operation."""
     hass_storage[store.key] = {"version": MOCK_VERSION, "data": MOCK_DATA}
+    started = asyncio.Event()
+    resume = asyncio.Event()
+    original_load = store._io.async_load
 
-    results = await asyncio.gather(store.async_load(), store.async_load())
+    async def blocked_load() -> JsonValueType:
+        started.set()
+        await resume.wait()
+        return await original_load()
 
-    assert results[0] == MOCK_DATA
-    assert results[1] == MOCK_DATA
-    assert caplog.text.count(f"Loading data for {store.key}")
+    with patch.object(store._io, "async_load", side_effect=blocked_load) as load:
+        first = hass.async_create_task(store.async_load())
+        await started.wait()
+        second = hass.async_create_task(store.async_load())
+        load.assert_awaited_once()
+        resume.set()
+        assert await asyncio.gather(first, second) == [MOCK_DATA, MOCK_DATA]
+        load.assert_awaited_once()
 
 
 async def test_loading_parallel_waiter_cancelled(
@@ -1216,11 +1229,11 @@ async def test_store_manager_caching(
         await store_manager.async_preload(["integration1", "integration2"])
 
         integration1 = storage.Store(hass, 1, "integration1")
-        assert integration1._manager is store_manager
+        assert integration1._io._manager is store_manager
         assert await integration1.async_load() == {"integration1": "updated2"}
 
         integration2 = storage.Store(hass, 1, "integration2")
-        assert integration2._manager is store_manager
+        assert integration2._io._manager is store_manager
         assert await integration2.async_load() == {"integration2": "updated2"}
 
         await integration1.async_remove()
@@ -1405,3 +1418,113 @@ async def test_load_empty_returns_none_and_read_only(
     await store.async_save({"new": "data"})
     assert hass_storage[MOCK_KEY]["data"] == MOCK_DATA
     assert hass_storage[MOCK_KEY]["version"] == 99
+
+
+@pytest.mark.parametrize("serialize_in_event_loop", [True, False])
+async def test_store_io_bound_to_instance(
+    tmp_path: Path, serialize_in_event_loop: bool
+) -> None:
+    """Delayed writes and removal keep using the I/O selected at construction."""
+    async with async_test_home_assistant(config_dir=str(tmp_path)) as hass:
+        with mock_storage() as memory:
+            store = storage.Store(
+                hass, 1, MOCK_KEY, serialize_in_event_loop=serialize_in_event_loop
+            )
+        with mock_storage() as other_memory:
+            store.async_delay_save(lambda: {"value": "latest"}, 60)
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+            await hass.async_block_till_done()
+            assert await store.async_load() == {"value": "latest"}
+            assert memory[MOCK_KEY] == {
+                "version": 1,
+                "minor_version": 1,
+                "key": MOCK_KEY,
+                "data": {"value": "latest"},
+            }
+            store.async_delay_save(lambda: {"value": "removed"}, 60)
+            await store.async_remove()
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+            await hass.async_block_till_done()
+            assert memory == {}
+            assert other_memory == {}
+        await hass.async_stop(force=True)
+
+
+async def test_mock_storage_ignores_file_cache(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """The memory store bypasses the filesystem cache and executor."""
+    manager = storage.get_internal_store_manager(hass)
+    manager._files = {MOCK_KEY}
+    manager._data_preload[MOCK_KEY] = {"version": 1, "data": {"source": "disk"}}
+    hass_storage[MOCK_KEY] = {"version": 1, "data": {"source": "memory"}}
+    store = storage.Store(hass, 1, MOCK_KEY)
+    assert await store.async_load() == {"source": "memory"}
+    hass_storage[MOCK_KEY]["data"]["source"] = "updated"
+    assert await store.async_load() == {"source": "updated"}
+    assert manager._data_preload[MOCK_KEY]["data"] == {"source": "disk"}
+    del hass_storage[MOCK_KEY]
+    assert await store.async_load() is None
+
+    with patch.object(
+        hass,
+        "async_add_executor_job",
+        side_effect=AssertionError("Memory I/O should not use the executor"),
+    ):
+        await store.async_save({"source": "saved"})
+        assert await store.async_load() == {"source": "saved"}
+        await store.async_remove()
+        assert await store.async_load() is None
+
+
+@pytest.mark.parametrize("serialize_in_event_loop", [True, False])
+async def test_mock_storage_rejects_mocks(
+    hass: HomeAssistant, serialize_in_event_loop: bool
+) -> None:
+    """A mock guard runs even when a custom encoder would accept the mock."""
+
+    class PermissiveEncoder(json.JSONEncoder):
+        def default(self, o: Any) -> str:
+            return "encoded"
+
+    store = storage.Store(
+        hass,
+        1,
+        MOCK_KEY,
+        encoder=PermissiveEncoder,
+        serialize_in_event_loop=serialize_in_event_loop,
+    )
+    with pytest.raises(TypeError):
+        await store.async_save({"mock": Mock()})
+
+
+@pytest.mark.parametrize("missing_key", ["version", "data"])
+async def test_mock_storage_rejects_invalid_envelopes(
+    hass: HomeAssistant, hass_storage: dict[str, Any], missing_key: str
+) -> None:
+    """The fixture retains validation of manually supplied envelopes."""
+    hass_storage[MOCK_KEY] = {"version": 1, "data": {}}
+    del hass_storage[MOCK_KEY][missing_key]
+    store = storage.Store(hass, 1, MOCK_KEY)
+    with pytest.raises(ValueError, match='Mock data needs "version" and "data"'):
+        await store.async_load()
+
+
+@pytest.mark.parametrize("atomic_writes", [False, True])
+async def test_file_store_io_private_permissions(
+    tmp_path: Path, atomic_writes: bool
+) -> None:
+    """File I/O preserves private permissions with both write implementations."""
+    async with async_test_home_assistant(config_dir=str(tmp_path)) as hass:
+        store = storage.Store(
+            hass, 1, MOCK_KEY, private=True, atomic_writes=atomic_writes
+        )
+        await store.async_save({"secret": "value"})
+        mode = await hass.async_add_executor_job(
+            lambda: stat.S_IMODE(os.stat(store.path).st_mode)
+        )
+        assert mode == 0o600
+        assert await store.async_load() == {"secret": "value"}
+        await store.async_remove()
+        assert not await hass.async_add_executor_job(os.path.exists, store.path)
+        await hass.async_stop(force=True)

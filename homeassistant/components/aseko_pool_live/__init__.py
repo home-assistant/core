@@ -6,8 +6,9 @@ from aioaseko import Aseko, AsekoNotLoggedIn
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
+from .const import DOMAIN
 from .coordinator import AsekoConfigEntry, AsekoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,5 +54,8 @@ async def async_migrate_entry(
         _LOGGER.debug("Migration to version %s successful", config_entry.version)
         return True
 
-    _LOGGER.error("Attempt to migrate from unknown version %s", config_entry.version)
-    return False
+    raise ConfigEntryError(
+        translation_domain=DOMAIN,
+        translation_key="migration_unknown_version",
+        translation_placeholders={"version": str(config_entry.version)},
+    )

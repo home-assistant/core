@@ -50,11 +50,7 @@ rules:
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices:
-    status: todo
-    comment: |
-      Device are documented, but some are missing. For example, the their pro
-      strip is supported as well.
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done

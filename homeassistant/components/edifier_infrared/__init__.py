@@ -19,9 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entries."""
-    if entry.version > 3:
-        return False
-
     if entry.version == 1:
         data = {**entry.data}
         # The R1700BT model was renamed to R1700BT (pre-2017), and its
