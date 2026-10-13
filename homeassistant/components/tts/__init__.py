@@ -166,12 +166,20 @@ async def _async_ffmpeg_join(task: asyncio.Task | None) -> None:
         _ffmpeg_late_result(task)
 
 
-async def _async_ffmpeg_reap(process: asyncio.subprocess.Process) -> None:
-    """Kill and reap a child, bounding each OS wait without masking errors."""
+async def _async_ffmpeg_reap(
+    hass: HomeAssistant, process: asyncio.subprocess.Process, wait_task: asyncio.Task
+) -> None:
+    """Kill and reap using the original HA-owned wait where possible."""
     if process.returncode is None:
         with contextlib.suppress(ProcessLookupError):
             process.kill()
-    wait_task = asyncio.create_task(process.wait())
+    if process.returncode is not None:
+        return
+    if wait_task.done():
+        # A cancelled or failed wait cannot report a still-unknown OS exit.
+        wait_task = hass.async_create_background_task(
+            process.wait(), "tts_ffmpeg_wait_replacement"
+        )
     await _async_ffmpeg_join(wait_task)
 
 
@@ -644,14 +652,16 @@ async def _async_convert_audio(  # noqa: C901
             )
         known_child_failure = child_exited_unsuccessfully()
         if not wait_task.done() and not (
-            known_child_failure or child_failure_with_close
+            known_child_failure or child_failure_with_close or process.returncode == 0
         ):
             raise HomeAssistantError(
                 "ffmpeg output closed before TTS input was exhausted"
             )
         retcode = (
             process.returncode
-            if known_child_failure or child_failure_with_close
+            if known_child_failure
+            or child_failure_with_close
+            or process.returncode == 0
             else wait_task.result()
         )
         if retcode != 0:
@@ -703,7 +713,7 @@ async def _async_convert_audio(  # noqa: C901
             await _async_ffmpeg_join(wait_task)
             await _async_ffmpeg_join(stderr_task)
             if process.returncode is None:
-                await _async_ffmpeg_reap(process)
+                await _async_ffmpeg_reap(hass, process, wait_task)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
