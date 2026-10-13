@@ -83,6 +83,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT]):
             result = await self._flow_mgr.async_init(
                 data["handler"],
                 context=self.get_context(data),
+                data=self.get_init_data(data),
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
@@ -96,6 +97,10 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT]):
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         return {}
+
+    def get_init_data(self, data: dict[str, Any]) -> Any:
+        """Return the data passed to the first step of the flow."""
+        return None
 
 
 class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT]):

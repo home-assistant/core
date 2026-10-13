@@ -38,6 +38,7 @@ from . import generated
 from .const import Platform
 from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
+from .generated.barcode import BARCODE
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
@@ -242,6 +243,13 @@ class USBMatcher(USBMatcherRequired, USBMatcherOptional):
     """Matcher for the USB integration."""
 
 
+class BarcodeMatcher(TypedDict):
+    """Matcher for barcodes."""
+
+    domain: str
+    data: str
+
+
 @dataclass(slots=True)
 class HomeKitDiscoveredIntegration:
     """HomeKit model."""
@@ -280,6 +288,7 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    barcode: list[dict[str, str]]
     bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
     ssdp: list[dict[str, str]]
@@ -628,6 +637,22 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
             )
 
     return usb
+
+
+async def async_get_barcode(hass: HomeAssistant) -> list[BarcodeMatcher]:
+    """Return cached list of barcode matchers."""
+    barcode = cast(list[BarcodeMatcher], BARCODE.copy())
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.barcode:
+            continue
+        for entry in integration.barcode:
+            barcode.append(
+                cast(BarcodeMatcher, {"domain": integration.domain, **entry})
+            )
+
+    return barcode
 
 
 def homekit_always_discover(iot_class: str | None) -> bool:
@@ -996,6 +1021,11 @@ class Integration:
     def usb(self) -> list[dict[str, str]] | None:
         """Return Integration usb entries."""
         return self.manifest.get("usb")
+
+    @property
+    def barcode(self) -> list[dict[str, str]] | None:
+        """Return Integration barcode entries."""
+        return self.manifest.get("barcode")
 
     @property
     def homekit(self) -> dict[str, list[str]] | None:

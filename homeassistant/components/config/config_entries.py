@@ -2,8 +2,11 @@
 
 from asyncio import shield
 from collections.abc import Callable
+import fnmatch
+from functools import lru_cache
 from http import HTTPStatus
 import logging
+import re
 from typing import Any, NoReturn, override
 
 from aiohttp import web
@@ -29,9 +32,11 @@ from homeassistant.helpers.json import (
     json_bytes,
     json_fragment,
 )
+from homeassistant.helpers.service_info.barcode import BarcodeServiceInfo
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
+    async_get_barcode,
     async_get_config_flows,
     async_get_integrations,
     async_get_loaded_integration,
@@ -39,6 +44,14 @@ from homeassistant.loader import (
 from homeassistant.util.json import format_unserializable_data
 
 _LOGGER = logging.getLogger(__name__)
+
+# Flows the user started themselves are not listed as in progress discoveries
+NON_DISCOVERED_SOURCES = {
+    *config_entries.USER_INITIATED_SOURCES,
+    config_entries.SOURCE_RECONFIGURE,
+}
+
+BARCODE_DATA_SCHEMA = probatio.All(cv.string, str.strip, probatio.Length(min=1))
 
 
 @callback
@@ -66,6 +79,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
+    websocket_api.async_register_command(hass, config_entries_flow_match_barcode)
     websocket_api.async_register_command(hass, config_entries_flow_progress)
     websocket_api.async_register_command(hass, config_entries_flow_subscribe)
     websocket_api.async_register_command(hass, ignore_config_flow)
@@ -188,7 +202,11 @@ class ConfigManagerFlowIndexView(
         probatio.Schema(
             {
                 probatio.Required("handler"): probatio.Any(str, list),
-                probatio.Optional("entry_id"): cv.string,
+                probatio.Exclusive("entry_id", "source"): cv.string,
+                probatio.Exclusive("barcode", "source"): {
+                    probatio.Required("data"): BARCODE_DATA_SCHEMA,
+                    probatio.Optional("format"): cv.string,
+                },
             },
             extra=probatio.ALLOW_EXTRA,
         )
@@ -203,6 +221,12 @@ class ConfigManagerFlowIndexView(
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
         """Handle a POST request for a config entry flow."""
+        if barcode := data.get("barcode"):
+            matches = await _async_match_barcode(request.app[KEY_HASS], barcode["data"])
+            if data["handler"] not in matches:
+                return self.json_message(
+                    "Barcode does not match the handler", HTTPStatus.BAD_REQUEST
+                )
         try:
             return await super()._post_impl(request, data)
         except DependencyError as exc:
@@ -219,7 +243,18 @@ class ConfigManagerFlowIndexView(
         if entry_id := data.get("entry_id"):
             context["source"] = config_entries.SOURCE_RECONFIGURE
             context["entry_id"] = entry_id
+        elif "barcode" in data:
+            context["source"] = config_entries.SOURCE_BARCODE
         return context
+
+    @override
+    def get_init_data(self, data: dict[str, Any]) -> BarcodeServiceInfo | None:
+        """Return the data passed to the first step of the flow."""
+        if barcode := data.get("barcode"):
+            return BarcodeServiceInfo(
+                data=barcode["data"], format=barcode.get("format")
+            )
+        return None
 
     @override
     def _prepare_result_json(
@@ -380,6 +415,46 @@ class SubentryManagerFlowResourceView(
         return await super().post(request, flow_id)
 
 
+@lru_cache(maxsize=1024)
+def _compile_barcode_matcher(pattern: str) -> re.Pattern[str]:
+    """Compile a barcode fnmatch pattern."""
+    # Case insensitive so manually entered barcodes match too
+    return re.compile(fnmatch.translate(pattern), re.IGNORECASE)
+
+
+async def _async_match_barcode(hass: HomeAssistant, data: str) -> list[str]:
+    """Return the domains that have a barcode matcher matching the data."""
+    return sorted(
+        {
+            matcher["domain"]
+            for matcher in await async_get_barcode(hass)
+            if _compile_barcode_matcher(matcher["data"]).match(data)
+        }
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config_entries/flow/match_barcode",
+        probatio.Required("data"): BARCODE_DATA_SCHEMA,
+    }
+)
+@websocket_api.async_response
+async def config_entries_flow_match_barcode(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the integrations that can be set up from a barcode.
+
+    No flow is started, the frontend starts one once the user picks an integration.
+    """
+    connection.send_result(
+        msg["id"], {"domains": await _async_match_barcode(hass, msg["data"])}
+    )
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({"type": "config_entries/flow/progress"})
 def config_entries_flow_progress(
@@ -397,8 +472,7 @@ def config_entries_flow_progress(
         [
             flw
             for flw in hass.config_entries.flow.async_progress()
-            if flw["context"]["source"]
-            not in (config_entries.SOURCE_RECONFIGURE, config_entries.SOURCE_USER)
+            if flw["context"]["source"] not in NON_DISCOVERED_SOURCES
         ],
     )
 
@@ -450,20 +524,13 @@ def config_entries_flow_subscribe(
         serialized_flows = [
             json_bytes({"type": None, "flow_id": flw["flow_id"], "flow": flw})
             for flw in hass.config_entries.flow.async_progress()
-            if flw["context"]["source"]
-            not in (
-                config_entries.SOURCE_RECONFIGURE,
-                config_entries.SOURCE_USER,
-            )
+            if flw["context"]["source"] not in NON_DISCOVERED_SOURCES
         ]
     except ValueError, TypeError:
         # If we can't serialize, we'll filter out unserializable flows
         serialized_flows = []
         for flw in hass.config_entries.flow.async_progress():
-            if flw["context"]["source"] in (
-                config_entries.SOURCE_RECONFIGURE,
-                config_entries.SOURCE_USER,
-            ):
+            if flw["context"]["source"] in NON_DISCOVERED_SOURCES:
                 continue
             try:
                 serialized_flows.append(

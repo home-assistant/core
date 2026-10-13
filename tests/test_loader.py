@@ -1195,6 +1195,30 @@ async def test_get_dhcp(hass: HomeAssistant) -> None:
         ]
 
 
+async def test_get_barcode(hass: HomeAssistant) -> None:
+    """Verify that custom components with barcode matchers are found."""
+    test_1_integration = loader.Integration(
+        hass,
+        "custom_components.test_1",
+        None,
+        {
+            "name": "Test 1",
+            "domain": "test_1",
+            "config_flow": True,
+            "barcode": [{"data": "8719514342620"}, {"data": "X-HM://*"}],
+        },
+    )
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {"test_1": test_1_integration}
+        barcode = await loader.async_get_barcode(hass)
+
+    assert [entry for entry in barcode if entry["domain"] == "test_1"] == [
+        {"domain": "test_1", "data": "8719514342620"},
+        {"domain": "test_1", "data": "X-HM://*"},
+    ]
+
+
 async def test_get_usb(hass: HomeAssistant) -> None:
     """Verify that custom components with usb matchers are found."""
     test_1_integration = _get_test_integration_with_usb_matcher(hass, "test_1", True)

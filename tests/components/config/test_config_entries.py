@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.barcode import BarcodeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -51,6 +52,20 @@ async def client(
     await async_setup_component(hass, "http", {})
     config_entries.async_setup(hass)
     return await hass_client()
+
+
+@pytest.fixture
+def mock_barcode_matchers() -> Generator[None]:
+    """Mock the barcode matchers from the manifests."""
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_barcode",
+        return_value=[
+            {"domain": "test", "data": "8719514342620"},
+            {"domain": "test", "data": "X-HM://*"},
+            {"domain": "other", "data": "X-HM://*"},
+        ],
+    ):
+        yield
 
 
 @pytest.fixture
@@ -559,6 +574,142 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.usefixtures("mock_barcode_matchers")
+@pytest.mark.parametrize(
+    ("barcode", "domains"),
+    [
+        pytest.param("8719514342620", ["test"], id="exact"),
+        pytest.param(" 8719514342620\n", ["test"], id="whitespace"),
+        pytest.param("X-HM://0023ABCDE1234", ["other", "test"], id="multiple"),
+        pytest.param("x-hm://0023abcde1234", ["other", "test"], id="lowercase"),
+        pytest.param("87195143426201", [], id="no_partial_match"),
+        pytest.param("4006381333931", [], id="no_match"),
+    ],
+)
+async def test_match_barcode(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    barcode: str,
+    domains: list[str],
+) -> None:
+    """Test matching a barcode to integrations without starting a flow."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "config_entries/flow/match_barcode", "data": barcode}
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"domains": domains}
+    assert hass.config_entries.flow.async_progress() == []
+
+
+async def test_match_barcode_unauth(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test non admins can't match barcodes."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    hass_admin_user.groups = []
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "config_entries/flow/match_barcode", "data": "8719514342620"}
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.usefixtures("mock_barcode_matchers")
+@pytest.mark.parametrize(
+    ("barcode", "expected"),
+    [
+        pytest.param(
+            {"data": "X-HM://0023ABCDE1234", "format": "qr_code"},
+            BarcodeServiceInfo(data="X-HM://0023ABCDE1234", format="qr_code"),
+            id="scanned",
+        ),
+        pytest.param(
+            {"data": " 8719514342620 "},
+            BarcodeServiceInfo(data="8719514342620", format=None),
+            id="manual",
+        ),
+    ],
+)
+async def test_initialize_barcode_flow(
+    hass: HomeAssistant,
+    client: TestClient,
+    barcode: dict[str, str],
+    expected: BarcodeServiceInfo,
+) -> None:
+    """Test we can initialize a flow from a barcode."""
+    mock_platform(hass, "test.config_flow", None)
+    received: list[BarcodeServiceInfo] = []
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_barcode(
+            self, discovery_info: BarcodeServiceInfo
+        ) -> ConfigFlowResult:
+            received.append(discovery_info)
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="confirm")
+
+    with mock_config_flow("test", TestFlow):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "barcode": barcode},
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["step_id"] == "confirm"
+    assert received == [expected]
+    flow = hass.config_entries.flow.async_get(data["flow_id"])
+    assert flow["context"]["source"] == core_ce.SOURCE_BARCODE
+
+
+@pytest.mark.usefixtures("mock_barcode_matchers")
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(
+            {"handler": "test", "barcode": {"data": "4006381333931"}},
+            id="no_match",
+        ),
+        pytest.param(
+            {"handler": "test", "barcode": {"data": "   "}},
+            id="empty",
+        ),
+        pytest.param(
+            {
+                "handler": "test",
+                "entry_id": "1234",
+                "barcode": {"data": "8719514342620"},
+            },
+            id="with_entry_id",
+        ),
+    ],
+)
+async def test_initialize_barcode_flow_invalid(
+    hass: HomeAssistant, client: TestClient, payload: dict[str, Any]
+) -> None:
+    """Test a barcode flow is not started for an invalid barcode."""
+    mock_platform(hass, "test.config_flow", None)
+
+    with mock_config_flow("test", core_ce.ConfigFlow):
+        resp = await client.post("/api/config/config_entries/flow", json=payload)
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert hass.config_entries.flow.async_progress() == []
+
+
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
@@ -836,11 +987,16 @@ async def test_get_progress_index(
         form_user = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
+        form_barcode = await hass.config_entries.flow.async_init(
+            "test",
+            context={"source": core_ce.SOURCE_BARCODE},
+            data=BarcodeServiceInfo(data="8719514342620"),
+        )
         form_reconfigure = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
         )
 
-    for form in (form_hassio, form_user, form_reconfigure):
+    for form in (form_hassio, form_user, form_barcode, form_reconfigure):
         assert form["type"] is data_entry_flow.FlowResultType.FORM
         assert form["step_id"] == "account"
 
@@ -849,7 +1005,8 @@ async def test_get_progress_index(
 
     assert response["success"]
 
-    # Active flows with SOURCE_USER and SOURCE_RECONFIGURE should be filtered out
+    # Active flows with SOURCE_USER, SOURCE_BARCODE and SOURCE_RECONFIGURE
+    # should be filtered out
     assert response["result"] == [
         {
             "flow_id": form_hassio["flow_id"],

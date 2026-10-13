@@ -95,6 +95,7 @@ from .util.enum import try_parse_enum
 
 if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
+    from .helpers.service_info.barcode import BarcodeServiceInfo
     from .helpers.service_info.dhcp import DhcpServiceInfo
     from .helpers.service_info.hassio import HassioServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
@@ -105,6 +106,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SOURCE_BARCODE = "barcode"
 SOURCE_BLUETOOTH = "bluetooth"
 SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
@@ -204,6 +206,9 @@ DISCOVERY_SOURCES = {
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
+
+# Flows started by an explicit user action, these are not shown as discovered
+USER_INITIATED_SOURCES = {SOURCE_BARCODE, SOURCE_USER}
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
@@ -1656,7 +1661,7 @@ class ConfigEntriesFlowManager(
                 self.config_entries.async_has_entries(handler, include_ignore=False)
                 or (
                     self.config_entries.async_has_entries(handler, include_ignore=True)
-                    and source != SOURCE_USER
+                    and source not in USER_INITIATED_SOURCES
                 )
             )
             and await _support_single_config_entry_only(self.hass, handler)
@@ -3388,7 +3393,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             # just discovered the unique id so we know its online
             should_reload = True
         # Allow ignored entries to be configured on manual user step
-        if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
+        if entry.source == SOURCE_IGNORE and self.source in USER_INITIATED_SOURCES:
             return
         if should_reload:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
@@ -3448,7 +3453,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """
         return self.hass.config_entries.async_entries(
             self.handler,
-            include_ignore or (include_ignore is None and self.source != SOURCE_USER),
+            include_ignore
+            or (include_ignore is None and self.source not in USER_INITIATED_SOURCES),
         )
 
     @callback
@@ -3543,6 +3549,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
+
+    async def async_step_barcode(
+        self, discovery_info: BarcodeServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user scanning a barcode."""
+        return await self.async_step_user()
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak

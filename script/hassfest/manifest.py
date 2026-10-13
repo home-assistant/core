@@ -3,6 +3,7 @@
 from enum import StrEnum, auto
 import json
 from pathlib import Path
+import re
 import subprocess
 from typing import Any
 from urllib.parse import urlparse
@@ -202,6 +203,20 @@ def verify_wildcard(value: str) -> str:
     return value
 
 
+BARCODE_MIN_PREFIX_LENGTH = 3
+
+
+def verify_barcode_prefix(value: str) -> str:
+    """Verify a barcode matcher is not so broad it claims unrelated barcodes."""
+    prefix = re.split(r"[*?\[]", value, maxsplit=1)[0]
+    if len(prefix) < BARCODE_MIN_PREFIX_LENGTH:
+        raise probatio.Invalid(
+            f"'{value}' needs at least {BARCODE_MIN_PREFIX_LENGTH} characters "
+            "before the first wildcard"
+        )
+    return value
+
+
 INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
     {
         probatio.Required("domain"): str,
@@ -296,6 +311,13 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
                         str, verify_lowercase
                     ),
                     probatio.Optional("known_devices"): [str],
+                }
+            )
+        ],
+        probatio.Optional("barcode"): [
+            probatio.Schema(
+                {
+                    probatio.Required("data"): probatio.All(str, verify_barcode_prefix),
                 }
             )
         ],

@@ -1,6 +1,7 @@
 {
   "domain": "hue",
   "name": "Philips Hue",
+  "barcode": [{ "data": "8719514342620" }, { "data": "87115604*" }],
   "codeowners": ["@marcelveldt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",

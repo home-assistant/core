@@ -53,6 +53,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.barcode import BarcodeServiceInfo
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -4990,8 +4991,22 @@ async def test_unique_id_ignore(
     assert entry.discovery_keys == expected_entry_discovery_keys
 
 
+USER_INITIATED_FLOWS = [
+    pytest.param(config_entries.SOURCE_USER, None, id="user"),
+    pytest.param(
+        config_entries.SOURCE_BARCODE,
+        BarcodeServiceInfo(data="8719514342620"),
+        id="barcode",
+    ),
+]
+
+
+@pytest.mark.parametrize(("source", "discovery_info"), USER_INITIATED_FLOWS)
 async def test_manual_add_overrides_ignored_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    discovery_info: BarcodeServiceInfo | None,
 ) -> None:
     """Test that we can ignore manually add entry, overriding ignored entry."""
     hass.config.components.add("comp")
@@ -5033,7 +5048,7 @@ async def test_manual_add_overrides_ignored_entry(
         ) as async_reload,
     ):
         result = await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}
+            "comp", context={"source": source}, data=discovery_info
         )
         await hass.async_block_till_done()
 
@@ -5043,8 +5058,12 @@ async def test_manual_add_overrides_ignored_entry(
     assert len(async_reload.mock_calls) == 0
 
 
+@pytest.mark.parametrize(("source", "discovery_info"), USER_INITIATED_FLOWS)
 async def test_manual_add_overrides_ignored_entry_singleton(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    discovery_info: BarcodeServiceInfo | None,
 ) -> None:
     """Test that we can ignore manually add entry, overriding ignored entry."""
     hass.config.components.add("comp")
@@ -5073,7 +5092,7 @@ async def test_manual_add_overrides_ignored_entry_singleton(
 
     with mock_config_flow("comp", TestFlow), mock_config_flow("invalid_flow", 5):
         await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}
+            "comp", context={"source": source}, data=discovery_info
         )
         await hass.async_block_till_done()
 
@@ -8921,6 +8940,11 @@ async def test_starting_config_flow_on_single_config_entry(
         (
             {"source": config_entries.SOURCE_USER},
             None,
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+        (
+            {"source": config_entries.SOURCE_BARCODE},
+            BarcodeServiceInfo(data="8719514342620"),
             {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
         ),
         (
