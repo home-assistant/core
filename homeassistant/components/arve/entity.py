@@ -44,7 +44,7 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
     @override
     def available(self) -> bool:
         """Check if device is available."""
-        return super()._attr_available and (
+        return super().available and (
             self.device_serial_number in self.coordinator.data
         )
 

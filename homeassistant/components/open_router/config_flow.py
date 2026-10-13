@@ -33,6 +33,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
@@ -46,7 +47,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     @classmethod
     @callback
@@ -276,10 +277,12 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
+            model = self.models[user_input[CONF_MODEL]]
+            user_input[CONF_OUTPUT_MODALITIES] = [
+                str(modality) for modality in model.architecture.output_modalities
+            ]
             if self._is_new:
-                return self.async_create_entry(
-                    title=self.models[user_input[CONF_MODEL]].name, data=user_input
-                )
+                return self.async_create_entry(title=model.name, data=user_input)
             return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),

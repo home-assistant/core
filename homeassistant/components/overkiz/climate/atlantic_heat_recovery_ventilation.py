@@ -45,7 +45,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_hvac_modes = [HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
@@ -65,7 +65,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(

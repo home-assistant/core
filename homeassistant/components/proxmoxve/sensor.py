@@ -138,7 +138,6 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
-        translation_key="node_uptime",
         value_fn=(
             lambda data: (
                 (dt_util.utcnow() - timedelta(seconds=data.node["uptime"]))
@@ -240,7 +239,6 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
-        translation_key="vm_uptime",
         value_fn=(
             lambda data: (
                 (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
@@ -360,7 +358,6 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
-        translation_key="container_uptime",
         value_fn=(
             lambda data: (
                 (dt_util.utcnow() - timedelta(seconds=data["uptime"]))

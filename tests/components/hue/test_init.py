@@ -152,6 +152,54 @@ async def test_fixing_unique_id_other_correct(
     assert hass.config_entries.async_entries() == [correct_entry]
 
 
+async def test_fixing_unique_id_other_correct_setup_error(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
+    """Test setup error reason when another entry has the correct ID."""
+    MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        unique_id="mock-id",
+        minor_version=2,
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        unique_id="invalid-id",
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == (
+        "Another entry already exists for this Hue bridge, this entry will be removed"
+    )
+    mock_remove.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_bridge_initialization_failed(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
+    """Test setup fails when the bridge can't be initialized."""
+    mock_bridge_setup.async_initialize_bridge.return_value = False
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to set up the Hue bridge at 0.0.0.0"
+
+
 async def test_security_vuln_check(hass: HomeAssistant) -> None:
     """Test that we report security vulnerabilities."""
     entry = MockConfigEntry(

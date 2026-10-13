@@ -36,6 +36,14 @@ from .helpers import kelvin_to_255, kelvin_to_255_reverse, wled_exception_handle
 
 PARALLEL_UPDATES = 1
 
+# The light capabilities firmware sets. Any other bit, like manual white,
+# doesn't change which colors a segment can do.
+_COLOR_CAPABILITIES = (
+    LightCapability.RGB_COLOR
+    | LightCapability.WHITE_CHANNEL
+    | LightCapability.COLOR_TEMPERATURE
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -143,12 +151,7 @@ def _has_warm_and_cold_white(device: WLEDDevice, segment: int) -> bool:
     capabilities = device.state.segments[segment].light_capabilities
     if (
         capabilities is None
-        or (
-            LightCapability.RGB_COLOR
-            | LightCapability.WHITE_CHANNEL
-            | LightCapability.COLOR_TEMPERATURE
-        )
-        not in capabilities
+        or _COLOR_CAPABILITIES not in capabilities
         or device.led_config is None
         or device.led_config.cct_from_rgb
     ):
@@ -193,7 +196,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if (
             capabilities := coordinator.data.state.segments[segment].light_capabilities
         ) is not None and (
-            color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(capabilities)
+            color_modes := LIGHT_CAPABILITIES_COLOR_MODE_MAPPING.get(
+                capabilities & _COLOR_CAPABILITIES
+            )
         ) is not None:
             # With separate warm and cold white, the white channel holds both.
             if _has_warm_and_cold_white(coordinator.data, segment):

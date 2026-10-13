@@ -70,12 +70,10 @@ STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
 
 
 async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
-    """Connect to the inverter and read its identity, or raise."""
+    """Connect to the inverter and identify it, or raise."""
     params = create_modbus_params(data)
     async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
-        device = await SofarInverter.async_detect(unit)
-        await device.async_update()
-    return device
+        return await SofarInverter.async_detect(unit)
 
 
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
