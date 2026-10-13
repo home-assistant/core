@@ -12,7 +12,7 @@ from .models import EufyLifeConfigEntry, EufyLifeData
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EufyLifeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EufyLifeConfigEntry) -> None:
     """Set up EufyLife device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -52,9 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EufyLifeConfigEntry) -> 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EufyLifeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EufyLifeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

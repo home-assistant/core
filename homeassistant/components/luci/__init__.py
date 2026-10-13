@@ -42,7 +42,7 @@ def _connect(
     return router
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> None:
     """Set up OpenWrt (luci) from a config entry."""
     try:
         router = await hass.async_add_executor_job(
@@ -88,8 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 def _legacy_issue_id(entry: LuciConfigEntry) -> str:
     """Return the issue ID, scoped per entry so routers don't clobber each other."""
@@ -134,6 +132,6 @@ async def _async_check_legacy_known_devices(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
