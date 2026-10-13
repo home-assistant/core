@@ -32,9 +32,9 @@ async def test_setup_and_unload_entry(
     mock_qube_client.close.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_qube_client")
 async def test_device_info(
     hass: HomeAssistant,
-    mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
