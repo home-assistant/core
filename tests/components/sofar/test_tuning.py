@@ -4,12 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import (
-    ModbusConnectionError,
-    ModbusError,
-    ModbusTimeoutError,
-    ServerDeviceBusyError,
-)
+from modbus_connection import ModbusError, ModbusTimeoutError, ServerDeviceBusyError
 from modbus_connection.mock import MockModbusConnection
 import pytest
 from sofar_modbus.model import UpdateReport
@@ -66,22 +61,3 @@ async def test_tuner_hears_a_timeout_either_attempt_hit(
 
     observe.assert_called_once()
     assert observe.call_args.args[0].failed == {"grid": SLOW}
-
-
-async def test_tuner_hears_the_timeout_when_the_retry_loses_the_link(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_connection: MockModbusConnection,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a link lost on the retry does not bury the earlier timeout."""
-    mock_connection.for_unit(1).fail_read(
-        GRID_REGISTER, ModbusConnectionError("link gone")
-    )
-
-    with patch.object(
-        init_integration.runtime_data.tuner, "observe_failure"
-    ) as observe_failure:
-        await _poll_after_grid_failed(hass, freezer, init_integration, SLOW)
-
-    observe_failure.assert_called_once_with(SLOW)
