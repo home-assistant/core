@@ -1663,6 +1663,18 @@ async def test_reauth_issue_flow_aborted(
     assert len(issue_registry.issues) == 0
 
 
+async def test_reauth_issue_removed_with_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the reauth issue is deleted when its config entry is removed."""
+    issue = await _test_reauth_issue(hass, manager, issue_registry)
+
+    await manager.async_remove(issue.config_entry_id)
+    assert len(issue_registry.issues) == 0
+
+
 async def _test_reauth_issue(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -1690,6 +1702,7 @@ async def _test_reauth_issue(
     assert issue == ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
+        config_entry_id=entry.entry_id,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,
@@ -11624,6 +11637,19 @@ async def test_orphaned_ignored_entries(
         "domain": "ghost_orphan_domain",
         "entry_id": entry.entry_id,
     }
+    assert issue.config_entry_id == entry.entry_id
+
+    # The issue is removed with the entry, also when it has been ignored
+    issue_registry.async_ignore(
+        HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}", True
+    )
+    await manager.async_remove(entry.entry_id)
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_orphaned_ignored_entries_existing_integration(
