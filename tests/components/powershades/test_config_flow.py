@@ -42,12 +42,13 @@ async def test_manual_flow_success(
         "name": "Bedroom Shade",
         "model": 1,
     }
+    assert result["result"].unique_id == "12345"
 
 
 async def test_manual_flow_cannot_connect(
-    hass: HomeAssistant, mock_discover_devices
+    hass: HomeAssistant, mock_discover_devices, mock_device_info, mock_setup_entry
 ) -> None:
-    """The device does not respond to the probe."""
+    """The device does not respond to the probe, then does on retry."""
     with patch(
         "homeassistant.components.powershades.config_flow.async_get_device_info",
         side_effect=PowerShadesTimeoutError,
@@ -63,11 +64,18 @@ async def test_manual_flow_cannot_connect(
     assert result["step_id"] == "manual"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_IP}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "12345"
+
 
 async def test_manual_flow_invalid_ip(
-    hass: HomeAssistant, mock_discover_devices
+    hass: HomeAssistant, mock_discover_devices, mock_device_info, mock_setup_entry
 ) -> None:
-    """An invalid IPv4 address is rejected before probing the device."""
+    """An invalid IPv4 address is rejected unprobed, then a valid one works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -78,6 +86,14 @@ async def test_manual_flow_invalid_ip(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert result["errors"] == {CONF_HOST: "invalid_ip"}
+    mock_device_info.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_IP}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "12345"
 
 
 async def test_manual_flow_duplicate(
@@ -124,6 +140,7 @@ async def test_discovery_pick_device(
     assert result["title"] == "PowerShade Bedroom Shade"
     assert result["data"][CONF_HOST] == TEST_IP
     assert result["data"]["serial"] == 12345
+    assert result["result"].unique_id == "12345"
 
 
 async def test_discovery_hides_already_configured_devices(
@@ -219,6 +236,7 @@ async def test_integration_discovery_probes_for_name(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["name"] == "Bedroom Shade"
     assert result["data"]["model"] == 1
+    assert result["result"].unique_id == "12345"
 
 
 async def test_integration_discovery_probe_timeout(
@@ -272,6 +290,7 @@ async def test_dhcp_discovery(
         "mac": "d8:3a:f5:11:22:33",
         "model": 1,
     }
+    assert result["result"].unique_id == "12345"
 
 
 async def test_background_discovery_already_configured(
