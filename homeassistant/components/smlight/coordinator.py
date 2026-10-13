@@ -147,7 +147,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except SmlightAuthError as err:
             raise ConfigEntryAuthFailed from err
 
-        except (SmlightConnectionError, TimeoutError) as err:
+        except SmlightConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_device",

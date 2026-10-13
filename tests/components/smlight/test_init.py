@@ -262,6 +262,7 @@ async def test_local_read_times_out_and_retries(
         await hass.async_block_till_done()
 
     assert coordinator.update_interval == timedelta(seconds=30)
+    assert isinstance(coordinator.last_exception, TimeoutError)
     assert (
         hass.states.get("sensor.mock_title_core_chip_temp").state == STATE_UNAVAILABLE
     )
