@@ -30,12 +30,16 @@ def _get_auth_state(
     hass: HomeAssistant, entry: PowerfoxConfigEntry
 ) -> PowerfoxAuthState:
     """Keep authentication investigation state across setup retries."""
+    # Preserve authentication state across failed setup attempts.
+    # pylint: disable-next=home-assistant-use-runtime-data
     states: dict[str, PowerfoxAuthState] = hass.data.setdefault(DOMAIN, {})
     return states.setdefault(entry.entry_id, PowerfoxAuthState())
 
 
 def reset_auth_state(hass: HomeAssistant, entry_id: str) -> None:
     """Reset authentication investigation after credentials are validated."""
+    # Preserve authentication state across failed setup attempts.
+    # pylint: disable-next=home-assistant-use-runtime-data
     states: dict[str, PowerfoxAuthState] = hass.data.get(DOMAIN, {})
     if state := states.get(entry_id):
         state.record_success()
@@ -108,5 +112,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) ->
 
 async def async_remove_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
     """Remove the shared authentication state when an entry is deleted."""
+    # Preserve authentication state across failed setup attempts.
+    # pylint: disable-next=home-assistant-use-runtime-data
     states: dict[str, PowerfoxAuthState] = hass.data.get(DOMAIN, {})
     states.pop(entry.entry_id, None)

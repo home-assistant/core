@@ -250,7 +250,9 @@ async def test_authentication_investigation_resets_on_success(
     auth_state = coordinators[0].auth_state
 
     original_device_side_effect = mock_powerfox_client.device.side_effect
+    original_report_side_effect = mock_powerfox_client.report.side_effect
     mock_powerfox_client.device.side_effect = PowerfoxAuthenticationError
+    mock_powerfox_client.report.side_effect = PowerfoxAuthenticationError
 
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
@@ -260,6 +262,7 @@ async def test_authentication_investigation_resets_on_success(
 
     # Restore the original device responses from the test fixture.
     mock_powerfox_client.device.side_effect = original_device_side_effect
+    mock_powerfox_client.report.side_effect = original_report_side_effect
 
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
