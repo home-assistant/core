@@ -42,12 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     client = Api2(host=entry.data[CONF_HOST], session=async_get_clientsession(hass))
 
     data_coordinator = SmDataUpdateCoordinator(hass, entry, client)
-    firmware_coordinator = SmFirmwareUpdateCoordinator(hass, entry, client)
-
     await data_coordinator.async_config_entry_first_refresh()
-    await firmware_coordinator.async_config_entry_first_refresh()
 
     info = data_coordinator.data.info
+    firmware_coordinator = SmFirmwareUpdateCoordinator(hass, entry, client, info)
 
     if info.legacy_api < 2:
         entry.async_create_background_task(
@@ -65,6 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if info.legacy_api != 2:
+        entry.async_create_background_task(
+            hass, firmware_coordinator.async_refresh(), "smlight-firmware-catalog"
+        )
     return True
 
 

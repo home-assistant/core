@@ -1,8 +1,10 @@
 """DataUpdateCoordinator for Smlight."""
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, override
 
 from pysmlight import Api2, Info, Sensors
@@ -30,6 +32,8 @@ from .const import (
     SCAN_FIRMWARE_INTERVAL,
     SCAN_INTERVAL,
 )
+
+REQUEST_TIMEOUT = 15
 
 
 @dataclass(kw_only=True)
@@ -91,9 +95,16 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.client = client
         self.unique_id: str | None = None
         self.legacy_api: int = 0
+        self._poll_interval = SCAN_INTERVAL
+        self._retry_interval = timedelta(seconds=30)
 
     @override
     async def _async_setup(self) -> None:
+        """Bound authentication and device identification reads."""
+        async with asyncio.timeout(REQUEST_TIMEOUT):
+            await self._async_authenticate()
+
+    async def _async_authenticate(self) -> None:
         """Authenticate if needed during initial setup."""
         if await self.client.check_auth_needed():
             if (
@@ -129,17 +140,22 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     @override
     async def _async_update_data(self) -> _DataT:
+        self.update_interval = self._retry_interval
         try:
-            return await self._internal_update_data()
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                data = await self._internal_update_data()
         except SmlightAuthError as err:
             raise ConfigEntryAuthFailed from err
 
-        except SmlightConnectionError as err:
+        except (SmlightConnectionError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_device",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        self.update_interval = self._poll_interval
+        return data
 
     @abstractmethod
     async def _internal_update_data(self) -> _DataT:
@@ -204,42 +220,44 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     """Class to manage fetching SMLIGHT firmware update data from cloud."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: SmConfigEntry, client: Api2
+        self, hass: HomeAssistant, config_entry: SmConfigEntry, client: Api2, info: Info
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the coordinator from fresh local device information."""
         super().__init__(hass, config_entry, client)
 
-        self.update_interval = SCAN_FIRMWARE_INTERVAL
+        self.unique_id = format_mac(info.MAC)
+        self.legacy_api = info.legacy_api
+        self.data = SmFwData(info=info, esp_firmware=None, zb_firmware=[])
+        self.last_update_success = False
+        self._poll_interval = self.update_interval = SCAN_FIRMWARE_INTERVAL
+        self._retry_interval = timedelta(minutes=5)
         # only one update can run at a time (core or zibgee)
         self.in_progress = False
+
+    @override
+    async def _async_setup(self) -> None:
+        """The shared client is already authenticated by local setup."""
 
     @override
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
         assert info.radios is not None
-        esp_firmware = None
-        zb_firmware: list[FirmwareList] = []
-
-        try:
-            esp_firmware = await self.client.get_firmware_version(
-                info.fw_channel, device=info.model
+        esp_firmware = await self.client.get_firmware_version(
+            info.fw_channel, device=info.model
+        )
+        zb_firmware = [
+            await self.client.get_firmware_version(
+                info.fw_channel,
+                device=info.model,
+                mode="zigbee",
+                zb_type=radio.zb_type,
+                idx=idx,
             )
-            zb_firmware.extend(
-                [
-                    await self.client.get_firmware_version(
-                        info.fw_channel,
-                        device=info.model,
-                        mode="zigbee",
-                        zb_type=r.zb_type,
-                        idx=idx,
-                    )
-                    for idx, r in enumerate(info.radios)
-                ]
-            )
-
-        except SmlightConnectionError as err:
-            self.async_set_update_error(err)
+            if radio.zb_type != -1
+            else None
+            for idx, radio in enumerate(info.radios)
+        ]
 
         return SmFwData(
             info=info,
