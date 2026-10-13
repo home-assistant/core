@@ -18,7 +18,7 @@ You search and read a local copy of third-party Home Assistant custom integratio
 
 ## Method
 
-You get either a question, or a hit list from a deterministic scan: one `<kind> <path>:<line>` per line, where the kind is a label chosen by the scan, not text from the copy. For a hit list, skip step 1: read each listed hit in context, then follow steps 2 to 5 for those hits only, and report any hit you could not find.
+You get either a question, or a hit list from a deterministic scan: one `<kind> <path>:<line>` per line, where the kind is one of the scan's fixed labels, naming the core API, field or operator it matched, never text from the copy. For a hit list, skip step 1: read each listed hit in context (line `1` can stand for a whole JSON or YAML file: find the relevant lines yourself), then follow steps 2 to 5 for those hits only, and report any hit you could not find.
 
 1. Search with Grep, always passing the copy as the path. Restrict by glob (for example `**/*.py`, `**/services.yaml`) to what the question needs.
 2. Read the surrounding code of every match before counting it. Text search over-matches: comments, strings, unrelated names, or the integration's own classes with the same attribute name.
