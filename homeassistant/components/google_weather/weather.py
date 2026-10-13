@@ -6,6 +6,7 @@ from google_weather_api import (
     DailyForecastResponse,
     GoogleWeatherApiError,
     HourlyForecastResponse,
+    PrecipitationSegment,
     WeatherCondition,
 )
 
@@ -128,6 +129,32 @@ def _get_condition(
     return cond
 
 
+# Values exposed in the get_minute_forecast action response. The API's enum names
+# stay out of the response so that a change on Google's side cannot break automations.
+_PRECIPITATION_TYPE_MAP: dict[
+    PrecipitationSegment.DominantPrecipitationType, str | None
+] = {
+    PrecipitationSegment.DominantPrecipitationType.DOMINANT_PRECIPITATION_TYPE_UNSPECIFIED: None,
+    PrecipitationSegment.DominantPrecipitationType.NONE: "none",
+    PrecipitationSegment.DominantPrecipitationType.RAIN: "rain",
+    PrecipitationSegment.DominantPrecipitationType.SNOW: "snow",
+    PrecipitationSegment.DominantPrecipitationType.HAIL: "hail",
+}
+
+_PRECIPITATION_INTENSITY_MAP: dict[
+    PrecipitationSegment.PrecipitationIntensity, str | None
+] = {
+    PrecipitationSegment.PrecipitationIntensity.PRECIPITATION_INTENSITY_UNSPECIFIED: None,
+    PrecipitationSegment.PrecipitationIntensity.NO_INTENSITY: "none",
+    PrecipitationSegment.PrecipitationIntensity.LIGHT: "light",
+    PrecipitationSegment.PrecipitationIntensity.MID_LIGHT: "mid_light",
+    PrecipitationSegment.PrecipitationIntensity.MODERATE: "moderate",
+    PrecipitationSegment.PrecipitationIntensity.MID_MODERATE: "mid_moderate",
+    PrecipitationSegment.PrecipitationIntensity.HEAVY: "heavy",
+    PrecipitationSegment.PrecipitationIntensity.MID_HEAVY: "mid_heavy",
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GoogleWeatherConfigEntry,
@@ -197,7 +224,7 @@ class GoogleWeatherEntity(
         self._longitude: float = subentry.data[CONF_LONGITUDE]
 
     async def async_get_minute_forecast(self) -> dict[str, Any]:
-        """Return the precipitation nowcast for the next 6 hours."""
+        """Return the precipitation nowcast for up to the next 6 hours."""
         try:
             response = await self._api.async_get_minute_forecast(
                 self._latitude, self._longitude
@@ -208,7 +235,28 @@ class GoogleWeatherEntity(
                 translation_key="minute_forecast_error",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return response.to_dict()
+        return {
+            "start_time": response.overall_prediction_timeframe.start_time,
+            "end_time": response.overall_prediction_timeframe.end_time,
+            "segments": [
+                {
+                    "start_time": segment.time_frame.start_time,
+                    "end_time": segment.time_frame.end_time,
+                    "precipitation_type": _PRECIPITATION_TYPE_MAP[segment.type],
+                    "precipitation_probability": segment.probability,
+                    "precipitation": (
+                        segment.qpf.quantity if segment.qpf is not None else None
+                    ),
+                    "snowfall": (
+                        segment.snowfall_amount.quantity
+                        if segment.snowfall_amount is not None
+                        else None
+                    ),
+                    "intensity": _PRECIPITATION_INTENSITY_MAP[segment.intensity],
+                }
+                for segment in response.segments
+            ],
+        }
 
     @property
     @override

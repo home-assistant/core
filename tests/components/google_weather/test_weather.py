@@ -4,13 +4,19 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from google_weather_api import GoogleWeatherApiError, WeatherCondition
+from google_weather_api import (
+    GoogleWeatherApiError,
+    PrecipitationSegment,
+    WeatherCondition,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.components.google_weather.weather import (
     _CONDITION_MAP,
+    _PRECIPITATION_INTENSITY_MAP,
+    _PRECIPITATION_TYPE_MAP,
     SERVICE_GET_MINUTE_FORECAST,
 )
 from homeassistant.components.homeassistant import (
@@ -152,6 +158,14 @@ def test_all_conditions_mapped() -> None:
         assert condition_type in _CONDITION_MAP
 
 
+def test_all_precipitation_segment_values_mapped() -> None:
+    """Ensure every precipitation type and intensity has a response value."""
+    for precipitation_type in PrecipitationSegment.DominantPrecipitationType:
+        assert precipitation_type in _PRECIPITATION_TYPE_MAP
+    for intensity in PrecipitationSegment.PrecipitationIntensity:
+        assert intensity in _PRECIPITATION_INTENSITY_MAP
+
+
 @pytest.mark.parametrize(("forecast_type"), ["daily", "hourly", "twice_daily"])
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -225,6 +239,7 @@ async def test_forecast_subscription(
 async def test_minute_forecast_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
     mock_google_weather_api: AsyncMock,
 ) -> None:
     """Test the get_minute_forecast service."""
@@ -240,13 +255,7 @@ async def test_minute_forecast_service(
     mock_google_weather_api.async_get_minute_forecast.assert_awaited_once_with(
         latitude=10.1, longitude=20.1
     )
-    result = response["weather.home"]
-    assert result["timeZone"]["id"] == "America/New_York"
-    assert len(result["segments"]) == 2
-    assert result["segments"][0]["type"] == "RAIN"
-    assert result["segments"][0]["probability"] == 62
-    assert result["segments"][0]["intensity"] == "MODERATE"
-    assert result["segments"][1]["type"] == "NONE"
+    assert response == snapshot
 
 
 async def test_minute_forecast_service_error(
