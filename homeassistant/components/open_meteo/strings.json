@@ -8,6 +8,15 @@
       "zone_not_found": "The selected zone does not exist."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "zone": "[%key:component::open_meteo::config::step::user::data::zone%]"
+        },
+        "data_description": {
+          "zone": "[%key:component::open_meteo::config::step::user::data_description::zone%]"
+        },
+        "description": "Update the zone used for weather forecasting"
+      },
       "user": {
         "data": {
           "zone": "Zone"
