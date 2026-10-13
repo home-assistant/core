@@ -20,6 +20,7 @@ from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -95,22 +96,35 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return await self.async_step_code()
 
+        data_schema = probatio.Schema(
+            {
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
+                    SelectSelectorConfig(
+                        options=REGION_OPTIONS,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="region",
+                    )
+                ),
+            }
+        )
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                {CONF_USERNAME: entry.data[CONF_USERNAME]},
+            )
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
-                        SelectSelectorConfig(
-                            options=REGION_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="region",
-                        )
-                    ),
-                }
-            ),
+            data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        return await self.async_step_user(user_input)
 
     async def async_step_custom_url(
         self, user_input: dict[str, Any] | None = None
@@ -201,6 +215,17 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                     reauth_entry = self._get_reauth_entry()
                     return self.async_update_reload_and_abort(
                         reauth_entry, data_updates={CONF_USER_DATA: user_data.as_dict()}
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch(reason="wrong_account")
+                    reconfigure_entry = self._get_reconfigure_entry()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={
+                            CONF_USER_DATA: user_data.as_dict(),
+                            CONF_USERNAME: self._username,
+                            CONF_BASE_URL: await self._client.base_url,
+                        },
                     )
                 self._abort_if_unique_id_configured(error="already_configured_account")
                 return await self._create_entry(self._client, self._username, user_data)
