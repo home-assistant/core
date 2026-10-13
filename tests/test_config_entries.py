@@ -23,6 +23,7 @@ from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -4051,6 +4052,77 @@ async def test_entry_disable_succeed(
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_entry_disable_entity_state(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity state is removed while an entry is disabled."""
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        return await hass.config_entries.async_unload_platforms(entry, ["light"])
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        async_add_entities([MockEntity(unique_id="1234", name="Test Entity")])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_manager(manager)
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id("light", "test", "1234")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+    assert hass.states.get(entity_id) is None
+
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_entry_disable_without_reload_support(
@@ -11647,6 +11719,63 @@ async def test_orphaned_ignored_entries_safe_recovery_mode(
         )
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("unload_result", "state", "translation_domain", "translation_key"),
+    [
+        pytest.param(
+            True, config_entries.ConfigEntryState.NOT_LOADED, None, None, id="ok"
+        ),
+        pytest.param(
+            False,
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            HOMEASSISTANT_DOMAIN,
+            "unload_platforms_failed",
+            id="failed",
+        ),
+    ],
+)
+async def test_unload_platforms_or_raise(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unload_result: bool,
+    state: config_entries.ConfigEntryState,
+    translation_domain: str | None,
+    translation_key: str | None,
+) -> None:
+    """Test async_unload_platforms_or_raise sets the unload state."""
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Mock unloading an entry."""
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=mock_unload_entry,
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    await manager.async_setup(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    with patch.object(
+        manager, "async_forward_entry_unload", return_value=unload_result
+    ) as mock_forward_unload:
+        await manager.async_unload(entry.entry_id)
+
+    mock_forward_unload.assert_called_once_with(entry, "light")
+    assert entry.state is state
+    assert entry.error_reason_translation_domain == translation_domain
+    assert entry.error_reason_translation_key == translation_key
 
 
 async def test_remove_subentry_cleans_registries_before_update_listener(
