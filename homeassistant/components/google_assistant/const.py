@@ -36,6 +36,8 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "google_assistant"
 
@@ -54,7 +56,7 @@ CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
 CONF_SERVICE_ACCOUNT = "service_account"
 
-DATA_CONFIG = "config"
+DATA_CONFIG: HassKey[ConfigType] = HassKey(DOMAIN)
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -221,7 +223,10 @@ CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+STORE_ENTITY_SETTINGS_VERSION = "entity_settings_version"
 STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
+
+ENTITY_SETTINGS_VERSION = 2
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"

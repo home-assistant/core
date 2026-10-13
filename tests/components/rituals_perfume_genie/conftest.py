@@ -24,20 +24,19 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_rituals_account() -> Generator[AsyncMock]:
-    """Mock Rituals Account."""
+def mock_rituals_client() -> Generator[AsyncMock]:
+    """Mock the Rituals Perfume Genie client."""
     with (
         patch(
-            "homeassistant.components.rituals_perfume_genie.config_flow.Account",
+            "homeassistant.components.rituals_perfume_genie.config_flow.RitualsGenie",
             autospec=True,
-        ) as mock_account_cls,
+        ) as mock_client_cls,
         patch(
-            "homeassistant.components.rituals_perfume_genie.Account",
-            new=mock_account_cls,
+            "homeassistant.components.rituals_perfume_genie.RitualsGenie",
+            new=mock_client_cls,
         ),
     ):
-        mock_account = mock_account_cls.return_value
-        yield mock_account
+        yield mock_client_cls.return_value
 
 
 @pytest.fixture

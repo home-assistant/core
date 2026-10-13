@@ -36,7 +36,7 @@ CONF_2FA_CHANNEL = "two_fa_channel"
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): probatio.In(
             COUNTRY_CODES
         ),

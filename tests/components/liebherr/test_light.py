@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import Device, DeviceState, DeviceType, PresentationLightControl
-from pyliebherrhomeapi.exceptions import LiebherrConnectionError
+from pyliebherrhomeapi.exceptions import LiebherrServerError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -122,10 +122,10 @@ async def test_light_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
 ) -> None:
-    """Test light fails gracefully on connection error."""
+    """Test light fails gracefully on a library error."""
     entity_id = "light.test_fridge_presentation_light"
-    mock_liebherr_client.set_presentation_light.side_effect = LiebherrConnectionError(
-        "Connection failed"
+    mock_liebherr_client.set_presentation_light.side_effect = LiebherrServerError(
+        "Server error"
     )
 
     with pytest.raises(

@@ -6,6 +6,7 @@ from stookwijzer import Stookwijzer
 
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -71,7 +72,10 @@ async def async_migrate_entry(
                     "entry_title": entry.title,
                 },
             )
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="location_migration_failed",
+            )
 
         hass.config_entries.async_update_entry(
             entry,

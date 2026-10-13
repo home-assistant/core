@@ -26,3 +26,14 @@ select_previous:
     wrap:
       selector:
         boolean:
+select_image:
+  target:
+    entity:
+      integration: collection_image
+  fields:
+    image:
+      required: true
+      selector:
+        media:
+          accept:
+            - image/*

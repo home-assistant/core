@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Droplet"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_DROPLETS): probatio.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_DROPLETS): probatio.All(probatio.EnsureList(), [cv.string])}
 )
 
 

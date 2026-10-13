@@ -253,7 +253,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             probatio.Required(CONF_USERNAME): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
             ),
-            probatio.Required(CONF_PASSWORD): selector.TextSelector(
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
             ),
             probatio.Required(CONF_COUNTRY): selector.CountrySelector(),
@@ -380,7 +380,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=probatio.Schema(
                     {
-                        probatio.Required(CONF_PASSWORD): selector.TextSelector(
+                        probatio.Required(
+                            probatio.Secret(CONF_PASSWORD)
+                        ): selector.TextSelector(
                             selector.TextSelectorConfig(
                                 type=selector.TextSelectorType.PASSWORD
                             )

@@ -3,7 +3,16 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BypassService, SilentModeService, ThermostatService
+from boschshcpy import (
+    BypassService,
+    CameraAmbientLightService,
+    CameraFrontLightService,
+    CameraLightService,
+    CameraNotificationService,
+    PrivacyModeService,
+    SilentModeService,
+    ThermostatService,
+)
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -17,6 +26,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
+    camera_360_device,
+    camera_eyes_device,
+    camera_outdoor_gen2_device,
     light_switch_bsm_device,
     micromodule_relay_device,
     motion_detector2_device,
@@ -186,6 +198,29 @@ async def test_light_switch_bsm_child_lock_unique_id(
     assert lightswitch_entry is not None
     assert child_lock_entry is not None
     assert lightswitch_entry.unique_id != child_lock_entry.unique_id
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "light_switches_bsm": [
+                light_switch_bsm_device(child_lock=False, has_child_protection=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_no_child_lock_without_child_protection_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No child-lock switch is created for a device lacking ChildProtection."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.light_switch") is not None
+    assert hass.states.get("switch.light_switch_child_lock") is None
 
 
 @pytest.mark.parametrize(
@@ -890,3 +925,368 @@ async def test_motion_detector2_no_smart_sensitivity_support(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.motion_detector_automatic_sensitivity") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True, swap_inputs=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_relay_swap_inputs(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Micromodule Relay's swap-inputs setting is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    state = hass.states.get("switch.relay_swap_inputs")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.relay_swap_inputs"},
+        blocking=True,
+    )
+    assert device.swap_inputs is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.relay_swap_inputs"},
+        blocking=True,
+    )
+    assert device.swap_inputs is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True, swap_outputs=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_relay_swap_outputs(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Micromodule Relay's swap-outputs setting is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    state = hass.states.get("switch.relay_swap_outputs")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.relay_swap_outputs"},
+        blocking=True,
+    )
+    assert device.swap_outputs is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.relay_swap_outputs"},
+        blocking=True,
+    )
+    assert device.swap_outputs is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(supports_switch_configuration=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_relay_no_switch_configuration_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No swap-inputs/outputs switches are created without switch-configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.relay_swap_inputs") is None
+    assert hass.states.get("switch.relay_swap_outputs") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"camera_eyes": [camera_eyes_device(cameralight=CameraLightService.State.OFF)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_eyes_cameralight(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Camera Eyes' camera light is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_eyes[0]
+
+    state = hass.states.get("switch.camera_eyes_camera_light")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.camera_eyes_camera_light"},
+        blocking=True,
+    )
+    assert device.cameralight is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.camera_eyes_camera_light"},
+        blocking=True,
+    )
+    assert device.cameralight is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_360": [
+                camera_360_device(
+                    cameranotification=CameraNotificationService.State.ENABLED
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_360_notification(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Camera 360' notifications are exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_360[0]
+
+    state = hass.states.get("switch.camera_360_notifications")
+    assert state is not None
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.camera_360_notifications"},
+        blocking=True,
+    )
+    assert device.cameranotification is False
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.camera_360_notifications"},
+        blocking=True,
+    )
+    assert device.cameranotification is True
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_eyes": [
+                camera_eyes_device(
+                    cameranotification=CameraNotificationService.State.ENABLED
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_eyes_notification(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Camera Eyes' notifications are exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_eyes[0]
+
+    state = hass.states.get("switch.camera_eyes_notifications")
+    assert state is not None
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.camera_eyes_notifications"},
+        blocking=True,
+    )
+    assert device.cameranotification is False
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.camera_eyes_notifications"},
+        blocking=True,
+    )
+    assert device.cameranotification is True
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_outdoor_gen2": [
+                camera_outdoor_gen2_device(privacymode=PrivacyModeService.State.ENABLED)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_outdoor_gen2_privacy_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An Outdoor Camera Gen2's privacy mode is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_outdoor_gen2[0]
+
+    state = hass.states.get("switch.outdoor_camera")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera"},
+        blocking=True,
+    )
+    assert device.privacymode is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera"},
+        blocking=True,
+    )
+    assert device.privacymode is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_outdoor_gen2": [
+                camera_outdoor_gen2_device(
+                    cameraambientlight=CameraAmbientLightService.State.OFF
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_outdoor_gen2_ambient_light(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An Outdoor Camera Gen2's ambient light is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_outdoor_gen2[0]
+
+    state = hass.states.get("switch.outdoor_camera_ambient_light")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera_ambient_light"},
+        blocking=True,
+    )
+    assert device.cameraambientlight is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera_ambient_light"},
+        blocking=True,
+    )
+    assert device.cameraambientlight is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "camera_outdoor_gen2": [
+                camera_outdoor_gen2_device(
+                    camerafrontlight=CameraFrontLightService.State.OFF
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_camera_outdoor_gen2_front_light(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An Outdoor Camera Gen2's front light is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_outdoor_gen2[0]
+
+    state = hass.states.get("switch.outdoor_camera_front_light")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera_front_light"},
+        blocking=True,
+    )
+    assert device.camerafrontlight is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.outdoor_camera_front_light"},
+        blocking=True,
+    )
+    assert device.camerafrontlight is False

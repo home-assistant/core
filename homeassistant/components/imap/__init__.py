@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> bool
         raise ConfigEntryAuthFailed from err
     except InvalidFolder as err:
         raise ConfigEntryError("Selected mailbox folder is invalid.") from err
-    except (TimeoutError, AioImapException) as err:
+    except (OSError, AioImapException) as err:
         raise ConfigEntryNotReady from err
 
     coordinator_class: type[

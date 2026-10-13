@@ -168,7 +168,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
     entity_description: MieleClimateDescription
     _attr_precision = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_hvac_modes = [HVACMode.COOL]
     _attr_hvac_mode = HVACMode.COOL
@@ -176,7 +176,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return cast(float, self.entity_description.value_fn(self.device))
 
@@ -217,7 +217,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
 
         return cast(float | None, self.entity_description.target_fn(self.device))

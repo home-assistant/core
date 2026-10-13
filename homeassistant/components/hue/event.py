@@ -5,7 +5,7 @@ from typing import Any, override
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.bell_button import BellButton
-from aiohue.v2.models.button import Button
+from aiohue.v2.models.button import Button, ButtonEvent
 from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
 from homeassistant.components.event import (
@@ -86,14 +86,15 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
         super().__init__(*args, **kwargs)
-        # fill the event types based on the features the switch supports
-        hue_dev_id = self.controller.get_device(self.resource.id).id
-        model_id = self.bridge.api.devices[hue_dev_id].product_data.product_name
-        self._attr_event_types: list[str] = [
-            event_type.value
-            for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
-                model_id, DEFAULT_BUTTON_EVENT_TYPES
+        # fill the event types based on the features the switch supports,
+        # the bridge can return button resources no device lists
+        event_types: tuple[ButtonEvent, ...] = DEFAULT_BUTTON_EVENT_TYPES
+        if self.device is not None:
+            event_types = DEVICE_SPECIFIC_EVENT_TYPES.get(
+                self.device.product_data.product_name, event_types
             )
+        self._attr_event_types: list[str] = [
+            event_type.value for event_type in event_types
         ]
         self._attr_translation_placeholders = {
             "button_id": self.resource.metadata.control_id

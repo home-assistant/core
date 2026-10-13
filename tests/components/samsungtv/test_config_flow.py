@@ -371,6 +371,7 @@ async def test_user_websocket_k_series_stays_on_websocket(
     assert result2["data"][CONF_METHOD] == METHOD_WEBSOCKET
     assert result2["data"][CONF_MODEL] == "UN55KU6290"
     assert result2["data"][CONF_PORT] == 8002
+    assert result2["result"].unique_id == "0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f"
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -436,16 +437,24 @@ async def test_user_websocket_k_series_encrypted_also_cannot_connect(
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow by user with authentication."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=AccessDenied("Boom"),
     ):
         # legacy device missing authentication
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pairing"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "auth_missing"}
 
     with patch(
@@ -463,13 +472,20 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=UnhandledResponse("Boom"),
     ):
         # legacy device not supported
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
@@ -478,6 +494,13 @@ async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket_failing")
 async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -489,8 +512,8 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         ),
     ):
         # websocket device not supported
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
@@ -501,6 +524,13 @@ async def test_user_websocket_access_denied(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test starting a flow by user for not supported device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -512,8 +542,8 @@ async def test_user_websocket_access_denied(
         ),
     ):
         # websocket device not supported
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == RESULT_NOT_SUPPORTED
@@ -523,6 +553,13 @@ async def test_user_websocket_access_denied(
 @pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket_failing")
 async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -534,8 +571,8 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
         ),
     ):
         # websocket device not supported
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
@@ -564,6 +601,13 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -574,8 +618,8 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
             side_effect=OSError("Boom"),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_CANNOT_CONNECT
@@ -584,6 +628,13 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -594,8 +645,8 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
             side_effect=ConnectionFailure("Boom"),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_CANNOT_CONNECT
@@ -999,13 +1050,20 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
         # entry was added
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         entry = result["result"]
@@ -1270,6 +1328,13 @@ async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remote_encrypted_websocket_failing")
 async def test_autodetect_websocket(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -1302,8 +1367,8 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         remote.token = "123456789"
         remote_websocket.return_value = remote
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_METHOD] == "websocket"
@@ -1322,6 +1387,14 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
 async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
     """Test for send key with autodetection of protocol."""
     mac_address.return_value = "gg:ee:tt:mm:aa:cc"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -1353,8 +1426,8 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         remote.token = "123456789"
         remote_websocket.return_value = remote
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_METHOD] == "websocket"
@@ -1373,15 +1446,23 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=AccessDenied("Boom"),
     ) as remote:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pairing"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "auth_missing"}
 
         assert remote.call_count == 2
@@ -1402,12 +1483,19 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[UnhandledResponse("Boom")],
     ) as remote:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
@@ -1419,8 +1507,16 @@ async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
 async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MAC] is None
@@ -1429,6 +1525,13 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
 
 async def test_autodetect_none(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with (
         patch(
             "homeassistant.components.samsungtv.bridge.Remote",
@@ -1439,8 +1542,8 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
             side_effect=ResponseError,
         ) as rest_device_info,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_CANNOT_CONNECT
@@ -2318,13 +2421,20 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
 @pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
     """Ensure that MAC address is correctly updated from SSDP."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
         # entry was added
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         entry = result["result"]

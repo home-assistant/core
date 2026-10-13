@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_DEVICES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Required(CONF_ID): cv.string,
