@@ -1205,7 +1205,13 @@ class _ExhaustedSource(AsyncGenerator[bytes]):
     async def aclose(self) -> None:
         self.close_entered.set()
         try:
-            await asyncio.sleep(self.delay)
+            try:
+                await asyncio.sleep(self.delay)
+            except asyncio.CancelledError:
+                if not self.fails:
+                    raise
+                # A source close already in progress may continue after the
+                # converter takes the real child's known nonzero exit path.
             if self.fails:
                 if self.exit_before_failure is not None:
                     await self.exit_before_failure.wait()
@@ -1662,6 +1668,160 @@ async def test_known_stdin_failure_before_next_output_pull(
             await gen.aclose()
 
 
+@pytest.mark.parametrize("boundary", ["blocked", "paused"])
+async def test_known_exit_precedes_stdin_error_with_original_wait_pending(
+    ffmpeg_ready: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    boundary: str,
+) -> None:
+    """A real failed child wins even while its original wait is still pending."""
+    release_child = tmp_path / "release-child"
+    release_source = asyncio.Event()
+    release_finalizer = asyncio.Event()
+    release_wait = asyncio.Event()
+    owner_waiting = asyncio.Event()
+    finalizer_entered = asyncio.Event()
+    transport_failed = asyncio.Event()
+    transport_errors: list[OSError] = []
+    owned_waits: list[asyncio.Task] = []
+    processes = []
+    spawn_os = asyncio.create_subprocess_exec
+    native_wait = asyncio.wait
+    script = (
+        "import os,sys,time\n"
+        + ("os.write(1,b'PREFIX')\n" if boundary == "paused" else "")
+        + "while not os.path.exists(sys.argv[1]):time.sleep(.01)\n"
+        "os.close(0)\n"
+        "os.write(2,b'known child failure\\n')\n"
+        "sys.exit(7)\n"
+    )
+
+    async def spawn(*args, **kwargs):
+        process = await spawn_os(
+            sys.executable, "-c", script, str(release_child), **kwargs
+        )
+        processes.append(process)
+        assert process.stdin is not None and process.stdout is not None
+        drain = process.stdin.drain
+        actual_wait = process.wait
+        read = process.stdout.read
+
+        async def observed_drain():
+            try:
+                await drain()
+            except (BrokenPipeError, ConnectionResetError) as err:
+                transport_errors.append(err)
+                transport_failed.set()
+                raise
+
+        async def delayed_owned_wait():
+            if asyncio.current_task().get_name() == "tts_ffmpeg_wait":
+                owned_waits.append(asyncio.current_task())
+                # Only delay the original owned waiter. The actual OS status
+                # is established independently, never fabricated by this gate.
+                await release_wait.wait()
+            return await actual_wait()
+
+        async def observed_read(n: int = -1) -> bytes:
+            data = await read(n)
+            if not data and boundary == "blocked":
+                # Prevent stdout EOF from winning the deliberately blocked
+                # owner before its real stdin drain has failed.
+                await transport_failed.wait()
+            return data
+
+        process.stdin.drain = observed_drain
+        process.wait = delayed_owned_wait
+        process.stdout.read = observed_read
+        return process
+
+    async def observed_wait(fs, *, return_when=asyncio.ALL_COMPLETED, timeout=None):
+        if (
+            asyncio.current_task() is owner
+            and return_when == asyncio.FIRST_COMPLETED
+            and timeout is None
+        ):
+            # Scheduled after the owner has entered the real wait, not after
+            # a sleep that guesses when the pending set was constructed.
+            asyncio.get_running_loop().call_soon(owner_waiting.set)
+        return await native_wait(fs, return_when=return_when, timeout=timeout)
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"R" * 100
+            await release_source.wait()
+            yield b"R" * (8 * 1024 * 1024)  # Real OS pipe pressure.
+        finally:
+            finalizer_entered.set()
+            try:
+                await release_finalizer.wait()
+            except asyncio.CancelledError:
+                await release_finalizer.wait()
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    owner = None
+    try:
+        with (
+            patch("homeassistant.components.tts.asyncio.create_subprocess_exec", spawn),
+            patch("homeassistant.components.tts.asyncio.wait", observed_wait),
+        ):
+            if boundary == "paused":
+                assert await asyncio.wait_for(anext(gen), 3) == b"PREFIX"
+            else:
+                owner = asyncio.create_task(anext(gen), name="known_exit_owner")
+                await asyncio.wait_for(owner_waiting.wait(), 3)
+            assert len(owned_waits) == 1 and not owned_waits[0].done()
+            release_child.touch()
+            # This is a *new* harness wait, not completion of the original
+            # waiter. It observes the real child's returncode before stdin
+            # fails, as on a runtime with delayed pipe disconnection.
+            assert await asyncio.wait_for(processes[0].wait(), 3) == 7
+            assert processes[0].returncode == 7
+            assert not owned_waits[0].done()
+            release_source.set()
+            await asyncio.wait_for(transport_failed.wait(), 3)
+            await asyncio.wait_for(finalizer_entered.wait(), 3)
+            assert len(transport_errors) == 1
+            assert not release_finalizer.is_set()
+            if boundary == "paused":
+                owner = asyncio.create_task(anext(gen), name="known_exit_owner")
+            with pytest.raises(
+                HomeAssistantError, match="Unexpected error while running ffmpeg"
+            ):
+                await _observe(owner, 3)
+            assert processes[0].returncode == 7
+            assert any("known child failure" in r.message for r in caplog.records)
+            assert not release_wait.is_set() and not owned_waits[0].done()
+            assert owned_waits[0] in ffmpeg_ready._background_tasks
+            assert finalizer_entered.is_set() and not release_finalizer.is_set()
+            assert not any(
+                t.get_name() in ("tts_ffmpeg_stdout", "tts_ffmpeg_stdout_discard")
+                and not t.done()
+                for t in asyncio.all_tasks()
+            )
+            release_wait.set()
+            assert await asyncio.wait_for(owned_waits[0], 3) == 7
+            assert not owned_waits[0].cancelled()
+    finally:
+        release_child.touch()
+        release_source.set()
+        release_wait.set()
+        if owner is not None and not owner.done():
+            owner.cancel()
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+            await asyncio.wait_for(process.wait(), 5)
+        release_finalizer.set()
+        if owner is not None:
+            await asyncio.wait_for(asyncio.gather(owner, return_exceptions=True), 5)
+        with contextlib.suppress(BrokenPipeError, HomeAssistantError):
+            await gen.aclose()
+        if owned_waits:
+            await asyncio.wait_for(asyncio.gather(*owned_waits), 5)
+
+
 @pytest.mark.parametrize("exit_code", [None, 7], ids=["live-child", "known-exit"])
 async def test_broken_stdin_reaps_before_held_source_finalizer_finishes(
     ffmpeg_ready: HomeAssistant,
@@ -2027,7 +2187,7 @@ async def test_abort_discards_saturated_real_stdout_before_return(
             assert processes[0].returncode == -9
             assert next(t for t in tasks if t.get_name() == "tts_ffmpeg_wait").done()
             assert all(task.done() for task in tasks)
-            assert stdout_eof.is_set()  # RED: old abort leaves the pipe paused.
+            assert stdout_eof.is_set()  # Abort discard reached real stdout EOF.
             assert processes[0].stdout.at_eof()
             assert not release.is_set() or mode == "source-error"
     finally:
@@ -2097,7 +2257,7 @@ async def test_real_ffmpeg_abort_drains_large_valid_wav(
             assert not stdout_eof.is_set()
             await asyncio.wait_for(gen.aclose(), 3)
             assert processes[0].returncode == -9
-            assert stdout_eof.is_set()  # RED on the unchanged converter.
+            assert stdout_eof.is_set()  # Real ffmpeg stdout was drained on abort.
             assert processes[0].stdout.at_eof()
     finally:
         for process in processes:

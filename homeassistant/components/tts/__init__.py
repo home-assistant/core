@@ -501,6 +501,10 @@ async def _async_convert_audio(  # noqa: C901
     read_task: asyncio.Task | None = None
     complete = False
 
+    def child_exited_unsuccessfully() -> bool:
+        """Use the observed OS exit even when the original wait is pending."""
+        return isinstance(process.returncode, int) and process.returncode != 0
+
     def check_completed_writer() -> bool:
         """Raise a close failure, or signal an already-known failed child."""
         if (
@@ -511,7 +515,7 @@ async def _async_convert_audio(  # noqa: C901
         ):
             # On some asyncio runtimes the original wait remains pending until
             # pipe disconnection even though the OS exit status is known.
-            if process.returncode is not None and process.returncode != 0:
+            if child_exited_unsuccessfully():
                 return True
             writer_task.result()
         return False
@@ -534,7 +538,7 @@ async def _async_convert_audio(  # noqa: C901
                         await asyncio.wait({wait_task}, timeout=0.1)
                     if source_read_error is not None:
                         raise source_read_error
-                    if wait_task.done() and wait_task.result() != 0:
+                    if child_exited_unsuccessfully():
                         break
                     raise stdin_error
                 writer_task.result()
@@ -568,7 +572,7 @@ async def _async_convert_audio(  # noqa: C901
                         await asyncio.wait({wait_task}, timeout=0.1)
                     if source_read_error is not None:
                         raise source_read_error
-                    if wait_task.done() and wait_task.result() != 0:
+                    if child_exited_unsuccessfully():
                         read_task.cancel()
                         await _async_ffmpeg_join(read_task)
                         # Keep the reader owned until it actually finishes;
@@ -594,7 +598,10 @@ async def _async_convert_audio(  # noqa: C901
         if source_read_error is not None:
             raise source_read_error
         child_failure_with_close = input_exhausted and check_completed_writer()
-        if not wait_task.done() and not child_failure_with_close:
+        known_child_failure = child_exited_unsuccessfully()
+        if not wait_task.done() and not (
+            known_child_failure or child_failure_with_close
+        ):
             if writer_task is not None and not input_exhausted:
                 # A held source cannot keep a child with closed stdout alive
                 # indefinitely. It may still exit during this brief grace.
@@ -618,11 +625,18 @@ async def _async_convert_audio(  # noqa: C901
             child_failure_with_close = (
                 check_completed_writer() or child_failure_with_close
             )
-        if not wait_task.done() and not child_failure_with_close:
+        known_child_failure = child_exited_unsuccessfully()
+        if not wait_task.done() and not (
+            known_child_failure or child_failure_with_close
+        ):
             raise HomeAssistantError(
                 "ffmpeg output closed before TTS input was exhausted"
             )
-        retcode = process.returncode if child_failure_with_close else wait_task.result()
+        retcode = (
+            process.returncode
+            if known_child_failure or child_failure_with_close
+            else wait_task.result()
+        )
         if retcode != 0:
             # A known child failure is primary over source finalization. The
             # normal EOF case below still waits for its writer to finish.
