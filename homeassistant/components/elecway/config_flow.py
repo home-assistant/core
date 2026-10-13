@@ -34,7 +34,7 @@ class ElecwayConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._devices[user_input[CONF_DEVICE]]
             )
 
-        configured = self._async_current_ids()
+        configured = self._async_current_ids(include_ignore=False)
         self._devices = {
             serial: info
             for serial, info in (await async_discover(self.hass)).items()

@@ -30,7 +30,9 @@ rules:
     comment: The integration does not provide custom triggers.
   docs-high-level-description:
     status: done
-    comment: The companion home-assistant.io page describes local storage monitoring.
+    comment: >-
+      The companion page describes local storage monitoring:
+      https://github.com/home-assistant/home-assistant.io/pull/49120.
   docs-installation-instructions:
     status: done
     comment: The companion page includes prerequisites and the config flow instructions.

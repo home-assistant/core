@@ -28,14 +28,25 @@ async def test_setup_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ElecwayError("Offline"), id="offline"),
+        pytest.param(RuntimeError("Unexpected"), id="unexpected"),
+    ],
+)
 async def test_setup_retry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: AsyncMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    error: Exception,
 ) -> None:
-    """Initial connection failures are retried by HA without starting a listener."""
-    mock_client.connect.side_effect = ElecwayError("Offline")
+    """Initial failures close the connection and retry without starting a listener."""
+    mock_client.connect.side_effect = error
     config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_client.disconnect.assert_awaited_once()
     mock_client.updates.assert_not_called()
 
 

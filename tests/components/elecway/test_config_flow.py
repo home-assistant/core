@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from aioelecway import ElecwayError
 import pytest
 
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -46,6 +46,46 @@ async def test_zeroconf(hass: HomeAssistant, discovery: ZeroconfServiceInfo) -> 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
+
+
+@pytest.mark.usefixtures("mock_discover")
+async def test_user_ignored_device(hass: HomeAssistant) -> None:
+    """Manual setup replaces the ignored entry for the selected device."""
+    ignored_entry = MockConfigEntry(
+        domain="elecway", unique_id=SERIAL, source=SOURCE_IGNORE
+    )
+    ignored_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        "elecway", context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: SERIAL}
+    )
+    assert result["step_id"] == "confirm"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert result["result"].source == SOURCE_USER
+    assert hass.config_entries.async_get_entry(ignored_entry.entry_id) is None
+    assert hass.config_entries.async_entries("elecway") == [result["result"]]
+
+
+async def test_zeroconf_ignored_device(
+    hass: HomeAssistant, discovery: ZeroconfServiceInfo, mock_client: AsyncMock
+) -> None:
+    """Automatic rediscovery must still respect an ignored device."""
+    ignored_entry = MockConfigEntry(
+        domain="elecway", unique_id=SERIAL, source=SOURCE_IGNORE
+    )
+    ignored_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        "elecway", context={"source": SOURCE_ZEROCONF}, data=discovery
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries("elecway") == [ignored_entry]
+    mock_client.connect.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
