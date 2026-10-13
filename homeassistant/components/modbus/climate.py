@@ -35,10 +35,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import get_hub
 from .const import (
@@ -310,17 +311,6 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_coil = None
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -329,8 +319,13 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         if state and state.attributes.get(
             ClimateEntityStateAttribute.TARGET_TEMPERATURE
         ):
-            self._attr_native_target_temperature = float(
-                state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+            self._attr_native_target_temperature = TemperatureConverter.convert(
+                float(state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]),
+                state.attributes.get(
+                    ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                    self.hass.config.units.temperature_unit,
+                ),
+                self.native_temperature_unit,
             )
 
     @override

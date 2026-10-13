@@ -10,6 +10,7 @@ from blinkpy.blinkpy import Blink
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -46,10 +47,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
     if entry.version == 1:
         data.pop("login_response", None)
         await _reauth_flow_wrapper(hass, entry, data)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migration_reauth_required",
+            translation_placeholders={"version": str(entry.version)},
+        )
     if entry.version == 2:
         await _reauth_flow_wrapper(hass, entry, data)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migration_reauth_required",
+            translation_placeholders={"version": str(entry.version)},
+        )
     if entry.version == 3:
         # Migrate device_id to hardware_id for blinkpy 0.25.x OAuth2 compatibility
         if "device_id" in data:

@@ -109,7 +109,6 @@
         }
       },
       "motion": {
-        "name": "[%key:component::event::entity_component::motion::name%]",
         "state_attributes": {
           "event_type": {
             "state": {

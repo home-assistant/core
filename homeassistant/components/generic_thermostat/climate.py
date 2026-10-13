@@ -69,6 +69,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -373,10 +374,17 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self._target_temp,
                     )
                 else:
-                    self._target_temp = float(
-                        old_state.attributes[
-                            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                        ]
+                    self._target_temp = TemperatureConverter.convert(
+                        float(
+                            old_state.attributes[
+                                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                            ]
+                        ),
+                        old_state.attributes.get(
+                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                            self.hass.config.units.temperature_unit,
+                        ),
+                        self.native_temperature_unit,
                     )
             if (
                 self.preset_modes
@@ -621,7 +629,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         )
                         self._check_callback = async_call_later(
                             self.hass,
-                            now - self._last_toggled_time + self.min_cycle_duration,
+                            self._last_toggled_time + self.min_cycle_duration - now,
                             self._async_timer_control_heating,
                         )
                 elif called_by_timer:
@@ -643,7 +651,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                     self._check_callback = async_call_later(
                         self.hass,
-                        now - self._last_toggled_time + self.cycle_cooldown,
+                        self._last_toggled_time + self.cycle_cooldown - now,
                         self._async_timer_control_heating,
                     )
             elif called_by_timer:

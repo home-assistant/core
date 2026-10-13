@@ -21,6 +21,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenMeteoConfigEntry) ->
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenMeteoConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    # The zone used to be the unique ID, which config entries don't need
+    if entry.minor_version < 2:
+        hass.config_entries.async_update_entry(entry, unique_id=None, minor_version=2)
+
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: OpenMeteoConfigEntry) -> bool:
     """Unload Open-Meteo config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
