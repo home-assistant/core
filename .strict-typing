@@ -374,6 +374,7 @@ homeassistant.components.llama_cpp.*
 homeassistant.components.llm.*
 homeassistant.components.local_ip.*
 homeassistant.components.local_todo.*
+homeassistant.components.location.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
 homeassistant.components.logger.*

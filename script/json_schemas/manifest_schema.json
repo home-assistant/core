@@ -139,6 +139,16 @@
         },
         "uniqueItems": true
       },
+      "locations": {
+        "description": "A list of ids of the regions served by the integration. The integration is discovered when the home location is inside one of these regions. Regions are GeoJSON files in homeassistant/components/location/regions.",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "description": "Region id, the name of a region file without the .geojson suffix."
+        },
+        "uniqueItems": true
+      },
       "ssdp": {
         "description": "A list of matchers to find devices discoverable via SSDP/UPnP. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#ssdp",
         "type": "array",

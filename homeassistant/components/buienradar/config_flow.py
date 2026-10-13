@@ -14,6 +14,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.service_info.location import LocationServiceInfo
 
 from .const import (
     CONF_DELTA,
@@ -73,6 +74,7 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for buienradar."""
 
     VERSION = 1
+    _data: dict[str, Any]
 
     @staticmethod
     @callback
@@ -113,3 +115,30 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors={},
         )
+
+    @override
+    async def async_step_location_discovery(
+        self, discovery_info: LocationServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by location."""
+        await self.async_set_unique_id(
+            f"{discovery_info.latitude}-{discovery_info.longitude}"
+        )
+        self._abort_if_unique_id_configured()
+        self._data = {
+            CONF_LATITUDE: discovery_info.latitude,
+            CONF_LONGITUDE: discovery_info.longitude,
+        }
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm setting up the discovered location."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"{self._data[CONF_LATITUDE]},{self._data[CONF_LONGITUDE]}",
+                data=self._data,
+            )
+        self._set_confirm_only()
+        return self.async_show_form(step_id="discovery_confirm")

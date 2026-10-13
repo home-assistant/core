@@ -1195,6 +1195,25 @@ async def test_get_dhcp(hass: HomeAssistant) -> None:
         ]
 
 
+async def test_get_locations(hass: HomeAssistant) -> None:
+    """Verify that custom components with locations are found."""
+    test_1_integration = loader.Integration(
+        hass,
+        "custom_components.test_1",
+        None,
+        {"name": "test_1", "domain": "test_1", "locations": ["NL", "BE"]},
+    )
+
+    with (
+        patch.dict(loader.LOCATIONS, {"NL": ["core_domain"]}, clear=True),
+        patch("homeassistant.loader.async_get_custom_components") as mock_get,
+    ):
+        mock_get.return_value = {"test_1": test_1_integration}
+        locations = await loader.async_get_locations(hass)
+        assert locations == {"NL": ["core_domain", "test_1"], "BE": ["test_1"]}
+        assert loader.LOCATIONS == {"NL": ["core_domain"]}
+
+
 async def test_get_usb(hass: HomeAssistant) -> None:
     """Verify that custom components with usb matchers are found."""
     test_1_integration = _get_test_integration_with_usb_matcher(hass, "test_1", True)
