@@ -710,6 +710,35 @@ async def test_migrate_light_setting_mirror_without_replacement(
     )
 
 
+@pytest.mark.parametrize(
+    ("platform", "replacement_platform", "device", "key", "in_scope"),
+    [
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            Platform.SWITCH,
+            "light",
+            "high_fps",
+            False,
+            id="camera_key_on_light",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            Platform.NUMBER,
+            "doorbell",
+            "sensitivity",
+            False,
+            id="light_key_on_camera",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            Platform.SWITCH,
+            "doorbell",
+            "high_fps",
+            True,
+            id="camera_key_on_camera",
+        ),
+    ],
+)
 async def test_migrate_setting_mirror_keys_scoped_to_device_type(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -717,39 +746,34 @@ async def test_migrate_setting_mirror_keys_scoped_to_device_type(
     ufp: MockUFPFixture,
     doorbell: Camera,
     light: Light,
+    platform: Platform,
+    replacement_platform: Platform,
+    device: str,
+    key: str,
+    in_scope: bool,
 ) -> None:
     """A mirror key only counts on the device type it belongs to.
 
-    A matching control is registered for each so only the scope can stop the
-    repair.
+    A matching control is registered so only the scope can stop the repair.
     """
     setup_public_light(ufp)
     setup_public_camera(ufp)
-    mirrors = [
-        (Platform.BINARY_SENSOR, Platform.SWITCH, f"{light.mac}_high_fps"),
-        (Platform.SENSOR, Platform.NUMBER, f"{doorbell.mac}_sensitivity"),
-    ]
-    entity_ids = []
-    for platform, replacement_platform, unique_id in mirrors:
-        entity_registry.async_get_or_create(
-            replacement_platform, DOMAIN, unique_id, config_entry=ufp.entry
-        )
-        entity_ids.append(
-            entity_registry.async_get_or_create(
-                platform, DOMAIN, unique_id, config_entry=ufp.entry
-            ).entity_id
-        )
-    await _load_automation(hass, *entity_ids)
+    mac = {"doorbell": doorbell, "light": light}[device].mac
+    unique_id = f"{mac}_{key}"
+    entity_registry.async_get_or_create(
+        replacement_platform, DOMAIN, unique_id, config_entry=ufp.entry
+    )
+    mirror = entity_registry.async_get_or_create(
+        platform, DOMAIN, unique_id, config_entry=ufp.entry
+    )
+    await _load_automation(hass, mirror.entity_id)
 
     await init_entry(hass, ufp, [doorbell, light], regenerate_ids=False)
 
-    for _, _, unique_id in mirrors:
-        assert (
-            issue_registry.async_get_issue(
-                DOMAIN, f"setting_mirror_deprecated_{unique_id}"
-            )
-            is None
-        ), unique_id
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"setting_mirror_deprecated_{unique_id}")
+        is not None
+    ) is in_scope
 
 
 @pytest.mark.parametrize(

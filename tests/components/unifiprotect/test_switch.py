@@ -1464,3 +1464,33 @@ async def test_public_only_switch_sense_registry_cleanup(
     await setup_public_only()
 
     assert entity_registry.async_get(stale.entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("platform", "key"),
+    [
+        pytest.param(Platform.NUMBER, "mic_level", id="mic_level"),
+        pytest.param(Platform.SELECT, "hdr_mode", id="hdr_mode"),
+        pytest.param(Platform.SELECT, "doorbell_text", id="doorbell_text_select"),
+        pytest.param(Platform.TEXT, "doorbell", id="doorbell_text"),
+    ],
+)
+async def test_camera_public_controls_read_only_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+) -> None:
+    """A read-only local user gets the camera controls that write publicly."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert entity_registry.async_get_entity_id(
+        platform, DOMAIN, f"{doorbell.mac}_{key}"
+    )

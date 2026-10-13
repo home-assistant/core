@@ -230,7 +230,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_mic",
         ufp_public_value="mic_volume",
-        ufp_enabled="feature_flags.has_mic",
+        ufp_public_enabled_fn=operator.attrgetter("feature_flags.has_mic"),
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(

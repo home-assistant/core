@@ -20,6 +20,7 @@ from uiprotect.data import (
     Sensor,
     WSAction,
 )
+from uiprotect.data.devices import Hotplug
 from uiprotect.data.nvr import EventMetadata
 from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.utils import convert_to_datetime, to_js_time
@@ -979,3 +980,29 @@ async def test_sensor_camera_mirror_reads_public(
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == expected
+
+
+async def test_sensor_camera_mic_mirror_unavailable_with_module_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A hot-plugged module alone leaves the microphone mirror unavailable.
+
+    The number it is deprecated for is gated on the built-in microphone.
+    """
+    doorbell.feature_flags.has_mic = False
+    doorbell.feature_flags.hotplug = Hotplug(audio=True)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{doorbell.mac}_mic_level"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
