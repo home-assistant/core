@@ -1,6 +1,5 @@
 """Commands part of Websocket API."""
 
-import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
@@ -96,7 +95,7 @@ from .automation import (
     async_get_services_for_target,
     async_get_triggers_for_target,
 )
-from .connection import ActiveConnection
+from .connection import ActiveConnection, SendMessage
 from .messages import construct_event_message, construct_result_message
 
 ALL_CONDITION_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_condition_descriptions_json"
@@ -420,7 +419,7 @@ _MAX_BATCHED_STATE_CHANGES: Final = 128
 class _StateDiffBatch:
     """Collects the state changes fired in one event loop iteration into one message.
 
-    Nothing is delayed to do it: the flush is scheduled with call_soon, so it runs at
+    Nothing is delayed to do it: the connection flushes with call_soon, so it runs at
     the end of the iteration that is already in progress, and a change that arrives on
     its own is still sent on its own.
     """
@@ -429,39 +428,33 @@ class _StateDiffBatch:
         "_connection",
         "_entity_ids",
         "_fragments",
-        "_loop",
         "_message_id",
-        "_send_message",
         "_unserializable",
     )
 
     def __init__(
-        self,
-        loop: asyncio.AbstractEventLoop,
-        connection: ActiveConnection,
-        message_id_as_bytes: bytes,
+        self, connection: ActiveConnection, message_id_as_bytes: bytes
     ) -> None:
-        """Initialize the batch and arrange for it to be flushed in order."""
-        self._loop = loop
+        """Initialize an empty batch."""
         self._connection = connection
         self._message_id = message_id_as_bytes
         self._fragments: list[tuple[bytes, bytes]] = []
         self._unserializable: list[Event[EventStateChangedData]] = []
         self._entity_ids: set[str] = set()
-        self._send_message = connection.async_register_state_diff_batch(
-            self.async_flush
-        )
 
     @callback
     def async_add(self, entity_id: str, event: Event[EventStateChangedData]) -> None:
         """Add a change, sending what is already collected if it supersedes it."""
+        connection = self._connection
         if entity_id in self._entity_ids:
             # Two updates for one entity cannot share a message. A diff is relative to
             # the state before it, and the client applies additions, removals and
             # changes in a fixed order that need not match the order they happened in -
             # so an entity removed and then added back would be left removed. Sending
             # what we have keeps the order the events actually occurred in.
-            self.async_flush()
+            connection.async_flush_state_diff_batches()
+        if not self._entity_ids:
+            connection.async_add_pending_state_diff_batch(self.async_flush)
         self._entity_ids.add(entity_id)
         # Resolved here rather than in the flush, while the bus is still dispatching
         # this event to every other subscription, so they all ask for the same
@@ -471,16 +464,20 @@ class _StateDiffBatch:
             self._unserializable.append(event)
         else:
             self._fragments.append(fragment)
-        collected = len(self._fragments) + len(self._unserializable)
-        if collected == 1:
-            self._loop.call_soon(self.async_flush)
-        elif collected >= _MAX_BATCHED_STATE_CHANGES:
-            self.async_flush()
+        if (
+            len(self._fragments) + len(self._unserializable)
+            >= _MAX_BATCHED_STATE_CHANGES
+        ):
+            connection.async_flush_state_diff_batches()
 
     @callback
-    def async_flush(self) -> None:
-        """Send everything collected so far, if anything."""
-        if not self._fragments and not self._unserializable:
+    def async_flush(self, send_message: SendMessage) -> None:
+        """Send everything collected so far, if anything.
+
+        Only called by the connection, which owns the order batches are sent in and
+        supplies the sender.
+        """
+        if not self._entity_ids:
             return
         fragments = self._fragments
         unserializable = self._unserializable
@@ -488,20 +485,18 @@ class _StateDiffBatch:
         self._unserializable = []
         self._entity_ids = set()
         if fragments:
-            self._send_message(
+            send_message(
                 messages.batched_state_diff_message(self._message_id, fragments)
             )
         # One change that will not serialize must not cost the rest of the batch their
         # update. cached_state_diff_message logs the bad data and substitutes the error
         # payload, which is what this change would have been sent as unbatched.
         for event in unserializable:
-            self._send_message(
-                messages.cached_state_diff_message(self._message_id, event)
-            )
+            send_message(messages.cached_state_diff_message(self._message_id, event))
 
     @callback
-    def async_discard(self) -> None:
-        """Drop anything collected but not yet sent.
+    def async_close(self) -> None:
+        """Drop what has not been sent and stop the connection flushing it.
 
         The flush is scheduled on the loop, so a batch collected in the same iteration
         as an unsubscribe would otherwise still be handed to send_message afterwards,
@@ -510,12 +505,7 @@ class _StateDiffBatch:
         self._fragments = []
         self._unserializable = []
         self._entity_ids = set()
-
-    @callback
-    def async_close(self) -> None:
-        """Drop what has not been sent and stop being flushed by the connection."""
-        self.async_discard()
-        self._connection.async_unregister_state_diff_batch(self.async_flush)
+        self._connection.async_discard_pending_state_diff_batch(self.async_flush)
 
 
 @callback
@@ -565,7 +555,7 @@ def handle_subscribe_entities(
     states = _async_get_allowed_states(hass, connection)
     msg_id = msg["id"]
     message_id_as_bytes = str(msg_id).encode()
-    batch = _StateDiffBatch(hass.loop, connection, message_id_as_bytes)
+    batch = _StateDiffBatch(connection, message_id_as_bytes)
     unsub = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(

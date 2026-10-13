@@ -4279,6 +4279,98 @@ async def test_subscribe_entities_sends_a_change_before_an_earlier_event_subscri
     await hass.async_block_till_done()
 
 
+async def test_subscribe_entities_sent_early_does_not_overtake_another_subscription(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A batch forced to send early goes after changes collected before it.
+
+    A second update for one entity forces the batch holding it to send straight away,
+    rather than at the end of the iteration. The connection decides the order, so a
+    change a different subscription collected earlier still goes first.
+    """
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_entities", "entity_ids": ["light.first"]}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    first_subscription = msg["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_entities", "entity_ids": ["light.second"]}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    second_subscription = msg["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    # All in one iteration, so the second subscription is forced to send while the
+    # first is still holding a change that happened before it.
+    hass.states.async_set("light.first", "on")
+    hass.states.async_set("light.second", "on")
+    hass.states.async_set("light.second", "off")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == first_subscription, "the earlier change should arrive first"
+    assert set(msg["event"]["a"]) == {"light.first"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == second_subscription
+    assert set(msg["event"]["a"]) == {"light.second"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == second_subscription
+    assert set(msg["event"]["c"]) == {"light.second"}
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_subscribe_entities_at_the_cap_does_not_overtake_another_subscription(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Reaching the size cap also sends earlier subscriptions first."""
+    capped_entity_ids = [
+        f"light.bulb_{index}" for index in range(_MAX_BATCHED_STATE_CHANGES)
+    ]
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_entities", "entity_ids": ["light.first"]}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    first_subscription = msg["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_entities", "entity_ids": capped_entity_ids}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    capped_subscription = msg["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.first", "on")
+    for entity_id in capped_entity_ids:
+        hass.states.async_set(entity_id, "on")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == first_subscription, "the earlier change should arrive first"
+    assert set(msg["event"]["a"]) == {"light.first"}
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == capped_subscription
+    assert set(msg["event"]["a"]) == set(capped_entity_ids)
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
 async def test_subscribe_entities_caps_how_much_one_message_can_carry(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
