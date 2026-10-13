@@ -63,6 +63,8 @@ class TractiveCoordinator(DataUpdateCoordinator[TractiveStatus]):
     def _async_handle_update(self, error: Exception | None) -> None:
         """Handle a push update or a channel error from the Tractive API."""
         if error is None:
+            if not self.last_update_success:
+                _LOGGER.info("Fetching %s data recovered", self.name)
             self.async_set_updated_data(self.client.status)
             return
         if isinstance(error, UnauthorizedError):
