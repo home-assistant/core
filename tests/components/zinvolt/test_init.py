@@ -1,10 +1,11 @@
 """Test the Zinvolt initialization."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.zinvolt.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -34,7 +35,13 @@ async def test_device_via_device_links(
     mock_zinvolt_client: AsyncMock,
 ) -> None:
     """Test that a unit sub-device links to its main battery device via via_device_id."""
-    await setup_integration(hass, mock_config_entry)
+    # Set up only the binary sensor platform, the sole platform that creates unit
+    # sub-devices. Their via_device_id is resolved during entity construction,
+    # before any entity is registered, so the parent must be pre-registered in
+    # async_setup_entry; without it the child's construction fails and no unit
+    # sub-device is created.
+    with patch("homeassistant.components.zinvolt._PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
     battery_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "ZVG011025120088"), mock_config_entry.entry_id
