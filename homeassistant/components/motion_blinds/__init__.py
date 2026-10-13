@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MotionBlindsConfigEntry
-) -> bool:
+) -> None:
     """Set up the motion_blinds components from a config entry."""
     if (motion_data := hass.data.get(MOTION_BLINDS_DATA)) is None:
         motion_data = hass.data[MOTION_BLINDS_DATA] = MotionBlindsData()
@@ -141,29 +141,28 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MotionBlindsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
     motion_data = hass.data[MOTION_BLINDS_DATA]
-    if unload_ok and motion_data.multicast is not None:
-        motion_data.multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
 
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # No motion gateways left, stop Motion multicast
-        if motion_data.unsub_stop is not None:
-            motion_data.unsub_stop()
-            motion_data.unsub_stop = None
-        _LOGGER.debug("Shutting down Motion Listener")
         if motion_data.multicast is not None:
-            motion_data.multicast.Stop_listen()
-            motion_data.multicast = None
-
-    return unload_ok
+            motion_data.multicast.Unregister_motion_gateway(
+                config_entry.data[CONF_HOST]
+            )
+    finally:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            # No motion gateways left, stop Motion multicast
+            if motion_data.unsub_stop is not None:
+                motion_data.unsub_stop()
+                motion_data.unsub_stop = None
+            _LOGGER.debug("Shutting down Motion Listener")
+            if motion_data.multicast is not None:
+                motion_data.multicast.Stop_listen()
+                motion_data.multicast = None

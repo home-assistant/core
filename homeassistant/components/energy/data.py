@@ -9,12 +9,7 @@ import probatio
 
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    singleton,
-    storage,
-)
+from homeassistant.helpers import entity_registry as er, singleton, storage
 
 from .const import DOMAIN
 
@@ -624,7 +619,7 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
 ENERGY_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         [
-            cv.key_value_schemas(
+            probatio.TaggedUnion(
                 "type",
                 {
                     "grid": GRID_SOURCE_SCHEMA,

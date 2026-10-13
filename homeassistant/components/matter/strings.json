@@ -740,6 +740,9 @@
     "addon_not_running": {
       "message": "The Matter Server app is not running yet."
     },
+    "addon_stop_failed": {
+      "message": "Failed to stop the Matter Server app."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },

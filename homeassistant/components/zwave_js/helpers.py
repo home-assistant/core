@@ -37,7 +37,6 @@ from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    CONF_TYPE,
     __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -560,18 +559,6 @@ def async_get_node_status_sensor_entity_id(
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     """Remove keys from config where the value is an empty string or None."""
     return {key: value for key, value in config.items() if value not in ("", None)}
-
-
-def check_type_schema_map(
-    schema_map: dict[str, probatio.Schema],
-) -> Callable[[ConfigType], ConfigType]:
-    """Check type specific schema against config."""
-
-    def _check_type_schema(config: ConfigType) -> ConfigType:
-        """Check type specific schema against config."""
-        return cast(ConfigType, schema_map[str(config[CONF_TYPE])](config))
-
-    return _check_type_schema
 
 
 def copy_available_params(
