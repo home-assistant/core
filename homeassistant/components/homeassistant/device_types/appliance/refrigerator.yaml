@@ -1,0 +1,93 @@
+# Device type: appliance.refrigerator
+#
+# The device type is its path under device_types/, so this file needs no top
+# level key. Adding a type means adding a file, never editing a shared one.
+#
+# `description` is written for language models and is deliberately NOT
+# translated: an LLM is told the user's language and answers in it, and every
+# other LLM facing string in Home Assistant is untranslated English too. Voice
+# never reads descriptions - it matches on names, aliases and device classes -
+# so the display names, and the optional voice aliases such as "fridge", live in
+# refrigerator.strings.json instead, where they can be translated. The two files
+# must define the same set of traits.
+#
+# Covers a fridge, and a fridge-freezer combination through the optional freezer
+# compartment traits. A standalone freezer is appliance.freezer, so that the
+# fridge compartment can stay required here.
+#
+# Compartment traits are deliberately named after what the compartment is for,
+# not after where the manufacturer puts it, so a bottom freezer and a top
+# freezer expose the same traits. Traits allowing both a sensor and a climate
+# domain accept either a plain readout or a thermostat reporting the same value.
+
+description: >-
+  An appliance that keeps food cold. It has a fridge compartment and may also
+  have a freezer compartment.
+
+traits:
+  door:
+    description: >-
+      On while the appliance's door is open. Leaving it open lets the
+      temperature rise and wastes energy.
+    domains:
+      - binary_sensor
+    device_class: door
+  fridge_compartment_door:
+    description: On while the door of the fridge compartment is open.
+    domains:
+      - binary_sensor
+    device_class: door
+  fridge_compartment_temperature:
+    description: >-
+      How cold it currently is inside the fridge compartment. This is the
+      temperature people mean when they ask how cold the fridge is.
+    required: true
+    domains:
+      - sensor
+      - climate
+  fridge_compartment_target_temperature:
+    description: >-
+      The temperature the fridge compartment is set to hold, usually a few
+      degrees above freezing.
+    domains:
+      - number
+      - climate
+  freezer_compartment_door:
+    description: On while the door of the freezer compartment is open.
+    domains:
+      - binary_sensor
+    device_class: door
+  freezer_compartment_temperature:
+    description: >-
+      How cold it currently is inside the freezer compartment. This is far
+      colder than the fridge compartment, and is not what people mean when they
+      ask about the temperature of the room or of the fridge.
+    domains:
+      - sensor
+      - climate
+  freezer_compartment_target_temperature:
+    description: >-
+      The temperature the freezer compartment is set to hold, usually well below
+      freezing.
+    domains:
+      - number
+      - climate
+  fast_cool:
+    description: >-
+      Chills the fridge compartment down quickly, for example after loading a
+      lot of shopping. It usually switches itself off again after a while.
+    domains:
+      - switch
+  fast_freeze:
+    description: >-
+      Freezes the freezer compartment down quickly so fresh food freezes through
+      faster. It usually switches itself off again after a while.
+    domains:
+      - switch
+  temperature_alarm:
+    description: >-
+      On when a compartment has drifted outside its safe temperature range and
+      the food in it may be spoiling.
+    domains:
+      - binary_sensor
+    device_class: problem

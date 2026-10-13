@@ -1,0 +1,22 @@
+{
+  "aliases": ["Coffee machine", "Espresso maker"],
+  "name": "Espresso machine",
+  "traits": {
+    "brewing": { "name": "Brewing" },
+    "cleaning_active": { "name": "Cleaning active" },
+    "coffee_boiler_ready_time": { "name": "Coffee boiler ready time" },
+    "coffee_boiler_target_temperature": {
+      "aliases": ["Brew temperature", "Coffee temperature"],
+      "name": "Coffee boiler target temperature"
+    },
+    "power": { "name": "Power" },
+    "start_cleaning": { "name": "Start cleaning" },
+    "steam_boiler_power": { "name": "Steam boiler power" },
+    "steam_boiler_ready_time": { "name": "Steam boiler ready time" },
+    "steam_boiler_target_temperature": {
+      "aliases": ["Steam temperature"],
+      "name": "Steam boiler target temperature"
+    },
+    "water_tank_empty": { "name": "Water tank empty" }
+  }
+}
