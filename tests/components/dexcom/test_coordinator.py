@@ -113,6 +113,27 @@ async def test_backoff_on_unchanged_reading(
     assert mock_reading.call_count == 7
 
 
+async def test_early_refresh_keeps_schedule(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_reading: MagicMock
+) -> None:
+    """Test a manual refresh before the next reading is due keeps the schedule."""
+    freezer.move_to(READING_TIME + timedelta(seconds=60))
+    mock_reading.return_value = _reading(READING_TIME)
+    await _setup(hass)
+
+    # Manual refresh 60 s later returns the same reading, as it is not due yet
+    await _advance(hass, freezer, 60)
+    coordinator = hass.config_entries.async_entries("dexcom")[0].runtime_data
+    await coordinator.async_refresh()
+    assert mock_reading.call_count == 2
+
+    # The next poll still follows the reading time (+5 min 20 s), not a retry
+    await _advance(hass, freezer, 199)
+    assert mock_reading.call_count == 2
+    await _advance(hass, freezer, 1)
+    assert mock_reading.call_count == 3
+
+
 async def test_default_interval_after_failure(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_reading: MagicMock
 ) -> None:

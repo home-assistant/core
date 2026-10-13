@@ -61,14 +61,20 @@ class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading | None]):
             # No recent reading, the sensor may be offline
             self._unchanged_polls = 0
             return _SCAN_INTERVAL
-        if self.data is not None and reading.datetime == self.data.datetime:
+        expected = reading.datetime + _READING_INTERVAL + _UPLOAD_MARGIN
+        now = dt_util.utcnow()
+        if (
+            self.data is not None
+            and reading.datetime == self.data.datetime
+            and now >= expected
+        ):
             # The next reading is late: retry once soon, then fall back
             self._unchanged_polls += 1
             return _MIN_INTERVAL if self._unchanged_polls == 1 else _SCAN_INTERVAL
+        # A new reading, or a refresh before the next one is due
         self._unchanged_polls = 0
-        expected = reading.datetime + _READING_INTERVAL + _UPLOAD_MARGIN
         # Clamp in case the reading time is ahead of the local clock
         return min(
-            max(expected - dt_util.utcnow(), _MIN_INTERVAL),
+            max(expected - now, _MIN_INTERVAL),
             _READING_INTERVAL + _UPLOAD_MARGIN,
         )
