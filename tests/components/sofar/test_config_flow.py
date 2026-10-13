@@ -38,6 +38,8 @@ from . import (
     MOCK_SERIAL_ENTRY_DATA,
     MOCK_SERIAL_INPUT,
     MOCK_TCP_INPUT,
+    MOCK_UNRECOGNIZED_SERIAL,
+    declare_pv_in_masks,
     seed_pv_inverter,
 )
 
@@ -144,12 +146,35 @@ async def test_user_step_success(
     assert len(mock_conn.for_unit(1).read_events) == 2
 
 
+def _seed_unmodeled(unit: MockModbusUnit) -> None:
+    seed_pv_inverter(unit, serial=_UNMODELED_SERIAL)
+
+
+def _seed_detected_from_masks(unit: MockModbusUnit) -> None:
+    seed_pv_inverter(unit, serial=MOCK_UNRECOGNIZED_SERIAL)
+    declare_pv_in_masks(unit)
+
+
+@pytest.mark.parametrize(
+    ("seed", "serial"),
+    [
+        pytest.param(_seed_unmodeled, _UNMODELED_SERIAL, id="unmodeled_prefix"),
+        pytest.param(
+            _seed_detected_from_masks,
+            MOCK_UNRECOGNIZED_SERIAL,
+            id="detected_from_masks",
+        ),
+    ],
+)
 async def test_user_step_success_without_model(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    seed: Callable[[MockModbusUnit], None],
+    serial: str,
 ) -> None:
     """Test the flow falls back to the default title for an unknown model."""
     mock_conn = MockModbusConnection()
-    seed_pv_inverter(mock_conn.for_unit(1), serial=_UNMODELED_SERIAL)
+    seed(mock_conn.for_unit(1))
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(mock_conn):
@@ -158,7 +183,7 @@ async def test_user_step_success_without_model(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == MOCK_ENTRY_DATA
-    assert result["result"].unique_id == _UNMODELED_SERIAL
+    assert result["result"].unique_id == serial
 
 
 def _seed_unreachable(unit: MockModbusUnit) -> None:
@@ -166,7 +191,7 @@ def _seed_unreachable(unit: MockModbusUnit) -> None:
 
 
 def _seed_unrecognized(unit: MockModbusUnit) -> None:
-    """No-op: unseeded registers already decode to an unrecognized serial."""
+    """No-op: unseeded registers give no known serial and no usable mask."""
 
 
 @pytest.mark.parametrize(
@@ -439,9 +464,10 @@ def _serial_entry() -> MockConfigEntry:
         pytest.param(None, ConfigEntryState.LOADED, id="loaded"),
         pytest.param(
             ModbusTimeoutError("stuck"),
-            ConfigEntryState.SETUP_RETRY,
-            id="setup_retry",
+            ConfigEntryState.LOADED,
+            id="asleep",
         ),
+        pytest.param(ValueError("bug"), ConfigEntryState.SETUP_RETRY, id="setup_retry"),
     ],
 )
 @pytest.mark.usefixtures("mock_get_unit")
@@ -513,8 +539,7 @@ async def test_reconfigure_new_line_settings_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data == MOCK_SERIAL_ENTRY_DATA
     assert entry.unique_id == MOCK_SERIAL
-    # Set back up against the same dead device, so it lands in retry.
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
 
     mock_connection.for_unit(1).fail_requests(None)
     with _patch_temporary_unit(mock_connection):

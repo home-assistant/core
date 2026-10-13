@@ -135,9 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(async_register_llm_api(hass, knx_module))
 
-    knx_module.ui_time_server_controller.start(
-        knx_module.xknx, knx_module.config_store.get_time_server_config()
-    )
+    if (time_server := knx_module.config_store.get_time_server()) is not None:
+        knx_module.ui_time_server_controller.start(knx_module.xknx, time_server)
     knx_module.ui_expose_controller.start(
         hass, knx_module.xknx, knx_module.config_store.get_exposes()
     )
