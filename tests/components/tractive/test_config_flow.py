@@ -13,7 +13,7 @@ from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 USER_INPUT = {
     "email": "test-email@example.com",
@@ -223,6 +223,10 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "email")
+        == USER_INPUT["email"]
+    )
 
     with (
         patch("aiotractive.api.API.user_id", return_value="USERID"),
