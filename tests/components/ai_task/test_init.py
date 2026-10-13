@@ -9,7 +9,10 @@ import probatio
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.ai_task import AITaskPreferences
+from homeassistant.components.ai_task import (
+    AITaskPreferences,
+    async_is_automatic_evaluation_enabled,
+)
 from homeassistant.components.ai_task.const import (
     DATA_MEDIA_SOURCE,
     DATA_PREFERENCES,
@@ -22,6 +25,24 @@ from homeassistant.helpers import selector
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
 from tests.common import MockUser, flush_store
+
+
+async def test_automatic_evaluation_without_setup(hass: HomeAssistant) -> None:
+    """Automatic evaluation is disabled when AI Task has not been set up."""
+    assert async_is_automatic_evaluation_enabled(hass) is False
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_automatic_evaluation_preference(hass: HomeAssistant) -> None:
+    """The public helper reflects the default and subsequent preference changes."""
+    assert async_is_automatic_evaluation_enabled(hass) is False
+
+    preferences = hass.data[DATA_PREFERENCES]
+    preferences.async_set_preferences(allow_automatic_evaluation=True)
+    assert async_is_automatic_evaluation_enabled(hass) is True
+
+    preferences.async_set_preferences(allow_automatic_evaluation=False)
+    assert async_is_automatic_evaluation_enabled(hass) is False
 
 
 async def test_preferences_storage_load(

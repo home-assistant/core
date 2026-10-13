@@ -57,6 +57,7 @@ __all__ = [
     "async_evaluate",
     "async_generate_data",
     "async_generate_image",
+    "async_is_automatic_evaluation_enabled",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,6 +87,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+
+
+@callback
+def async_is_automatic_evaluation_enabled(hass: HomeAssistant) -> bool:
+    """Return whether the user allows automatic use of the default decision model.
+
+    Returns False if AI Task has not been set up. This only checks the user's
+    preference, not whether a default decision entity is available.
+    """
+    if (preferences := hass.data.get(DATA_PREFERENCES)) is None:
+        return False
+    return preferences.allow_automatic_evaluation
 
 
 class AITaskPreferences:
