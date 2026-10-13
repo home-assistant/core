@@ -343,6 +343,19 @@ async def test_failed_setup_cancels_connection_retry(
     assert config_entry.runtime_data.connection._retry_handle is None
 
 
+async def test_setup_retries_when_sites_unavailable(
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Ensure setup is retried when site information could not be loaded."""
+    with patch(
+        "aiounifi.interfaces.sites.Sites.update",
+        side_effect=aiounifi.ServiceUnavailable,
+    ):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_connection_recovery_does_not_restart_running_websocket(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,

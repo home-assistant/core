@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -107,7 +108,9 @@ class UnifiHub:
         self._entity_helper.initialize()
 
         assert self.config.entry.unique_id is not None
-        self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
+        if (site := self.api.sites.get(self.config.entry.unique_id)) is None:
+            raise ConfigEntryNotReady("UniFi site information is not available")
+        self.is_admin = site.role == "admin"
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
