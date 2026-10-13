@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers import config_validation as cv, entityfilter, start
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
@@ -48,7 +48,9 @@ from homeassistant.util.signal_type import SignalType
 # startup
 from . import (
     account_link,
+    alexa_config,
     backup,  # noqa: F401
+    google_config,
     http_api,
 )
 from .assist_pipeline import async_create_cloud_pipeline
@@ -434,6 +436,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await cloud.initialize()
 
+    async def _async_migrate_alexa_settings(_: HomeAssistant) -> None:
+        """Migrate the Alexa entity settings, connected or not."""
+        await alexa_config.async_migrate_entity_settings(hass, alexa_conf, prefs, cloud)
+
+    async def _async_migrate_google_settings(_: HomeAssistant) -> None:
+        """Migrate the Google Assistant entity settings, connected or not."""
+        await google_config.async_migrate_entity_settings(
+            hass, google_conf, prefs, cloud
+        )
+
+    # Separate jobs, so one failing does not block the other
+    start.async_at_started(hass, _async_migrate_alexa_settings)
+    start.async_at_started(hass, _async_migrate_google_settings)
+
     if not cloud.is_logged_in:
         # Remove leftover config entries if the user is not logged in.
         await _async_remove_config_entry(hass)
@@ -504,7 +520,7 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     platforms = PLATFORMS.copy()
     if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
@@ -517,12 +533,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data["platforms"]
     )
 

@@ -71,11 +71,7 @@ async def async_setup_entry(
     def _async_add_wired_packs() -> None:
         """Add a pack's sensors the first time it reports a voltage."""
         wired = runtime_data.wired_packs
-        new = {
-            number
-            for number in BATTERY_STRING_COMPONENTS
-            if number not in wired and runtime_data.pack_is_wired(number)
-        }
+        new = runtime_data.readings.device.wired_battery_strings - wired
         if not new:
             return
         wired.update(new)
@@ -142,8 +138,6 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         except ValueError, TypeError:
             return
         self._attr_native_value = val
-        if (total_fn := self.entity_description.total_fn) is not None:
-            total_fn(self.coordinator.device).seed(val)
 
     @property
     @override

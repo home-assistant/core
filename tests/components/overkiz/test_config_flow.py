@@ -1461,8 +1461,7 @@ async def test_rexel_full_flow_single_gateway(
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
-    # Azure AD B2C needs the policy on the authorize URL; the helper rebuilds
-    # the query string, so it must survive via extra_authorize_data.
+    # Azure AD B2C needs the policy on the authorize URL.
     assert f"p={REXEL_OAUTH_POLICY}" in result["url"]
     # offline_access is required for B2C to return a refresh token.
     assert f"{REXEL_OAUTH_SCOPE}+offline_access" in result["url"]

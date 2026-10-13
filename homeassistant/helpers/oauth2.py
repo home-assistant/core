@@ -7,7 +7,8 @@ from http import HTTPStatus
 import json
 import logging
 import secrets
-from typing import Any, NoReturn, cast
+from typing import Any, Literal, NoReturn, cast
+from urllib.parse import quote_plus
 
 from aiohttp import ClientError, ClientResponseError, client, hdrs
 from multidict import CIMultiDict
@@ -24,6 +25,30 @@ from homeassistant.exceptions import (
 from .aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
+
+type ClientAuthMethod = Literal["client_secret_basic", "client_secret_post"]
+
+
+def client_auth(
+    data: Mapping[str, Any],
+    client_id: str,
+    client_secret: str | None,
+    method: ClientAuthMethod = "client_secret_post",
+) -> tuple[dict[str, Any], dict[str, str]]:
+    """Return the token request body and headers that authenticate the client."""
+
+    if method == "client_secret_basic" and client_secret is not None:
+        # RFC 6749 section 2.3.1 requires form encoding before base64.
+        credentials = (
+            f"{quote_plus(client_id, safe='')}:{quote_plus(client_secret, safe='')}"
+        )
+        encoded = base64.b64encode(credentials.encode()).decode()
+        return dict(data), {hdrs.AUTHORIZATION: f"Basic {encoded}"}
+
+    body = {**data, "client_id": client_id}
+    if client_secret:
+        body["client_secret"] = client_secret
+    return body, {}
 
 
 def generate_code_verifier(code_verifier_length: int = 128) -> str:
@@ -61,7 +86,7 @@ def build_authorize_url(
     """Return the URL that sends the user to the authorization endpoint."""
     return str(
         URL(authorize_url)
-        .with_query(
+        .update_query(
             {
                 "response_type": "code",
                 "client_id": client_id,
@@ -101,6 +126,8 @@ async def async_token_request(
     data: Mapping[str, Any],
     *,
     domain: str,
+    headers: Mapping[str, str] | None = None,
+    allow_redirects: bool = True,
 ) -> dict:
     """Post to a token endpoint and return the decoded response."""
     session = async_get_clientsession(hass)
@@ -108,7 +135,9 @@ async def async_token_request(
     _LOGGER.debug("Sending token request to %s", token_url)
 
     try:
-        resp = await session.post(token_url, data=data)
+        resp = await session.post(
+            token_url, data=data, headers=headers, allow_redirects=allow_redirects
+        )
         if resp.status >= 400:
             error_body = ""
             try:
@@ -125,6 +154,15 @@ async def async_token_request(
                 detail = error_body[:200] if error_body else "unknown error"
             _LOGGER.debug(
                 "Token request for %s failed (%s): %s", domain, resp.status, detail
+            )
+        elif not allow_redirects and 300 <= resp.status < 400:
+            resp.release()
+            raise ClientResponseError(
+                resp.request_info,
+                resp.history,
+                status=resp.status,
+                message="Token endpoint redirected",
+                headers=resp.headers,
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
