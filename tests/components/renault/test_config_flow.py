@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import aiohttp
 import pytest
@@ -696,6 +696,7 @@ async def test_config_flow_two_factor_auth_multiple_emails(
             "invalid_code",
         ),
         (aiohttp.ClientConnectionError(), "cannot_connect"),
+        (aiohttp.ClientResponseError(Mock(), (), status=500), "cannot_connect"),
         (GigyaException(), "cannot_connect"),
         (Exception(), "unknown"),
     ],
@@ -758,6 +759,12 @@ async def test_config_flow_two_factor_code_error(
             {"side_effect": GigyaException()},
             "cannot_connect",
             id="request_code_error",
+        ),
+        pytest.param(
+            "request_two_factor_auth_code",
+            {"side_effect": aiohttp.ClientResponseError(Mock(), (), status=500)},
+            "cannot_connect",
+            id="request_code_http_error",
         ),
     ],
 )

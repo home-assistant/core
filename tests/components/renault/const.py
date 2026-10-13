@@ -17,6 +17,7 @@ MOCK_CONFIG = {
     RenaultConfigurationKeys.USERNAME: "email@test.com",
     RenaultConfigurationKeys.PASSWORD: "test",
     RenaultConfigurationKeys.LOGIN_TOKEN: MOCK_LOGIN_TOKEN,
+    RenaultConfigurationKeys.DEVICE_IDS: MOCK_DEVICE_IDS,
     RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
     RenaultConfigurationKeys.LOCALE: "fr_FR",
 }

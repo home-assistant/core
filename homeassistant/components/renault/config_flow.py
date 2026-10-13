@@ -85,7 +85,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except PendingTwoFactorAuthenticationException:
                 return await self.async_step_two_factor_email()
-            except aiohttp.ClientConnectionError, GigyaException:
+            except aiohttp.ClientError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -176,7 +176,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except PendingTwoFactorAuthenticationException:
                 return await self.async_step_two_factor_email()
-            except aiohttp.ClientConnectionError, GigyaException:
+            except aiohttp.ClientError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -208,7 +208,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             emails = await self.renault_hub.get_two_factor_auth_emails()
-        except aiohttp.ClientConnectionError, GigyaException:
+        except aiohttp.ClientError, GigyaException:
             return self.async_abort(reason="cannot_connect")
         self._two_factor_emails = {
             email.id: email.obfuscated or email.id for email in emails if email.id
@@ -242,7 +242,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         """Email the two-factor authentication code."""
         try:
             await self.renault_hub.request_two_factor_auth_code(email_id)
-        except aiohttp.ClientConnectionError, GigyaException:
+        except aiohttp.ClientError, GigyaException:
             return self.async_abort(reason="cannot_connect")
         self._two_factor_email = self._two_factor_emails[email_id]
         return await self.async_step_two_factor_code()
@@ -257,7 +257,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.renault_hub.complete_two_factor_auth(user_input[CONF_CODE])
             except InvalidVerificationCodeException:
                 errors["base"] = "invalid_code"
-            except aiohttp.ClientConnectionError, GigyaException:
+            except aiohttp.ClientError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
