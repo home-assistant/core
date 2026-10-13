@@ -23,7 +23,6 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .data import (
     DEVICE_CONSUMPTION_SCHEMA,
-    ENERGY_DEVICES_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
     EnergyManager,
     EnergyPreferencesUpdate,
@@ -127,7 +126,7 @@ def ws_get_prefs(
     {
         probatio.Required("type"): "energy/save_prefs",
         probatio.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
-        probatio.Optional("device_consumption"): ENERGY_DEVICES_SCHEMA,
+        probatio.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
         probatio.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )

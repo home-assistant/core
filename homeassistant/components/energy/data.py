@@ -161,6 +161,15 @@ class SolarSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class HomeSourceType(TypedDict):
+    """Dictionary holding the whole-home consumption meter."""
+
+    type: Literal["home"]
+    stat_energy_from: str
+    stat_rate: NotRequired[str]
+    name: NotRequired[str]
+
+
 class BatterySourceType(TypedDict):
     """Dictionary holding the source of battery storage."""
 
@@ -234,6 +243,7 @@ class WaterSourceType(TypedDict):
 type SourceType = (
     GridSourceType
     | SolarSourceType
+    | HomeSourceType
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
@@ -257,17 +267,11 @@ class DeviceConsumption(TypedDict):
     included_in_stat: NotRequired[str]
 
 
-class EnergyDeviceConsumption(DeviceConsumption):
-    """Electricity device consumption."""
-
-    is_home_total: NotRequired[bool]
-
-
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
 
     energy_sources: list[SourceType]
-    device_consumption: list[EnergyDeviceConsumption]
+    device_consumption: list[DeviceConsumption]
     device_consumption_water: NotRequired[list[DeviceConsumption]]
 
 
@@ -527,6 +531,14 @@ SOLAR_SOURCE_SCHEMA = probatio.Schema(
         probatio.Optional("name"): str,
     }
 )
+HOME_SOURCE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("type"): "home",
+        probatio.Required("stat_energy_from"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("name"): str,
+    }
+)
 BATTERY_SOURCE_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): "battery",
@@ -583,7 +595,8 @@ WATER_SOURCE_SCHEMA = probatio.All(
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     """Validate that we don't have too many of certain types."""
-    # Currently no type limits - multiple grid sources are allowed (like batteries)
+    if sum(1 for source in value if source["type"] == "home") > 1:
+        raise probatio.Invalid("Only one home source is allowed")
     return value
 
 
@@ -627,18 +640,6 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
     return value
 
 
-def _validate_single_home_total(
-    value: list[EnergyDeviceConsumption],
-) -> list[EnergyDeviceConsumption]:
-    """Validate that at most one device is flagged as the home total."""
-    totals = [device for device in value if device.get("is_home_total")]
-    if len(totals) > 1:
-        raise probatio.Invalid("Only one device can be the home total")
-    if totals and "included_in_stat" in totals[0]:
-        raise probatio.Invalid("The home total cannot be included in another device")
-    return value
-
-
 ENERGY_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         [
@@ -647,6 +648,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "home": HOME_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
@@ -658,18 +660,13 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
     _validate_grid_stat_uniqueness,
 )
 
-_DEVICE_CONSUMPTION_FIELDS = {
-    probatio.Required("stat_consumption"): str,
-    probatio.Optional("stat_rate"): str,
-    probatio.Optional("name"): str,
-    probatio.Optional("included_in_stat"): str,
-}
-DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(_DEVICE_CONSUMPTION_FIELDS)
-ENERGY_DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
-    {**_DEVICE_CONSUMPTION_FIELDS, probatio.Optional("is_home_total"): bool}
-)
-ENERGY_DEVICES_SCHEMA = probatio.All(
-    [ENERGY_DEVICE_CONSUMPTION_SCHEMA], _validate_single_home_total
+DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("stat_consumption"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("included_in_stat"): str,
+    }
 )
 
 

@@ -784,7 +784,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 validate_calls,
             )
 
-        elif source["type"] == "solar":
+        elif source["type"] in ("solar", "home"):
             wanted_statistics_metadata.add(source["stat_energy_from"])
             validate_calls.append(
                 functools.partial(
@@ -844,16 +844,16 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             )
         )
 
-    for water_device in manager.data.get("device_consumption_water", []):
+    for device in manager.data.get("device_consumption_water", []):
         device_result = ValidationIssues()
         result.device_consumption_water.append(device_result)
-        wanted_statistics_metadata.add(water_device["stat_consumption"])
+        wanted_statistics_metadata.add(device["stat_consumption"])
         validate_calls.append(
             functools.partial(
                 _async_validate_usage_stat,
                 hass,
                 statistics_metadata,
-                water_device["stat_consumption"],
+                device["stat_consumption"],
                 WATER_USAGE_DEVICE_CLASSES,
                 WATER_USAGE_UNITS,
                 WATER_UNIT_ERROR,
