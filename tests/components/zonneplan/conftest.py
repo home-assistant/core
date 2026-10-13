@@ -8,6 +8,8 @@ import pytest
 from pyzonneplan import (
     Account,
     BatteryControlMode,
+    BatteryDayAheadArbitrage,
+    BatteryHomeOptimization,
     BatteryInstallation,
     ChargePointInstallation,
     ConsumerPrices,
@@ -85,6 +87,16 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
     )
     client.async_get_charge_point.return_value = ChargePointInstallation.from_dict(
         load_json_object_fixture("get_charge_point.json", DOMAIN)
+    )
+    client.async_get_battery_home_optimization.return_value = (
+        BatteryHomeOptimization.from_dict(
+            load_json_object_fixture("get_battery_home_optimization.json", DOMAIN)
+        )
+    )
+    client.async_get_battery_day_ahead_arbitrage.return_value = (
+        BatteryDayAheadArbitrage.from_dict(
+            load_json_object_fixture("get_battery_day_ahead_arbitrage.json", DOMAIN)
+        )
     )
 
     with (

@@ -36,6 +36,20 @@
         }
       }
     },
+    "number": {
+      "backup_reserve": {
+        "default": "mdi:home-battery-outline"
+      },
+      "max_charge_power": {
+        "default": "mdi:battery-arrow-up-outline"
+      },
+      "max_discharge_power": {
+        "default": "mdi:battery-arrow-down-outline"
+      },
+      "price_spread": {
+        "default": "mdi:cash-sync"
+      }
+    },
     "select": {
       "control_mode": {
         "default": "mdi:tune-variant",
