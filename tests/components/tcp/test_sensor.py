@@ -1,15 +1,20 @@
 """The tests for the TCP sensor platform."""
 
+from collections.abc import Callable
 from copy import copy
-from unittest.mock import call, patch
+import ssl
+from unittest.mock import MagicMock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.tcp import common as tcp
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
 
 TEST_CONFIG = {
     "sensor": {
@@ -134,33 +139,37 @@ async def test_config_uses_defaults(hass: HomeAssistant, mock_socket) -> None:
 
 
 @pytest.mark.parametrize("sock_attr", ["connect", "send"])
-async def test_update_socket_error(hass: HomeAssistant, mock_socket, sock_attr) -> None:
+@pytest.mark.parametrize("platform", ["sensor", "binary_sensor"])
+async def test_update_socket_error(
+    hass: HomeAssistant, mock_socket: MagicMock, sock_attr: str, platform: str
+) -> None:
     """Test socket errors during update."""
     socket_method = getattr(mock_socket, sock_attr)
     socket_method.side_effect = OSError("Boom")
 
-    assert await async_setup_component(hass, "sensor", TEST_CONFIG)
+    assert await async_setup_component(hass, platform, {platform: SENSOR_TEST_CONFIG})
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY)
+    state = hass.states.get(f"{platform}.test_name")
 
     assert state
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("platform", ["sensor", "binary_sensor"])
 async def test_update_select_fails(
-    hass: HomeAssistant, mock_socket, mock_select
+    hass: HomeAssistant, mock_socket: MagicMock, mock_select: MagicMock, platform: str
 ) -> None:
     """Test select fails to return a socket for reading."""
     mock_select.return_value = (False, False, False)
 
-    assert await async_setup_component(hass, "sensor", TEST_CONFIG)
+    assert await async_setup_component(hass, platform, {platform: SENSOR_TEST_CONFIG})
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY)
+    state = hass.states.get(f"{platform}.test_name")
 
     assert state
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_update_returns_if_template_render_fails(
@@ -244,3 +253,133 @@ async def test_ssl_state_verify_off(
     )
     assert mock_ssl_socket.recv.called
     assert mock_ssl_socket.recv.call_args == call(SENSOR_TEST_CONFIG["buffer_size"])
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected"), [("sensor", "7.123"), ("binary_sensor", STATE_OFF)]
+)
+@pytest.mark.parametrize(
+    ("method", "side_effect", "use_ssl"),
+    [
+        ("connect", OSError("Boom"), False),
+        ("send", OSError("Boom"), False),
+        ("select", lambda *args: (False, False, False), False),
+        ("recv", OSError("Boom"), False),
+        ("recv", ssl.SSLError("Boom"), True),
+        ("wrap_socket", ssl.SSLError("Boom"), True),
+    ],
+)
+async def test_update_failure_after_success(
+    hass: HomeAssistant,
+    mock_socket: MagicMock,
+    mock_select: MagicMock,
+    mock_ssl_context: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+    expected: str,
+    method: str,
+    side_effect: OSError | Callable[..., tuple[bool, bool, bool]],
+    use_ssl: bool,
+) -> None:
+    """Test connection failures, response timeouts, and recovery after a successful update."""
+    mock_ssl_context.return_value.wrap_socket.return_value = mock_socket
+    config = {**SENSOR_TEST_CONFIG, tcp.CONF_SSL: use_ssl}
+    assert await async_setup_component(hass, platform, {platform: config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == expected
+
+    failing_method = {
+        "connect": mock_socket.connect,
+        "send": mock_socket.send,
+        "select": mock_select,
+        "recv": mock_socket.recv,
+        "wrap_socket": mock_ssl_context.return_value.wrap_socket,
+    }[method]
+    failing_method.side_effect = side_effect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    failing_method.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected"), [("sensor", "123"), ("binary_sensor", STATE_OFF)]
+)
+async def test_template_error_after_success(
+    hass: HomeAssistant,
+    mock_socket: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+    expected: str,
+) -> None:
+    """Test template errors preserve availability, including after reconnection."""
+    config = {**SENSOR_TEST_CONFIG, tcp.CONF_VALUE_TEMPLATE: "{{ value | int }}"}
+    assert await async_setup_component(hass, platform, {platform: config})
+    await hass.async_block_till_done()
+
+    mock_socket.recv.return_value = b"invalid"
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == expected
+
+    mock_socket.connect.side_effect = OSError("Boom")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_socket.connect.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == expected
+
+
+@pytest.mark.parametrize("platform", ["sensor", "binary_sensor"])
+@pytest.mark.parametrize("method", ["wrap_socket", "recv"])
+async def test_initial_ssl_failure(
+    hass: HomeAssistant,
+    mock_socket: MagicMock,
+    mock_ssl_context: MagicMock,
+    platform: str,
+    method: str,
+) -> None:
+    """Test initial TLS handshake and receive failures mark entities unavailable."""
+    mock_ssl_context.return_value.wrap_socket.return_value = mock_socket
+    failing_method = {
+        "wrap_socket": mock_ssl_context.return_value.wrap_socket,
+        "recv": mock_socket.recv,
+    }[method]
+    failing_method.side_effect = ssl.SSLError("Boom")
+    config = {**SENSOR_TEST_CONFIG, tcp.CONF_SSL: True}
+    assert await async_setup_component(hass, platform, {platform: config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{platform}.test_name")
+    assert state
+    assert state.state == STATE_UNAVAILABLE

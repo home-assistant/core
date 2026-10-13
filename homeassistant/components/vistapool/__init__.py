@@ -107,12 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
     # first live snapshot is a no-op so it wouldn't clean these up.
     _async_remove_stale_devices(hass, entry, set(pools))
 
-    def _on_user_pools_snapshot(pool_ids: list[str]) -> None:
-        """Bridge the Firestore snapshot from the watch thread to the HA loop."""
-        hass.loop.call_soon_threadsafe(_schedule_reconcile, pool_ids)
-
     @callback
-    def _schedule_reconcile(pool_ids: list[str]) -> None:
+    def _on_user_pools_snapshot(pool_ids: list[str]) -> None:
+        """Reconcile the pool list from a user-pools snapshot."""
         entry.async_create_background_task(
             hass,
             _async_reconcile_pools(hass, entry, pool_ids),

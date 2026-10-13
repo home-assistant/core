@@ -175,7 +175,6 @@
     },
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -668,14 +667,8 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "valve_position": {
         "name": "Valve position"
-      },
-      "voltage": {
-        "name": "Voltage"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"
@@ -690,6 +683,9 @@
       }
     },
     "switch": {
+      "audible_alarm_enabled": {
+        "name": "Audible alarm enabled"
+      },
       "child_lock": {
         "name": "Child lock"
       },
@@ -698,6 +694,9 @@
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "one_touch_locking": {
+        "name": "One-touch locking"
       },
       "power": {
         "name": "Power"
@@ -710,6 +709,9 @@
       },
       "switch": {
         "name": "[%key:component::switch::title%]"
+      },
+      "visual_alarm_enabled": {
+        "name": "Visual alarm enabled"
       }
     },
     "vacuum": {

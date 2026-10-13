@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientError
+from probatio import Required, Schema
 from ttls.client import Twinkly
-from voluptuous import Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME

@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from steamloop import PairingError, SteamloopConnectionError, ThermostatConnection
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -13,9 +13,9 @@ from .const import CONF_SECRET_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 

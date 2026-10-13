@@ -201,20 +201,31 @@ def mock_controller_service_validate_verification_code_failed():
         yield service_mock
 
 
+def _accept_2fa_code(service: MagicMock) -> None:
+    """Accept the next 2FA code, which makes the session trusted."""
+
+    def _validate_2fa_code(code: str) -> bool:
+        service.requires_2fa = False
+        service.requires_2sa = False
+        return True
+
+    service.validate_2fa_code = Mock(side_effect=_validate_2fa_code)
+
+
 @pytest.mark.usefixtures("service")
 async def test_user(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=None
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     # test with required
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
@@ -223,11 +234,18 @@ async def test_user(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("service_authenticated")
 async def test_user_with_cookie(hass: HomeAssistant) -> None:
     """Test user config with presence of a cookie."""
-    # test with all provided
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # test with all provided
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_WITH_FAMILY: WITH_FAMILY,
@@ -243,19 +261,33 @@ async def test_user_with_cookie(hass: HomeAssistant) -> None:
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
+@pytest.mark.usefixtures("service_authenticated")
 async def test_login_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during login."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService",
         side_effect=PyiCloudFailedLoginException(msg="Invalid login"),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("service_authenticated_no_device")
@@ -264,7 +296,14 @@ async def test_no_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_device"
@@ -338,8 +377,18 @@ async def test_trusted_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -352,31 +401,66 @@ async def test_trusted_device_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
-@pytest.mark.usefixtures("service_send_verification_code_failed")
-async def test_send_verification_code_failed(hass: HomeAssistant) -> None:
+async def test_send_verification_code_failed(
+    hass: HomeAssistant, service_send_verification_code_failed: MagicMock
+) -> None:
     """Test when we have errors during send_verification_code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
+
+    service = service_send_verification_code_failed.return_value
+    service.send_verification_code.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+
+    service.requires_2sa = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("service")
@@ -385,10 +469,21 @@ async def test_verification_code(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -403,15 +498,26 @@ async def test_verification_code_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
     )
     service.return_value.requires_2sa = False
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
@@ -423,24 +529,53 @@ async def test_verification_code_success(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-@pytest.mark.usefixtures("service_validate_verification_code_failed")
-async def test_validate_verification_code_failed(hass: HomeAssistant) -> None:
+async def test_validate_verification_code_failed(
+    hass: HomeAssistant, service_validate_verification_code_failed: MagicMock
+) -> None:
     """Test when we have errors during validate_verification_code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
-    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {"base": "validate_verification_code"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRUSTED_DEVICE: 0}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+
+    service = service_validate_verification_code_failed.return_value
+    service.validate_verification_code.return_value = True
+    service.requires_2sa = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock) -> None:
@@ -448,13 +583,24 @@ async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
+
     service_2fa.return_value.requires_2fa = False
     service_2fa.return_value.requires_2sa = False
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -474,13 +620,24 @@ async def test_2fa_new_code_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
+
     service_2fa.return_value.requires_2fa = False
     service_2fa.return_value.requires_2sa = False
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -488,40 +645,74 @@ async def test_2fa_new_code_success(
     assert result["errors"] == {}
 
 
-@pytest.mark.usefixtures("service_validate_2fa_code_failed")
-async def test_validate_2fa_code_failed(hass: HomeAssistant) -> None:
+async def test_validate_2fa_code_failed(
+    hass: HomeAssistant, service_validate_2fa_code_failed: MagicMock
+) -> None:
     """Test when we have errors during validate_verification_code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "validate_verification_code"}
 
+    _accept_2fa_code(service_validate_2fa_code_failed.return_value)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-@pytest.mark.usefixtures("service_2fa")
-async def test_validate_2fa_code_not_provided(hass: HomeAssistant) -> None:
+
+async def test_validate_2fa_code_not_provided(
+    hass: HomeAssistant, service_2fa: MagicMock
+) -> None:
     """Test when we have errors during validate_verification_code if the user didn't provide a code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: ""}
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: ""}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "validate_verification_code"}
+
+    _accept_2fa_code(service_2fa.return_value)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_2fa_code_failed_request(
@@ -531,20 +722,43 @@ async def test_2fa_code_failed_request(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
 
     service_2fa_failed_request.return_value.request_2fa_code.side_effect = (
         PyiCloudAPIResponseException(reason="PyiCloud error")
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "send_verification_code"}
+
+    service_2fa_failed_request.return_value.request_2fa_code.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    _accept_2fa_code(service_2fa_failed_request.return_value)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_2fa_code_non_pyicloud_error(
@@ -554,20 +768,43 @@ async def test_2fa_code_non_pyicloud_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
 
     service_2fa_failed_request.return_value.request_2fa_code.side_effect = Exception(
         "Non-PyiCloud error"
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "send_verification_code"}
+
+    service_2fa_failed_request.return_value.request_2fa_code.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    _accept_2fa_code(service_2fa_failed_request.return_value)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_2fa_code_returned_false(
@@ -577,18 +814,41 @@ async def test_2fa_code_returned_false(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
 
     service_2fa_failed_request.return_value.request_2fa_code.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "send_verification_code"}
+
+    service_2fa_failed_request.return_value.request_2fa_code.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    _accept_2fa_code(service_2fa_failed_request.return_value)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("service_password_update")
@@ -605,7 +865,7 @@ async def test_password_update(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
+        result["flow_id"], user_input={CONF_PASSWORD: PASSWORD_2}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -613,8 +873,9 @@ async def test_password_update(hass: HomeAssistant) -> None:
     assert config_entry.data[CONF_PASSWORD] == PASSWORD_2
 
 
-@pytest.mark.usefixtures("service_password_update_failed")
-async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
+async def test_password_update_wrong_password(
+    hass: HomeAssistant, service_password_update_failed: MagicMock
+) -> None:
     """Test password reauthentication with wrong password returns error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -630,11 +891,20 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
+        result["flow_id"], user_input={CONF_PASSWORD: PASSWORD_2}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    service_password_update_failed.side_effect = None
+    service_password_update_failed.return_value.requires_2fa = False
+    service_password_update_failed.return_value.requires_2sa = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: PASSWORD_2}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.usefixtures("service")
@@ -644,7 +914,7 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.icloud.config_flow.os.path.exists",
             return_value=False,
-        ),
+        ) as mocked_path,
         patch(
             "homeassistant.components.icloud.config_flow.os.makedirs"
         ) as makedirs_mock,
@@ -652,7 +922,16 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        mocked_path.return_value = True
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == CONF_TRUSTED_DEVICE

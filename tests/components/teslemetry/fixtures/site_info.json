@@ -1,6 +1,6 @@
 {
   "response": {
-    "id": "1233-abcd",
+    "id": "1152100-14-J--CN00000000J50D",
     "site_name": "Site",
     "backup_reserve_percent": 0,
     "default_real_mode": "self_consumption",
@@ -44,7 +44,7 @@
       "gateways": [
         {
           "device_id": "gateway-id",
-          "din": "gateway-din",
+          "din": "1152100-14-J--CN00000000J50D",
           "serial_number": "CN00000000J50D",
           "part_number": "1152100-14-J",
           "part_type": 10,
@@ -58,7 +58,7 @@
       "batteries": [
         {
           "device_id": "battery-1-id",
-          "din": "battery-1-din",
+          "din": "3012170-10-B--TG000000001DA5",
           "serial_number": "TG000000001DA5",
           "part_number": "3012170-10-B",
           "part_type": 2,
@@ -69,7 +69,7 @@
         },
         {
           "device_id": "battery-2-id",
-          "din": "battery-2-din",
+          "din": "3012170-05-C--TG000000002DA5",
           "serial_number": "TG000000002DA5",
           "part_number": "3012170-05-C",
           "part_type": 2,
@@ -119,7 +119,7 @@
     },
     "nameplate_power": 15000,
     "nameplate_energy": 40500,
-    "installation_time_zone": "",
+    "installation_time_zone": "Australia/Brisbane",
     "max_site_meter_power_ac": 1000000000,
     "min_site_meter_power_ac": -1000000000,
     "tariff_content_v2": {

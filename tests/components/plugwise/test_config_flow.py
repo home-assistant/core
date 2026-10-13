@@ -208,6 +208,7 @@ async def test_zeroconf_flow_stretch(
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME2,
     }
+    assert result2["result"].unique_id == TEST_SMILE_HOST
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 1

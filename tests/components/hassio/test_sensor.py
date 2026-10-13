@@ -242,3 +242,53 @@ async def test_stats_addon_sensor(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     addon_stats.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@patch.dict(os.environ, MOCK_ENVIRON)
+async def test_stats_addon_sensor_rename(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    addon_stats: AsyncMock,
+) -> None:
+    """Test a renamed stats sensor keeps its stats subscription."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity("sensor.test_cpu_percent", disabled_by=None)
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("sensor.test_cpu_percent") is not None
+
+    entity_registry.async_update_entity(
+        "sensor.test_cpu_percent", new_entity_id="sensor.renamed_cpu_percent"
+    )
+    await hass.async_block_till_done()
+
+    addon_stats.reset_mock()
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    addon_stats.assert_called_with("test")
+    assert hass.states.get("sensor.renamed_cpu_percent").state == "0.99"
+    assert hass.states.get("sensor.test_cpu_percent") is None
+
+    # Disabling the renamed entity unsubscribes it, so stats fetching stops
+    entity_registry.async_update_entity(
+        "sensor.renamed_cpu_percent", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    addon_stats.reset_mock()
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    addon_stats.assert_not_called()

@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.idrive_e2 import ClientError
 from homeassistant.components.idrive_e2.config_flow import CONF_ACCESS_KEY_ID
@@ -231,7 +231,7 @@ async def test_flow_bucket_step_options_from_s3_list_buckets(
 
     # Extract dropdown options from selector in schema
     schema = result["data_schema"].schema
-    selector = schema[vol.Required(CONF_BUCKET)]
+    selector = schema[probatio.Required(CONF_BUCKET)]
     assert isinstance(selector, SelectSelector)
 
     cfg = selector.config

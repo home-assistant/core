@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -195,9 +195,11 @@ def with_system_store(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "frontend/set_user_data",
-        vol.Required("key"): str,
-        vol.Required("value"): vol.Any(bool, str, int, float, dict, list, None),
+        probatio.Required("type"): "frontend/set_user_data",
+        probatio.Required("key"): str,
+        probatio.Required("value"): probatio.Any(
+            bool, str, int, float, dict, list, None
+        ),
     }
 )
 @websocket_api.async_response
@@ -214,7 +216,7 @@ async def websocket_set_user_data(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "frontend/get_user_data", vol.Optional("key"): str}
+    {probatio.Required("type"): "frontend/get_user_data", probatio.Optional("key"): str}
 )
 @websocket_api.async_response
 @with_user_store
@@ -232,7 +234,10 @@ async def websocket_get_user_data(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "frontend/subscribe_user_data", vol.Optional("key"): str}
+    {
+        probatio.Required("type"): "frontend/subscribe_user_data",
+        probatio.Optional("key"): str,
+    }
 )
 @websocket_api.async_response
 @with_user_store
@@ -259,9 +264,11 @@ async def websocket_subscribe_user_data(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "frontend/set_system_data",
-        vol.Required("key"): str,
-        vol.Required("value"): vol.Any(bool, str, int, float, dict, list, None),
+        probatio.Required("type"): "frontend/set_system_data",
+        probatio.Required("key"): str,
+        probatio.Required("value"): probatio.Any(
+            bool, str, int, float, dict, list, None
+        ),
     }
 )
 @websocket_api.require_admin
@@ -279,7 +286,10 @@ async def websocket_set_system_data(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "frontend/get_system_data", vol.Required("key"): str}
+    {
+        probatio.Required("type"): "frontend/get_system_data",
+        probatio.Required("key"): str,
+    }
 )
 @websocket_api.async_response
 @with_system_store
@@ -295,8 +305,8 @@ async def websocket_get_system_data(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "frontend/subscribe_system_data",
-        vol.Required("key"): str,
+        probatio.Required("type"): "frontend/subscribe_system_data",
+        probatio.Required("key"): str,
     }
 )
 @websocket_api.async_response

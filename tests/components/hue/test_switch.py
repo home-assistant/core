@@ -10,11 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
-from .conftest import setup_platform
+from .conftest import replace_resources, setup_platform
 from .const import (
     FAKE_BEHAVIOR_INSTANCE,
     FAKE_BEHAVIOR_SCRIPT,
     FAKE_BINARY_SENSOR,
+    FAKE_BRIDGE,
     FAKE_DEVICE,
     FAKE_PRESENCE_MIMICKING_INSTANCE,
     FAKE_PRESENCE_MIMICKING_SCRIPT,
@@ -22,6 +23,8 @@ from .const import (
 )
 
 TEST_ROOM_ID = "6ddc9066-7e7d-4a03-a773-c73937968296"
+BRIDGE_HOME_ID = "a3fbc86a-bf4c-4c69-899d-d6eafc37e288"
+MOTION_AREA_CONFIGURATION_ID = "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b"
 
 
 async def test_switch(
@@ -59,26 +62,58 @@ async def test_switch(
     assert test_entity.attributes["device_class"] == "switch"
 
 
+@pytest.mark.parametrize(
+    ("group", "device_identifier"),
+    [
+        pytest.param(
+            {"rid": TEST_ROOM_ID, "rtype": "room"},
+            (DOMAIN, TEST_ROOM_ID),
+            id="room",
+        ),
+        pytest.param(
+            {"rid": BRIDGE_HOME_ID, "rtype": "bridge_home"},
+            (DOMAIN, FAKE_BRIDGE["bridge_id"]),
+            id="whole_home",
+        ),
+    ],
+)
 async def test_motionaware_switch_device(
     hass: HomeAssistant,
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    group: dict[str, str],
+    device_identifier: tuple[str, str],
 ) -> None:
-    """Test the MotionAware switch is attached to the zone device, not the bridge."""
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    """Test the MotionAware switch is attached to its room or zone, or to the bridge.
 
+    A MotionAware zone that covers the whole home points at `bridge_home`, which
+    has no device of its own.
+    """
+    motion_area_configuration = next(
+        resource
+        for resource in v2_resources_test_data
+        if resource["id"] == MOTION_AREA_CONFIGURATION_ID
+    )
+    await mock_bridge_v2.api.load_test_data(
+        replace_resources(
+            v2_resources_test_data, [{**motion_area_configuration, "group": group}]
+        )
+    )
     await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
 
-    entity_entry = entity_registry.async_get("switch.test_room_test_room_motionaware")
-    assert entity_entry is not None
-
-    zone_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, TEST_ROOM_ID), mock_bridge_v2.config_entry.entry_id
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, MOTION_AREA_CONFIGURATION_ID
     )
-    assert zone_device is not None
-    assert entity_entry.device_id == zone_device.id
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "on"
+
+    device = device_registry.async_get_device_by_identifier(
+        device_identifier, mock_bridge_v2.config_entry.entry_id
+    )
+    assert device is not None
+    assert entity_registry.async_get(entity_id).device_id == device.id
 
 
 async def test_switch_turn_on_service(
@@ -172,14 +207,13 @@ async def test_motionaware_switch_turn_on_off_service(
     assert mock_bridge_v2.mock_requests[0]["method"] == "put"
     assert (
         mock_bridge_v2.mock_requests[0]["path"]
-        == "clip/v2/resource/motion_area_configuration/"
-        "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b"
+        == f"clip/v2/resource/motion_area_configuration/{MOTION_AREA_CONFIGURATION_ID}"
     )
     assert mock_bridge_v2.mock_requests[0]["json"]["enabled"] is False
 
     # Now generate update event by emitting the json we've sent as incoming event
     event = {
-        "id": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
+        "id": MOTION_AREA_CONFIGURATION_ID,
         "type": "motion_area_configuration",
         **mock_bridge_v2.mock_requests[0]["json"],
     }

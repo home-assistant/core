@@ -1,20 +1,33 @@
 """The Snooz component."""
 
+from dataclasses import replace
 import logging
 
+from pysnooz import parse_snooz_advertisement
 from pysnooz.device import SnoozDevice
 
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
-    async_ble_device_from_address,
+    async_last_service_info,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .models import SnoozConfigEntry, SnoozConfigurationData
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Snooz integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
@@ -25,7 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
     # transitions info logs are verbose. Only enable warnings
     logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
-    if not (ble_device := async_ble_device_from_address(hass, address)):
+    if (service_info := async_last_service_info(hass, address)) is None or (
+        advertisement := parse_snooz_advertisement(service_info)
+    ) is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
@@ -39,7 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
             },
         )
 
-    device = SnoozDevice(ble_device, token)
+    ble_device = service_info.device
+    device = SnoozDevice(ble_device, replace(advertisement, password=token))
 
     entry.runtime_data = SnoozConfigurationData(ble_device, device, entry.title)
 
