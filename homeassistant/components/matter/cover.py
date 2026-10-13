@@ -208,11 +208,13 @@ class MatterCover(MatterEntity, CoverEntity):
                 self._attr_is_opening = False
                 self._attr_is_closing = False
 
-        # Some devices report a moving operational status together with the
-        # final position(s) without a subsequent report clearing the moving
-        # state, leaving the cover stuck in a moving state. For position aware
-        # covers, a covering whose position(s) match the target position(s) is
-        # not moving.
+        # Some devices (e.g. a bridge observed mirroring the target into the
+        # current position on command receipt) report a moving operational status
+        # together with current = target and never report the operational
+        # status clearing, leaving the cover stuck in a moving state. Treat a
+        # position aware covering at its target as not moving. This only ever
+        # clears the moving state; at movement start the debounce hides a
+        # status report arriving before the target update.
         if self._has_unobservable_axis():
             # An axis that is supported but not position aware cannot be
             # checked, and the remaining axis says nothing about whether
