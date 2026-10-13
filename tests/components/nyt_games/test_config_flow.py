@@ -155,7 +155,7 @@ async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_nyt_games_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
+    exception: type[Exception],
     error: str,
 ) -> None:
     """Test reauthentication flow errors and recovery."""
