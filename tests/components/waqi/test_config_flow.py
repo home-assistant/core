@@ -442,6 +442,30 @@ async def test_reauth_flow_loaded_entry(
     mock_waqi.get_by_station_number.assert_awaited_once()
 
 
+async def test_reauth_flow_setup_failed_entry(
+    hass: HomeAssistant,
+    mock_waqi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthenticating an entry that failed setup reloads it with the new key."""
+    mock_waqi.get_by_station_number.side_effect = WAQIAuthenticationError
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_waqi.get_by_station_number.side_effect = None
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data == {CONF_API_KEY: "new_key"}
+    mock_waqi.authenticate.assert_called_with("new_key")
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
