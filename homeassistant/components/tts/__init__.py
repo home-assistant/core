@@ -524,6 +524,11 @@ async def _async_convert_audio(  # noqa: C901
         while True:
             if source_read_error is not None:
                 raise source_read_error
+            if child_exited_unsuccessfully():
+                if read_task is not None and not read_task.done():
+                    read_task.cancel()
+                    await _async_ffmpeg_join(read_task)
+                break
             if input_exhausted and check_completed_writer():
                 break
             if (
@@ -564,6 +569,10 @@ async def _async_convert_audio(  # noqa: C901
                 # Do not let a later source close or child failure replace an
                 # error already observed while reading input.
                 raise source_read_error
+            if child_exited_unsuccessfully():
+                read_task.cancel()
+                await _async_ffmpeg_join(read_task)
+                break
             if input_exhausted and check_completed_writer():
                 break
             if (
