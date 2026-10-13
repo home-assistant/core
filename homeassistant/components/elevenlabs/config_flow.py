@@ -6,6 +6,7 @@ from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
+from httpx2 import ConnectError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -82,6 +83,9 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         try:
             voices, _ = await get_voices_models(self.hass, api_key)
+        except ConnectError:
+            errors["base"] = "cannot_connect"
+            return {}, errors
         except ApiError as exc:
             errors["base"] = "unknown"
             details = getattr(exc, "body", {}).get("detail", {})

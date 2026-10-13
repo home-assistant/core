@@ -318,6 +318,9 @@ async def test_reauth_flow(
             "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
         ),
         pytest.param("mock_async_client_voices_error", "unknown", id="unknown"),
+        pytest.param(
+            "mock_async_client_connect_error", "cannot_connect", id="cannot_connect"
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
