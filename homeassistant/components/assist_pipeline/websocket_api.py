@@ -74,7 +74,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         probatio.TaggedUnion(
             "start_stage",
             {
-                PipelineStage.WAKE_WORD: probatio.Schema(
+                PipelineStage.WAKE_WORD.value: probatio.Schema(
                     {
                         probatio.Required("input"): {
                             probatio.Required("sample_rate"): int,
@@ -92,7 +92,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     },
                     extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.STT: probatio.Schema(
+                PipelineStage.STT.value: probatio.Schema(
                     {
                         probatio.Required("input"): {
                             probatio.Required("sample_rate"): int,
@@ -101,11 +101,11 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     },
                     extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.INTENT: probatio.Schema(
+                PipelineStage.INTENT.value: probatio.Schema(
                     {probatio.Required("input"): {"text": str}},
                     extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.TTS: probatio.Schema(
+                PipelineStage.TTS.value: probatio.Schema(
                     {probatio.Required("input"): {"text": str}},
                     extra=probatio.ALLOW_EXTRA,
                 ),
