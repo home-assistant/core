@@ -7,7 +7,11 @@ import openai
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -16,6 +20,12 @@ from homeassistant.helpers import (
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
+from .chatgpt_auth import (
+    ChatGPTAuth,
+    ChatGPTSubscriptionClient,
+    async_get_subscription_models,
+    is_chatgpt_entry,
+)
 from .const import (
     CONF_CHAT_MODEL,
     CONF_REASONING_SUMMARY,
@@ -44,39 +54,100 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
-    client = openai.AsyncOpenAI(
-        api_key=entry.data[CONF_API_KEY],
-        http_client=get_async_client(hass),
-    )
+    auth: ChatGPTAuth | None = None
+    if is_chatgpt_entry(entry):
+        # A ChatGPT plan access token is the credential. It is refreshed by the
+        # client before every request and on a 401.
+        auth = ChatGPTAuth.from_entry(hass, entry)
+        client: openai.AsyncClient = ChatGPTSubscriptionClient(
+            auth,
+            http_client=get_async_client(hass),
+        )
+    else:
+        client = openai.AsyncOpenAI(
+            api_key=entry.data[CONF_API_KEY],
+            http_client=get_async_client(hass),
+        )
 
     # Cache current platform data which gets added to each request
     # (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
-    try:
-        await client.models.list(timeout=10.0)
-    except openai.AuthenticationError as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except openai.OpenAIError as err:
-        raise ConfigEntryNotReady(err) from err
+    if auth is not None:
+        # The plan usage route serves the account's own model catalog instead of
+        # the regular models list, and it rejects models outside that catalog.
+        try:
+            models = await async_get_subscription_models(hass, auth)
+        except ConfigEntryAuthFailed:
+            raise
+        except HomeAssistantError as err:
+            # Reading the catalog can fail for reasons which are not the entry's
+            # fault (a transient error on OpenAI's side, for example). Loading
+            # the entry is then the better outcome: the plan usage route reports
+            # an unsupported model itself when a request uses one.
+            LOGGER.warning("Could not read the OpenAI model catalog: %s", err)
+            models = []
+
+        # An entry created before the model was chosen in the sign in falls
+        # back to the API default model, which the plan usage route rejects.
+        # Bind the catalog's first model to the subentries which have none, but
+        # only when the catalog could be read: writing a guessed model would be
+        # worse than leaving the subentry alone.
+        if models:
+            for subentry in entry.subentries.values():
+                if (
+                    subentry.subentry_type in ("conversation", "ai_task_data")
+                    and subentry.data.get(CONF_CHAT_MODEL) is None
+                ):
+                    hass.config_entries.async_update_subentry(
+                        entry,
+                        subentry,
+                        data={**subentry.data, CONF_CHAT_MODEL: models[0]},
+                    )
+                    LOGGER.info(
+                        "ChatGPT plan subentry %s had no model, bound the "
+                        "catalog model %s",
+                        subentry.subentry_id,
+                        models[0],
+                    )
+
+        for subentry in entry.subentries.values():
+            model = subentry.data.get(CONF_CHAT_MODEL)
+            if models and model is not None and model not in models:
+                # Failing setup here put the entry in SETUP_RETRY, which took
+                # every subentry offline and left the options flow unable to
+                # change the model, because it aborts while the parent entry is
+                # not loaded. The plan usage route reports an unsupported model
+                # itself, so keep the entry loaded and let the user reconfigure.
+                LOGGER.warning(
+                    "Model %s of subentry %s is not available for this ChatGPT "
+                    "account; choose one of %s",
+                    model,
+                    subentry.subentry_id,
+                    models,
+                )
+    else:
+        try:
+            await client.models.list(timeout=10.0)
+        except openai.AuthenticationError as err:
+            raise ConfigEntryAuthFailed(err) from err
+        except openai.OpenAIError as err:
+            raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
+    # Home Assistant treats a non-boolean setup result as a failed setup and
+    # disables the entry ("async_setup_entry did not return boolean").
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
     """Unload OpenAI."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_update_options(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
@@ -95,6 +166,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     device_registry = dr.async_get(hass)
 
     for entry in entries:
+        if CONF_API_KEY not in entry.data:
+            # ChatGPT subscription entries never used the version 1 layout.
+            continue
         use_existing = False
         subentry = ConfigSubentry(
             data=entry.options,
@@ -107,7 +181,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             all_disabled = all(
                 e.disabled_by is not None
                 for e in entries
-                if e.data[CONF_API_KEY] == entry.data[CONF_API_KEY]
+                if e.data.get(CONF_API_KEY) == entry.data[CONF_API_KEY]
             )
             api_keys_entries[entry.data[CONF_API_KEY]] = (entry, all_disabled)
 
