@@ -29,6 +29,7 @@ from .const import (
     MANUFACTURER,
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
+    NETATMO_DOORBELLS,
     WEBHOOK_PUSH_TYPE,
 )
 from .coordinator import EVENT, HOME, NetatmoConfigEntry, NetatmoDevice
@@ -223,7 +224,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @property
     @override
     def is_on(self) -> bool:
-        if self.device_type == "NDB":
+        if self.device_type not in NETATMO_DOORBELLS:
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         if self._webhook_on is not None:
             return self._webhook_on
@@ -236,16 +237,17 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def motion_detection_enabled(self) -> bool:
         """Return motion detection state derived directly from camera state."""
-        return self.is_on and self.device_type != "NDB"
+        return self.is_on and self.device_type not in NETATMO_DOORBELLS
 
     @property
     @override
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
-        supported_features = CameraEntityFeature.ON_OFF
-        if self.device_type != "NDB":
+        if self.device_type not in NETATMO_DOORBELLS:
+            supported_features = CameraEntityFeature.ON_OFF
             supported_features |= CameraEntityFeature.STREAM
-        return supported_features
+            return supported_features
+        return CameraEntityFeature(0)
 
     @property
     @override
@@ -265,8 +267,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        if self.is_on is not True:
-            return
         try:
             await self.device.async_monitoring_off()
         except (
@@ -282,11 +282,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        if (
-            self.is_on is not False
-            or self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE
-        ):
-            return
         try:
             await self.device.async_monitoring_on()
         except (
@@ -327,7 +322,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._webhook_connection = None
 
         if (
-            self.device_type != "NDB"
+            self.device_type not in NETATMO_DOORBELLS
             and self._webhook_on is not None
             and (self.device.reachable or self._webhook_on == self.device.monitoring)
         ):
