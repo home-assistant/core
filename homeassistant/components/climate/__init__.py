@@ -839,6 +839,7 @@ class RestoreClimate(ClimateEntity, RestoreEntity):
     def extra_restore_state_data(self) -> ClimateExtraStoredData:
         """Return climate specific state data to be restored."""
         high = low = None
+        # High/low have no default and are only implemented with this feature
         if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features:
             high = self.native_target_temperature_high
             low = self.native_target_temperature_low
