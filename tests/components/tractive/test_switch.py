@@ -251,7 +251,6 @@ async def test_switch_unavailable(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    # Buzzer and LED remain available in power saving zones
     buzzer_state = hass.states.get("switch.tracker_device_id_123_buzzer")
     assert buzzer_state
     assert buzzer_state.state == STATE_ON
