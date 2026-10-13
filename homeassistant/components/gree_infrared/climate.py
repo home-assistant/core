@@ -173,7 +173,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             if (data := _GreeAcExtraStoredData.from_dict(restored)) is not None:
                 last_active_hvac_mode = data.last_active_hvac_mode
             else:
-                # Saved before the temperatures were stored along with the mode
+                # Saved before 2026.11 without the temperatures, remove in 2027.5
                 last_active_hvac_mode = restored.get("last_active_hvac_mode")
             if isinstance(last_active_hvac_mode, str) and last_active_hvac_mode in (
                 mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF

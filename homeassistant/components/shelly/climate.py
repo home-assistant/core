@@ -642,7 +642,7 @@ class BlockSleepingClimate(CoordinatorEntity[ShellyBlockCoordinator], RestoreCli
             if (data := ShellyClimateExtraStoredData.from_dict(restored)) is not None:
                 self._last_target_temp = data.last_target_temp
             else:
-                # Saved before the temperatures were stored along with it
+                # Saved before 2026.11 without the temperatures, remove in 2027.5
                 self._last_target_temp = restored["last_target_temp"]
 
         # The restored target is sent to the device when turning off and on again

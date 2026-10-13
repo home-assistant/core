@@ -164,7 +164,7 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             if (data := _SamsungAcExtraStoredData.from_dict(restored)) is not None:
                 last_on_hvac_mode = data.last_on_hvac_mode
             else:
-                # Saved before the temperatures were stored along with the mode
+                # Saved before 2026.11 without the temperatures, remove in 2027.5
                 last_on_hvac_mode = restored.get("last_on_hvac_mode")
             if isinstance(last_on_hvac_mode, str) and last_on_hvac_mode in (
                 mode.value for mode in self._attr_hvac_modes if mode != HVACMode.OFF
