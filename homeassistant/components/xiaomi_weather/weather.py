@@ -177,12 +177,10 @@ class XiaomiWeather(
         """Return daily highs and lows at the location's local midnight."""
         forecasts: list[Forecast] = []
         for day in self.coordinator.data.iter_daily():
-            if day.sunrise is None:
+            if (date := day.sunrise or day.sunset) is None:
                 continue
             forecast: Forecast = {
-                "datetime": day.sunrise.replace(
-                    hour=0, minute=0, second=0, microsecond=0
-                )
+                "datetime": date.replace(hour=0, minute=0, second=0, microsecond=0)
                 .astimezone(UTC)
                 .isoformat(),
             }

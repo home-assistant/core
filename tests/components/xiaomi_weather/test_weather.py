@@ -1,15 +1,22 @@
 """Test Home Assistant display policies over the library's typed data."""
 
-from typing import Any
-from unittest.mock import AsyncMock
+from datetime import timedelta
+from typing import Any, Literal
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from xiaomi_weather import parse_weather
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.typing import WebSocketGenerator
+
+ENTITY_ID = "weather.beijing"
+
 
 SUPPORTED_UNITS = {
     "temperature": "℃",
@@ -42,7 +49,7 @@ SUPPORTED_UNITS = {
 )
 async def test_clear_condition(
     hass: HomeAssistant,
-    client: AsyncMock,
+    client: MagicMock,
     entry: MockConfigEntry,
     payload: dict[str, Any],
     time: str,
@@ -52,11 +59,11 @@ async def test_clear_condition(
     """Use the weather location's day boundaries, independent of the HA timezone."""
     payload["current"].update(weather="0", pubTime=time)
     payload["forecastDaily"]["sunRiseSet"]["status"] = int(not solar_times)
-    client.return_value = parse_weather(payload)
+    client.get_weather.return_value = parse_weather(payload)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("weather.beijing")
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == expected
 
@@ -79,10 +86,11 @@ async def test_clear_condition(
 )
 async def test_measurements(
     hass: HomeAssistant,
-    client: AsyncMock,
+    client: MagicMock,
     entry: MockConfigEntry,
     payload: dict[str, Any],
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     units: dict[str, str],
     value: str,
 ) -> None:
@@ -98,20 +106,21 @@ async def test_measurements(
             "value": value,
         }
     payload["current"]["weather"] = "999"
-    client.return_value = parse_weather(payload)
+    client.get_weather.return_value = parse_weather(payload)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("weather.beijing")
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == "unknown"
-    assert state.attributes == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 @pytest.mark.parametrize(
     "changes",
     [
         pytest.param({}, id="complete"),
+        pytest.param({"sunRiseSet": {"value": []}}, id="missing-solar-times"),
         pytest.param({"temperature": {"value": []}}, id="missing-temperature-series"),
         pytest.param(
             {
@@ -167,7 +176,7 @@ async def test_measurements(
 @pytest.mark.parametrize("forecast_type", ["daily", "twice_daily"])
 async def test_daily_projection(
     hass: HomeAssistant,
-    client: AsyncMock,
+    client: MagicMock,
     entry: MockConfigEntry,
     payload: dict[str, Any],
     snapshot: SnapshotAssertion,
@@ -183,7 +192,7 @@ async def test_daily_projection(
     daily["weather"]["value"] = [{"from": "0", "to": "0"}]
     for key, change in changes.items():
         daily[key].update(change)
-    client.return_value = parse_weather(payload)
+    client.get_weather.return_value = parse_weather(payload)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -191,13 +200,13 @@ async def test_daily_projection(
         await hass.services.async_call(
             "weather",
             "get_forecasts",
-            {"entity_id": "weather.beijing", "type": forecast_type},
+            {"entity_id": ENTITY_ID, "type": forecast_type},
             blocking=True,
             return_response=True,
         )
         == snapshot
     )
-    client.assert_awaited_once_with("101010100", 39.9042, 116.4074)
+    client.get_weather.assert_awaited_once_with("101010100", 39.9042, 116.4074)
 
 
 @pytest.mark.parametrize(
@@ -212,7 +221,7 @@ async def test_daily_projection(
 )
 async def test_hourly_projection(
     hass: HomeAssistant,
-    client: AsyncMock,
+    client: MagicMock,
     entry: MockConfigEntry,
     payload: dict[str, Any],
     snapshot: SnapshotAssertion,
@@ -233,7 +242,7 @@ async def test_hourly_projection(
             {"datetime": "2026-09-08T12:00:00+00:00", "speed": "2", "direction": "90"},
         ],
     )
-    client.return_value = parse_weather(payload)
+    client.get_weather.return_value = parse_weather(payload)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -241,10 +250,136 @@ async def test_hourly_projection(
         await hass.services.async_call(
             "weather",
             "get_forecasts",
-            {"entity_id": "weather.beijing", "type": "hourly"},
+            {"entity_id": ENTITY_ID, "type": "hourly"},
             blocking=True,
             return_response=True,
         )
         == snapshot
     )
-    client.assert_awaited_once()
+    client.get_weather.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "forecast_type",
+    [
+        pytest.param("daily", id="daily"),
+        pytest.param("hourly", id="hourly"),
+        pytest.param("twice_daily", id="twice-daily"),
+    ],
+)
+async def test_forecast_subscription(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    forecast_type: Literal["daily", "hourly", "twice_daily"],
+    payload: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Subscribers receive changed forecasts, with no extra network fetch."""
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": forecast_type,
+            "entity_id": ENTITY_ID,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"]
+    initial = await ws_client.receive_json()
+    assert initial["type"] == "event"
+    payload["forecastDaily"]["temperature"]["value"][0]["from"] = "30"
+    payload["forecastHourly"]["temperature"]["value"][0] = "30"
+    client.get_weather.return_value = parse_weather(payload)
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    updated = await ws_client.receive_json()
+    assert updated["id"] == result["id"]
+    assert updated["type"] == "event"
+    assert updated["event"]["forecast"][0]["temperature"] == 30
+    assert client.get_weather.await_count == 2
+
+
+async def test_unknown_forecast_condition(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    payload: dict[str, Any],
+) -> None:
+    """Unknown condition and absent low temperature remain omitted in forecasts."""
+    payload["forecastDaily"]["weather"]["value"][0]["from"] = "999"
+    payload["forecastDaily"]["temperature"]["value"][0]["to"] = "-999"
+    client.get_weather.return_value = parse_weather(payload)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "weather",
+        "get_forecasts",
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result is not None
+    forecast = result[ENTITY_ID]["forecast"][0]
+    assert "condition" not in forecast
+    assert "templow" not in forecast
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "count", "speed", "bearing", "extra"),
+    [
+        pytest.param("daily", 15, 6, 27, {"precipitation_probability": 0}, id="daily"),
+        pytest.param("hourly", 23, 4.6, 37.05, {}, id="hourly"),
+        pytest.param("twice_daily", 30, 6, 27, {"is_daytime": True}, id="twice-daily"),
+    ],
+)
+async def test_forecast(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    forecast_type: str,
+    count: int,
+    speed: float,
+    bearing: float,
+    extra: dict[str, bool | int],
+) -> None:
+    """Expose cached forecasts through the standard weather action."""
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "weather",
+        "get_forecasts",
+        {"entity_id": ENTITY_ID, "type": forecast_type},
+        blocking=True,
+        return_response=True,
+    )
+    assert result is not None
+    forecasts = result[ENTITY_ID]["forecast"]
+    assert len(forecasts) == count
+    assert (
+        forecasts[0].items()
+        >= {"wind_speed": speed, "wind_bearing": bearing, **extra}.items()
+    )
+    client.get_weather.assert_awaited_once()
+
+
+async def test_entities(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the weather platform state and entity registration."""
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
