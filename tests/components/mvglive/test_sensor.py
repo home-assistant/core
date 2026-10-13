@@ -30,7 +30,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-from .conftest import TEST_DEPARTURES, TEST_STATION
+from .conftest import TEST_DEPARTURES, TEST_STATION, TEST_STATIONS
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -262,13 +262,20 @@ async def test_yaml_import(
 
 
 @pytest.mark.parametrize(
-    ("stations", "responses", "entry_count"),
+    ("stations", "responses", "entry_count", "recovery_responses"),
     [
-        pytest.param([{"station": "Missing"}], [None], 0, id="all_failed"),
+        pytest.param(
+            [{"station": "Missing"}],
+            [None],
+            0,
+            [TEST_STATIONS[1]],
+            id="all_failed",
+        ),
         pytest.param(
             [{"station": "Hauptbahnhof"}, {"station": "Missing"}],
             [TEST_STATION, None],
             1,
+            [TEST_STATION, TEST_STATIONS[1]],
             id="mixed",
         ),
     ],
@@ -281,8 +288,9 @@ async def test_yaml_invalid_station(
     stations: list[dict[str, str]],
     responses: list[dict[str, str] | None],
     entry_count: int,
+    recovery_responses: list[dict[str, str]],
 ) -> None:
-    """Test failed imports keep YAML and surface a station-specific repair."""
+    """Test recovery from invalid YAML stations and removal of repairs."""
     mvg_api["station_async"].side_effect = responses
     config = PLATFORM_SCHEMA({"platform": DOMAIN, "nextdeparture": stations})
     await async_setup_platform(hass, config, Mock())
@@ -296,6 +304,22 @@ async def test_yaml_invalid_station(
     assert issue is not None
     assert issue.translation_placeholders == {"station": "Missing"}
     assert issue.breaks_in_ha_version == "2027.5.0"
+
+    imported_entries = hass.config_entries.async_entries(DOMAIN)
+    mvg_api["station_async"].side_effect = recovery_responses
+    await async_setup_platform(hass, config, Mock())
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == len(stations)
+    assert all(entry in entries for entry in imported_entries)
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -333,11 +357,14 @@ async def test_yaml_import_retry(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect_Hauptbahnhof"
     )
 
+    imported_entries = hass.config_entries.async_entries(DOMAIN)
     mvg_api["station_async"].side_effect = None
     await async_setup_platform(hass, config, Mock())
     await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+    assert all(entry in entries for entry in imported_entries)
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert (
         issue_registry.async_get_issue(

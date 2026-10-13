@@ -40,14 +40,12 @@ from .const import (
 
 ALL_PRODUCTS = [product.value[0] for product in TransportType.all()]
 
-# Product names the legacy YAML accepted but mvg no longer knows.
 LEGACY_PRODUCTS = {
     "ExpressBus": TransportType.BUS.value[0],
     "Nachteule": TransportType.BUS.value[0],
 }
 LEGACY_DEFAULT_PRODUCTS = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
 
-# Filters that tell unnamed legacy entries for one station apart.
 IMPORT_FILTER_KEYS = (
     CONF_DESTINATIONS,
     CONF_DIRECTIONS,
