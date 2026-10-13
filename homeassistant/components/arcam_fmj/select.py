@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Generic, TypeVar, override
+from typing import Any, override
 
 from arcam.fmj.codecs import RoomEqMode
 
@@ -18,23 +18,16 @@ from .entity import ArcamFmjEntity, convert_exception
 
 PARALLEL_UPDATES = 1
 
-_EnumT = TypeVar("_EnumT", bound=Enum)
-
-
 @dataclass(frozen=True, kw_only=True)
-class ArcamFmjEnumSelectEntityDescription(
-    SelectEntityDescription, Generic[_EnumT]
-):
+class ArcamFmjEnumSelectEntityDescription[EnumT: Enum](SelectEntityDescription):
     """Description for a select entity backed by enum values."""
 
-    options_fn: Callable[[ArcamFmjCoordinator], dict[str, _EnumT]]
-    current_value_fn: Callable[[ArcamFmjCoordinator], _EnumT | None]
-    set_value_fn: Callable[
-        [ArcamFmjCoordinator, _EnumT], Coroutine[Any, Any, None]
-    ]
+    options_fn: Callable[[ArcamFmjCoordinator], dict[str, EnumT]]
+    current_value_fn: Callable[[ArcamFmjCoordinator], EnumT | None]
+    set_value_fn: Callable[[ArcamFmjCoordinator, EnumT], Coroutine[Any, Any, None]]
     invalid_option_translation_key: str
     invalid_option_placeholder: str
-    read_only_values: frozenset[_EnumT] = frozenset()
+    read_only_values: frozenset[EnumT] = frozenset()
 
 
 ROOM_EQ_DESCRIPTION = ArcamFmjEnumSelectEntityDescription[RoomEqMode](
@@ -78,17 +71,15 @@ async def async_setup_entry(
     )
 
 
-class ArcamFmjEnumSelectEntity(
-    ArcamFmjEntity, SelectEntity, Generic[_EnumT]
-):
+class ArcamFmjEnumSelectEntity[EnumT: Enum](ArcamFmjEntity, SelectEntity):
     """A select entity whose options map to enum values."""
 
-    entity_description: ArcamFmjEnumSelectEntityDescription[_EnumT]
+    entity_description: ArcamFmjEnumSelectEntityDescription[EnumT]
 
     def __init__(
         self,
         coordinator: ArcamFmjCoordinator,
-        description: ArcamFmjEnumSelectEntityDescription[_EnumT],
+        description: ArcamFmjEnumSelectEntityDescription[EnumT],
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator, description)
