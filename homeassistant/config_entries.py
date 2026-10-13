@@ -1489,6 +1489,7 @@ class ConfigEntry[_DataT = Any]:
             hass,
             HOMEASSISTANT_DOMAIN,
             issue_id,
+            config_entry_id=self.entry_id,
             data={"flow_id": result["flow_id"]},
             is_fixable=False,
             issue_domain=self.domain,
@@ -2433,6 +2434,7 @@ class ConfigEntries:
 
         dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
+        ir.async_get(self.hass).async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
@@ -2560,6 +2562,7 @@ class ConfigEntries:
                     self.hass,
                     HOMEASSISTANT_DOMAIN,
                     issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     is_persistent=True,
                     severity=ir.IssueSeverity.WARNING,
