@@ -16,7 +16,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "creation_date": data.creation_date,
         "expiration_date": data.expiration_date,
-        "last_updated": data.last_updated,
+        "last_updated": data.updated_date,
         "status": data.status,
         "statuses": data.statuses,
         "dnssec": data.dnssec,

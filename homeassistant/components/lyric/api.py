@@ -2,7 +2,7 @@
 
 from typing import cast, override
 
-from aiohttp import BasicAuth, ClientSession
+from aiohttp import ClientSession, encode_basic_auth
 from aiolyric.client import LyricClient
 
 from homeassistant.components.application_credentials import AuthImplementation
@@ -63,7 +63,7 @@ class LyricLocalOAuth2Implementation(
             data["client_secret"] = self.client_secret
 
         headers = {
-            "Authorization": BasicAuth(self.client_id, self.client_secret).encode(),
+            "Authorization": encode_basic_auth(self.client_id, self.client_secret),
             "Content-Type": "application/x-www-form-urlencoded",
         }
 

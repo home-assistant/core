@@ -30,7 +30,7 @@
   --- | ---
   ai_task | AI Task
   auth | Auth
-  binary_sensor | Binary Sensor
+  binary_sensor | Binary sensor
   cloud | Home Assistant Cloud
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
@@ -43,7 +43,7 @@
   http | HTTP
   intent | Intent
   llm | LLM
-  media_source | Media Source
+  media_source | Media source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
   stt | Speech-to-text (STT)
@@ -166,7 +166,7 @@
   --- | ---
   ai_task | AI Task
   auth | Auth
-  binary_sensor | Binary Sensor
+  binary_sensor | Binary sensor
   cloud | Home Assistant Cloud
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
@@ -179,7 +179,7 @@
   http | HTTP
   intent | Intent
   llm | LLM
-  media_source | Media Source
+  media_source | Media source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
   stt | Speech-to-text (STT)
@@ -238,7 +238,6 @@
   <details><summary>Logs</summary>
   
   ```logs
-  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] This message will be dropped since this test patches MAX_RECORDS
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
   2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
@@ -320,7 +319,6 @@
   <details><summary>Logs</summary>
   
   ```logs
-  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] This message will be dropped since this test patches MAX_RECORDS
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
   2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log

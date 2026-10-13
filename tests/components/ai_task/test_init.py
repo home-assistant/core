@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import AITaskPreferences
@@ -15,13 +15,13 @@ from homeassistant.components.ai_task.const import (
     DATA_PREFERENCES,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
-from tests.common import flush_store
+from tests.common import MockUser, flush_store
 
 
 async def test_preferences_storage_load(
@@ -87,6 +87,7 @@ async def test_generate_data_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate data service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -108,9 +109,11 @@ async def test_generate_data_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     assert result["data"] == "Mock result"
+    assert hass.states.get(TEST_ENTITY_ID).context is context
 
     assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
@@ -173,19 +176,19 @@ async def test_generate_data_service_structure_fields(
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
     assert task.instructions == "Please generate a profile for a new user"
     assert task.structure
-    assert isinstance(task.structure, vol.Schema)
+    assert isinstance(task.structure, probatio.Schema)
     schema = list(task.structure.schema.items())
     assert len(schema) == 2
 
     name_key, name_value = schema[0]
     assert name_key == "name"
-    assert isinstance(name_key, vol.Required)
+    assert isinstance(name_key, probatio.Required)
     assert name_key.description == "First and last name of the user such as Alice Smith"
     assert isinstance(name_value, selector.TextSelector)
 
     age_key, age_value = schema[1]
     assert age_key == "age"
-    assert isinstance(age_key, vol.Optional)
+    assert isinstance(age_key, probatio.Optional)
     assert age_key.description == "Age of the user"
     assert isinstance(age_value, selector.NumberSelector)
     assert age_value.config["min"] == 0
@@ -204,7 +207,7 @@ async def test_generate_data_service_structure_fields(
                     "selector": {"invalid-selector": {}},
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"Unknown selector type invalid-selector.*",
         ),
         (
@@ -220,8 +223,8 @@ async def test_generate_data_service_structure_fields(
                     },
                 },
             },
-            vol.Invalid,
-            r"extra keys not allowed.*",
+            probatio.Invalid,
+            r"not a valid option.*",
         ),
         (
             {
@@ -231,12 +234,12 @@ async def test_generate_data_service_structure_fields(
                     ),
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"required key not provided.*selector.*",
         ),
-        (12345, vol.Invalid, r"xpected a dictionary.*"),
-        ("name", vol.Invalid, r"xpected a dictionary.*"),
-        (["name"], vol.Invalid, r"xpected a dictionary.*"),
+        (12345, probatio.Invalid, r"xpected a mapping.*"),
+        ("name", probatio.Invalid, r"xpected a mapping.*"),
+        (["name"], probatio.Invalid, r"xpected a mapping.*"),
         (
             {
                 "name": {
@@ -247,8 +250,8 @@ async def test_generate_data_service_structure_fields(
                     "extra-fields": "Some extra fields",
                 },
             },
-            vol.Invalid,
-            r"extra keys not allowed .*",
+            probatio.Invalid,
+            r"not a valid option .*",
         ),
         (
             {
@@ -259,8 +262,8 @@ async def test_generate_data_service_structure_fields(
                     "selector": "invalid-schema",
                 },
             },
-            vol.Invalid,
-            r"xpected a dictionary for dictionary.",
+            probatio.Invalid,
+            r"xpected a dictionary.*",
         ),
     ],
     ids=(
@@ -317,6 +320,7 @@ async def test_generate_image_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate image service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -335,9 +339,11 @@ async def test_generate_image_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     mock_upload_media.assert_called_once()
+    assert hass.states.get(TEST_ENTITY_ID).context is context
     assert "image_data" not in result
     assert (
         result["media_source_id"]
@@ -374,3 +380,111 @@ async def test_generate_image_service_no_entity(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+async def test_generate_service_explicit_entity_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_ai_task_entity: MockAITaskEntity,
+    service: str,
+) -> None:
+    """Reject an explicit entity before resolving attachments or calling a provider."""
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                "task_name": "Test",
+                "instructions": "Test prompt",
+                "entity_id": TEST_ENTITY_ID,
+            },
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    assert err.value.entity_id == TEST_ENTITY_ID
+    resolve.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+@pytest.mark.parametrize("domain", ["camera", "image"])
+@pytest.mark.parametrize("entity_selection", [{}, {"entity_id": TEST_ENTITY_ID}])
+async def test_generate_service_attachment_permission(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_ai_task_entity: MockAITaskEntity,
+    service: str,
+    domain: str,
+    entity_selection: dict[str, str],
+) -> None:
+    """Camera and image attachments require read permission for either task choice."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        gen_data_entity_id=TEST_ENTITY_ID, gen_image_entity_id=TEST_ENTITY_ID
+    )
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {TEST_ENTITY_ID: {"control": True}}}}
+    )
+    attachment_entity_id = f"{domain}.test"
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                "task_name": "Test",
+                "instructions": "Test prompt",
+                "attachments": [
+                    {
+                        "media_content_id": f"media-source://{domain}/{attachment_entity_id}",
+                        "media_content_type": "image/jpeg",
+                    }
+                ],
+            }
+            | entity_selection,
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+    assert err.value.entity_id == attachment_entity_id
+    resolve.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+async def test_generate_service_default_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service: str,
+) -> None:
+    """Read-only users can use the configured default task entity."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        gen_data_entity_id=TEST_ENTITY_ID, gen_image_entity_id=TEST_ENTITY_ID
+    )
+    context = Context(user_id=hass_read_only_user.id)
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/test.png",
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"task_name": "Test", "instructions": "Test prompt"},
+            blocking=True,
+            return_response=True,
+            context=context,
+        )
+    assert result
+    assert hass.states.get(TEST_ENTITY_ID).context is context

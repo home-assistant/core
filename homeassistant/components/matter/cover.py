@@ -261,9 +261,10 @@ class MatterCover(MatterEntity, CoverEntity):
                 self.current_cover_position,
             )
 
-        if self._entity_info.endpoint.has_attribute(
+        has_tilt_position_attribute = self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
-        ):
+        )
+        if has_tilt_position_attribute:
             # current tilt position is inverted in matter (100 is closed, 0 is open)
             current_cover_tilt_position = self.get_matter_attribute_value(
                 clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
@@ -293,9 +294,17 @@ class MatterCover(MatterEntity, CoverEntity):
         commands = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.AcceptedCommandList
         )
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
         if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
             supported_features |= CoverEntityFeature.SET_POSITION
-        if clusters.WindowCovering.Commands.GoToTiltPercentage.command_id in commands:
+        # Some devices report GoToTiltPercentage in AcceptedCommandList even
+        # without tilt support, so also require the FeatureMap Tilt bit.
+        if (
+            clusters.WindowCovering.Commands.GoToTiltPercentage.command_id in commands
+            and feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
+        ):
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
@@ -364,9 +373,12 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
+        # tilt is optional, not required: some devices (e.g. Shelly 2PM Gen4)
+        # report it as present but null instead of omitting it when tilt is
+        # disabled, which would otherwise fail schema matching
         optional_attributes=(
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
             clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
             clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
         ),

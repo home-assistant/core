@@ -1,0 +1,301 @@
+# serializer version: 1
+# name: test_all_entities[time.my_pool_filtration_interval_1_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.my_pool_filtration_interval_1_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filtration interval 1 end',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filtration interval 1 end',
+    'platform': 'vistapool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_interval_end',
+    'unique_id': 'ABCDEF1234567890-filtration_interval_1_end',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_1_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration interval 1 end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.my_pool_filtration_interval_1_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10:00:00',
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_1_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.my_pool_filtration_interval_1_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filtration interval 1 start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filtration interval 1 start',
+    'platform': 'vistapool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_interval_start',
+    'unique_id': 'ABCDEF1234567890-filtration_interval_1_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_1_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration interval 1 start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.my_pool_filtration_interval_1_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '08:00:00',
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_2_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.my_pool_filtration_interval_2_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filtration interval 2 end',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filtration interval 2 end',
+    'platform': 'vistapool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_interval_end',
+    'unique_id': 'ABCDEF1234567890-filtration_interval_2_end',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_2_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration interval 2 end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.my_pool_filtration_interval_2_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14:00:00',
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_2_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.my_pool_filtration_interval_2_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filtration interval 2 start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filtration interval 2 start',
+    'platform': 'vistapool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_interval_start',
+    'unique_id': 'ABCDEF1234567890-filtration_interval_2_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_2_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration interval 2 start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.my_pool_filtration_interval_2_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13:00:00',
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_3_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.my_pool_filtration_interval_3_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filtration interval 3 end',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filtration interval 3 end',
+    'platform': 'vistapool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_interval_end',
+    'unique_id': 'ABCDEF1234567890-filtration_interval_3_end',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_3_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration interval 3 end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.my_pool_filtration_interval_3_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19:30:00',
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_3_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.my_pool_filtration_interval_3_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filtration interval 3 start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filtration interval 3 start',
+    'platform': 'vistapool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filtration_interval_start',
+    'unique_id': 'ABCDEF1234567890-filtration_interval_3_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.my_pool_filtration_interval_3_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration interval 3 start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.my_pool_filtration_interval_3_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19:00:00',
+  })
+# ---

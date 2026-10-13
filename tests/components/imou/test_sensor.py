@@ -5,7 +5,9 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import (
     PARAM_BATTERY,
+    PARAM_STATE,
     PARAM_STATE_VARIANT,
+    PARAM_STATUS,
     PARAM_STORAGE_USED,
     STATE_VARIANT_ENUM,
 )
@@ -13,7 +15,6 @@ from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imou.const import PARAM_STATE, PARAM_STATUS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -95,14 +96,15 @@ async def test_sensor_availability_when_device_offline(
 ) -> None:
     """Status stays available offline; other sensors become unavailable."""
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {
-            PARAM_STATE: DeviceStatus.OFFLINE.value,
-            PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
-        }
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> None:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {
+                PARAM_STATE: DeviceStatus.OFFLINE.value,
+                PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
+            }
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

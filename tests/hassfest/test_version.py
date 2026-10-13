@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from script.hassfest.manifest import (
     CUSTOM_INTEGRATION_MANIFEST_SCHEMA,
@@ -45,11 +45,11 @@ def test_validate_custom_integration_manifest(integration: Integration) -> None:
     """Test validate custom integration manifest."""
 
     integration.manifest["version"] = "lorem_ipsum"
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
 
     integration.manifest["version"] = None
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
 
     integration.manifest["version"] = "1"

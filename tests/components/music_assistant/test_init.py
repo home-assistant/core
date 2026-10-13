@@ -1,12 +1,18 @@
 """Test the Music Assistant integration init."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from music_assistant_models.enums import EventType
+from music_assistant_client.exceptions import ConnectionFailed, InvalidState
+from music_assistant_models.config_entries import PlayerConfig
+from music_assistant_models.dashboard import DashboardDevice
+from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
+import pytest
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
+    DASHBOARD_DEVICE_MODEL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -18,7 +24,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import setup_integration_from_fixtures, trigger_subscription_callback
+from .common import (
+    setup_dashboards,
+    setup_integration_from_fixtures,
+    trigger_subscription_callback,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -49,13 +59,13 @@ async def test_remove_config_entry_device(
     music_assistant_client.config.remove_player_config = AsyncMock(
         side_effect=ActionUnavailable
     )
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 1
     assert response["success"] is False
 
     # test if the removal should be allowed if the device is not in use
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"] is True
     await hass.async_block_till_done()
     assert not device_registry.async_get(device_entry.id)
@@ -73,9 +83,138 @@ async def test_remove_config_entry_device(
     assert entity_registry.async_get(entity_id)
     assert hass.states.get(entity_id)
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 0
     assert response["success"] is True
+
+
+async def test_remove_dashboard_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test dashboard device removal is refused while the endpoint is live."""
+    assert await async_setup_component(hass, "config", {})
+    setup_dashboards(music_assistant_client)
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
+    )
+    assert device_entry
+
+    # the endpoint is still live - removal must be refused
+    response = await client.remove_device(device_entry.id)
+    assert response["success"] is False
+    assert device_registry.async_get(device_entry.id)
+
+    # the endpoint is gone from the server for good - removal is now allowed
+    del music_assistant_client.dashboard._dashboards["chromecast_kitchen"]
+    response = await client.remove_device(device_entry.id)
+    assert response["success"] is True
+    assert not device_registry.async_get(device_entry.id)
+
+    # it comes back online later, without HA ever reloading in between -
+    # its entity must not stay missing (regression for a "ghost" bug)
+    music_assistant_client.dashboard._dashboards["chromecast_kitchen"] = (
+        DashboardDevice(
+            dashboard_id="chromecast_kitchen",
+            name="Kitchen Display",
+            supported_types={DashboardType.PARTY, DashboardType.NOW_PLAYING},
+            provider_domain_hint="chromecast",
+        )
+    )
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.DASHBOARDS_UPDATED,
+        data=[
+            dashboard.to_dict()
+            for dashboard in music_assistant_client.dashboard._dashboards.values()
+        ],
+    )
+    assert hass.states.get("media_player.kitchen_display")
+
+
+async def test_dashboard_device_survives_reload_with_empty_cache(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test dashboard devices survive a reload with a momentarily empty cache.
+
+    Regression test: dashboard registrations are connection-scoped, so right
+    after an MA server restart + HA entry reload the dashboard cache can be
+    empty before the physical endpoints have re-registered. The startup
+    stale-device cleanup must not treat that as "gone for good".
+    """
+    setup_dashboards(music_assistant_client)
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
+    )
+
+    # simulate an MA server restart: the dashboard cache is empty again,
+    # as if nothing had re-registered yet
+    music_assistant_client.dashboard._dashboards = {}
+    music_assistant_client.dashboard._sessions = {}
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "dashboard:chromecast_kitchen"), config_entry.entry_id
+    )
+    state = hass.states.get("media_player.kitchen_display")
+    assert state
+    assert state.state == "unavailable"
+
+
+async def test_dashboard_device_id_namespaced(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a dashboard endpoint sharing a player's id gets its own device.
+
+    Fully Kiosk registers dashboard_id == player_id. If the dashboard
+    device identifier were not namespaced, the display would merge into
+    the player's device, and removing the player would delete the display.
+    """
+    assert await async_setup_component(hass, "config", {})
+    setup_dashboards(music_assistant_client)
+    collision_id = "00:00:00:00:00:01"
+    music_assistant_client.dashboard._dashboards[collision_id] = DashboardDevice(
+        dashboard_id=collision_id,
+        name="Player Display",
+        supported_types={DashboardType.PARTY},
+    )
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    client = await hass_ws_client(hass)
+
+    player_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, collision_id), config_entry.entry_id
+    )
+    dashboard_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"dashboard:{collision_id}"), config_entry.entry_id
+    )
+    assert player_device
+    assert dashboard_device
+    assert player_device.id != dashboard_device.id
+    assert player_device.model != DASHBOARD_DEVICE_MODEL
+    assert dashboard_device.model == DASHBOARD_DEVICE_MODEL
+
+    # removing the player device must not be refused because a dashboard
+    # endpoint happens to be live under the same bare id, and must not
+    # touch the (separate) display device
+    music_assistant_client.config.remove_player_config = AsyncMock()
+    response = await client.remove_device(player_device.id)
+    assert response["success"] is True
+    await hass.async_block_till_done()
+    assert not device_registry.async_get(player_device.id)
+    assert device_registry.async_get(dashboard_device.id)
 
 
 async def test_player_config_expose_to_ha_toggle(
@@ -165,6 +304,7 @@ async def test_player_config_expose_to_ha_toggle(
 
 async def test_authentication_required_triggers_reauth(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
     """Test that AuthenticationRequired exception triggers reauth flow."""
@@ -185,13 +325,13 @@ async def test_authentication_required_triggers_reauth(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
-    assert issue_reg.async_get_issue("homeassistant", issue_id)
+    assert issue_registry.async_get_issue("homeassistant", issue_id)
 
 
 async def test_authentication_required_addon_no_reauth(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
     """Test that AuthenticationRequired exception does not trigger reauth for addon."""
@@ -214,6 +354,67 @@ async def test_authentication_required_addon_no_reauth(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
-    assert issue_reg.async_get_issue("homeassistant", issue_id) is None
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is None
+
+
+async def test_server_lost_during_setup_retries(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test losing the server during setup leaves no platforms set up."""
+    get_player_configs = music_assistant_client.config.get_player_configs
+    music_assistant_client.config.get_player_configs = AsyncMock(
+        side_effect=InvalidState("Not connected")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    music_assistant_client.disconnect.assert_awaited_once()
+
+    music_assistant_client.config.get_player_configs = get_player_configs
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "has already been setup" not in caplog.text
+
+
+async def test_server_lost_late_in_setup_retries(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test losing the server after the last server call during setup retries."""
+    connection_lost = asyncio.Event()
+
+    async def listen(init_ready: asyncio.Event) -> None:
+        init_ready.set()
+        await connection_lost.wait()
+        raise ConnectionFailed
+
+    get_player_configs = music_assistant_client.config.get_player_configs
+
+    async def get_player_configs_then_lose_server() -> list[PlayerConfig]:
+        player_configs = await get_player_configs()
+        connection_lost.set()
+        # Let the listen task fail before setup continues
+        await asyncio.sleep(0)
+        return player_configs
+
+    music_assistant_client.start_listening.side_effect = listen
+    music_assistant_client.config.get_player_configs = (
+        get_player_configs_then_lose_server
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    music_assistant_client.disconnect.assert_awaited_once()

@@ -1,5 +1,9 @@
 """Test device template functions."""
 
+from collections.abc import Callable
+from typing import Any
+
+import attr
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -7,7 +11,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.template import TemplateError
 
 from tests.common import MockConfigEntry
-from tests.helpers.template.helpers import assert_result_info, render_to_info
+from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 
 async def test_device_entities(
@@ -38,7 +42,7 @@ async def test_device_entities(
     assert info.rate_limit is None
 
     # Test device with single entity, which has no state
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
@@ -46,7 +50,7 @@ async def test_device_entities(
         device_id=device_entry.id,
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678"], [])
+    assert_result_info(info, [entity_entry.entity_id], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -55,11 +59,11 @@ async def test_device_entities(
             "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
-    assert_result_info(info, "", ["light.hue_5678"])
+    assert_result_info(info, "", [entity_entry.entity_id])
     assert info.rate_limit is None
 
     # Test device with single entity, with state
-    hass.states.async_set("light.hue_5678", "happy")
+    hass.states.async_set(entity_entry.entity_id, "happy")
     info = render_to_info(
         hass,
         (
@@ -67,20 +71,20 @@ async def test_device_entities(
             "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
-    assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
+    assert_result_info(info, entity_entry.entity_id, [entity_entry.entity_id])
     assert info.rate_limit is None
 
     # Test device with multiple entities, which have a state
-    entity_registry.async_get_or_create(
+    entity_entry_2 = entity_registry.async_get_or_create(
         "light",
         "hue",
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
     )
-    hass.states.async_set("light.hue_abcd", "camper")
+    hass.states.async_set(entity_entry_2.entity_id, "camper")
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_abcd"], [])
+    assert_result_info(info, [entity_entry.entity_id, entity_entry_2.entity_id], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -90,7 +94,9 @@ async def test_device_entities(
         ),
     )
     assert_result_info(
-        info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
+        info,
+        f"{entity_entry.entity_id}, {entity_entry_2.entity_id}",
+        [entity_entry.entity_id, entity_entry_2.entity_id],
     )
     assert info.rate_limit is None
 
@@ -199,6 +205,103 @@ async def test_device_name(
     info = render_to_info(hass, f"{{{{ device_name('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, device_entry.name_by_user)
     assert info.rate_limit is None
+
+
+@pytest.mark.parametrize(
+    ("attr_name", "expected", "replacement"),
+    [
+        pytest.param(
+            "config_entries",
+            lambda entry_id: {entry_id},
+            "use 'config_entry_id' instead",
+            id="config_entries",
+        ),
+        pytest.param(
+            "config_entries_subentries",
+            lambda entry_id: {entry_id: {None}},
+            "use 'config_entry_id' and 'config_subentry_id' instead",
+            id="config_entries_subentries",
+        ),
+        pytest.param(
+            "primary_config_entry",
+            lambda entry_id: entry_id,
+            "use 'config_entry_id' instead",
+            id="primary_config_entry",
+        ),
+    ],
+)
+async def test_device_attr_deprecated_config_entry_attributes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    attr_name: str,
+    expected: Callable[[str], Any],
+    replacement: str,
+) -> None:
+    """Test deprecated config entry attributes keep working in templates."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}"
+    )
+    assert_result_info(info, expected(config_entry.entry_id))
+
+    info = render_to_info(
+        hass,
+        f"{{{{ is_device_attr('{device_entry.id}', '{attr_name}', None) }}}}",
+    )
+    assert_result_info(info, False)
+
+    # A custom log function renders in a fresh template environment
+    render(
+        hass,
+        f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}",
+        log_fn=lambda level, msg: None,
+    )
+
+    assert caplog.text.count(f"device attribute '{attr_name}'") == 1
+    assert replacement in caplog.text
+
+
+async def test_device_attr_deprecated_config_entry_attributes_composite(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a pre-migration composite device id reports its merged config entries."""
+    entry_1 = MockConfigEntry(domain="light")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="light")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("light", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("light", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    info = render_to_info(hass, f"{{{{ device_attr('{old_id}', 'config_entries') }}}}")
+    assert_result_info(info, {entry_1.entry_id, entry_2.entry_id})
+
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{old_id}', 'config_entries_subentries') }}}}"
+    )
+    assert_result_info(info, {entry_1.entry_id: {None}, entry_2.entry_id: {None}})
+
+    assert "is deprecated" not in caplog.text
 
 
 async def test_device_attr(
@@ -325,3 +428,41 @@ async def test_device_attr(
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_device_functions_with_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device functions with child devices."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+
+    # device_id finds a child device by name
+    info = render_to_info(hass, "{{ device_id('Outlet 1') }}")
+    assert_result_info(info, child_device.id)
+
+    # device_name resolves a child device
+    info = render_to_info(hass, f"{{{{ device_name('{child_device.id}') }}}}")
+    assert_result_info(info, "Outlet 1")
+
+    # device_attr returns None for attributes a child device does not have
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{child_device.id}', 'manufacturer') }}}}"
+    )
+    assert_result_info(info, None)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{child_device.id}', 'parent_device_id') }}}}"
+    )
+    assert_result_info(info, child_device.parent_device_id)

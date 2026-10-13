@@ -206,8 +206,8 @@ def _load_json_2_production_data(
     if item := json_fixture["data"].get("system_consumption_phases"):
         mocked_data.system_consumption_phases = {}
         for sub_item, item_data in item.items():
-            mocked_data.system_consumption_phases[sub_item] = EnvoySystemConsumption(
-                **item_data
+            mocked_data.system_consumption_phases[sub_item] = (
+                None if not item_data else EnvoySystemConsumption(**item_data)
             )
     if item := json_fixture["data"].get("system_net_consumption_phases"):
         mocked_data.system_net_consumption_phases = {}
@@ -218,8 +218,8 @@ def _load_json_2_production_data(
     if item := json_fixture["data"].get("system_production_phases"):
         mocked_data.system_production_phases = {}
         for sub_item, item_data in item.items():
-            mocked_data.system_production_phases[sub_item] = EnvoySystemProduction(
-                **item_data
+            mocked_data.system_production_phases[sub_item] = (
+                None if not item_data else EnvoySystemProduction(**item_data)
             )
     if item := json_fixture["data"].get("acb_power"):
         mocked_data.acb_power = EnvoyACBPower(**item)
@@ -232,15 +232,19 @@ def _load_json_2_meter_data(
     if meters := json_fixture["data"].get("ctmeters"):
         mocked_data.ctmeters = {}
         [
-            mocked_data.ctmeters.update({meter: EnvoyMeterData(**meter_data)})
+            mocked_data.ctmeters.update(
+                {meter: None if not meter_data else EnvoyMeterData(**meter_data)}
+            )
             for meter, meter_data in meters.items()
         ]
     if meters := json_fixture["data"].get("ctmeters_phases"):
         mocked_data.ctmeters_phases = {}
         for meter, meter_data in meters.items():
-            meter_phase_data: dict[str, EnvoyMeterData] = {}
+            meter_phase_data: dict[str, EnvoyMeterData | None] = {}
             [
-                meter_phase_data.update({phase: EnvoyMeterData(**phase_data)})
+                meter_phase_data.update(
+                    {phase: None if not phase_data else EnvoyMeterData(**phase_data)}
+                )
                 for phase, phase_data in meter_data.items()
             ]
             mocked_data.ctmeters_phases.update({meter: meter_phase_data})

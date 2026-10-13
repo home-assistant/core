@@ -160,9 +160,20 @@
     "button": {
       "cancel_room_setpoint_override": {
         "name": "Cancel room setpoint override"
+      },
+      "hot_water_push": {
+        "name": "Heat hot water once"
       }
     },
     "select": {
+      "dhw_ovrd_mode": {
+        "name": "Hot water override",
+        "state": {
+          "force_off": "Force off",
+          "force_on": "Force on",
+          "override_disabled": "[%key:common::state::disabled%]"
+        }
+      },
       "gpio_mode_n": {
         "name": "GPIO {gpio_id} mode",
         "state": {

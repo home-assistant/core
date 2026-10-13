@@ -1,12 +1,13 @@
 """Test the UniFi Protect binary_sensor platform."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
+from functools import partial
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
 from uiprotect.data import (
-    AiPort,
     Camera,
     Event,
     EventType,
@@ -15,6 +16,7 @@ from uiprotect.data import (
     MountType,
     Sensor,
     SmartDetectAudioType,
+    WSAction,
 )
 from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.websocket import WebsocketState
@@ -51,7 +53,9 @@ from .utils import (
     make_public_camera,
     make_public_light,
     make_public_sensor,
+    make_streamless_public_camera,
     public_device_ws_message,
+    registered_keys,
     remove_entities,
     setup_public_camera,
     setup_public_light,
@@ -109,6 +113,25 @@ async def test_binary_sensor_sensor_remove(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 5, 5)
+
+
+async def test_binary_sensor_adopt_adds_only_the_adopted_device(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    light: Light,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Adopting one device does not add the other devices' entities again."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [sensor_all, light])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 7)
+    await remove_entities(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    await adopt_devices(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 7)
+    assert "already exists" not in caplog.text
 
 
 async def test_binary_sensor_setup_light(
@@ -498,14 +521,6 @@ async def test_binary_sensor_sense_leak_public_value(
         ),
         pytest.param(
             MountType.NONE,
-            None,
-            True,
-            True,
-            STATE_UNAVAILABLE,
-            id="settings-without-capability-map",
-        ),
-        pytest.param(
-            MountType.NONE,
             set(),
             True,
             True,
@@ -601,21 +616,23 @@ async def test_binary_sensor_sense_capability_registry_cleanup(
     assert entity_registry.async_get(stale.entity_id) is None
 
 
-async def test_binary_sensor_sense_no_capability_map_creates_all(
+async def test_binary_sensor_sense_no_capability_map_creates_none(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
 ) -> None:
-    """Without a capability map (older firmware) every sense entity is created."""
-    setup_public_sensor(ufp)
+    """A sensor without a capability map gets no capability-gated entity."""
+    setup_public_sensor(ufp, capabilities=set())
     await init_entry(hass, ufp, [sensor_all])
 
     for description in (SENSE_DOOR, SENSE_TAMPERING, SENSE_MOTION, SENSE_LEAK):
-        _, entity_id = await ids_from_device_description(
-            hass, Platform.BINARY_SENSOR, sensor_all, description
-        )
-        assert entity_registry.async_get(entity_id) is not None
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{sensor_all.mac}_{description.key}"
+            )
+            is None
+        ), description.key
 
 
 async def test_binary_sensor_sense_tampering_public_value(
@@ -979,26 +996,6 @@ async def test_binary_sensor_doorbell_ring(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
-async def test_aiport_no_binary_sensor_entities(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    aiport: AiPort,
-) -> None:
-    """Test AI Port devices do not create camera-specific binary sensors."""
-    await init_entry(hass, ufp, [aiport])
-
-    # AI Port should not create any camera-specific binary sensors
-    # (motion, smart detection, etc.)
-    # NVR HDD sensors will still be created, but no AI Port-specific entities
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
-
-    for entity in entities:
-        if entity.domain == Platform.BINARY_SENSOR:
-            # No entities should contain the AI Port's device id
-            assert aiport.id not in entity.unique_id
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
     hass: HomeAssistant,
@@ -1064,3 +1061,175 @@ async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
 
     assert hass.states.get(vehicle_entity_id).state == STATE_OFF
     assert hass.states.get(person_entity_id).state == STATE_OFF
+
+
+async def test_public_only_binary_sensors_end_to_end(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    doorbell: Camera,
+    light: Light,
+    sensor_all: Sensor,
+) -> None:
+    """An API-key-only entry builds public binary sensors, without read-only mirrors."""
+    # One audio type so the audio family is exercised alongside the objects.
+    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
+    pb = ufp_public_only.api.public_bootstrap
+    pb.cameras = {doorbell.id: make_streamless_public_camera(doorbell)}
+    pb.lights = {light.id: make_public_light(light)}
+    pb.sensors = {sensor_all.id: make_public_sensor(sensor_all)}
+
+    await setup_public_only()
+
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, doorbell.mac) == {
+        "motion",
+        "smart_audio_any",
+        "smart_audio_smoke",
+        "smart_obj_animal",
+        "smart_obj_any",
+        "smart_obj_person",
+        "smart_obj_vehicle",
+    }
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, light.mac) == {
+        "dark",
+        "motion",
+    }
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, sensor_all.mac) == {
+        "battery_low",
+        "door",
+        "leak",
+        "motion",
+        "tampering",
+    }
+    # The skipped mirrors would have duplicated these writable entities.
+    assert hass.states.get("switch.test_light_status_light") is not None
+    assert hass.states.get("light.test_light") is not None
+
+    person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, person
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    detected = make_streamless_public_camera(
+        doorbell, is_smart_currently_detected=True, is_person_currently_detected=True
+    )
+    pb.cameras = {doorbell.id: detected}
+    ufp_public_only.devices_ws_subscription(public_device_ws_message(detected))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "make", "key", "expected_keys"),
+    [
+        pytest.param(
+            "doorbell",
+            make_streamless_public_camera,
+            "motion",
+            {
+                "motion",
+                "smart_obj_animal",
+                "smart_obj_any",
+                "smart_obj_person",
+                "smart_obj_vehicle",
+            },
+            id="camera",
+        ),
+        pytest.param(
+            "light", make_public_light, "dark", {"dark", "motion"}, id="light"
+        ),
+        pytest.param(
+            "sensor_all",
+            partial(make_public_sensor, capabilities={SensorFeatureCapability.MOTION}),
+            "motion",
+            {"battery_low", "motion"},
+            id="sensor",
+        ),
+    ],
+)
+async def test_public_only_binary_sensor_added_after_setup(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    caplog: pytest.LogCaptureFixture,
+    fixture_name: str,
+    make: Callable[[Any], Mock],
+    key: str,
+    expected_keys: set[str],
+) -> None:
+    """A device added after setup gets its binary sensors from its add frame."""
+    await setup_public_only()
+
+    device = request.getfixturevalue(fixture_name)
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac) == set()
+
+    public = make(device)
+    store = getattr(ufp_public_only.api.public_bootstrap, f"{device.model.value}s")
+    store[device.id] = public
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac)
+    assert keys == expected_keys
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{device.mac}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # A re-delivered frame must not add the entities a second time.
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert registered_keys(entity_registry, Platform.BINARY_SENSOR, device.mac) == keys
+    assert "already exists" not in caplog.text
+
+
+async def test_public_only_binary_sensor_sense_registry_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_all: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The capability cleanup runs without a private bootstrap."""
+    stale = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_leak",
+        config_entry=ufp_public_only.entry,
+    )
+    ufp_public_only.api.public_bootstrap.sensors[sensor_all.id] = make_public_sensor(
+        sensor_all, capabilities={SensorFeatureCapability.MOTION}
+    )
+
+    await setup_public_only()
+
+    assert entity_registry.async_get(stale.entity_id) is None
+    assert "motion" in registered_keys(
+        entity_registry, Platform.BINARY_SENSOR, sensor_all.mac
+    )
+
+
+async def test_object_detected_needs_advertised_types(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A camera advertising no smart detection types gets no object detected sensor."""
+    doorbell.feature_flags.has_smart_detect = True
+    doorbell.feature_flags.smart_detect_types = []
+
+    await init_entry(hass, ufp, [doorbell])
+
+    keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, doorbell.mac)
+    assert "motion" in keys
+    assert "smart_obj_any" not in keys

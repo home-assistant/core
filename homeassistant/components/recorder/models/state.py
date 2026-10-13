@@ -5,7 +5,6 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from propcache.api import cached_property
-from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
     COMPRESSED_STATE_ATTRIBUTES,
@@ -39,20 +38,24 @@ class LazyState(State):
 
     def __init__(  # pylint: disable=super-init-not-called
         self,
-        row: Row,
         attr_cache: dict[str, dict[str, Any]],
         start_time_ts: float | None,
         entity_id: str,
         state: str,
         last_updated_ts: float | None,
-        no_attributes: bool,
+        attributes_source: Any = None,
+        last_changed_ts: float | None = None,
+        last_reported_ts: float | None = None,
+        no_attributes: bool = False,
     ) -> None:
         """Init the lazy state."""
-        self._row = row
+        self._attributes_source = attributes_source
         self.entity_id = entity_id
         self.state = state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = last_updated_ts or start_time_ts
+        self._last_changed_ts = last_changed_ts
+        self._last_reported_ts = last_reported_ts
         self.attr_cache = attr_cache
         self.context = EMPTY_CONTEXT
 
@@ -60,14 +63,7 @@ class LazyState(State):
     @override
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
-        return decode_attributes_from_source(
-            getattr(self._row, "attributes", None), self.attr_cache
-        )
-
-    @cached_property
-    def _last_changed_ts(self) -> float | None:
-        """Last changed timestamp."""
-        return getattr(self._row, "last_changed_ts", None)
+        return decode_attributes_from_source(self._attributes_source, self.attr_cache)
 
     @cached_property
     @override
@@ -76,11 +72,6 @@ class LazyState(State):
         return dt_util.utc_from_timestamp(
             self._last_changed_ts or self._last_updated_ts  # type: ignore[arg-type]
         )
-
-    @cached_property
-    def _last_reported_ts(self) -> float | None:
-        """Last reported timestamp."""
-        return getattr(self._row, "last_reported_ts", None)
 
     @cached_property
     @override
@@ -147,26 +138,24 @@ class LazyState(State):
 
 
 def row_to_compressed_state(
-    row: Row,
     attr_cache: dict[str, dict[str, Any]],
     start_time_ts: float | None,
     entity_id: str,
     state: str,
     last_updated_ts: float | None,
-    no_attributes: bool,
+    attributes_source: Any = None,
+    last_changed_ts: float | None = None,
+    last_reported_ts: float | None = None,
+    no_attributes: bool = False,
 ) -> dict[str, Any]:
     """Convert a database row to a compressed state schema 41 and later."""
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state}
     if not no_attributes:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = decode_attributes_from_source(
-            getattr(row, "attributes", None), attr_cache
+            attributes_source, attr_cache
         )
     row_last_updated_ts: float = last_updated_ts or start_time_ts  # type: ignore[assignment]
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
-    if (
-        (row_last_changed_ts := getattr(row, "last_changed_ts", None))
-        and row_last_changed_ts
-        and row_last_updated_ts != row_last_changed_ts
-    ):
-        comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
+    if last_changed_ts and row_last_updated_ts != last_changed_ts:
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = last_changed_ts
     return comp_state

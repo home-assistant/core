@@ -394,6 +394,7 @@ async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is True
+    assert result["result"].unique_id == TEST_DEVICE_ID
 
     # Verify HikCamera was called with ssl=True
     mock_hikcamera.assert_called_once_with(

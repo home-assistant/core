@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mikrotik.const import INTERFACE, MIKROTIK_SERVICES, POE
+from homeassistant.components.mikrotik.select import SELECTS, MikrotikSelectEntity
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -79,3 +80,22 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "forced_on"
+
+
+async def test_current_option_none_without_poe_state(hass: HomeAssistant) -> None:
+    """Test current_option is None for an interface without a reported PoE state."""
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SELECT]):
+        config_entry = await setup_mikrotik_entry(
+            hass,
+            interface_data=[dict(ETHER1_INTERFACE)],
+            poe_data=[ETHER1_POE],
+        )
+
+    entity = MikrotikSelectEntity(
+        config_entry,
+        config_entry.runtime_data,
+        SELECTS[0],
+        dict(ETHER1_INTERFACE),
+    )
+
+    assert entity.current_option is None

@@ -15,6 +15,7 @@ from . import (
     config_schema,
     core_files,
     dependencies,
+    device_classes,
     dhcp,
     docker,
     icons,
@@ -66,6 +67,7 @@ INTEGRATION_PLUGINS = [
 ]
 HASS_PLUGINS = [
     core_files,
+    device_classes,
     docker,
     mdi_icons,
     mypy_config,

@@ -4,9 +4,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pylutron_caseta import BridgeResponseError
+from pylutron_caseta import BridgeDisconnectedError, BridgeResponseError
+import pytest
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
+from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.binary_sensor import SCAN_INTERVAL
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -88,6 +93,9 @@ async def test_battery_sensor_updates_on_schedule(
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
 
+    # Setup asks once to find out whether the shade has a battery at all
+    instance.get_battery_status.reset_mock()
+
     binary_sensor_entity_id = (
         "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
     )
@@ -107,7 +115,7 @@ async def test_battery_sensor_updates_on_schedule(
     updated_state = hass.states.get(binary_sensor_entity_id)
     assert updated_state is not None
     assert updated_state.state == STATE_ON
-    assert instance.get_battery_status.await_count == 2
+    assert instance.get_battery_status.await_count == 1
     instance.get_battery_status.assert_awaited_with("802")
 
     instance.battery_statuses["802"] = "Unknown"
@@ -118,7 +126,86 @@ async def test_battery_sensor_updates_on_schedule(
     unknown_state = hass.states.get(binary_sensor_entity_id)
     assert unknown_state is not None
     assert unknown_state.state == STATE_UNKNOWN
-    assert instance.get_battery_status.await_count == 3
+    assert instance.get_battery_status.await_count == 2
+
+
+async def test_no_battery_sensor_for_a_shade_wired_for_power(
+    hass: HomeAssistant,
+) -> None:
+    """Test a shade the bridge reports no battery for gets no battery sensor."""
+    instance = MockBridge()
+    instance.battery_statuses = {}
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(
+            "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
+        )
+        is None
+    )
+
+
+async def test_battery_sensor_removed_when_the_shade_has_no_battery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a battery sensor from an earlier release is removed."""
+    instance = MockBridge()
+    instance.battery_statuses = {}
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        "000004d2_802_battery",
+        suggested_object_id="basement_bedroom_basement_bedroom_left_shade_battery",
+    )
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, "000004d2_802_battery"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [BridgeDisconnectedError(), TimeoutError],
+)
+async def test_battery_sensor_kept_when_the_bridge_cannot_answer(
+    hass: HomeAssistant,
+    error: Exception,
+) -> None:
+    """Test a cover keeps its battery sensor when the bridge cannot be asked."""
+    instance = MockBridge()
+    instance.get_battery_status = AsyncMock(side_effect=error)
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(
+            "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
+        )
+        is not None
+    )
 
 
 async def test_battery_sensor_handles_bridge_response_error(
