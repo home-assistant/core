@@ -78,8 +78,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
 /tests/components/airnow/ @asymworks
-/homeassistant/components/airobot/ @mettolen
-/tests/components/airobot/ @mettolen
+/homeassistant/components/airobot/ @mettolen @dmednis
+/tests/components/airobot/ @mettolen @dmednis
 /homeassistant/components/airos/ @CoMPaTech
 /tests/components/airos/ @CoMPaTech
 /homeassistant/components/airpatrol/ @antondalgren

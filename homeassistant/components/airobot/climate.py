@@ -25,9 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirobotConfigEntry
 from .const import DOMAIN
-from .coordinator import AirobotDataUpdateCoordinator
+from .coordinator import AirobotConfigEntry, AirobotDataUpdateCoordinator
 from .entity import AirobotEntity
 
 PARALLEL_UPDATES = 1
@@ -45,6 +44,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Airobot climate platform."""
     coordinator = entry.runtime_data
+    if not isinstance(coordinator, AirobotDataUpdateCoordinator):
+        return
+
     async_add_entities([AirobotClimate(coordinator)])
 
 

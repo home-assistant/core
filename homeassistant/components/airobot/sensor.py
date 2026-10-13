@@ -1,10 +1,11 @@
-"""Sensor platform for Airobot thermostat."""
+"""Sensor platform for Airobot thermostat and ventilation unit."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import override
 
+from pyairobotmodbus.models import AirobotData
 from pyairobotrest.models import ThermostatStatus
 
 from homeassistant.components.sensor import (
@@ -14,10 +15,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
+    UnitOfDensity,
     UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,9 +29,12 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from . import AirobotConfigEntry
-from .coordinator import AirobotDataUpdateCoordinator
-from .entity import AirobotEntity
+from .coordinator import (
+    AirobotConfigEntry,
+    AirobotDataUpdateCoordinator,
+    AirobotVUCoordinator,
+)
+from .entity import AirobotEntity, AirobotVUEntity
 
 PARALLEL_UPDATES = 0
 
@@ -38,6 +45,14 @@ class AirobotSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[ThermostatStatus], StateType | datetime]
     supported_fn: Callable[[ThermostatStatus], bool] = lambda _: True
+
+
+@dataclass(frozen=True, kw_only=True)
+class AirobotVUSensorEntityDescription(SensorEntityDescription):
+    """Describes Airobot VU sensor entity."""
+
+    value_fn: Callable[[AirobotData], StateType]
+    supported_fn: Callable[[AirobotData], bool] = lambda _: True
 
 
 uptime_to_stable_datetime = ignore_variance(
@@ -114,6 +129,185 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
     ),
 )
 
+VU_SENSOR_TYPES: tuple[AirobotVUSensorEntityDescription, ...] = (
+    # Temperatures
+    AirobotVUSensorEntityDescription(
+        key="extract_air_temperature",
+        translation_key="extract_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.extract_air_temp,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="supply_air_temperature",
+        translation_key="supply_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.supply_air_temp,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="outside_air_temperature",
+        translation_key="outside_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.outside_air_temp,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="exhaust_air_temperature",
+        translation_key="exhaust_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.exhaust_air_temp,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="extra_temperature",
+        translation_key="extra_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.extra_temp,
+        supported_fn=lambda data: data.extra_temp is not None,
+    ),
+    # Humidity
+    AirobotVUSensorEntityDescription(
+        key="extract_air_humidity",
+        translation_key="extract_air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.extract_air_humidity,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="supply_air_humidity",
+        translation_key="supply_air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.supply_air_humidity,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="outside_air_humidity",
+        translation_key="outside_air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.outside_air_humidity,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="exhaust_air_humidity",
+        translation_key="exhaust_air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.exhaust_air_humidity,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="extra_humidity",
+        translation_key="extra_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.extra_humidity,
+        supported_fn=lambda data: data.extra_humidity is not None,
+    ),
+    # Air quality
+    AirobotVUSensorEntityDescription(
+        key="co2_level",
+        translation_key="co2_level",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.co2_level,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="voc",
+        translation_key="voc",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.voc,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.pm25,
+    ),
+    # Fan
+    AirobotVUSensorEntityDescription(
+        key="supply_fan_rpm",
+        translation_key="supply_fan_rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        value_fn=lambda data: data.supply_fan_rpm,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="extract_fan_rpm",
+        translation_key="extract_fan_rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        value_fn=lambda data: data.extract_fan_rpm,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="supply_fan_level",
+        translation_key="supply_fan_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.supply_fan_level,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="extract_fan_level",
+        translation_key="extract_fan_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.extract_fan_level,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="supply_airflow",
+        translation_key="supply_airflow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        # Only constant-flow models measure airflow
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.supply_airflow,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="extract_airflow",
+        translation_key="extract_airflow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.extract_airflow,
+    ),
+    # Device
+    AirobotVUSensorEntityDescription(
+        key="heat_recovery_efficiency",
+        translation_key="heat_recovery_efficiency",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_fn=lambda data: data.heat_recovery_efficiency,
+    ),
+    AirobotVUSensorEntityDescription(
+        key="working_time",
+        translation_key="working_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.working_time_ms,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -122,6 +316,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Airobot sensor platform."""
     coordinator = entry.runtime_data
+    if isinstance(coordinator, AirobotVUCoordinator):
+        async_add_entities(
+            AirobotVUSensor(coordinator, description)
+            for description in VU_SENSOR_TYPES
+            if description.supported_fn(coordinator.data)
+        )
+        return
+
     async_add_entities(
         AirobotSensor(coordinator, description)
         for description in SENSOR_TYPES
@@ -149,3 +351,15 @@ class AirobotSensor(AirobotEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.status)
+
+
+class AirobotVUSensor(AirobotVUEntity, SensorEntity):
+    """Representation of an Airobot VU sensor."""
+
+    entity_description: AirobotVUSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
