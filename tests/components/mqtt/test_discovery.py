@@ -3690,6 +3690,45 @@ async def test_config_for_removed_disabled_device_component(
     assert not entity_registry.async_is_registered("sensor.bla_disabled")
 
 
+async def test_rollback_re_enabled_device_component(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device component can be rolled back after it was re-enabled."""
+    await mqtt_mock_entry()
+    device_config = copy.deepcopy(DISABLED_COMPONENT_DEVICE_CONFIG)
+    device_config["cmps"]["sens2"]["enabled_by_default"] = True
+    payload = json.dumps(device_config)
+    async_fire_mqtt_message(hass, "homeassistant/device/bla/config", payload)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        "sensor.bla_disabled", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity("sensor.bla_disabled", disabled_by=None)
+    # The re-enabled component is loaded again with the next discovery payload
+    async_fire_mqtt_message(hass, "homeassistant/device/bla/config", payload)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_disabled") is not None
+
+    # Roll back the component to single component discovery
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", json.dumps({"migrate_discovery": True})
+    )
+    await hass.async_block_till_done()
+    single_config = copy.deepcopy(SINGLE_DISABLED_COMPONENT_CONFIG)
+    single_config["enabled_by_default"] = True
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/sens2/config", json.dumps(single_config)
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_disabled") is not None
+    assert "conflicting MQTT discovery message for disabled" not in caplog.text
+
+
 async def test_clean_up_registry_monitoring(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

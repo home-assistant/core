@@ -1108,6 +1108,10 @@ class MqttDiscoveryUpdateMixin(Entity):
         )
         # Set in case the entity has been removed and is re-added
         set_discovery_hash(self.hass, discovery_hash)
+        # The entity is loaded, so it is no longer tracked as disabled
+        self.hass.data[DATA_MQTT].discovery_discovered_and_disabled.pop(
+            discovery_hash, None
+        )
         self._remove_discovery_updated = async_dispatcher_connect(
             self.hass,
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
