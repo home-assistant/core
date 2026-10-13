@@ -257,7 +257,7 @@ async def test_switch_unavailable(
 
     led_state = hass.states.get("switch.tracker_device_id_123_led")
     assert led_state
-    assert led_state.state == STATE_OFF
+    assert led_state.state == STATE_UNAVAILABLE
 
     mock_tractive_client.set_tracker_status(power_saving_zone=False)
     await hass.async_block_till_done()
@@ -272,8 +272,9 @@ async def test_switch_unavailable_at_startup(
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test live tracking is unavailable when the REST status reports a power saving zone."""
+    """Test switches availability when REST status reports a power saving zone."""
     mock_tractive_client.status.trackers["device_id_123"].power_saving_zone = True
+    mock_tractive_client.status.trackers["device_id_123"].buzzer = True
 
     await init_integration(hass, mock_config_entry)
 
@@ -283,11 +284,11 @@ async def test_switch_unavailable_at_startup(
 
     buzzer_state = hass.states.get("switch.tracker_device_id_123_buzzer")
     assert buzzer_state
-    assert buzzer_state.state != STATE_UNAVAILABLE
+    assert buzzer_state.state == STATE_ON
 
     led_state = hass.states.get("switch.tracker_device_id_123_led")
     assert led_state
-    assert led_state.state != STATE_UNAVAILABLE
+    assert led_state.state == STATE_UNAVAILABLE
 
 
 async def test_switch_device_assignment(

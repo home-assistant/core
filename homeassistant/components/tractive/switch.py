@@ -91,9 +91,13 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        if self.entity_description.key == ATTR_LIVE_TRACKING:
-            return super().available and not self._tracker_status.power_saving_zone
-        return super().available
+        if not super().available:
+            return False
+        if self._tracker_status.power_saving_zone:
+            if self.entity_description.key == ATTR_LIVE_TRACKING:
+                return False
+            return bool(self.is_on)
+        return True
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
