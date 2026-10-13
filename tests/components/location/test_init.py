@@ -7,7 +7,11 @@ from unittest.mock import call, patch
 import pytest
 
 from homeassistant.components.location.const import DOMAIN
-from homeassistant.config_entries import SOURCE_LOCATION, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_LOCATION_DISCOVERY,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import locations as generated_locations
 from homeassistant.helpers.service_info.location import LocationServiceInfo
@@ -36,7 +40,7 @@ def mock_locations(locations: dict[str, list[str]]) -> Generator[None]:
 class MockLocationFlow(ConfigFlow):
     """Config flow handling location discovery."""
 
-    async def async_step_location(
+    async def async_step_location_discovery(
         self, discovery_info: LocationServiceInfo
     ) -> ConfigFlowResult:
         """Handle location discovery."""
@@ -73,7 +77,7 @@ async def test_discovery_at_start(
         call(
             hass,
             domain,
-            {"source": SOURCE_LOCATION},
+            {"source": SOURCE_LOCATION_DISCOVERY},
             LocationServiceInfo(latitude=latitude, longitude=longitude, regions=["NL"]),
         )
         for domain in domains
@@ -97,7 +101,7 @@ async def test_unknown_region(
         call(
             hass,
             "test",
-            {"source": SOURCE_LOCATION},
+            {"source": SOURCE_LOCATION_DISCOVERY},
             LocationServiceInfo(
                 latitude=AMSTERDAM[0], longitude=AMSTERDAM[1], regions=["NL"]
             ),

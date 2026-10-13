@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.config_entries import SOURCE_LOCATION, SOURCE_USER
+from homeassistant.config_entries import SOURCE_LOCATION_DISCOVERY, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -109,7 +109,7 @@ async def test_location_discovery(hass: HomeAssistant) -> None:
     """Test location discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_LOCATION},
+        context={"source": SOURCE_LOCATION_DISCOVERY},
         data=LOCATION_DISCOVERY,
     )
 
@@ -143,7 +143,7 @@ async def test_location_discovery_duplicate(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_LOCATION},
+        context={"source": SOURCE_LOCATION_DISCOVERY},
         data=LOCATION_DISCOVERY,
     )
 

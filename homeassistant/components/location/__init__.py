@@ -114,7 +114,7 @@ class LocationDiscovery:
             discovery_flow.async_create_flow(
                 self.hass,
                 domain,
-                {"source": config_entries.SOURCE_LOCATION},
+                {"source": config_entries.SOURCE_LOCATION_DISCOVERY},
                 LocationServiceInfo(
                     latitude=latitude, longitude=longitude, regions=regions
                 ),

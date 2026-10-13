@@ -114,7 +114,7 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
             errors={},
         )
 
-    async def async_step_location(
+    async def async_step_location_discovery(
         self, discovery_info: LocationServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by location."""
