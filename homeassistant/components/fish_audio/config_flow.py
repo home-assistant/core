@@ -246,7 +246,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             user_id, errors = await self._async_validate_input(user_input[CONF_API_KEY])
             if user_id is not None:
                 await self.async_set_unique_id(user_id)
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
