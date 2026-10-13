@@ -7,5 +7,6 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "quality_scale": "internal",
+  "requirements": ["skyfield==1.55"],
   "single_config_entry": true
 }

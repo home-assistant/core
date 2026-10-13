@@ -1,9 +1,17 @@
 """Helpers for moon phases."""
 
-from astral import moon
+from typing import NamedTuple, cast
 
-from homeassistant.core import callback
+from skyfield import almanac
+from skyfield.api import Loader
+from skyfield.jpllib import SpiceKernel
+from skyfield.timelib import Timescale
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 STATE_FIRST_QUARTER = "first_quarter"
 STATE_FULL_MOON = "full_moon"
@@ -26,15 +34,47 @@ MOON_PHASES: tuple[str, ...] = (
     STATE_WANING_CRESCENT,
 )
 
-# astral.moon.phase returns 0-27.99; illumination increases up to the full moon
-# (value 14) and decreases afterwards.
+# Scale Skyfield's phase angle to the 28-day scale used by the phase thresholds.
+_LUNAR_CYCLE_DAYS = 28
 _FULL_MOON_PHASE_VALUE = 14
 
 
+class MoonData(NamedTuple):
+    """The ephemeris and timescale used for moon calculations."""
+
+    ephemeris: SpiceKernel
+    timescale: Timescale
+
+
+type MoonConfigEntry = ConfigEntry[MoonData]
+
+
+def load_moon_data(directory: str) -> MoonData:
+    """Load the 17 MB planetary ephemeris and built-in timescale."""
+    loader = Loader(directory)
+    return MoonData(loader("de421.bsp"), loader.timescale(builtin=True))
+
+
 @callback
-def moon_phase() -> str:
+def get_moon_data(hass: HomeAssistant) -> MoonData:
+    """Return the loaded Moon config entry data."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    return cast(MoonConfigEntry, entry).runtime_data
+
+
+@callback
+def _phase_value(moon_data: MoonData) -> float:
+    """Return the current moon phase on a 28-day scale."""
+    now = dt_util.utcnow()
+    time = moon_data.timescale.from_datetime(now)
+    phase_angle = almanac.moon_phase(moon_data.ephemeris, time).degrees
+    return float(phase_angle * (_LUNAR_CYCLE_DAYS / 360))
+
+
+@callback
+def moon_phase(moon_data: MoonData) -> str:
     """Return the current moon phase."""
-    value: float = moon.phase(dt_util.now().date())
+    value = _phase_value(moon_data)
     if value < 0.5 or value > 27.5:
         return STATE_NEW_MOON
     if value < 6.5:
@@ -53,7 +93,7 @@ def moon_phase() -> str:
 
 
 @callback
-def is_waxing() -> bool:
+def is_waxing(moon_data: MoonData) -> bool:
     """Return whether the moon is currently waxing (illumination increasing)."""
-    value: float = moon.phase(dt_util.now().date())
+    value = _phase_value(moon_data)
     return value < _FULL_MOON_PHASE_VALUE

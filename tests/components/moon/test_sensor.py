@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from skyfield.units import Angle
 
 from homeassistant.components.moon.helpers import (
     STATE_FIRST_QUARTER,
@@ -47,7 +48,8 @@ async def test_moon_day(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.moon.helpers.moon.phase", return_value=moon_value
+        "homeassistant.components.moon.helpers.almanac.moon_phase",
+        return_value=Angle(degrees=moon_value * 360 / 28),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
