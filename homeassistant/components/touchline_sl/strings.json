@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "wrong_account": "The credentials provided belong to a different Roth Touchline SL account than the one originally configured."
+      "unique_id_mismatch": "The credentials provided belong to a different Roth Touchline SL account than the one originally configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

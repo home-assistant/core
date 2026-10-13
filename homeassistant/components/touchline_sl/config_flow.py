@@ -94,7 +94,7 @@ class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 await self.async_set_unique_id(str(user_id))
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
