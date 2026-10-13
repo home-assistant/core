@@ -1,5 +1,8 @@
 {
   "conditions": {
+    "is_current_source": {
+      "condition": "mdi:import"
+    },
     "is_muted": {
       "condition": "mdi:volume-mute"
     },
@@ -17,9 +20,6 @@
     },
     "is_playing": {
       "condition": "mdi:play"
-    },
-    "is_source": {
-      "condition": "mdi:import"
     },
     "is_unmuted": {
       "condition": "mdi:volume-high"

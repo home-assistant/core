@@ -115,7 +115,7 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         )
 
 
-IS_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+IS_CURRENT_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(ATTR_INPUT_SOURCE): probatio.All(
@@ -126,11 +126,11 @@ IS_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
 )
 
 
-class MediaPlayerIsSourceCondition(EntityStateConditionBase):
+class MediaPlayerIsCurrentSourceCondition(EntityStateConditionBase):
     """Condition for the media player's selected source."""
 
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_INPUT_SOURCE)}
-    _schema = IS_SOURCE_CONDITION_SCHEMA
+    _schema = IS_CURRENT_SOURCE_CONDITION_SCHEMA
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the source condition."""
@@ -149,6 +149,7 @@ class MediaPlayerIsSourceCondition(EntityStateConditionBase):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
+    "is_current_source": MediaPlayerIsCurrentSourceCondition,
     "is_muted": MediaPlayerIsMutedCondition,
     "is_not_playing": make_entity_state_condition(
         DOMAIN,
@@ -173,7 +174,6 @@ CONDITIONS: dict[str, type[Condition]] = {
     ),
     "is_paused": make_entity_state_condition(DOMAIN, MediaPlayerState.PAUSED),
     "is_playing": make_entity_state_condition(DOMAIN, MediaPlayerState.PLAYING),
-    "is_source": MediaPlayerIsSourceCondition,
     "is_unmuted": MediaPlayerIsUnmutedCondition,
     "is_volume": MediaPlayerIsVolumeCondition,
 }
