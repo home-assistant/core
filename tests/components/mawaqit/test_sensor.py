@@ -57,6 +57,12 @@ async def test_all_entities(
             ["sensor.dhuhr_prayer"],
             id="no_jumua",
         ),
+        pytest.param(
+            {"jumua": "13h50"},
+            ["sensor.second_jumua_prayer"],
+            ["sensor.jumua_prayer"],
+            id="invalid_jumua",
+        ),
     ],
 )
 @pytest.mark.freeze_time("2026-04-09 10:00:00+00:00")
@@ -79,6 +85,22 @@ async def test_optional_sensors(
         assert hass.states.get(entity_id) is None
     for entity_id in present:
         assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.freeze_time("2026-04-09 10:00:00+00:00")
+async def test_invalid_jumua_skipped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mawaqit_client: MagicMock,
+    prayer_times: PrayerTimes,
+) -> None:
+    """Test the next Jumua becomes the first one when the first is invalid."""
+    mock_mawaqit_client.mosques.prayer_times.return_value = prayer_times.model_copy(
+        update={"jumua": "13h50"}
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.jumua_prayer").state == "2026-04-10T12:30:00+00:00"
 
 
 @pytest.mark.freeze_time("2026-04-09 10:00:00+00:00")
@@ -291,3 +313,24 @@ async def test_sensors_added_when_the_mosque_publishes_them(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
         == entities
     )
+
+
+@pytest.mark.freeze_time("2026-04-09 10:00:00+00:00")
+async def test_sensors_kept_after_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mawaqit_client: MagicMock,
+    prayer_times: PrayerTimes,
+) -> None:
+    """Test the sensors the mosque stopped publishing are still added on restart."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.fajr_iqama") is not None
+
+    mock_mawaqit_client.mosques.prayer_times.return_value = prayer_times.model_copy(
+        update={"iqama_enabled": False, "jumua_2": None}
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.fajr_iqama").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.second_jumua_prayer").state == STATE_UNKNOWN

@@ -6,7 +6,6 @@ from datetime import date, datetime, time, timedelta
 from typing import override
 
 from mawaqit.prayer_times import Prayer, PrayerDay, next_prayer, night, prayer_day
-from mawaqit.types import PrayerTimes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_UUID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,15 +39,20 @@ def _jumua(index: int) -> Callable[[PrayerDay], datetime | None]:
     return lambda day: day.jumua[index].at if len(day.jumua) > index else None
 
 
-def _has_iqama(prayer_times: PrayerTimes) -> bool:
-    return prayer_times.iqama_enabled and bool(prayer_times.iqama_calendar)
+def _next_friday(day: date) -> date:
+    return day + timedelta(days=(FRIDAY - day.weekday()) % 7)
 
 
-def _has_jumua(index: int) -> Callable[[PrayerTimes], bool]:
-    def has_jumua(prayer_times: PrayerTimes) -> bool:
-        first = prayer_times.jumua_as_duhr or prayer_times.jumua
-        times = (first, prayer_times.jumua_2, prayer_times.jumua_3)
-        return sum(map(bool, times)) > index
+def _has_iqama(data: MawaqitData) -> bool:
+    return data.prayer_times.iqama_enabled and bool(data.prayer_times.iqama_calendar)
+
+
+def _has_jumua(index: int) -> Callable[[MawaqitData], bool]:
+    def has_jumua(data: MawaqitData) -> bool:
+        # The library drops invalid Jumua times, shifting the next ones down.
+        friday = _next_friday(dt_util.now(data.timezone).date())
+        day = prayer_day(data.prayer_times, friday, timezone=data.timezone)
+        return day is not None and len(day.jumua) > index
 
     return has_jumua
 
@@ -58,7 +63,7 @@ class MawaqitDaySensorEntityDescription(SensorEntityDescription):
 
     device_class: SensorDeviceClass = SensorDeviceClass.TIMESTAMP
     value_fn: Callable[[PrayerDay], datetime | None]
-    exists_fn: Callable[[PrayerTimes], bool] = lambda _: True
+    exists_fn: Callable[[MawaqitData], bool] = lambda _: True
     # Read the next Friday from the shown day, rather than the shown day.
     friday: bool = False
 
@@ -172,17 +177,26 @@ async def async_setup_entry(
         for description in NEXT_PRAYER_SENSORS
     )
 
+    # Sensors of times the mosque stops publishing are kept, as unknown.
+    registered = {
+        registry_entry.unique_id
+        for registry_entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
     added: set[str] = set()
 
     @callback
     def _async_add_day_sensors() -> None:
         """Add the sensors of the times the mosque has started publishing."""
-        # Sensors of times the mosque stops publishing are kept, as unknown.
-        prayer_times = coordinator.data.prayer_times
         if new := [
             description
             for description in DAY_SENSORS
-            if description.key not in added and description.exists_fn(prayer_times)
+            if description.key not in added
+            and (
+                description.exists_fn(coordinator.data)
+                or f"{entry.data[CONF_UUID]}_{description.key}" in registered
+            )
         ]:
             added.update(description.key for description in new)
             async_add_entities(
@@ -284,7 +298,7 @@ class MawaqitDaySensor(MawaqitSensor[MawaqitDaySensorEntityDescription]):
         while (day_end := _day_end(data, day)) <= now:
             day += timedelta(days=1)
         if self.entity_description.friday:
-            day += timedelta(days=(FRIDAY - day.weekday()) % 7)
+            day = _next_friday(day)
         prayers = prayer_day(data.prayer_times, day, timezone=data.timezone)
         return (self.entity_description.value_fn(prayers) if prayers else None), day_end
 
