@@ -11,9 +11,10 @@ The copy is made by `script/sync_custom_integrations.py`. Layout: `<copy>/<owner
 
 ## Locate the copy
 
-- Use the directory the user names, if any. Otherwise use `.custom_integration_sources/` at the repo root.
+- Use the directory the user names, if any. Otherwise use `.custom_integration_sources/` in the **main worktree**, which all git worktrees share: `"$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.custom_integration_sources"`. In a linked worktree, use that copy; never create a second one there.
 - A directory is a valid copy only if its `.state.json` has `"format": "custom-integration-sources/1"`.
 - If there is no valid copy, ask the user where theirs is, or whether to create one (a first sync takes about 5 minutes), or whether a quick GitHub code search is enough (see below). Never start a sync unprompted.
+- Before offering a first sync, check free space on the destination's filesystem (`df -h` on the destination's parent directory) and tell the user the copy needs about 3.5 GB, so they can pick another location with `--dest` or free up space first.
 - Before searching, state how old the snapshot is (the modification time of `.state.json`). Do not refresh it unless the user asks; suggest a refresh if it is more than a few days old.
 
 ## Sync
@@ -27,10 +28,11 @@ python3 -m script.sync_custom_integrations [--dest DIR]
 - Requires an authenticated `gh` (`gh auth status`), used only to resolve commit SHAs via GraphQL.
 - Incremental: only repos whose HEAD changed are fetched. A no-change run takes about a minute; the first run clones everything (~5 minutes).
 - Repos dropped from the HACS list are deleted. Repos that are deleted, private or empty are listed as `unavailable` and their local copy is removed.
-- Exit status 3 means the sync completed but some downloads failed: the listed repos are stale or missing. Rerun, or name them in the report.
+- Output: one `unavailable owner/repo` or `failed owner/repo: error` line per affected repo, then a last summary line with all counts (`updated N, removed N, unavailable N, failed N`). Read the last line to see whether the sync worked.
+- Exit status 3 means the sync completed but some downloads failed: the summary line says so, and the `failed` repos are stale or missing. Rerun, or name them in the report.
 - Any other non-zero exit means the sync did not complete (authentication, refused destination, network or GraphQL error, another sync already running). Fix the cause and rerun before searching.
 - The directory is added to `.git/info/exclude` automatically; it must never be committed.
-- Options: `owner/repo ...` to sync only some repos, `--force` to re-fetch every repo, `--dest DIR` for a copy outside `.custom_integration_sources/` (for example one shared between worktrees), `--workers N` for download concurrency.
+- Options: `owner/repo ...` to sync only some repos, `--force` to re-fetch every repo, `--dest DIR` for a copy elsewhere than the main worktree's `.custom_integration_sources/` (for example on a disk with more space), `--workers N` for download concurrency.
 
 ## Search
 

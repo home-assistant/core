@@ -28,7 +28,7 @@ import urllib.error
 import urllib.request
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DEST = REPO_ROOT / ".custom_integration_sources"
+DEST_NAME = ".custom_integration_sources"
 HACS_LIST = "https://raw.githubusercontent.com/hacs/default/master/integration"
 GRAPHQL = "https://api.github.com/graphql"
 BATCH = 50
@@ -100,6 +100,22 @@ def _repo_arg(value: str) -> str:
     if not is_repo_slug(value):
         raise argparse.ArgumentTypeError(f"not an owner/repo: {value!r}")
     return value
+
+
+def default_dest() -> Path:
+    """Return the copy in the main worktree, so all worktrees share one copy."""
+    try:
+        common_dir = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        ).stdout.strip()
+    except OSError, subprocess.SubprocessError:
+        return REPO_ROOT / DEST_NAME
+    return Path(common_dir).parent / DEST_NAME
 
 
 def _token() -> str:
@@ -363,10 +379,14 @@ def main() -> None:
     )
     parser.add_argument("--force", action="store_true", help="ignore recorded SHAs")
     parser.add_argument("--workers", type=int, default=16)
-    parser.add_argument("--dest", type=Path, default=DEFAULT_DEST)
+    parser.add_argument(
+        "--dest",
+        type=Path,
+        help=f"copy location (default: {DEST_NAME}/ in the main worktree)",
+    )
     args = parser.parse_args()
 
-    root: Path = args.dest.resolve()
+    root: Path = (args.dest or default_dest()).resolve()
     root.mkdir(parents=True, exist_ok=True)
     # Read-only ownership check first, so a refused directory is never modified
     load_state(root)
@@ -418,7 +438,8 @@ def main() -> None:
             try:
                 fut.result()
             except Exception as err:  # noqa: BLE001
-                failed.append(f"{repo}: {err}")
+                # One line per repo, even for multi-line git errors
+                failed.append(f"{repo}: {' '.join(str(err).split())}")
             else:
                 state[repo] = todo[repo]
             if done % 100 == 0 or done == len(todo):
@@ -441,12 +462,21 @@ def main() -> None:
             state.pop(repo, None)
     save_state(root, state)
 
-    print(f"updated {len(todo) - len(failed)}, removed {len(removed)}")
-    for line in (*(f"unavailable {r}" for r in missing), *failed):
-        print(line)
+    # Per-repo lines first, so the summary is always the last line of output
+    for repo in missing:
+        print(f"unavailable {repo}")
+    for line in failed:
+        print(f"failed {line}")
+    summary = (
+        f"updated {len(todo) - len(failed)}, removed {len(removed)},"
+        f" unavailable {len(missing)}, failed {len(failed)}"
+    )
     if failed:
-        print(f"{len(failed)} downloads failed; those repos are stale or missing")
+        print(
+            f"{summary}; {len(failed)} downloads failed, those repos are stale or missing"
+        )
         sys.exit(EXIT_PARTIAL)
+    print(summary)
 
 
 if __name__ == "__main__":
