@@ -6,11 +6,12 @@ from unittest import mock
 import probatio
 import pytest
 
-from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
-from homeassistant.components.blackbird.media_player import (
+from homeassistant.components.blackbird.const import (
     DATA_BLACKBIRD,
-    PLATFORM_SCHEMA,
+    DOMAIN,
+    SERVICE_SETALLZONES,
 )
+from homeassistant.components.blackbird.media_player import PLATFORM_SCHEMA
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
