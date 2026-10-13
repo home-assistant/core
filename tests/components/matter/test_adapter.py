@@ -249,6 +249,28 @@ async def test_endpoint_child_devices_pruned_on_setup(
     assert entity_registry.async_get("switch.eve_energy_20ecn4101_bottom") is None
 
 
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_device_readded_after_removal(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a split endpoint's entities are rediscovered after remove and re-add."""
+    assert entity_registry.async_get("switch.eve_energy_20ecn4101_top") is not None
+
+    # Removing the endpoint deletes its child device and entities.
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 1)
+    assert entity_registry.async_get("switch.eve_energy_20ecn4101_top") is None
+
+    # Re-adding the endpoint rediscovers its entities instead of skipping them
+    # until a reload.
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 1)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("switch.eve_energy_20ecn4101_top") is not None
+
+
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.skip("Waiting for a new test fixture")
 @pytest.mark.parametrize("node_fixture", ["fake_bridge_two_light"])
