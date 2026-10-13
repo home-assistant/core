@@ -189,6 +189,8 @@ async def test_reconfigure_flow_cannot_connect(
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
+    schema_keys = {str(k): k for k in result2["data_schema"].schema}
+    assert schema_keys[CONF_ZONE].description == {"suggested_value": ENTITY_ID_HOME}
 
     mock_open_meteo.forecast.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(

@@ -93,7 +93,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 _ZONE_SCHEMA,
-                {CONF_ZONE: entry.data[CONF_ZONE]},
+                user_input or {CONF_ZONE: entry.data[CONF_ZONE]},
             ),
             errors=errors,
         )
