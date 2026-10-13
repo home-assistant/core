@@ -1,6 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any, override
@@ -18,17 +18,36 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
-from homeassistant.const import CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+    statistics_during_period,
+)
+from homeassistant.const import CONF_TOKEN, Platform, UnitOfEnergy
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.unit_conversion import EnergyConverter
 
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
 
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
+from .const import (
+    DOMAIN,
+    ENERGY_HISTORY_FIELDS,
+    LOGGER,
+    TeslaFleetState,
+    build_statistic_id,
+)
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -44,6 +63,7 @@ VEHICLE_FIRST_REFRESH_TIMEOUT = 60
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
+ENERGY_STATISTICS_INTERVAL = timedelta(hours=1)
 
 
 def _stale_site_info_error(err: BaseException | None) -> TeslaFleetError | None:
@@ -76,6 +96,100 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_CONFIG,
     VehicleDataEndpoint.LOCATION_DATA,
 ]
+
+
+def _get_latest_field_statistics(
+    hass: HomeAssistant, site_id: str | int
+) -> dict[str, StatisticData]:
+    """Return the latest long-term statistic for each energy field."""
+    latest: dict[str, StatisticData] = {}
+    for key in ENERGY_HISTORY_FIELDS:
+        statistic_id = build_statistic_id(site_id, key)
+        if stats := get_last_statistics(
+            hass, 1, statistic_id, False, {"state", "sum"}
+        ).get(statistic_id):
+            latest[key] = StatisticData(
+                start=dt_util.utc_from_timestamp(stats[0]["start"]),
+                state=stats[0]["state"] or 0.0,
+                sum=stats[0]["sum"] or 0.0,
+            )
+    return latest
+
+
+def _get_sensor_statistics(
+    hass: HomeAssistant, sensors: dict[str, str], end: datetime
+) -> dict[str, list[StatisticData]]:
+    """Return each sensor's hourly statistics as hourly energy, keyed by field."""
+    history: dict[str, list[StatisticData]] = {}
+    for entity_id, rows in statistics_during_period(
+        hass,
+        dt_util.utc_from_timestamp(0),
+        end,
+        set(sensors),
+        "hour",
+        {EnergyConverter.UNIT_CLASS: UnitOfEnergy.WATT_HOUR},
+        {"sum"},
+    ).items():
+        previous = 0.0
+        statistics: list[StatisticData] = []
+        for row in rows:
+            total = row["sum"] or 0.0
+            statistics.append(
+                StatisticData(
+                    start=dt_util.utc_from_timestamp(row["start"]),
+                    state=total - previous,
+                    sum=total,
+                )
+            )
+            previous = total
+        history[sensors[entity_id]] = statistics
+    return history
+
+
+def _aggregate_energy_history_by_hour(
+    time_series: list[dict[str, Any]],
+) -> list[tuple[datetime, dict[str, float]]]:
+    """Aggregate energy history samples into recorder-compatible hourly buckets."""
+    hourly_periods: dict[datetime, dict[str, float]] = {}
+
+    for period in time_series:
+        timestamp = period.get("timestamp")
+        # Tesla omits a field instead of sending zero, so an omitted field is zero
+        # only when the period has a reading; without one the period stays missing
+        if (parsed_time := dt_util.parse_datetime(timestamp or "")) is None or not any(
+            key in period for key in ENERGY_HISTORY_FIELDS
+        ):
+            continue
+
+        start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
+        hour_values = hourly_periods.setdefault(
+            start, dict.fromkeys(ENERGY_HISTORY_FIELDS, 0.0)
+        )
+        for key in ENERGY_HISTORY_FIELDS:
+            hour_values[key] += float(period.get(key) or 0)
+
+    return sorted(hourly_periods.items())
+
+
+def _parse_energy_history(
+    response: Any,
+) -> tuple[dict[str, Any], datetime]:
+    """Validate an energy history response and its first timestamp."""
+    if (
+        not isinstance(response, dict)
+        or not isinstance((data := response.get("response")), dict)
+        or not isinstance((time_series := data.get("time_series")), list)
+        or not time_series
+        or not isinstance((first_period := time_series[0]), dict)
+        or not isinstance((timestamp := first_period.get("timestamp")), str)
+        or (period_start := dt_util.parse_datetime(timestamp)) is None
+        or period_start.tzinfo is None
+    ):
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_data",
+        )
+    return data, period_start
 
 
 def _invalidate_access_token(
@@ -371,6 +485,193 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         output["_period_start"] = period_start
 
         return output
+
+
+class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
+    """Import energy site history as hourly external statistics."""
+
+    config_entry: TeslaFleetConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySite,
+        site_name: str,
+    ) -> None:
+        """Initialize Tesla Fleet Energy Site Statistics coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"Tesla Fleet Energy Statistics {api.energy_site_id}",
+            update_interval=ENERGY_STATISTICS_INTERVAL,
+        )
+        self.api = api
+        self.site_name = site_name
+
+    async def _async_get_history(
+        self, end_date: str | None = None
+    ) -> tuple[dict[str, Any], datetime]:
+        """Fetch one local day of energy history."""
+        try:
+            response = await self.api.energy_history(
+                TeslaEnergyPeriod.DAY, end_date=end_date
+            )
+        except RateLimited as e:
+            after = e.data.get("after") if isinstance(e.data, dict) else None
+            raise UpdateFailed(
+                e.message, retry_after=float(after) if after else None
+            ) from e
+        except (InvalidToken, OAuthExpired) as e:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise UpdateFailed(e.message) from e
+        except LoginRequired as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+        return _parse_energy_history(response)
+
+    @override
+    async def _async_update_data(self) -> None:
+        """Import daily history from the last recorded hour through today."""
+        data, period_start = await self._async_get_history()
+        if (
+            not isinstance((time_zone := data.get("installation_time_zone")), str)
+            or not time_zone
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="history_time_zone_missing",
+            )
+        if (site_time_zone := await dt_util.async_get_time_zone(time_zone)) is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="history_time_zone_unknown",
+                translation_placeholders={"time_zone": time_zone},
+            )
+        today = period_start.astimezone(site_time_zone).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        recorder = get_instance(self.hass)
+        last_stats = await recorder.async_add_executor_job(
+            _get_latest_field_statistics, self.hass, self.api.energy_site_id
+        )
+
+        first_run_start = dt_util.as_utc(today).replace(
+            minute=0, second=0, microsecond=0
+        )
+        if not last_stats:
+            await self._async_copy_sensor_history(last_stats, first_run_start)
+        # Resume from the newest field so one that fell behind, such as a sensor
+        # whose copied history ends earlier, can't force refetching old days.
+        # Fields commit separately, so a crash between commits can leave a gap.
+        start = max(
+            (stat["start"] for stat in last_stats.values()),
+            default=dt_util.as_utc(today),
+        )
+        day = start.astimezone(site_time_zone).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        window_start = dt_util.as_utc(day)
+        previous_day: list[dict[str, Any]] = []
+        while day <= today:
+            next_day = day + timedelta(days=1)
+            if day < today:
+                history, history_start = await self._async_get_history(
+                    (next_day - timedelta(seconds=1)).isoformat()
+                )
+                if history_start.astimezone(site_time_zone).date() != day.date():
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="history_wrong_day",
+                        translation_placeholders={"date": day.date().isoformat()},
+                    )
+            else:
+                history = data
+            self._add_statistics(
+                [*previous_day, *history["time_series"]],
+                last_stats,
+                window_start,
+                first_run_start,
+            )
+            await recorder.async_block_till_done()
+            previous_day = history["time_series"]
+            window_start = dt_util.as_utc(day)
+            day = next_day
+
+    async def _async_copy_sensor_history(
+        self, last_stats: dict[str, StatisticData], end: datetime
+    ) -> None:
+        """Start each statistic from its sensor's history so switching keeps it."""
+        entity_registry = er.async_get(self.hass)
+        site_id = self.api.energy_site_id
+        if not (
+            sensors := {
+                entity_id: key
+                for key in ENERGY_HISTORY_FIELDS
+                if (
+                    entity_id := entity_registry.async_get_entity_id(
+                        Platform.SENSOR, DOMAIN, f"{site_id}-{key}"
+                    )
+                )
+            }
+        ):
+            return
+        history = await get_instance(self.hass).async_add_executor_job(
+            _get_sensor_statistics, self.hass, sensors, end
+        )
+        for key, statistics in history.items():
+            async_add_external_statistics(self.hass, self._metadata(key), statistics)
+            last_stats[key] = statistics[-1]
+
+    def _metadata(self, key: str) -> StatisticMetaData:
+        """Return the external statistic metadata for a field."""
+        return StatisticMetaData(
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+            name=f"{self.site_name} {key.replace('_', ' ')}",
+            source=DOMAIN,
+            statistic_id=build_statistic_id(self.api.energy_site_id, key),
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        )
+
+    @callback
+    def _add_statistics(
+        self,
+        time_series: list[dict[str, Any]],
+        last_stats: dict[str, StatisticData],
+        window_start: datetime,
+        first_run_start: datetime,
+    ) -> None:
+        """Write each field's hours from its latest one, continuing its total."""
+        hourly_periods = _aggregate_energy_history_by_hour(time_series)
+        for key in ENERGY_HISTORY_FIELDS:
+            latest = last_stats.get(key)
+            running_sum = latest["sum"] if latest else 0.0
+            field_start = (
+                max(latest["start"], window_start) if latest else first_run_start
+            )
+            statistics: list[StatisticData] = []
+            for start, hour_values in hourly_periods:
+                if start < field_start:
+                    continue
+
+                state = hour_values[key]
+                if latest and start == latest["start"]:
+                    running_sum -= latest["state"]
+                running_sum += state
+
+                statistics.append(
+                    StatisticData(start=start, state=state, sum=running_sum)
+                )
+
+            if statistics:
+                async_add_external_statistics(
+                    self.hass, self._metadata(key), statistics
+                )
+                last_stats[key] = statistics[-1]
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):

@@ -9,6 +9,7 @@ import jwt
 import pytest
 from tesla_fleet_api.const import Scope
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 
 from .const import (
@@ -197,3 +198,8 @@ def mock_signed_command() -> Generator[AsyncMock]:
         return_value=COMMAND_OK,
     ) as mock_signed_command:
         yield mock_signed_command
+
+
+@pytest.fixture(autouse=True)
+def use_recorder(recorder_mock: Recorder) -> None:
+    """Enable the recorder for external energy statistics."""

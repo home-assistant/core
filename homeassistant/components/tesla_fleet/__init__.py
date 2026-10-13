@@ -17,6 +17,8 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleFleet
 
+from homeassistant.components.recorder import get_instance as get_recorder_instance
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -35,12 +37,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, build_statistic_id
 from .coordinator import (
     VEHICLE_FIRST_REFRESH_TIMEOUT,
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
+    TeslaFleetEnergySiteStatisticsCoordinator,
     TeslaFleetVehicleDataCoordinator,
     _stale_site_info_error,
 )
@@ -250,6 +253,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
 
             await live_coordinator.async_config_entry_first_refresh()
+            if info_coordinator.data.get(
+                "components_battery"
+            ) or info_coordinator.data.get("components_solar"):
+                statistics_coordinator = TeslaFleetEnergySiteStatisticsCoordinator(
+                    hass, entry, api_energy, product.get("site_name", "Energy Site")
+                )
+                entry.async_on_unload(
+                    statistics_coordinator.async_add_listener(lambda: None)
+                )
+                entry.async_create_background_task(
+                    hass,
+                    statistics_coordinator.async_refresh(),
+                    f"{statistics_coordinator.name} first refresh",
+                )
 
             # Create energy site model
             model = None
@@ -298,3 +315,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Unload TeslaFleet Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    if RECORDER_DOMAIN not in hass.config.components:
+        LOGGER.debug("Skipping statistics cleanup because recorder is not loaded")
+        return
+
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    # Only energy sites have all-numeric identifiers (the energy_site_id).
+    # Do not match on serial_number: a wall connector's serial is derived
+    # from its DIN and can also be all-numeric.
+    site_ids = {
+        site_id
+        for device in devices
+        for domain, site_id in device.identifiers
+        if domain == DOMAIN and site_id.isdigit()
+    }
+    statistic_ids = [
+        build_statistic_id(site_id, key)
+        for site_id in site_ids
+        if len(device_registry.async_get_devices(identifiers={(DOMAIN, site_id)})) == 1
+        for key in ENERGY_HISTORY_FIELDS
+    ]
+
+    if statistic_ids:
+        get_recorder_instance(hass).async_clear_statistics(statistic_ids)
