@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.const import ClosureState
 from tesla_fleet_api.exceptions import InvalidCommand
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from teslemetry_stream import Signal
@@ -47,11 +46,6 @@ WINDOWS_ENTITY_ID = "cover.test_windows"
 TONNEAU_ENTITY_ID = "cover.test_tonneau"
 BLE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TONNEAU_SERVICES = [
-    pytest.param(SERVICE_OPEN_COVER, "open_tonneau", ClosureState.OPEN, id="open"),
-    pytest.param(SERVICE_CLOSE_COVER, "close_tonneau", ClosureState.CLOSE, id="close"),
-    pytest.param(SERVICE_STOP_COVER, "stop_tonneau", ClosureState.STOP, id="stop"),
-]
-TONNEAU_BLUETOOTH_SERVICES = [
     pytest.param(SERVICE_OPEN_COVER, "open_tonneau", id="open"),
     pytest.param(SERVICE_CLOSE_COVER, "close_tonneau", id="close"),
     pytest.param(SERVICE_STOP_COVER, "stop_tonneau", id="stop"),
@@ -81,7 +75,6 @@ async def ble_cybertruck(
         ],
     )
     entry.add_to_hass(hass)
-    # spec keeps the router from seeing a closure method Bluetooth does not have.
     bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     bluetooth_vehicle.model = "Cybertruck"
     ble_lookup = MagicMock(return_value=MagicMock())
@@ -240,7 +233,7 @@ async def test_cover_tonneau_services(
 
     entity_id = "cover.test_tonneau"
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.closure",
+        "tesla_fleet_api.teslemetry.Vehicle.open_tonneau",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -249,102 +242,106 @@ async def test_cover_tonneau_services(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once_with(tonneau=ClosureState.OPEN)
+        call.assert_called_once_with()
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.OPEN
 
-        call.reset_mock()
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.stop_tonneau",
+        return_value=COMMAND_OK,
+    ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once_with(tonneau=ClosureState.STOP)
+        call.assert_called_once_with()
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.OPEN
 
-        call.reset_mock()
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.close_tonneau",
+        return_value=COMMAND_OK,
+    ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once_with(tonneau=ClosureState.CLOSE)
+        call.assert_called_once_with()
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.CLOSED
 
 
-@pytest.mark.parametrize(("service", "ble_command"), TONNEAU_BLUETOOTH_SERVICES)
+@pytest.mark.parametrize(("service", "command"), TONNEAU_SERVICES)
 async def test_cover_tonneau_bluetooth(
     hass: HomeAssistant,
     ble_cybertruck: tuple[AsyncMock, MagicMock],
     service: str,
-    ble_command: str,
+    command: str,
 ) -> None:
     """Tests that a Bluetooth-paired Cybertruck in range moves the tonneau locally."""
     bluetooth_vehicle, _ = ble_cybertruck
-    getattr(bluetooth_vehicle, ble_command).return_value = COMMAND_OK
+    getattr(bluetooth_vehicle, command).return_value = COMMAND_OK
 
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.closure", return_value=COMMAND_OK
-    ) as closure:
+        f"tesla_fleet_api.teslemetry.Vehicle.{command}", return_value=COMMAND_OK
+    ) as cloud_command:
         await hass.services.async_call(
             COVER_DOMAIN, service, {ATTR_ENTITY_ID: [TONNEAU_ENTITY_ID]}, blocking=True
         )
 
-    getattr(bluetooth_vehicle, ble_command).assert_awaited_once_with()
-    closure.assert_not_called()
+    getattr(bluetooth_vehicle, command).assert_awaited_once_with()
+    cloud_command.assert_not_called()
 
 
-@pytest.mark.parametrize(("service", "ble_command", "state"), TONNEAU_SERVICES)
+@pytest.mark.parametrize(("service", "command"), TONNEAU_SERVICES)
 async def test_cover_tonneau_bluetooth_out_of_range(
     hass: HomeAssistant,
     ble_cybertruck: tuple[AsyncMock, MagicMock],
     service: str,
-    ble_command: str,
-    state: ClosureState,
+    command: str,
 ) -> None:
     """Tests that a Bluetooth-paired Cybertruck out of range uses the cloud."""
     bluetooth_vehicle, ble_lookup = ble_cybertruck
     ble_lookup.return_value = None
 
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.closure", return_value=COMMAND_OK
-    ) as closure:
+        f"tesla_fleet_api.teslemetry.Vehicle.{command}", return_value=COMMAND_OK
+    ) as cloud_command:
         await hass.services.async_call(
             COVER_DOMAIN, service, {ATTR_ENTITY_ID: [TONNEAU_ENTITY_ID]}, blocking=True
         )
 
-    closure.assert_called_once_with(tonneau=state)
-    getattr(bluetooth_vehicle, ble_command).assert_not_called()
+    cloud_command.assert_called_once_with()
+    getattr(bluetooth_vehicle, command).assert_not_called()
 
 
-@pytest.mark.parametrize(("service", "ble_command", "state"), TONNEAU_SERVICES)
+@pytest.mark.parametrize(("service", "command"), TONNEAU_SERVICES)
 async def test_cover_tonneau_bluetooth_failover(
     hass: HomeAssistant,
     ble_cybertruck: tuple[AsyncMock, MagicMock],
     service: str,
-    ble_command: str,
-    state: ClosureState,
+    command: str,
 ) -> None:
     """Tests that a failed Bluetooth tonneau command falls back to the cloud."""
     bluetooth_vehicle, _ = ble_cybertruck
-    getattr(bluetooth_vehicle, ble_command).side_effect = TimeoutError
+    getattr(bluetooth_vehicle, command).side_effect = TimeoutError
 
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.closure", return_value=COMMAND_OK
-    ) as closure:
+        f"tesla_fleet_api.teslemetry.Vehicle.{command}", return_value=COMMAND_OK
+    ) as cloud_command:
         await hass.services.async_call(
             COVER_DOMAIN, service, {ATTR_ENTITY_ID: [TONNEAU_ENTITY_ID]}, blocking=True
         )
 
-    getattr(bluetooth_vehicle, ble_command).assert_awaited_once_with()
-    closure.assert_called_once_with(tonneau=state)
+    getattr(bluetooth_vehicle, command).assert_awaited_once_with()
+    cloud_command.assert_called_once_with()
 
 
 async def test_cover_tonneau_streaming(
