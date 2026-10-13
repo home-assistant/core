@@ -10,6 +10,7 @@ FORBIDDEN_EXCEPTION = ForbiddenException(
     "err.func.wired.forbidden", "The access is forbidden"
 )
 MOCK_LOGIN_TOKEN = "sample-login-token"
+MOCK_DEVICE_IDS = {"gmid": "sample-gmid", "ucid": "sample-ucid"}
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
