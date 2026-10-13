@@ -1,16 +1,19 @@
 """Tests for the INDI Allsky integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.indi_allsky.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload_entry(
@@ -97,6 +100,7 @@ async def test_background_sensor_fetch_auth_failure_triggers_reauth(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that authentication failure during background sensor fetch triggers reauth."""
     await setup_integration(hass, mock_config_entry)
@@ -105,20 +109,22 @@ async def test_background_sensor_fetch_auth_failure_triggers_reauth(
         "Unauthorized"
     )
 
-    with patch.object(
-        mock_config_entry, "async_start_reauth"
-    ) as mock_async_start_reauth:
-        coordinator = mock_config_entry.runtime_data
-        coordinator._async_trigger_fetch_sensors()
-        await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_async_start_reauth.assert_called_once_with(hass)
+    flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_background_sensor_fetch_generic_error_ignored(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that generic error during background sensor fetch is suppressed."""
     await setup_integration(hass, mock_config_entry)
@@ -127,6 +133,6 @@ async def test_background_sensor_fetch_generic_error_ignored(
         "Connection lost"
     )
 
-    coordinator = mock_config_entry.runtime_data
-    coordinator._async_trigger_fetch_sensors()
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
