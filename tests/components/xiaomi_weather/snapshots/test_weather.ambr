@@ -50,6 +50,15 @@
   dict({
     'weather.beijing': dict({
       'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 21.0,
+          'templow': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
       ]),
     }),
   })

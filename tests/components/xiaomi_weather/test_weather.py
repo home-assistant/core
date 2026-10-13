@@ -434,3 +434,66 @@ async def test_condition_codes(
     assert {period["condition"] for period in result[ENTITY_ID]["forecast"]} == {
         expected
     }
+
+
+@pytest.mark.parametrize(
+    "publication_time",
+    [
+        pytest.param("2026-09-08T00:30:00+08:00", id="local-midnight"),
+        pytest.param("2026-09-07T16:30:00Z", id="utc-previous-date"),
+    ],
+)
+async def test_daily_dates_without_solar_times(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    payload: dict[str, Any],
+    publication_time: str,
+) -> None:
+    """Keep the original daily indexes when solar data is unavailable."""
+    daily = payload["forecastDaily"]
+    daily["sunRiseSet"]["status"] = 1
+    daily["pubTime"] = publication_time
+    daily["temperature"]["value"][0] = {"from": None, "to": None}
+    client.get_weather.return_value = parse_weather(payload)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "weather",
+        "get_forecasts",
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result is not None
+    forecasts = result[ENTITY_ID]["forecast"]
+    assert len(forecasts) == 15
+    assert forecasts[0]["datetime"] == "2026-09-07T16:00:00+00:00"
+    assert forecasts[1]["datetime"] == "2026-09-08T16:00:00+00:00"
+    assert forecasts[-1]["datetime"] == "2026-09-21T16:00:00+00:00"
+    assert forecasts[0]["condition"] == "rainy"
+    assert forecasts[1]["temperature"] == 25
+
+
+async def test_daily_without_date_anchor(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    payload: dict[str, Any],
+) -> None:
+    """Do not invent dates when both publication and solar times are absent."""
+    payload["forecastDaily"]["pubTime"] = None
+    payload["forecastDaily"]["sunRiseSet"]["status"] = 1
+    client.get_weather.return_value = parse_weather(payload)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "weather",
+        "get_forecasts",
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {ENTITY_ID: {"forecast": []}}

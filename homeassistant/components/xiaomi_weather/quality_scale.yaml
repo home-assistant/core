@@ -30,15 +30,15 @@ rules:
   docs-examples: todo
   docs-high-level-description:
     status: done
-    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
+    comment: https://github.com/home-assistant/home-assistant.io/pull/49161
   docs-installation-instructions:
     status: done
-    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
+    comment: https://github.com/home-assistant/home-assistant.io/pull/49161
   docs-installation-parameters: todo
   docs-known-limitations: todo
   docs-removal-instructions:
     status: done
-    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
+    comment: https://github.com/home-assistant/home-assistant.io/pull/49161
   docs-supported-devices: todo
   docs-supported-functions: todo
   docs-triggers:

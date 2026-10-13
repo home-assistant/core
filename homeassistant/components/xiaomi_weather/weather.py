@@ -1,7 +1,8 @@
 """Present Xiaomi observations and forecasts using Home Assistant units."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import override
+from zoneinfo import ZoneInfo
 
 from xiaomi_weather import DailyForecastEntry, Measurement, WeatherData
 
@@ -176,8 +177,16 @@ class XiaomiWeather(
     def _async_forecast_daily(self) -> list[Forecast]:
         """Return daily highs and lows at the location's local midnight."""
         forecasts: list[Forecast] = []
-        for day in self.coordinator.data.iter_daily():
-            if (date := day.sunrise or day.sunset) is None:
+        data = self.coordinator.data
+        daily = data.forecast_daily
+        for day in data.iter_daily():
+            date = day.sunrise or day.sunset
+            if date is None and daily is not None and daily.pub_time is not None:
+                # weathercn daily series start on the publication date in China.
+                date = daily.pub_time.astimezone(ZoneInfo("Asia/Shanghai")) + timedelta(
+                    days=day.index
+                )
+            if date is None:
                 continue
             forecast: Forecast = {
                 "datetime": date.replace(hour=0, minute=0, second=0, microsecond=0)
