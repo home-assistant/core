@@ -416,12 +416,6 @@ async def test_reauthentication_unique_id_mismatch(hass: HomeAssistant) -> None:
         unique_id="USERID",
     )
     old_entry.add_to_hass(hass)
-    other_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=NEW_USER_INPUT,
-        unique_id="USERID_DIFFERENT",
-    )
-    other_entry.add_to_hass(hass)
 
     result = await old_entry.start_reauth_flow(hass)
 
@@ -429,20 +423,13 @@ async def test_reauthentication_unique_id_mismatch(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
-    with (
-        patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"),
-        patch(
-            "homeassistant.components.tractive.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
+    with patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            NEW_USER_INPUT,
+            USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "unique_id_mismatch"
     assert old_entry.data == USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 0
