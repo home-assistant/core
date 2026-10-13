@@ -20,7 +20,7 @@ type SpecializedTurboConfigEntry = ConfigEntry[SpecializedTurboCoordinator]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SpecializedTurboConfigEntry
-) -> bool:
+) -> None:
     """Set up Specialized Turbo from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     wrapped_key: str | None = entry.data.get(CONF_WRAPPED_KEY)
@@ -63,16 +63,11 @@ async def async_setup_entry(
     # The coordinator connects and subscribes when the first advertisement arrives.
     entry.async_on_unload(coordinator.async_start())
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SpecializedTurboConfigEntry
-) -> bool:
+) -> None:
     """Unload a Specialized Turbo config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.async_shutdown()
-
-    return unload_ok
+    await entry.runtime_data.async_shutdown()
