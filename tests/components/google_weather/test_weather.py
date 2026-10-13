@@ -13,11 +13,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_weather.const import DOMAIN
+from homeassistant.components.google_weather.services import SERVICE_GET_MINUTE_FORECAST
 from homeassistant.components.google_weather.weather import (
     _CONDITION_MAP,
     _PRECIPITATION_INTENSITY_MAP,
     _PRECIPITATION_TYPE_MAP,
-    SERVICE_GET_MINUTE_FORECAST,
 )
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,

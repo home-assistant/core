@@ -129,7 +129,7 @@
       'end_time': '2025-06-01T06:00:00Z',
       'segments': list([
         dict({
-          'end_time': '2025-06-01T00:01:00Z',
+          'end_time': '2025-06-01T00:02:00Z',
           'intensity': 'moderate',
           'precipitation': 0.5,
           'precipitation_probability': 62,
@@ -138,13 +138,13 @@
           'start_time': '2025-06-01T00:00:00Z',
         }),
         dict({
-          'end_time': '2025-06-01T00:02:00Z',
+          'end_time': '2025-06-01T00:04:00Z',
           'intensity': 'none',
           'precipitation': None,
           'precipitation_probability': 0,
           'precipitation_type': 'none',
           'snowfall': None,
-          'start_time': '2025-06-01T00:01:00Z',
+          'start_time': '2025-06-01T00:02:00Z',
         }),
       ]),
       'start_time': '2025-06-01T00:00:00Z',

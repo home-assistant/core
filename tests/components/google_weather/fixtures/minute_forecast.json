@@ -10,7 +10,7 @@
     {
       "timeFrame": {
         "startTime": "2025-06-01T00:00:00Z",
-        "endTime": "2025-06-01T00:01:00Z"
+        "endTime": "2025-06-01T00:02:00Z"
       },
       "type": "RAIN",
       "probability": 62,
@@ -26,8 +26,8 @@
     },
     {
       "timeFrame": {
-        "startTime": "2025-06-01T00:01:00Z",
-        "endTime": "2025-06-01T00:02:00Z"
+        "startTime": "2025-06-01T00:02:00Z",
+        "endTime": "2025-06-01T00:04:00Z"
       },
       "type": "NONE",
       "intensity": "NO_INTENSITY"

@@ -52,12 +52,9 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
@@ -69,8 +66,6 @@ from .coordinator import (
 from .entity import GoogleWeatherBaseEntity
 
 PARALLEL_UPDATES = 0
-
-SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
 
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
 # to https://developers.home-assistant.io/docs/core/entity/weather/#recommended-values-for-state-and-condition
@@ -166,14 +161,6 @@ async def async_setup_entry(
             [GoogleWeatherEntity(entry, subentry)],
             config_subentry_id=subentry.subentry_id,
         )
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        name=SERVICE_GET_MINUTE_FORECAST,
-        schema=None,
-        func="async_get_minute_forecast",
-        supports_response=SupportsResponse.ONLY,
-    )
 
 
 class GoogleWeatherEntity(
