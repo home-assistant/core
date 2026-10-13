@@ -1,14 +1,17 @@
 """Tests for the Tile BLE device tracker."""
 
+from collections.abc import Generator
 from datetime import timedelta
 import time
+from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -23,6 +26,15 @@ from tests.components.bluetooth import (
 )
 
 ENTITY_ID = "device_tracker.tile"
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Only set up the device tracker platform."""
+    with patch(
+        "homeassistant.components.tile_ble.PLATFORMS", [Platform.DEVICE_TRACKER]
+    ):
+        yield
 
 
 async def test_entities(

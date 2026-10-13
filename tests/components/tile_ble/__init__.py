@@ -6,6 +6,8 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from tests.common import MockConfigEntry
 
 TILE_ADDRESS = "AA:BB:CC:DD:EE:FF"
+AUTH_KEY = "AAECAwQFBgcICQoLDA0ODw=="
+OTHER_AUTH_KEY = "EBESExQVFhcYGRobHB0eHw=="
 TILE_SERVICE_UUID = "0000feed-0000-1000-8000-00805f9b34fb"
 
 TILE_SERVICE_INFO = BluetoothServiceInfo(

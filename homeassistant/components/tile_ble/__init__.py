@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import TileBleConfigEntry, TileBleCoordinator
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TileBleConfigEntry) -> bool:

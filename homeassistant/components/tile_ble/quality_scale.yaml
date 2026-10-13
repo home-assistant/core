@@ -10,9 +10,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: exempt
-    comment: This integration has no requirements.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: This integration does not register actions.
@@ -29,28 +27,24 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: exempt
-    comment: |
-      Passive device; the user picks a Tile that Home Assistant has just received
-      advertisements from, no connection is made.
+  test-before-configure: done
   test-before-setup:
     status: exempt
     comment: A Tile that is out of range at startup is expected and is reported as away.
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not register actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: This integration does not have an options flow.
   docs-installation-parameters: todo
   entity-unavailable:
-    status: exempt
-    comment: A Tile that is out of range is reported as away instead of unavailable.
+    status: done
+    comment: |
+      The ring button is unavailable while the Tile is out of range; the device
+      tracker reports it as away instead.
   integration-owner: done
   log-when-unavailable:
     status: exempt
@@ -58,7 +52,7 @@ rules:
   parallel-updates: done
   reauthentication-flow:
     status: exempt
-    comment: This integration does not require authentication.
+    comment: The Tile account is only used during setup to get the Tile's key, which does not change. The credentials are not stored.
   test-coverage: done
 
   # Gold
@@ -83,17 +77,13 @@ rules:
   entity-category: done
   entity-device-class:
     status: exempt
-    comment: Device trackers do not have a device class.
+    comment: Neither the device tracker nor the ring button has a fitting device class.
   entity-disabled-by-default:
     status: exempt
-    comment: This integration only provides the device tracker.
-  entity-translations:
-    status: exempt
-    comment: The device tracker uses the device name.
-  exception-translations:
-    status: exempt
-    comment: This integration does not raise exceptions.
-  icon-translations: todo
+    comment: All entities are useful for every Tile.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: There is nothing to reconfigure.
@@ -105,10 +95,6 @@ rules:
     comment: Each config entry represents a single Tile.
 
   # Platinum
-  async-dependency:
-    status: exempt
-    comment: This integration has no requirements.
-  inject-websession:
-    status: exempt
-    comment: This integration does not make HTTP requests.
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo

@@ -3,15 +3,27 @@
 from typing import Any, override
 
 import probatio
+from pytile import async_login
+from pytile.errors import InvalidAuthError, TileError
+from tile_ble import TileBleAuthenticationError, TileBleDevice, TileBleError
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
+    async_ble_device_from_address,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, TILE_SERVICE_UUID
+from .const import CONF_AUTH_KEY, CONF_TILE, DOMAIN, TILE_SERVICE_UUID
+
+STEP_ACCOUNT_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
+)
 
 
 class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,6 +34,8 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
+        self._address: str | None = None
+        self._tiles: dict[str, tuple[str, str]] = {}
 
     @override
     async def async_step_user(
@@ -32,9 +46,8 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=self._discovered_devices[address].name, data={}
-            )
+            self._address = address
+            return await self.async_step_account()
 
         current_addresses = self._async_current_ids()
         for service_info in async_discovered_service_info(self.hass, connectable=False):
@@ -68,4 +81,73 @@ class TileBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
+        )
+
+    async def async_step_account(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Log in to the Tile account to get the keys of its Tiles."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                client = await async_login(
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    session=async_get_clientsession(self.hass),
+                )
+                tiles = await client.async_get_tiles()
+            except InvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except TileError:
+                errors["base"] = "cannot_connect"
+            else:
+                self._tiles = {
+                    tile.uuid: (tile.name, tile.auth_key)
+                    for tile in tiles.values()
+                    if tile.auth_key
+                }
+                if not self._tiles:
+                    return self.async_abort(reason="no_tiles")
+                return await self.async_step_tile()
+
+        return self.async_show_form(
+            step_id="account", data_schema=STEP_ACCOUNT_SCHEMA, errors=errors
+        )
+
+    async def async_step_tile(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick which of their Tiles they selected."""
+        assert self._address is not None
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            name, auth_key = self._tiles[user_input[CONF_TILE]]
+            if not (
+                ble_device := async_ble_device_from_address(
+                    self.hass, self._address, connectable=True
+                )
+            ):
+                errors["base"] = "cannot_connect"
+            else:
+                try:
+                    await TileBleDevice(ble_device, auth_key).async_authenticate()
+                except TileBleAuthenticationError:
+                    errors["base"] = "wrong_tile"
+                except TileBleError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_create_entry(
+                        title=name, data={CONF_AUTH_KEY: auth_key}
+                    )
+
+        return self.async_show_form(
+            step_id="tile",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_TILE): probatio.In(
+                        {uuid: name for uuid, (name, _) in self._tiles.items()}
+                    )
+                }
+            ),
+            errors=errors,
         )
