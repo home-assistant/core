@@ -39,6 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import get_hub
 from .const import (
@@ -318,8 +319,13 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         if state and state.attributes.get(
             ClimateEntityStateAttribute.TARGET_TEMPERATURE
         ):
-            self._attr_native_target_temperature = float(
-                state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+            self._attr_native_target_temperature = TemperatureConverter.convert(
+                float(state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]),
+                state.attributes.get(
+                    ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                    self.hass.config.units.temperature_unit,
+                ),
+                self.native_temperature_unit,
             )
 
     @override
