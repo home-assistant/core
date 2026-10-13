@@ -1700,6 +1700,7 @@ ENERGY_LOCAL_COMPONENTS_DESCRIPTIONS: tuple[
     *(
         TeslemetryLocalSensorEntityDescription(
             key=f"pv_string_{string.lower()}_current",
+            # Idle strings report float noise, which the library reads as 0.
             value_fn=partial(pv_string_current, string=string),
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
