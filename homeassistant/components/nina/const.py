@@ -13,6 +13,9 @@ DOMAIN: str = "nina"
 NO_MATCH_REGEX: str = "/(?!)/"
 ALL_MATCH_REGEX: str = ".*"
 
+DEFAULT_HEADLINE_FILTER = NO_MATCH_REGEX
+DEFAULT_AREA_FILTER = ALL_MATCH_REGEX
+
 SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
 
 SERVICE_GET_DETAILS: str = "get_details"
