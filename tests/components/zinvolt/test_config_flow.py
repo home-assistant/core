@@ -151,7 +151,7 @@ async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_zinvolt_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
+    exception: type[Exception],
     error: str,
 ) -> None:
     """Test the reauthentication flow recovers from errors."""
