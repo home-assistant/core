@@ -297,7 +297,7 @@ async def test_cover_split_attribute_updates(
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
-        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+        ("mock_window_covering_full", "cover.mock_full_window_covering"),
     ],
 )
 async def test_cover_stale_moving_operational_status(
@@ -307,18 +307,54 @@ async def test_cover_stale_moving_operational_status(
     entity_id: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test moving operational status is ignored when the cover is at its target."""
+    """Test moving operational status is ignored when the cover is at its target.
 
-    # the device reports a moving operational status without ever
-    # reporting it stopped, while position reports show it reached the target
-    set_node_attribute(matter_node, 1, 258, 11, 10000)
-    set_node_attribute(matter_node, 1, 258, 14, 10000)
-    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    Replays the Matter Server debug log of a Rademacher SmartHome Box bridged
+    shutter (home-assistant/addons#4724): resting at 42% lift with the tilt
+    closed, it answers GoToLiftPercentage(10000) within ~100 ms with three
+    attribute updates, OperationalStatus 0b001010, then target and current
+    lift both 10000, and never reports the operational status clearing.
+    """
+
+    set_node_attribute(matter_node, 1, 258, 11, 4200)
+    set_node_attribute(matter_node, 1, 258, 14, 4200)
+    set_node_attribute(matter_node, 1, 258, 12, 10000)
+    set_node_attribute(matter_node, 1, 258, 15, 10000)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes["current_position"] == 58
+
+    for attribute_id, value in (
+        (10, 0b001010),
+        (11, 10000),
+        (14, 10000),
+    ):
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=1,
+            cluster_id=258,
+            attribute_id=attribute_id,
+            value=value,
+        )
+
+    # no intermittent state is written while the report is still coalescing
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
     assert state.state == CoverState.CLOSED
+    assert state.attributes["current_position"] == 0
 
 
 @pytest.mark.parametrize(
