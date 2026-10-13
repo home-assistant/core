@@ -63,7 +63,7 @@ async def test_room_eq_default_options(
     state = hass.states.get(ROOM_EQ_ENTITY_ID)
     assert state is not None
     assert state.state == "EQ1"
-    assert state.attributes["options"] == ["Off", "EQ1", "EQ2", "EQ3"]
+    assert state.attributes["options"] == ["off", "EQ1", "EQ2", "EQ3"]
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -125,7 +125,7 @@ async def test_select_not_calculated(
             SERVICE_SELECT_OPTION,
             service_data={
                 ATTR_ENTITY_ID: ROOM_EQ_ENTITY_ID,
-                ATTR_OPTION: "Not calculated",
+                ATTR_OPTION: "not_calculated",
             },
             blocking=True,
         )
