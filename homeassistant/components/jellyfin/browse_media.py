@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from .client_wrapper import get_artwork_url
 from .const import (
     CONTENT_TYPE_MAP,
+    ITEM_TYPE_ARTIST,
     MEDIA_CLASS_MAP,
     MEDIA_TYPE_NONE,
     SEARCH_ITEM_TYPE_MAP,
@@ -25,7 +26,10 @@ from .const import (
 )
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
+    MediaType.ALBUM: MediaClass.ALBUM,
+    MediaType.ARTIST: MediaClass.ARTIST,
     MediaType.MUSIC: MediaClass.MUSIC,
+    MediaType.PLAYLIST: MediaClass.PLAYLIST,
     MediaType.SEASON: MediaClass.SEASON,
     MediaType.TVSHOW: MediaClass.TV_SHOW,
     "boxset": MediaClass.DIRECTORY,
@@ -33,12 +37,17 @@ CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
     "library": MediaClass.DIRECTORY,
 }
 
+# The server expands a folder or an artist into its playable items.
 PLAYABLE_MEDIA_TYPES = [
+    MediaType.ALBUM,
+    MediaType.ARTIST,
     MediaType.EPISODE,
     MediaType.MOVIE,
     MediaType.MUSIC,
+    MediaType.PLAYLIST,
     MediaType.SEASON,
     MediaType.TVSHOW,
+    MediaType.VIDEO,
 ]
 
 
@@ -62,6 +71,8 @@ async def item_payload(
         media_class=MEDIA_CLASS_MAP.get(item["Type"], MediaClass.DIRECTORY),
         can_play=bool(media_content_type in PLAYABLE_MEDIA_TYPES and media_content_id),
         can_expand=bool(item.get("IsFolder")),
+        # Search can scope to any folder or artist.
+        can_search=bool(item.get("IsFolder") or item["Type"] == ITEM_TYPE_ARTIST),
         children_media_class=None,
         thumbnail=thumbnail,
     )
@@ -118,6 +129,8 @@ async def build_item_response(
         title=title,
         can_play=bool(media_type in PLAYABLE_MEDIA_TYPES and media_content_id),
         can_expand=True,
+        # Only a folder has children, and search can scope to a folder.
+        can_search=True,
         children=children,
         thumbnail=thumbnail,
     )
@@ -162,8 +175,6 @@ async def search_items(
     hass: HomeAssistant, client: JellyfinClient, user_id: str, query: SearchMediaQuery
 ) -> list[BrowseMedia]:
     """Search items in Jellyfin server."""
-    search_result: list[BrowseMedia] = []
-
     items: list[dict[str, Any]] = []
     # Search for items based on media filter classes (or all if none specified)
     media_types: list[str] | list[None] = []
@@ -182,34 +193,30 @@ async def search_items(
         media_types = [None]
 
     for media_type in media_types:
-        items_dict: dict[str, Any] = await hass.async_add_executor_job(
-            partial(
+        if query.media_content_type == MediaType.ARTIST:
+            # The items of a by-name artist are not its descendants, so a
+            # parentId search finds nothing. Filter on the artist instead.
+            search = partial(
+                client.jellyfin.user_items,
+                params={
+                    "searchTerm": query.search_query,
+                    "Recursive": True,
+                    "IncludeItemTypes": media_type,
+                    "Limit": 20,
+                    "ArtistIds": query.media_content_id,
+                },
+            )
+        else:
+            search = partial(
                 client.jellyfin.search_media_items,
                 term=query.search_query,
                 media=media_type,
                 parent_id=query.media_content_id,
             )
-        )
+        items_dict: dict[str, Any] = await hass.async_add_executor_job(search)
         items.extend(items_dict.get("Items", []))
 
-    for item in items:
-        content_type: str = item["MediaType"]
-
-        response = BrowseMedia(
-            media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
-                content_type, MediaClass.DIRECTORY
-            ),
-            media_content_id=item["Id"],
-            media_content_type=content_type,
-            title=item["Name"],
-            thumbnail=get_artwork_url(client, item),
-            can_play=bool(content_type in PLAYABLE_MEDIA_TYPES),
-            can_expand=item.get("IsFolder", False),
-            children=None,
-        )
-        search_result.append(response)
-
-    return search_result
+    return [await item_payload(hass, client, user_id, item) for item in items]
 
 
 async def get_media_info(

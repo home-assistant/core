@@ -78,6 +78,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data.get("name")
     assert result["data"] == test_data
+    assert result["result"].unique_id == "0.0,0.0"
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
@@ -105,6 +106,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         user_input=test_data,
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+    assert result1["result"].unique_id == "0.0,0.0"
 
     # Create the second entry and assert that it is aborted
     result2 = await hass.config_entries.flow.async_init(

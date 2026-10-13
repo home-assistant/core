@@ -21,7 +21,7 @@ from .const import DEFAULT_NAME, DOMAIN, LOGGER, TIMEOUT
 
 DATA_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }

@@ -39,9 +39,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: No service actions currently available
+  action-exceptions: done
   reauthentication-flow:
     status: exempt
     comment: Local polling without authentication

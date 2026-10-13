@@ -4,11 +4,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -19,10 +19,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 pytestmark = pytest.mark.usefixtures("mock_websocket_terminated")
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_ble_device_from_address"
+)
 async def test_binary_sensors(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_bluetooth: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -31,8 +33,57 @@ async def test_binary_sensors(
     with patch(
         "homeassistant.components.lamarzocco.PLATFORMS", [Platform.BINARY_SENSOR]
     ):
-        await async_init_integration(hass, mock_config_entry)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        await async_init_integration(hass, mock_config_entry_bluetooth)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry_bluetooth.entry_id
+    )
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_ble_device_from_address"
+)
+async def test_bluetooth_connected(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Bluetooth connected binary sensor follows the connection."""
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+
+    entity_id = "binary_sensor.gs012345_bluetooth_connected"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    # the library reports connection changes through the registered callback
+    mock_lamarzocco.bluetooth_connected = False
+    connection_callback = (
+        mock_lamarzocco.register_bluetooth_connection_callback.call_args.args[0]
+    )
+    connection_callback(False)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    # a failing Bluetooth poll doesn't hide the known connection state
+    mock_lamarzocco.websocket.connected = False
+    mock_lamarzocco.get_dashboard_from_bluetooth.side_effect = (
+        BluetoothConnectionFailed("")
+    )
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # entities relying on Bluetooth updates are unavailable now
+    assert (state := hass.states.get("binary_sensor.gs012345_water_tank_empty"))
+    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    unregister = mock_lamarzocco.register_bluetooth_connection_callback.return_value
+    await hass.config_entries.async_unload(mock_config_entry_bluetooth.entry_id)
+    unregister.assert_called_once()
 
 
 async def test_brew_active_unavailable(

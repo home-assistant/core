@@ -8,7 +8,7 @@ from homeassistant.const import CONF_DEVICE, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import LOGGER, DenonRS232ConfigEntry
+from .const import DOMAIN, LOGGER, DenonRS232ConfigEntry
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -23,10 +23,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -
         await receiver.connect()
         await receiver.query_state()
     except (ConnectionError, OSError, TimeoutError) as err:
-        LOGGER.error("Error connecting to Denon receiver at %s: %s", port, err)
         if receiver.connected:
             await receiver.disconnect()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            # An ESPHome proxy URL can carry the API key in its query string
+            translation_placeholders={"port": port.split("?", 1)[0]},
+        ) from err
 
     entry.runtime_data = receiver
 

@@ -33,8 +33,6 @@
       'tuning': dict({
         'connect_delay': 0.0,
         'spacing': 0.0,
-        'timeout': None,
-        'withdrawals': 0,
       }),
     }),
     'model': '4.4 KTLX-G3',

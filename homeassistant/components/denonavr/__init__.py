@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
 
     entry.runtime_data = receiver
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
 
     async def _async_disconnect(event: Event) -> None:
@@ -74,9 +73,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
             await receiver.async_telnet_disconnect()
 
     if use_telnet:
+        # Not keyed on options at unload: an options change reloads the entry, and
+        # turning Telnet off there must still close the connection opened here.
+        entry.async_on_unload(entry.runtime_data.async_telnet_disconnect)
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
         )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -88,10 +92,6 @@ async def async_unload_entry(
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
-
-    if config_entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
-        receiver = config_entry.runtime_data
-        await receiver.async_telnet_disconnect()
 
     # Remove zone2 and zone3 entities if needed
     entity_registry = er.async_get(hass)

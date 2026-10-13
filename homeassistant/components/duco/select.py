@@ -1,6 +1,5 @@
 """Select platform for the Duco integration."""
 
-import logging
 from typing import override
 
 from duco_connectivity import (
@@ -22,8 +21,6 @@ from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 from .helpers import remove_stale_node_ids
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -133,7 +130,6 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
             # through keeps newly added Duco states forward-compatible.
             await self.coordinator.async_set_ventilation_state(self._node_id, option)
         except DucoRateLimitError as err:
-            _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limit_exceeded",

@@ -39,7 +39,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 cv.string: probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): cv.string,
-                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
                         probatio.Required(CONF_SWITCHES): probatio.Schema(
                             {RELAY_ID: SWITCH_SCHEMA}
                         ),

@@ -1,4 +1,4 @@
-"""Switch platform for Miele switch integration."""
+"""Switch platform for Miele integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -56,7 +56,8 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="supercooling",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.supercooling,
+            on_value=StateStatus.supercooling.value,
+            off_value=StateStatus.in_use.value,
             translation_key="supercooling",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERCOOL},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERCOOL},
@@ -71,7 +72,8 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="superfreezing",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.superfreezing,
+            on_value=StateStatus.superfreezing.value,
+            off_value=StateStatus.in_use.value,
             translation_key="superfreezing",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERFREEZE},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERFREEZE},
@@ -228,3 +230,19 @@ class MieleSuperSwitch(MieleSwitch):
             self.entity_description.value_fn(self.device)
             == self.entity_description.on_value
         )
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the device."""
+        await self.async_turn_switch(self.entity_description.on_cmd_data)
+        _LOGGER.debug("Turned on super switch for %s", self.entity_id)
+        self.device.state_status = self.entity_description.on_value
+        self.async_write_ha_state()
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the device."""
+        await self.async_turn_switch(self.entity_description.off_cmd_data)
+        _LOGGER.debug("Turned off super switch for %s", self.entity_id)
+        self.device.state_status = self.entity_description.off_value
+        self.async_write_ha_state()

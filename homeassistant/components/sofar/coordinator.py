@@ -14,10 +14,11 @@ from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, BATTERY_COMPONENTS, DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,30 +56,34 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         """Return device information."""
         serial = self.device.serial_number
         identity = self.device.identity
-        return dr.DeviceInfo(
+        info = dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
-            hw_version=identity.hardware_version or None,
-            sw_version=identity.software_version or None,
         )
+        if identity.hardware_version:
+            info["hw_version"] = identity.hardware_version
+        if identity.software_version:
+            info["sw_version"] = identity.software_version
+        return info
 
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._async_observed_poll()
+            if not report.failed and not report.updated:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="unrecognized_inverter_model",
+                )
             if not report.updated:
-                errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                    )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                ) from ExceptionGroup("all components failed to refresh", errors)
+                ) from ExceptionGroup(
+                    "all components failed to refresh", list(report.failed.values())
+                )
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.
@@ -170,21 +175,20 @@ class SofarRuntimeData:
     def served_components(self) -> frozenset[str]:
         """Component names this inverter polls, answered or not."""
         device = self.readings.device
-        return frozenset(device.readings_components) | frozenset(
-            device.settings_components
+        return frozenset(device.expected_readings_components) | frozenset(
+            device.expected_settings_components
         )
 
     def pack_is_wired(self, number: int) -> bool:
         """Whether a pack has answered, so it physically exists."""
-        component_name = BATTERY_COMPONENTS[number]
-        if component_name not in self.served_components:
+        string = self.readings.device.battery_string(number)
+        if string.component_name not in self.served_components:
             return False
-        component = getattr(self.readings.device, component_name)
-        return bool(getattr(component, f"battery_voltage_{number}", None))
+        return bool(string.voltage)
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
-        if component in self.readings.device.readings_components:
+        if component in self.readings.device.expected_readings_components:
             return self.readings
         return self.settings
 
