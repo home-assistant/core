@@ -86,10 +86,15 @@ def test_sensor_uses_default_expiration(hass: HomeAssistant) -> None:
             id="formatted-name",
         ),
         pytest.param({"id": 2}, "LaCrosse sensor 2", "2", id="sensor-id-fallback"),
-        pytest.param({"id": 2, "friendly_name": ""}, "", "2", id="empty-name-fallback"),
+        pytest.param(
+            {"id": 2, "friendly_name": ""},
+            "LaCrosse sensor 2",
+            "2",
+            id="empty-name-fallback",
+        ),
         pytest.param(
             {"id": 2, "friendly_name": "   "},
-            "   ",
+            "LaCrosse sensor 2",
             "2",
             id="blank-name-fallback",
         ),
