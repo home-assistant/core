@@ -5,7 +5,6 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.location import LocationServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
@@ -15,6 +14,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.service_info.location import LocationServiceInfo
 
 from .const import (
     CONF_DELTA,
@@ -131,7 +131,7 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by location."""
+        """Confirm setting up the discovered location."""
         if user_input is not None:
             return self.async_create_entry(
                 title=f"{self._data[CONF_LATITUDE]},{self._data[CONF_LONGITUDE]}",

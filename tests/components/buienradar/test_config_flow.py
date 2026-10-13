@@ -3,18 +3,20 @@
 import pytest
 
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.components.location import LocationServiceInfo
 from homeassistant.config_entries import SOURCE_LOCATION, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.location import LocationServiceInfo
 
 from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.5288504
 TEST_LONGITUDE = 5.4002156
 
-LOCATION_DISCOVERY = LocationServiceInfo(TEST_LATITUDE, TEST_LONGITUDE)
+LOCATION_DISCOVERY = LocationServiceInfo(
+    latitude=TEST_LATITUDE, longitude=TEST_LONGITUDE, regions=["NL"]
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

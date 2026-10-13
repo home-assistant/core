@@ -275,7 +275,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Optional("locations"): [str],
+        vol.Optional("locations"): vol.All([str], vol.Unique()),
         vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
