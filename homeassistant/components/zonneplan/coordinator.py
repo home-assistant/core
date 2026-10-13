@@ -11,6 +11,7 @@ from pyzonneplan import (
     Account,
     Battery,
     BatteryControlMode,
+    ChargePoint,
     Connection,
     ConsumerPrices,
     ElectricityChart,
@@ -42,6 +43,7 @@ LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=15)
 BATTERY_UPDATE_INTERVAL = timedelta(minutes=5)
 BATTERY_CONTROL_UPDATE_INTERVAL = timedelta(minutes=1)
+CHARGE_POINT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 type ZonneplanConfigEntry = ConfigEntry[ZonneplanRuntimeData]
 
@@ -53,6 +55,7 @@ class ZonneplanRuntimeData:
     coordinator: ZonneplanCoordinator
     battery_coordinator: ZonneplanBatteryCoordinator
     battery_control_coordinator: ZonneplanBatteryControlCoordinator
+    charge_point_coordinator: ZonneplanChargePointCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -258,6 +261,42 @@ class ZonneplanBatteryCoordinator(
                 ),
             )
         return batteries
+
+
+class ZonneplanChargePointCoordinator(ZonneplanBaseCoordinator[dict[str, ChargePoint]]):
+    """Coordinator to manage fetching the Zonneplan charge points."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ZonneplanConfigEntry,
+        zonneplan: Zonneplan,
+        connection_uuids: dict[str, str],
+    ) -> None:
+        """Initialize the coordinator with the connection UUID of each charge point."""
+        super().__init__(hass, entry, zonneplan, CHARGE_POINT_UPDATE_INTERVAL)
+        self.connection_uuids = connection_uuids
+
+    @override
+    async def _async_fetch(self) -> dict[str, ChargePoint]:
+        """Fetch the state of every charge point, keyed by contract UUID."""
+        installations = await asyncio.gather(
+            *(
+                self.zonneplan.async_get_charge_point(connection_uuid, contract_uuid)
+                for contract_uuid, connection_uuid in self.connection_uuids.items()
+            )
+        )
+        charge_points: dict[str, ChargePoint] = {}
+        for contract_uuid, installation in zip(
+            self.connection_uuids, installations, strict=True
+        ):
+            if (charge_point := installation.charge_point) is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="charge_point_not_found",
+                )
+            charge_points[contract_uuid] = charge_point
+        return charge_points
 
 
 class ZonneplanBatteryControlCoordinator(
