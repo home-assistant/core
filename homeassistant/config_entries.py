@@ -143,6 +143,7 @@ SAVE_DELAY = 1
 DISCOVERY_COOLDOWN = 1
 
 SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+SETUP_RETRY_AFTER_MAX_WAIT = 86400  # 1 day
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
@@ -238,9 +239,6 @@ class ConfigEntryDisabler(StrEnum):
 
     USER = "user"
 
-
-# DISABLED_* is deprecated, to be removed in 2022.3
-DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
@@ -345,7 +343,6 @@ class FlowType(StrEnum):
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
     """Validate config entry item."""
 
-    # Deprecated in 2022.1, stopped working in 2024.10
     if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
         raise TypeError(
             f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
@@ -806,7 +803,14 @@ class ConfigEntry[_DataT = Any]:
                 reason.translation_placeholders,
                 reason.translation_domain,
             )
-            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT)
+            if exc.retry_after is not None:
+                # The backoff stays the floor, so a delay that has already
+                # passed does not retry immediately.
+                wait_time = max(
+                    wait_time, min(exc.retry_after, SETUP_RETRY_AFTER_MAX_WAIT)
+                )
+            wait_time += (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
@@ -982,13 +986,23 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value,assignment]
+                setup_result: bool | None = await component.async_setup_entry(
+                    hass, self
+                )  # type: ignore[func-returns-value]
 
-            if not isinstance(result, bool):
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
+            if setup_result is None:
+                result = True
+            elif not isinstance(setup_result, bool):
                 logger.error(  # type: ignore[unreachable]
-                    "%s.async_setup_entry did not return boolean", integration.domain
+                    "%s.async_setup_entry did not return None or a boolean",
+                    integration.domain,
                 )
                 result = False
+            else:
+                result = setup_result
+
         except (
             asyncio.CancelledError,
             SystemExit,
@@ -1126,13 +1140,21 @@ class ConfigEntry[_DataT = Any]:
 
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
-        try:
-            result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
+        result = False
+        try:
+            unload_result: bool | None = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
+
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
+            if unload_result is None:
+                result = True
+            else:
+                result = unload_result
             assert isinstance(result, bool)
 
             # Only do side effects if we unloaded the integration
-            if domain_is_integration:  # type: ignore[unreachable]
+            if domain_is_integration:
                 if result:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
@@ -1149,11 +1171,24 @@ class ConfigEntry[_DataT = Any]:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if domain_is_integration:
+                translation = (
+                    (
+                        exc.translation_key,
+                        exc.translation_placeholders,
+                        exc.translation_domain,
+                    )
+                    if isinstance(exc, HomeAssistantError)
+                    else (None, None, None)
+                )
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
+                    hass,
+                    ConfigEntryState.FAILED_UNLOAD,
+                    str(exc) or "Unknown error",
+                    *translation,
                 )
             return False
-        return result  # type: ignore[unreachable]
+
+        return result
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1281,16 +1316,20 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
-        if not isinstance(result, bool):
-            self.logger.error(
-                "%s.async_migrate_entry did not return boolean", self.domain
+        migration_result: bool | None = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
+        # Custom components can continue to return a boolean
+        # See https://github.com/home-assistant/architecture/discussions/1463
+        if migration_result is None:
+            migration_result = True
+        elif not isinstance(migration_result, bool):
+            self.logger.error(  # type: ignore[unreachable]
+                "%s.async_migrate_entry did not return None or a boolean", self.domain
             )
             return False
-        if result:  # type: ignore[unreachable]
+        if migration_result:
             hass.config_entries._async_schedule_save()  # noqa: SLF001
 
-        return result
+        return migration_result
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
@@ -2758,6 +2797,7 @@ class ConfigEntries:
 
         self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
+        removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
@@ -2809,6 +2849,7 @@ class ConfigEntries:
 
         if subentries is not UNDEFINED:
             if entry.subentries != subentries:
+                removed_subentry_ids = entry.subentries.keys() - subentries.keys()
                 changed = True
                 _setter(entry, "subentries", MappingProxyType(subentries))
 
@@ -2816,6 +2857,15 @@ class ConfigEntries:
             return False
 
         _setter(entry, "modified_at", utcnow())
+
+        if removed_subentry_ids:
+            dev_reg = dr.async_get(self.hass)
+            ent_reg = er.async_get(self.hass)
+            for subentry_id in removed_subentry_ids:
+                dev_reg.async_clear_config_subentry(
+                    entry.entry_id, subentry_id, entry.domain
+                )
+                ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
 
         self._async_save_and_notify(entry)
         return True
@@ -2853,13 +2903,7 @@ class ConfigEntries:
         except KeyError as err:
             raise UnknownSubEntry from err
 
-        result = self._async_update_entry(entry, subentries=subentries)
-        dev_reg = dr.async_get(self.hass)
-        ent_reg = er.async_get(self.hass)
-
-        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id, entry.domain)
-        ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
-        return result
+        return self._async_update_entry(entry, subentries=subentries)
 
     @callback
     def async_update_subentry(
@@ -3032,6 +3076,16 @@ class ConfigEntries:
                 )
             )
         )
+
+    async def async_unload_platforms_or_raise(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
+        """Forward the unloading of an entry to platforms, raising on failure."""
+        if not await self.async_unload_platforms(entry, platforms):
+            raise ConfigEntryError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="unload_platforms_failed",
+            )
 
     async def async_forward_entry_unload(
         self, entry: ConfigEntry, domain: Platform | str

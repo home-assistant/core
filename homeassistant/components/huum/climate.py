@@ -41,7 +41,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
 
     def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
@@ -78,13 +78,13 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int | None:
+    def native_current_temperature(self) -> int | None:
         """Return the current temperature."""
         return self.coordinator.data.temperature
 
     @property
     @override
-    def target_temperature(self) -> int:
+    def native_target_temperature(self) -> int:
         """Return the temperature we try to reach."""
         return self.coordinator.data.target_temperature or int(self.min_temp)
 
@@ -94,7 +94,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         if hvac_mode == HVACMode.HEAT:
             # Make sure to send integers
             # The temperature is not always an integer if the user uses Fahrenheit
-            temperature = int(self.target_temperature)
+            temperature = int(self.native_target_temperature)
             await self._turn_on(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.huum.turn_off()

@@ -114,6 +114,8 @@ async def test_switch_actions(
     call_assertion: Callable[[AsyncMock], Any],
 ) -> None:
     """Test the adguard switch actions."""
+    mock_adguard.status.reset_mock()
+
     await hass.services.async_call(
         "switch",
         service,
@@ -122,6 +124,9 @@ async def test_switch_actions(
     )
 
     call_assertion(mock_adguard)
+
+    # The new state is fetched right away, instead of on the next poll.
+    mock_adguard.status.assert_called_once()
 
 
 @pytest.mark.parametrize(

@@ -3,14 +3,7 @@
 import logging
 from typing import Final
 
-from lunatone_rest_api_client import (
-    Auth,
-    DALIBroadcast,
-    DALIScan,
-    Devices,
-    Info,
-    Sensors,
-)
+from lunatone_rest_api_client import Auth, DALIScan, Devices, Info, Sensors
 from lunatone_rest_api_client.models import DeviceCapabilities
 
 from homeassistant.const import CONF_URL, Platform
@@ -132,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, line_unique_id)},
-            name=f"DALI Line {line_id}",
+            translation_key="dali_line",
+            translation_placeholders={"line_id": str(line_id)},
             via_device_id=dr.async_get_device_id_by_identifier(
                 hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
             ),
@@ -155,16 +149,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         )
         await coordinator_sensors.async_config_entry_first_refresh()
 
-    dali_line_broadcasts = [
-        DALIBroadcast(auth_api, int(line)) for line in coordinator_info.data.lines
-    ]
-
     entry.runtime_data = LunatoneData(
         coordinator_info,
         coordinator_devices,
         coordinator_scan,
         coordinator_sensors,
-        dali_line_broadcasts,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

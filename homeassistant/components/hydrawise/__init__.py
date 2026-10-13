@@ -44,7 +44,10 @@ async def async_setup_entry(
     """Set up Hydrawise from a config entry."""
     if any(k not in config_entry.data for k in _REQUIRED_AUTH_KEYS):
         # If we are missing any required authentication keys, trigger a reauth flow.
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_credentials",
+        )
 
     hydrawise = hybrid.HybridClient(
         auth.HybridAuth(

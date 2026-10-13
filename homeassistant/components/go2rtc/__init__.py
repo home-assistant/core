@@ -44,7 +44,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -235,8 +239,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
             raise ConfigEntryNotReady(
                 f"Could not connect to go2rtc instance on {url}"
             ) from err
-        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
     except Go2RtcVersionError as err:
         ir.async_create_issue(
             hass,
@@ -251,9 +258,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"The go2rtc server version is not supported, {err}"
         ) from err
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
-        return False
+    except Exception as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
 
     ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 

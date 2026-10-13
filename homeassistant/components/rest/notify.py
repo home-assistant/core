@@ -206,28 +206,23 @@ class RestNotificationService(BaseNotificationService):
                 auth=self._auth,
             )
 
-        if (
-            response.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
-            and response.status_code < 600
-        ):
+        if HTTPStatus.INTERNAL_SERVER_ERROR <= response.status_code < 600:
             _LOGGER.exception(
                 "Server error. Response %d: %s:",
                 response.status_code,
                 response.reason_phrase,
             )
         elif (
-            response.status_code >= HTTPStatus.BAD_REQUEST
-            and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            HTTPStatus.BAD_REQUEST
+            <= response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.exception(
                 "Client error. Response %d: %s:",
                 response.status_code,
                 response.reason_phrase,
             )
-        elif (
-            response.status_code >= HTTPStatus.OK
-            and response.status_code < HTTPStatus.MULTIPLE_CHOICES
-        ):
+        elif HTTPStatus.OK <= response.status_code < HTTPStatus.MULTIPLE_CHOICES:
             _LOGGER.debug(
                 "Success. Response %d: %s:",
                 response.status_code,

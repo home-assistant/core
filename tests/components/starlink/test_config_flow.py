@@ -60,6 +60,7 @@ async def test_flow_user_success(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == user_input
+    assert result["result"].unique_id == "some-valid-id"
 
 
 async def test_flow_user_duplicate_abort(hass: HomeAssistant) -> None:

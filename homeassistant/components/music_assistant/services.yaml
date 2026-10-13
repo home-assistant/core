@@ -49,6 +49,10 @@ play_media:
     radio_mode:
       selector:
         boolean:
+    start_item:
+      example: "latest"
+      selector:
+        text:
     username:
       example: "john"
       selector:
