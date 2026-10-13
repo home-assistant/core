@@ -95,8 +95,6 @@ PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
-    # Should be adjusted to rename register_actions to async_setup_services
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEARCH,
@@ -117,7 +115,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ),
         supports_response=SupportsResponse.ONLY,
     )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_LIBRARY,
@@ -140,7 +137,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     # Platform entity services
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -161,7 +157,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="_async_handle_play_media",
     )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -186,7 +181,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ),
         func="_async_handle_play_announcement",
     )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -199,7 +193,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="_async_handle_transfer_queue",
     )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
