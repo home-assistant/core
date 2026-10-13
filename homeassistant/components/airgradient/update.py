@@ -40,6 +40,7 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     def __init__(self, coordinator: AirGradientCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.serial_number}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @cached_property

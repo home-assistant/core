@@ -56,10 +56,12 @@ class EnergyIDDirectivesData:
 class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]):
     """Poll record-scoped directives without affecting outbound uploads."""
 
+    config_entry: EnergyIDConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: EnergyIDConfigEntry,
         client: WebhookClient,
     ) -> None:
         """Initialize the coordinator."""

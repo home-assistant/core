@@ -42,7 +42,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA
 from .entity import BroadlinkEntity
 from .helpers import data_packet
 
@@ -63,9 +63,9 @@ FLAG_SAVE_DELAY = 15
 COMMAND_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_COMMAND): probatio.All(
-            cv.ensure_list,
-            [probatio.All(cv.string, probatio.Length(min=1))],
-            probatio.Length(min=1),
+            probatio.EnsureList(),
+            [probatio.All(cv.string, probatio.NonEmpty())],
+            probatio.NonEmpty(),
         ),
     },
     extra=probatio.ALLOW_EXTRA,
@@ -73,7 +73,7 @@ COMMAND_SCHEMA = probatio.Schema(
 
 SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
         probatio.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): probatio.Coerce(
             float
         ),
@@ -82,7 +82,7 @@ SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
 
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
         probatio.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): probatio.In(
             COMMAND_TYPES
         ),
@@ -91,7 +91,7 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
-    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1))}
+    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty())}
 )
 
 
@@ -101,9 +101,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
         device,
         Store(hass, CODE_STORAGE_VERSION, f"broadlink_remote_{device.unique_id}_codes"),

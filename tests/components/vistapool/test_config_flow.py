@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USERNAME
+from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USER_ID, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -79,6 +79,7 @@ async def test_user_step(
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
     }
+    assert result["result"].unique_id == MOCK_USER_ID
 
 
 # ── Error Handling (each path also verifies the flow can recover) ─
@@ -263,6 +264,7 @@ async def test_dhcp_discovery_starts_user_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
+    assert result["result"].unique_id == MOCK_USER_ID
 
 
 async def test_dhcp_discovery_aborts_when_configured(

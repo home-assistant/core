@@ -183,5 +183,5 @@ async def test_media_player_availability_follows_ir_entity(
 ) -> None:
     """Test the media player becomes unavailable when the IR entity is."""
     await assert_availability_follows_source_entity(
-        hass, MEDIA_PLAYER_ENTITY_ID, MOCK_INFRARED_EMITTER_ENTITY_ID
+        hass, MEDIA_PLAYER_ENTITY_ID, [MOCK_INFRARED_EMITTER_ENTITY_ID]
     )

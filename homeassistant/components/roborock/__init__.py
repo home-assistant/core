@@ -238,6 +238,7 @@ async def async_setup_device(
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
         | RoborockB01Q10UpdateCoordinator
         | None
     ) = None

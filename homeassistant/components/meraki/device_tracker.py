@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_VALIDATOR): cv.string,
-        probatio.Required(CONF_SECRET): cv.string,
+        probatio.Required(probatio.Secret(CONF_SECRET)): cv.string,
     }
 )
 

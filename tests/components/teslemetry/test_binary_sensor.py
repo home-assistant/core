@@ -7,13 +7,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
+from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import VEHICLE_DATA_ALT
+from .const import METADATA, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
@@ -162,3 +163,35 @@ async def test_binary_sensors_connectivity(
     # Assert the entities have correct state with concrete assertions
     assert hass.states.get("binary_sensor.test_cellular").state == "on"
     assert hass.states.get("binary_sensor.test_wi_fi").state == "off"
+
+
+@pytest.mark.parametrize(
+    ("scopes", "expected"),
+    [
+        pytest.param(METADATA["scopes"], True, id="location_scope"),
+        pytest.param(
+            [scope for scope in METADATA["scopes"] if scope != "vehicle_location"],
+            False,
+            id="no_location_scope",
+        ),
+    ],
+)
+async def test_gps_state_requires_location_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    scopes: list[str],
+    expected: bool,
+) -> None:
+    """Test the GPS state binary sensor is only created with the location scope."""
+
+    mock_metadata.return_value = {**METADATA, "scopes": scopes}
+
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, "LRW3F7EK4NC700000-gps_state"
+        )
+        is not None
+    ) is expected

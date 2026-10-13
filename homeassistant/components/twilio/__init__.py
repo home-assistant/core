@@ -23,7 +23,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(DOMAIN): probatio.Schema(
             {
                 probatio.Required(CONF_ACCOUNT_SID): cv.string,
-                probatio.Required(CONF_AUTH_TOKEN): cv.string,
+                probatio.Required(probatio.Secret(CONF_AUTH_TOKEN)): cv.string,
             }
         )
     },

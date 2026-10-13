@@ -20,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry as dr,
@@ -161,9 +162,11 @@ def _standardize_geography_config_entry(
 async def async_setup_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
     if CONF_API_KEY not in entry.data:
-        # If this is a migrated AirVisual Pro entry, there's no actual setup to do;
-        # that will be handled by the `airvisual_pro` domain:
-        return False
+        # Migrated AirVisual Pro entries are set up by the `airvisual_pro` domain
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migrated_to_airvisual_pro",
+        )
 
     _standardize_geography_config_entry(hass, entry)
 

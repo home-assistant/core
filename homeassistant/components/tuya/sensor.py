@@ -1,5 +1,10 @@
 """Support for Tuya sensors."""
 
+# Tuya drops the device class at runtime when a device reports a unit that
+# doesn't fit it. The translation key then still gives the entity its name,
+# so it is not redundant here.
+# pylint: disable=home-assistant-redundant-translation-key
+
 from dataclasses import dataclass
 from typing import override
 
