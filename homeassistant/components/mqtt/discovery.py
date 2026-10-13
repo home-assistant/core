@@ -258,13 +258,27 @@ def _generate_device_config(
 
     If an empty payload, or a migrate discovery request is received for a device,
     we forward an empty payload for all previously discovered components.
+    On cleanup, discovered disabled components are included, so they are removed too.
     """
     mqtt_data = hass.data[DATA_MQTT]
     device_node_id: str = f"{node_id} {object_id}" if node_id else object_id
     config = MQTTDiscoveryPayload({CONF_DEVICE: {}, CONF_COMPONENTS: {}})
     config.migrate_discovery = migrate_discovery
     comp_config = config[CONF_COMPONENTS]
-    for platform, discover_id in mqtt_data.discovery_already_discovered:
+    disabled_discovery_hashes = (
+        ()
+        if migrate_discovery
+        else (
+            discovery_hash
+            for discovery_hash, disabled_entity in (
+                mqtt_data.discovery_discovered_and_disabled.items()
+            )
+            if disabled_entity.discovery_data[ATTR_DISCOVERY_PAYLOAD].device_discovery
+        )
+    )
+    for platform, discover_id in chain(
+        mqtt_data.discovery_already_discovered, disabled_discovery_hashes
+    ):
         ids = discover_id.split(" ")
         component_node_id = f"{ids.pop(1)} {ids.pop(0)}" if len(ids) > 2 else ids.pop(0)
         component_object_id = " ".join(ids)
@@ -425,6 +439,7 @@ def _async_cleanup_disabled_entity(
                 hass,
                 device_id=entity_entry.device_id,
                 config_entry_id=entity_entry.config_entry_id,
+                include_disabled_entities=discovery_payload.device_discovery,
             ),
             name=f"Check for cleanup device registry for {entity_id}",
         )
@@ -649,11 +664,16 @@ async def async_start(  # noqa: C901
         elif payload:
             _async_add_component(payload)
         else:
+            # A disabled entity is not loaded, so there is nothing to migrate
             if (
-                disabled_entity := mqtt_data.discovery_discovered_and_disabled.get(
-                    discovery_hash
+                not payload.migrate_discovery
+                and (
+                    disabled_entity := mqtt_data.discovery_discovered_and_disabled.get(
+                        discovery_hash
+                    )
                 )
-            ) is not None:
+                is not None
+            ):
                 _async_cleanup_disabled_entity(
                     hass, discovery_hash, disabled_entity, payload
                 )

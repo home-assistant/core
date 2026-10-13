@@ -1044,7 +1044,12 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             # Prevent a second cleanup round after the device is removed
             self._skip_device_removal = True
             await async_cleanup_device_registry(
-                self.hass, self._device_id, self._config_entry_id
+                self.hass,
+                self._device_id,
+                self._config_entry_id,
+                include_disabled_entities=self._discovery_data[
+                    ATTR_DISCOVERY_PAYLOAD
+                ].device_discovery,
             )
 
     @abstractmethod
@@ -1117,11 +1122,18 @@ class MqttDiscoveryUpdateMixin(Entity):
         this also removes the state. If the entity is not in the entity
         registry, just remove the state.
         """
+        if TYPE_CHECKING:
+            assert self._discovery_data is not None
         entity_registry = er.async_get(self.hass)
         if entity_entry := entity_registry.async_get(self.entity_id):
             entity_registry.async_remove(self.entity_id)
             await async_cleanup_device_registry(
-                self.hass, entity_entry.device_id, entity_entry.config_entry_id
+                self.hass,
+                entity_entry.device_id,
+                entity_entry.config_entry_id,
+                include_disabled_entities=self._discovery_data[
+                    ATTR_DISCOVERY_PAYLOAD
+                ].device_discovery,
             )
         else:
             await self.async_remove(force_remove=True)
