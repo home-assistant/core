@@ -2779,7 +2779,7 @@ async def test_clear_statistics_range(
     client = await hass_ws_client()
     await client.send_json_auto_id(
         {
-            "type": "recorder/clear_statistics_range",
+            "type": "recorder/clear_statistics",
             "statistic_ids": ["sensor.test1"],
             "start_time": (start + timedelta(hours=1, minutes=20)).isoformat(),
             "end_time": (start + timedelta(hours=3)).isoformat(),
@@ -2830,10 +2830,10 @@ async def test_clear_statistics_range_invalid_range(
     client = await hass_ws_client()
     now = dt_util.utcnow()
 
-    with patch.object(recorder.tasks.ClearStatisticsRangeTask, "run") as run_mock:
+    with patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock:
         await client.send_json_auto_id(
             {
-                "type": "recorder/clear_statistics_range",
+                "type": "recorder/clear_statistics",
                 "statistic_ids": ["sensor.test"],
                 "start_time": now.isoformat(),
                 "end_time": now.isoformat(),
@@ -2848,19 +2848,41 @@ async def test_clear_statistics_range_invalid_range(
     run_mock.assert_not_called()
 
 
+@pytest.mark.parametrize("time_key", ["start_time", "end_time"])
 @pytest.mark.usefixtures("recorder_mock")
-async def test_clear_statistics_range_requires_admin(
+async def test_clear_statistics_range_incomplete(
+    hass_ws_client: WebSocketGenerator, time_key: str
+) -> None:
+    """Test removing statistics with only one end of the time range."""
+    client = await hass_ws_client()
+
+    with patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics",
+                "statistic_ids": ["sensor.test"],
+                time_key: dt_util.utcnow().isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    run_mock.assert_not_called()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_requires_admin(
     hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
-    """Test removing statistics in a time range requires an admin user."""
+    """Test removing statistics requires an admin user."""
     hass_admin_user.groups = []
     client = await hass_ws_client()
     now = dt_util.utcnow()
 
-    with patch.object(recorder.tasks.ClearStatisticsRangeTask, "run") as run_mock:
+    with patch.object(recorder.tasks.ClearStatisticsTask, "run") as run_mock:
         await client.send_json_auto_id(
             {
-                "type": "recorder/clear_statistics_range",
+                "type": "recorder/clear_statistics",
                 "statistic_ids": ["sensor.test"],
                 "start_time": now.isoformat(),
                 "end_time": (now + timedelta(hours=1)).isoformat(),
@@ -2870,34 +2892,6 @@ async def test_clear_statistics_range_requires_admin(
     assert not response["success"]
     assert response["error"]["code"] == "unauthorized"
     run_mock.assert_not_called()
-
-
-@pytest.mark.usefixtures("recorder_mock")
-async def test_clear_statistics_range_time_out(
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test removing statistics in a time range with time-out error."""
-    client = await hass_ws_client()
-    now = dt_util.utcnow()
-
-    with (
-        patch.object(recorder.tasks.ClearStatisticsRangeTask, "run"),
-        patch.object(recorder.websocket_api, "CLEAR_STATISTICS_TIME_OUT", 0),
-    ):
-        await client.send_json_auto_id(
-            {
-                "type": "recorder/clear_statistics_range",
-                "statistic_ids": ["sensor.test"],
-                "start_time": now.isoformat(),
-                "end_time": (now + timedelta(hours=1)).isoformat(),
-            }
-        )
-        response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "timeout",
-        "message": "clear_statistics_range timed out",
-    }
 
 
 @pytest.mark.parametrize(

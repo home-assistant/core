@@ -147,7 +147,6 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
     websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
-    websocket_api.async_register_command(hass, ws_clear_statistics_range)
     websocket_api.async_register_command(hass, ws_get_statistic_during_period)
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
@@ -395,6 +394,16 @@ async def ws_update_statistics_issues(
     {
         probatio.Required("type"): "recorder/clear_statistics",
         probatio.Required("statistic_ids"): [str],
+        probatio.Inclusive(
+            "start_time",
+            "time_range",
+            "start_time and end_time must be provided together",
+        ): cv.datetime,
+        probatio.Inclusive(
+            "end_time",
+            "time_range",
+            "start_time and end_time must be provided together",
+        ): cv.datetime,
     }
 )
 @websocket_api.async_response
@@ -403,16 +412,32 @@ async def ws_clear_statistics(
 ) -> None:
     """Clear statistics for a list of statistic_ids.
 
+    With a time range, only the statistics which overlap the range are cleared.
+
     Note: The WS call posts a job to the recorder's queue and then returns, it doesn't
     wait until the job is completed.
     """
+    start_time: dt | None = None
+    end_time: dt | None = None
+    if "start_time" in msg:
+        start_time = dt_util.as_utc(msg["start_time"])
+        end_time = dt_util.as_utc(msg["end_time"])
+        if start_time >= end_time:
+            connection.send_error(
+                msg["id"], "invalid_time_range", "start_time must be before end_time"
+            )
+            return
+
     done_event = asyncio.Event()
 
     def clear_statistics_done() -> None:
         hass.loop.call_soon_threadsafe(done_event.set)
 
     get_instance(hass).async_clear_statistics(
-        msg["statistic_ids"], on_done=clear_statistics_done
+        msg["statistic_ids"],
+        start_time=start_time,
+        end_time=end_time,
+        on_done=clear_statistics_done,
     )
     try:
         async with asyncio.timeout(CLEAR_STATISTICS_TIME_OUT):
@@ -420,51 +445,6 @@ async def ws_clear_statistics(
     except TimeoutError:
         connection.send_error(
             msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics timed out"
-        )
-        return
-
-    connection.send_result(msg["id"])
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): "recorder/clear_statistics_range",
-        probatio.Required("statistic_ids"): [str],
-        probatio.Required("start_time"): cv.datetime,
-        probatio.Required("end_time"): cv.datetime,
-    }
-)
-@websocket_api.async_response
-async def ws_clear_statistics_range(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Clear statistics in a time range for a list of statistic_ids."""
-    start_time = dt_util.as_utc(msg["start_time"])
-    end_time = dt_util.as_utc(msg["end_time"])
-    if start_time >= end_time:
-        connection.send_error(
-            msg["id"], "invalid_time_range", "start_time must be before end_time"
-        )
-        return
-
-    done_event = asyncio.Event()
-
-    def clear_statistics_range_done() -> None:
-        hass.loop.call_soon_threadsafe(done_event.set)
-
-    get_instance(hass).async_clear_statistics_range(
-        msg["statistic_ids"],
-        start_time,
-        end_time,
-        on_done=clear_statistics_range_done,
-    )
-    try:
-        async with asyncio.timeout(CLEAR_STATISTICS_TIME_OUT):
-            await done_event.wait()
-    except TimeoutError:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics_range timed out"
         )
         return
 
