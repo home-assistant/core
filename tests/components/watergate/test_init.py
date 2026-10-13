@@ -122,11 +122,11 @@ async def test_device_state_missing_from_the_v1_fallback(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a device reporting no state at all leaves the coordinator without one."""
+    mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
+        "Unsupported media type"
+    )
     await init_integration(hass, mock_entry)
 
-    mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
-        "boom"
-    )
     mock_watergate_client.async_get_device_state.return_value = None
     freezer.tick(timedelta(minutes=2, seconds=1))
     async_fire_time_changed(hass)
@@ -184,26 +184,47 @@ async def test_unreachable_device_does_not_fall_back_to_device_state_v1(
     assert mock_entry.runtime_data.data.state.water_meter_negative is not None
 
 
-async def test_device_state_v2_survives_a_blip_that_ends_during_the_update(
+async def test_device_state_v2_survives_a_blip_that_ends_during_the_first_update(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Test that v2 is kept when the device is back by the time v1 is read."""
+    mock_watergate_client.async_get_device_state_v2.side_effect = [
+        WatergateApiException("blip"),
+        DEFAULT_DEVICE_STATE_V2,
+    ]
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.runtime_data.data.state.water_meter_negative is not None
+    assert mock_watergate_client.async_get_device_state_v2.call_count == 2
+
+
+async def test_confirmed_device_state_v2_is_never_downgraded(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that v2 is kept when the device is back by the time v1 is read."""
+    """Test that a v2 failure after v2 was read fails the update without using v1."""
     await init_integration(hass, mock_entry)
+    mock_watergate_client.async_get_device_state.reset_mock()
 
-    mock_watergate_client.async_get_device_state_v2.side_effect = [
-        WatergateApiException("blip"),
-        DEFAULT_DEVICE_STATE_V2,
-        DEFAULT_DEVICE_STATE_V2,
-    ]
-    freezer.tick(timedelta(minutes=2, seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
+        "blip"
+    )
     freezer.tick(timedelta(minutes=2, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    assert not mock_entry.runtime_data.last_update_success
+    mock_watergate_client.async_get_device_state.assert_not_called()
+
+    mock_watergate_client.async_get_device_state_v2.side_effect = None
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_entry.runtime_data.last_update_success
     assert mock_entry.runtime_data.data.state.water_meter_negative is not None
-    assert mock_watergate_client.async_get_device_state_v2.call_count == 4

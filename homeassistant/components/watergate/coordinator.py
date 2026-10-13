@@ -80,6 +80,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         )
         self.api = api
         self._supports_state_v2 = True
+        self._state_v2_confirmed = False
 
     @override
     async def _async_update_data(self) -> WatergateAgregatedRequests:
@@ -101,19 +102,25 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         if not self._supports_state_v2:
             return _as_device_state_v2(await self.api.async_get_device_state())
         try:
-            return await self.api.async_get_device_state_v2()
+            state_v2 = await self.api.async_get_device_state_v2()
         except WatergateApiException:
+            if self._state_v2_confirmed:
+                # v2 has been read before, so this is a transient failure, not old
+                # firmware: keep the last data rather than switching the meter source.
+                raise
             # The client reports a rejected media type and an unreachable device the same
             # way, so only a successful v1 read proves the firmware simply lacks v2. The
             # device may have come back in between, so v2 is tried once more before the
             # downgrade is made permanent.
             state = await self.api.async_get_device_state()
             try:
-                return await self.api.async_get_device_state_v2()
+                state_v2 = await self.api.async_get_device_state_v2()
             except WatergateApiException:
                 self._supports_state_v2 = False
                 _LOGGER.debug("Device state v2 is not supported, falling back to v1")
                 return _as_device_state_v2(state)
+        self._state_v2_confirmed = True
+        return state_v2
 
     @override
     def async_set_updated_data(self, data: WatergateAgregatedRequests) -> None:
