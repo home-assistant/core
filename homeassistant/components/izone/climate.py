@@ -238,7 +238,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
         if zone is None:
             return None
-        return zone.target_temperature
+        return zone.native_target_temperature
 
     @property
     @override
