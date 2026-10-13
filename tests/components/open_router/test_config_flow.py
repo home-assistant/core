@@ -221,6 +221,7 @@ async def test_create_conversation_agent_no_control(
     }
 
 
+@pytest.mark.parametrize("subentry_type", ["ai_task_data", "ai_task_evaluate"])
 @pytest.mark.parametrize(
     ("model", "expected_modalities"),
     [
@@ -235,12 +236,13 @@ async def test_create_ai_task(
     mock_config_entry: MockConfigEntry,
     model: str,
     expected_modalities: list[str],
+    subentry_type: str,
 ) -> None:
     """Test creating an AI Task stores the model output modalities."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "ai_task_data"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
@@ -269,7 +271,7 @@ async def test_create_ai_task(
 
 @pytest.mark.parametrize(
     "subentry_type",
-    ["conversation", "ai_task_data"],
+    ["conversation", "ai_task_data", "ai_task_evaluate"],
 )
 @pytest.mark.parametrize(
     ("exception", "reason"),
@@ -334,16 +336,18 @@ async def test_reconfigure_conversation_agent(
     assert subentry.data[CONF_WEB_SEARCH] == "off"
 
 
+@pytest.mark.parametrize("subentry_type", ["ai_task_data", "ai_task_evaluate"])
 async def test_reconfigure_ai_task(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
     """Test reconfiguring an AI task."""
     await setup_integration(hass, mock_config_entry)
 
-    subentry_id = get_subentry_id(mock_config_entry, "ai_task_data")
+    subentry_id = get_subentry_id(mock_config_entry, subentry_type)
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.FORM
@@ -365,7 +369,7 @@ async def test_reconfigure_ai_task(
 
 @pytest.mark.parametrize(
     "subentry_type",
-    ["conversation", "ai_task_data"],
+    ["conversation", "ai_task_data", "ai_task_evaluate"],
 )
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,

@@ -105,6 +105,13 @@ def mock_config_entry(
                 title="Gemini 2.5 Flash Image",
                 unique_id=None,
             ),
+            ConfigSubentryData(
+                data={CONF_MODEL: "openai/gpt-4", CONF_OUTPUT_MODALITIES: ["text"]},
+                subentry_id="ABCDEH",
+                subentry_type="ai_task_evaluate",
+                title="GPT-4",
+                unique_id=None,
+            ),
         ],
     )
 
