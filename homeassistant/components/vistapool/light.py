@@ -52,6 +52,7 @@ class VistapoolLight(VistapoolEntity, LightEntity):
     def __init__(self, coordinator: VistapoolDataUpdateCoordinator) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = self.build_unique_id("pool_light")  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
@@ -85,4 +86,3 @@ class VistapoolLight(VistapoolEntity, LightEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(_VALUE_PATH, value)

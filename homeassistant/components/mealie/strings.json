@@ -7,8 +7,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
@@ -168,6 +166,22 @@
       "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "parse_todo_edit": "Recognize food in edited items",
+          "parse_todo_new": "Recognize food in new items",
+          "parser": "Recognition method"
+        },
+        "data_description": {
+          "parse_todo_edit": "When enabled, Mealie checks edited to-do list items to find matches in your food items and identify quantities and units. If it finds a confident match, Mealie updates the food item, unit, and quantity. If disabled, the item is updated as entered.",
+          "parse_todo_new": "When enabled, Mealie checks new to-do list items to find matches in your food items and identify quantities and units. If it finds a confident match, Mealie adds the food item, unit, and quantity separately. Otherwise, the item is added as a note.",
+          "parser": "The method to use for processing to-do list items.\nIf you select OpenAI, you must set up an API key in Mealie."
+        }
+      }
+    }
+  },
   "selector": {
     "mealplan_entry_type": {
       "options": {
@@ -178,6 +192,13 @@
         "lunch": "[%key:component::mealie::entity::calendar::lunch::name%]",
         "side": "[%key:component::mealie::entity::calendar::side::name%]",
         "snack": "[%key:component::mealie::entity::calendar::snack::name%]"
+      }
+    },
+    "parser": {
+      "options": {
+        "brute": "Brute force",
+        "nlp": "Natural language processing",
+        "openai": "OpenAI"
       }
     }
   },

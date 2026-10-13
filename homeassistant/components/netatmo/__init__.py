@@ -3,19 +3,13 @@
 import logging
 from typing import Any
 
-from aiohttp import ClientError
 import pyatmo
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import async_unregister as webhook_unregister
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -60,20 +54,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as ex:
-        raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-    except (OAuth2TokenRequestError, ClientError) as ex:
-        raise ConfigEntryNotReady from ex
+    await session.async_ensure_token_valid()
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & set(required_scopes)):
-        _LOGGER.warning(
-            "Session is missing scopes: %s",
-            set(required_scopes) - set(session.token["scope"]),
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+            translation_placeholders={
+                "scopes": ", ".join(
+                    sorted(set(required_scopes) - set(session.token["scope"]))
+                )
+            },
         )
-        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     auth = api.AsyncConfigEntryNetatmoAuth(
         aiohttp_client.async_get_clientsession(hass), session

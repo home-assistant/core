@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
@@ -53,13 +53,13 @@ def validate_mqtt_light_modern(config_value: dict[str, Any]) -> ConfigType:
     return config
 
 
-DISCOVERY_SCHEMA = vol.All(
-    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA),
     validate_mqtt_light_discovery,
 )
 
-PLATFORM_SCHEMA_MODERN = vol.All(
-    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+PLATFORM_SCHEMA_MODERN = probatio.All(
+    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA),
     validate_mqtt_light_modern,
 )
 

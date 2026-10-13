@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -118,6 +116,9 @@
       "last_motion": {
         "name": "Last motion"
       },
+      "last_recording": {
+        "name": "Last recording"
+      },
       "mic_volume": {
         "name": "Mic volume"
       },
@@ -157,6 +158,9 @@
     },
     "api_timeout": {
       "message": "Timeout communicating with Ring API"
+    },
+    "chime_type_unknown": {
+      "message": "The in-home chime type changed and is no longer supported. Reload the Ring integration."
     },
     "no_subscription": {
       "message": "Ring Protect subscription required for snapshots"

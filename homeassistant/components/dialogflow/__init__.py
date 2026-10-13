@@ -3,7 +3,7 @@
 import logging
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SOURCE = "Home Assistant Dialogflow"
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema({DOMAIN: {}}, extra=probatio.ALLOW_EXTRA)
 
 V1 = 1
 V2 = 2

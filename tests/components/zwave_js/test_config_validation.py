@@ -2,8 +2,8 @@
 
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.zwave_js.config_validation import VALUE_SCHEMA, boolean
 
@@ -27,5 +27,5 @@ def test_validation(test_cases: list[Any], expected_value: Any) -> None:
 @pytest.mark.parametrize("value", ["invalid", "1", "0", 1, 0])
 def test_invalid_boolean_validation(value: str | int) -> None:
     """Test invalid cases for boolean config validator."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         boolean(value)

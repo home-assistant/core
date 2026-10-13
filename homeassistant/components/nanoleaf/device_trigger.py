@@ -1,6 +1,6 @@
 """Provides device triggers for Nanoleaf."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -26,9 +26,9 @@ TRIGGER_TYPES = TOUCH_GESTURE_TRIGGER_MAP.values()
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_DEVICE_ID): str,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 

@@ -6,15 +6,18 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from librouteros.exceptions import ConnectionClosed, LibRouterosError
+from librouteros.exceptions import ConnectionClosed, LibRouterosError, TrapError
 import pytest
 
+from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
     ARP,
     CONF_ARP_PING,
     CONF_FORCE_DHCP,
     DHCP,
+    DOMAIN,
     IDENTITY,
+    INTERFACE,
     MIKROTIK_SERVICES,
     PING,
     ROUTERBOARD,
@@ -22,18 +25,34 @@ from homeassistant.components.mikrotik.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
-from . import setup_integration
+from . import build_mock_command, setup_integration, setup_mikrotik_entry
 from .conftest import MockConfigEntryFactory
-from .const import ARP_DATA, DHCP_DATA, MOCK_DATA
+from .const import (
+    ARP_DATA,
+    BRIDGE1_INTERFACE,
+    DHCP_DATA,
+    ETHER1_INTERFACE,
+    INTERFACE_DATA,
+    MOCK_DATA,
+    ROUTERBOARD_DATA,
+    TEST_SERIAL_NUMBER,
+    WLAN1_INTERFACE,
+)
 
 from tests.common import async_fire_time_changed
 
 _BASE_COMMAND_RESPONSES: dict[str, list[dict[str, Any]]] = {
     MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}]
 }
+
+
+def _interface_identifier(interface: dict[str, Any]) -> tuple[str, str]:
+    """Return the device registry identifier used for an interface."""
+    return (DOMAIN, f"{slugify(interface['mac-address'])}_{interface['name']}")
 
 
 def _command_side_effect(
@@ -135,6 +154,33 @@ async def test_hub_login_error_starts_reauth(
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    "error",
+    [ConnectionClosed(), OSError(), TimeoutError()],
+    ids=["connection_closed", "os_error", "timeout_error"],
+)
+async def test_hub_connect_error_skips_token_login_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+    error: Exception,
+) -> None:
+    """Test a connection error on plain login doesn't fall back to token login."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    # Modern RouterOS rejects the legacy token login as invalid credentials
+    with patch(
+        "librouteros.connect",
+        side_effect=[error, TrapError("invalid user name or password (6)")],
+    ) as mock_connect:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_connect.call_count == 1
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_optional_command_error_is_suppressed(
@@ -355,3 +401,83 @@ async def test_unload_entry(
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     mock_api.close.assert_called_once()
+
+
+async def test_stale_interface_devices_are_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test interface devices missing from the hub data are removed on setup."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "0a_0b_0c_0d_0e_0f_wlan9")},
+    )
+    # a device-tracker client is linked by MAC connection only and must survive
+    client_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:09")},
+    )
+
+    command = build_mock_command(
+        {
+            MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}],
+            MIKROTIK_SERVICES[ROUTERBOARD]: ROUTERBOARD_DATA,
+            MIKROTIK_SERVICES[INTERFACE]: INTERFACE_DATA,
+        }
+    )
+
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=command):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert device_registry.async_get(stale_device.id) is None
+    assert device_registry.async_get(client_device.id) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, TEST_SERIAL_NUMBER), config_entry_id=entry.entry_id
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            _interface_identifier(ETHER1_INTERFACE), config_entry_id=entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_stale_interface_device_removed_on_coordinator_update(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test an interface device is removed once the hub stops reporting it."""
+    config_entry = await setup_mikrotik_entry(hass, interface_data=INTERFACE_DATA)
+
+    wlan1_identifier = _interface_identifier(WLAN1_INTERFACE)
+    assert device_registry.async_get_device_by_identifier(
+        wlan1_identifier, config_entry_id=config_entry.entry_id
+    )
+
+    command = build_mock_command(
+        {MIKROTIK_SERVICES[INTERFACE]: [ETHER1_INTERFACE, BRIDGE1_INTERFACE]}
+    )
+
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=command):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            wlan1_identifier, config_entry_id=config_entry.entry_id
+        )
+        is None
+    )
+    assert device_registry.async_get_device_by_identifier(
+        _interface_identifier(ETHER1_INTERFACE), config_entry_id=config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SERIAL_NUMBER), config_entry_id=config_entry.entry_id
+    )
