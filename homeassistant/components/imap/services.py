@@ -75,7 +75,7 @@ async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="invalid_folder"
         ) from exc
-    except (TimeoutError, AioImapException) as exc:
+    except (OSError, AioImapException) as exc:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="imap_server_fail",

@@ -123,13 +123,8 @@ async def validate_input(
     except InvalidFolder:
         errors[CONF_FOLDER] = "invalid_folder"
     except ssl.SSLError:
-        # The aioimaplib library 1.0.1 does not raise an
-        # ssl.SSLError correctly, but is logged.
-        # See
-        # https://github.com/bamthomas/aioimaplib/issues/91
-        # This handler supplies a better error message.
         errors["base"] = "ssl_error"
-    except TimeoutError, AioImapException, ConnectionRefusedError:
+    except OSError, AioImapException:
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":

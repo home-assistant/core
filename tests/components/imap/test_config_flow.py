@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+import socket
 import ssl
 from unittest.mock import AsyncMock, patch
 
@@ -143,7 +144,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     [
         (TimeoutError, "cannot_connect"),
         (AioImapException(""), "cannot_connect"),
+        (ConnectionRefusedError, "cannot_connect"),
+        (socket.gaierror, "cannot_connect"),
         (ssl.SSLError, "ssl_error"),
+        (ssl.SSLCertVerificationError, "ssl_error"),
     ],
 )
 async def test_form_cannot_connect(
