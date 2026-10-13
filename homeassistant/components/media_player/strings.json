@@ -22,7 +22,7 @@
           "name": "Source"
         }
       },
-      "name": "Media player source"
+      "name": "Media player current source"
     },
     "is_muted": {
       "description": "Tests if one or more media players are muted.",
