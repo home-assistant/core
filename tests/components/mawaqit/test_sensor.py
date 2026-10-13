@@ -261,7 +261,7 @@ async def test_available_when_update_fails(
     mock_mawaqit_client.mosques.prayer_times.side_effect = MawaqitError
     freezer.tick(timedelta(hours=12))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_mawaqit_client.mosques.prayer_times.await_count == 2
     assert hass.states.get("sensor.fajr_prayer").state == "2026-04-10T03:33:00+00:00"
@@ -270,7 +270,7 @@ async def test_available_when_update_fails(
     # Retried sooner than the next 12-hour refresh.
     freezer.tick(timedelta(minutes=15))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_mawaqit_client.mosques.prayer_times.await_count == 3
 
 
@@ -294,7 +294,7 @@ async def test_sensors_added_when_the_mosque_publishes_them(
     mock_mawaqit_client.mosques.prayer_times.return_value = prayer_times
     freezer.tick(timedelta(hours=12))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("sensor.fajr_iqama") is not None
     assert hass.states.get("sensor.second_jumua_prayer") is not None
     entities = er.async_entries_for_config_entry(
@@ -307,7 +307,7 @@ async def test_sensors_added_when_the_mosque_publishes_them(
     )
     freezer.tick(timedelta(hours=12))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("sensor.fajr_iqama").state == STATE_UNKNOWN
     assert (
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)

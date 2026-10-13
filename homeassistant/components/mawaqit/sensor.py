@@ -239,6 +239,7 @@ class MawaqitSensor[DescriptionT: SensorEntityDescription](
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True while there is data, even when the last refresh failed."""
         # The prayer times of the whole year stay valid when MAWAQIT is down.
