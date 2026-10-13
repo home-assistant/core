@@ -12,9 +12,6 @@ LOGGER = logging.getLogger(__package__)
 # device API, so it is captured during discovery and stored on the config entry.
 CONF_SW_VERSION: Final = "sw_version"
 
-# User-facing product name per device family, shown as the device model and in
-# discovery titles. Families without dedicated branding fall back to the raw
-# DeviceType value.
 DEVICE_MODEL_NAMES: dict[DeviceType, str] = {
     DeviceType.STROMLESER: "stromleser.one",
 }

@@ -1,8 +1,10 @@
 """Tests for the energieleser integration setup and unload."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 from energieleser import (
+    DeviceType,
     EnergieleserConnectionError,
     EnergieleserError,
     EnergieleserUnknownDeviceError,
@@ -11,14 +13,27 @@ from energieleser import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.energieleser import FIRMWARE_COORDINATOR
 from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
-from homeassistant.components.energieleser.coordinator import SCAN_INTERVAL
+from homeassistant.components.energieleser.coordinator import (
+    FIRMWARE_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
+from homeassistant.components.update import ATTR_LATEST_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
-from .conftest import STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
+from .conftest import (
+    LATEST_FIRMWARE_VERSIONS,
+    STROMLESER_DEVICE_ID,
+    STROMLESER_SW_VERSION,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -151,3 +166,104 @@ async def test_meter_locked_repair_issue_removed_on_unload(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.usefixtures("mock_energieleser_client")
+async def test_firmware_coordinator_shared_across_entries(
+    hass: HomeAssistant,
+    mock_latest_firmware_versions: AsyncMock,
+    mock_stromleser_config_entry: MockConfigEntry,
+    mock_gasleser_config_entry: MockConfigEntry,
+) -> None:
+    """Test one firmware API call serves every config entry."""
+    mock_stromleser_config_entry.add_to_hass(hass)
+    mock_gasleser_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_stromleser_config_entry.state is ConfigEntryState.LOADED
+    assert mock_gasleser_config_entry.state is ConfigEntryState.LOADED
+    assert mock_latest_firmware_versions.call_count == 1
+    assert hass.data[FIRMWARE_COORDINATOR].data == LATEST_FIRMWARE_VERSIONS
+
+
+@pytest.mark.usefixtures("mock_energieleser_client")
+async def test_firmware_coordinator_survives_until_last_entry_unloads(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_latest_firmware_versions: AsyncMock,
+    mock_stromleser_config_entry: MockConfigEntry,
+    mock_gasleser_config_entry: MockConfigEntry,
+) -> None:
+    """Test remaining entities keep updating and the last unload tears the coordinator down."""
+    mock_stromleser_config_entry.add_to_hass(hass)
+    mock_gasleser_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_latest_firmware_versions.return_value = {
+        **LATEST_FIRMWARE_VERSIONS,
+        DeviceType.STROMLESER: "v1.4.31",
+    }
+    freezer.tick(FIRMWARE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, f"{mock_gasleser_config_entry.unique_id}_firmware"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.4.31"
+    assert mock_latest_firmware_versions.call_count == 2
+
+    await hass.config_entries.async_unload(mock_gasleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert FIRMWARE_COORDINATOR not in hass.data
+
+
+@pytest.mark.usefixtures("mock_energieleser_client")
+async def test_setup_does_not_wait_for_firmware_api(
+    hass: HomeAssistant,
+    mock_latest_firmware_versions: AsyncMock,
+    mock_stromleser_config_entry: MockConfigEntry,
+) -> None:
+    """Test a slow firmware API does not delay device setup."""
+    release = asyncio.Event()
+
+    async def _slow(*_: object) -> dict[DeviceType, str]:
+        await release.wait()
+        return dict(LATEST_FIRMWARE_VERSIONS)
+
+    mock_latest_firmware_versions.side_effect = _slow
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    async with asyncio.timeout(1):
+        await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    assert mock_stromleser_config_entry.state is ConfigEntryState.LOADED
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.data[FIRMWARE_COORDINATOR].data == LATEST_FIRMWARE_VERSIONS
+
+
+@pytest.mark.usefixtures("mock_energieleser_client")
+async def test_firmware_api_failure_does_not_block_setup(
+    hass: HomeAssistant,
+    mock_latest_firmware_versions: AsyncMock,
+    mock_stromleser_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry loads even when the firmware API is down."""
+    mock_latest_firmware_versions.side_effect = EnergieleserConnectionError("down")
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_stromleser_config_entry.state is ConfigEntryState.LOADED
+    assert hass.data[FIRMWARE_COORDINATOR].last_update_success is False

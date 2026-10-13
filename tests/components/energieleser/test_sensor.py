@@ -1,6 +1,7 @@
 """Tests for the energieleser sensor platform."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from energieleser import (
     GasleserDevice,
@@ -11,10 +12,18 @@ from energieleser import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def only_sensor_platform() -> Generator[None]:
+    """Only set up the sensor platform so snapshots stay sensor-only."""
+    with patch("homeassistant.components.energieleser.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def _setup_integration(
