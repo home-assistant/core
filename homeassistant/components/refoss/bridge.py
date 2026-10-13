@@ -34,11 +34,14 @@ class DiscoveryService(Listener):
         self.coordinators: list[RefossDataUpdateCoordinator] = []
         self._last_sweep: float | None = None
 
-    async def async_scan(self, *, force_sweep: bool = False) -> None:
+    async def async_scan(
+        self, *, force_sweep: bool = False, networks: list[str] | None = None
+    ) -> None:
         """Probe the local network and any configured VLAN subnets."""
         if force_sweep:
             self._last_sweep = None
-        networks = networks_from_options(self.config_entry.options)
+        if networks is None:
+            networks = networks_from_options(self.config_entry.options)
         local_broadcasts = [
             str(address)
             for address in await async_get_ipv4_broadcast_addresses(self.hass)

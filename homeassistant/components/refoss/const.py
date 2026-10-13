@@ -7,6 +7,7 @@ LOGGER: Logger = getLogger(__package__)
 COORDINATORS = "coordinators"
 
 DATA_DISCOVERY_SERVICE = "refoss_discovery"
+DISCOVERY_SERVER = "refoss_discovery_server"
 
 DISCOVERY_SCAN_INTERVAL = 30
 DISCOVERY_TIMEOUT = 20

@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import CONF_NETWORKS, DISCOVERY_TIMEOUT, DOMAIN, LOGGER
@@ -46,12 +47,18 @@ class RefossOptionsFlow(OptionsFlow):
                 errors[CONF_NETWORKS] = "invalid_networks"
             else:
                 options = {CONF_NETWORKS: networks} if networks else {}
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, options=options
-                )
                 if self.config_entry.state is ConfigEntryState.LOADED:
-                    await self.config_entry.runtime_data.async_scan(force_sweep=True)
-                return self.async_create_entry(title="", data=options)
+                    try:
+                        await self.config_entry.runtime_data.async_scan(
+                            force_sweep=True, networks=networks
+                        )
+                    except OSError, TimeoutError, HomeAssistantError:
+                        LOGGER.exception("Failed to apply discovery networks")
+                        errors[CONF_NETWORKS] = "invalid_networks"
+                    else:
+                        return self.async_create_entry(title="", data=options)
+                else:
+                    return self.async_create_entry(title="", data=options)
 
         return self.async_show_form(
             step_id="init",

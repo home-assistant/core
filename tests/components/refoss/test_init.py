@@ -10,6 +10,7 @@ from refoss_ha.exceptions import DeviceTimeoutError
 
 from homeassistant.components.refoss.const import (
     CONF_NETWORKS,
+    DISCOVERY_SERVER,
     DOMAIN,
     MAX_ERRORS,
     SWEEP_COOLDOWN,
@@ -204,6 +205,55 @@ async def test_options_change_scans_without_reload(
     assert latest is not None
     assert "10.8.0.255" in latest
     assert "10.8.0.1" in latest
+
+
+async def test_options_flow_keeps_old_networks_when_scan_fails(
+    hass: HomeAssistant, refoss_entry: MockConfigEntry
+) -> None:
+    """Test a failed options scan does not persist the new networks."""
+    original = list(refoss_entry.options[CONF_NETWORKS])
+    result = await hass.config_entries.options.async_init(refoss_entry.entry_id)
+    with patch.object(
+        refoss_entry.runtime_data, "async_scan", side_effect=OSError("scan failed")
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_NETWORKS: "10.8.0.0/24"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_NETWORKS: "invalid_networks"}
+    assert refoss_entry.options[CONF_NETWORKS] == original
+
+
+async def test_unload_closes_discovery_server(
+    hass: HomeAssistant,
+    fake_discovery: FakeDiscovery,
+    refoss_entry: MockConfigEntry,
+) -> None:
+    """Test a successful unload detaches the listener and drops the singleton."""
+    assert hass.data[DISCOVERY_SERVER] is fake_discovery
+    assert await hass.config_entries.async_unload(refoss_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert refoss_entry.runtime_data not in fake_discovery._listeners
+    assert DISCOVERY_SERVER not in hass.data
+    fake_discovery.sock.close.assert_called()
+    fake_discovery.transport.close.assert_called()
+
+
+async def test_failed_unload_keeps_discovery_listener(
+    hass: HomeAssistant,
+    fake_discovery: FakeDiscovery,
+    refoss_entry: MockConfigEntry,
+) -> None:
+    """Test a failed platform unload leaves discovery attached."""
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(refoss_entry.entry_id)
+
+    assert refoss_entry.runtime_data in fake_discovery._listeners
+    assert hass.data[DISCOVERY_SERVER] is fake_discovery
 
 
 async def test_device_update_replaces_ip(refoss_entry: MockConfigEntry) -> None:

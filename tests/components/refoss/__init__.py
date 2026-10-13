@@ -22,12 +22,21 @@ class FakeDiscovery:
         self.mock_devices = {"abc": build_device_mock()}
         self.last_mock_infos = {}
         self._listeners = []
+        self.tasks: list[asyncio.Task] = []
         self.sock = None
+        self.transport = None
         self.probes: list[list[str] | None] = []
 
-    def add_listener(self, listener: Listener) -> None:
-        """Add an event listener."""
-        self._listeners.append(listener)
+    def add_listener(self, listener: Listener) -> list[asyncio.Task]:
+        """Add an event listener and replay already cached devices."""
+        if listener not in self._listeners:
+            self._listeners.append(listener)
+        tasks: list[asyncio.Task] = []
+        for info in self.devices:
+            task = asyncio.get_running_loop().create_task(listener.device_found(info))
+            self.tasks.append(task)
+            tasks.append(task)
+        return tasks
 
     def remove_listener(self, listener: Listener) -> bool:
         """Remove an event listener."""
@@ -39,6 +48,7 @@ class FakeDiscovery:
     async def initialize(self) -> None:
         """Initialize socket server."""
         self.sock = Mock()
+        self.transport = Mock()
 
     @property
     def devices(self) -> list[Mock]:
