@@ -116,7 +116,7 @@ async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> None:
     """Set up Grandstream Home integration."""
     _LOGGER.debug("Starting integration initialization: %s", entry.entry_id)
 
@@ -164,11 +164,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.debug("Integration setup completed for %s", entry.title)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GrandstreamConfigEntry
-) -> bool:
+) -> None:
     """Unload config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

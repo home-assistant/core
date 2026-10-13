@@ -208,7 +208,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         except (ModbusError, HomeAssistantError) as err:
             return None, {"base": "cannot_connect"}, {"error": str(err)}
 
-        if not device.inverter_type:
+        if device.unrecognized:
             return None, {"base": "unrecognized_inverter"}, {}
 
         return device, {}, {}

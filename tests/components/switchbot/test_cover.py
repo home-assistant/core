@@ -62,7 +62,7 @@ async def test_curtain3_setup(
     """Test setting up the Curtain3."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
 
     entity_id = "cover.test_name"
     mock_restore_cache(
@@ -91,7 +91,7 @@ async def test_curtain3_controlling(
     """Test Curtain3 controlling."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
     entry.add_to_hass(hass)
 
     with (
@@ -192,7 +192,7 @@ async def test_curtain3_custom_speed_controlling(
     """Test Curtain3 controlling with custom speed."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
     entry.add_to_hass(hass)
 
     # Update entry options using async_update_entry
@@ -251,7 +251,7 @@ async def test_curtain3_speed(
     """Test the curtain forwards the requested cover speed to the device."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
     entry.add_to_hass(hass)
 
     with (
@@ -859,7 +859,7 @@ async def test_roller_shade_invalid_speed(
     ),
     [
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_CLOSE_COVER,
@@ -867,7 +867,7 @@ async def test_roller_shade_invalid_speed(
             "close",
         ),
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_OPEN_COVER,
@@ -875,7 +875,7 @@ async def test_roller_shade_invalid_speed(
             "open",
         ),
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_STOP_COVER,
@@ -883,7 +883,7 @@ async def test_roller_shade_invalid_speed(
             "stop",
         ),
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_SET_COVER_POSITION,

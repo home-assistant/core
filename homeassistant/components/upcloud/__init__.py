@@ -13,7 +13,7 @@ from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> None:
     """Set up the UpCloud config entry."""
 
     manager = upcloud_api.CloudManager(
@@ -47,9 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
     # Forward entry setup
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

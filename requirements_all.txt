@@ -86,7 +86,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
-PySwitchbot==2.9.0
+PySwitchbot==3.0.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -728,7 +728,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.15
+boschshcpy==0.6.20
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -1334,7 +1334,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.18.0
+homematicip==2.19.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -1424,7 +1424,7 @@ inkbird-ble==1.7.1
 insteon-frontend-home-assistant==0.7.0
 
 # homeassistant.components.intellifire
-intellifire4py==4.5.0
+intellifire4py==4.5.6
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -1636,7 +1636,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==12.2.0
+midea-local==12.3.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2289,6 +2289,9 @@ pygtfs==0.1.11
 # homeassistant.components.hvv_departures
 pygti==1.1.1
 
+# homeassistant.components.hase_iq
+pyhaseiq==0.2.1
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 
@@ -2311,7 +2314,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.7.0
+pyicloud==2026.10.0
 
 # homeassistant.components.imou
 pyimouapi==1.4.0
@@ -2709,7 +2712,7 @@ python-blockchain-api==0.0.2
 python-broadlink==1.0.6
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.9
+python-bsblan==6.1.10
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -3443,7 +3446,7 @@ waterfurnace==1.9.7
 watergate-local-api==2026.2.2
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.8
+weatherflow4py==1.5.12
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.6
@@ -3566,7 +3569,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.1
+zinvolt==1.1.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4

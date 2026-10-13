@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: HydrawiseConfigEntry
-) -> bool:
+) -> None:
     """Set up Hydrawise from a config entry."""
     if any(k not in config_entry.data for k in _REQUIRED_AUTH_KEYS):
         # If we are missing any required authentication keys, trigger a reauth flow.
@@ -104,9 +104,8 @@ async def async_setup_entry(
         water_use=water_use_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HydrawiseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HydrawiseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
