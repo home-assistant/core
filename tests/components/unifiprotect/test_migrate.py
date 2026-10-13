@@ -4,7 +4,13 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 import pytest
-from uiprotect.data import Camera, Light, Sensor
+from uiprotect.data import (
+    Camera,
+    Light,
+    Sensor,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
+)
 from uiprotect.data.public_devices import SensorFeatureCapability
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -776,6 +782,30 @@ async def test_migrate_setting_mirror_keys_scoped_to_device_type(
     ) is in_scope
 
 
+_CAMERA_SWITCH_MIRRORS = (
+    "status_light",
+    "high_fps",
+    "osd_name",
+    "osd_date",
+    "osd_logo",
+    "osd_bitrate",
+    "smart_person",
+    "smart_vehicle",
+    "smart_animal",
+    "smart_package",
+    "smart_licenseplate",
+    "smart_smoke",
+    "smart_cmonx",
+    "smart_siren",
+    "smart_baby_cry",
+    "smart_speak",
+    "smart_bark",
+    "smart_car_alarm",
+    "smart_car_horn",
+    "smart_glass_break",
+)
+
+
 @pytest.mark.parametrize(
     (
         "platform",
@@ -785,21 +815,16 @@ async def test_migrate_setting_mirror_keys_scoped_to_device_type(
         "translation_key",
     ),
     [
-        pytest.param(
-            Platform.BINARY_SENSOR,
-            "status_light",
-            Platform.SWITCH,
-            "status_light",
-            "setting_mirror_deprecated",
-            id="status_light",
-        ),
-        pytest.param(
-            Platform.BINARY_SENSOR,
-            "smart_person",
-            Platform.SWITCH,
-            "smart_person",
-            "setting_mirror_deprecated",
-            id="smart_person",
+        *(
+            pytest.param(
+                Platform.BINARY_SENSOR,
+                key,
+                Platform.SWITCH,
+                key,
+                "setting_mirror_deprecated",
+                id=key,
+            )
+            for key in _CAMERA_SWITCH_MIRRORS
         ),
         pytest.param(
             Platform.BINARY_SENSOR,
@@ -840,6 +865,11 @@ async def test_migrate_camera_setting_mirror_in_use(
     translation_key: str,
 ) -> None:
     """A used camera mirror gets a repair naming the control that replaces it."""
+    # Every detection type, so each detection switch exists as a replacement.
+    doorbell.feature_flags.smart_detect_types = [
+        t for t in SmartDetectObjectType if t.audio_type is None
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = list(SmartDetectAudioType)
     setup_public_camera(ufp)
     mirror = entity_registry.async_get_or_create(
         platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry

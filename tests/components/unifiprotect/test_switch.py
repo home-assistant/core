@@ -1473,6 +1473,7 @@ async def test_public_only_switch_sense_registry_cleanup(
         pytest.param(Platform.SELECT, "hdr_mode", id="hdr_mode"),
         pytest.param(Platform.SELECT, "doorbell_text", id="doorbell_text_select"),
         pytest.param(Platform.TEXT, "doorbell", id="doorbell_text"),
+        pytest.param(Platform.SWITCH, "smart_cmonx", id="smart_cmonx"),
     ],
 )
 async def test_camera_public_controls_read_only_user(
@@ -1484,6 +1485,7 @@ async def test_camera_public_controls_read_only_user(
     key: str,
 ) -> None:
     """A read-only local user gets the camera controls that write publicly."""
+    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.CMONX]
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
     ]

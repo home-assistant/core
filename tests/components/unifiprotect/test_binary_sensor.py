@@ -19,6 +19,7 @@ from uiprotect.data import (
     Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
+    VideoMode,
     WSAction,
 )
 from uiprotect.data.public_devices import SensorFeatureCapability
@@ -1238,25 +1239,47 @@ async def test_object_detected_needs_advertised_types(
     assert "smart_obj_any" not in keys
 
 
+def _enable_private_co_detection(camera: Camera) -> None:
+    camera.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.CMONX]
+    camera.smart_detect_settings.audio_types = [SmartDetectAudioType.CMONX]
+
+
 @pytest.mark.parametrize(
-    ("key", "set_private", "public"),
+    ("key", "set_private", "public", "expected"),
     [
         pytest.param(
             "status_light",
             lambda camera: setattr(camera.led_settings, "is_enabled", True),
             {"status_light": False},
+            STATE_OFF,
             id="status_light",
         ),
         pytest.param(
             "hdr_mode",
             lambda camera: setattr(camera, "hdr_mode", True),
             {"hdr_type": PublicHdrMode.OFF},
-            id="hdr_mode",
+            STATE_OFF,
+            id="hdr_mode_off",
+        ),
+        pytest.param(
+            "hdr_mode",
+            lambda camera: setattr(camera, "hdr_mode", False),
+            {"hdr_type": PublicHdrMode.AUTO},
+            STATE_ON,
+            id="hdr_mode_auto",
+        ),
+        pytest.param(
+            "high_fps",
+            lambda camera: setattr(camera, "video_mode", VideoMode.HIGH_FPS),
+            {"video_mode": VideoMode.DEFAULT},
+            STATE_OFF,
+            id="high_fps",
         ),
         pytest.param(
             "osd_name",
             lambda camera: setattr(camera.osd_settings, "is_name_enabled", True),
             {"osd_name": False},
+            STATE_OFF,
             id="osd_name",
         ),
         pytest.param(
@@ -1267,7 +1290,15 @@ async def test_object_detected_needs_advertised_types(
                 [SmartDetectObjectType.PERSON],
             ),
             {"object_types": []},
+            STATE_OFF,
             id="smart_person",
+        ),
+        pytest.param(
+            "smart_cmonx",
+            _enable_private_co_detection,
+            {"audio_types": []},
+            STATE_OFF,
+            id="smart_cmonx",
         ),
     ],
 )
@@ -1279,6 +1310,7 @@ async def test_binary_sensor_camera_mirror_reads_public(
     key: str,
     set_private: Callable[[Camera], None],
     public: dict[str, Any],
+    expected: str,
 ) -> None:
     """A read-only user's camera setting mirror shows the public value."""
     set_private(doorbell)
@@ -1293,4 +1325,4 @@ async def test_binary_sensor_camera_mirror_reads_public(
         Platform.BINARY_SENSOR, DOMAIN, f"{doorbell.mac}_{key}"
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == expected
