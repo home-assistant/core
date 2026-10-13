@@ -244,7 +244,7 @@ RELOAD_AFTER_UPDATE_DELAY = 30
 
 # Deprecated: Connection classes
 # These aren't used anymore since 2021.6.0
-# Mainly here not to break custom integrations.
+# Mainly here not to break custom integrations, remove in 2027.5.0.
 CONN_CLASS_CLOUD_PUSH = "cloud_push"
 CONN_CLASS_CLOUD_POLL = "cloud_poll"
 CONN_CLASS_LOCAL_PUSH = "local_push"
@@ -1993,6 +1993,15 @@ class ConfigEntriesFlowManager(
         )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
+
+        if hasattr(handler, "CONNECTION_CLASS"):
+            report_usage(
+                "sets the CONNECTION_CLASS attribute on its config flow, which is "
+                "no longer used and should be removed",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2027.5.0",
+                integration_domain=handler_key,
+            )
 
         flow = handler()
         flow.init_step = context["source"]
