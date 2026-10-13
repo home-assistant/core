@@ -156,10 +156,6 @@ class MatterCover(MatterEntity, CoverEntity):
         Returns None if the positions cannot be compared, e.g. the device is
         not position aware or a position is (still) unknown.
         """
-        # An axis that is supported but not position aware cannot be checked,
-        # and the remaining axis says nothing about whether it is moving.
-        if self._has_unobservable_axis():
-            return None
         at_target: bool | None = None
         for current_attribute, target_attribute in (
             (
@@ -217,7 +213,16 @@ class MatterCover(MatterEntity, CoverEntity):
         # state, leaving the cover stuck in a moving state. For position aware
         # covers, a covering whose position(s) match the target position(s) is
         # not moving.
-        at_target = self._positions_at_target()
+        if self._has_unobservable_axis():
+            # An axis that is supported but not position aware cannot be
+            # checked, and the remaining axis says nothing about whether
+            # it is moving.
+            at_target = None
+            detection = "supported axis is not position aware"
+        elif (at_target := self._positions_at_target()) is None:
+            detection = "positions not comparable"
+        else:
+            detection = f"positions at target: {at_target}"
         if at_target and (self._attr_is_opening or self._attr_is_closing):
             LOGGER.debug(
                 "Ignoring moving operational status for %s, position(s) match target position(s)",
@@ -230,9 +235,7 @@ class MatterCover(MatterEntity, CoverEntity):
             self.entity_id,
             self._attr_is_opening,
             self._attr_is_closing,
-            "from operational status and target/current position"
-            if at_target is not None
-            else "from operational status only",
+            detection,
         )
 
         if self._entity_info.endpoint.has_attribute(
