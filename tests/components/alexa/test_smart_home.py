@@ -2,10 +2,12 @@
 
 import asyncio
 from collections.abc import Generator
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit
 
@@ -43,7 +45,11 @@ from .test_common import (
     reported_properties,
 )
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 from tests.typing import ClientSessionGenerator
 
 
@@ -5943,6 +5949,7 @@ WEBRTC_CANDIDATE_AUDIO = "candidate:3 1 udp 1694498815 10.0.0.1 6000 typ srflx"
 WEBRTC_CANDIDATE_MDNS = "candidate:4 1 udp 2130706431 abcd.local 5000 typ host"
 WEBRTC_CANDIDATE_RELAY = "candidate:5 1 udp 16777215 203.0.113.5 7000 typ relay"
 RTC_SESSION_ID = "e2c4f6a8-0b1d-4e3f-9a5b-7c8d9e0f1a2b"
+RTC_MAX_SESSION_DURATION = timedelta(hours=1)
 DEMO_CAMERA_ENDPOINT = "camera#demo_camera"
 
 
@@ -6056,7 +6063,9 @@ async def test_camera_discovery_webrtc_camera_off(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("mock_camera_capabilities")
 async def test_initiate_session_with_offer(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test InitiateSessionWithOffer returns an answer with gathered candidates."""
     caplog.set_level(logging.DEBUG)
@@ -6135,13 +6144,20 @@ async def test_initiate_session_with_offer(
     ) in caplog.text
     assert f"Generated WebRTC answer for session {RTC_SESSION_ID} in" in caplog.text
 
+    # Let the session expire so its timer is not left behind
+    freezer.tick(RTC_MAX_SESSION_DURATION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
 
 @pytest.mark.parametrize(
     "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
 )
 @pytest.mark.usefixtures("mock_camera_capabilities")
 async def test_initiate_session_with_offer_candidate_timeout(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the answer is returned when no end of candidates is signalled."""
     caplog.set_level(logging.DEBUG)
@@ -6186,6 +6202,11 @@ async def test_initiate_session_with_offer_candidate_timeout(
         f"ICE candidate gathering for WebRTC session {RTC_SESSION_ID} "
         "did not complete in time"
     ) in caplog.text
+
+    # Let the session expire so its timer is not left behind
+    freezer.tick(RTC_MAX_SESSION_DURATION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -6321,6 +6342,59 @@ async def test_initiate_session_with_offer_failure(
     assert response["header"]["name"] == "ErrorResponse"
     assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
     assert response["payload"]["message"] == error_message
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.parametrize(
+    "messages",
+    [
+        pytest.param([], id="waiting_for_answer"),
+        pytest.param([camera.WebRTCAnswer(WEBRTC_ANSWER)], id="gathering_candidates"),
+    ],
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_cancelled(
+    hass: HomeAssistant, messages: list[camera.WebRTCMessage]
+) -> None:
+    """Test the WebRTC session is closed when negotiation is cancelled."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+    offer_handled = asyncio.Event()
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        for message in messages:
+            send_message(message)
+        offer_handled.set()
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.close_webrtc_session"
+        ) as mock_close,
+    ):
+        task = hass.async_create_task(
+            smart_home.async_handle_message(hass, get_default_config(hass), request)
+        )
+        await offer_handled.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
     mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 
@@ -6493,6 +6567,93 @@ async def test_rtc_session_disconnected_unknown_camera(hass: HomeAssistant) -> N
     response = msg["event"]
     assert response["header"]["name"] == "SessionDisconnected"
     assert response["payload"] == {"sessionId": RTC_SESSION_ID}
+
+
+async def _async_negotiate_rtc_session(hass: HomeAssistant) -> None:
+    """Negotiate a WebRTC session with the demo camera."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        send_message(camera.WebRTCAnswer(WEBRTC_ANSWER))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+        side_effect=async_handle_async_webrtc_offer,
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    assert msg["event"]["header"]["name"] == "AnswerGeneratedForSession"
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_rtc_session_expires(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a session is closed when Alexa never sends SessionDisconnected."""
+    caplog.set_level(logging.DEBUG)
+    with patch(
+        "homeassistant.components.camera.Camera.close_webrtc_session"
+    ) as mock_close:
+        await _async_negotiate_rtc_session(hass)
+
+        freezer.tick(RTC_MAX_SESSION_DURATION - timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_close.assert_not_called()
+
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+    assert (
+        f"WebRTC session {RTC_SESSION_ID} for camera.demo_camera expired" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_rtc_session_disconnected_cancels_expiry(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test SessionDisconnected cancels the session expiry."""
+    request = get_new_request(
+        "Alexa.RTCSessionController", "SessionDisconnected", DEMO_CAMERA_ENDPOINT
+    )
+    request["directive"]["payload"] = {"sessionId": RTC_SESSION_ID}
+
+    with patch(
+        "homeassistant.components.camera.Camera.close_webrtc_session"
+    ) as mock_close:
+        await _async_negotiate_rtc_session(hass)
+        await smart_home.async_handle_message(hass, get_default_config(hass), request)
+        mock_close.assert_called_once_with(RTC_SESSION_ID)
+
+        freezer.tick(RTC_MAX_SESSION_DURATION)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 
 async def test_alexa_config_migrate_entity_names(

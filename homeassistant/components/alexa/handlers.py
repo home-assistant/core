@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from datetime import datetime
 import ipaddress
 import logging
 import math
@@ -108,9 +109,11 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import network
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     TemperatureDeltaConverter,
@@ -123,6 +126,7 @@ from .const import (
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
+    DOMAIN,
     PRESET_MODE_NA,
     Cause,
     Inputs,
@@ -149,6 +153,13 @@ TO_REDACT_SERVICE_DATA = {ATTR_CODE}
 # gathering therefore share one overall deadline.
 RTC_ANSWER_TIMEOUT = 5
 RTC_CANDIDATE_GATHERING_TIMEOUT = 1.5
+
+# Alexa does not send SessionDisconnected when an Echo loses power or its network
+# connection, so sessions are closed after a maximum duration.
+RTC_MAX_SESSION_DURATION = 3600
+DATA_RTC_SESSIONS: HassKey[dict[str, ha.CALLBACK_TYPE]] = HassKey(
+    f"{DOMAIN}_rtc_sessions"
+)
 
 MIN_MAX_TEMP = {
     CLIMATE_DOMAIN: {
@@ -2393,6 +2404,19 @@ async def async_api_initiate_session_with_offer(
         hass.loop.time() - start,
     )
 
+    @ha.callback
+    def async_expire_session(_now: datetime) -> None:
+        """Close the session when Alexa did not disconnect it in time."""
+        hass.data[DATA_RTC_SESSIONS].pop(session_id, None)
+        _LOGGER.debug(
+            "WebRTC session %s for %s expired", session_id, camera_entity.entity_id
+        )
+        camera_entity.close_webrtc_session(session_id)
+
+    hass.data.setdefault(DATA_RTC_SESSIONS, {})[session_id] = async_call_later(
+        hass, RTC_MAX_SESSION_DURATION, async_expire_session
+    )
+
     return directive.response(
         name="AnswerGeneratedForSession",
         namespace="Alexa.RTCSessionController",
@@ -2424,15 +2448,13 @@ async def async_api_rtc_session_disconnected(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process a SessionDisconnected request.
-
-    This is the only cleanup for a negotiated session. If Alexa never sends it,
-    for example when the Echo loses power, the session stays open on the camera.
-    """
+    """Process a SessionDisconnected request."""
     session_id: str = directive.payload["sessionId"]
     _LOGGER.debug(
         "WebRTC session %s disconnected for %s", session_id, directive.entity_id
     )
+    if cancel_expiry := hass.data.get(DATA_RTC_SESSIONS, {}).pop(session_id, None):
+        cancel_expiry()
     if camera_entity := async_get_camera_entity(hass, directive.entity.entity_id):
         camera_entity.close_webrtc_session(session_id)
     else:
