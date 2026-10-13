@@ -71,7 +71,6 @@ class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading | None]):
             # The next reading is late: retry once soon, then fall back
             self._unchanged_polls += 1
             return _MIN_INTERVAL if self._unchanged_polls == 1 else _SCAN_INTERVAL
-        # A new reading, or a refresh before the next one is due
         self._unchanged_polls = 0
         # Clamp in case the reading time is ahead of the local clock
         return min(
