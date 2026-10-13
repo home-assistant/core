@@ -275,6 +275,10 @@ class TwinguardSmokeSensor(SHCEntity, BinarySensorEntity):
             events = _parse_surveillance_events(arguments.get("surveillanceEvents"))
             if any(event.get("type") == "ALARM_OFF" for event in events):
                 continue
-            if any(event.get("triggerId") == self._device.id for event in events):
+            # The Bosch app reads this field as "device", the SHC writes "triggerId".
+            if any(
+                self._device.id in (event.get("triggerId"), event.get("device"))
+                for event in events
+            ):
                 return True
         return False
