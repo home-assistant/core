@@ -169,6 +169,13 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data == {CONF_ZONE: "zone.work"}
     assert mock_config_entry.title == "Work"
 
+    assert len(mock_open_meteo.forecast.mock_calls) == 1
+    _, _, kwargs = mock_open_meteo.forecast.mock_calls[0]
+    work_zone = hass.states.get("zone.work")
+    assert work_zone is not None
+    assert kwargs["latitude"] == work_zone.attributes["latitude"]
+    assert kwargs["longitude"] == work_zone.attributes["longitude"]
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_cannot_connect(
