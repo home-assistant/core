@@ -169,7 +169,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._webhook_connection = True
-                self._webhook_on = False
+                self._webhook_on = None
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
