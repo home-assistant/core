@@ -435,9 +435,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         super().__init__(
             intent.INTENT_SET_POSITION,
             required_slots={
-                ATTR_POSITION: probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
-                )
+                ATTR_POSITION: probatio.All(probatio.Coerce(int), probatio.Percentage())
             },
             description="Sets the position of a device or entity",
             platforms={COVER_DOMAIN, VALVE_DOMAIN},

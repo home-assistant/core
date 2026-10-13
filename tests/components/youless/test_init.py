@@ -15,4 +15,4 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
     assert await setup.async_setup_component(hass, DOMAIN, {})
     assert entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_entity_ids()) == 22
+    assert len(hass.states.async_entity_ids()) == 23

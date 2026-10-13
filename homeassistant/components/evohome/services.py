@@ -30,14 +30,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import (
-    DOMAIN,
-    REFRESH_BREAKS_IN_HA_VERSION,
-    RESET_BREAKS_IN_HA_VERSION,
-    SERVICE_BREAKS_IN_HA_VERSION,
-    EvoService,
-)
-from .coordinator import EvoDataUpdateCoordinator
+from .const import DOMAIN, EVOHOME_DATA, REFRESH_BREAKS_IN_HA_VERSION, EvoService
 from .helpers import async_create_deprecation_issue_once
 
 
@@ -58,7 +51,7 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
         cv.time_period,
         probatio.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
-    probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
+    probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
 }
 
 # Zone service schemas (registered as entity services)
@@ -88,14 +81,6 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        EvoService.CLEAR_ZONE_OVERRIDE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema=None,
-        func="async_clear_zone_override",
-    )
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
         EvoService.SET_ZONE_OVERRIDE,
         entity_domain=CLIMATE_DOMAIN,
         schema=SET_ZONE_OVERRIDE_SCHEMA,
@@ -108,21 +93,9 @@ def _resolve_ctl_unique_id(
     call: ServiceCall,
     tcs_id: str,
 ) -> str:
-    """Resolve the target controller unique_id from an optional entity_id.
+    """Resolve the target controller unique_id from the (required) entity_id."""
 
-    During the deprecation window, advise users to switch to targeting the controller.
-    """
-
-    if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
-        async_create_deprecation_issue_once(
-            hass,
-            f"deprecated_{call.service}_service",
-            SERVICE_BREAKS_IN_HA_VERSION,
-            translation_key="deprecated_controller_service",
-            translation_placeholders={"service": call.service},
-        )
-        return tcs_id
-
+    entity_id: str = call.data[ATTR_ENTITY_ID]
     entry = er.async_get(hass).async_get(entity_id)
 
     if entry is None:
@@ -206,9 +179,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
 
 @callback
-def async_setup_services(
-    hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Evohome services."""
 
     @verify_domain_control(DOMAIN)
@@ -219,47 +190,25 @@ def async_setup_services(
             "deprecated_refresh_system_service",
             REFRESH_BREAKS_IN_HA_VERSION,
         )
-        await coordinator.async_refresh()
+        await hass.data[EVOHOME_DATA].coordinator.async_refresh()
 
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
-        """Set the Evohome system mode or reset the system."""
+        """Set the Evohome system mode."""
 
-        # We can rely upon coordinator.tcs being non-None here, since:
-        # - services are registered only if coordinator.async_first_refresh() succeeds
-        # - without config flow, the controller entity will never be de-registered
+        tcs = hass.data[EVOHOME_DATA].tcs
 
-        assert coordinator.tcs is not None  # mypy
-
-        # No additional validation for RESET_SYSTEM here, as the library method invoked
-        # via that service call may be able to emulate the reset even if the system
-        # doesn't support AutoWithReset natively
-
-        if call.service == EvoService.RESET_SYSTEM:
-            async_create_deprecation_issue_once(
-                hass,
-                "deprecated_reset_system_service",
-                RESET_BREAKS_IN_HA_VERSION,
-            )
-
-        if call.service == EvoService.SET_SYSTEM_MODE:
-            _validate_set_system_mode_params(coordinator.tcs, call.data)
-            unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
-        else:
-            # this service call to be deprecated, so no need to _resolve_ctl_unique_id
-            unique_id = coordinator.tcs.id
+        _validate_set_system_mode_params(tcs, call.data)
+        unique_id = _resolve_ctl_unique_id(hass, call, tcs.id)
 
         payload = {
             "unique_id": unique_id,
             "service": call.service,
-            "data": {**call.data, SZ_MODE: _as_snake_case(call.data[SZ_MODE])}
-            if SZ_MODE in call.data
-            else call.data,
+            "data": {**call.data, SZ_MODE: _as_snake_case(call.data[SZ_MODE])},
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
-    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     hass.services.async_register(
         DOMAIN,

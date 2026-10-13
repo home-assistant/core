@@ -478,3 +478,15 @@ async def test_flow_serial_bridge_with_vedo_auth_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_vedo_auth"}
+
+    mock_serial_bridge.vedo_enabled.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

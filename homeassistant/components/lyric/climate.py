@@ -3,12 +3,10 @@
 import asyncio
 import enum
 import logging
-from time import localtime, strftime, time
 from typing import Any, override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-import probatio
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -30,9 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     DOMAIN,
@@ -104,17 +100,6 @@ HVAC_ACTIONS = {
     LYRIC_HVAC_ACTION_COOL: HVACAction.COOLING,
 }
 
-SERVICE_HOLD_TIME = "set_hold_time"
-ATTR_TIME_PERIOD = "time_period"
-
-SCHEMA_HOLD_TIME: VolDictType = {
-    probatio.Required(ATTR_TIME_PERIOD, default="01:00:00"): probatio.All(
-        cv.time_period,
-        cv.positive_timedelta,
-        lambda td: strftime("%H:%M:%S", localtime(time() + td.total_seconds())),
-    )
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -139,14 +124,6 @@ async def async_setup_entry(
             for device in location.devices
         ),
         True,
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_HOLD_TIME,
-        SCHEMA_HOLD_TIME,
-        "async_set_hold_time",
     )
 
 
@@ -188,10 +165,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
         # Use the native temperature unit from the device settings
         if device.units == "Fahrenheit":
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_precision = PRECISION_WHOLE
         else:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
             self._attr_precision = PRECISION_HALVES
 
         # Setup supported hvac modes
@@ -247,7 +224,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.indoor_temperature
 
@@ -268,7 +245,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         device = self.device
         if (
@@ -282,7 +259,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         device = self.device
         if (
@@ -294,7 +271,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         device = self.device
         if (

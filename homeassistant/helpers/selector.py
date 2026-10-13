@@ -1043,6 +1043,14 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
         return [probatio.Schema(str)(val) for val in data]
 
 
+class DurationSelectorMode(StrEnum):
+    """Possible modes for a duration selector."""
+
+    POSITIVE = "positive"
+    SIGNED = "signed"
+    OFFSET = "offset"
+
+
 class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
@@ -1050,6 +1058,15 @@ class DurationSelectorConfig(BaseSelectorConfig, total=False):
     enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
+    mode: DurationSelectorMode
+
+
+def _validate_duration_selector_mode(config: dict[str, Any]) -> dict[str, Any]:
+    if "allow_negative" not in config or "mode" not in config:
+        return config
+    if (config["mode"] == DurationSelectorMode.POSITIVE) == config["allow_negative"]:
+        raise probatio.Invalid(f"allow_negative conflicts with mode {config['mode']}")
+    return config
 
 
 @SELECTORS.register("duration")
@@ -1058,27 +1075,42 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            # Enable day field in frontend. A selection with `days` set is allowed
-            # even if `enable_day` is not set
-            probatio.Optional("enable_day"): cv.boolean,
-            # Enable seconds field in frontend.
-            probatio.Optional("enable_second", default=True): cv.boolean,
-            # Enable millisecond field in frontend.
-            probatio.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations.
-            probatio.Optional("allow_negative"): cv.boolean,
-        }
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                # Enable day field in frontend. A selection with `days` set is allowed
+                # even if `enable_day` is not set
+                probatio.Optional("enable_day"): cv.boolean,
+                # Enable seconds field in frontend.
+                probatio.Optional("enable_second", default=True): cv.boolean,
+                # Enable millisecond field in frontend.
+                probatio.Optional("enable_millisecond"): cv.boolean,
+                # Legacy alias of mode signed, provided for backwards compatibility
+                # and feature frozen. New configs should use `mode` instead.
+                probatio.Optional("allow_negative"): cv.boolean,
+                probatio.Optional("mode"): probatio.All(
+                    probatio.Coerce(DurationSelectorMode), lambda val: val.value
+                ),
+            }
+        ),
+        _validate_duration_selector_mode,
     )
 
     def __init__(self, config: DurationSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
+    @property
+    def allows_negative(self) -> bool:
+        """Return whether the selector allows a negative duration."""
+        mode = self.config.get("mode", DurationSelectorMode.POSITIVE)
+        return mode != DurationSelectorMode.POSITIVE or bool(
+            self.config.get("allow_negative", False)
+        )
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", False):
+        if self.allows_negative:
             cv.time_period_dict(data)
         else:
             cv.positive_time_period_dict(data)
@@ -2349,3 +2381,136 @@ dumper.add_representer(
         dumper, "tag:yaml.org,2002:map", value.serialize()
     ),
 )
+
+
+@cache
+def _units_set(dict_name: str, keys: tuple[str, ...]) -> set[str | None] | None:
+    """Return a cached lookup of the units allowed for any of the keys.
+
+    Returns None if one of the keys does not limit the units.
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module("homeassistant.components.sensor")
+    units_dict: dict[str, set[str | None]] = getattr(module, dict_name)
+    non_numeric_device_classes: set[str] = module.NON_NUMERIC_DEVICE_CLASSES
+
+    units: set[str | None] = set()
+    for key in keys:
+        if key in units_dict:
+            units |= units_dict[key]
+        elif key in non_numeric_device_classes:
+            units.add(None)
+        else:
+            return None
+    return units
+
+
+class UnitOfMeasurementSelectorContext(TypedDict, total=False):
+    """Class to represent a unit of measurement selector context."""
+
+    filter_device_class: str
+    filter_state_class: str
+
+
+class UnitOfMeasurementSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a unit of measurement selector config."""
+
+    device_classes: str | list[str] | None
+    state_classes: str | list[str] | None
+    # Maps context keys to the names of the fields providing their value
+    context: UnitOfMeasurementSelectorContext
+
+
+@SELECTORS.register("unit_of_measurement")
+class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
+    """Selector for unit of measurement."""
+
+    selector_type = "unit_of_measurement"
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available units based on the device class
+            "filter_device_class": frozenset({DeviceClassSelector.selector_type}),
+            # Filters the available units based on the state class
+            "filter_state_class": frozenset({StateClassSelector.selector_type}),
+        }
+    )
+
+    @staticmethod
+    def _valid_state_class(option: str) -> str:
+        """Validate state class and raise if invalid."""
+        probatio.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(option)
+        return option
+
+    @staticmethod
+    def _valid_device_class(option: str) -> str:
+        """Validate device class and raise if invalid."""
+        probatio.In(_enum_options(Platform.SENSOR, "SensorDeviceClass"))(option)
+        return option
+
+    @staticmethod
+    def _valid_context(
+        config: UnitOfMeasurementSelectorConfig,
+    ) -> UnitOfMeasurementSelectorConfig:
+        """Validate the context does not filter on a fixed option and raise if so."""
+        context = config.get("context", {})
+        for option, context_key in (
+            ("device_classes", "filter_device_class"),
+            ("state_classes", "filter_state_class"),
+        ):
+            if config.get(option) and context_key in context:
+                raise probatio.Invalid(
+                    f"Context key {context_key} can not be used with {option}"
+                )
+        return config
+
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                probatio.Optional("device_classes"): probatio.Any(
+                    None, probatio.All(probatio.EnsureList(), [_valid_device_class])
+                ),
+                probatio.Optional("state_classes"): probatio.Any(
+                    None, probatio.All(probatio.EnsureList(), [_valid_state_class])
+                ),
+                probatio.Optional("context"): {
+                    probatio.Optional("filter_device_class"): str,
+                    probatio.Optional("filter_state_class"): str,
+                },
+            },
+        ),
+        _valid_context,
+    )
+
+    def __init__(self, config: UnitOfMeasurementSelectorConfig | None = None) -> None:
+        """Instantiate a unit of measurement selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | None:
+        """Validate the passed selection."""
+
+        valid_units_set: set[str | None] | None = None
+        # The config schema ensures a list
+        if device_classes := cast(list[str] | None, self.config.get("device_classes")):
+            valid_units_set = _units_set("DEVICE_CLASS_UNITS", tuple(device_classes))
+        if (
+            state_classes := cast(list[str] | None, self.config.get("state_classes"))
+        ) and (
+            state_class_units := _units_set("STATE_CLASS_UNITS", tuple(state_classes))
+        ) is not None:
+            valid_units_set = (
+                state_class_units
+                if valid_units_set is None
+                else valid_units_set & state_class_units
+            )
+
+        unit: str | None
+        if valid_units_set is None:
+            # If there is no device class or state class units limitation,
+            # any (custom) unit is accepted
+            unit = probatio.Any(None, str)(data)
+            return unit
+
+        units_schema = probatio.In(valid_units_set)
+        unit = units_schema(data)
+        return unit

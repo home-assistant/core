@@ -94,13 +94,25 @@ HVAC_MODE_TO_ATW_ZONE_MODE: dict[HVACMode, ATWZoneMode] = {
     HVACMode.COOL: ATWZoneMode.COOL_ROOM_TEMPERATURE,
 }
 
+# Switching between heating and cooling keeps the room or flow temperature control;
+# HeatCurve has no cooling counterpart and falls back to room temperature
+ATW_ZONE_MODE_COUNTERPART: dict[ATWZoneMode, ATWZoneMode] = {
+    ATWZoneMode.HEAT_ROOM_TEMPERATURE: ATWZoneMode.COOL_ROOM_TEMPERATURE,
+    ATWZoneMode.HEAT_FLOW_TEMPERATURE: ATWZoneMode.COOL_FLOW_TEMPERATURE,
+    ATWZoneMode.COOL_ROOM_TEMPERATURE: ATWZoneMode.HEAT_ROOM_TEMPERATURE,
+    ATWZoneMode.COOL_FLOW_TEMPERATURE: ATWZoneMode.HEAT_FLOW_TEMPERATURE,
+}
+
 # The unit heats either the tank or the zones, so heating the tank idles the zones
 ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
     ATWOperationMode.STOP: HVACAction.IDLE,
     ATWOperationMode.HOT_WATER: HVACAction.IDLE,
     ATWOperationMode.HEAT: HVACAction.HEATING,
     ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
+    ATWOperationMode.HEATING: HVACAction.HEATING,
+    ATWOperationMode.FREEZE_STAT: HVACAction.HEATING,
     ATWOperationMode.COOL: HVACAction.COOLING,
+    ATWOperationMode.COOLING: HVACAction.COOLING,
 }
 
 
@@ -144,7 +156,7 @@ async def async_setup_entry(
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     """Climate entity for a MELCloud Home Air-to-Air unit."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
     _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
@@ -206,13 +218,13 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current room temperature."""
         return self.unit.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self.unit.set_temperature
 
@@ -251,6 +263,16 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
                 if capabilities.max_temp_heat is not None:
                     return capabilities.max_temp_heat
         return super().max_temp
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the target temperature step."""
+        if (
+            capabilities := self.unit.capabilities
+        ) is None or capabilities.has_half_degree_increments is None:
+            return super().target_temperature_step
+        return 0.5 if capabilities.has_half_degree_increments else 1.0
 
     @property
     @override
@@ -366,7 +388,7 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
     """Climate entity for a MELCloud Home ATW zone."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_ON
@@ -394,7 +416,7 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current zone temperature."""
         return (
             self.unit.room_temperature_zone1
@@ -404,7 +426,7 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target zone temperature."""
         return (
             self.unit.set_temperature_zone1
@@ -444,6 +466,16 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
 
     @property
     @override
+    def target_temperature_step(self) -> float | None:
+        """Return the target zone temperature step."""
+        if (
+            capabilities := self.unit.capabilities
+        ) is None or capabilities.has_half_degrees is None:
+            return super().target_temperature_step
+        return 0.5 if capabilities.has_half_degrees else 1.0
+
+    @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         return (
@@ -471,7 +503,13 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
                 self.coordinator.client.control_atw_unit(self._unit_id, power=False),
             )
         else:
-            zone_mode = HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+            zone_mode = self._zone_mode
+            if zone_mode is None:
+                zone_mode = HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+            elif ATW_ZONE_MODE_TO_HVAC_MODE[zone_mode] != hvac_mode:
+                zone_mode = ATW_ZONE_MODE_COUNTERPART.get(
+                    zone_mode, HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+                )
             if self.zone_number == 1:
                 await perform_action(
                     self.coordinator,

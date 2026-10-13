@@ -68,13 +68,15 @@ async def test_filter_cleaning_unavailable_when_tracking_disabled(
     The vendor API keeps returning `change_filter: false` in this state, which
     would otherwise misreport a "clean filter" the integration can't actually vouch for.
     """
-    mock_cloud_interface.get_filter_status.return_value = IntelliClimaFilterStatus(
-        serial="11223344",
-        is_active=False,
-        from_date="2025-11-18 10:22:51",
-        stats=[],
-        totale=0,
-        change_filter=False,
+    mock_cloud_interface.ecocomfort2.get_filter_status.return_value = (
+        IntelliClimaFilterStatus(
+            serial="11223344",
+            is_active=False,
+            from_date="2025-11-18 10:22:51",
+            stats=[],
+            totale=0,
+            change_filter=False,
+        )
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

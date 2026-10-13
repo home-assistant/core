@@ -71,6 +71,54 @@
       "usable_battery_level": 77,
       "user_charge_enable_request": null
     },
+    "charge_schedule_data": {
+      "charge_schedule_window": {
+        "enabled": false,
+        "end_time": 0,
+        "latitude": -30.222626,
+        "longitude": -97.6236871,
+        "start_time": 0
+      },
+      "charge_schedules": [
+        {
+          "days_of_week": 127,
+          "enabled": true,
+          "end_enabled": false,
+          "end_time": 0,
+          "id": 1,
+          "latitude": -30.222626,
+          "longitude": -97.6236871,
+          "name": "Home",
+          "one_time": false,
+          "start_enabled": true,
+          "start_time": 1320
+        }
+      ],
+      "max_num_charge_schedules": 10,
+      "next_schedule": false
+    },
+    "preconditioning_schedule_data": {
+      "max_num_precondition_schedules": 10,
+      "preconditioning_schedule_window": {
+        "enabled": false,
+        "end_time": 0,
+        "latitude": -30.222626,
+        "longitude": -97.6236871,
+        "start_time": 0
+      },
+      "precondition_schedules": [
+        {
+          "days_of_week": 31,
+          "enabled": true,
+          "id": 1,
+          "latitude": -30.222626,
+          "longitude": -97.6236871,
+          "name": "Work",
+          "one_time": false,
+          "precondition_time": 450
+        }
+      ]
+    },
     "climate_state": {
       "allow_cabin_overheat_protection": true,
       "auto_seat_climate_left": true,

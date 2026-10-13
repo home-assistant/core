@@ -8,13 +8,22 @@ import probatio
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.dt import as_timestamp, utcnow
 
-from .const import CONF_DURATION, DATA_PROGRAMS, DATA_ZONES, DOMAIN
+from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_DURATION,
+    DATA_PROGRAMS,
+    DATA_ZONES,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 if TYPE_CHECKING:
     from . import RainMachineConfigEntry
@@ -48,9 +57,7 @@ CV_FLOW_METER_VALID_UNITS = {
     "m3",
 }
 
-CV_WX_DATA_VALID_PERCENTAGE = probatio.All(
-    probatio.Coerce(int), probatio.Range(min=0, max=100)
-)
+CV_WX_DATA_VALID_PERCENTAGE = probatio.All(probatio.Coerce(int), probatio.Percentage())
 CV_WX_DATA_VALID_TEMP_RANGE = probatio.All(
     probatio.Coerce(float), probatio.Range(min=-40.0, max=40.0)
 )
@@ -293,4 +300,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
             description_placeholders={
                 "api_url": API_URL_REFERENCE,
             },
+        )
+
+    entity_services: tuple[tuple[str, VolDictType | None, str], ...] = (
+        ("start_program", None, "async_start_program"),
+        (
+            "start_zone",
+            {
+                probatio.Optional(
+                    CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
+                ): cv.positive_int
+            },
+            "async_start_zone",
+        ),
+        ("stop_program", None, "async_stop_program"),
+        ("stop_zone", None, "async_stop_zone"),
+    )
+    for service_name, entity_schema, func in entity_services:
+        service.async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=SWITCH_DOMAIN,
+            func=func,
+            schema=entity_schema,
         )
