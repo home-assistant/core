@@ -47,3 +47,4 @@ async def test_diagnostics_without_control_modes(
     )
 
     assert diagnostics["battery_control_modes"] == []
+    assert diagnostics["battery_settings"] is None

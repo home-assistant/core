@@ -75,6 +75,20 @@
         "name": "Overload protection"
       }
     },
+    "number": {
+      "backup_reserve": {
+        "name": "Backup power reserve"
+      },
+      "max_charge_power": {
+        "name": "Maximum charge power"
+      },
+      "max_discharge_power": {
+        "name": "Maximum discharge power"
+      },
+      "price_spread": {
+        "name": "Minimum price spread"
+      }
+    },
     "select": {
       "control_mode": {
         "name": "Control mode",
@@ -228,8 +242,17 @@
     "charge_point_not_found": {
       "message": "The Zonneplan API returned no data for the charge point"
     },
+    "control_mode_unavailable": {
+      "message": "The control mode of the home battery is not known yet"
+    },
+    "day_ahead_arbitrage_not_active": {
+      "message": "The minimum price spread can only be changed while the battery's control mode is day-ahead arbitrage."
+    },
     "day_ahead_arbitrage_not_set_up": {
       "message": "Day-ahead arbitrage has not been set up for this battery yet. Set it up in the Zonneplan app first."
+    },
+    "home_optimization_not_active": {
+      "message": "The power limits can only be changed while the battery's control mode is home optimization."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"
