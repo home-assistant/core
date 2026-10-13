@@ -319,7 +319,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "knx_climate"
 
     default_hvac_mode: HVACMode
@@ -401,13 +401,13 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.temperature.value
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_temperature.value
 

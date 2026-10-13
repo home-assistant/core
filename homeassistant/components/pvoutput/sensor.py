@@ -83,6 +83,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.temperature,
     ),
     PVOutputSensorEntityDescription(
@@ -90,6 +91,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.voltage,
     ),
 )
@@ -126,7 +128,7 @@ class PVOutputSensorEntity(
         *,
         coordinator: PVOutputDataUpdateCoordinator,
         description: PVOutputSensorEntityDescription,
-        system_id: str,
+        system_id: int,
     ) -> None:
         """Initialize a PVOutput sensor."""
         super().__init__(coordinator=coordinator)

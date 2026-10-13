@@ -103,7 +103,7 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
     entity_description: OumanEh800ClimateEntityDescription
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.1
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = list(_PRESET_TO_OPERATION_MODE)
@@ -162,7 +162,7 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current room temperature."""
         value = self.coordinator.data[
             self.entity_description.current_temperature_endpoint
@@ -172,7 +172,7 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the user-set room temperature setpoint."""
         value = self.coordinator.data[
             self.entity_description.target_temperature_endpoint

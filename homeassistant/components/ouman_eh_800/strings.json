@@ -68,6 +68,10 @@
       }
     },
     "number": {
+      "autumn_drying_outdoor_temperature_limit": {
+        "name": "Autumn drying outdoor temperature limit"
+      },
+      "autumn_drying_setpoint": { "name": "Autumn drying setpoint" },
       "big_temperature_drop": { "name": "Big temperature drop" },
       "constant_temp_setpoint": { "name": "Constant temperature setpoint" },
       "curve_0_temperature": { "name": "Curve 0°C temperature" },
@@ -125,6 +129,9 @@
       }
     },
     "sensor": {
+      "accumulator_temperature": { "name": "Accumulator temperature" },
+      "autumn_drying_effect": { "name": "Autumn drying effect" },
+      "boiler_temperature": { "name": "Boiler temperature" },
       "curve_supply_water_temperature": {
         "name": "Curve supply water temperature"
       },
@@ -134,6 +141,7 @@
       "delayed_room_temperature": { "name": "Delayed room temperature" },
       "fine_adjustment_effect": { "name": "Fine adjustment effect" },
       "outside_temperature": { "name": "Outside temperature" },
+      "return_water_temperature": { "name": "Return water temperature" },
       "room_sensor_potentiometer": { "name": "Room sensor potentiometer" },
       "room_temperature": { "name": "Room temperature" },
       "room_temperature_setpoint": { "name": "Room temperature setpoint" },

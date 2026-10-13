@@ -84,7 +84,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
@@ -102,7 +102,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.data[self._serial_number].temperature
 
@@ -116,7 +116,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.coordinator.data[self._serial_number].set_point_temp
 

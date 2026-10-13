@@ -1,8 +1,10 @@
 """Services for the AdGuard Home integration."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
-from adguardhome import AdGuardHome
+from adguardhome import AdGuardHomeAuthenticationError
 import probatio
 
 from homeassistant.const import CONF_NAME, CONF_URL
@@ -19,6 +21,7 @@ from .const import (
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
 )
+from .helpers import adguard_exception_handler
 
 if TYPE_CHECKING:
     from . import AdGuardConfigEntry
@@ -37,48 +40,76 @@ SERVICE_REFRESH_SCHEMA = probatio.Schema(
 )
 
 
-def _get_adguard_instances(hass: HomeAssistant) -> list[AdGuardHome]:
-    """Get the AdGuardHome instances."""
+def _get_adguard_entries(hass: HomeAssistant) -> list[AdGuardConfigEntry]:
+    """Get the loaded AdGuard Home config entries."""
     entries: list[AdGuardConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
     if not entries:
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
         )
-    return [entry.runtime_data.client for entry in entries]
+    return entries
 
 
+@asynccontextmanager
+async def _reauthenticate_on_rejection(
+    hass: HomeAssistant, entry: AdGuardConfigEntry
+) -> AsyncIterator[None]:
+    """Ask for new credentials when AdGuard Home rejects the ones of the entry."""
+    try:
+        yield
+    except AdGuardHomeAuthenticationError:
+        entry.async_start_reauth(hass)
+        raise
+
+
+@adguard_exception_handler
 async def _add_url(call: ServiceCall) -> None:
     """Service call to add a new filter subscription to AdGuard Home."""
-    for adguard in _get_adguard_instances(call.hass):
-        await adguard.filtering.blocklists.add(
-            call.data[CONF_URL], name=call.data[CONF_NAME]
-        )
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            await entry.runtime_data.client.filtering.blocklists.add(
+                call.data[CONF_URL], name=call.data[CONF_NAME]
+            )
 
 
+@adguard_exception_handler
 async def _remove_url(call: ServiceCall) -> None:
     """Service call to remove a filter subscription from AdGuard Home."""
-    for adguard in _get_adguard_instances(call.hass):
-        await adguard.filtering.blocklists.remove(call.data[CONF_URL])
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            await entry.runtime_data.client.filtering.blocklists.remove(
+                call.data[CONF_URL]
+            )
 
 
+@adguard_exception_handler
 async def _enable_url(call: ServiceCall) -> None:
     """Service call to enable a filter subscription in AdGuard Home."""
-    for adguard in _get_adguard_instances(call.hass):
-        await adguard.filtering.blocklists.enable(call.data[CONF_URL])
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            await entry.runtime_data.client.filtering.blocklists.enable(
+                call.data[CONF_URL]
+            )
 
 
+@adguard_exception_handler
 async def _disable_url(call: ServiceCall) -> None:
     """Service call to disable a filter subscription in AdGuard Home."""
-    for adguard in _get_adguard_instances(call.hass):
-        await adguard.filtering.blocklists.disable(call.data[CONF_URL])
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            await entry.runtime_data.client.filtering.blocklists.disable(
+                call.data[CONF_URL]
+            )
 
 
+@adguard_exception_handler
 async def _refresh(call: ServiceCall) -> None:
     """Service call to refresh the filter subscriptions in AdGuard Home."""
-    for adguard in _get_adguard_instances(call.hass):
-        # AdGuard Home always forces a refresh, so the force option does
-        # nothing, but is kept so existing automations keep working.
-        await adguard.filtering.blocklists.refresh()
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            # AdGuard Home always forces a refresh, so the force option does
+            # nothing, but is kept so existing automations keep working.
+            await entry.runtime_data.client.filtering.blocklists.refresh()
 
 
 @callback

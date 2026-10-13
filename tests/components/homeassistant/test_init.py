@@ -8,8 +8,6 @@ import yaml
 
 from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
-    ATTR_ENTRY_ID,
-    ATTR_SAFE_MODE,
     DOMAIN,
     SERVICE_CHECK_CONFIG,
     SERVICE_HOMEASSISTANT_RESTART,
@@ -18,6 +16,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
+)
+from homeassistant.components.homeassistant.services import (
+    ATTR_ENTRY_ID,
+    ATTR_SAFE_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -130,7 +132,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
-@patch("homeassistant.components.homeassistant._LOGGER.error")
+@patch("homeassistant.components.homeassistant.services._LOGGER.error")
 @patch("homeassistant.core_config.async_process_ha_core_config")
 @pytest.mark.parametrize(
     ("files_patch", "expected_error"),
@@ -244,7 +246,7 @@ async def test_entity_update(hass: HomeAssistant) -> None:
     await async_setup_component(hass, DOMAIN, {})
 
     with patch(
-        "homeassistant.components.homeassistant.async_update_entity",
+        "homeassistant.components.homeassistant.services.async_update_entity",
         return_value=None,
     ) as mock_update:
         await hass.services.async_call(
@@ -598,7 +600,7 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
     """Test we can call reload_custom_templates."""
     await async_setup_component(hass, DOMAIN, {})
     with patch(
-        "homeassistant.components.homeassistant.async_load_custom_templates",
+        "homeassistant.components.homeassistant.services.async_load_custom_templates",
         return_value=None,
     ) as mock_load_custom_templates:
         await hass.services.async_call(

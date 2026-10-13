@@ -331,10 +331,7 @@ async def test_coordinator_backs_off_until_the_quota_resets(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -382,10 +379,7 @@ async def test_coordinator_backs_off_when_the_reset_has_passed(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -424,15 +418,14 @@ async def test_setup_entry_invalid_credentials(
 ) -> None:
     """Test setup raises ConfigEntryAuthFailed on PyViCare credentials error."""
     mock_config_entry.add_to_hass(hass)
+    client = MockPyViCare([])
+    client.initWithExternalOAuth.side_effect = PyViCareInvalidCredentialsError
 
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            side_effect=PyViCareInvalidCredentialsError,
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -456,20 +449,19 @@ async def test_setup_entry_rate_limited(
             }
         }
     )
+    client = MockPyViCare([])
+    client.initWithExternalOAuth.side_effect = rate_limit_error
 
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            side_effect=rate_limit_error,
-        ) as setup_api,
+        patch(f"{MODULE}.PyViCare", return_value=client),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    setup_api.assert_called_once()
+    client.initWithExternalOAuth.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     # SETUP_RETRY alone would also match an unrelated ConfigEntryNotReady.
     assert "rate limit" in mock_config_entry.reason
@@ -482,15 +474,14 @@ async def test_setup_entry_invalid_configuration(
 ) -> None:
     """Test setup raises ConfigEntryAuthFailed on PyViCare config error."""
     mock_config_entry.add_to_hass(hass)
+    client = MockPyViCare([])
+    client.initWithExternalOAuth.side_effect = PyViCareInvalidConfigurationError
 
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            side_effect=PyViCareInvalidConfigurationError,
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -514,10 +505,7 @@ async def test_device_and_entity_migration(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -612,10 +600,7 @@ async def test_coordinator_recovers_after_transient_failure(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -666,10 +651,7 @@ async def test_coordinator_handles_invalid_data(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -706,10 +688,7 @@ async def test_per_gateway_failure_isolation(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -759,10 +738,7 @@ async def test_devices_on_same_gateway_share_coordinator(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -806,10 +782,7 @@ async def test_coordinator_auth_failure_triggers_reauth(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         mock_config_entry.add_to_hass(hass)
@@ -851,10 +824,7 @@ async def test_device_via_device_links(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -883,10 +853,7 @@ async def test_device_via_device_missing_gateway(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -901,11 +868,7 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Set up through _setup_vicare_api instead of a prebuilt ViCareData.
-
-    Covers the via-gateway init, the gateway-based cache duration, and one
-    fetch per gateway.
-    """
+    """Test the via-gateway init, the cache duration and one fetch per gateway."""
     # Two devices behind gwA, one behind gwB: two gateways, three devices.
     fixtures: list[Fixture] = [
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwA"),
@@ -915,11 +878,8 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     client = MockPyViCare(fixtures)
     # viaGateway has to be set before init, the services are wired during init.
     setup_calls: list[str] = []
-    client.loadViaGateway = Mock(side_effect=lambda _: setup_calls.append("gateway"))
-    client.setCacheDuration = Mock()
-    client.initWithExternalOAuth = Mock(
-        side_effect=lambda _: setup_calls.append("init")
-    )
+    client.loadViaGateway.side_effect = lambda _: setup_calls.append("gateway")
+    client.initWithExternalOAuth.side_effect = lambda _: setup_calls.append("init")
 
     with (
         patch(
@@ -964,9 +924,6 @@ async def test_offline_gateway_does_not_stretch_the_cache(
         ),
     ]
     client = MockPyViCare(fixtures)
-    client.loadViaGateway = Mock()
-    client.setCacheDuration = Mock()
-    client.initWithExternalOAuth = Mock()
 
     with (
         patch(
@@ -999,9 +956,6 @@ async def test_setup_retries_until_a_device_is_online(
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json", online=False)
     ]
     client = MockPyViCare(fixtures)
-    client.loadViaGateway = Mock()
-    client.setCacheDuration = Mock()
-    client.initWithExternalOAuth = Mock()
 
     with (
         patch(
@@ -1045,10 +999,7 @@ async def test_setup_loads_with_unpaid_package_gateway(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         mock_config_entry.add_to_hass(hass)

@@ -705,6 +705,7 @@ async def test_invalid_model(
             id="valid-model-4-5",
             created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
             display_name="Valid Model 4-5",
+            lifecycle="active",
         ),
     ):
         options = await hass.config_entries.subentries.async_configure(

@@ -7,7 +7,12 @@ from typing import Any, override
 
 from adguardhome import AdGuardHome, Stats
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,30 +50,36 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
     AdGuardHomeEntityDescription(
         key="dns_queries",
         translation_key="dns_queries",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="queries",
         value_fn=lambda adguard: _stat(adguard, lambda stats: stats.dns_queries),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_filtering",
         translation_key="dns_queries_blocked",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="queries",
         value_fn=lambda adguard: _stat(adguard, lambda stats: stats.blocked_filtering),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_percentage",
         translation_key="dns_queries_blocked_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
         value_fn=lambda adguard: _stat(adguard, lambda stats: stats.blocked_percentage),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_parental",
         translation_key="parental_control_blocked",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: _stat(adguard, lambda stats: stats.blocked_parental),
     ),
     AdGuardHomeEntityDescription(
         key="blocked_safebrowsing",
         translation_key="safe_browsing_blocked",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: _stat(
             adguard, lambda stats: stats.blocked_safebrowsing
@@ -77,6 +88,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
     AdGuardHomeEntityDescription(
         key="enforced_safesearch",
         translation_key="safe_searches_enforced",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: _stat(
             adguard, lambda stats: stats.enforced_safesearch
@@ -85,7 +97,10 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
     AdGuardHomeEntityDescription(
         key="average_speed",
         translation_key="average_processing_speed",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_display_precision=2,
         value_fn=lambda adguard: _stat(
             adguard,
             lambda stats: stats.avg_processing_time / timedelta(milliseconds=1),
@@ -94,6 +109,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
     AdGuardHomeEntityDescription(
         key="rules_count",
         translation_key="rules_count",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="rules",
         value_fn=_rules_count,
         entity_registry_enabled_default=False,
@@ -143,7 +159,4 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
     @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
-        value = await self.entity_description.value_fn(self.adguard)
-        self._attr_native_value = value
-        if isinstance(value, float):
-            self._attr_native_value = f"{value:.2f}"
+        self._attr_native_value = await self.entity_description.value_fn(self.adguard)
