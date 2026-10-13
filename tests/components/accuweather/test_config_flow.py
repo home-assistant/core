@@ -51,8 +51,14 @@ async def test_invalid_api_key(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+    mock_accuweather_client.async_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_api_error(
@@ -74,8 +80,14 @@ async def test_api_error(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_accuweather_client.async_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_requests_exceeded_error(
@@ -97,8 +109,14 @@ async def test_requests_exceeded_error(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "requests_exceeded"}
+
+    mock_accuweather_client.async_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_integration_already_exists(

@@ -148,8 +148,29 @@ async def test_flow_fails(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result4["errors"] == {"base": base_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_ferry.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Ekerö",
+                CONF_TO: "Slagsta",
+                CONF_TIME: "00:00",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

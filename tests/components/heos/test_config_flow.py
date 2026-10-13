@@ -72,10 +72,15 @@ async def test_cannot_connect_shows_error_form(
     assert result["step_id"] == "user"
     errors = result["errors"]
     assert errors is not None
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert errors[CONF_HOST] == "cannot_connect"
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
+
+    controller.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_create_entry_when_host_valid(
@@ -254,6 +259,34 @@ async def test_discovery_updates(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
+async def test_discovery_does_not_update_while_connected(
+    hass: HomeAssistant,
+    discovery_data_bedroom: SsdpServiceInfo,
+    controller: MockHeos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery keeps the current host while connected to it."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.mock_set_connection_state(ConnectionState.CONNECTED)
+
+    # A device that has just rejoined the network reports an incomplete host list,
+    # without the configured host, and the player that is momentarily missing is
+    # not in the player list either.
+    controller.mock_set_players({1: controller.players[1]})
+    host = HeosHost("Player", "Model", None, None, "127.0.0.2", NetworkType.WIRED, True)
+    controller.get_system_info.return_value = HeosSystem(None, host, [host])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_zeroconf_discovery(

@@ -304,10 +304,10 @@ async def test_deprecated_version_is_rejected_and_flow_recovery(
     assert mock_setup_entry.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_deprecated_lhm_client")
 async def test_reauth_deprecated_version_is_rejected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_deprecated_lhm_client: AsyncMock,
 ) -> None:
     """Test that reauth does not complete for a deprecated LHM version."""
     mock_config_entry.add_to_hass(hass)
@@ -320,6 +320,16 @@ async def test_reauth_deprecated_version_is_rejected(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "deprecated_version"}
     assert mock_config_entry.data == VALID_CONFIG
+
+    mock_deprecated_lhm_client.get_data.return_value = replace(
+        mock_deprecated_lhm_client.get_data.return_value, is_deprecated_version=False
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

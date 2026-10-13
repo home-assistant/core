@@ -1,6 +1,6 @@
 """Test the Rainforest Eagle config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.rainforest_eagle.const import (
@@ -12,9 +12,38 @@ from homeassistant.components.rainforest_eagle.const import (
     TYPE_EAGLE_200,
 )
 from homeassistant.components.rainforest_eagle.data import CannotConnect, InvalidAuth
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+
+async def _async_configure_success(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlowResult:
+    """Configure the user step with a connected EAGLE-200 meter."""
+    with (
+        patch(
+            "aioeagle.EagleHub.get_device_list",
+            return_value=[
+                MagicMock(hardware_address="meter-1", connection_status="Connected")
+            ],
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+        await hass.async_block_till_done()
+    return result
 
 
 async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None:
@@ -107,8 +136,10 @@ async def test_form_eagle_200_meters_none_connected(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_meters_connected"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_eagle_200_no_meters(hass: HomeAssistant) -> None:
@@ -139,8 +170,10 @@ async def test_form_eagle_200_no_meters(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_meters_connected"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_eagle_100(hass: HomeAssistant) -> None:
@@ -235,8 +268,10 @@ async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown_device_type"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unsupported_device_type(hass: HomeAssistant) -> None:
@@ -262,8 +297,10 @@ async def test_form_unsupported_device_type(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_device_type"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
@@ -289,8 +326,10 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -313,8 +352,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -337,5 +378,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await _async_configure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY

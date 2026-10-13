@@ -100,8 +100,13 @@ async def test_user_flow_tv_requires_emitter_or_receiver(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_infrared_entity"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures(

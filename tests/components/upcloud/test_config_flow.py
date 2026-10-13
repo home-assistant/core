@@ -48,8 +48,14 @@ async def test_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    requests_mock.request(ANY, "/1.3/account", text='{"account":{"username":"user"}}')
+    requests_mock.request(ANY, "/1.3/server", text='{"servers": {"server":[]}}')
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_login_error(
@@ -79,8 +85,14 @@ async def test_login_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
+
+    requests_mock.request(ANY, "/1.3/account", text='{"account":{"username":"user"}}')
+    requests_mock.request(ANY, "/1.3/server", text='{"servers": {"server":[]}}')
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_success(

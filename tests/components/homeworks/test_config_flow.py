@@ -162,11 +162,22 @@ async def test_user_flow_credentials_password_only(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "need_username_with_password"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+            CONF_USERNAME: "username",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-@pytest.mark.usefixtures("mock_setup_entry")
+
+@pytest.mark.usefixtures("mock_homeworks", "mock_setup_entry")
 async def test_user_flow_already_exists(
     hass: HomeAssistant, mock_empty_config_entry: MockConfigEntry
 ) -> None:
@@ -200,8 +211,17 @@ async def test_user_flow_already_exists(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_controller_id"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.2",
+            CONF_NAME: "Other controller",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -236,9 +256,19 @@ async def test_user_flow_cannot_connect(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "user"
+
+    mock_homeworks.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_flow(
@@ -325,8 +355,17 @@ async def test_reconfigure_flow_flow_duplicate(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_host_port"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.3",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_flow_flow_no_change(
@@ -394,8 +433,19 @@ async def test_reconfigure_flow_credentials_password_only(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "need_username_with_password"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.2",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+            CONF_USERNAME: "username",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_options_add_light_flow(
@@ -715,8 +765,17 @@ async def test_options_add_keypad_with_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_addr"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDR: "[02:08:03:01]",
+            CONF_NAME: "Hall Keypad",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_edit_light_no_lights_flow(
@@ -940,8 +999,18 @@ async def test_options_add_button_flow_duplicate(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_number"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "Dim down",
+            CONF_NUMBER: 4,
+            CONF_RELEASE_DELAY: 0.2,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_edit_button_flow(

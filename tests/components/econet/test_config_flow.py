@@ -27,7 +27,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
         patch(
             "pyeconet.EcoNetApiInterface.login",
             side_effect=InvalidCredentialsError(),
-        ),
+        ) as mock_login,
         patch("homeassistant.components.econet.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -40,10 +40,20 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {
             "base": "invalid_auth",
         }
+
+        mock_login.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_EMAIL: "admin@localhost.com",
+                CONF_PASSWORD: "password0",
+            },
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_generic_error_from_library(hass: HomeAssistant) -> None:
@@ -59,7 +69,7 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
         patch(
             "pyeconet.EcoNetApiInterface.login",
             side_effect=PyeconetError(),
-        ),
+        ) as mock_login,
         patch("homeassistant.components.econet.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -72,10 +82,20 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {
             "base": "cannot_connect",
         }
+
+        mock_login.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_EMAIL: "admin@localhost.com",
+                CONF_PASSWORD: "password0",
+            },
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_auth_worked(hass: HomeAssistant) -> None:

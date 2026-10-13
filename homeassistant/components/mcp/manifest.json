@@ -1,6 +1,6 @@
 {
   "domain": "mcp",
-  "name": "Model Context Protocol",
+  "name": "Model Context Protocol Client",
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

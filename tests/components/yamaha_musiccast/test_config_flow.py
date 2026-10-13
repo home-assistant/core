@@ -1,6 +1,7 @@
 """Test config flow."""
 
 from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
@@ -19,6 +20,16 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_valid_device_info() -> Generator[None]:
+    """Patch getting valid device info from musiccast API."""
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        return_value={"system_id": "1234567890", "model_name": "MC20"},
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -133,9 +144,10 @@ def mock_empty_discovery_information():
 # User Flows
 
 
-async def test_user_input_device_not_found(
-    hass: HomeAssistant, mock_get_device_info_mc_exception
-) -> None:
+@pytest.mark.usefixtures(
+    "mock_get_device_info_mc_exception", "mock_valid_discovery_information"
+)
+async def test_user_input_device_not_found(hass: HomeAssistant) -> None:
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -148,13 +160,20 @@ async def test_user_input_device_not_found(
         {"host": "none"},
     )
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_valid_device_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "127.0.0.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_user_input_non_yamaha_device_found(
-    hass: HomeAssistant, mock_get_device_info_invalid
-) -> None:
+
+@pytest.mark.usefixtures(
+    "mock_get_device_info_invalid", "mock_valid_discovery_information"
+)
+async def test_user_input_non_yamaha_device_found(hass: HomeAssistant) -> None:
     """Test when device does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -167,8 +186,14 @@ async def test_user_input_non_yamaha_device_found(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_musiccast_device"}
+
+    with _patch_valid_device_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "127.0.0.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_input_device_already_existing(
@@ -195,9 +220,10 @@ async def test_user_input_device_already_existing(
     assert result2["reason"] == "already_configured"
 
 
-async def test_user_input_unknown_error(
-    hass: HomeAssistant, mock_get_device_info_exception
-) -> None:
+@pytest.mark.usefixtures(
+    "mock_get_device_info_exception", "mock_valid_discovery_information"
+)
+async def test_user_input_unknown_error(hass: HomeAssistant) -> None:
     """Test when device info raises an unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -210,8 +236,14 @@ async def test_user_input_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_valid_device_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "127.0.0.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_input_device_found(

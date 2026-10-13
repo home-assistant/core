@@ -40,6 +40,7 @@ from .const import (
     MOCK_ZEROCONF_SERVICE_INFO,
     NAME,
     NAME2,
+    PAIR_CHALLENGE,
     PORTLESS_HOST,
     UNIQUE_ID,
     VOLUME_STEP,
@@ -337,7 +338,7 @@ async def test_user_serial_number_already_exists(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "existing_config_entry_found"}
 
 
-@pytest.mark.usefixtures("vizio_no_unique_id")
+@pytest.mark.usefixtures("vizio_no_unique_id", "vizio_connect", "vizio_bypass_setup")
 async def test_user_error_on_could_not_connect(hass: HomeAssistant) -> None:
     """Test with could_not_connect during user setup due to no connectivity."""
     result = await hass.config_entries.flow.async_init(
@@ -351,11 +352,20 @@ async def test_user_error_on_could_not_connect(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.vizio.config_flow.Vizio.get_serial_number",
+        AsyncMock(return_value=UNIQUE_ID),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_VALID_TV_CONFIG
+        )
 
-@pytest.mark.usefixtures("vizio_cant_connect")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("vizio_cant_connect", "vizio_bypass_setup")
 async def test_user_error_on_could_not_connect_invalid_token(
     hass: HomeAssistant,
 ) -> None:
@@ -371,8 +381,17 @@ async def test_user_error_on_could_not_connect_invalid_token(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.vizio.config_flow.Vizio.ping_auth",
+        AsyncMock(return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_VALID_TV_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures(
@@ -428,8 +447,29 @@ async def test_user_start_pairing_failure(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.begin_pair",
+            return_value=PAIR_CHALLENGE,
+        ),
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.finish_pair",
+            return_value=ACCESS_TOKEN,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_TV_CONFIG_NO_TOKEN
+        )
+        assert result["step_id"] == "pair_tv"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_PIN_CONFIG
+        )
+    assert result["step_id"] == "pairing_complete"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures(
@@ -456,8 +496,19 @@ async def test_user_invalid_pin(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair_tv"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_PIN: "complete_pairing_failed"}
+
+    with patch(
+        "homeassistant.components.vizio.config_flow.Vizio.finish_pair",
+        return_value=ACCESS_TOKEN,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_PIN_CONFIG
+        )
+    assert result["step_id"] == "pairing_complete"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures(
@@ -761,8 +812,28 @@ async def test_reauth_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.begin_pair",
+            return_value=PAIR_CHALLENGE,
+        ),
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.finish_pair",
+            return_value=ACCESS_TOKEN,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["step_id"] == "pair_tv"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_PIN_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.usefixtures("vizio_bypass_setup", "vizio_connect")
@@ -882,7 +953,7 @@ async def test_reconfigure_flow_wrong_device(hass: HomeAssistant) -> None:
     assert entry.data[CONF_HOST] == HOST
 
 
-@pytest.mark.usefixtures("vizio_bypass_setup", "vizio_no_unique_id")
+@pytest.mark.usefixtures("vizio_bypass_setup", "vizio_no_unique_id", "vizio_connect")
 async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test reconfigure flow shows an error when the device is unreachable."""
     entry = MockConfigEntry(
@@ -898,8 +969,18 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.vizio.config_flow.Vizio.get_serial_number",
+        AsyncMock(return_value=UNIQUE_ID),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: HOST2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures(
@@ -928,7 +1009,9 @@ async def test_user_flow_resolves_host_without_port(hass: HomeAssistant) -> None
     assert result["result"].unique_id == UNIQUE_ID
 
 
-@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+@pytest.mark.usefixtures(
+    "vizio_connect", "vizio_bypass_setup", "vizio_guess_device_type"
+)
 async def test_user_flow_unresolvable_host_errors(hass: HomeAssistant) -> None:
     """Test an unresolvable host surfaces as a cannot_determine_port error."""
     with patch(
@@ -947,8 +1030,18 @@ async def test_user_flow_unresolvable_host_errors(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "cannot_determine_port"}
+
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_resolve_host",
+        AsyncMock(return_value=HOST),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**MOCK_SPEAKER_CONFIG, CONF_HOST: PORTLESS_HOST},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")

@@ -100,8 +100,18 @@ async def test_form_invalid_auth(
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> None:
@@ -120,8 +130,18 @@ async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> N
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(
@@ -176,8 +196,17 @@ async def test_reauth_invalid_auth(
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_wrong_account(

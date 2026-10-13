@@ -164,8 +164,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+            return_value=TEST_SYSTEM_INFO,
+        ),
+        patch(
+            "homeassistant.components.volumio.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_exception(hass: HomeAssistant) -> None:
@@ -184,8 +201,25 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+            return_value=TEST_SYSTEM_INFO,
+        ),
+        patch(
+            "homeassistant.components.volumio.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery(hass: HomeAssistant) -> None:

@@ -78,5 +78,22 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.advantage_air.config_flow.advantage_air.async_get",
+            new=AsyncMock(return_value=TEST_SYSTEM_DATA),
+        ),
+        patch(
+            "homeassistant.components.advantage_air.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

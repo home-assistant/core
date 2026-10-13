@@ -1,5 +1,7 @@
 """Tests for the Tami4 config flow."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from Tami4EdgeAPI import exceptions
 
@@ -31,10 +33,13 @@ async def test_step_user_valid_number(
     assert result["errors"] == {}
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_step_user_invalid_number(
-    hass: HomeAssistant, mock_request_otp, mock__get_devices_metadata
-) -> None:
+@pytest.mark.usefixtures(
+    "mock_setup_entry",
+    "mock_request_otp",
+    "mock_submit_otp",
+    "mock__get_devices_metadata",
+)
+async def test_step_user_invalid_number(hass: HomeAssistant) -> None:
     """Test user step with invalid phone number."""
 
     result = await hass.config_entries.flow.async_init(
@@ -50,8 +55,20 @@ async def test_step_user_invalid_number(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_phone"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PHONE: "+972555555555"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"otp": "123456"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -59,9 +76,11 @@ async def test_step_user_invalid_number(
     [(Exception, "unknown"), (exceptions.OTPFailedException, "cannot_connect")],
     indirect=["mock_request_otp"],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_submit_otp", "mock__get_devices_metadata"
+)
 async def test_step_user_exception(
-    hass: HomeAssistant, mock_request_otp, mock__get_devices_metadata, expected_error
+    hass: HomeAssistant, mock_request_otp: MagicMock, expected_error: str
 ) -> None:
     """Test user step with exception."""
 
@@ -78,8 +97,21 @@ async def test_step_user_exception(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
+
+    mock_request_otp.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PHONE: "+972555555555"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"otp": "123456"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -154,13 +186,13 @@ async def test_step_otp_valid_device_no_name(hass: HomeAssistant) -> None:
     ],
     indirect=["mock_submit_otp"],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_request_otp", "mock__get_devices_metadata"
+)
 async def test_step_otp_exception(
     hass: HomeAssistant,
-    mock_request_otp,
-    mock_submit_otp,
-    mock__get_devices_metadata,
-    expected_error,
+    mock_submit_otp: MagicMock,
+    expected_error: str,
 ) -> None:
     """Test user step with valid phone number."""
 
@@ -185,5 +217,11 @@ async def test_step_otp_exception(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
+
+    mock_submit_otp.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"otp": "123456"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

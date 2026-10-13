@@ -146,10 +146,11 @@ Every check has a code following the
 | `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
 | `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
+| `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
+| `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
-
 
 ## `home_assistant_logger` checker
 
@@ -347,6 +348,35 @@ When the alias lives in `__init__.py`, import it in the coordinator under
 coordinator that passes `config_entry` to `super().__init__` doesn't need to
 assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
+
+
+## `home_assistant_coordinator_entity_available` checker
+
+Checks `available` overrides on coordinator entities.
+
+### `W7449`: `home-assistant-coordinator-entity-available`
+
+`CoordinatorEntity.available` returns `coordinator.last_update_success`, so the
+entity becomes unavailable when an update fails. An override that takes its
+availability only from `coordinator.data` keeps the entity available with the
+data of the last successful update, because the coordinator keeps that data
+when an update fails:
+
+```python
+@property
+def available(self) -> bool:
+    return super().available and self.device_id in self.coordinator.data
+```
+
+Properties and methods of the entity and the coordinator are followed, so
+`self.data` or `self.coordinator.get_device(...)` reading `coordinator.data`
+count as coordinator data.
+
+Overrides with a source of their own, such as a client, a device, a websocket
+or `_attr_available`, are not flagged. Neither are entities of a push
+coordinator, one that never sets an `update_interval` and gets its data
+through `async_set_updated_data`: its `last_update_success` doesn't show
+whether the device is reachable.
 
 
 ## `home_assistant_log_and_raise` checker
@@ -908,7 +938,8 @@ Detects services registered inside `async_setup_entry` rather than
 Services should be registered in `async_setup` so they are available for
 automation validation even when no config entry is loaded. Registrations
 inside helper functions that are called from `async_setup_entry` are
-caught too.
+caught too, as are calls to the conventional `async_setup_services` helper
+from `services.py`.
 
 See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
 
@@ -919,6 +950,11 @@ Ensures `HomeAssistantError` and its subclasses use the translation system
 (`translation_domain`, `translation_key`) instead of hardcoded English
 strings. Also verifies that referenced translation keys exist in the
 integration's `strings.json` and that placeholders match.
+
+`translation_domain` may be a string literal, the integration's own `DOMAIN`,
+or a constant that resolves to a string, such as
+`from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN`. Keys
+and placeholders are then checked against that domain's `strings.json`.
 
 ### `W7417`: `home-assistant-exception-not-translated`
 
@@ -1255,3 +1291,15 @@ Detects config flow classes that set `CONNECTION_CLASS`.
 
 `CONNECTION_CLASS` is no longer used by Home Assistant and should not be set
 on config flows. Remove the attribute.
+
+## `home-assistant-step_id-match-method` checker
+
+Detects config flows using a `step_id` parameter different than the method it is
+currently in.
+
+### `W7443`: `home-assistant-step_id-match-method`
+
+Check the `step_id` parameter for all calls to `async_show_form`,
+`async_external_step`, `async_show_progress` and `async_show_menu`.
+The `step_id` parameter should be same as the method it is in.
+For example: `step_id="user"` should be used in `async_step_user`

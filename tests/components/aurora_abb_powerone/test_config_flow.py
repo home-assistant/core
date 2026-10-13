@@ -172,6 +172,37 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
             result["flow_id"],
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_clientclose.mock_calls) == 1
+
+    with (
+        patch(
+            "aurorapy.client.AuroraSerialClient.connect",
+            return_value=None,
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.serial_number",
+            return_value="9876543",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.version",
+            return_value="9.8.7.6",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.pn",
+            return_value="A.B.C",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.firmware",
+            return_value="1.234",
+        ),
+        patch(
+            "homeassistant.components.aurora_abb_powerone.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

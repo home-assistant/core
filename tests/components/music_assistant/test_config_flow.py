@@ -909,9 +909,9 @@ async def test_reauth_with_manual_token(
         (InvalidToken("invalid_token"), "auth_failed"),
     ],
 )
+@pytest.mark.usefixtures("mock_get_server_info")
 async def test_auth_manual_invalid_token(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
     exception: Exception,
     error_key: str,
 ) -> None:
@@ -937,8 +937,21 @@ async def test_auth_manual_invalid_token(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_manual"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error_key}
+
+    with (
+        patch("homeassistant.components.music_assistant.config_flow._test_connection"),
+        patch(
+            "homeassistant.components.music_assistant.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "test_auth_token"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

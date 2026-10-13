@@ -1307,6 +1307,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
+        ClassTypeHintMatch(
+            base_class="RestoreClimate",
+            matches=[
+                TypeHintMatch(
+                    function_name="extra_restore_state_data",
+                    return_type="ClimateExtraStoredData",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_last_climate_data",
+                    return_type=["ClimateExtraStoredData", None],
+                ),
+            ],
+        ),
     ],
     Platform.COVER: [
         ClassTypeHintMatch(

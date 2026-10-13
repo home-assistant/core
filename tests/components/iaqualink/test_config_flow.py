@@ -110,8 +110,15 @@ async def test_with_invalid_credentials(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login,
+    ):
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -139,8 +146,15 @@ async def test_cannot_connect_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login,
+    ):
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_with_existing_config(
@@ -287,8 +301,26 @@ async def test_reauth_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
@@ -324,5 +356,23 @@ async def test_reauth_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

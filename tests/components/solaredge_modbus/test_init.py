@@ -23,6 +23,7 @@ from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
     CONF_SILENT_BLOCKS,
     DOMAIN,
+    READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
@@ -1276,3 +1277,30 @@ async def test_only_a_block_a_check_reloads_for_is_kept(
     await _tick_attachment_check(hass, freezer)
 
     assert mock_config_entry.data[CONF_SILENT_BLOCKS] == ["power_control"]
+
+
+async def test_reads_wait_longer_than_the_probe(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Polls get a longer timeout, the probe keeps the link's default.
+
+    Over Wi-Fi some answers come late, and one late answer fails a whole poll.
+    The probe waits out a full timeout for every block the inverter never
+    answers, so raising it there would only make setting up slower.
+    """
+    during_probe: list[float | None] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        during_probe.append(mock_modbus_unit.required_timeout)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        await _setup(hass, mock_config_entry)
+
+    assert during_probe == [None]
+    assert mock_modbus_unit.required_timeout == READ_TIMEOUT

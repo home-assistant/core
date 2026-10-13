@@ -110,7 +110,7 @@ async def test_user(hass: HomeAssistant, service) -> None:
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_user_connect_error(hass: HomeAssistant, service) -> None:
+async def test_user_connect_error(hass: HomeAssistant, service: Mock) -> None:
     """Test user step with connection failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -145,8 +145,20 @@ async def test_user_connect_error(hass: HomeAssistant, service) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "config"}
+
+    service.return_value.login_try_port = Mock(return_value=True)
+    service.return_value.get_info = Mock(return_value=ROUTER_INFOS)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_incomplete_info(hass: HomeAssistant, service) -> None:

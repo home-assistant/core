@@ -44,7 +44,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_password(hass: HomeAssistant) -> None:
+async def test_invalid_password(hass: HomeAssistant, client: AsyncMock) -> None:
     """Test that an invalid password throws an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -62,8 +62,26 @@ async def test_invalid_password(hass: HomeAssistant) -> None:
                 CONF_PORT: 8080,
             },
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with (
+        patch(
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "password",
+                CONF_PORT: 8080,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

@@ -129,7 +129,7 @@ def _status_error(
     )
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_models")
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -160,8 +160,13 @@ async def test_user_step_proxy_errors(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

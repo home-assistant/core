@@ -530,6 +530,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         super().__init__(hass, entry, device, update_interval)
 
         self.connected = False
+        self.last_seen: datetime | None = None
         # Set once BLE scanner setup has been attempted after connecting.
         self.ble_scanner_setup_done = asyncio.Event()
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
@@ -828,6 +829,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self._async_handle_rpc_device_online()
         elif update_type is RpcUpdateType.INITIALIZED:
             self._ota_reboot_deadline = None
+            self.last_seen = dt_util.utcnow()
             self.config_entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
@@ -843,6 +845,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             # Make sure entities are marked as unavailable
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.STATUS:
+            self.last_seen = dt_util.utcnow()
             self.async_set_updated_data(None)
             if self.sleep_period:
                 update_device_fw_info(self.hass, self.device, self.config_entry)

@@ -1,5 +1,7 @@
 """Test the motionEye config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
 from motioneye_client.client import (
@@ -29,6 +31,30 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
 from tests.common import MockConfigEntry
+
+USER_INPUT = {
+    CONF_URL: TEST_URL,
+    CONF_ADMIN_USERNAME: "admin-username",
+    CONF_ADMIN_PASSWORD: "admin-password",
+    CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+    CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+}
+
+
+@contextmanager
+def _patch_client_and_setup(mock_client: AsyncMock) -> Generator[None]:
+    """Patch the motionEye client and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.motioneye.MotionEyeClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.motioneye.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -187,9 +213,17 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_client.async_client_close.called
+
+    mock_client.async_client_login = AsyncMock()
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_invalid_url(hass: HomeAssistant) -> None:
@@ -217,8 +251,15 @@ async def test_user_invalid_url(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_url"}
+
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_cannot_connect(hass: HomeAssistant) -> None:
@@ -249,9 +290,17 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_client.async_client_close.called
+
+    mock_client.async_client_login = AsyncMock()
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_request_error(hass: HomeAssistant) -> None:
@@ -280,9 +329,17 @@ async def test_user_request_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     assert mock_client.async_client_close.called
+
+    mock_client.async_client_login = AsyncMock()
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant) -> None:

@@ -147,8 +147,15 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=new_options
         )
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd",
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=new_options
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
 
     # ValueError Case
     with patch(

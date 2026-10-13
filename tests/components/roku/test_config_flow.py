@@ -90,6 +90,7 @@ async def test_form(hass: HomeAssistant, mock_roku_config_flow: MagicMock) -> No
     assert result["result"].unique_id == "1GU48T017973"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
@@ -105,8 +106,14 @@ async def test_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_roku_config_flow.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(

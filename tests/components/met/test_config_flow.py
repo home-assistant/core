@@ -118,8 +118,13 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["name"] == "already_configured"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**test_data, CONF_LATITUDE: 1, CONF_LONGITUDE: 1},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_onboarding_step(hass: HomeAssistant) -> None:

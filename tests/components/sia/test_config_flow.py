@@ -235,10 +235,10 @@ def mock_sia() -> Generator[None]:
 )
 async def test_validation_errors_user(
     hass: HomeAssistant,
-    flow_at_user_step,
-    field,
-    value,
-    error,
+    flow_at_user_step: ConfigFlowResult,
+    field: str,
+    value: str | int,
+    error: str,
 ) -> None:
     """Test we handle the different invalid inputs, in the user flow."""
     config = BASIC_CONFIG.copy()
@@ -246,8 +246,11 @@ async def test_validation_errors_user(
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result_err["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_err["errors"] == {"base": error}
+
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(flow_id, BASIC_CONFIG)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -263,10 +266,10 @@ async def test_validation_errors_user(
 )
 async def test_validation_errors_account(
     hass: HomeAssistant,
-    flow_at_user_step,
-    field,
-    value,
-    error,
+    flow_at_user_step: ConfigFlowResult,
+    field: str,
+    value: str | int,
+    error: str,
 ) -> None:
     """Test we handle the different invalid inputs, in the add_account flow."""
     flow_at_add_account_step = await hass.config_entries.flow.async_configure(
@@ -277,11 +280,18 @@ async def test_validation_errors_account(
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result_err["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_err["errors"] == {"base": error}
 
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, ADDITIONAL_ACCOUNT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_unknown_user(hass: HomeAssistant, flow_at_user_step) -> None:
+
+async def test_unknown_user(
+    hass: HomeAssistant, flow_at_user_step: ConfigFlowResult
+) -> None:
     """Test unknown exceptions."""
     flow_id = flow_at_user_step["flow_id"]
     with patch(
@@ -292,12 +302,17 @@ async def test_unknown_user(hass: HomeAssistant, flow_at_user_step) -> None:
         result_err = await hass.config_entries.flow.async_configure(flow_id, config)
         assert result_err
         assert result_err["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == HUB_SCHEMA
 
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(flow_id, config)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_unknown_account(hass: HomeAssistant, flow_at_user_step) -> None:
+
+async def test_unknown_account(
+    hass: HomeAssistant, flow_at_user_step: ConfigFlowResult
+) -> None:
     """Test unknown exceptions."""
     flow_at_add_account_step = await hass.config_entries.flow.async_configure(
         flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
@@ -311,9 +326,12 @@ async def test_unknown_account(hass: HomeAssistant, flow_at_user_step) -> None:
         result_err = await hass.config_entries.flow.async_configure(flow_id, config)
         assert result_err
         assert result_err["step_id"] == "add_account"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
+
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(flow_id, config)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_not_loaded(hass: HomeAssistant) -> None:

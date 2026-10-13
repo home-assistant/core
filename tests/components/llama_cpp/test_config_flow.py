@@ -156,10 +156,20 @@ async def test_config_flow_fail_completion(
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": expected_error}
 
     assert len(mock_setup.mock_calls) == 0
+
+    mock_completion.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-4",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_no_streaming(
@@ -398,9 +408,9 @@ async def test_config_flow_model_selection_fallbacks(
         assert chat_model_key.description["suggested_value"] == "my-custom-model-1"
 
 
+@pytest.mark.usefixtures("mock_setup")
 async def test_config_flow_connection_errors(
     hass: HomeAssistant,
-    mock_setup: AsyncMock,
 ) -> None:
     """Test config flow handles connection validation errors."""
     result = await hass.config_entries.flow.async_init(
@@ -456,8 +466,26 @@ async def test_config_flow_connection_errors(
             },
         )
         assert result4["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result4["errors"] == {"base": "api_error"}
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BASE_URL: "http://localhost:8080/v1",
+        },
+    )
+    assert result5["type"] is FlowResultType.FORM
+    assert result5["step_id"] == "model"
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-4",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -535,9 +563,9 @@ async def test_reconfiguring_conversation_subentry_connection_error(
         assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_reconfiguring_conversation_subentry_validation_error(
     hass: HomeAssistant,
-    setup_integration: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfiguring subentry shows form with error if model validation fails."""
@@ -562,10 +590,23 @@ async def test_reconfiguring_conversation_subentry_validation_error(
             },
         )
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "api_error"}
 
+    result3 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_CHAT_MODEL: "gpt-4",
+            CONF_PROMPT: "New prompt",
+        },
+    )
+    await hass.async_block_till_done()
 
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_setup")
 async def test_config_flow_unexpected_exception(
     hass: HomeAssistant,
 ) -> None:
@@ -587,5 +628,23 @@ async def test_config_flow_unexpected_exception(
             },
         )
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "unknown"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BASE_URL: "http://localhost:8080/v1",
+        },
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "model"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-4",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY

@@ -223,8 +223,18 @@ async def test_config_flow_manual_discover_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "discovery_error"}
+
+    with patch(
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
+        return_value=TEST_DISCOVER_1_RECEIVER,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_manual_host_no_serial(hass: HomeAssistant) -> None:

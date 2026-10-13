@@ -85,8 +85,18 @@ async def test_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        URL_STATUS, json=FIXTURE_STATUS, headers={"Content-Type": CONTENT_TYPE_JSON}
+    )
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -114,8 +124,18 @@ async def test_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        URL_STATUS, json=FIXTURE_STATUS, headers={"Content-Type": CONTENT_TYPE_JSON}
+    )
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_full_flow_implementation(
@@ -306,8 +326,18 @@ async def test_hassio_connection_error(
     assert result
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://mock-adguard:3000/control/status",
+        json=FIXTURE_STATUS,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:

@@ -126,14 +126,12 @@ async def test_config_flow_exceptions(
     exception_type: Exception,
     error_base: str,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     mock_ssh_connection: SSHClientConnectionMock,
 ) -> None:
-    """Test successful failure of already added config entry."""
+    """Test config flow errors and recovering from them."""
 
     mock_ssh_connection._sftp._mock_chdir.side_effect = exception_type("Error message.")
 
-    # config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -144,29 +142,21 @@ async def test_config_flow_exceptions(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] and result["errors"]["base"] == error_base
 
-    # Recover from the error
     mock_ssh_connection._sftp._mock_chdir.side_effect = None
-
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["step_id"] == "user"
-
+    # The uploaded key file is removed after an error, so recover with the password
+    user_input = USER_INPUT.copy()
+    del user_input[CONF_PRIVATE_KEY_FILE]
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"], user_input
     )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
+@pytest.mark.usefixtures("mock_ssh_connection")
 async def test_config_entry_error(hass: HomeAssistant) -> None:
     """Test config flow with raised `KeyImportError`."""
 
@@ -193,8 +183,12 @@ async def test_config_entry_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert "errors" in result and result["errors"]["base"] == "key_or_password_needed"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("current_request_with_host")
