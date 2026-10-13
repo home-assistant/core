@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 import openai
 from openai.types.chat import (
     ChatCompletion,
@@ -15,7 +15,12 @@ from openai.types.chat import (
     ChatCompletionMessageToolCall,
 )
 from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
+from openai.types.chat.chat_completion_chunk import (
+    Choice as ChunkChoice,
+    ChoiceDelta,
+    ChoiceDeltaToolCall,
+    ChoiceDeltaToolCallFunction,
+)
 from openai.types.chat.chat_completion_message_tool_call import Function
 from openai.types.completion_usage import CompletionUsage
 import pytest
@@ -600,24 +605,133 @@ async def test_streaming_response_redundant_role(
     assert content[1].content == "Hello world"
 
 
+def _chunk(delta: ChoiceDelta, finish_reason: str | None = None) -> ChatCompletionChunk:
+    """Return a streamed chunk with one choice."""
+    return ChatCompletionChunk(
+        id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+        choices=[ChunkChoice(index=0, delta=delta, finish_reason=finish_reason)],
+        created=1700000000,
+        model="gpt-3.5-turbo-0613",
+        object="chat.completion.chunk",
+    )
+
+
+def _tool_call_delta(
+    index: int, arguments: str, call_id: str | None = None, name: str | None = None
+) -> ChoiceDelta:
+    """Return a delta carrying one piece of a streamed tool call."""
+    return ChoiceDelta(
+        tool_calls=[
+            ChoiceDeltaToolCall(
+                index=index,
+                id=call_id,
+                type="function" if call_id else None,
+                function=ChoiceDeltaToolCallFunction(name=name, arguments=arguments),
+            )
+        ]
+    )
+
+
+@pytest.mark.parametrize(("config_entry_options"), [{CONF_STREAMING: True}])
+async def test_streaming_response_content_in_final_chunk(
+    hass: HomeAssistant,
+    mock_chat_log: MockChatLog,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test content that arrives in the same chunk as finish_reason."""
+
+    async def mock_stream() -> AsyncGenerator[ChatCompletionChunk]:
+        yield _chunk(ChoiceDelta(role="assistant", content="Hello"))
+        yield _chunk(ChoiceDelta(content=" world"), finish_reason="stop")
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            mock_chat_log.conversation_id,
+            Context(),
+            agent_id="conversation.llama_cpp_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello world"
+
+
+@pytest.mark.parametrize(
+    ("config_entry_options"), [{CONF_STREAMING: True, **ASSIST_OPTIONS}]
+)
+async def test_streaming_tool_call_arguments_in_final_chunk(
+    hass: HomeAssistant,
+    mock_chat_log: MockChatLog,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test parallel tool calls whose last arguments arrive with finish_reason."""
+    mock_chat_log.mock_tool_results({"call_1": "value1", "call_2": "value2"})
+
+    async def tool_call_stream() -> AsyncGenerator[ChatCompletionChunk]:
+        yield _chunk(ChoiceDelta(role="assistant"))
+        yield _chunk(_tool_call_delta(0, "", call_id="call_1", name="test_tool"))
+        yield _chunk(_tool_call_delta(0, '{"param1": '))
+        yield _chunk(_tool_call_delta(0, '"call1"}'))
+        yield _chunk(_tool_call_delta(1, "", call_id="call_2", name="test_tool"))
+        yield _chunk(_tool_call_delta(1, '{"param1": '))
+        yield _chunk(_tool_call_delta(1, '"call2"}'), finish_reason="tool_calls")
+
+    async def answer_stream() -> AsyncGenerator[ChatCompletionChunk]:
+        yield _chunk(ChoiceDelta(role="assistant", content="Done"))
+        yield _chunk(ChoiceDelta(), finish_reason="stop")
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=[tool_call_stream(), answer_stream()],
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function twice",
+            mock_chat_log.conversation_id,
+            Context(),
+            agent_id="conversation.llama_cpp_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Done"
+    tool_calls = [
+        tool_call
+        for content in mock_chat_log.content
+        if content.role == "assistant" and content.tool_calls
+        for tool_call in content.tool_calls
+    ]
+    assert [(call.id, call.tool_args) for call in tool_calls] == [
+        ("call_1", {"param1": "call1"}),
+        ("call_2", {"param1": "call2"}),
+    ]
+
+
 @pytest.mark.parametrize(("config_entry_options"), [{CONF_STREAMING: True}])
 @pytest.mark.parametrize(
     ("error", "expected_speech"),
     [
         pytest.param(
-            openai.APIConnectionError(request=httpx.Request(method="POST", url="test")),
+            openai.APIConnectionError(
+                request=httpx2.Request(method="POST", url="test")
+            ),
             "Cannot connect to the server: Connection error.",
             id="connection_error",
         ),
         pytest.param(
-            openai.APITimeoutError(request=httpx.Request(method="POST", url="test")),
+            openai.APITimeoutError(request=httpx2.Request(method="POST", url="test")),
             "Connection timed out: Request timed out.",
             id="timeout",
         ),
         pytest.param(
             openai.APIError(
                 message="An error occurred during streaming",
-                request=httpx.Request(method="POST", url="test"),
+                request=httpx2.Request(method="POST", url="test"),
                 body=None,
             ),
             "API error: An error occurred during streaming",
@@ -691,7 +805,7 @@ async def test_conversation_agent_error(
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         side_effect=openai.APIConnectionError(
-            request=httpx.Request(method="POST", url="test")
+            request=httpx2.Request(method="POST", url="test")
         ),
     ):
         result = await conversation.async_converse(
@@ -714,9 +828,9 @@ async def test_conversation_agent_structured_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test handling of OpenAI API structured errors in conversation entity."""
-    response = httpx.Response(
+    response = httpx2.Response(
         status_code=402,
-        request=httpx.Request(
+        request=httpx2.Request(
             method="POST", url="https://api.openai.com/v1/chat/completions"
         ),
         json={

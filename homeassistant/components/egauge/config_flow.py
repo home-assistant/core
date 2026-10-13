@@ -4,7 +4,7 @@ from typing import Any, override
 
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
 from egauge_async.json.client import EgaugeJsonClient
-from httpx import ConnectError
+from httpx2 import ConnectError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

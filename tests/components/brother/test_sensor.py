@@ -39,7 +39,7 @@ async def test_availability(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when device is offline."""
-    entity_id = "sensor.hl_l2340dw_printer_status"
+    entity_id = "sensor.hl_l2340dw"
     await init_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity_id)

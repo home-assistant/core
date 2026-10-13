@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -50,7 +50,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 pass
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}
-        except AqualinkServiceException, TimeoutError, httpx.HTTPError:
+        except AqualinkServiceException, TimeoutError, httpx2.HTTPError:
             return {"base": "cannot_connect"}
 
         return {}
@@ -104,6 +104,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=(
                 "reconfigure" if self.source == SOURCE_RECONFIGURE else "reauth_confirm"

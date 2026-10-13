@@ -38,6 +38,24 @@ REAUTH_SCHEMA = probatio.Schema(
     }
 )
 
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_APP_SECRET)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+        probatio.Required(CONF_API_URL): SelectSelector(
+            SelectSelectorConfig(
+                options=list(API_URLS),
+                translation_key="api_url",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+)
+
 
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Imou integration."""
@@ -134,5 +152,41 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             description_placeholders={"app_id": reauth_entry.data[CONF_APP_ID]},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            credentials = {
+                CONF_APP_ID: reconfigure_entry.data[CONF_APP_ID],
+                CONF_APP_SECRET: user_input[CONF_APP_SECRET],
+                CONF_API_URL: user_input[CONF_API_URL],
+            }
+            if not (errors := await self._validate_input(credentials)):
+                await self.async_set_unique_id(reconfigure_entry.data[CONF_APP_ID])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_APP_SECRET: user_input[CONF_APP_SECRET],
+                        CONF_API_URL: user_input[CONF_API_URL],
+                    },
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                user_input
+                or {
+                    CONF_APP_SECRET: reconfigure_entry.data[CONF_APP_SECRET],
+                    CONF_API_URL: reconfigure_entry.data[CONF_API_URL],
+                },
+            ),
+            description_placeholders={"app_id": reconfigure_entry.data[CONF_APP_ID]},
             errors=errors,
         )

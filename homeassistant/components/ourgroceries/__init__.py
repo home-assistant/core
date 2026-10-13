@@ -6,8 +6,9 @@ from ourgroceries.exceptions import InvalidLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import OurGroceriesConfigEntry, OurGroceriesDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.TODO]
@@ -23,8 +24,11 @@ async def async_setup_entry(
         await og.login()
     except (TimeoutError, ClientError) as error:
         raise ConfigEntryNotReady from error
-    except InvalidLoginException:
-        return False
+    except InvalidLoginException as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_login",
+        ) from error
 
     coordinator = OurGroceriesDataUpdateCoordinator(hass, entry, og)
     await coordinator.async_config_entry_first_refresh()

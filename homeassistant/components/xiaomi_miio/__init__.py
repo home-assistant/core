@@ -33,7 +33,11 @@ from miio import (
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -466,7 +470,11 @@ async def async_setup_device_entry(
     await async_create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"model": entry.data[CONF_MODEL]},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 

@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, cast, overload, override
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -897,9 +897,11 @@ class EntityPlatform:
 
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
-            del self.entities[entity_id]
-            del self.domain_entities[entity_id]
-            del self.domain_platform_entities[entity_id]
+            # The entity_id may have changed since the entity was added
+            current_entity_id = entity.entity_id
+            del self.entities[current_entity_id]
+            del self.domain_entities[current_entity_id]
+            del self.domain_platform_entities[current_entity_id]
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -1022,32 +1024,35 @@ class EntityPlatform:
 
             device: dr.AnyDeviceEntry | None
             if self.config_entry:
-                if device_info := entity.device_info:
+                device_info = entity.device_info
+                device_info_fields: dict[str, Any]
+                if device_info is None:
+                    device_info_fields = {}
+                elif isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
+                    device_info_fields = device_info.as_dict()
+                else:
+                    # An integration can still describe its device with a plain
+                    # mapping, which its type does not allow. To be deprecated.
+                    device_info_fields = dict(device_info)  # type: ignore[unreachable]
+                # A device info without any field means no device
+                if device_info_fields:
                     dev_reg = dr.async_get(self.hass)
+                    # An explicit parent_device_id of None, as a dynamically built
+                    # device info may carry, means a main device
+                    parent_device_id = device_info_fields.pop("parent_device_id", None)
                     try:
-                        # A device info carrying a parent_device_id registers a child
-                        # device. An explicit None (as a dynamically built device info
-                        # may carry) means a main device, so check `is not None`.
-                        if device_info.get("parent_device_id") is not None:
+                        if parent_device_id is not None:
                             device = dev_reg.async_get_or_create_child(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
-                                **cast("dr.ChildDeviceInfo", device_info),
+                                parent_device_id=parent_device_id,
+                                **device_info_fields,
                             )
                         else:
-                            # An explicit parent_device_id=None means a main device;
-                            # drop the key as async_get_or_create is main-only.
                             device = dev_reg.async_get_or_create(
                                 config_entry_id=self.config_entry.entry_id,
                                 config_subentry_id=config_subentry_id,
-                                **cast(
-                                    "dr.DeviceInfo",
-                                    {
-                                        key: value
-                                        for key, value in device_info.items()
-                                        if key != "parent_device_id"
-                                    },
-                                ),
+                                **device_info_fields,
                             )
                     except (HomeAssistantError, TypeError) as exc:
                         # A TypeError signals a bad key in the device info passed as
@@ -1233,6 +1238,16 @@ class EntityPlatform:
         """
         await self.async_reset()
         self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
+
+    @callback
+    def async_move_entity(self, old_entity_id: str, new_entity_id: str) -> None:
+        """Move an entity whose entity_id has changed to its new entity_id."""
+        for entities in (
+            self.entities,
+            self.domain_entities,
+            self.domain_platform_entities,
+        ):
+            entities[new_entity_id] = entities.pop(old_entity_id)
 
     async def async_remove_entity(self, entity_id: str) -> None:
         """Remove entity id from platform."""

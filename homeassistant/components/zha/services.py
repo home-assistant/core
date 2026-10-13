@@ -38,6 +38,7 @@ from zigpy.typing import (
     UndefinedType as ZigpyUndefinedType,
 )
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -477,7 +478,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             service_name,
-            entity_domain=Platform.LOCK,
+            entity_domain=LOCK_DOMAIN,
             schema=LOCK_CODE_SLOT_SCHEMA,
             func=func,
         )
@@ -486,7 +487,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_SET_LOCK_USER_CODE,
-        entity_domain=Platform.LOCK,
+        entity_domain=LOCK_DOMAIN,
         schema=LOCK_SET_USER_CODE_SCHEMA,
         func="async_set_lock_user_code",
     )

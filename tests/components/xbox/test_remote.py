@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.smartglass.models import CommandResponse, InputKeyType
 from syrupy.assertion import SnapshotAssertion

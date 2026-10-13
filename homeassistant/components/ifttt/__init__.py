@@ -1,50 +1,26 @@
 """Support to trigger Maker IFTTT recipes."""
 
-from http import HTTPStatus
 import json
 import logging
 
 from aiohttp import web
 import probatio
-import pyfttt
-import requests
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_API_KEYS, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_RECEIVED = "ifttt_webhook_received"
 
-ATTR_EVENT = "event"
-ATTR_TARGET = "target"
-ATTR_VALUE1 = "value1"
-ATTR_VALUE2 = "value2"
-ATTR_VALUE3 = "value3"
-
 CONF_KEY = "key"
-
-SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
-SERVICE_TRIGGER = "trigger"
-
-SERVICE_TRIGGER_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_EVENT): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(
-            probatio.EnsureList(), [cv.string]
-        ),
-        probatio.Optional(ATTR_VALUE1): cv.string,
-        probatio.Optional(ATTR_VALUE2): cv.string,
-        probatio.Optional(ATTR_VALUE3): cv.string,
-    }
-)
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -62,42 +38,15 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the IFTTT service component."""
+    async_setup_services(hass)
+
     if DOMAIN not in config:
         return True
 
     api_keys = config[DOMAIN][CONF_KEY]
     if isinstance(api_keys, str):
         api_keys = {"default": api_keys}
-
-    def trigger_service(call: ServiceCall) -> None:
-        """Handle IFTTT trigger service calls."""
-        event = call.data[ATTR_EVENT]
-        targets = call.data.get(ATTR_TARGET, list(api_keys))
-        value1 = call.data.get(ATTR_VALUE1)
-        value2 = call.data.get(ATTR_VALUE2)
-        value3 = call.data.get(ATTR_VALUE3)
-
-        target_keys = {}
-        for target in targets:
-            if target not in api_keys:
-                _LOGGER.error("No IFTTT api key for %s", target)
-                continue
-            target_keys[target] = api_keys[target]
-
-        try:
-            for target, key in target_keys.items():
-                res = pyfttt.send_event(key, event, value1, value2, value3)
-                if res.status_code != HTTPStatus.OK:
-                    _LOGGER.error("IFTTT reported error sending event to %s", target)
-        except requests.exceptions.RequestException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="trigger_failed",
-            ) from err
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, trigger_service, schema=SERVICE_TRIGGER_SCHEMA
-    )
+    hass.data[DATA_API_KEYS] = api_keys
 
     return True
 
