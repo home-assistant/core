@@ -344,9 +344,13 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowed_system_modes]
+        self._evo_modes = {
+            m[SZ_SYSTEM_MODE].value: m for m in evo_device.allowed_system_modes
+        }
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[mode]
+            for m in evo_device.allowed_system_modes
+            if (mode := m[SZ_SYSTEM_MODE]) in TCS_PRESET_TO_HA
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -361,55 +365,38 @@ class EvoController(EvoClimateEntity):
         duration: timedelta | None = None,
         period: timedelta | None = None,
     ) -> None:
-        """Set the system mode, either indefinitely or for a duration/period.
+        """Set the system mode, either indefinitely or for a duration/period."""
 
-        Validation occurs here, instead of in the library, because the library's
-        method uses a slightly different schema (until instead of duration/period).
-        The service schema ensures that duration and period are not both present.
-        """
-
-        tcs_modes = {
-            m[SZ_SYSTEM_MODE].value: m for m in self._evo_device.allowed_system_modes
-        }
-
-        if (mode_info := tcs_modes.get(as_snake_case(mode))) is None:
+        # check the requested mode; not all systems support all modes...
+        if (mode_info := self._evo_modes.get(as_snake_case(mode))) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mode_not_supported",
                 translation_placeholders={SZ_MODE: mode},
             )
 
-        if not mode_info[SZ_CAN_BE_TEMPORARY]:
-            if duration is not None or period is not None:
+        timing_mode: str | None = None
+        until: datetime | None = None
+
+        # service schema makes duration & period mutually exclusive (can be neither)
+        if period is not None:
+            timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
+        elif duration is not None:
+            timing_mode, until = SZ_DURATION, dt_util.now() + duration
+
+        if timing_mode is not None:
+            if not mode_info[SZ_CAN_BE_TEMPORARY]:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="mode_cant_be_temporary",
                     translation_placeholders={SZ_MODE: mode},
                 )
-
-        else:  # will have a timing mode, as can_be_temporary
-            timing_mode = mode_info.get(SZ_TIMING_MODE)
-
-            if timing_mode == SZ_DURATION and period is not None:
+            if mode_info.get(SZ_TIMING_MODE) != timing_mode:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="mode_cant_have_period",
+                    translation_key=f"mode_cant_have_{timing_mode}",
                     translation_placeholders={SZ_MODE: mode},
                 )
-
-            if timing_mode == SZ_PERIOD and duration is not None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="mode_cant_have_duration",
-                    translation_placeholders={SZ_MODE: mode},
-                )
-
-        if period is not None:
-            until = dt_util.start_of_local_day() + period
-        elif duration is not None:
-            until = dt_util.now() + duration
-        else:
-            until = None
 
         await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
 
