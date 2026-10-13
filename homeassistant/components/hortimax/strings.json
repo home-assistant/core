@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "wrong_account": "The API key belongs to a different organization than the one configured."
+      "unique_id_mismatch": "The API key belongs to a different organization than the one configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

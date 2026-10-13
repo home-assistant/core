@@ -234,5 +234,5 @@ async def test_reauth_wrong_account(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"
+    assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data == {CONF_API_KEY: API_KEY}
