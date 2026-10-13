@@ -4,6 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import re
 from typing import override
 
 import aiohttp
@@ -38,6 +39,19 @@ class LunatoneData:
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
 
 
+def _restore_previous_devices(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    device_identifier_pattern: re.Pattern[str],
+) -> set[str]:
+    devices: set[str] = set()
+    for device in dr.async_entries_for_config_entry(device_registry, config_entry_id):
+        for domain, identifier in device.identifiers:
+            if domain == DOMAIN and device_identifier_pattern.fullmatch(identifier):
+                devices.add(identifier)
+    return devices
+
+
 def _remove_stale_devices(
     device_registry: dr.DeviceRegistry, config_entry_id: str, stale_devices: set[str]
 ) -> None:
@@ -67,7 +81,14 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             update_interval=DEFAULT_INFO_UPDATE_INTERVAL,
         )
         self.info_api = info_api
-        self.previous_devices: set[str] = set()
+
+        assert config_entry.unique_id is not None
+        device_registry = dr.async_get(hass)
+        self.previous_devices: set[str] = _restore_previous_devices(
+            device_registry,
+            config_entry.entry_id,
+            re.compile(rf"{re.escape(config_entry.unique_id)}-line\d+"),
+        )
 
     @override
     async def _async_update_data(self) -> InfoData:
@@ -124,7 +145,14 @@ class LunatoneDevicesDataUpdateCoordinator(
             update_interval=DEFAULT_DEVICES_UPDATE_INTERVAL,
         )
         self.devices_api = devices_api
-        self.previous_devices: set[str] = set()
+
+        assert config_entry.unique_id is not None
+        device_registry = dr.async_get(hass)
+        self.previous_devices: set[str] = _restore_previous_devices(
+            device_registry,
+            config_entry.entry_id,
+            re.compile(rf"{re.escape(config_entry.unique_id)}-device\d+"),
+        )
 
     @override
     async def _async_update_data(self) -> dict[int, dict[int, Device]]:
@@ -179,7 +207,14 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             update_interval=DEFAULT_SENSORS_UPDATE_INTERVAL,
         )
         self.sensors_api = sensors_api
-        self.previous_devices: set[str] = set()
+
+        assert config_entry.unique_id is not None
+        device_registry = dr.async_get(hass)
+        self.previous_devices: set[str] = _restore_previous_devices(
+            device_registry,
+            config_entry.entry_id,
+            re.compile(rf"{re.escape(config_entry.unique_id)}-line\d+-d24-address\d+"),
+        )
 
     @override
     async def _async_update_data(self) -> dict[int, Sensor]:
