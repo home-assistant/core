@@ -196,5 +196,5 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         entry_id=TEST_ENTRY,
-        version=5,
+        version=6,
     )
