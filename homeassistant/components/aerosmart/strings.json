@@ -5,7 +5,8 @@
       "reconfigure_successful": "Re-configuration was successful"
     },
     "error": {
-      "cannot_connect": "Failed to connect. Check the host, port, and both station addresses."
+      "cannot_connect": "Failed to connect. Check the host, port, and both station addresses.",
+      "same_unit": "The ventilation and heat pump unit IDs must be different."
     },
     "step": {
       "reconfigure": {

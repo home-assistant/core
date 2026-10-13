@@ -89,24 +89,27 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input = self._normalize_input(user_input)
-            await self.async_set_unique_id(self._unique_id(user_input))
-            if step_id == "reconfigure":
-                reconfigure_entry = self._get_reconfigure_entry()
-                if self.unique_id != reconfigure_entry.unique_id:
+            if user_input[CONF_UNIT_VENTILATION] == user_input[CONF_UNIT_HEAT_PUMP]:
+                errors["base"] = "same_unit"
+            else:
+                await self.async_set_unique_id(self._unique_id(user_input))
+                if step_id == "reconfigure":
+                    reconfigure_entry = self._get_reconfigure_entry()
+                    if self.unique_id != reconfigure_entry.unique_id:
+                        self._abort_if_unique_id_configured()
+                else:
                     self._abort_if_unique_id_configured()
-            else:
-                self._abort_if_unique_id_configured()
 
-            if not await self._async_can_connect(user_input):
-                errors["base"] = "cannot_connect"
-            elif step_id == "reconfigure":
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data=user_input,
-                    unique_id=self.unique_id,
-                )
-            else:
-                return self.async_create_entry(title="aerosmart", data=user_input)
+                if not await self._async_can_connect(user_input):
+                    errors["base"] = "cannot_connect"
+                elif step_id == "reconfigure":
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data=user_input,
+                        unique_id=self.unique_id,
+                    )
+                else:
+                    return self.async_create_entry(title="aerosmart", data=user_input)
 
         schema = STEP_USER
         if step_id == "reconfigure":
@@ -141,7 +144,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
     def _normalize_input(data: dict[str, Any]) -> dict[str, Any]:
         """Normalize selector values before storing them."""
         return {
-            CONF_HOST: str(data[CONF_HOST]).strip(),
+            CONF_HOST: str(data[CONF_HOST]).strip().lower(),
             CONF_PORT: int(data[CONF_PORT]),
             CONF_UNIT_VENTILATION: int(data[CONF_UNIT_VENTILATION]),
             CONF_UNIT_HEAT_PUMP: int(data[CONF_UNIT_HEAT_PUMP]),
