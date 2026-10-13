@@ -132,6 +132,9 @@
       "previous_image": {
         "name": "Previous image"
       },
+      "random_image": {
+        "name": "Random image"
+      },
       "sync_datetime": {
         "name": "Sync date and time"
       }

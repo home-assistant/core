@@ -37,6 +37,7 @@ async def async_setup_entry(
             [
                 SwitchBotArtFrameNextButton(coordinator, "next_image"),
                 SwitchBotArtFramePrevButton(coordinator, "previous_image"),
+                SwitchBotArtFrameRandomButton(coordinator, "random_image"),
             ]
         )
 
@@ -107,6 +108,17 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
         """Handle the button press."""
         _LOGGER.debug("Pressing previous image button %s", self._address)
         await self._device.prev_image()
+
+
+class SwitchBotArtFrameRandomButton(SwitchBotArtFrameButtonBase):
+    """Representation of a random image button."""
+
+    @exception_handler
+    @override
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.debug("Pressing random image button %s", self._address)
+        await self._device.random_image()
 
 
 class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
