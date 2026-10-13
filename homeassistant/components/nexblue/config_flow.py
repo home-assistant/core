@@ -1,7 +1,7 @@
 """Config flow for the NexBlue integration."""
 
 from collections.abc import Mapping
-from typing import Any, NamedTuple, override
+from typing import Any, override
 
 from nexblue_api import (
     NexBlueAuthError,
@@ -31,13 +31,6 @@ REAUTH_SCHEMA = probatio.Schema(
 )
 
 
-class _LoginResult(NamedTuple):
-    """Validated login data."""
-
-    account_id: str
-    refresh_token: str
-
-
 class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a NexBlue config flow."""
 
@@ -57,14 +50,15 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             if isinstance(result, str):
                 errors["base"] = result
             else:
-                await self.async_set_unique_id(result.account_id)
+                account_id, refresh_token = result
+                await self.async_set_unique_id(account_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"NexBlue ({user_input[CONF_USERNAME]})",
                     data={
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_REFRESH_TOKEN: result.refresh_token,
+                        CONF_REFRESH_TOKEN: refresh_token,
                     },
                 )
 
@@ -93,13 +87,14 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             if isinstance(result, str):
                 errors["base"] = result
             else:
-                await self.async_set_unique_id(result.account_id)
+                account_id, refresh_token = result
+                await self.async_set_unique_id(account_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_account")
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_REFRESH_TOKEN: result.refresh_token,
+                        CONF_REFRESH_TOKEN: refresh_token,
                     },
                 )
 
@@ -112,8 +107,8 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_login(
         self, username: str, password: str
-    ) -> _LoginResult | str:
-        """Validate credentials and return token data safe to persist or an error key."""
+    ) -> tuple[str, str] | str:
+        """Validate credentials and return the account ID and refresh token or an error key."""
         client = NexBlueClient(async_get_clientsession(self.hass), DEFAULT_API_URL)
         try:
             token = await client.async_login(username, password)
@@ -131,4 +126,4 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             return "invalid_auth"
         if not token.account_id:
             return "unknown"
-        return _LoginResult(token.account_id, token.refresh_token)
+        return token.account_id, token.refresh_token
