@@ -14,8 +14,11 @@ from uiprotect.data import (
     Light,
     ModelType,
     MountType,
+    Permission,
+    PublicHdrMode,
     Sensor,
     SmartDetectAudioType,
+    SmartDetectObjectType,
     WSAction,
 )
 from uiprotect.data.public_devices import SensorFeatureCapability
@@ -1233,3 +1236,61 @@ async def test_object_detected_needs_advertised_types(
     keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, doorbell.mac)
     assert "motion" in keys
     assert "smart_obj_any" not in keys
+
+
+@pytest.mark.parametrize(
+    ("key", "set_private", "public"),
+    [
+        pytest.param(
+            "status_light",
+            lambda camera: setattr(camera.led_settings, "is_enabled", True),
+            {"status_light": False},
+            id="status_light",
+        ),
+        pytest.param(
+            "hdr_mode",
+            lambda camera: setattr(camera, "hdr_mode", True),
+            {"hdr_type": PublicHdrMode.OFF},
+            id="hdr_mode",
+        ),
+        pytest.param(
+            "osd_name",
+            lambda camera: setattr(camera.osd_settings, "is_name_enabled", True),
+            {"osd_name": False},
+            id="osd_name",
+        ),
+        pytest.param(
+            "smart_person",
+            lambda camera: setattr(
+                camera.smart_detect_settings,
+                "object_types",
+                [SmartDetectObjectType.PERSON],
+            ),
+            {"object_types": []},
+            id="smart_person",
+        ),
+    ],
+)
+async def test_binary_sensor_camera_mirror_reads_public(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+    set_private: Callable[[Camera], None],
+    public: dict[str, Any],
+) -> None:
+    """A read-only user's camera setting mirror shows the public value."""
+    set_private(doorbell)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp, **public)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{doorbell.mac}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF

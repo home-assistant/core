@@ -355,6 +355,79 @@ def async_deprecate_light_setting_mirrors(
     )
 
 
+# Release that removes the deprecated camera mirrors.
+CAMERA_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+
+_CAMERA_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+    **{
+        (Platform.BINARY_SENSOR, key): (
+            Platform.SWITCH,
+            key,
+            "setting_mirror_deprecated",
+        )
+        for key in (
+            "status_light",
+            "high_fps",
+            "osd_name",
+            "osd_date",
+            "osd_logo",
+            "osd_bitrate",
+            "smart_person",
+            "smart_vehicle",
+            "smart_animal",
+            "smart_package",
+            "smart_licenseplate",
+            "smart_smoke",
+            "smart_cmonx",
+            "smart_siren",
+            "smart_baby_cry",
+            "smart_speak",
+            "smart_bark",
+            "smart_car_alarm",
+            "smart_car_horn",
+            "smart_glass_break",
+        )
+    },
+    # The binary sensor is on for both HDR modes the select tells apart.
+    (Platform.BINARY_SENSOR, "hdr_mode"): (
+        Platform.SELECT,
+        "hdr_mode",
+        "setting_mirror_deprecated_hdr_mode",
+    ),
+    (Platform.SENSOR, "mic_level"): (
+        Platform.NUMBER,
+        "mic_level",
+        "setting_mirror_deprecated",
+    ),
+    # The text entity falls back to the default message where the sensor is empty.
+    (Platform.SENSOR, "doorbell_text"): (
+        Platform.TEXT,
+        "doorbell",
+        "setting_mirror_deprecated_doorbell_text",
+    ),
+}
+
+
+@callback
+def async_deprecate_camera_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the read-only mirrors of the public camera controls.
+
+    These controls write through the public API, so every user gets them and
+    the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {camera.mac for camera in bootstrap.cameras.values()},
+        _CAMERA_MIRROR_REPLACEMENTS,
+        CAMERA_SETTING_MIRROR_BREAKS_IN,
+    )
+
+
 @callback
 def _async_deprecate_setting_mirrors(
     hass: HomeAssistant,

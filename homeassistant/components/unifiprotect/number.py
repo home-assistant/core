@@ -93,7 +93,6 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_mic",
         ufp_public_value="mic_volume",
         ufp_set_method="set_mic_volume",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
         key="system_sounds_volume",

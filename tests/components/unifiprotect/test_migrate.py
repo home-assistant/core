@@ -10,6 +10,7 @@ from uiprotect.data.public_devices import SensorFeatureCapability
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.migrate import (
+    CAMERA_SETTING_MIRROR_BREAKS_IN,
     LIGHT_SETTING_MIRROR_BREAKS_IN,
     async_deprecate_light_setting_mirrors,
     async_migrate_sensor_signal_strength,
@@ -29,6 +30,7 @@ from .utils import (
     MockUFPFixture,
     init_entry,
     make_public_sensor,
+    setup_public_camera,
     setup_public_light,
     setup_public_sensor,
 )
@@ -708,7 +710,7 @@ async def test_migrate_light_setting_mirror_without_replacement(
     )
 
 
-async def test_migrate_light_setting_keys_scoped_to_lights(
+async def test_migrate_setting_mirror_keys_scoped_to_device_type(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
@@ -716,30 +718,121 @@ async def test_migrate_light_setting_keys_scoped_to_lights(
     doorbell: Camera,
     light: Light,
 ) -> None:
-    """Cameras share the ``status_light`` key, so only the light's mirror counts."""
+    """A mirror key only counts on the device type it belongs to.
+
+    A matching control is registered for each so only the scope can stop the
+    repair.
+    """
     setup_public_light(ufp)
-    camera_mirror = entity_registry.async_get_or_create(
-        Platform.BINARY_SENSOR,
-        DOMAIN,
-        f"{doorbell.mac}_status_light",
-        config_entry=ufp.entry,
-    )
-    light_mirror = entity_registry.async_get_or_create(
-        Platform.BINARY_SENSOR,
-        DOMAIN,
-        f"{light.mac}_status_light",
-        config_entry=ufp.entry,
-    )
-    await _load_automation(hass, camera_mirror.entity_id, light_mirror.entity_id)
+    setup_public_camera(ufp)
+    mirrors = [
+        (Platform.BINARY_SENSOR, Platform.SWITCH, f"{light.mac}_high_fps"),
+        (Platform.SENSOR, Platform.NUMBER, f"{doorbell.mac}_sensitivity"),
+    ]
+    entity_ids = []
+    for platform, replacement_platform, unique_id in mirrors:
+        entity_registry.async_get_or_create(
+            replacement_platform, DOMAIN, unique_id, config_entry=ufp.entry
+        )
+        entity_ids.append(
+            entity_registry.async_get_or_create(
+                platform, DOMAIN, unique_id, config_entry=ufp.entry
+            ).entity_id
+        )
+    await _load_automation(hass, *entity_ids)
 
     await init_entry(hass, ufp, [doorbell, light], regenerate_ids=False)
 
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"setting_mirror_deprecated_{light.mac}_status_light"
+    for _, _, unique_id in mirrors:
+        assert (
+            issue_registry.async_get_issue(
+                DOMAIN, f"setting_mirror_deprecated_{unique_id}"
+            )
+            is None
+        ), unique_id
+
+
+@pytest.mark.parametrize(
+    (
+        "platform",
+        "key",
+        "replacement_platform",
+        "replacement_key",
+        "translation_key",
+    ),
+    [
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            "status_light",
+            Platform.SWITCH,
+            "status_light",
+            "setting_mirror_deprecated",
+            id="status_light",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            "smart_person",
+            Platform.SWITCH,
+            "smart_person",
+            "setting_mirror_deprecated",
+            id="smart_person",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            "hdr_mode",
+            Platform.SELECT,
+            "hdr_mode",
+            "setting_mirror_deprecated_hdr_mode",
+            id="hdr_mode",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            "mic_level",
+            Platform.NUMBER,
+            "mic_level",
+            "setting_mirror_deprecated",
+            id="mic_level",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            "doorbell_text",
+            Platform.TEXT,
+            "doorbell",
+            "setting_mirror_deprecated_doorbell_text",
+            id="doorbell_text",
+        ),
+    ],
+)
+async def test_migrate_camera_setting_mirror_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    replacement_platform: Platform,
+    replacement_key: str,
+    translation_key: str,
+) -> None:
+    """A used camera mirror gets a repair naming the control that replaces it."""
+    setup_public_camera(ufp)
+    mirror = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, f"setting_mirror_deprecated_{doorbell.mac}_status_light"
-        )
-        is None
+    await _load_automation(hass, mirror.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(mirror.entity_id) is not None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{doorbell.mac}_{key}"
     )
+    assert issue is not None
+    assert issue.translation_key == translation_key
+    assert issue.breaks_in_ha_version == CAMERA_SETTING_MIRROR_BREAKS_IN
+    replacement_id = entity_registry.async_get_entity_id(
+        replacement_platform, DOMAIN, f"{doorbell.mac}_{replacement_key}"
+    )
+    assert replacement_id is not None
+    assert issue.translation_placeholders["replacement"] == replacement_id

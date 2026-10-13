@@ -18,6 +18,8 @@ from uiprotect.data import (
     MountType,
     OnOffState,
     ProtectAdoptableDeviceModel,
+    PublicCamera,
+    PublicHdrMode,
     PublicRelayInput,
     Relay,
     RelayInputState,
@@ -99,6 +101,10 @@ MOUNT_DEVICE_CLASS_MAP = {
 }
 
 
+def _is_hdr_on_public(obj: PublicDeviceModel) -> bool:
+    return cast(PublicCamera, obj).hdr_type is not PublicHdrMode.OFF
+
+
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="dark",
@@ -118,7 +124,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_led_status",
-        ufp_value="led_settings.is_enabled",
+        ufp_public_value="led_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -126,7 +132,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="hdr_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_hdr",
-        ufp_value="hdr_mode",
+        ufp_public_value_fn=_is_hdr_on_public,
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -134,7 +140,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="high_fps",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value="is_high_fps_enabled",
+        ufp_public_value="is_high_fps_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -150,28 +156,28 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="osd_name",
         translation_key="overlay_show_name",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="osd_settings.is_name_enabled",
+        ufp_public_value="osd_settings.is_name_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="osd_date",
         translation_key="overlay_show_date",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="osd_settings.is_date_enabled",
+        ufp_public_value="osd_settings.is_date_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="osd_logo",
         translation_key="overlay_show_logo",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="osd_settings.is_logo_enabled",
+        ufp_public_value="osd_settings.is_logo_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="osd_bitrate",
         translation_key="overlay_show_nerd_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="osd_settings.is_debug_enabled",
+        ufp_public_value="osd_settings.is_debug_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -185,7 +191,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_person",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.PERSON,
-        ufp_value="is_person_detection_on",
+        ufp_public_value="is_person_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -193,7 +199,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_vehicle",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.VEHICLE,
-        ufp_value="is_vehicle_detection_on",
+        ufp_public_value="is_vehicle_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -201,7 +207,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_animal",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.ANIMAL,
-        ufp_value="is_animal_detection_on",
+        ufp_public_value="is_animal_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -209,7 +215,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_package",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.PACKAGE,
-        ufp_value="is_package_detection_on",
+        ufp_public_value="is_package_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -217,7 +223,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_license_plate",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.LICENSE_PLATE,
-        ufp_value="is_license_plate_detection_on",
+        ufp_public_value="is_license_plate_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -225,7 +231,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_smoke",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.SMOKE,
-        ufp_value="is_smoke_detection_on",
+        ufp_public_value="is_smoke_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -233,7 +239,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_co_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.CMONX,
-        ufp_value="is_co_detection_on",
+        ufp_public_value="is_co_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -241,7 +247,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_siren",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.SIREN,
-        ufp_value="is_siren_detection_on",
+        ufp_public_value="is_siren_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -249,7 +255,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_baby_cry",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.BABY_CRY,
-        ufp_value="is_baby_cry_detection_on",
+        ufp_public_value="is_baby_cry_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -257,7 +263,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_speaking",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.SPEAK,
-        ufp_value="is_speaking_detection_on",
+        ufp_public_value="is_speaking_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -265,7 +271,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_barking",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.BARK,
-        ufp_value="is_bark_detection_on",
+        ufp_public_value="is_bark_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -273,7 +279,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_car_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.BURGLAR,
-        ufp_value="is_car_alarm_detection_on",
+        ufp_public_value="is_car_alarm_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -281,7 +287,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_car_horn",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.CAR_HORN,
-        ufp_value="is_car_horn_detection_on",
+        ufp_public_value="is_car_horn_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -289,7 +295,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="detections_glass_break",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_capability=SmartDetectObjectType.GLASS_BREAK,
-        ufp_value="is_glass_break_detection_on",
+        ufp_public_value="is_glass_break_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
