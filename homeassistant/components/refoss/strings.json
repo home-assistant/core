@@ -12,6 +12,9 @@
         "description": "Devices on this network are discovered automatically. To find devices on another VLAN, list its IPv4 addresses or subnets, separated by commas. English and Chinese commas are both accepted. Subnets must be /24 to /32.",
         "data": {
           "networks": "Networks"
+        },
+        "data_description": {
+          "networks": "Optional. Leave empty to discover devices on this network. For other VLANs, comma separated, e.g. 192.168.20.0/24, 10.1.2.17"
         }
       }
     }
@@ -24,6 +27,9 @@
       "init": {
         "data": {
           "networks": "[%key:component::refoss::config::step::user::data::networks%]"
+        },
+        "data_description": {
+          "networks": "[%key:component::refoss::config::step::user::data_description::networks%]"
         },
         "description": "[%key:component::refoss::config::step::user::description%]"
       }
