@@ -9,6 +9,7 @@ from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
 import logging
+from operator import attrgetter
 import os
 import shutil
 import time
@@ -149,8 +150,11 @@ class _DeviceInfoMapping:
 
     __slots__ = ()
 
-    # The mapping keys, in field declaration order
+    # The mapping keys, in field declaration order and as a set for lookups, and a
+    # getter returning all the field values at once, for comparisons
     _field_names: ClassVar[tuple[str, ...]]
+    _field_set: ClassVar[frozenset[str]]
+    _field_values: ClassVar[attrgetter[tuple[Any, ...]]]
     __required_keys__: ClassVar[frozenset[str]]
     __optional_keys__: ClassVar[frozenset[str]]
 
@@ -161,7 +165,7 @@ class _DeviceInfoMapping:
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
         # Also backs `.get()`, `dict()` and `**device_info` unpacking
-        if key in self._field_names:
+        if key in self._field_set:
             value = getattr(self, key)
             if value is not UNDEFINED:
                 return value
@@ -170,7 +174,7 @@ class _DeviceInfoMapping:
     def __setitem__(self, key: str, value: Any) -> None:
         """Set the value of a field."""
         # Integrations fill a device info in after building it
-        if key not in self._field_names:
+        if key not in self._field_set:
             raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
         setattr(self, key, value)
 
@@ -182,7 +186,7 @@ class _DeviceInfoMapping:
         # Integrations test for a field: `"name" in device_info`
         return (
             isinstance(key, str)
-            and key in self._field_names
+            and key in self._field_set
             and getattr(self, key) is not UNDEFINED
         )
 
@@ -191,10 +195,12 @@ class _DeviceInfoMapping:
         """Return if the set fields match those of another device info or mapping."""
         # Integrations compare a device info to a plain mapping, so this can't be
         # left to the dataclass
+        if other is self:
+            return True
         if isinstance(other, _DeviceInfoMapping):
-            return type(other) is type(self) and all(
-                getattr(self, key) == getattr(other, key) for key in self._field_names
-            )
+            return type(other) is type(self) and self._field_values(
+                self
+            ) == other._field_values(other)
         if isinstance(other, Mapping):
             return dict(self) == other
         return NotImplemented
@@ -251,6 +257,8 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
     """Cache the field names a device info dataclass exposes as mapping keys."""
     fields = dataclass_fields(cls)
     cls._field_names = tuple(field.name for field in fields)
+    cls._field_set = frozenset(cls._field_names)
+    cls._field_values = attrgetter(*cls._field_names)
     # Integrations read these TypedDict attributes to check for a field
     cls.__required_keys__ = frozenset(
         field.name

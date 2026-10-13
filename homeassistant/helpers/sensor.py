@@ -1,8 +1,7 @@
 """Common functions related to sensor device management."""
 
+from functools import lru_cache
 from typing import TYPE_CHECKING
-
-from homeassistant import const
 
 from .device_registry import DeviceInfo
 
@@ -16,12 +15,29 @@ if TYPE_CHECKING:
 def sensor_device_info_to_hass_device_info(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
-    """Convert a sensor_state_data sensor device info to a HA device info."""
+    """Convert a sensor_state_data sensor device info to a HA device info.
+
+    The same device info is returned for the same values, so it must not be modified.
+    """
+    return _device_info(
+        sensor_device_info.name,
+        sensor_device_info.manufacturer,
+        sensor_device_info.model,
+    )
+
+
+# Bluetooth converts every advertisement, which almost always carries the same values:
+# the cached device info is cheap to build, and compares by identity
+@lru_cache(maxsize=512)
+def _device_info(
+    name: str | None, manufacturer: str | None, model: str | None
+) -> DeviceInfo:
+    """Return the device info for these values, leaving None values unset."""
     device_info = DeviceInfo()
-    if sensor_device_info.name is not None:
-        device_info[const.ATTR_NAME] = sensor_device_info.name
-    if sensor_device_info.manufacturer is not None:
-        device_info[const.ATTR_MANUFACTURER] = sensor_device_info.manufacturer
-    if sensor_device_info.model is not None:
-        device_info[const.ATTR_MODEL] = sensor_device_info.model
+    if name is not None:
+        device_info.name = name
+    if manufacturer is not None:
+        device_info.manufacturer = manufacturer
+    if model is not None:
+        device_info.model = model
     return device_info
