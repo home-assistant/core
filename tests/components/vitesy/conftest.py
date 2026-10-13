@@ -60,7 +60,20 @@ def mock_devices() -> dict[str, VitesyDevice]:
                 "filter": {"due_date": "2026-08-02T06:45:07.623Z"},
                 "fridge": {"due_date": "2026-10-31T06:45:07.623Z"},
             },
-            programs={},
+            programs={
+                "eco-s1": {
+                    "id": "eco-s1",
+                    "name": "Eco",
+                    "preset": {"mode": "eco"},
+                    "metadata": {"fan": "MID", "power": "HIGH"},
+                },
+                "performance-s1": {
+                    "id": "performance-s1",
+                    "name": "Performance",
+                    "preset": {"mode": "boost"},
+                    "metadata": {"fan": "HIGH", "power": "LOW"},
+                },
+            },
         )
     }
 

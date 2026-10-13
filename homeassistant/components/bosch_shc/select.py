@@ -9,10 +9,12 @@ from boschshcpy import (
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCShutterContact2Plus,
+    SHCSmokeDetector,
 )
 from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
     PirSensorConfigurationService,
+    SmokeSensitivityService,
     VibrationSensorService,
 )
 
@@ -94,6 +96,25 @@ VIBRATION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCShutterContact
 )
 
 
+def _smoke_select_option(device: SHCSmokeDetector, option: str) -> None:
+    """Write the Smoke Detector's smoke sensitivity."""
+    device.smoke_sensitivity = SmokeSensitivityService.SmokeSensitivityLevel[
+        option.upper()
+    ]
+
+
+SMOKE_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCSmokeDetector](
+    key="smoke_sensitivity",
+    translation_key="smoke_sensitivity",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: (
+        level.name.lower() if (level := device.smoke_sensitivity) else None
+    ),
+    select_option_fn=_smoke_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -146,6 +167,18 @@ async def async_setup_entry(
         )
         for contact in session.device_helper.shutter_contacts2
         if isinstance(contact, SHCShutterContact2Plus)
+    )
+
+    async_add_entities(
+        SHCSelect(
+            hass=hass,
+            device=smoke_detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SMOKE_SENSITIVITY_DESCRIPTION,
+        )
+        for smoke_detector in session.device_helper.smoke_detectors
+        if smoke_detector.smoke_sensitivity is not None
     )
 
 
