@@ -22,6 +22,7 @@ from .coordinator import (
 from .helpers import create_modbus_params
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 
