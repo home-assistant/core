@@ -1876,6 +1876,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tailwind/ @frenck
 /homeassistant/components/tami4/ @Guy293
 /tests/components/tami4/ @Guy293
+/homeassistant/components/tank_utility/ @krismolendyke
+/tests/components/tank_utility/ @krismolendyke
 /homeassistant/components/tankerkoenig/ @guillempages @mib1185 @jpbede
 /tests/components/tankerkoenig/ @guillempages @mib1185 @jpbede
 /homeassistant/components/tapsaff/ @bazwilliams

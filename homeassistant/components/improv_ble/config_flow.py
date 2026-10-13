@@ -431,6 +431,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     return
 
             # If we reach here, we had UNABLE_TO_CONNECT error
+            # pylint: disable-next=home-assistant-step_id-match-method
             self._provision_result = self.async_show_form(
                 step_id="provision", data_schema=STEP_PROVISION_SCHEMA, errors=errors
             )
