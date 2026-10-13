@@ -73,5 +73,5 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        if self._device.state.get_source() in OCCUPANCY_SOURCES:
-            self._attr_is_on = self._device.status
+        if self._state and self._state.get_source() in OCCUPANCY_SOURCES:
+            self._attr_is_on = self._state.get_state()

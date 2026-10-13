@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WizConfigEntry, WizData
-from .entity import WizEntity
+from .entity import WizEntity, get_wiz_state
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,8 +26,7 @@ class WizNumberEntityDescription(NumberEntityDescription):
     required_feature: str
     set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
     value_fn: Callable[[wizlight], int | None]
-    # Optional fallback, checked against runtime state when required_feature is
-    # not advertised by the bulb type.
+    # Optional runtime support check used instead of required_feature.
     supported_fn: Callable[[wizlight], bool] | None = None
 
 
@@ -39,6 +38,24 @@ async def _async_set_ratio(device: wizlight, ratio: int) -> None:
     await device.set_ratio(ratio)
 
 
+def _get_speed(device: wizlight) -> int | None:
+    """Return the effect speed."""
+    return (
+        cast(int | None, state.get_speed())
+        if (state := get_wiz_state(device))
+        else None
+    )
+
+
+def _get_ratio(device: wizlight) -> int | None:
+    """Return the dual head ratio."""
+    return (
+        cast(int | None, state.get_ratio())
+        if (state := get_wiz_state(device))
+        else None
+    )
+
+
 NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     WizNumberEntityDescription(
         key="effect_speed",
@@ -46,7 +63,7 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_min_value=10,
         native_max_value=200,
         native_step=1,
-        value_fn=lambda device: cast(int | None, device.state.get_speed()),
+        value_fn=_get_speed,
         set_value_fn=_async_set_speed,
         required_feature="effect",
         entity_category=EntityCategory.CONFIG,
@@ -57,13 +74,11 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        value_fn=lambda device: cast(int | None, device.state.get_ratio()),
+        value_fn=_get_ratio,
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
         # Some ratio-based dual-head lights do not advertise this feature.
-        supported_fn=lambda device: (
-            device.state is not None and device.state.get_ratio() is not None
-        ),
+        supported_fn=lambda device: _get_ratio(device) is not None,
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -74,14 +89,13 @@ def _supports_number_description(
 ) -> bool:
     """Return whether the device supports a number description.
 
-    When the bulb type does not advertise the required feature, ``supported_fn``
-    is evaluated as a fallback. It inspects the current runtime state (e.g.
-    whether a ratio is present), so the result depends on the device state at
-    call time.
+    A runtime support check takes precedence over the advertised feature. Zoned
+    dual-head devices advertise the dual-head feature but do not support a
+    configurable ratio.
     """
-    return getattr(device.bulbtype.features, description.required_feature, False) or (
-        description.supported_fn is not None and description.supported_fn(device)
-    )
+    if description.supported_fn is not None:
+        return description.supported_fn(device)
+    return getattr(device.bulbtype.features, description.required_feature, False)
 
 
 async def async_setup_entry(
