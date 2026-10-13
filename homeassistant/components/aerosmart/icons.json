@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "carbon_dioxide_co2_sensor_available": {
+        "default": "mdi:molecule-co2"
+      },
+      "carbon_dioxide_stoerung_co2_sensor": {
+        "default": "mdi:molecule-co2"
+      },
+      "coarse_dust_filter_grobstaubfilter_wechseln": {
+        "default": "mdi:air-filter"
+      },
+      "fine_dust_filter_feinstaubfilter_wechseln": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "sensor": {
+      "carbon_dioxide_co2": {
+        "default": "mdi:molecule-co2"
+      },
+      "carbon_dioxide_co2_measurement": {
+        "default": "mdi:molecule-co2"
+      },
+      "coarse_dust_filter_betriebsstunden_grobstaubfilter": {
+        "default": "mdi:air-filter"
+      },
+      "coarse_dust_filter_grobstaubfilter_standzeit": {
+        "default": "mdi:air-filter"
+      },
+      "fans_drehzahl_abluftventilator": {
+        "default": "mdi:fan"
+      },
+      "fans_drehzahl_zuluftventilator": {
+        "default": "mdi:fan"
+      },
+      "fans_ist_ventilator_abluft": {
+        "default": "mdi:fan"
+      },
+      "fans_ist_ventilator_zuluft": {
+        "default": "mdi:fan"
+      },
+      "fine_dust_filter_betriebsstunden_feinstaubfilter": {
+        "default": "mdi:air-filter"
+      },
+      "fine_dust_filter_feinstaubfilter_standzeit": {
+        "default": "mdi:air-filter"
+      },
+      "heat_pump_waermepumpe": {
+        "default": "mdi:heat-pump"
+      },
+      "heat_pump_wp_status": {
+        "default": "mdi:heat-pump"
+      },
+      "heat_pump_wp_status_restlaufzeit": {
+        "default": "mdi:heat-pump"
+      },
+      "ventilation_aktive_luefterstufe": {
+        "default": "mdi:fan"
+      }
+    },
+    "switch": {
+      "boost_functions_heat_pump_function_bad_plus": {
+        "default": "mdi:shower-head"
+      },
+      "boost_functions_ventilation_function_heizung_plus": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      }
+    }
+  }
+}

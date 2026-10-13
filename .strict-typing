@@ -48,6 +48,7 @@ homeassistant.components.actiontec.*
 homeassistant.components.actron_air.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
+homeassistant.components.aerosmart.*
 homeassistant.components.aftership.*
 homeassistant.components.ai_task.*
 homeassistant.components.air_quality.*
