@@ -1,6 +1,5 @@
 """Tests for the Bosch SHC binary_sensor platform."""
 
-import json
 from unittest.mock import MagicMock
 
 from boschshcpy import ShutterContactService, SurveillanceAlarmService
@@ -85,21 +84,23 @@ async def test_shutter_contact_device_class(
     assert state.attributes["device_class"] == "door"
 
 
-def _smoke_message(trigger_id: str, event_type: str = "ALARM_ON") -> dict:
-    return {
-        "messageCode": {"name": "SMOKE_ALARM"},
-        "sourceId": "hdm:ZigBee:smokedetectionsystem",
-        "arguments": {
-            "surveillanceEvents": [{"type": event_type, "triggerId": trigger_id}]
-        },
-    }
+TWINGUARD_ID = "hdm:HomeMaticIP:twinguard1"
 
 
-def _smoke_buckets(alarm: SurveillanceAlarmService.State) -> dict:
+def _smoke_buckets(
+    alarm: SurveillanceAlarmService.State, triggered: set[str] | None = None
+) -> dict:
     return {
         "twinguards": [twinguard_device()],
-        "smoke_detection_system": smoke_detection_system_device(alarm=alarm),
+        "smoke_detection_system": smoke_detection_system_device(
+            alarm=alarm, triggered=triggered
+        ),
     }
+
+
+def _fire_alarm_update(mock_session: MagicMock) -> None:
+    system = mock_session.device_helper.smoke_detection_system
+    next(iter(system.device_services[0].callbacks.values()))()
 
 
 @pytest.mark.parametrize(
@@ -110,25 +111,24 @@ def _smoke_buckets(alarm: SurveillanceAlarmService.State) -> dict:
 async def test_twinguard_smoke_idle(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
-    """No alarm: the sensor is off and no messages are fetched."""
+    """No alarm: the sensor is off and the controller is not asked."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
-    mock_session.api.get_messages.assert_not_called()
+    system = mock_session.device_helper.smoke_detection_system
+    system.triggered_device_ids.assert_not_called()
 
 
 @pytest.mark.parametrize(
     "device_buckets",
-    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON)],
+    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON, {TWINGUARD_ID})],
     indirect=True,
 )
-async def test_twinguard_smoke_alarm_from_message(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_smoke_triggered(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """An alarm message naming this Twinguard turns the sensor on."""
-    mock_session.api.get_messages.return_value = [
-        _smoke_message("hdm:HomeMaticIP:twinguard1")
-    ]
+    """A Twinguard named as the alarm trigger is on."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_ON
@@ -136,14 +136,14 @@ async def test_twinguard_smoke_alarm_from_message(
 
 @pytest.mark.parametrize(
     "device_buckets",
-    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON)],
+    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON, {"hdm:other"})],
     indirect=True,
 )
+@pytest.mark.usefixtures("mock_session")
 async def test_twinguard_smoke_other_device(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """An alarm triggered by another device keeps this sensor off."""
-    mock_session.api.get_messages.return_value = [_smoke_message("hdm:other")]
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
@@ -151,48 +151,20 @@ async def test_twinguard_smoke_other_device(
 
 @pytest.mark.parametrize(
     "device_buckets",
-    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON)],
-    indirect=True,
-)
-async def test_twinguard_smoke_ended_alarm_and_string_events(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
-) -> None:
-    """ALARM_OFF messages are ignored, JSON string events are parsed."""
-    ended = _smoke_message("hdm:HomeMaticIP:twinguard1", "ALARM_OFF")
-    mock_session.api.get_messages.return_value = [ended]
-    await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
-
-    as_string = _smoke_message("hdm:HomeMaticIP:twinguard1")
-    as_string["arguments"]["surveillanceEvents"] = json.dumps(
-        [{"type": "SMOKE_PRIMARY", "device": "hdm:HomeMaticIP:twinguard1"}]
-    )
-    mock_session.api.get_messages.return_value = [as_string]
-    service = mock_session.device_helper.smoke_detection_system.device_services[0]
-    next(iter(service.callbacks.values()))()
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_ON
-
-
-@pytest.mark.parametrize(
-    "device_buckets",
-    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON)],
+    [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON, {TWINGUARD_ID})],
     indirect=True,
 )
 async def test_twinguard_smoke_clears_and_unsubscribes(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
     """Alarm off clears the sensor; unloading removes the callback."""
-    mock_session.api.get_messages.return_value = [
-        _smoke_message("hdm:HomeMaticIP:twinguard1")
-    ]
     await setup_integration(hass, mock_config_entry)
     system = mock_session.device_helper.smoke_detection_system
     service = system.device_services[0]
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_ON
 
     system.alarm = SurveillanceAlarmService.State.ALARM_OFF
-    next(iter(service.callbacks.values()))()
+    _fire_alarm_update(mock_session)
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
 
@@ -211,15 +183,14 @@ async def test_twinguard_smoke_fetch_fails_then_retries(
     mock_session: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failing message fetch makes the sensor unavailable and is retried."""
-    mock_session.api.get_messages.side_effect = OSError("boom")
+    """A failing lookup makes the sensor unavailable and is retried."""
+    system = mock_session.device_helper.smoke_detection_system
+    system.triggered_device_ids.side_effect = OSError("boom")
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_UNAVAILABLE
 
-    mock_session.api.get_messages.side_effect = None
-    mock_session.api.get_messages.return_value = [
-        _smoke_message("hdm:HomeMaticIP:twinguard1")
-    ]
+    system.triggered_device_ids.side_effect = None
+    system.triggered_device_ids.return_value = {TWINGUARD_ID}
     freezer.tick(RETRY_DELAY + 1)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -236,21 +207,20 @@ async def test_twinguard_smoke_fetch_fails_then_retries(
                 twinguard_device(device_id="hdm:HomeMaticIP:twinguard2", name="Second"),
             ],
             "smoke_detection_system": smoke_detection_system_device(
-                alarm=SurveillanceAlarmService.State.ALARM_ON
+                alarm=SurveillanceAlarmService.State.ALARM_ON,
+                triggered={"hdm:HomeMaticIP:twinguard2"},
             ),
         }
     ],
     indirect=True,
 )
-async def test_twinguard_smoke_fetches_messages_once(
+async def test_twinguard_smoke_looks_up_once(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
-    """All Twinguards share a single message request per alarm update."""
-    mock_session.api.get_messages.return_value = [
-        _smoke_message("hdm:HomeMaticIP:twinguard2")
-    ]
+    """All Twinguards share a single lookup per alarm update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_session.api.get_messages.call_count == 1
+    system = mock_session.device_helper.smoke_detection_system
+    assert system.triggered_device_ids.call_count == 1
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
     assert hass.states.get("binary_sensor.second_smoke").state == STATE_ON

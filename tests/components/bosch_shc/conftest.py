@@ -804,13 +804,14 @@ class FakeSurveillanceAlarmService:
 
 
 def smoke_detection_system_device(
-    alarm: Any = None,
+    alarm: Any = None, triggered: set[str] | None = None
 ) -> MagicMock:
     """Build a minimal double of the smoke detection system."""
     system = MagicMock()
     system.id = "hdm:ZigBee:smokedetectionsystem"
     system.alarm = alarm
     system.device_services = [FakeSurveillanceAlarmService()]
+    system.triggered_device_ids.return_value = triggered or set()
     return system
 
 
