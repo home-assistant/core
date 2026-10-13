@@ -156,6 +156,8 @@ async def test_reconfigure_flow(
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reconfigure"
+    schema_keys = {str(k): k for k in result["data_schema"].schema}
+    assert schema_keys[CONF_ZONE].description == {"suggested_value": ENTITY_ID_HOME}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
