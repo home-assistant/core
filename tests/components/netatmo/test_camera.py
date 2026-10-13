@@ -5,7 +5,6 @@
 # e.g. cameras: NACamera, NOC, etc.
 from datetime import timedelta
 from functools import partial
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
