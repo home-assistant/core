@@ -1,9 +1,11 @@
 """Tests for WATERCryst update coordinators."""
 
 from asyncio import CancelledError
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
 
@@ -23,7 +25,7 @@ from .conftest import (
     request_error,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -34,43 +36,45 @@ async def test_state_update_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     language: str,
     expected_locale: str,
 ) -> None:
     """Test successful state update."""
     hass.config.language = language
 
-    coordinator = WatercrystStateUpdateCoordinator(
-        hass=hass,
-        config_entry=config_entry,
-        client=mock_api_client,
-    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
-    assert coordinator.data is DEFAULT_STATE_RESPONSE
-    mock_api_client.get_state.assert_awaited_once_with(locale=expected_locale)
+    assert config_entry.runtime_data.state.last_update_success
+    assert config_entry.runtime_data.state.data is DEFAULT_STATE_RESPONSE
+    mock_api_client.get_state.assert_awaited_with(locale=expected_locale)
 
 
 async def test_measurements_update_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test successful measurements update."""
-    state = MagicMock(spec=WatercrystStateUpdateCoordinator)
-    state.data = DEFAULT_STATE_RESPONSE
 
-    coordinator = WatercrystMeasurementsUpdateCoordinator(
-        hass=hass, config_entry=config_entry, client=mock_api_client, state=state
-    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator.last_update_success
-    assert coordinator.data is DEFAULT_MEASUREMENT_RESPONSE
-    mock_api_client.get_measurements.assert_awaited_once()
+    assert config_entry.runtime_data.measurements.last_update_success
+    assert config_entry.runtime_data.measurements.data is DEFAULT_MEASUREMENT_RESPONSE
+    mock_api_client.get_measurements.assert_awaited()
 
 
 @pytest.mark.parametrize(
