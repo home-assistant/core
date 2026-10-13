@@ -1652,16 +1652,30 @@ async def async_replace_device(
     assert entry is not None
     hass.config_entries.async_update_entry(entry, unique_id=new_mac)
 
+    upper_mac = new_mac.upper()
+    old_upper_mac = old_mac.upper()
+
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         dev_reg.async_update_device(
             device.id,
             new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
         )
+    for child_device in dr.async_child_entries_for_config_entry(
+        dev_reg, entry.entry_id
+    ):
+        new_identifiers = {
+            (domain, upper_mac + identifier[len(old_upper_mac) :])
+            if identifier.startswith(old_upper_mac)
+            else (domain, identifier)
+            for domain, identifier in child_device.identifiers
+        }
+        if new_identifiers != child_device.identifiers:
+            dev_reg.async_update_child_device(
+                child_device.id, new_identifiers=new_identifiers
+            )
 
     ent_reg = er.async_get(hass)
-    upper_mac = new_mac.upper()
-    old_upper_mac = old_mac.upper()
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
         # The mac is the leading segment of the unique id in every format,
         # so swap the prefix without parsing the rest.
