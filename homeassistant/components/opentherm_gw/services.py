@@ -100,25 +100,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
         }
     )
     service_set_gpio_mode_schema = probatio.Schema(
-        probatio.Any(
-            probatio.Schema(
-                {
-                    probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
-                    probatio.Required(ATTR_ID): probatio.Equal("A"),
-                    probatio.Required(ATTR_MODE): probatio.All(
-                        probatio.Coerce(int), probatio.Range(min=0, max=6)
-                    ),
-                }
-            ),
-            probatio.Schema(
-                {
-                    probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
-                    probatio.Required(ATTR_ID): probatio.Equal("B"),
-                    probatio.Required(ATTR_MODE): probatio.All(
-                        probatio.Coerce(int), probatio.Range(min=0, max=7)
-                    ),
-                }
-            ),
+        probatio.TaggedUnion(
+            ATTR_ID,
+            [
+                probatio.Schema(
+                    {
+                        probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+                        probatio.Required(ATTR_ID): "A",
+                        probatio.Required(ATTR_MODE): probatio.All(
+                            probatio.Coerce(int), probatio.Range(min=0, max=6)
+                        ),
+                    }
+                ),
+                probatio.Schema(
+                    {
+                        probatio.Required(ATTR_GW_ID): probatio.All(cv.string),
+                        probatio.Required(ATTR_ID): "B",
+                        probatio.Required(ATTR_MODE): probatio.All(
+                            probatio.Coerce(int), probatio.Range(min=0, max=7)
+                        ),
+                    }
+                ),
+            ],
         )
     )
     service_set_led_mode_schema = probatio.Schema(
