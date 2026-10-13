@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from knocki import KnockiConnectionError, KnockiInvalidAuthError
+from knocki import KnockiConnectionError, KnockiInvalidAuthError, TokenResponse
 import pytest
 
 from homeassistant.components.knocki.const import DOMAIN
@@ -15,7 +15,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 DEVICE_ID = "KNC1-W-00000214"
 FORMATTED_MAC = "aa:bb:cc:dd:ee:ff"
@@ -238,3 +238,113 @@ async def test_dhcp_already_setup(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_knocki_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+    mock_knocki_client.login.return_value = TokenResponse(
+        token="new-token", user_id="test-id"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result["errors"]
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME)
+        == "Knocki"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_TOKEN: "new-token"}
+    assert len(mock_knocki_client.link.mock_calls) == 1
+
+
+@pytest.mark.parametrize(("field"), ["login", "link"])
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (KnockiConnectionError, "cannot_connect"),
+        (KnockiInvalidAuthError, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reauth_flow_exceptions(
+    hass: HomeAssistant,
+    mock_knocki_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    field: str,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauthentication flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    getattr(mock_knocki_client, field).side_effect = exception
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME)
+        == "test-username"
+    )
+
+    getattr(mock_knocki_client, field).side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_knocki_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication with a different account aborts."""
+    mock_config_entry.add_to_hass(hass)
+    mock_knocki_client.login.return_value = TokenResponse(
+        token="new-token", user_id="other-id"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "other-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {CONF_TOKEN: "test-token"}
+    assert len(mock_knocki_client.link.mock_calls) == 0

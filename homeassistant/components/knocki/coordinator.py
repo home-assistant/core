@@ -2,11 +2,18 @@
 
 from typing import override
 
-from knocki import Event, KnockiClient, KnockiConnectionError, Trigger
+from knocki import (
+    Event,
+    KnockiClient,
+    KnockiConnectionError,
+    KnockiInvalidAuthError,
+    Trigger,
+)
 
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -37,6 +44,8 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[int, Trigger]]):
     async def _async_update_data(self) -> dict[int, Trigger]:
         try:
             triggers = await self.client.get_triggers()
+        except KnockiInvalidAuthError as exc:
+            raise ConfigEntryAuthFailed from exc
         except KnockiConnectionError as exc:
             raise UpdateFailed from exc
         current_triggers = {
