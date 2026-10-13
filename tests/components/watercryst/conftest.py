@@ -51,6 +51,25 @@ DEFAULT_INFO_RESPONSE = DeviceResponse(
     system_mac_address=SYSTEM_MAC,
 )
 
+MINIMAL_CONFIG_INFO_RESPONSE = DeviceResponse(
+    biocat_serial=BIOCAT_SERIAL,
+    electronics_serial="0123456789",
+    device_type_number=DEVICE_TYPE_NUMBER,
+    line=DEVICE_TYPE_LINE,
+    series=DEVICE_TYPE_SERIES,
+    has_flow_rate_sensor=False,
+    has_leakage_protection_system=False,
+    has_lime_scale_protection=False,
+    has_pressure_sensor=False,
+    has_temperature_sensor=False,
+    has_wireless_sensor_option=False,
+    name=DEVICE_NAME,
+    current_firmware_version=FW_VERSION,
+    current_hardware_version=HW_VERSION,
+    latest_firmware_version="V01.08.05",
+    system_mac_address=SYSTEM_MAC,
+)
+
 DEFAULT_MEASUREMENT_RESPONSE = MeasurementResponse(
     water_temp=24,
     pressure=3.68,

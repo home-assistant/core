@@ -712,3 +712,191 @@
     'state': '24',
   })
 # ---
+# name: test_available_entities[sensor.ha_device_device_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error_mode',
+        'fail_safe',
+        'leakage_protection',
+        'manual_control',
+        'rinse',
+        'self_test',
+        'thermal_disinfection',
+        'update',
+        'water_off',
+        'water_treatment',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ha_device_device_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device mode',
+    'platform': 'watercryst',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode_id',
+    'unique_id': '2026123456789123_mode.id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_available_entities[sensor.ha_device_device_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Device mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error_mode',
+        'fail_safe',
+        'leakage_protection',
+        'manual_control',
+        'rinse',
+        'self_test',
+        'thermal_disinfection',
+        'update',
+        'water_off',
+        'water_treatment',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ha_device_device_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'water_treatment',
+  })
+# ---
+# name: test_available_entities[sensor.ha_device_event_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error',
+        'warning',
+        'info',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ha_device_event_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Event category',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Event category',
+    'platform': 'watercryst',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event_category',
+    'unique_id': '2026123456789123_event.category',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_available_entities[sensor.ha_device_event_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Event category',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error',
+        'warning',
+        'info',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ha_device_event_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'info',
+  })
+# ---
+# name: test_available_entities[sensor.ha_device_event_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ha_device_event_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Event ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Event ID',
+    'platform': 'watercryst',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event_id',
+    'unique_id': '2026123456789123_event.event_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_available_entities[sensor.ha_device_event_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Event ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ha_device_event_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
