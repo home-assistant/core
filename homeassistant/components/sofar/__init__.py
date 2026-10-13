@@ -236,7 +236,10 @@ async def async_remove_config_entry_device(
             return False
         if (number := _battery_pack_number(serial, identifier)) is None:
             continue
-        if runtime_data is not None and runtime_data.pack_is_wired(number):
+        if (
+            runtime_data is not None
+            and number in runtime_data.readings.device.wired_battery_strings
+        ):
             return False
         packs.add(number)
 

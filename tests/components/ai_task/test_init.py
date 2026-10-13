@@ -16,12 +16,12 @@ from homeassistant.components.ai_task.const import (
     DOMAIN,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
-from tests.common import flush_store
+from tests.common import MockUser, flush_store
 
 
 async def test_preferences_storage_load(
@@ -380,3 +380,111 @@ async def test_generate_image_service_no_entity(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+async def test_generate_service_explicit_entity_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_ai_task_entity: MockAITaskEntity,
+    service: str,
+) -> None:
+    """Reject an explicit entity before resolving attachments or calling a provider."""
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                "task_name": "Test",
+                "instructions": "Test prompt",
+                "entity_id": TEST_ENTITY_ID,
+            },
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    assert err.value.entity_id == TEST_ENTITY_ID
+    resolve.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+@pytest.mark.parametrize("domain", ["camera", "image"])
+@pytest.mark.parametrize("entity_selection", [{}, {"entity_id": TEST_ENTITY_ID}])
+async def test_generate_service_attachment_permission(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_ai_task_entity: MockAITaskEntity,
+    service: str,
+    domain: str,
+    entity_selection: dict[str, str],
+) -> None:
+    """Camera and image attachments require read permission for either task choice."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        gen_data_entity_id=TEST_ENTITY_ID, gen_image_entity_id=TEST_ENTITY_ID
+    )
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {TEST_ENTITY_ID: {"control": True}}}}
+    )
+    attachment_entity_id = f"{domain}.test"
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                "task_name": "Test",
+                "instructions": "Test prompt",
+                "attachments": [
+                    {
+                        "media_content_id": f"media-source://{domain}/{attachment_entity_id}",
+                        "media_content_type": "image/jpeg",
+                    }
+                ],
+            }
+            | entity_selection,
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+    assert err.value.entity_id == attachment_entity_id
+    resolve.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+async def test_generate_service_default_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service: str,
+) -> None:
+    """Read-only users can use the configured default task entity."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        gen_data_entity_id=TEST_ENTITY_ID, gen_image_entity_id=TEST_ENTITY_ID
+    )
+    context = Context(user_id=hass_read_only_user.id)
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/test.png",
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"task_name": "Test", "instructions": "Test prompt"},
+            blocking=True,
+            return_response=True,
+            context=context,
+        )
+    assert result
+    assert hass.states.get(TEST_ENTITY_ID).context is context

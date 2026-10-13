@@ -2797,6 +2797,7 @@ class ConfigEntries:
 
         self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
+        removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
@@ -2848,6 +2849,7 @@ class ConfigEntries:
 
         if subentries is not UNDEFINED:
             if entry.subentries != subentries:
+                removed_subentry_ids = entry.subentries.keys() - subentries.keys()
                 changed = True
                 _setter(entry, "subentries", MappingProxyType(subentries))
 
@@ -2855,6 +2857,15 @@ class ConfigEntries:
             return False
 
         _setter(entry, "modified_at", utcnow())
+
+        if removed_subentry_ids:
+            dev_reg = dr.async_get(self.hass)
+            ent_reg = er.async_get(self.hass)
+            for subentry_id in removed_subentry_ids:
+                dev_reg.async_clear_config_subentry(
+                    entry.entry_id, subentry_id, entry.domain
+                )
+                ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
 
         self._async_save_and_notify(entry)
         return True
@@ -2892,13 +2903,7 @@ class ConfigEntries:
         except KeyError as err:
             raise UnknownSubEntry from err
 
-        result = self._async_update_entry(entry, subentries=subentries)
-        dev_reg = dr.async_get(self.hass)
-        ent_reg = er.async_get(self.hass)
-
-        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id, entry.domain)
-        ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
-        return result
+        return self._async_update_entry(entry, subentries=subentries)
 
     @callback
     def async_update_subentry(
