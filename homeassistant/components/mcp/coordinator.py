@@ -27,6 +27,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import llm
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
@@ -61,7 +62,7 @@ def create_mcp_httpx_client(
     return httpx2.AsyncClient(
         verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
         follow_redirects=True,
-        headers=headers,
+        headers={USER_AGENT: SERVER_SOFTWARE, **(headers or {})},
         auth=auth,
         **kwargs,
     )
