@@ -22,8 +22,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from . import BoschConfigEntry
 from .entity import SHCEntity
@@ -94,15 +95,16 @@ async def async_setup_entry(
 
     if (
         smoke_detection_system := session.device_helper.smoke_detection_system
-    ) is not None:
+    ) is not None and session.device_helper.twinguards:
+        tracker = TwinguardAlarmTracker(hass, session, smoke_detection_system)
+        config_entry.async_on_unload(tracker.async_stop)
         entities.extend(
             TwinguardSmokeSensor(
                 hass=hass,
                 device=twinguard,
                 parent_id=shc_info.unique_id,
                 entry_id=config_entry.entry_id,
-                smoke_detection_system=smoke_detection_system,
-                session=session,
+                tracker=tracker,
             )
             for twinguard in session.device_helper.twinguards
         )
@@ -180,12 +182,117 @@ def _parse_surveillance_events(raw_events: Any) -> list[dict[str, Any]]:
     return [event for event in raw_events if isinstance(event, dict)]
 
 
-class TwinguardSmokeSensor(SHCEntity, BinarySensorEntity):
-    """Smoke alarm of a single Twinguard.
+RETRY_DELAY = 30
 
-    The controller reports the alarm on the shared smoke detection system.
-    The Twinguard that triggered it is named in the SMOKE_ALARM message.
+
+class TwinguardAlarmTracker:
+    """Track which Twinguards triggered the active smoke alarm.
+
+    The controller reports a smoke alarm on the shared smoke detection system.
+    The Twinguards that raised it are named in its SMOKE_ALARM message. The
+    messages are requested once per alarm update and shared by all sensors.
     """
+
+    def __init__(
+        self, hass: HomeAssistant, session: Any, smoke_detection_system: Any
+    ) -> None:
+        """Initialize the tracker and subscribe to the alarm state."""
+        self._hass = hass
+        self._session = session
+        self._system = smoke_detection_system
+        self._callback_id = f"{smoke_detection_system.id}_twinguard_alarm"
+        self._listeners: list[CALLBACK_TYPE] = []
+        self._retry: CALLBACK_TYPE | None = None
+        self._stopped = False
+        self._generation = 0
+        self._applied_generation = 0
+        self.trigger_ids: set[str] = set()
+        self.available = True
+        self._services = [
+            service
+            for service in smoke_detection_system.device_services
+            if service.id == "SurveillanceAlarm"
+        ]
+        for service in self._services:
+            service.subscribe_callback(self._callback_id, self._on_alarm_changed)
+
+    @callback
+    def async_add_listener(self, listener: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Add a listener that is called when the tracked state changes."""
+        self._listeners.append(listener)
+        if len(self._listeners) == 1:
+            self._hass.async_create_task(self.async_refresh())
+        return partial(self._listeners.remove, listener)
+
+    @callback
+    def async_stop(self) -> None:
+        """Unsubscribe and stop all pending work."""
+        self._stopped = True
+        self._cancel_retry()
+        for service in self._services:
+            service.unsubscribe_callback(self._callback_id)
+
+    def _on_alarm_changed(self) -> None:
+        """Handle an alarm update, called from the SHC polling thread."""
+        self._hass.add_job(self.async_refresh)
+
+    def _cancel_retry(self) -> None:
+        if self._retry is not None:
+            self._retry()
+            self._retry = None
+
+    async def async_refresh(self, *_: Any) -> None:
+        """Update the trigger ids from the controller messages."""
+        self._cancel_retry()
+        self._generation += 1
+        generation = self._generation
+        trigger_ids: set[str] = set()
+        available = True
+        if self._system.alarm != SurveillanceAlarmService.State.ALARM_OFF:
+            try:
+                messages = await self._hass.async_add_executor_job(
+                    self._session.api.get_messages
+                )
+            except Exception:
+                _LOGGER.warning("Unable to fetch Bosch SHC messages", exc_info=True)
+                available = False
+            else:
+                trigger_ids = self._trigger_ids(messages)
+        if self._stopped or generation < self._applied_generation:
+            return
+        self._applied_generation = generation
+        if not available:
+            self._retry = async_call_later(self._hass, RETRY_DELAY, self.async_refresh)
+        if (trigger_ids, available) != (self.trigger_ids, self.available):
+            self.trigger_ids = trigger_ids
+            self.available = available
+            for listener in list(self._listeners):
+                listener()
+
+    def _trigger_ids(self, messages: Any) -> set[str]:
+        """Return the device ids named by open SMOKE_ALARM messages."""
+        trigger_ids: set[str] = set()
+        for message in messages:
+            code = message.get("messageCode")
+            if not isinstance(code, dict) or code.get("name") != "SMOKE_ALARM":
+                continue
+            if message.get("sourceId") != self._system.id:
+                continue
+            arguments = message.get("arguments")
+            if not isinstance(arguments, dict):
+                continue
+            events = _parse_surveillance_events(arguments.get("surveillanceEvents"))
+            if any(event.get("type") == "ALARM_OFF" for event in events):
+                continue
+            # The Bosch app reads this field as "device", the SHC writes "triggerId".
+            for event in events:
+                if trigger_id := event.get("triggerId") or event.get("device"):
+                    trigger_ids.add(trigger_id)
+        return trigger_ids
+
+
+class TwinguardSmokeSensor(SHCEntity, BinarySensorEntity):
+    """Smoke alarm of a single Twinguard."""
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
     _device: SHCTwinguard
@@ -196,89 +303,29 @@ class TwinguardSmokeSensor(SHCEntity, BinarySensorEntity):
         device: SHCDevice,
         parent_id: str,
         entry_id: str,
-        smoke_detection_system: Any,
-        session: Any,
+        tracker: TwinguardAlarmTracker,
     ) -> None:
         """Initialize a Twinguard smoke sensor."""
         super().__init__(hass, device, parent_id, entry_id)
         self._attr_unique_id = f"{device.serial}_smoke"
-        self._smoke_detection_system = smoke_detection_system
-        self._session = session
-        self._alarm_active = False
-        self._refresh_generation = 0
-        self._applied_generation = 0
-        self._removed = False
+        self._tracker = tracker
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to the smoke detection system."""
+        """Listen to the shared alarm tracker."""
         await super().async_added_to_hass()
-        callback_id = f"{self._attr_unique_id}_alarm"
+        self.async_on_remove(
+            self._tracker.async_add_listener(self.async_write_ha_state)
+        )
 
-        def on_alarm_changed() -> None:
-            self.hass.add_job(self._async_refresh)
-
-        for service in self._smoke_detection_system.device_services:
-            if service.id == "SurveillanceAlarm":
-                service.subscribe_callback(callback_id, on_alarm_changed)
-                self.async_on_remove(partial(service.unsubscribe_callback, callback_id))
-        await self._async_refresh()
-
+    @property
     @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop applying results of in-flight refreshes."""
-        self._removed = True
-        await super().async_will_remove_from_hass()
+    def available(self) -> bool:
+        """Return false if the device or the alarm lookup is unavailable."""
+        return super().available and self._tracker.available
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if this Twinguard raised the active smoke alarm."""
-        return self._alarm_active
-
-    async def _async_refresh(self) -> None:
-        """Update the alarm state from the controller messages."""
-        self._refresh_generation += 1
-        generation = self._refresh_generation
-        if (
-            self._smoke_detection_system.alarm
-            == SurveillanceAlarmService.State.ALARM_OFF
-        ):
-            active = False
-        else:
-            try:
-                messages = await self.hass.async_add_executor_job(
-                    self._session.api.get_messages
-                )
-            except Exception:
-                _LOGGER.warning("Unable to fetch Bosch SHC messages", exc_info=True)
-                return
-            active = self._is_triggered_by_device(messages)
-        if self._removed or generation < self._applied_generation:
-            return
-        self._applied_generation = generation
-        if active != self._alarm_active:
-            self._alarm_active = active
-            self.async_write_ha_state()
-
-    def _is_triggered_by_device(self, messages: Any) -> bool:
-        """Return true if an open SMOKE_ALARM message names this Twinguard."""
-        for message in messages:
-            code = message.get("messageCode")
-            if not isinstance(code, dict) or code.get("name") != "SMOKE_ALARM":
-                continue
-            if message.get("sourceId") != self._smoke_detection_system.id:
-                continue
-            arguments = message.get("arguments")
-            if not isinstance(arguments, dict):
-                continue
-            events = _parse_surveillance_events(arguments.get("surveillanceEvents"))
-            if any(event.get("type") == "ALARM_OFF" for event in events):
-                continue
-            # The Bosch app reads this field as "device", the SHC writes "triggerId".
-            if any(
-                self._device.id in (event.get("triggerId"), event.get("device"))
-                for event in events
-            ):
-                return True
-        return False
+        return self._device.id in self._tracker.trigger_ids

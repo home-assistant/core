@@ -4,10 +4,12 @@ import json
 from unittest.mock import MagicMock
 
 from boschshcpy import ShutterContactService, SurveillanceAlarmService
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.bosch_shc.binary_sensor import RETRY_DELAY
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -16,7 +18,6 @@ from .conftest import (
     smoke_detection_system_device,
     twinguard_device,
 )
-
 
 @pytest.mark.parametrize(
     "device_buckets",
@@ -204,11 +205,52 @@ async def test_twinguard_smoke_clears_and_unsubscribes(
     [_smoke_buckets(SurveillanceAlarmService.State.ALARM_ON)],
     indirect=True,
 )
-async def test_twinguard_smoke_message_fetch_fails(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+async def test_twinguard_smoke_fetch_fails_then_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failing message fetch keeps the previous state."""
+    """A failing message fetch makes the sensor unavailable and is retried."""
     mock_session.api.get_messages.side_effect = OSError("boom")
     await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_UNAVAILABLE
 
+    mock_session.api.get_messages.side_effect = None
+    mock_session.api.get_messages.return_value = [
+        _smoke_message("hdm:HomeMaticIP:twinguard1")
+    ]
+    freezer.tick(RETRY_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "twinguards": [
+                twinguard_device(),
+                twinguard_device(device_id="hdm:HomeMaticIP:twinguard2", name="Second"),
+            ],
+            "smoke_detection_system": smoke_detection_system_device(
+                alarm=SurveillanceAlarmService.State.ALARM_ON
+            ),
+        }
+    ],
+    indirect=True,
+)
+async def test_twinguard_smoke_fetches_messages_once(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+) -> None:
+    """All Twinguards share a single message request per alarm update."""
+    mock_session.api.get_messages.return_value = [
+        _smoke_message("hdm:HomeMaticIP:twinguard2")
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_session.api.get_messages.call_count == 1
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
+    assert hass.states.get("binary_sensor.second_smoke").state == STATE_ON
