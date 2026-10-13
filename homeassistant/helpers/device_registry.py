@@ -132,6 +132,19 @@ class DeviceEntryDisabler(StrEnum):
     USER = "user"
 
 
+# Deprecated `async_get_or_create` parameters, mapped to the HA Core version they are
+# removed in and the replacement parameter, or `None` if the parameter is ignored and
+# has no replacement.
+_DEPRECATED_DEVICE_INFO_PARAMETERS: dict[str, tuple[str, str | None]] = {
+    "created_at": ("2027.9.0", None),
+    "default_manufacturer": ("2027.9.0", "manufacturer"),
+    "default_model": ("2027.9.0", "model"),
+    "default_name": ("2027.9.0", "name"),
+    "modified_at": ("2027.9.0", None),
+    "via_device": ("2027.8.0", "via_device_id"),
+}
+
+
 type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
 
@@ -265,7 +278,12 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
         for field in fields
         if field.default is MISSING and field.default_factory is MISSING
     )
-    cls.__optional_keys__ = frozenset(cls._field_names) - cls.__required_keys__
+    # The deprecated fields were not keys of the TypedDict
+    cls.__optional_keys__ = (
+        frozenset(cls._field_names)
+        - cls.__required_keys__
+        - _DEPRECATED_DEVICE_INFO_PARAMETERS.keys()
+    )
     return cls
 
 
@@ -420,19 +438,6 @@ def _validate_device_info(
                 device_info,
                 f"passing both `{field}` and `default_{field}` is not allowed",
             )
-
-
-# Deprecated `async_get_or_create` parameters, mapped to the HA Core version they are
-# removed in and the replacement parameter, or `None` if the parameter is ignored and
-# has no replacement.
-_DEPRECATED_DEVICE_INFO_PARAMETERS: dict[str, tuple[str, str | None]] = {
-    "created_at": ("2027.9.0", None),
-    "default_manufacturer": ("2027.9.0", "manufacturer"),
-    "default_model": ("2027.9.0", "model"),
-    "default_name": ("2027.9.0", "name"),
-    "modified_at": ("2027.9.0", None),
-    "via_device": ("2027.8.0", "via_device_id"),
-}
 
 
 class _ValidatedDeviceInfoFields(TypedDict):

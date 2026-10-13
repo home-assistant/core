@@ -4658,6 +4658,7 @@ def test_device_info_typed_dict_keys() -> None:
     """Test the TypedDict key attributes integrations read to check for a field."""
     assert dr.DeviceInfo.__required_keys__ == frozenset()
     assert "via_device_id" in dr.DeviceInfo.__optional_keys__
+    assert "via_device" not in dr.DeviceInfo.__optional_keys__
     assert dr.ChildDeviceInfo.__required_keys__ == {"identifiers", "parent_device_id"}
     assert dr.ChildDeviceInfo.__optional_keys__ == {
         "name",
