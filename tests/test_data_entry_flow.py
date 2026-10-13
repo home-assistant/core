@@ -3,6 +3,7 @@
 import asyncio
 import dataclasses
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import probatio
@@ -116,6 +117,136 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
     result = manager.mock_created_entries[0]
     assert result["handler"] == "test"
     assert result["data"] == ["INIT-DATA", "SECOND-DATA"]
+
+
+async def test_flow_step_nested_step_id(manager: MockFlowManager) -> None:
+    """Test a decorated step that hands off to another step reports the inner id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+        data: list[str] | None = None
+
+        @data_entry_flow.flow_step
+        async def async_step_first(self, user_input=None):
+            if user_input is not None:
+                self.data = user_input
+                return await self.async_step_second()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        @data_entry_flow.flow_step
+        async def async_step_second(self, user_input=None):
+            return await self.async_step_third()
+
+        @data_entry_flow.flow_step
+        async def async_step_third(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title="Test Entry", data=self.data + user_input
+                )
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+    form = await manager.async_configure(form["flow_id"], ["FIRST-DATA"])
+    assert form["step_id"] == "third"
+    form = await manager.async_configure(form["flow_id"], ["THIRD-DATA"])
+    assert form["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert form["data"] == ["FIRST-DATA", "THIRD-DATA"]
+
+
+@pytest.mark.parametrize(
+    ("method", "params"),
+    [
+        pytest.param("async_show_form", {}, id="form"),
+        pytest.param("async_show_menu", {"menu_options": ["first"]}, id="menu"),
+        pytest.param(
+            "async_show_progress",
+            {"progress_action": "task", "progress_task": Mock()},
+            id="progress",
+        ),
+        pytest.param("async_external_step", {"url": "https://example.com"}, id="ext"),
+    ],
+)
+async def test_flow_step_all_result_types(
+    manager: MockFlowManager, method: str, params: dict[str, Any]
+) -> None:
+    """Test every result builder picks up the id of the decorated step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_first(self, user_input=None):
+            return await self.async_step_second()
+
+        @data_entry_flow.flow_step
+        async def async_step_second(self, user_input=None):
+            return getattr(self, method)(**params)
+
+    result = await manager.async_init("test", context={"init_step": "first"})
+    assert result["step_id"] == "second"
+
+
+async def test_flow_step_restores_outer_step_id(manager: MockFlowManager) -> None:
+    """Test a step that resumes after awaiting another step keeps its own id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_init(self, user_input=None):
+            await self.async_step_helper()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        @data_entry_flow.flow_step
+        async def async_step_helper(self, user_input=None):
+            return self.async_abort(reason="unused")
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "init"
+    assert form["flow_id"] in [flow["flow_id"] for flow in manager.async_progress()]
+
+
+async def test_flow_step_explicit_step_id_wins(manager: MockFlowManager) -> None:
+    """Test an explicit step_id overrides the decorated step's id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(step_id="other")
+
+        async def async_step_other(self, user_input=None):
+            return self.async_create_entry(title="done", data={})
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "other"
+
+
+async def test_undecorated_step_uses_dispatched_step_id(
+    manager: MockFlowManager,
+) -> None:
+    """Test the manager still fills in the dispatched step for undecorated steps."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_first(self, user_input=None):
+            return await self.async_step_second()
+
+        async def async_step_second(self, user_input=None):
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+
+
+def test_flow_step_rejects_non_step_method() -> None:
+    """Test the decorator requires the async_step_ naming convention."""
+
+    with pytest.raises(TypeError, match="is not an async_step_ method"):
+
+        @data_entry_flow.flow_step
+        async def async_not_a_step(self, user_input=None):
+            return None
 
 
 async def test_show_form(manager: MockFlowManager) -> None:

@@ -3,14 +3,23 @@
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, Iterable, Mapping
-from contextlib import suppress
+from collections.abc import (
+    Callable,
+    Container,
+    Coroutine,
+    Generator,
+    Hashable,
+    Iterable,
+    Mapping,
+)
+from contextlib import contextmanager, suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import wraps
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Concatenate, Generic, Required, TypedDict, TypeVar, cast
 
 import probatio
 
@@ -617,6 +626,22 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ]
 
 
+def flow_step[_FlowHandlerT: FlowHandler[Any, Any, Any], **_P, _R](
+    func: Callable[Concatenate[_FlowHandlerT, _P], Coroutine[Any, Any, _R]], /
+) -> Callable[Concatenate[_FlowHandlerT, _P], Coroutine[Any, Any, _R]]:
+    """Mark a step method so results built inside it default to its step id."""
+    if not func.__name__.startswith("async_step_"):
+        raise TypeError(f"{func.__qualname__} is not an async_step_ method")
+    step_id = func.__name__.removeprefix("async_step_")
+
+    @wraps(func)
+    async def wrapper(self: _FlowHandlerT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        with self._as_step(step_id):
+            return await func(self, *args, **kwargs)
+
+    return wrapper
+
+
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
@@ -624,6 +649,9 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
     # Set by flow manager
     cur_step: _FlowResultT | None = None
+
+    # Set by _as_step while a step runs
+    _current_step_id: str | None = None
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
@@ -702,6 +730,16 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             schema[new_key] = val
         return probatio.Schema(schema)
 
+    @contextmanager
+    def _as_step(self, step_id: str) -> Generator[None]:
+        """Default the step id of results built inside the block."""
+        previous = self._current_step_id
+        self._current_step_id = step_id
+        try:
+            yield
+        finally:
+            self._current_step_id = previous
+
     @callback
     def async_show_form(
         self,
@@ -724,6 +762,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
+        if step_id is None:
+            step_id = self._current_step_id
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -791,6 +831,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             url=url,
             description_placeholders=description_placeholders,
         )
+        if step_id is None:
+            step_id = self._current_step_id
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -841,6 +883,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
+        if step_id is None:
+            step_id = self._current_step_id
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -897,6 +941,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if sort:
             flow_result["sort"] = sort
+        if step_id is None:
+            step_id = self._current_step_id
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
