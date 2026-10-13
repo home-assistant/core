@@ -205,9 +205,14 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
-    # An active locate must be requested on every poll (pyicloud >= 2.3.0
-    # only locates at service creation, so the account has to ask for it)
-    assert mock_icloud_service.return_value.devices.refresh_calls == [True]
-    assert "device1" in account.devices
     # The account polls devices itself, so pyicloud's own Find My monitor is disabled.
     assert mock_icloud_service.call_args.kwargs["refresh_interval"] is None
+    # The FindMyiPhoneServiceManager constructor just located every device, so
+    # the first update must read that fresh data without a second active locate.
+    assert mock_icloud_service.return_value.devices.refresh_calls == []
+    assert "device1" in account.devices
+
+    # Later updates request a fresh GPS fix on every poll.
+    with patch.object(account, "_schedule_next_fetch"):
+        account.update_devices()
+    assert mock_icloud_service.return_value.devices.refresh_calls == [True]
