@@ -431,7 +431,7 @@ async def test_const_control_zone_current_temperature_unknown(
     mock_controller.control_setpoint = None
     mock_controller.temp_return = 22.0
 
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.WARNING):
         await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
@@ -445,7 +445,7 @@ async def test_const_control_zone_current_temperature_unknown(
     # Property reads again without re-logging.
     climate = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY)
     assert climate is not None
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.WARNING):
         assert climate.native_current_temperature is None
     assert caplog.text.count("Unexpected iZone control zone") == 1
 

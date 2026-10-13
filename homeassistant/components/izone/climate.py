@@ -239,7 +239,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             if owner.type is Zone.Type.AUTO and owner.temp_current is not None:
                 return owner.temp_current
             if not self._unexpected_control_zone_logged:
-                _LOGGER.error(
+                _LOGGER.warning(
                     "Unexpected iZone control zone on controller %s: "
                     "zone index %s type %s temp %s; current temperature "
                     "unavailable. The bridge is not expected to select a "
