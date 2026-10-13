@@ -522,7 +522,7 @@ async def test_user_no_mac_new_device(
     hass: HomeAssistant,
     mock_gds_api: MagicMock,
 ) -> None:
-    """Test user flow creates entry with host:port unique_id when no MAC."""
+    """Test user flow creates entry without unique_id when no MAC is known."""
     mock_gds_api.device_mac = None
 
     result = await hass.config_entries.flow.async_init(
@@ -542,7 +542,7 @@ async def test_user_no_mac_new_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == "192.168.1.200:443"
+    assert entry.unique_id is None
 
 
 async def test_user_empty_host(
@@ -628,45 +628,3 @@ async def test_user_offline_device_reports_cannot_connect(
     )
 
     _assert_created_entry(hass, result)
-
-
-async def test_zeroconf_adopts_host_port_fallback_entry(
-    hass: HomeAssistant,
-    mock_gds_api: MagicMock,
-) -> None:
-    """Discovery with a MAC migrates an earlier host:port entry instead of duplicating."""
-    fallback = MockConfigEntry(
-        domain=DOMAIN,
-        title="Test Device",
-        unique_id="192.168.1.100:443",
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "gdsha",
-            CONF_PASSWORD: "password",
-            CONF_TYPE: "GDS",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-        },
-    )
-    fallback.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.1.100"),
-            ip_addresses=[ip_address("192.168.1.100")],
-            hostname="GDS3710-EC74D79753C5.local.",
-            name="GDS3710-EC74D79753C5._https._tcp.local.",
-            port=443,
-            properties={"version": "1.0.1.13"},
-            type="_https._tcp.local.",
-        ),
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].unique_id == format_mac("EC74D79753C5")

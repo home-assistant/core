@@ -60,10 +60,10 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
         if not version:
             return
 
-        assert self.config_entry.unique_id is not None
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, self.config_entry.unique_id), self.config_entry.entry_id
+            (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id),
+            self.config_entry.entry_id,
         )
         if device:
             device_registry.async_update_device(device.id, sw_version=version)

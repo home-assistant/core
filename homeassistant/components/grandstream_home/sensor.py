@@ -94,7 +94,10 @@ class GrandstreamDeviceSensor(CoordinatorEntity[GrandstreamCoordinator], SensorE
         super().__init__(coordinator)
         self._attr_device_info = device_info
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}"
+            f"_{description.key}"
+        )
 
     @property
     @override

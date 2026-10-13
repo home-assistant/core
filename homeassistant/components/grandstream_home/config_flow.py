@@ -27,8 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -51,24 +50,6 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         self._firmware_version: str | None = None
         self._device_model: str = DEVICE_TYPE_GDS
         self._product_model: str | None = None
-
-    @callback
-    def _adopt_fallback_entry(self, mac_unique_id: str) -> None:
-        """Rewrite a host:port fallback entry to the discovered MAC unique id.
-
-        An entry created while the device had no reachable MAC is keyed by
-        host:port; adopting it keeps a single entry once the MAC is known.
-        """
-        for entry in self._async_current_entries():
-            stored_port = entry.data.get(CONF_PORT, DEFAULT_PORT)
-            if (
-                entry.data.get(CONF_HOST) == self._host
-                and entry.unique_id == f"{self._host}:{stored_port}"
-            ):
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=mac_unique_id
-                )
-                return
 
     @override
     async def async_step_user(
@@ -145,15 +126,11 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._firmware_version = str(version)
             self._product_model = txt_properties.get("product")
 
-        # Use MAC address as unique_id if available
         self._mac = extract_mac_from_name(self._name) if self._name else None
-        # Set unique_id and check if already configured
         if self._mac:
-            mac_unique_id = format_mac(self._mac)
-            self._adopt_fallback_entry(mac_unique_id)
-            await self.async_set_unique_id(mac_unique_id)
+            await self.async_set_unique_id(format_mac(self._mac))
         else:
-            # For devices without MAC, use host+port to check for duplicates
+            # No unique id is set without a MAC; abort on an exact host+port match
             self._async_abort_entries_match(
                 {CONF_HOST: self._host, CONF_PORT: self._port}
             )
@@ -237,17 +214,16 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = validation_result
             return self._show_auth_form(errors)
 
-        # Set unique_id before creating entry (prefer MAC if available)
+        # Only entries with a known MAC get a unique id; otherwise uniqueness
+        # is guarded by the host+port match below
         if not self.unique_id:
             if self._mac:
-                self._adopt_fallback_entry(format_mac(self._mac))
                 await self.async_set_unique_id(format_mac(self._mac))
                 self._abort_if_unique_id_configured()
             else:
                 self._async_abort_entries_match(
                     {CONF_HOST: self._host, CONF_PORT: self._port}
                 )
-                await self.async_set_unique_id(f"{self._host}:{self._port}")
 
         # Set device name from API if not already set (e.g., from zeroconf)
         if not self._name:
@@ -280,7 +256,12 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
                     # Username is fixed to "gdsha", port defaults from discovery
                     probatio.Required(CONF_PASSWORD): cv.string,
                     probatio.Optional(CONF_PORT, default=self._port): probatio.All(
-                        probatio.Coerce(int), probatio.Range(min=1, max=65535)
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+                            )
+                        ),
+                        probatio.Coerce(int),
                     ),
                     probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
                 }

@@ -127,8 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     # 1. Set up API
     api = await _setup_api(hass, entry)
 
-    # 2. unique_id is always set in config flow
-    assert entry.unique_id is not None
+    # 2. unique_id is only set when the device MAC is known; the entry id
+    # keeps the device identity stable otherwise
+    device_unique_id = entry.unique_id or entry.entry_id
 
     # 3. Create device info
     mac_address = api.device_mac
@@ -136,7 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
 
     device_info = _create_device_info(
         entry=entry,
-        unique_id=entry.unique_id,
+        unique_id=device_unique_id,
         device_model=device_model,
         product_model=product_model,
         mac_address=mac_address,
@@ -153,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
         device_info=device_info,
         device_model=device_model,
         product_model=product_model,
-        unique_id=entry.unique_id,
+        unique_id=device_unique_id,
     )
 
     # 6. First refresh (firmware version updated in coordinator)
