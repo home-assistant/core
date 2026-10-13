@@ -27,6 +27,7 @@ TO_REDACT = {
     "uuid",
     "external_contract_id",
     "identifier",
+    "last_known_vehicle_uuid",
 }
 
 
@@ -62,6 +63,12 @@ async def async_get_config_entry_diagnostics(
                 for control_mode in (
                     entry.runtime_data.battery_control_coordinator.data or {}
                 ).values()
+            ],
+            "charge_points": [
+                charge_point.to_dict()
+                for charge_point in (
+                    entry.runtime_data.charge_point_coordinator.data.values()
+                )
             ],
         },
         TO_REDACT,
