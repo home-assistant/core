@@ -47,7 +47,7 @@ ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
-openai==3.10.0
+openai==3.26.0
 orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
@@ -261,6 +261,11 @@ python-backoff<2.4.0
 # (used by pydrawise) still imports
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
+
+# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# https://github.com/home-assistant/core/issues/185645
+# https://github.com/c-ares/c-ares/pull/1256
+pycares==5.0.1
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

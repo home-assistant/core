@@ -166,7 +166,7 @@ async def async_connect_androidtv(
     return aftv, None
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -189,8 +189,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.minor_version,
     )
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Android TV / Fire TV integration."""
@@ -198,7 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Set up Android Debug Bridge platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
@@ -230,16 +228,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        aftv = entry.runtime_data.aftv
-        await aftv.adb_close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    aftv = entry.runtime_data.aftv
+    await aftv.adb_close()
 
 
 async def update_listener(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:

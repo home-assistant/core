@@ -2778,6 +2778,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "grandstream_home": {
+      "name": "Grandstream Home",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "graphite": {
       "name": "Graphite",
       "integration_type": "hub",
@@ -2888,6 +2894,12 @@
       "name": "Harvey",
       "integration_type": "virtual",
       "supported_by": "aquacell"
+    },
+    "hase_iq": {
+      "name": "Hase iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "hassio": {
       "name": "Home Assistant Supervisor",
@@ -6827,6 +6839,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "smartyplants": {
+      "name": "SmartyPlants",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "smhi": {
       "name": "SMHI",
       "integration_type": "service",
@@ -8389,6 +8407,12 @@
           "config_flow": false,
           "iot_class": "assumed_state",
           "name": "Xiaomi TV"
+        },
+        "xiaomi_weather": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Xiaomi Weather"
         },
         "xiaomi": {
           "integration_type": "hub",

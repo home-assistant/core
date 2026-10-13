@@ -63,7 +63,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ViCareConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
@@ -131,8 +131,6 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
         _LOGGER.debug("Promoted pre-merge ViCare config entry from 1.3 to 2.1")
 
-    return True
-
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -143,7 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
@@ -222,8 +220,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     await _async_register_zigbee_gateway_devices(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def _async_register_zigbee_gateway_devices(
@@ -319,9 +315,9 @@ def _setup_vicare_api(
     return ViCareData(client=client, devices=devices)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     """Unload ViCare config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_devices_and_entities(
