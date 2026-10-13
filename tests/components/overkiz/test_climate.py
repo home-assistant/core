@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     HVACAction,
@@ -69,12 +70,19 @@ THERMOSTAT_HEATING = FixtureDevice(
     "io://1234-5678-5010/386310#1",
     "climate.study_thermostat",
 )
+# io:AtlanticHeatRecoveryVentilationIOComponent without io:VentilationModeState value
+HEAT_RECOVERY_VENTILATION = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/2840629#1",
+    "climate.ventilation",
+)
 
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
     YUTAKI_ZONE_1,
     THERMOSTAT_HEATING,
+    HEAT_RECOVERY_VENTILATION,
 ]
 
 
@@ -389,4 +397,28 @@ async def test_thermostat_heating_set_preset_mode(
         device_url=THERMOSTAT_HEATING.device_url,
         command_name="setDerogation",
         parameters=parameters,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param("set_fan_mode", {ATTR_FAN_MODE: "bypass_boost"}, id="fan_mode"),
+        pytest.param("set_preset_mode", {ATTR_PRESET_MODE: "prog"}, id="preset_mode"),
+    ],
+)
+async def test_heat_recovery_ventilation_without_ventilation_mode(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test setting modes does not fail without an io:VentilationModeState value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        service,
+        {"entity_id": HEAT_RECOVERY_VENTILATION.entity_id, **service_data},
+        blocking=True,
     )

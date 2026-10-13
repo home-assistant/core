@@ -23,6 +23,10 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "is_disable": { "name": "Charging enabled" },
+      "is_lock": { "name": "Cable lock state" }
+    },
     "sensor": {
       "access_level": {
         "name": "Access level",
@@ -74,6 +78,11 @@
         }
       },
       "voltage": { "name": "Voltage {phase}" }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
     }
   }
 }

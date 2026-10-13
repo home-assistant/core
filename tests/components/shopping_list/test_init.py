@@ -16,6 +16,7 @@ from homeassistant.components.shopping_list.const import (
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
+    SERVICE_INCOMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
     SERVICE_SORT,
 )
@@ -26,6 +27,7 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import intent, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -51,12 +53,15 @@ async def test_add_item(
     hass: HomeAssistant, sl_setup: None, snapshot: SnapshotAssertion
 ) -> None:
     """Test adding an item intent."""
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
 
     response = await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": " beer "}}
     )
     assert len(_get_shopping_data(hass).items) == 1
     assert _get_shopping_data(hass).items[0]["name"] == "beer"  # name was trimmed
+    assert len(events) == 1
+    assert events[0].data["action"] == "add"
 
     # Response text is now handled by default conversation agent
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -797,6 +802,21 @@ async def test_add_item_service(
     assert_shopping_list_data(hass, snapshot)
 
 
+async def test_add_item_service_allows_duplicates(
+    hass: HomeAssistant, sl_setup: None
+) -> None:
+    """Test adding duplicate items with the shopping list service."""
+    for _ in range(2):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_ITEM,
+            {ATTR_NAME: "beer"},
+            blocking=True,
+        )
+
+    assert len(_get_shopping_data(hass).items) == 2
+
+
 async def test_remove_item_service(
     hass: HomeAssistant, sl_setup: None, snapshot: SnapshotAssertion
 ) -> None:
@@ -828,6 +848,28 @@ async def test_remove_item_service(
     assert _get_shopping_data(hass).items[0]["name"] == "cheese"
     assert len(events) == 3
     assert_shopping_list_data(hass, snapshot)
+
+
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param(SERVICE_REMOVE_ITEM, id="remove_item"),
+        pytest.param(SERVICE_COMPLETE_ITEM, id="complete_item"),
+        pytest.param(SERVICE_INCOMPLETE_ITEM, id="incomplete_item"),
+    ],
+)
+@pytest.mark.usefixtures("sl_setup")
+async def test_item_service_item_not_found(hass: HomeAssistant, service: str) -> None:
+    """Test item services raise when no item matches the name."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_NAME: "beer"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "item_not_found"
+    assert exc_info.value.translation_placeholders == {"name": "beer"}
 
 
 async def test_clear_completed_items_service(

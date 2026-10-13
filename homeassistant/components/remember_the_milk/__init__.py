@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from aiortm import AioRTMClient, AioRTMError, Auth, AuthError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, async_noop
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -35,26 +35,27 @@ from .storage import RememberTheMilkConfiguration
 
 PLATFORMS = [Platform.TODO]
 
-RTM_SCHEMA = vol.Schema(
+RTM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SHARED_SECRET): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Required(probatio.Secret(CONF_SHARED_SECRET)): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [RTM_SCHEMA])}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(probatio.EnsureList(), [RTM_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_CREATE_TASK = "create_task"
 SERVICE_COMPLETE_TASK = "complete_task"
 
-SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Optional(CONF_ID): cv.string}
+SERVICE_SCHEMA_CREATE_TASK = probatio.Schema(
+    {probatio.Required(CONF_NAME): cv.string, probatio.Optional(CONF_ID): cv.string}
 )
 
-SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
+SERVICE_SCHEMA_COMPLETE_TASK = probatio.Schema({probatio.Required(CONF_ID): cv.string})
 
 DATA_COMPONENT = "component"
 DATA_STORAGE = "storage"
@@ -182,7 +183,7 @@ async def async_setup_entry(
     )
 
     # The services are registered here for now because they need the account name.
-    # The services will be deprecated when a todo platform is added.
+    # The services are deprecated in favor of the todo platform.
     # pylint: disable=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
@@ -203,7 +204,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     # Keep the coordinator polling even when there are no todo entities so that
     # lists created later in RTM are discovered and synced to subentries.
-    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+    entry.async_on_unload(coordinator.async_add_listener(async_noop))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

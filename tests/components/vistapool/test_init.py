@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 from aioaquarite import AquariteError, AuthenticationError
+import pytest
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.vistapool.const import DOMAIN
@@ -297,26 +298,6 @@ async def test_setup_prunes_devices_removed_while_offline(
     )
 
 
-async def test_apply_optimistic_creates_missing_intermediate_dicts(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test apply_optimistic walks through and creates missing intermediate dicts."""
-    mock_vistapool_client.fetch_pool_data.return_value = {"existing": "scalar"}
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.apply_optimistic("filtration.intel.temp", 27)
-    coordinator.apply_optimistic("existing.nested.key", 1)
-
-    assert coordinator.data["filtration"]["intel"]["temp"] == 27
-    assert coordinator.data["existing"] == {"nested": {"key": 1}}
-
-
 async def test_entities_unavailable_while_push_connection_is_down(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -325,7 +306,10 @@ async def test_entities_unavailable_while_push_connection_is_down(
     """Test entities go unavailable when the Firestore subscription drops.
 
     The integration has no polling interval, so without this the last
-    snapshot would stay on display as if it were still current.
+    snapshot would stay on display as if it were still current. Only the
+    library's health transition restores availability: data it delivers in
+    between (an acknowledged write, a reconcile fetch) is not proof the
+    stream is back.
     """
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -342,8 +326,12 @@ async def test_entities_unavailable_while_push_connection_is_down(
 
     assert hass.states.get(_TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE
 
-    # Only an incoming snapshot proves the connection is back.
     on_data({"main": {"temperature": 25}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE
+
+    on_health(True)
     await hass.async_block_till_done()
 
     assert hass.states.get(_TEMPERATURE_ENTITY).state == "25.0"
@@ -356,7 +344,7 @@ async def test_entities_stay_unavailable_on_local_updates_during_outage(
 ) -> None:
     """Test updates that are not push snapshots do not fake availability.
 
-    Both an optimistic write and a manual refresh set the coordinator's
+    Both an acknowledged write and a manual refresh set the coordinator's
     success flag, so availability cannot ride on that flag alone.
     """
     mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
@@ -365,20 +353,22 @@ async def test_entities_stay_unavailable_on_local_updates_during_outage(
     await hass.async_block_till_done()
     assert await async_setup_component(hass, "homeassistant", {})
 
-    on_health = mock_vistapool_client.subscribe_pool_resilient.call_args.kwargs[
-        "on_health"
-    ]
+    call = mock_vistapool_client.subscribe_pool_resilient.call_args
+    on_data = call.args[1]
+    on_health = call.kwargs["on_health"]
     on_health(False)
     await hass.async_block_till_done()
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
 
-    # An optimistic write updates coordinator data while the push is down.
+    # The library delivers an acknowledged write through the data callback
+    # while the push is down.
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: _LIGHT_ENTITY},
         blocking=True,
     )
+    on_data({"light": {"status": 1}})
     await hass.async_block_till_done()
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
 
@@ -409,3 +399,50 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_closes_firestore_clients(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_auth: MagicMock,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test unloading releases the Firestore gRPC channels."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_vistapool_auth.close.assert_not_called()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vistapool_auth.close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("owner", "method", "exception"),
+    [
+        pytest.param("auth", "authenticate", AuthenticationError, id="auth_rejected"),
+        pytest.param("auth", "authenticate", AquariteError, id="auth_unreachable"),
+        pytest.param("client", "get_pools", AquariteError, id="pools_unreachable"),
+    ],
+)
+async def test_failed_setup_closes_firestore_clients(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_auth: MagicMock,
+    mock_vistapool_client: AsyncMock,
+    owner: str,
+    method: str,
+    exception: type[Exception],
+) -> None:
+    """Test a setup that never completes still releases the Firestore channels."""
+    mocks = {"auth": mock_vistapool_auth, "client": mock_vistapool_client}
+    getattr(mocks[owner], method).side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vistapool_auth.close.assert_called_once()

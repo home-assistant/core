@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from probatio import MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous import MultipleInvalid
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,

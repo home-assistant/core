@@ -4,50 +4,51 @@ import logging
 import re
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
-from .const import (
-    ATTR_LEVEL,
+from .const import (  # noqa: F401
     DOMAIN,
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
     LOGGER_LOGS,
     LOGSEVERITY,
-    SERVICE_SET_DEFAULT_LEVEL,
     SERVICE_SET_LEVEL,
 )
 from .helpers import (
     DATA_LOGGER,
+    VALID_LOG_LEVEL,
     LoggerDomainConfig,
     LoggerSettings,
     _clear_logger_overwrites,  # noqa: F401
     set_default_log_level,
     set_log_levels,
 )
+from .services import async_setup_services
 
-_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
+# Home Assistant moved from httpx to httpx2, which logs under new logger names.
+RENAMED_LOGGERS = {"httpx": "httpx2", "httpcore": "httpcore2"}
 
-SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
-SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
-
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
-                vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
-                vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
+                probatio.Optional(LOGGER_DEFAULT): VALID_LOG_LEVEL,
+                probatio.Optional(LOGGER_LOGS): probatio.Schema(
+                    {cv.string: VALID_LOG_LEVEL}
+                ),
+                probatio.Optional(LOGGER_FILTERS): probatio.Schema(
+                    {cv.string: [cv.is_regex]}
+                ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -65,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set default log severity and filter
     logger_config = config.get(DOMAIN, {})
+    _async_check_renamed_loggers(hass, logger_config)
 
     if LOGGER_DEFAULT in logger_config:
         set_default_log_level(hass, logger_config[LOGGER_DEFAULT])
@@ -79,31 +81,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
 
-    @callback
-    def async_service_handler(service: ServiceCall) -> None:
-        """Handle logger services."""
-        if service.service == SERVICE_SET_DEFAULT_LEVEL:
-            set_default_log_level(hass, service.data[ATTR_LEVEL])
-        else:
-            set_log_levels(hass, service.data)
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_DEFAULT_LEVEL,
-        async_service_handler,
-        schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA,
-    )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_LEVEL,
-        async_service_handler,
-        schema=SERVICE_SET_LEVEL_SCHEMA,
-    )
+    async_setup_services(hass)
 
     return True
+
+
+def _renamed_logger(name: str) -> str | None:
+    """Return the new name of a renamed logger, or None if not renamed."""
+    for old, new in RENAMED_LOGGERS.items():
+        if name == old or name.startswith(f"{old}."):
+            return f"{new}{name.removeprefix(old)}"
+    return None
+
+
+@callback
+def _async_check_renamed_loggers(
+    hass: HomeAssistant, logger_config: ConfigType
+) -> None:
+    """Create a repair issue if the config uses renamed logger names."""
+    renames = {
+        name: new_name
+        for section in (LOGGER_LOGS, LOGGER_FILTERS)
+        for name in logger_config.get(section, {})
+        if (new_name := _renamed_logger(name))
+    }
+    if not renames:
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "renamed_loggers",
+        is_fixable=False,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="renamed_loggers",
+        translation_placeholders={
+            "loggers": "\n".join(
+                f"- `{old}` → `{new}`" for old, new in sorted(renames.items())
+            )
+        },
+    )
 
 
 def _add_log_filter(logger: logging.Logger, patterns: list[re.Pattern]) -> None:

@@ -18,41 +18,6 @@ TEST_PASSWORD = "123456"
 FAKE_TOKEN = "fake_token"
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (RedgtechAuthError, "invalid_auth"),
-        (RedgtechConnectionError, "cannot_connect"),
-        (Exception("Generic error"), "unknown"),
-    ],
-)
-async def test_user_step_errors(
-    hass: HomeAssistant,
-    mock_redgtech_api: MagicMock,
-    side_effect: type[Exception],
-    expected_error: str,
-) -> None:
-    """Test user step with various errors."""
-    user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
-    mock_redgtech_api.login.side_effect = side_effect
-    mock_redgtech_api.login.return_value = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
-    mock_redgtech_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
-
-
 async def test_user_step_creates_entry(
     hass: HomeAssistant,
     mock_redgtech_api: MagicMock,

@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Set up the esphome component."""
     host: str = entry.data[CONF_HOST]
     password: str | None = entry.data[CONF_PASSWORD]
@@ -95,7 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
     cli = async_create_api_client(
-        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
+        hass,
+        entry,
+        zeroconf_instance,
+        noise_psk=entry.data.get(CONF_NOISE_PSK),
+        declare_outgoing_target=True,
     )
 
     domain_data = DomainData.get(hass)
@@ -113,17 +117,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     )
     await manager.async_start()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Unload an esphome config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data.loaded_platforms
     )
-    if unload_ok:
-        await cleanup_instance(entry)
-    return unload_ok
+    await cleanup_instance(entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
@@ -154,7 +154,10 @@ async def _async_clear_dynamic_encryption_key(
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
     cli = async_create_api_client(
-        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
+        hass,
+        entry,
+        zeroconf_instance,
+        noise_psk=entry.data.get(CONF_NOISE_PSK),
     )
 
     try:

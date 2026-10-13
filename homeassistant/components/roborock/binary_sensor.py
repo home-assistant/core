@@ -278,7 +278,10 @@ class RoborockBinarySensorEntityA01(RoborockCoordinatedEntityA01, BinarySensorEn
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the value reported by the sensor."""
-        value = self.coordinator.data[self.entity_description.data_protocol]
+        if (
+            value := self.coordinator.data.get(self.entity_description.data_protocol)
+        ) is None:
+            return None
         return self.entity_description.value_fn(value)

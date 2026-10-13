@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import hmac
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -12,17 +12,17 @@ from homeassistant.exceptions import HomeAssistantError
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
-        vol.Optional("name"): str,
+        probatio.Required("username"): str,
+        probatio.Required("password"): str,
+        probatio.Optional("name"): str,
     }
 )
 
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
-    {vol.Required("users"): [USER_SCHEMA]}, extra=vol.PREVENT_EXTRA
+    {probatio.Required("users"): [USER_SCHEMA]}, extra=probatio.PREVENT_EXTRA
 )
 
 
@@ -120,10 +120,10 @@ class ExampleLoginFlow(LoginFlow[ExampleAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("username"): str,
-                    vol.Required("password"): str,
+                    probatio.Required("username"): str,
+                    probatio.Required("password"): str,
                 }
             ),
             errors=errors,

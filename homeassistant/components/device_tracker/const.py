@@ -8,9 +8,10 @@ from typing import Final
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.util.signal_type import SignalType
 
+DOMAIN: Final = "device_tracker"
+
 LOGGER: Final = logging.getLogger(__package__)
 
-DOMAIN: Final = "device_tracker"
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY: Final = "legacy"
