@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 import types
-from typing import Any
+from typing import Any, override
 
 import probatio
 from probatio.humanize import humanize_error
@@ -75,11 +75,6 @@ class AuthProvider:
     def name(self) -> str:
         """Return the name of the auth provider."""
         return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
-
-    @property
-    def support_mfa(self) -> bool:
-        """Return whether multi-factor auth supported by the auth provider."""
-        return True
 
     async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
@@ -200,13 +195,7 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
     def __init__(self, auth_provider: _AuthProviderT) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
-        self._auth_module_id: str | None = None
         self._auth_manager = auth_provider.hass.auth
-        self.available_mfa_modules: dict[str, str] = {}
-        self.created_at = dt_util.utcnow()
-        self.invalid_mfa_times = 0
-        self.user: User | None = None
-        self.credential: Credentials | None = None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -217,6 +206,45 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
         Return await self.async_finish(flow_result) if login init step pass.
         """
         raise NotImplementedError
+
+    async def async_finish(self, flow_result: Any) -> AuthFlowResult:
+        """Handle the pass of login flow."""
+        return self.async_create_entry(data=flow_result)
+
+
+class MfaLoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
+    LoginFlow[_AuthProviderT]
+):
+    """Login flow that asks for a user's enabled multi-factor auth module."""
+
+    def __init__(self, auth_provider: _AuthProviderT) -> None:
+        """Initialize the login flow."""
+        super().__init__(auth_provider)
+        self._auth_module_id: str | None = None
+        self.available_mfa_modules: dict[str, str] = {}
+        self.created_at = dt_util.utcnow()
+        self.invalid_mfa_times = 0
+        self.user: User | None = None
+        self.credential: Credentials | None = None
+
+    @override
+    async def async_finish(self, flow_result: Any) -> AuthFlowResult:
+        """Ask for a second factor before finishing, if the user enabled one."""
+        credentials = await self._auth_provider.async_get_or_create_credentials(
+            flow_result
+        )
+
+        # New credentials are not linked to a user that could have enabled MFA
+        if not credentials.is_new and (
+            user := await self._auth_manager.async_get_user_by_credentials(credentials)
+        ):
+            if modules := await self._auth_manager.async_get_enabled_mfa(user):
+                self.credential = credentials
+                self.user = user
+                self.available_mfa_modules = modules
+                return await self.async_step_select_mfa_module()
+
+        return await super().async_finish(credentials)
 
     async def async_step_select_mfa_module(
         self, user_input: dict[str, str] | None = None
@@ -281,7 +309,7 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
                     return self.async_abort(reason="too_many_retry")
 
             if not errors:
-                return await self.async_finish(self.credential)
+                return await super().async_finish(self.credential)
 
         description_placeholders: dict[str, str] = {
             "mfa_module_name": auth_module.name,
@@ -294,7 +322,3 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
             description_placeholders=description_placeholders,
             errors=errors,
         )
-
-    async def async_finish(self, flow_result: Any) -> AuthFlowResult:
-        """Handle the pass of login flow."""
-        return self.async_create_entry(data=flow_result)

@@ -145,9 +145,9 @@ async def test_login_flow_validates(data: hass_auth.Data, hass: HomeAssistant) -
     data.add_auth("test-user", "test-pass")
     await data.async_save()
 
-    provider = hass_auth.HassAuthProvider(
-        hass, auth_store.AuthStore(hass), {"type": "homeassistant"}
-    )
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    provider = hass_auth.HassAuthProvider(hass, store, {"type": "homeassistant"})
     flow = await provider.async_login_flow({})
     result = await flow.async_step_init()
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -168,7 +168,7 @@ async def test_login_flow_validates(data: hass_auth.Data, hass: HomeAssistant) -
         {"username": "test-USER", "password": "test-pass"}
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"]["username"] == "test-USER"
+    assert result["data"].data["username"] == "test-user"
 
 
 async def test_saving_loading(data: hass_auth.Data, hass: HomeAssistant) -> None:

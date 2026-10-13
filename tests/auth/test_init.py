@@ -1,6 +1,8 @@
 """Tests for the Home Assistant auth module."""
 
 from datetime import timedelta
+from ipaddress import ip_address
+from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import patch
@@ -877,6 +879,92 @@ async def test_login_with_auth_module(mock_hass) -> None:
     # Finally passed, get credential
     assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
+    assert step["result"].id == "mock-id"
+
+
+async def test_login_command_line_with_auth_module(mock_hass: HomeAssistant) -> None:
+    """Test the command line provider asks for an enabled auth module."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {
+                "type": "command_line",
+                "command": str(
+                    Path(__file__).parent / "providers/test_command_line_cmd.sh"
+                ),
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="command_line",
+            auth_provider_id=None,
+            data={"username": "good-user"},
+            is_new=False,
+        )
+    )
+
+    step = await manager.login_flow.async_init(("command_line", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "good-user", "password": "good-pass"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
+    assert step["step_id"] == "mfa"
+
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"pin": "test-pin"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["result"].id == "mock-id"
+
+
+async def test_login_trusted_networks_skips_auth_module(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test a provider without an MFA login flow does not ask for auth modules."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [{"type": "trusted_networks", "trusted_networks": ["192.168.0.1"]}],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="trusted_networks",
+            auth_provider_id=None,
+            data={"user_id": "mock-user"},
+            is_new=False,
+        )
+    )
+    assert await manager.async_get_enabled_mfa(user)
+
+    step = await manager.login_flow.async_init(
+        ("trusted_networks", None), context={"ip_address": ip_address("192.168.0.1")}
+    )
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"user": "mock-user"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"].id == "mock-id"
 
 
