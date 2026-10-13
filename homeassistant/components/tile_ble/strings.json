@@ -1,0 +1,19 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The Tile you want to set up. Tiles with the strongest signal are listed first."
+        },
+        "description": "Hold your Tile close to a Bluetooth adapter or proxy so it appears at the top of the list."
+      }
+    }
+  }
+}
