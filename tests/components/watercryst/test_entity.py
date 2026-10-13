@@ -25,3 +25,29 @@ def test_entity_initialization(config_entry: MockConfigEntry) -> None:
     assert entity.device_info is config_entry.runtime_data.device_info
     assert entity.should_poll is False
     assert entity.has_entity_name is True
+
+
+def test_entity_availability(config_entry: MockConfigEntry) -> None:
+    """Test shared WATERCryst entity availability."""
+    coordinator = MagicMock()
+    description = SensorEntityDescription(key="pressure")
+
+    entity = WatercrystEntity(
+        config_entry=config_entry,
+        coordinator=coordinator,
+        entity_description=description,
+    )
+
+    assert entity.available
+
+    config_entry.runtime_data.state.data.online = False
+
+    assert not entity.available
+
+    config_entry.runtime_data.state.data.online = True
+
+    assert entity.available
+
+    config_entry.runtime_data.state.data = None
+
+    assert not entity.available
