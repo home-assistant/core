@@ -1,7 +1,7 @@
 """Support for OwnTracks."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections import defaultdict
+from functools import partial
 import json
 import logging
 import re
@@ -26,7 +26,7 @@ from homeassistant.util import slugify
 from homeassistant.util.json import json_loads
 
 from .config_flow import CONF_SECRET
-from .const import DOMAIN
+from .const import DATA_OWNTRACKS_CONFIG, DOMAIN
 from .messages import async_handle_message, encrypt_message
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +42,8 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
+type OwnTracksConfigEntry = ConfigEntry[OwnTracksContext]
+
 CONFIG_SCHEMA = probatio.All(
     cv.removed(CONF_WEBHOOK_ID),
     probatio.Schema(
@@ -54,9 +56,9 @@ CONFIG_SCHEMA = probatio.All(
                     CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
                 ): mqtt.valid_subscribe_topic,
                 probatio.Optional(CONF_WAYPOINT_WHITELIST): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
-                probatio.Optional(CONF_SECRET): probatio.Any(
+                probatio.Optional(probatio.Secret(CONF_SECRET)): probatio.Any(
                     probatio.Schema({probatio.Optional(cv.string): cv.string}),
                     cv.string,
                 ),
@@ -70,13 +72,13 @@ CONFIG_SCHEMA = probatio.All(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize OwnTracks component."""
-    hass.data[DOMAIN] = {"config": config[DOMAIN], "devices": {}, "unsub": None}
+    hass.data[DATA_OWNTRACKS_CONFIG] = config[DOMAIN]
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> bool:
     """Set up OwnTracks entry."""
-    config = hass.data[DOMAIN]["config"]
+    config = hass.data[DATA_OWNTRACKS_CONFIG]
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
@@ -98,31 +100,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     webhook_id = config.get(CONF_WEBHOOK_ID) or entry.data[CONF_WEBHOOK_ID]
 
-    hass.data[DOMAIN]["context"] = context
+    entry.runtime_data = context
 
-    async_when_setup(hass, "mqtt", async_connect_mqtt)
+    async_when_setup(hass, "mqtt", partial(async_connect_mqtt, context=context))
 
-    webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
+    webhook.async_register(
+        hass,
+        DOMAIN,
+        "OwnTracks",
+        webhook_id,
+        partial(handle_webhook, context=context),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.data[DOMAIN]["unsub"] = async_dispatcher_connect(
-        hass, DOMAIN, async_handle_message
-    )
+    entry.async_on_unload(async_dispatcher_connect(hass, DOMAIN, async_handle_message))
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> bool:
     """Unload an OwnTracks config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN]["unsub"]()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> None:
     """Remove an OwnTracks config entry."""
     if not entry.data.get("cloudhook"):
         return
@@ -130,9 +133,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
-async def async_connect_mqtt(hass, component):
+async def async_connect_mqtt(hass, component, context):
     """Subscribe to MQTT topic."""
-    context = hass.data[DOMAIN]["context"]
 
     @callback
     def async_handle_mqtt_message(msg):
@@ -153,14 +155,16 @@ async def async_connect_mqtt(hass, component):
 
 
 async def handle_webhook(
-    hass: HomeAssistant, webhook_id: str, request: web.Request
+    hass: HomeAssistant,
+    webhook_id: str,
+    request: web.Request,
+    context: OwnTracksContext,
 ) -> web.Response:
     """Handle webhook callback.
 
     iOS sets the "topic" as part of the payload.
     Android does not set a topic but adds headers to the request.
     """
-    context = hass.data[DOMAIN]["context"]
     topic_base = re.sub("/#$", "", context.mqtt_topic)
 
     try:

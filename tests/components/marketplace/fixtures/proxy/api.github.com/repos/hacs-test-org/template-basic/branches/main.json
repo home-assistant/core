@@ -1,0 +1,101 @@
+{
+  "name": "main",
+  "commit": {
+    "sha": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+    "node_id": "MDY6Q29tbWl0MTI5NjI2OTo3ZmQxYTYwYjAxZjkxYjMxNGY1OTk1NWE0ZTRkNGU4MGQ4ZWRmMTFk",
+    "commit": {
+      "author": {
+        "name": "The Octocat",
+        "email": "octocat@nowhere.com",
+        "date": "2012-03-06T23:06:50Z"
+      },
+      "committer": {
+        "name": "The Octocat",
+        "email": "octocat@nowhere.com",
+        "date": "2012-03-06T23:06:50Z"
+      },
+      "message": "Merge pull request #6 from Spaceghost/patch-1\n\nNew line at end of file.",
+      "tree": {
+        "sha": "b4eecafa9be2f2006ce1b709d6857b07069b4608",
+        "url": "https://api.github.com/repos/hacs-test-org/integration-basic/git/trees/b4eecafa9be2f2006ce1b709d6857b07069b4608"
+      },
+      "url": "https://api.github.com/repos/hacs-test-org/integration-basic/git/commits/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+      "comment_count": 77,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+    "html_url": "https://github.com/hacs-test-org/integration-basic/commit/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+    "comments_url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d/comments",
+    "author": {
+      "login": "octocat",
+      "id": 583231,
+      "node_id": "MDQ6VXNlcjU4MzIzMQ==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/583231?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/octocat",
+      "html_url": "https://github.com/octocat",
+      "followers_url": "https://api.github.com/users/hacs-test-org/followers",
+      "following_url": "https://api.github.com/users/hacs-test-org/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hacs-test-org/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hacs-test-org/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hacs-test-org/subscriptions",
+      "organizations_url": "https://api.github.com/users/hacs-test-org/orgs",
+      "repos_url": "https://api.github.com/users/hacs-test-org/repos",
+      "events_url": "https://api.github.com/users/hacs-test-org/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hacs-test-org/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "octocat",
+      "id": 583231,
+      "node_id": "MDQ6VXNlcjU4MzIzMQ==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/583231?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/octocat",
+      "html_url": "https://github.com/octocat",
+      "followers_url": "https://api.github.com/users/hacs-test-org/followers",
+      "following_url": "https://api.github.com/users/hacs-test-org/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hacs-test-org/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hacs-test-org/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hacs-test-org/subscriptions",
+      "organizations_url": "https://api.github.com/users/hacs-test-org/orgs",
+      "repos_url": "https://api.github.com/users/hacs-test-org/repos",
+      "events_url": "https://api.github.com/users/hacs-test-org/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hacs-test-org/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+        "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+        "html_url": "https://github.com/hacs-test-org/integration-basic/commit/553c2077f0edc3d5dc5d17262f6aa498e69d6f8e"
+      },
+      {
+        "sha": "762941318ee16e59dabbacb1b4049eec22f0d303",
+        "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/762941318ee16e59dabbacb1b4049eec22f0d303",
+        "html_url": "https://github.com/hacs-test-org/integration-basic/commit/762941318ee16e59dabbacb1b4049eec22f0d303"
+      }
+    ]
+  },
+  "_links": {
+    "self": "https://api.github.com/repos/hacs-test-org/integration-basic/branches/main",
+    "html": "https://github.com/hacs-test-org/integration-basic/tree/main"
+  },
+  "protected": false,
+  "protection": {
+    "enabled": false,
+    "required_status_checks": {
+      "enforcement_level": "off",
+      "contexts": [],
+      "checks": []
+    }
+  },
+  "protection_url": "https://api.github.com/repos/hacs-test-org/integration-basic/branches/main/protection"
+}

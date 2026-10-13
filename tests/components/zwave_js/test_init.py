@@ -925,7 +925,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     await hass.async_block_till_done()
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
     assert not hass.states.get(motion_entity)
 
     node_state = deepcopy(zp3111_not_ready_state)
@@ -961,7 +961,7 @@ async def test_existing_node_not_replaced_when_not_ready(
 
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
     event = Event(
         type="ready",
@@ -994,7 +994,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     state = hass.states.get(custom_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
 
 @pytest.mark.usefixtures("client")
@@ -1009,13 +1009,31 @@ async def test_null_name(
 
 
 @pytest.mark.usefixtures("addon_installed", "addon_info")
+@pytest.mark.parametrize(
+    "existing_addon_options",
+    [
+        pytest.param({}, id="unconfigured"),
+        pytest.param(
+            {
+                "device": "/old",
+                "log_level": "debug",
+                "log_to_file": True,
+                "rf_region": "Europe",
+            },
+            id="user-configured",
+        ),
+    ],
+)
 async def test_start_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    existing_addon_options: dict[str, Any],
 ) -> None:
-    """Test start the Z-Wave JS add-on during entry setup."""
+    """Test entry setup preserves user options when starting the Z-Wave JS add-on."""
+    addon_options.update(existing_addon_options)
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -1023,7 +1041,7 @@ async def test_start_addon(
     s2_unauthenticated_key = "s2_unauthenticated"
     lr_s2_access_control_key = "lr_s2_access_control"
     lr_s2_authenticated_key = "lr_s2_authenticated"
-    addon_options = {
+    expected_options = existing_addon_options | {
         "device": device,
         "s0_legacy_key": s0_legacy_key,
         "s2_access_control_key": s2_access_control_key,
@@ -1055,8 +1073,9 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config=addon_options)
+        "core_zwave_js", AddonsOptions(config=expected_options)
     )
+    assert addon_options == expected_options
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
 
@@ -2043,7 +2062,7 @@ async def test_node_model_change(
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
     # Unload the integration
     assert await hass.config_entries.async_unload(integration.entry_id)
@@ -2073,7 +2092,7 @@ async def test_node_model_change(
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Entity Name"
+    assert state.name == "Custom Device Name Custom Entity Name"
 
 
 @pytest.mark.usefixtures("zp3111", "integration")

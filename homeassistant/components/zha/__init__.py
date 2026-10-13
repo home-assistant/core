@@ -97,7 +97,9 @@ PLATFORMS = (
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -106,6 +108,7 @@ PLATFORMS = (
     Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VALVE,
 )
 
 

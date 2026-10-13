@@ -49,7 +49,7 @@ FULL_EDIT_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_HTTPS, default=False): bool,
     }
 )
@@ -57,7 +57,7 @@ FULL_EDIT_SCHEMA = probatio.Schema(
 SHORT_EDIT_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_HTTPS, default=False): bool,
     }
 )

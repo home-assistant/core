@@ -207,7 +207,8 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = probatio.Schema(
             {
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
             }
         )

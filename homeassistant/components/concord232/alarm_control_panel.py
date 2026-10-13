@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_CODE): cv.string,
         probatio.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pajgps_api.models.device import Device
 from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
@@ -12,14 +14,19 @@ from pajgps_api.pajgps_api_error import PajGpsApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.paj_gps.const import DOMAIN
+from homeassistant.components.paj_gps.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -165,6 +172,7 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
     caplog: pytest.LogCaptureFixture,
     mock_paj_gps_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test one failed sensor-data request does not break all voltage sensors."""
     mock_paj_gps_api.get_devices.return_value = [
@@ -212,9 +220,12 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
         == 1
     )
 
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    fetches = device_sensor_data[2].await_count
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert device_sensor_data[2].await_count > fetches
     assert (
         caplog.messages.count("Failed to fetch voltage sensor data for device 2: boom")
         == 1
@@ -222,15 +233,19 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
 
     device_sensor_data[2].side_effect = None
     device_sensor_data[2].return_value = SensorData(did=2, volt=12500)
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert caplog.messages.count("Voltage sensor data recovered for device 2") == 1
     state_2 = hass.states.get("sensor.device_2_voltage")
     assert state_2 is not None
     assert state_2.state == "12.5"
 
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    fetches = device_sensor_data[2].await_count
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert device_sensor_data[2].await_count > fetches
     assert caplog.messages.count("Voltage sensor data recovered for device 2") == 1
