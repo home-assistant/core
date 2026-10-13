@@ -289,6 +289,7 @@ async def test_user_defaults(hass: HomeAssistant) -> None:
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
     assert result["data"][CONF_INCLUDE_COMPLETED] == DEFAULT_INCLUDE_COMPLETED
 
 

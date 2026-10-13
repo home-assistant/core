@@ -28,10 +28,10 @@
       },
       "user": {
         "data": {
+          "include_completed": "Include completed reminders",
           "password": "Main password (MFA)",
           "username": "[%key:common::config_flow::data::email%]",
-          "with_family": "With family",
-          "include_completed": "Include completed reminders"
+          "with_family": "With family"
         },
         "description": "Enter your credentials",
         "title": "iCloud credentials"
@@ -43,15 +43,6 @@
         },
         "description": "Please enter the verification code you just received from Apple",
         "title": "Apple Account code"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "include_completed": "Include completed reminders"
-        }
       }
     }
   },
@@ -91,6 +82,15 @@
     },
     "unsupported_media_type": {
       "message": "Unsupported media type"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "include_completed": "Include completed reminders"
+        }
+      }
     }
   },
   "services": {

@@ -404,6 +404,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> IcloudOptionsFlowHandler:
