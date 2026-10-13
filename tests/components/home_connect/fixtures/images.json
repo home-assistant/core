@@ -1,0 +1,27 @@
+{
+  "FridgeFreezer": {
+    "images": [
+      {
+        "key": "Refrigeration.FridgeFreezer.Status.DoorCameraPresentRefrigerator",
+        "imagekey": "door-image-1",
+        "previewimagekey": "door-image-1-preview",
+        "timestamp": 1457704646,
+        "quality": "good"
+      },
+      {
+        "key": "Refrigeration.FridgeFreezer.Status.DoorCameraPresentRefrigerator",
+        "imagekey": "door-image-2",
+        "previewimagekey": "door-image-2-preview",
+        "timestamp": 1457708246,
+        "quality": "good"
+      },
+      {
+        "key": "Refrigeration.FridgeFreezer.Status.InteriorCameraPresentRefrigerator",
+        "imagekey": "interior-image-1",
+        "previewimagekey": "interior-image-1-preview",
+        "timestamp": 1457704646,
+        "quality": "good"
+      }
+    ]
+  }
+}

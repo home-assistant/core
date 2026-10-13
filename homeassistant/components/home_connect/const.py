@@ -24,6 +24,15 @@ APPLIANCES_WITH_PROGRAMS = (
     "WasherDryer",
 )
 
+APPLIANCES_WITH_IMAGES = (
+    "FridgeFreezer",
+    "Oven",
+    "Refrigerator",
+)
+
+# Time the appliance needs to upload new images after its door was closed
+IMAGES_REFRESH_DELAY = 60
+
 UNIT_MAP = {
     "seconds": UnitOfTime.SECONDS,
     "ml": UnitOfVolume.MILLILITERS,
@@ -60,6 +69,8 @@ BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR = (
 BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
 BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
+
+DOOR_CLOSED_STATES = {BSH_DOOR_STATE_CLOSED, REFRIGERATION_STATUS_DOOR_CLOSED}
 
 
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
