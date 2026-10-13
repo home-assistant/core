@@ -5,7 +5,6 @@
 
 from datetime import timedelta
 from functools import partial
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -38,13 +37,6 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-
-# Set the log level for your specific components here
-# This will show all messages from DEBUG level and above for these loggers.
-logging.getLogger("homeassistant.components.netatmo.data_handler").setLevel(
-    logging.DEBUG
-)
-logging.getLogger("homeassistant.components.netatmo.camera").setLevel(logging.DEBUG)
 
 
 async def test_entity(
