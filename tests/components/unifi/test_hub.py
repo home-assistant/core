@@ -323,6 +323,26 @@ async def test_connection_failure_reports_are_deduplicated(
     assert caplog.text.count("Connection to UniFi Network restored") == 1
 
 
+async def test_failed_setup_cancels_connection_retry(
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Ensure a retry scheduled during a failed setup does not outlive the entry."""
+    with (
+        patch(
+            "aiounifi.interfaces.system_information.SystemInformationHandler.update",
+            side_effect=aiounifi.ServiceUnavailable,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            side_effect=RuntimeError,
+        ),
+    ):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.runtime_data.connection._retry_handle is None
+
+
 async def test_connection_recovery_does_not_restart_running_websocket(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,

@@ -48,6 +48,7 @@ class UnifiHub:
         self.connection = UnifiConnectionManager(
             hass, config_entry, api, self.signal_reachable
         )
+        config_entry.async_on_unload(self.connection.stop)
         self.websocket = UnifiWebsocket(hass, api, self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
