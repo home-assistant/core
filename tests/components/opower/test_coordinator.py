@@ -1125,24 +1125,26 @@ async def test_coordinator_rate_periods_time_of_use_and_tiered(
     }
 
 
-async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
+async def test_coordinator_rate_periods_leave_out_resolution_that_does_not_add_up(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test reads whose components do not add up to the read are left out.
+    """Test a resolution whose components do not add up is left out as a whole.
 
     Some utilities return daily components that do not sum to the read while
-    the hourly ones do. Such reads must feed nothing into the period
-    statistics, and a period only seen in such reads must not be created.
+    the hourly ones do. Feeding the days that happen to add up would store a
+    patchwork, so no daily read feeds the periods, and a period only seen in
+    them is not created. The hourly reads feed the periods as usual.
     """
-    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
+    day = dt_util.as_utc(datetime(2023, 1, 1))
+    hour = [day + timedelta(days=2, hours=i) for i in range(3)]
     mock_opower_api.async_get_cost_reads.return_value = [
-        # Adds up: written
+        # Daily read that adds up
         CostRead(
-            start_time=hour[0],
-            end_time=hour[1],
+            start_time=day,
+            end_time=day + timedelta(days=1),
             consumption=3.0,
             provided_cost=0.75,
             read_components=[
@@ -1150,10 +1152,11 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
                 _read_component("ON_PEAK", 1.0, 0.25),
             ],
         ),
-        # Does not add up: a zero point, and its extra period is never created
+        # Daily read that does not: all daily reads are left out, and the
+        # period only seen in them is never created
         CostRead(
-            start_time=hour[1],
-            end_time=hour[2],
+            start_time=day + timedelta(days=1),
+            end_time=day + timedelta(days=2),
             consumption=-10.0,
             provided_cost=-1.0,
             read_components=[
@@ -1161,13 +1164,20 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
                 _read_component("PART_PEAK", -0.6, 2.0),
             ],
         ),
-        # Adds up again: written, sums continue from the first read
+        # Hourly reads that add up: written
         CostRead(
-            start_time=hour[2],
-            end_time=hour[2] + timedelta(hours=1),
+            start_time=hour[0],
+            end_time=hour[1],
+            consumption=2.0,
+            provided_cost=0.5,
+            read_components=[_read_component("OFF_PEAK", 2.0, 0.5)],
+        ),
+        CostRead(
+            start_time=hour[1],
+            end_time=hour[2],
             consumption=1.0,
             provided_cost=0.25,
-            read_components=[_read_component("OFF_PEAK", 1.0, 0.25)],
+            read_components=[_read_component("ON_PEAK", 1.0, 0.25)],
         ),
     ]
     coordinator = OpowerCoordinator(hass, mock_config_entry)
@@ -1175,12 +1185,17 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
     await async_wait_recording_done(hass)
 
     off_peak_id = "opower:pge_elec_111111_off_peak_energy_consumption"
+    on_peak_id = "opower:pge_elec_111111_on_peak_energy_consumption"
     stats = await hass.async_add_executor_job(
         statistics_during_period,
         hass,
         dt_util.utc_from_timestamp(0),
         None,
-        {off_peak_id, "opower:pge_elec_111111_part_peak_energy_consumption"},
+        {
+            off_peak_id,
+            on_peak_id,
+            "opower:pge_elec_111111_part_peak_energy_consumption",
+        },
         "hour",
         None,
         {"state", "sum"},
@@ -1189,21 +1204,24 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
     assert [(s["start"], s["state"], s["sum"]) for s in stats[off_peak_id]] == [
         (hour[0].timestamp(), 2.0, 2.0),
         (hour[1].timestamp(), 0.0, 2.0),
-        (hour[2].timestamp(), 1.0, 3.0),
+    ]
+    assert [(s["start"], s["state"], s["sum"]) for s in stats[on_peak_id]] == [
+        (hour[0].timestamp(), 0.0, 0.0),
+        (hour[1].timestamp(), 1.0, 1.0),
     ]
 
 
-async def test_coordinator_rate_period_zeroed_when_correction_does_not_add_up(
+async def test_coordinator_rate_periods_keep_points_when_resolution_stops_adding_up(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test a stored period is zeroed when its only read stops adding up.
+    """Test stored points stay when a correction makes a resolution not add up.
 
-    The period is only in the corrected read, whose breakdown no longer adds
-    up. It is not found from the reads that do, but it has stored statistics,
-    so its old point must be replaced with a zero one instead of staying.
+    Once a read of the resolution no longer adds up, none of its reads feed
+    the periods, so the points stored from the earlier version of the reads
+    are neither replaced nor deleted.
     """
     hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
 
@@ -1251,7 +1269,7 @@ async def test_coordinator_rate_period_zeroed_when_correction_does_not_add_up(
     )
     assert [(s["start"], s["state"], s["sum"]) for s in stats[part_peak_id]] == [
         (hour[0].timestamp(), 0.0, 0.0),
-        (hour[1].timestamp(), 0.0, 0.0),
+        (hour[1].timestamp(), 1.0, 1.0),
     ]
 
 
@@ -1387,10 +1405,11 @@ async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test reads with a component that belongs to no rate period feed nothing.
+    """Test a resolution with a component that belongs to no period is left out.
 
     Such a read can add up as a whole while the periods it feeds would not,
-    since the component without a period is written nowhere.
+    since the component without a period is written nowhere, so it counts as
+    not adding up and takes its resolution out of the periods with it.
     """
     hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
     mock_opower_api.async_get_cost_reads.return_value = [
@@ -1428,10 +1447,7 @@ async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
         None,
         {"state", "sum"},
     )
-    assert [(s["start"], s["state"], s["sum"]) for s in stats[off_peak_id]] == [
-        (hour[0].timestamp(), 0.0, 0.0),
-        (hour[1].timestamp(), 1.0, 1.0),
-    ]
+    assert off_peak_id not in stats
 
 
 async def test_coordinator_rate_periods_skip_empty_periods(
@@ -1697,13 +1713,11 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test a period whose statistics were partly deleted is rebuilt as a whole.
+    """Test only the deleted statistic of a period is rebuilt.
 
-    The four statistics of a period are resumed together. If one of them is
-    gone, e.g. deleted in Developer tools, the period starts over from the
-    full history instead of resuming the others from a point the deleted one
-    no longer has. The rebuild overwrites what is left and deletes nothing:
-    a row the history no longer produces stays as it is.
+    Each of the four statistics of a period continues from its own stored
+    point. If one of them is gone, e.g. deleted in Developer tools, it alone
+    is rebuilt from the full history, while the others carry on untouched.
     """
     hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
 
@@ -1729,7 +1743,7 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
     await async_wait_recording_done(hass)
 
     # The history no longer contains the first read, as happens when hourly
-    # reads age into daily reads. Its old row is left alone.
+    # reads age into daily reads. The surviving statistics are left alone.
     mock_opower_api.async_get_cost_reads.return_value = [read(1), read(2)]
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
@@ -1750,8 +1764,8 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
     ]
     assert [(s["start"], s["sum"]) for s in stats[consumption_id]] == [
         (hour[0].timestamp(), 1.0),
-        (hour[1].timestamp(), 2.0),
-        (hour[2].timestamp(), 5.0),
+        (hour[1].timestamp(), 3.0),
+        (hour[2].timestamp(), 6.0),
     ]
 
 
@@ -1761,7 +1775,7 @@ async def test_coordinator_rate_period_returns_after_absence(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test a rate period continues its sum after runs without it.
+    """Test a rate period continues its sum after runs without usage in it.
 
     Each run refetches the previous run's last read, as the coordinator
     refetches the last 30 days to allow corrections in data from utilities.
@@ -1788,7 +1802,7 @@ async def test_coordinator_rate_period_returns_after_absence(
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    # Second run: only off peak, so no on peak statistics are written
+    # Second run: only off peak. On peak is stored, so it gets a zero point
     mock_opower_api.async_get_cost_reads.return_value = [
         read(1, []),
         read(2, [_read_component("OFF_PEAK", 2.0, 0.4)]),
@@ -1796,12 +1810,12 @@ async def test_coordinator_rate_period_returns_after_absence(
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    # On peak was last written in the first run, at hour 0. The read at hour 1
-    # has no components, so the periods have no point there.
+    # The read at hour 1 has no components, so the periods have no point
+    # there. The read at hour 2 gives on peak a zero point, sum unchanged.
     stats = await hass.async_add_executor_job(
         get_last_statistics, hass, 1, on_peak_id, True, {"start", "sum"}
     )
-    assert stats[on_peak_id][0]["start"] == hour[0].timestamp()
+    assert stats[on_peak_id][0]["start"] == hour[2].timestamp()
     assert stats[on_peak_id][0]["sum"] == 1.0
 
     # Third run: on peak is back and its sum continues from the first run
