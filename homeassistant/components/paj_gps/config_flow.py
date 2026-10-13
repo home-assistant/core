@@ -124,7 +124,7 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if error is None and auth is not None:
                 await self.async_set_unique_id(str(auth.userID))
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
