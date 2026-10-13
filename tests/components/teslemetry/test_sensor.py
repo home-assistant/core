@@ -1199,10 +1199,21 @@ async def test_energy_history_time_zone_fallback(
 
 
 @pytest.mark.parametrize(
-    ("connected", "expected_state"),
+    ("entity_id", "connected", "expected_state"),
     [
-        pytest.param(True, "0.036", id="connected"),
-        pytest.param(False, STATE_UNAVAILABLE, id="disconnected"),
+        pytest.param(ENERGY_HISTORY_ENTITY, True, "0.036", id="history_connected"),
+        pytest.param(
+            ENERGY_HISTORY_ENTITY, False, STATE_UNAVAILABLE, id="history_disconnected"
+        ),
+        pytest.param(
+            WALL_CONNECTOR_ENERGY_ENTITY, True, "7.25", id="wall_connector_connected"
+        ),
+        pytest.param(
+            WALL_CONNECTOR_ENERGY_ENTITY,
+            False,
+            STATE_UNAVAILABLE,
+            id="wall_connector_disconnected",
+        ),
     ],
 )
 async def test_energy_history_update_entity_service(
@@ -1210,10 +1221,12 @@ async def test_energy_history_update_entity_service(
     caplog: pytest.LogCaptureFixture,
     mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
+    mock_wall_connector_totals_stream: MagicMock,
+    entity_id: str,
     connected: bool,
     expected_state: str,
 ) -> None:
-    """The generic update service leaves the history sensors as the stream set them.
+    """The generic update service leaves the stream totals sensors as the stream set them.
 
     The stream is their only source, so the service must neither fail on a
     healthy stream nor revive stale totals while it is down.
@@ -1222,6 +1235,7 @@ async def test_energy_history_update_entity_service(
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_energy_totals_stream.send()
+    mock_wall_connector_totals_stream.send()
     await hass.async_block_till_done()
     mock_add_connection_listener.send(connected)
     await hass.async_block_till_done()
@@ -1229,12 +1243,12 @@ async def test_energy_history_update_entity_service(
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
     assert "NotImplementedError" not in caplog.text
-    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert (state := hass.states.get(entity_id))
     assert state.state == expected_state
 
 
