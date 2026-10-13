@@ -329,6 +329,11 @@ def _service_rejecting_the_device_fetch(
         yield service_mock
 
 
+def _recover_device_fetch(service_mock: MagicMock) -> None:
+    """Let the device fetch succeed, as it does once iCloud answers again."""
+    type(service_mock.return_value).devices = PropertyMock(return_value=[MagicMock()])
+
+
 async def test_device_fetch_challenged_asks_for_a_code(hass: HomeAssistant) -> None:
     """Test that a challenge while reading the devices asks for the code.
 
@@ -360,15 +365,22 @@ async def test_device_fetch_rejected_returns_to_the_form(hass: HomeAssistant) ->
             "Authentication required for Account.",
             AppleAuthError.LOGIN_TOKEN_EXPIRED,
         )
-    ):
+    ) as service_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("service")
@@ -956,10 +968,17 @@ async def test_device_fetch_during_an_outage_keeps_the_session(
             context={"source": SOURCE_USER},
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        service_mock.return_value.session.clear_persistence.assert_not_called()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-    service_mock.return_value.session.clear_persistence.assert_not_called()
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
@@ -975,12 +994,19 @@ async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
     with _service_rejecting_the_device_fetch(
         PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
         delivery="unknown",
-    ):
+    ) as service_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "send_verification_code"}
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "send_verification_code"}
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
