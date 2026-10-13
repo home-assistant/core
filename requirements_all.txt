@@ -2930,7 +2930,7 @@ pyzbar==0.1.9
 pyzerproc==0.4.8
 
 # homeassistant.components.zonneplan
-pyzonneplan==0.2.0
+pyzonneplan==0.3.0
 
 # homeassistant.components.qbittorrent
 qbittorrent-api==2026.5.1
@@ -2969,7 +2969,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.15
+renault-api==0.6.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2

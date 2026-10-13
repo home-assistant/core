@@ -1538,6 +1538,48 @@ async def test_deprecated_temperature_member_read_reports_the_reader(
     assert f"{__name__}::MigratedClimateEntity" not in caplog.text
 
 
+@pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
+@pytest.mark.parametrize("prefix", ["", "_attr_"], ids=["property", "attribute"])
+async def test_deprecated_temperature_member_core_declaration_raises(
+    prefix: str, member: str, native_value: Any
+) -> None:
+    """Test a core integration still declaring a deprecated member raises."""
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "homeassistant.components.test.climate::CoreClimateEntity provides the "
+            f"deprecated {prefix}{member},"
+        ),
+    ):
+        type(
+            "CoreClimateEntity",
+            (MockShimClimateEntity,),
+            {
+                "__module__": "homeassistant.components.test.climate",
+                f"{prefix}{member}": native_value,
+            },
+        )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["homeassistant/components/hue"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_temperature_member_core_read_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test a core integration reading a deprecated member raises."""
+    entity = _migrated_entity("MigratedClimateEntity")
+    entity.hass = hass
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'hue' reads the deprecated "
+            "MigratedClimateEntity.current_temperature"
+        ),
+    ):
+        _ = entity.current_temperature
+
+
 @pytest.mark.parametrize(
     "integration_frame_path",
     [

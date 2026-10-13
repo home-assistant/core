@@ -174,17 +174,7 @@ class SofarRuntimeData:
     @property
     def served_components(self) -> frozenset[str]:
         """Component names this inverter polls, answered or not."""
-        device = self.readings.device
-        return frozenset(device.expected_readings_components) | frozenset(
-            device.expected_settings_components
-        )
-
-    def pack_is_wired(self, number: int) -> bool:
-        """Whether a pack has answered, so it physically exists."""
-        string = self.readings.device.battery_string(number)
-        if string.component_name not in self.served_components:
-            return False
-        return bool(string.voltage)
+        return self.readings.device.expected_components
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
