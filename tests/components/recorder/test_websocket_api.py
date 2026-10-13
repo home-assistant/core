@@ -2823,6 +2823,53 @@ async def test_clear_statistics_range(
 
 
 @pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_latest_short_term(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the latest short term statistic after removing the latest rows."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        hours=1
+    )
+    stats_5min: list[StatisticData] = [
+        {"start": start + timedelta(minutes=5 * i), "state": i, "sum": i}
+        for i in range(12)
+    ]
+    metadata: StatisticMetaData = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": None,
+        "source": "recorder",
+        "statistic_id": "sensor.test",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    recorder.get_instance(hass).async_import_statistics(
+        metadata, stats_5min, StatisticsShortTerm
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/clear_statistics",
+            "statistic_ids": ["sensor.test"],
+            "start_time": (start + timedelta(minutes=50)).isoformat(),
+            "end_time": (start + timedelta(hours=1)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    # The next statistics run continues the sum from the latest remaining row.
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass, session, {"sensor.test"}, {"sum"}
+        )
+    assert stats["sensor.test"][0]["sum"] == 9
+
+
+@pytest.mark.usefixtures("recorder_mock")
 async def test_clear_statistics_range_invalid_range(
     hass_ws_client: WebSocketGenerator,
 ) -> None:

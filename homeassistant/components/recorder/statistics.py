@@ -317,6 +317,11 @@ class ShortTermStatisticsRunCache:
         """Cache the latest id for the each metadata_id."""
         self._latest_id_by_metadata_id.update(metadata_id_to_id)
 
+    def remove_metadata_ids(self, metadata_ids: Iterable[int]) -> None:
+        """Remove the cached latest ids for the metadata_ids."""
+        for metadata_id in metadata_ids:
+            self._latest_id_by_metadata_id.pop(metadata_id, None)
+
 
 class BaseStatisticsRow(TypedDict, total=False):
     """A processed row of statistic data."""
@@ -992,6 +997,8 @@ def clear_statistics_range(
                 table.start_ts > (start_time - table.duration).timestamp(),
                 table.start_ts < end_time.timestamp(),
             ).delete(synchronize_session=False)
+    # The cached latest short term statistics can be among the deleted rows.
+    get_short_term_statistics_run_cache(instance.hass).remove_metadata_ids(metadata_ids)
 
 
 @callback
