@@ -9,6 +9,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModbusApi
 
@@ -77,6 +78,7 @@ async def test_setup_entry_creates_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_api: MockModbusApi,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """The entry loads and produces sensor entities."""
     mock_config_entry.add_to_hass(hass)
@@ -86,9 +88,10 @@ async def test_setup_entry_creates_entities(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_modbus_api.get_unit.call_count == 2
 
-    wochentag = hass.states.get("sensor.aerosmart_day_of_week")
-    assert wochentag is not None
-    assert wochentag.state == "3"
+    day_of_week = entity_registry.async_get("sensor.aerosmart_day_of_week")
+    assert day_of_week is not None
+    assert day_of_week.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get("sensor.aerosmart_day_of_week") is None
 
     outside_temp = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
     assert outside_temp is not None

@@ -101,7 +101,9 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             elif step_id == "reconfigure":
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(), data=user_input
+                    self._get_reconfigure_entry(),
+                    data=user_input,
+                    unique_id=self.unique_id,
                 )
             else:
                 return self.async_create_entry(title="aerosmart", data=user_input)

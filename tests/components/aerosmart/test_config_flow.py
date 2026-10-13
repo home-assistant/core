@@ -153,6 +153,7 @@ async def test_reconfigure_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_UNIT_HEAT_PUMP] == 3
+    assert mock_config_entry.unique_id == "1.2.3.4:502_1_3"
 
 
 async def test_reconfigure_cannot_connect(

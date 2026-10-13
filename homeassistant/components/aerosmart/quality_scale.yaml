@@ -84,8 +84,8 @@ rules:
   icon-translations:
     status: done
     comment: |
-      icons.json covers sensors without a device-class-derived icon, including
-      airflow, pressure, operating mode, and controller state values.
+      icons.json covers CO2, filters, fan states and speeds, heat-pump state,
+      and the active ventilation level where no device-class icon applies.
   reconfiguration-flow: done
   repair-issues:
     status: exempt

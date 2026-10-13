@@ -15,13 +15,7 @@ _TO_REDACT = {CONF_HOST}
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: AerosmartConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry.
-
-    Reads every known register the same way its entity would -- via the
-    description's ``component``/``attribute`` pair -- instead of introspecting
-    ``aerosmart_modbus`` internals, so this stays correct regardless of how
-    that library stores field values.
-    """
+    """Return diagnostics for a config entry without polling the device."""
     runtime = entry.runtime_data
     device = runtime.device
 
