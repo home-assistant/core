@@ -970,13 +970,13 @@ async def test_remove_config_entry_device_no_node(
     assert not device_registry.async_get(device_entry.id)
 
 
-async def test_remove_config_entry_device_allows_child_device(
+async def test_remove_config_entry_device_allows_orphan_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that a child device can be removed."""
+    """Test that an orphan child device (its endpoint is gone) can be removed."""
     assert await async_setup_component(hass, "config", {})
     parent_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
@@ -994,6 +994,28 @@ async def test_remove_config_entry_device_allows_child_device(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(child_device.id)
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_remove_config_entry_device_rejects_active_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_node: MatterNode,
+) -> None:
+    """Test removing a child device whose endpoint still needs one is rejected."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert children
+
+    client = await hass_ws_client(hass)
+    for child in children:
+        response = await client.remove_device(child.id)
+        assert not response["success"]
+        assert device_registry.async_get(child.id)
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
