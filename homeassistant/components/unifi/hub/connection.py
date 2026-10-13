@@ -102,32 +102,17 @@ class UnifiConnectionManager:
             try:
                 async with asyncio.timeout(5):
                     await self.api.login()
+                async with asyncio.timeout(5):
+                    await self.api.system_information.update()
             except aiounifi.LoginRequired, aiounifi.Unauthorized:
                 self._reconnect_task = None
                 self._reauth_required = True
                 self.config_entry.async_start_reauth(self.hass)
-            except (
-                TimeoutError,
-                aiounifi.BadGateway,
-                aiounifi.ServiceUnavailable,
-                aiounifi.AiounifiException,
-            ) as err:
+            except (TimeoutError, aiounifi.AiounifiException) as err:
                 self._reconnect_task = None
                 LOGGER.debug("UniFi Network is not ready after login: %s", err)
                 self._schedule_retry()
             else:
-                try:
-                    async with asyncio.timeout(5):
-                        await self.api.system_information.update()
-                except (
-                    TimeoutError,
-                    aiounifi.AiounifiException,
-                ) as err:
-                    self._reconnect_task = None
-                    LOGGER.debug("UniFi Network is not ready after login: %s", err)
-                    self._schedule_retry()
-                    return
-
                 self._reconnect_task = None
                 self._attempt = 0
                 self._set_available(True)
