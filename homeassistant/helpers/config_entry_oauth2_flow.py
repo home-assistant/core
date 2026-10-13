@@ -516,16 +516,21 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
         """Extra data for the device authorization request, such as the scope."""
         return {}
 
-    async def async_register_device(self) -> DeviceAuthorization:
+    async def async_register_device(
+        self, extra_data: Mapping[str, Any] | None = None
+    ) -> DeviceAuthorization:
         """Request a device code and return the device authorization.
 
-        Posts client_id plus extra_authorize_data (such as scope) to the device
-        authorization endpoint (RFC 8628 section 3.1).
+        Posts client_id plus extra_authorize_data and extra_data (such as scope)
+        to the device authorization endpoint (RFC 8628 section 3.1).
         """
         response = await self._oauth2_post_request(
             {
                 key: str(value)
-                for key, value in self.extra_authorize_data.items()
+                for key, value in {
+                    **self.extra_authorize_data,
+                    **(extra_data or {}),
+                }.items()
                 if value is not None
             },
             self.authorize_url,
@@ -900,6 +905,11 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
         self.device_token: dict[str, Any] = {}
         self.device_flow_error: BaseException | None = None
 
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data for the device authorization request, such as the scope."""
+        return {}
+
     @override
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
@@ -922,7 +932,9 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
             try:
                 async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                     self.device_authorization = (
-                        await self.flow_impl.async_register_device()
+                        await self.flow_impl.async_register_device(
+                            self.extra_authorize_data
+                        )
                     )
             except TimeoutError as err:
                 _LOGGER.error("Timeout registering device: %s", err)

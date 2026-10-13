@@ -1260,6 +1260,35 @@ async def test_device_flow_poll_aborts(
     assert result["description_placeholders"] == placeholders
 
 
+@pytest.mark.usefixtures("poll_sleep")
+async def test_device_flow_handler_authorize_data(
+    hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the flow handler adds its authorize data, such as the scope."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    _mock_token_responses(
+        aioclient_mock, [{"status": 400, "json": {"error": "access_denied"}}]
+    )
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    with patch.object(
+        device_flow_handler, "extra_authorize_data", {"scope": "repo", "prompt": None}
+    ):
+        await _start_device_flow(hass)
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.mock_calls[0][1:] == (
+        URL(AUTHORIZE_URL),
+        {"scope": "repo", "client_id": CLIENT_ID},
+        JSON_ACCEPT_HEADER,
+    )
+
+
 @pytest.mark.usefixtures("device_flow_handler", "poll_sleep")
 async def test_device_flow_url_complete_placeholder(
     hass: HomeAssistant,
