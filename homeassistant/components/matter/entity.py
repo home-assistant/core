@@ -172,7 +172,7 @@ class MatterEntity(Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:  # pylint: disable=home-assistant-return-type
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return device info for this entity.
 
         An endpoint that is split into its own child device declares that child
@@ -454,10 +454,11 @@ class MatterEntity(Entity):
         if not self._unsupported():
             return
         entry = cast(MatterConfigEntry, self.platform.config_entry)
-        # let discovery add the entity again if the device supports it later
-        entry.runtime_data.adapter.discovered_entities.discard(
-            get_discovery_key(self._endpoint, self._entity_info)
-        )
+        # let discovery add the entity again if the device supports it later;
+        # discovered keys are grouped per (node_id, endpoint_id)
+        entry.runtime_data.adapter.discovered_entities.get(
+            (self._endpoint.node.node_id, self._endpoint.endpoint_id), set()
+        ).discard(get_discovery_key(self._endpoint, self._entity_info))
         er.async_get(self.hass).async_remove(self.entity_id)
 
     @callback
