@@ -224,7 +224,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @property
     @override
     def is_on(self) -> bool:
-        if self.device_type not in NETATMO_DOORBELLS:
+        if self.device_type in NETATMO_DOORBELLS:
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         if self._webhook_on is not None:
             return self._webhook_on
