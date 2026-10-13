@@ -11649,6 +11649,63 @@ async def test_orphaned_ignored_entries_safe_recovery_mode(
     )
 
 
+@pytest.mark.parametrize(
+    ("unload_result", "state", "translation_domain", "translation_key"),
+    [
+        pytest.param(
+            True, config_entries.ConfigEntryState.NOT_LOADED, None, None, id="ok"
+        ),
+        pytest.param(
+            False,
+            config_entries.ConfigEntryState.FAILED_UNLOAD,
+            HOMEASSISTANT_DOMAIN,
+            "unload_platforms_failed",
+            id="failed",
+        ),
+    ],
+)
+async def test_unload_platforms_or_raise(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unload_result: bool,
+    state: config_entries.ConfigEntryState,
+    translation_domain: str | None,
+    translation_key: str | None,
+) -> None:
+    """Test async_unload_platforms_or_raise sets the unload state."""
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Mock unloading an entry."""
+        await hass.config_entries.async_unload_platforms_or_raise(entry, ["light"])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=mock_unload_entry,
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    await manager.async_setup(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    with patch.object(
+        manager, "async_forward_entry_unload", return_value=unload_result
+    ) as mock_forward_unload:
+        await manager.async_unload(entry.entry_id)
+
+    mock_forward_unload.assert_called_once_with(entry, "light")
+    assert entry.state is state
+    assert entry.error_reason_translation_domain == translation_domain
+    assert entry.error_reason_translation_key == translation_key
+
+
 async def test_remove_subentry_cleans_registries_before_update_listener(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

@@ -3077,6 +3077,16 @@ class ConfigEntries:
             )
         )
 
+    async def async_unload_platforms_or_raise(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
+        """Forward the unloading of an entry to platforms, raising on failure."""
+        if not await self.async_unload_platforms(entry, platforms):
+            raise ConfigEntryError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="unload_platforms_failed",
+            )
+
     async def async_forward_entry_unload(
         self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:
