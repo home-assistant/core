@@ -76,7 +76,7 @@ async def test_config_flow_error_cases(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     side_effect: Exception | None,
-    return_value: bool,
+    return_value: bool | None,
     expected_errors: dict[str, str],
 ) -> None:
     """Test invalid authentication handling."""
