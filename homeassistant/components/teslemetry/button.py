@@ -47,18 +47,14 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
     TeslemetryButtonEntityDescription(
         key="enable_keep_accessory_power_mode",
         func=lambda self: handle_vehicle_command(
-            self.hass,
-            self.config_entry,
-            self.api.set_keep_accessory_power_mode(True),
+            self.api.set_keep_accessory_power_mode(True)
         ),
         available_firmware="2025.38",
     ),
     TeslemetryButtonEntityDescription(
         key="disable_keep_accessory_power_mode",
         func=lambda self: handle_vehicle_command(
-            self.hass,
-            self.config_entry,
-            self.api.set_keep_accessory_power_mode(False),
+            self.api.set_keep_accessory_power_mode(False)
         ),
         available_firmware="2025.38",
     ),
