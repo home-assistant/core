@@ -164,7 +164,7 @@ async def test_twinguard_smoke_ended_alarm_and_string_events(
 
     as_string = _smoke_message("hdm:HomeMaticIP:twinguard1")
     as_string["arguments"]["surveillanceEvents"] = json.dumps(
-        as_string["arguments"]["surveillanceEvents"]
+        [{"type": "SMOKE_PRIMARY", "device": "hdm:HomeMaticIP:twinguard1"}]
     )
     mock_session.api.get_messages.return_value = [as_string]
     service = mock_session.device_helper.smoke_detection_system.device_services[0]
