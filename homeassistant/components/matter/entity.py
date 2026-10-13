@@ -168,7 +168,7 @@ class MatterEntity(Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:  # pylint: disable=home-assistant-return-type
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return device info for this entity.
 
         An endpoint that is split into its own child device declares that child
