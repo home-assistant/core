@@ -32,6 +32,8 @@ from .const import (
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TractiveSensorEntityDescription(SensorEntityDescription):
