@@ -87,10 +87,6 @@ class _RatePeriodStatistics:
         """Return the statistic ids of this period."""
         return {metadata["statistic_id"] for metadata in self.metadata.values()}
 
-    def needs_backfill(self) -> bool:
-        """Return whether any of the four statistics is not stored yet."""
-        return any(start is None for start in self.last_stats_time.values())
-
 
 def _rate_period_key(component: ReadComponent) -> str | None:
     """Return the rate period key of a read component.
@@ -550,9 +546,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     await self._async_init_rate_period_sums(
                         rate_periods, dt_util.utc_from_timestamp(last_stats_time)
                     )
-                if any(
-                    rate_period.needs_backfill()
+                if missing_statistic_ids := sorted(
+                    rate_period.metadata[kind]["statistic_id"]
                     for rate_period in rate_periods.values()
+                    for kind, start in rate_period.last_stats_time.items()
+                    if start is None
                 ):
                     # The reads only cover the last few weeks once statistics
                     # exist. A statistic that is not stored yet, e.g. right after
@@ -564,15 +562,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     # reads.
                     _LOGGER.debug(
                         "Fetching full history for rate period statistics: %s",
-                        sorted(
-                            statistic_id
-                            for rate_period in rate_periods.values()
-                            for kind, start in rate_period.last_stats_time.items()
-                            if start is None
-                            for statistic_id in (
-                                rate_period.metadata[kind]["statistic_id"],
-                            )
-                        ),
+                        missing_statistic_ids,
                     )
                     backfill_reads = _period_reads(
                         await self._async_get_cost_reads(
