@@ -8,7 +8,7 @@ from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.b1 import DeviceAttributes as B1Attributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
-from midealocal.devices.ca import MideaCADevice
+from midealocal.devices.ca import DeviceAttributes as CAAttributes, MideaCADevice
 from midealocal.devices.da import DeviceAttributes as DAAttributes
 from midealocal.devices.db import DeviceAttributes as DBAttributes, MideaDBDevice
 from midealocal.devices.dc import DeviceAttributes as DCAttributes
@@ -82,6 +82,19 @@ from tests.common import MockConfigEntry, snapshot_platform
                 },
             ),
             id="c3",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.CA,
+                attributes={
+                    CAAttributes.energy_consumption: 350,
+                    CAAttributes.refrigerator_actual_temp: 5,
+                    CAAttributes.freezer_actual_temp: 1,
+                    CAAttributes.flex_zone_actual_temp: 4,
+                    CAAttributes.right_flex_zone_actual_temp: 3,
+                },
+            ),
+            id="ca",
         ),
         pytest.param(
             DummyDevice(
