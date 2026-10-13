@@ -46,6 +46,19 @@ def fire_node_removed_event(matter_client: MagicMock, node: MatterNode) -> None:
     callback(EventType.NODE_REMOVED, node.node_id)
 
 
+def fire_node_updated_event(matter_client: MagicMock, node: MatterNode) -> None:
+    """Fire a node updated event for a node."""
+    # The adapter's node-updated handler subscribes without a node_filter, unlike
+    # the per-entity subscriptions that also listen for NODE_UPDATED.
+    callback = next(
+        call.kwargs["callback"]
+        for call in matter_client.subscribe_events.call_args_list
+        if call.kwargs["event_filter"] == EventType.NODE_UPDATED
+        and call.kwargs.get("node_filter") is None
+    )
+    callback(EventType.NODE_UPDATED, node)
+
+
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize(
     ("node_fixture", "unique_id", "name"),
@@ -203,6 +216,36 @@ async def test_node_removed_removes_child_devices(
             )
             is None
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_devices_pruned_on_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test stale child devices are pruned when an endpoint no longer needs one."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    assert len(dr.async_entries_for_parent_device(device_registry, parent.id)) == 2
+
+    # Drop one socket so the remaining socket no longer has a same-type sibling
+    # and stops needing its own child device, then re-run node setup.
+    matter_node.endpoints.pop(2)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    # Both child devices are pruned and the remaining socket's switch moved back
+    # to the node device.
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    switch_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert switch_entry is not None
+    assert switch_entry.device_id == parent.id
 
 
 @pytest.mark.usefixtures("matter_node")

@@ -16,6 +16,7 @@ from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
 from .helpers import (
     MatterConfigEntry,
+    endpoint_requires_child_device,
     get_child_device_id,
     get_device_endpoint,
     get_device_id,
@@ -174,6 +175,7 @@ class MatterAdapter:
             for endpoint_id in sorted(node.endpoints):
                 # Node endpoints are translated into HA devices
                 self._setup_endpoint(node.endpoints[endpoint_id])
+            self._prune_node_child_devices(node)
         except Exception as err:  # noqa: BLE001
             # We don't want to crash the whole setup when a single node fails to setup
             # for whatever reason, so we catch all exceptions here.
@@ -182,6 +184,48 @@ class MatterAdapter:
                 node.node_id,
                 err,
             )
+
+    def _prune_node_child_devices(self, node: MatterNode) -> None:
+        """Remove child devices of a node that no longer map to a split endpoint.
+
+        When the set of endpoints changes, e.g. a firmware update drops one of
+        two sibling outputs, an endpoint can stop needing its own child device.
+        Its entities are then rediscovered on the node device, leaving the former
+        child device empty. Prune such child devices, moving any entities still on
+        them back to the node device first to preserve user customizations.
+        """
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        device_registry = dr.async_get(self.hass)
+        node_device = device_registry.async_get_device_by_identifier(
+            (
+                DOMAIN,
+                f"{ID_TYPE_DEVICE_ID}_{get_device_id(server_info, node.endpoints[0])}",
+            ),
+            self.config_entry.entry_id,
+        )
+        if node_device is None:
+            return
+        expected_child_identifiers = {
+            (
+                DOMAIN,
+                f"{ID_TYPE_DEVICE_ID}_{get_child_device_id(server_info, endpoint)}",
+            )
+            for endpoint in node.endpoints.values()
+            if endpoint_requires_child_device(endpoint)
+        }
+        entity_registry = er.async_get(self.hass)
+        for child_device in dr.async_entries_for_parent_device(
+            device_registry, node_device.id
+        ):
+            if child_device.identifiers & expected_child_identifiers:
+                continue
+            for entity_entry in er.async_entries_for_device(
+                entity_registry, child_device.id
+            ):
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, device_id=node_device.id
+                )
+            device_registry.async_remove_device(child_device.id)
 
     def _create_device_registry(
         self,
