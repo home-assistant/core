@@ -1,7 +1,7 @@
 """Tests for frontend PR download functionality."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiogithubapi import (
     GitHubAuthenticationException,
@@ -50,6 +50,76 @@ async def test_pr_download_success(
     assert len(aioclient_mock.mock_calls) == 1
 
     mock_zipfile.extractall.assert_called_once()
+
+
+async def test_pr_download_skips_expired_artifact(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    mock_zipfile: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Use an available build when an earlier result has expired."""
+    hass.config.config_dir = str(tmp_path)
+    mock_github_api.generic.side_effect = [
+        MagicMock(
+            data={"head": {"sha": "abc123def456"}, "base": {"sha": "base789abc012"}}
+        ),
+        MagicMock(
+            data={
+                "workflow_runs": [
+                    {"id": 12345, "status": "completed", "conclusion": "success"},
+                    {"id": 12346, "status": "completed", "conclusion": "success"},
+                ]
+            }
+        ),
+        MagicMock(
+            data={
+                "artifacts": [
+                    {
+                        "name": "frontend-build",
+                        "expired": True,
+                        "archive_download_url": "https://api.github.com/artifact/expired",
+                    }
+                ]
+            }
+        ),
+        MagicMock(
+            data={
+                "artifacts": [
+                    {
+                        "name": "frontend-build",
+                        "expired": False,
+                        "archive_download_url": "https://api.github.com/artifact/download",
+                    }
+                ]
+            }
+        ),
+    ]
+    aioclient_mock.get("https://api.github.com/artifact/expired", status=410)
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download", content=b"fake zip data"
+    )
+
+    config = {DOMAIN: {"development_pr": 12345, "github_token": "test_token"}}
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    mock_github_api.generic.assert_has_calls(
+        [
+            call(
+                endpoint="/repos/home-assistant/frontend/actions/runs/12345/artifacts"
+            ),
+            call(
+                endpoint="/repos/home-assistant/frontend/actions/runs/12346/artifacts"
+            ),
+        ]
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    mock_zipfile.extractall.assert_called_once()
+    assert "Using frontend from PR #12345" in caplog.text
+    assert "Failed to download PR #12345" not in caplog.text
 
 
 async def test_pr_download_uses_cache(
@@ -296,10 +366,22 @@ async def test_pr_download_artifact_search_github_errors(
         assert "Failed to download PR #12345" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "workflow_runs",
+    [
+        pytest.param([], id="no-runs"),
+        pytest.param(
+            [{"id": 12345, "status": "completed", "conclusion": "success"}],
+            id="only-expired-artifact",
+        ),
+    ],
+)
 async def test_pr_download_artifact_not_found(
     hass: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    workflow_runs: list[dict[str, str | int]],
 ) -> None:
     """Test handling when artifact is not found."""
     hass.config.config_dir = str(tmp_path)
@@ -317,16 +399,24 @@ async def test_pr_download_artifact_not_found(
         }
 
         workflow_response = AsyncMock()
-        workflow_response.data = {"workflow_runs": []}
-
-        async def generic_side_effect(endpoint, **kwargs):
-            if "pulls" in endpoint:
-                return pr_response
-            if "workflows" in endpoint:
-                return workflow_response
-            raise ValueError(f"Unexpected endpoint: {endpoint}")
-
-        mock_client.generic.side_effect = generic_side_effect
+        workflow_response.data = {"workflow_runs": workflow_runs}
+        artifacts_response = MagicMock(
+            data={
+                "artifacts": [
+                    {
+                        "name": "frontend-build",
+                        "expired": True,
+                        "archive_download_url": "https://api.github.com/artifact/expired",
+                    }
+                ]
+            }
+        )
+        mock_client.generic.side_effect = [
+            pr_response,
+            workflow_response,
+            artifacts_response,
+        ]
+        aioclient_mock.get("https://api.github.com/artifact/expired", status=410)
 
         config = {
             DOMAIN: {
@@ -339,6 +429,7 @@ async def test_pr_download_artifact_not_found(
         await hass.async_block_till_done()
 
         assert "No 'frontend-build' artifact found" in caplog.text
+        assert not aioclient_mock.mock_calls
 
 
 async def test_pr_download_http_error(

@@ -78,7 +78,7 @@ async def _find_pr_artifact(client: GitHubAPI, pr_number: int, head_sha: str) ->
                 )
 
                 for artifact in artifacts_response.data.get("artifacts", []):
-                    if artifact["name"] == ARTIFACT_NAME:
+                    if artifact["name"] == ARTIFACT_NAME and not artifact["expired"]:
                         _LOGGER.info(
                             "Found artifact '%s' from CI run #%s",
                             ARTIFACT_NAME,

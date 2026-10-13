@@ -53,6 +53,7 @@ def mock_github_api() -> Generator[AsyncMock]:
             "artifacts": [
                 {
                     "name": "frontend-build",
+                    "expired": False,
                     "archive_download_url": "https://api.github.com/artifact/download",
                 }
             ]
