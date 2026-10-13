@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This integration is already configured.",
-      "wrong_account": "The credentials belong to a different MyNeomitis account than the one originally configured."
+      "unique_id_mismatch": "The credentials belong to a different MyNeomitis account than the one originally configured."
     },
     "error": {
       "cannot_connect": "Could not connect to the MyNeomitis service. Please try again later.",

@@ -216,5 +216,5 @@ async def test_reauth_flow_wrong_account(
         user_input={CONF_PASSWORD: "new-password"},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"
+    assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
