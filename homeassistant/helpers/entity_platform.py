@@ -473,6 +473,9 @@ class EntityPlatform:
         """Set up a platform via config file or config entry.
 
         async_create_setup_awaitable creates an awaitable that sets up platform.
+
+        Returns False only if the setup failed. A setup that is retried or still
+        running in the background is not a failure.
         """
         current_platform.set(self)
         logger = self.logger
@@ -538,7 +541,7 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -548,7 +551,7 @@ class EntityPlatform:
                 self.platform_name,
                 SLOW_SETUP_MAX_WAIT,
             )
-            return False
+            return True
         except (ConfigEntryNotReady, ConfigEntryAuthFailed, ConfigEntryError) as exc:
             _LOGGER.error(
                 "%s raises exception %s in forwarded platform "

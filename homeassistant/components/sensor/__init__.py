@@ -18,8 +18,13 @@ from homeassistant.const import (  # noqa: F401
     EntityCategory,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    State,
+    callback,
+)
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -98,14 +103,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_unload_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="unload_platforms_failed",
+        )
 
 
 class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
