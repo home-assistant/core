@@ -39,11 +39,12 @@ async def test_room_eq_options(
     assert state is not None
     assert state.state == "EQ2: Front Row"
     assert state.attributes["options"] == [
-        "Off",
+        "off",
         "EQ1: Front Row",
         "EQ2: Front Row",
         "EQ3: Off",
     ]
+    assert len(hass.states.async_all("select")) == 1
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -79,8 +80,8 @@ async def test_room_eq_not_calculated(
 
     state = hass.states.get(ROOM_EQ_ENTITY_ID)
     assert state is not None
-    assert state.state == "Not calculated"
-    assert "Not calculated" in state.attributes["options"]
+    assert state.state == "not_calculated"
+    assert "not_calculated" in state.attributes["options"]
 
 
 @pytest.mark.usefixtures("player_setup")
