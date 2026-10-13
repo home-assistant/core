@@ -10,6 +10,7 @@ import attr
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -28,7 +29,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from tests.common import (
@@ -3690,6 +3691,101 @@ async def test_restore_states(
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+
+
+@pytest.mark.parametrize(
+    ("initial_disabled_by", "new_disabled_by"),
+    [
+        pytest.param(None, er.RegistryEntryDisabler.USER, id="disable"),
+        pytest.param(er.RegistryEntryDisabler.USER, None, id="enable"),
+        pytest.param(
+            er.RegistryEntryDisabler.USER,
+            er.RegistryEntryDisabler.HASS,
+            id="change_disabler",
+        ),
+    ],
+)
+async def test_restore_states_disabled_by_changed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    initial_disabled_by: er.RegistryEntryDisabler | None,
+    new_disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test a restored state follows the disabled state of its registry entry."""
+    hass.set_state(CoreState.not_running)
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        suggested_object_id="simple",
+        disabled_by=initial_disabled_by,
+    )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+    assert (hass.states.get("light.simple") is not None) is (
+        initial_disabled_by is None
+    )
+
+    entity_registry.async_update_entity("light.simple", disabled_by=new_disabled_by)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.simple") == snapshot
+
+
+async def test_restore_states_disabled_by_changed_keeps_live_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test disabling a registry entry leaves a non-restored state alone."""
+    entity_registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="simple"
+    )
+    hass.states.async_set("light.simple", "on")
+
+    entity_registry.async_update_entity(
+        "light.simple", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.simple")
+    assert state is not None
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("initial_disabled_by", "new_disabled_by"),
+    [
+        pytest.param(None, UNDEFINED, id="rename"),
+        pytest.param(None, er.RegistryEntryDisabler.USER, id="rename_disable"),
+        pytest.param(er.RegistryEntryDisabler.USER, None, id="rename_enable"),
+    ],
+)
+async def test_restore_states_renamed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    initial_disabled_by: er.RegistryEntryDisabler | None,
+    new_disabled_by: er.RegistryEntryDisabler | UndefinedType | None,
+) -> None:
+    """Test a restored state follows a registry entry rename."""
+    hass.set_state(CoreState.not_running)
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        suggested_object_id="simple",
+        disabled_by=initial_disabled_by,
+    )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        "light.simple", new_entity_id="light.renamed", disabled_by=new_disabled_by
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.simple") is None
+    assert hass.states.get("light.renamed") == snapshot
 
 
 @pytest.mark.parametrize(
