@@ -176,7 +176,7 @@ async def test_reauth_flow(
 @pytest.mark.parametrize(
     ("side_effect", "profile", "reason"),
     [
-        pytest.param(None, {"id": 1337}, "wrong_account", id="wrong_account"),
+        pytest.param(None, {"id": 1337}, "unique_id_mismatch", id="unique_id_mismatch"),
         pytest.param(WillowAuthError, None, "invalid_auth", id="invalid_auth"),
         pytest.param(Exception("boom"), None, "unknown", id="unknown"),
     ],
