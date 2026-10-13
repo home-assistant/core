@@ -23,12 +23,7 @@ def get_error_code(response: Any) -> str | None:
     if isinstance(response, RestResult):
         if response.success:
             return None
-        # the library keeps the cloud's error body as text on failed calls
-        try:
-            error_code = json.loads(response.text)["errorCode"]
-        except ValueError, KeyError, TypeError:
-            error_code = None
-        return response.status_text if error_code in ("", None) else str(error_code)
+        return response.error_code or response.status_text
     if isinstance(response, dict) and response.get("errorCode") not in ("", None):
         return str(response["errorCode"])
     return None
