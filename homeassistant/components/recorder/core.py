@@ -89,6 +89,7 @@ from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
+    ClearStatisticsRangeTask,
     ClearStatisticsTask,
     CommitTask,
     CompileMissingStatisticsTask,
@@ -559,6 +560,20 @@ class Recorder(threading.Thread):
     ) -> None:
         """Clear statistics for a list of statistic_ids."""
         self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
+
+    @callback
+    def async_clear_statistics_range(
+        self,
+        statistic_ids: list[str],
+        start_time: datetime,
+        end_time: datetime,
+        *,
+        on_done: Callable[[], None] | None = None,
+    ) -> None:
+        """Clear statistics in a time range for a list of statistic_ids."""
+        self.queue_task(
+            ClearStatisticsRangeTask(on_done, statistic_ids, start_time, end_time)
+        )
 
     @callback
     def async_update_statistics_metadata(

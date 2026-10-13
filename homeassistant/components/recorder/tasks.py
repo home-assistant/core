@@ -71,6 +71,25 @@ class ClearStatisticsTask(RecorderTask):
 
 
 @dataclass(slots=True)
+class ClearStatisticsRangeTask(RecorderTask):
+    """Object to store statistic_ids and the time range to remove statistics for."""
+
+    on_done: Callable[[], None] | None
+    statistic_ids: list[str]
+    start_time: datetime
+    end_time: datetime
+
+    @override
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.clear_statistics_range(
+            instance, self.statistic_ids, self.start_time, self.end_time
+        )
+        if self.on_done:
+            self.on_done()
+
+
+@dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 

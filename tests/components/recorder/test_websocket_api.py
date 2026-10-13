@@ -2745,6 +2745,137 @@ async def test_clear_statistics_time_out(hass_ws_client: WebSocketGenerator) -> 
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test removing statistics which overlap a time range."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        days=1
+    )
+    stats_5min: list[StatisticData] = [
+        {"start": start + timedelta(minutes=5 * i), "mean": i, "min": i, "max": i}
+        for i in range(5 * 12)
+    ]
+    stats_hour: list[StatisticData] = [
+        {"start": start + timedelta(hours=i), "mean": i, "min": i, "max": i}
+        for i in range(5)
+    ]
+    instance = recorder.get_instance(hass)
+    for statistic_id in ("sensor.test1", "sensor.test2"):
+        metadata: StatisticMetaData = {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": None,
+            "source": "recorder",
+            "statistic_id": statistic_id,
+            "unit_class": "temperature",
+            "unit_of_measurement": "°C",
+        }
+        instance.async_import_statistics(metadata, stats_hour, Statistics)
+        instance.async_import_statistics(metadata, stats_5min, StatisticsShortTerm)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/clear_statistics_range",
+            "statistic_ids": ["sensor.test1"],
+            "start_time": (start + timedelta(hours=1, minutes=20)).isoformat(),
+            "end_time": (start + timedelta(hours=3)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    def starts(period: str) -> dict[str, list[datetime.datetime]]:
+        stats = statistics_during_period(
+            hass,
+            start,
+            statistic_ids={"sensor.test1", "sensor.test2"},
+            period=period,
+            types={"mean"},
+        )
+        return {
+            statistic_id: [dt_util.utc_from_timestamp(row["start"]) for row in rows]
+            for statistic_id, rows in stats.items()
+        }
+
+    # The hour starting at 1:00 overlaps the range, so it is removed.
+    hourly = starts("hour")
+    assert hourly["sensor.test1"] == [
+        start,
+        start + timedelta(hours=3),
+        start + timedelta(hours=4),
+    ]
+    assert len(hourly["sensor.test2"]) == 5
+
+    # The row starting at 1:15 ends when the range starts, so it is kept.
+    short_term = starts("5minute")
+    assert short_term["sensor.test1"] == [
+        row["start"]
+        for row in stats_5min
+        if row["start"] <= start + timedelta(hours=1, minutes=15)
+        or row["start"] >= start + timedelta(hours=3)
+    ]
+    assert len(short_term["sensor.test2"]) == 5 * 12
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_invalid_range(
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test removing statistics with an end time which is not after the start time."""
+    client = await hass_ws_client()
+    now = dt_util.utcnow()
+
+    with patch.object(recorder.tasks.ClearStatisticsRangeTask, "run") as run_mock:
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics_range",
+                "statistic_ids": ["sensor.test"],
+                "start_time": now.isoformat(),
+                "end_time": now.isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "invalid_time_range",
+        "message": "start_time must be before end_time",
+    }
+    run_mock.assert_not_called()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_clear_statistics_range_time_out(
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test removing statistics in a time range with time-out error."""
+    client = await hass_ws_client()
+    now = dt_util.utcnow()
+
+    with (
+        patch.object(recorder.tasks.ClearStatisticsRangeTask, "run"),
+        patch.object(recorder.websocket_api, "CLEAR_STATISTICS_TIME_OUT", 0),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "recorder/clear_statistics_range",
+                "statistic_ids": ["sensor.test"],
+                "start_time": now.isoformat(),
+                "end_time": (now + timedelta(hours=1)).isoformat(),
+            }
+        )
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "timeout",
+        "message": "clear_statistics_range timed out",
+    }
+
+
 @pytest.mark.parametrize(
     (
         "requested_new_unit",

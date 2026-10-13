@@ -970,6 +970,30 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
         instance.statistics_meta_manager.delete(session, statistic_ids)
 
 
+def clear_statistics_range(
+    instance: Recorder,
+    statistic_ids: list[str],
+    start_time: datetime,
+    end_time: datetime,
+) -> None:
+    """Clear statistics rows which overlap a time range."""
+    with session_scope(session=instance.get_session()) as session:
+        metadata = instance.statistics_meta_manager.get_many(
+            session, statistic_ids=set(statistic_ids)
+        )
+        if not metadata:
+            return
+        metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
+        for table in (StatisticsShortTerm, Statistics):
+            # Delete each row whose period overlaps the range. A row which
+            # only partly overlaps also includes the bad values.
+            session.query(table).filter(
+                table.metadata_id.in_(metadata_ids),
+                table.start_ts > (start_time - table.duration).timestamp(),
+                table.start_ts < end_time.timestamp(),
+            ).delete(synchronize_session=False)
+
+
 @callback
 def async_update_statistics_metadata(
     hass: HomeAssistant,
