@@ -591,13 +591,13 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         except HomeConnectError:
             commands = set()
 
-        # Keep the known images if the request fails, so that the cameras stay available
+        # Keep the known images if the request fails, so that the cameras stay
+        # available. Rate limits are not retried either, as the images are
+        # refreshed again when a door is closed.
         images = self.data.images.copy()
         if appliance.type in APPLIANCES_WITH_IMAGES:
             try:
                 images = await self.get_latest_images()
-            except TooManyRequestsError:
-                raise
             except HomeConnectError as error:
                 _LOGGER.debug(
                     "Error fetching images for %s: %s",

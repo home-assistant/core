@@ -1594,6 +1594,9 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
+    "fetch_image_error": {
+      "message": "Error obtaining the image of {entity_id}: {error}"
+    },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"
     },

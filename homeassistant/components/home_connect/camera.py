@@ -1,21 +1,20 @@
 """Provides camera entities for Home Connect."""
 
 import asyncio
-import logging
 from typing import override
 
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.camera import Camera, CameraEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
+from .const import DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import RE_CAMEL_CASE
-
-_LOGGER = logging.getLogger(__name__)
+from .utils import RE_CAMEL_CASE, get_dict_from_home_connect_error
 
 PARALLEL_UPDATES = 0
 
@@ -117,8 +116,14 @@ class HomeConnectCameraEntity(HomeConnectEntity, Camera):
                     self.appliance.info.ha_id, image_key=image_key
                 )
             except HomeConnectError as error:
-                _LOGGER.error("Error fetching image for %s: %s", self.entity_id, error)
-                return None
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_image_error",
+                    translation_placeholders={
+                        **get_dict_from_home_connect_error(error),
+                        "entity_id": self.entity_id,
+                    },
+                ) from error
             if image_key == self._image_key:
                 # Only cache the image if no newer one was taken while downloading
                 self._image = image

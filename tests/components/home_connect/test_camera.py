@@ -23,6 +23,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import CameraState, async_get_image
 from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE_CLOSED,
     DOMAIN,
     IMAGES_REFRESH_DELAY,
     REFRIGERATION_STATUS_DOOR_CLOSED,
@@ -69,16 +70,20 @@ def mock_camera_access_token() -> Generator[None]:
         yield
 
 
-def _get_door_event(appliance: HomeAppliance, value: str) -> EventMessage:
-    """Return a refrigerator door status event."""
+def _get_door_event(
+    appliance: HomeAppliance,
+    value: str,
+    key: EventKey = EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
+) -> EventMessage:
+    """Return a door status event, for the refrigerator door by default."""
     return EventMessage(
         appliance.ha_id,
         EventType.STATUS,
         ArrayOfEvents(
             [
                 Event(
-                    key=EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
-                    raw_key=EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR.value,
+                    key=key,
+                    raw_key=key.value,
                     timestamp=0,
                     level="",
                     handling="",
@@ -162,6 +167,13 @@ async def test_paired_depaired_devices_flow(
 
 
 @pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        HomeConnectApiError("SDK.Error.HomeAppliance.Connection.Initialization.Failed"),
+        TooManyRequestsError("error.key", retry_after=42),
+    ],
+)
 async def test_connected_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -169,16 +181,22 @@ async def test_connected_devices(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
+    exception: Exception,
 ) -> None:
-    """Test that the camera entities are added once the images can be fetched."""
+    """Test that the camera entities are added once the images can be fetched.
+
+    Fetching the images is optional, so failures and rate limits must not make
+    the appliance refresh retry.
+    """
     get_images_original_mock = client.get_images
-    client.get_images = AsyncMock(
-        side_effect=HomeConnectApiError(
-            "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
-        )
-    )
-    assert await integration_setup(client)
+    client.get_images = AsyncMock(side_effect=exception)
+    with patch(
+        "homeassistant.components.home_connect.coordinator.asyncio_sleep",
+    ) as asyncio_sleep_mock:
+        assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
+    asyncio_sleep_mock.assert_not_called()
+    client.get_images.assert_called_once_with(appliance.ha_id)
     client.get_images = get_images_original_mock
 
     for key in (DOOR_CAMERA_KEY, INTERIOR_CAMERA_KEY):
@@ -503,14 +521,31 @@ async def test_new_image_after_door_closed(
 
 @pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
 @pytest.mark.parametrize(
-    ("door_states", "expected_images_fetches"),
+    ("door_event_key", "door_states", "expected_images_fetches"),
     [
-        pytest.param([REFRIGERATION_STATUS_DOOR_CLOSED], 1, id="door_closed"),
-        pytest.param([REFRIGERATION_STATUS_DOOR_OPEN], 0, id="door_open"),
         pytest.param(
+            EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
+            [REFRIGERATION_STATUS_DOOR_CLOSED],
+            1,
+            id="door_closed",
+        ),
+        pytest.param(
+            EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
+            [REFRIGERATION_STATUS_DOOR_OPEN],
+            0,
+            id="door_open",
+        ),
+        pytest.param(
+            EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
             [REFRIGERATION_STATUS_DOOR_CLOSED, REFRIGERATION_STATUS_DOOR_CLOSED],
             1,
             id="door_closed_twice",
+        ),
+        pytest.param(
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            [BSH_DOOR_STATE_CLOSED],
+            1,
+            id="generic_door_closed",
         ),
     ],
 )
@@ -521,6 +556,7 @@ async def test_images_refresh_scheduling(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
+    door_event_key: EventKey,
     door_states: list[str],
     expected_images_fetches: int,
 ) -> None:
@@ -530,7 +566,10 @@ async def test_images_refresh_scheduling(
     client.get_images.reset_mock()
 
     await client.add_events(
-        [_get_door_event(appliance, door_state) for door_state in door_states]
+        [
+            _get_door_event(appliance, door_state, door_event_key)
+            for door_state in door_states
+        ]
     )
     await hass.async_block_till_done()
     await _wait_for_images_refresh(hass, freezer)
