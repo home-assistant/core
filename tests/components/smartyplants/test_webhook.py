@@ -7,7 +7,7 @@ from hashlib import sha256
 import hmac
 import json
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmartyplants import Sensor, SensorUpdate, SmartyPlantsConnectionError
@@ -316,6 +316,7 @@ async def test_push_keeps_poll_schedule(
 
 async def test_push_during_poll_not_reverted(
     hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_smartyplants_client: AsyncMock,
     sensor_payloads: list[dict[str, Any]],
@@ -323,30 +324,37 @@ async def test_push_during_poll_not_reverted(
 ) -> None:
     """Test a push that lands mid-poll survives the poll's older response."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     polled = mock_smartyplants_client.async_get_sensors.side_effect
-    started = asyncio.Event()
-    release = asyncio.Event()
+    polling = asyncio.Event()
+    finish_poll = asyncio.Event()
+    pushed = asyncio.Event()
 
     async def _slow_poll() -> list[Sensor]:
-        started.set()
-        await release.wait()
+        polling.set()
+        await finish_poll.wait()
         return polled()
+
+    parse = SensorUpdate.from_api
+
+    def _parse(payload: Any) -> SensorUpdate | None:
+        pushed.set()
+        return parse(payload)
 
     mock_smartyplants_client.async_get_sensors.side_effect = _slow_poll
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    # Only once the poll is in flight can the push land mid-poll.
-    await started.wait()
+    await polling.wait()
 
-    update = SensorUpdate.from_api(_moisture_push(sensor_payloads, 55))
-    assert update is not None
-    push = hass.async_create_task(coordinator.async_apply_update(update))
-    await asyncio.sleep(0)
+    with patch.object(SensorUpdate, "from_api", _parse):
+        push = hass.async_create_task(
+            _post_signed(hass_client_no_auth, _moisture_push(sensor_payloads, 55))
+        )
+        # The push has reached the integration, so the poll can now finish.
+        await pushed.wait()
+        finish_poll.set()
+        assert await push == 200
 
-    release.set()
-    await push
     await hass.async_block_till_done()
 
     # The poll still reports 41; only serializing the two keeps the pushed 55.
