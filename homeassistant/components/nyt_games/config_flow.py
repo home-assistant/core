@@ -76,3 +76,21 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration with a new token."""
+        errors: dict[str, str] = {}
+        if user_input:
+            token = user_input[CONF_TOKEN].strip()
+            user_id = await self._async_validate_token(token, errors)
+            if user_id is not None:
+                await self.async_set_unique_id(str(user_id))
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(), data_updates={CONF_TOKEN: token}
+                )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=DATA_SCHEMA, errors=errors
+        )
