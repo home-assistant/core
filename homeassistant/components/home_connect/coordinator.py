@@ -324,7 +324,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         ) in self.global_listeners.values():
                             if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
                                 listener()
-                    if event.value in DOOR_CLOSED_STATES and self.data.images:
+                    if (
+                        event.value in DOOR_CLOSED_STATES
+                        and self.data.info.type in APPLIANCES_WITH_IMAGES
+                    ):
                         # Appliances with cameras take new images when a door is closed
                         self._schedule_images_refresh()
                 self._call_event_listener(event_message)
