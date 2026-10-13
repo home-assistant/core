@@ -29,9 +29,11 @@ CALENDAR_SCAN_INTERVAL = timedelta(minutes=15)
 LOOKBACK = timedelta(days=1)
 LOOKAHEAD = timedelta(days=30)
 
-# Abandon a fetch rather than let a slow or unresponsive Apple request tie the
-# coordinator's executor thread up forever. The refresh no longer runs on the
-# startup path, so the bound is generous and just a backstop.
+# Bound how long the coordinator waits for a fetch so a slow or unresponsive
+# Apple request cannot stall the refresh indefinitely. This frees the
+# coordinator, not the executor thread running the request, which is released
+# only once that request itself returns. The refresh no longer runs on the
+# startup path, so the bound is a generous backstop.
 FETCH_TIMEOUT = 300  # seconds
 
 
