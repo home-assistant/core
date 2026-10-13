@@ -107,14 +107,14 @@ def _smoke_buckets(alarm: SurveillanceAlarmService.State) -> dict:
     [_smoke_buckets(SurveillanceAlarmService.State.ALARM_OFF)],
     indirect=True,
 )
-@pytest.mark.usefixtures("mock_session")
 async def test_twinguard_smoke_idle(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
 ) -> None:
     """No alarm: the sensor is off and no messages are fetched."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.twinguard_smoke").state == STATE_OFF
+    mock_session.api.get_messages.assert_not_called()
 
 
 @pytest.mark.parametrize(
