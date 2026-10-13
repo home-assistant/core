@@ -121,7 +121,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = validation_result
             else:
                 await self.async_set_unique_id(user_id)
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
 
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
