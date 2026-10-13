@@ -215,9 +215,8 @@ class WatercrystSensor[DataT, CoordinatorT: WatercrystDataUpdateCoordinator[Any]
         await super().async_added_to_hass()
 
         if self.coordinator is not self._state:
-            self.async_on_remove(
-                self._state.async_add_listener(self.async_write_ha_state)
-            )
+            remove_listener = self._state.async_add_listener(self.async_write_ha_state)
+            self.async_on_remove(remove_listener)
 
     @override
     @property

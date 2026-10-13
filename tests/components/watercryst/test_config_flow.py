@@ -35,6 +35,7 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     )
     await hass.async_block_till_done()
 
+    assert result["result"].unique_id is not None
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "HA Device"
     assert result["data"] == {
