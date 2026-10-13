@@ -188,11 +188,12 @@ class MatterAdapter:
     def _prune_node_child_devices(self, node: MatterNode) -> None:
         """Remove child devices of a node that no longer map to a split endpoint.
 
-        When the set of endpoints changes, e.g. a firmware update drops one of
-        two sibling outputs, an endpoint can stop needing its own child device.
-        Its entities are then rediscovered on the node device, leaving the former
-        child device empty. Prune such child devices, moving any entities still on
-        them back to the node device first to preserve user customizations.
+        When the set of endpoints changes, a child device can become stale in two
+        ways. If its endpoint still exists but no longer needs its own device (e.g.
+        a sibling output was removed so it no longer collides), its entities are
+        moved back to the node device to preserve user customizations. If its
+        endpoint is gone entirely, the child device is removed together with its
+        now-orphaned entities.
         """
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         device_registry = dr.async_get(self.hass)
@@ -205,26 +206,32 @@ class MatterAdapter:
         )
         if node_device is None:
             return
-        expected_child_identifiers = {
-            (
+        expected_child_identifiers: set[tuple[str, str]] = set()
+        current_child_identifiers: set[tuple[str, str]] = set()
+        for endpoint in node.endpoints.values():
+            child_identifier = (
                 DOMAIN,
                 f"{ID_TYPE_DEVICE_ID}_{get_child_device_id(server_info, endpoint)}",
             )
-            for endpoint in node.endpoints.values()
-            if endpoint_requires_child_device(endpoint)
-        }
+            current_child_identifiers.add(child_identifier)
+            if endpoint_requires_child_device(endpoint):
+                expected_child_identifiers.add(child_identifier)
         entity_registry = er.async_get(self.hass)
         for child_device in dr.async_entries_for_parent_device(
             device_registry, node_device.id
         ):
             if child_device.identifiers & expected_child_identifiers:
                 continue
-            for entity_entry in er.async_entries_for_device(
-                entity_registry, child_device.id
-            ):
-                entity_registry.async_update_entity(
-                    entity_entry.entity_id, device_id=node_device.id
-                )
+            if child_device.identifiers & current_child_identifiers:
+                # Endpoint still present but no longer split: keep its entities by
+                # moving them back to the node device before removing the child.
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, child_device.id
+                ):
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, device_id=node_device.id
+                    )
+            # A child whose endpoint is gone is removed with its orphaned entities.
             device_registry.async_remove_device(child_device.id)
 
     def _create_device_registry(

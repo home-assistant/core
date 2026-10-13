@@ -240,12 +240,13 @@ async def test_endpoint_child_devices_pruned_on_setup(
     fire_node_updated_event(matter_client, matter_node)
     await hass.async_block_till_done()
 
-    # Both child devices are pruned and the remaining socket's switch moved back
-    # to the node device.
+    # Both child devices are pruned. The surviving socket's switch moves back to
+    # the node device, while the removed socket's switch is deleted.
     assert not dr.async_entries_for_parent_device(device_registry, parent.id)
-    switch_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
-    assert switch_entry is not None
-    assert switch_entry.device_id == parent.id
+    surviving_switch = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert surviving_switch is not None
+    assert surviving_switch.device_id == parent.id
+    assert entity_registry.async_get("switch.eve_energy_20ecn4101_bottom") is None
 
 
 @pytest.mark.usefixtures("matter_node")
