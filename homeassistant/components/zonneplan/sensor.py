@@ -4,11 +4,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-import logging
 from typing import override
 
 from pyzonneplan import Battery, ElectricityChartGroup, GasChartGroup
-from pyzonneplan.const import MONEY_FACTOR
+from pyzonneplan.const import MONEY_FACTOR, BatteryState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,11 +37,9 @@ from .coordinator import (
 )
 from .entity import ZonneplanBatteryEntity, ZonneplanEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 0
 
-BATTERY_STATES = ["charging", "discharging", "operative"]
+BATTERY_STATES = [state.value for state in BatteryState]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -407,16 +404,6 @@ ZONNEPLAN_USAGE_SENSORS: tuple[ZonneplanUsageSensorEntityDescription, ...] = (
 )
 
 
-def _battery_state(state: str | None) -> str | None:
-    """Return a battery or inverter state as an enum option."""
-    if state is None:
-        return None
-    if (option := state.lower()) not in BATTERY_STATES:
-        _LOGGER.debug("Unknown Zonneplan battery state: %s", state)
-        return None
-    return option
-
-
 @dataclass(frozen=True, kw_only=True)
 class ZonneplanBatterySensorEntityDescription(SensorEntityDescription):
     """Describes a Zonneplan home battery sensor."""
@@ -448,14 +435,14 @@ ZONNEPLAN_BATTERY_SENSORS: tuple[ZonneplanBatterySensorEntityDescription, ...] =
         translation_key="battery_state",
         device_class=SensorDeviceClass.ENUM,
         options=BATTERY_STATES,
-        value_fn=lambda battery: _battery_state(battery.battery_state),
+        value_fn=lambda battery: battery.battery_state,
     ),
     ZonneplanBatterySensorEntityDescription(
         key="inverter_state",
         translation_key="inverter_state",
         device_class=SensorDeviceClass.ENUM,
         options=BATTERY_STATES,
-        value_fn=lambda battery: _battery_state(battery.inverter_state),
+        value_fn=lambda battery: battery.inverter_state,
     ),
     ZonneplanBatterySensorEntityDescription(
         key="total_earned",
