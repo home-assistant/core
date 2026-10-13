@@ -32,7 +32,7 @@ _MODULES: dict[str, set[str]] = {
     Platform.BUTTON: {"ButtonEntity", "ButtonEntityDescription"},
     Platform.CALENDAR: {"CalendarEntity", "CalendarEntityDescription"},
     Platform.CAMERA: {"Camera", "CameraEntityDescription"},
-    Platform.CLIMATE: {"ClimateEntity", "ClimateEntityDescription"},
+    Platform.CLIMATE: {"ClimateEntity", "ClimateEntityDescription", "RestoreClimate"},
     Module.COORDINATOR: {"DataUpdateCoordinator"},
     Platform.CONVERSATION: {"ConversationEntity"},
     Platform.COVER: {"CoverEntity", "CoverEntityDescription"},
