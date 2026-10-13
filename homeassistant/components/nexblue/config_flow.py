@@ -1,5 +1,6 @@
 """Config flow for the NexBlue integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from nexblue_api import (
@@ -20,6 +21,12 @@ from .const import CONF_REFRESH_TOKEN, DEFAULT_API_URL, DOMAIN, LOGGER
 AUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
+)
+
+REAUTH_SCHEMA = probatio.Schema(
+    {
         probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
@@ -60,6 +67,47 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=AUTH_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauthentication request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        username = reauth_entry.data[CONF_USERNAME]
+
+        if user_input is not None:
+            token, error = await self._async_validate_login(
+                username, user_input[CONF_PASSWORD]
+            )
+            if error:
+                errors["base"] = error
+            else:
+                assert token is not None
+                assert token.account_id is not None
+                assert token.refresh_token is not None
+                await self.async_set_unique_id(token.account_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_REFRESH_TOKEN: token.refresh_token,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={CONF_USERNAME: username},
+            errors=errors,
         )
 
     async def _async_validate_login(
