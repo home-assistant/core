@@ -25,7 +25,7 @@ rules:
     comment: Integration does not provide any custom triggers.
   entity-event-setup:
     status: exempt
-    comment: Entities do not subscribe to events directly, the coordinator handles push updates.
+    comment: Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
