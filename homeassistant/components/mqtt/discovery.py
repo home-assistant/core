@@ -439,7 +439,6 @@ def _async_cleanup_disabled_entity(
                 hass,
                 device_id=entity_entry.device_id,
                 config_entry_id=entity_entry.config_entry_id,
-                include_disabled_entities=discovery_payload.device_discovery,
             ),
             name=f"Check for cleanup device registry for {entity_id}",
         )
