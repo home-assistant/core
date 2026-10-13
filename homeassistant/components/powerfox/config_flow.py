@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import reset_auth_state
 from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
@@ -52,6 +53,7 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._async_abort_entries_match(
                         {CONF_EMAIL: user_input[CONF_EMAIL]}
                     )
+                reset_auth_state(self.hass, reconfigure_entry.entry_id)
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
@@ -88,6 +90,7 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
+                reset_auth_state(self.hass, reauth_entry.entry_id)
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates=user_input,
