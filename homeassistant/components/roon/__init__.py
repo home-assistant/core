@@ -23,7 +23,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> None:
     """Set up a roonserver from a config entry."""
     # fallback to using host for compatibility with older configs
     name = entry.data.get(CONF_ROON_NAME, entry.data[CONF_HOST])
@@ -49,12 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> bool
     # initialize media_player platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> None:
     """Unload a config entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    return await entry.runtime_data.async_reset()
+    await entry.runtime_data.async_reset()

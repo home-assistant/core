@@ -199,6 +199,9 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "unload_failed": {
+      "message": "Failed to unload UniFi Network"
     }
   },
   "options": {

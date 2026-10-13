@@ -392,7 +392,7 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "command_topic": "test-topic",
             },
-            "Error 'expected 'emitter' or 'receiver' at 'schema''",
+            "Error 'expected schema to be one of",
         ),
         (
             {
@@ -407,7 +407,7 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "state_topic": "test-topic",
             },
-            "Error 'expected 'emitter' or 'receiver' at 'schema''",
+            "Error 'expected schema to be one of",
         ),
         (
             {

@@ -26,7 +26,7 @@ PLATFORMS: list[Platform] = [
 type LupusecConfigEntry = ConfigEntry[lupupy.Lupusec]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> None:
     """Set up this integration using UI."""
 
     host = entry.data[CONF_HOST]
@@ -63,5 +63,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> b
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
