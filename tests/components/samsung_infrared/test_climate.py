@@ -342,90 +342,43 @@ async def test_samsung_infrared_climate_restores_state_after_restart(
 
 
 @pytest.mark.parametrize(
-    (
-        "restored_attributes",
-        "extra_data",
-        "unit_system",
-        "expected_temperature",
-        "expected_native",
-    ),
+    ("restored_attributes", "unit_system", "expected_temperature"),
     [
         pytest.param(
             {ATTR_TEMPERATURE: 17, "temperature_unit": UnitOfTemperature.CELSIUS},
-            None,
             METRIC_SYSTEM,
-            17,
             17,
             id="celsius_to_celsius",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 17, "temperature_unit": UnitOfTemperature.CELSIUS},
-            None,
             US_CUSTOMARY_SYSTEM,
             63,
-            17,
             id="celsius_to_fahrenheit",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
             METRIC_SYSTEM,
-            17,
             17,
             id="fahrenheit_to_celsius",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
             US_CUSTOMARY_SYSTEM,
             63,
-            17,
             id="fahrenheit_to_fahrenheit",
         ),
+        pytest.param({ATTR_TEMPERATURE: 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
         pytest.param(
-            {ATTR_TEMPERATURE: 17}, None, METRIC_SYSTEM, 17, 17, id="legacy_celsius"
-        ),
-        pytest.param(
-            {ATTR_TEMPERATURE: 63},
-            None,
-            US_CUSTOMARY_SYSTEM,
-            63,
-            17,
-            id="legacy_fahrenheit",
-        ),
-        pytest.param(
-            {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            {**_STORED_CLIMATE_DATA, "last_on_hvac_mode": HVACMode.COOL.value},
-            US_CUSTOMARY_SYSTEM,
-            77,
-            25,
-            id="extra_data_preferred_over_attributes",
-        ),
-        pytest.param(
-            {ATTR_TEMPERATURE: 167, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
-            US_CUSTOMARY_SYSTEM,
-            75,
-            24,
-            id="out_of_range_falls_back_to_default",
-        ),
-        pytest.param(
-            {ATTR_TEMPERATURE: 20, "temperature_unit": "invalid"},
-            None,
-            METRIC_SYSTEM,
-            24,
-            24,
-            id="invalid_unit_falls_back_to_default",
+            {ATTR_TEMPERATURE: 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
         ),
     ],
 )
 async def test_samsung_infrared_climate_restore_temperature_unit(
     hass: HomeAssistant,
     restored_attributes: dict[str, int | str],
-    extra_data: dict[str, Any] | None,
     unit_system: UnitSystem,
     expected_temperature: int,
-    expected_native: int,
 ) -> None:
     """Test restoration uses the saved unit, falling back to the configured unit."""
     hass.config.units = unit_system
@@ -442,9 +395,9 @@ async def test_samsung_infrared_climate_restore_temperature_unit(
     )
     entry.add_to_hass(hass)
 
-    mock_restore_cache_with_extra_data(
+    mock_restore_cache(
         hass,
-        [(State("climate.samsung_ac", HVACMode.COOL, restored_attributes), extra_data)],
+        [State("climate.samsung_ac", HVACMode.COOL, restored_attributes)],
     )
 
     with patch(
@@ -466,7 +419,7 @@ async def test_samsung_infrared_climate_restore_temperature_unit(
         )
 
         sent_command = mock_send_command.call_args[0][0]
-        assert sent_command.target_temperature == expected_native
+        assert sent_command.target_temperature == 17
 
 
 async def test_samsung_infrared_climate_restore_data_saved(

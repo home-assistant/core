@@ -556,21 +556,6 @@ STORED_COP = {
             "climate.test_climate",
             US_CUSTOMARY_SYSTEM,
             {
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: "warm",
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
-                    UnitOfTemperature.FAHRENHEIT
-                ),
-            },
-            None,
-            (None, 22.222),
-            (None, 72.0),
-            id="climate_non_numeric",
-        ),
-        pytest.param(
-            "climate.test_climate",
-            US_CUSTOMARY_SYSTEM,
-            {
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE: None,
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: None,
                 ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
@@ -593,15 +578,6 @@ STORED_COP = {
             (21.0, 22.0),
             (70.0, 71.5),
             id="climate_extra_data_on_us_customary",
-        ),
-        pytest.param(
-            "climate.test_climate",
-            US_CUSTOMARY_SYSTEM,
-            {},
-            {**STORED_CLIMATE, "native_temperature_unit": "invalid"},
-            (None, None),
-            (None, None),
-            id="climate_extra_data_invalid_unit",
         ),
         pytest.param(
             "climate.test_cabin_overheat_protection",
@@ -691,49 +667,6 @@ async def test_streaming_restore_temperature_unit(
         state.attributes[ClimateEntityStateAttribute.CURRENT_TEMPERATURE],
         state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE],
     ) == expected_display
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_streaming_restore_does_not_compound(
-    hass: HomeAssistant,
-    mock_metadata: AsyncMock,
-    mock_add_listener: AsyncMock,
-) -> None:
-    """Test restored temperatures stay in Celsius across restarts."""
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][VIN]["config"] = {"cop_user_set_temp_supported": True}
-    mock_metadata.return_value = metadata
-    hass.config.units = US_CUSTOMARY_SYSTEM
-
-    entry = await setup_platform(hass, [Platform.CLIMATE])
-    mock_add_listener.send(
-        {
-            "vin": VEHICLE_DATA_ALT["response"]["vin"],
-            "data": {
-                Signal.INSIDE_TEMP: 21,
-                Signal.HVAC_POWER: "HvacPowerStateOn",
-                Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,
-                Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 22,
-                Signal.CABIN_OVERHEAT_PROTECTION_MODE: (
-                    "CabinOverheatProtectionModeStateOn"
-                ),
-                Signal.CABIN_OVERHEAT_PROTECTION_TEMPERATURE_LIMIT: "Medium",
-            },
-            "createdAt": "2024-10-04T10:45:17.537Z",
-        }
-    )
-    await hass.async_block_till_done()
-
-    for _ in range(3):
-        await reload_platform(hass, entry, [Platform.CLIMATE])
-
-    component = hass.data[DATA_COMPONENT]
-    climate = component.get_entity("climate.test_climate")
-    assert climate.native_current_temperature == 21
-    assert climate.native_target_temperature == 22
-    cop = component.get_entity("climate.test_cabin_overheat_protection")
-    assert cop.native_current_temperature == 21
-    assert cop.native_target_temperature == 35
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

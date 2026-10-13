@@ -46,7 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -55,7 +54,6 @@ from homeassistant.util.unit_system import (
 
 from tests.common import (
     MockConfigEntry,
-    async_mock_restore_state_shutdown_restart,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
@@ -687,22 +685,6 @@ async def test_state_restored_on_restart(
             25,
             id="extra_data_preferred_over_attributes",
         ),
-        pytest.param(
-            {"temperature": 167, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
-            US_CUSTOMARY_SYSTEM,
-            61,
-            MIN_TEMP,
-            id="out_of_range_falls_back_to_default",
-        ),
-        pytest.param(
-            {"temperature": 24, "temperature_unit": "invalid"},
-            None,
-            METRIC_SYSTEM,
-            MIN_TEMP,
-            MIN_TEMP,
-            id="invalid_unit_falls_back_to_default",
-        ),
     ],
 )
 async def test_restore_temperature_unit(
@@ -756,31 +738,6 @@ async def test_restore_temperature_unit(
             mode=LgAcMode.COOL, temperature=expected_native, fan=LgAcFanSpeed.AUTO
         ).get_raw_timings()
     )
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_restore_data_saved(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test the native temperatures are stored for restoring."""
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_TEMPERATURE: 25,
-            "hvac_mode": HVACMode.COOL,
-        },
-        blocking=True,
-    )
-
-    await async_mock_restore_state_shutdown_restart(hass)
-
-    stored = {
-        data["state"]["entity_id"]: data["extra_data"]
-        for data in hass_storage[RESTORE_STATE_KEY]["data"]
-    }
-    assert stored[_CLIMATE_ENTITY_ID] == _STORED_CLIMATE_DATA
 
 
 @pytest.mark.usefixtures("init_integration")

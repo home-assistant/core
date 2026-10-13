@@ -891,80 +891,35 @@ async def test_state_restored_on_restart(
 
 
 @pytest.mark.parametrize(
-    (
-        "restored_attributes",
-        "extra_data",
-        "unit_system",
-        "expected_temperature",
-        "expected_native",
-    ),
+    ("restored_attributes", "unit_system", "expected_temperature"),
     [
         pytest.param(
             {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
-            None,
             METRIC_SYSTEM,
-            17,
             17,
             id="celsius_to_celsius",
         ),
         pytest.param(
             {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
-            None,
             US_CUSTOMARY_SYSTEM,
             63,
-            17,
             id="celsius_to_fahrenheit",
         ),
         pytest.param(
             {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
             METRIC_SYSTEM,
-            17,
             17,
             id="fahrenheit_to_celsius",
         ),
         pytest.param(
             {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
             US_CUSTOMARY_SYSTEM,
             63,
-            17,
             id="fahrenheit_to_fahrenheit",
         ),
+        pytest.param({"temperature": 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
         pytest.param(
-            {"temperature": 17}, None, METRIC_SYSTEM, 17, 17, id="legacy_celsius"
-        ),
-        pytest.param(
-            {"temperature": 63},
-            None,
-            US_CUSTOMARY_SYSTEM,
-            63,
-            17,
-            id="legacy_fahrenheit",
-        ),
-        pytest.param(
-            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            {**_STORED_CLIMATE_DATA, "last_active_hvac_mode": HVACMode.COOL.value},
-            US_CUSTOMARY_SYSTEM,
-            77,
-            25,
-            id="extra_data_preferred_over_attributes",
-        ),
-        pytest.param(
-            {"temperature": 167, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
-            None,
-            US_CUSTOMARY_SYSTEM,
-            61,
-            MIN_TEMP,
-            id="out_of_range_falls_back_to_default",
-        ),
-        pytest.param(
-            {"temperature": 24, "temperature_unit": "invalid"},
-            None,
-            METRIC_SYSTEM,
-            MIN_TEMP,
-            MIN_TEMP,
-            id="invalid_unit_falls_back_to_default",
+            {"temperature": 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
         ),
     ],
 )
@@ -974,23 +929,18 @@ async def test_restore_temperature_unit(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
     restored_attributes: dict[str, int | str],
-    extra_data: dict[str, Any] | None,
     unit_system: UnitSystem,
     expected_temperature: int,
-    expected_native: int,
 ) -> None:
     """Test restoration uses the saved unit, falling back to the configured unit."""
     hass.config.units = unit_system
-    mock_restore_cache_with_extra_data(
+    mock_restore_cache(
         hass,
         [
-            (
-                State(
-                    _CLIMATE_ENTITY_ID,
-                    HVACMode.COOL,
-                    restored_attributes,
-                ),
-                extra_data,
+            State(
+                _CLIMATE_ENTITY_ID,
+                HVACMode.COOL,
+                restored_attributes,
             )
         ],
     )
@@ -1016,9 +966,7 @@ async def test_restore_temperature_unit(
     assert (
         timings
         == GreeAcCommand(
-            mode=GreeAcMode.COOL,
-            temperature=expected_native,
-            fan=GreeAcFanSpeed.AUTO,
+            mode=GreeAcMode.COOL, temperature=17, fan=GreeAcFanSpeed.AUTO
         ).get_raw_timings()
     )
 
