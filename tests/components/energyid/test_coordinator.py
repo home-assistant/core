@@ -13,15 +13,19 @@ from energyid_webhooks.directives import (
     DirectiveSignal,
     SignalProvider,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energyid.const import CONF_ENABLE_DIRECTIVES, DOMAIN
-from homeassistant.components.energyid.coordinator import EnergyIDDirectiveCoordinator
+from homeassistant.components.energyid.coordinator import (
+    DIRECTIVE_UPDATE_INTERVAL,
+    EnergyIDDirectiveCoordinator,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 DIRECTIVE_ID = "11111111-1111-1111-1111-111111111111"
 
@@ -80,7 +84,10 @@ async def _setup_with_directives(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    return mock_config_entry.runtime_data.directive_coordinator
+    coordinator = mock_config_entry.runtime_data.directive_coordinator
+    # Without entities nothing listens to the coordinator, so it wouldn't poll.
+    coordinator.async_add_listener(lambda: None)
+    return coordinator
 
 
 async def test_directives_require_opt_in(
@@ -198,6 +205,7 @@ async def test_startup_failure_does_not_block_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a failed first fetch leaves the entry loaded and recovers later."""
     resource, schedule = _directive_fixture()
@@ -211,7 +219,9 @@ async def test_startup_failure_does_not_block_setup(
 
     mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
     mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
-    await coordinator.async_refresh()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
@@ -221,6 +231,7 @@ async def test_access_granted_after_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test API access granted later is picked up by re-authenticating."""
     resource, schedule = _directive_fixture(good_slots=4)
@@ -235,7 +246,9 @@ async def test_access_granted_after_setup(
     mock_webhook_client.authenticate = AsyncMock(side_effect=grant_token)
     mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
     mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
-    await coordinator.async_refresh()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
     assert coordinator.data.schedules[DIRECTIVE_ID].current == schedule.data[0]
@@ -246,6 +259,7 @@ async def test_rejected_credentials_start_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     status: int,
 ) -> None:
     """Test rejected credentials while polling start the reauthentication flow."""
@@ -258,8 +272,9 @@ async def test_rejected_credentials_start_reauth(
     mock_webhook_client.get_directives.side_effect = ClientResponseError(
         request_info=MagicMock(), history=(), status=status
     )
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -271,6 +286,7 @@ async def test_rejected_schedule_credentials_start_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     status: int,
 ) -> None:
     """Test credentials rejected on a schedule start reauthentication."""
@@ -283,8 +299,9 @@ async def test_rejected_schedule_credentials_start_reauth(
     mock_webhook_client.get_directive_data.side_effect = ClientResponseError(
         request_info=MagicMock(), history=(), status=status
     )
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -318,6 +335,7 @@ async def test_unclaimed_device_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a device that is no longer claimed starts reauthentication."""
     coordinator = await _setup_with_directives(hass, mock_config_entry)
@@ -328,8 +346,9 @@ async def test_unclaimed_device_starts_reauth(
 
     mock_webhook_client.authenticate = AsyncMock(side_effect=lose_claim)
     mock_webhook_client.get_directives.reset_mock()
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     mock_webhook_client.get_directives.assert_not_awaited()
@@ -367,6 +386,7 @@ async def test_claim_lost_while_polling_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     method: str,
     lose_claim: Callable[..., Awaitable[Any]],
 ) -> None:
@@ -380,8 +400,9 @@ async def test_claim_lost_while_polling_starts_reauth(
     getattr(mock_webhook_client, method).side_effect = partial(
         lose_claim, mock_webhook_client
     )
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -392,6 +413,7 @@ async def test_server_error_marks_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a server error while polling fails the update without reauthentication."""
     resource, schedule = _directive_fixture()
@@ -403,7 +425,9 @@ async def test_server_error_marks_update_failed(
     mock_webhook_client.get_directives.side_effect = ClientResponseError(
         request_info=MagicMock(), history=(), status=500
     )
-    await coordinator.async_refresh()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
