@@ -72,7 +72,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._async_observed_poll()
-            if not report.failed and not report.updated:
+            if self.device.unrecognized:
                 raise ConfigEntryError(
                     translation_domain=DOMAIN,
                     translation_key="unrecognized_inverter_model",
