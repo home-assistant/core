@@ -168,9 +168,8 @@ def sensor_subentries(
         ConfigSubentryData(
             data={CONF_SENSORS: sensor_data},
             subentry_type="sensor",
-            title=next(iter(sensor_data.values())).get(
-                CONF_FRIENDLY_NAME, f"LaCrosse sensor {sensor_id}"
-            ),
+            title=next(iter(sensor_data.values())).get(CONF_FRIENDLY_NAME)
+            or f"LaCrosse sensor {sensor_id}",
             unique_id=str(sensor_id),
         )
         for sensor_id, sensor_data in grouped.items()

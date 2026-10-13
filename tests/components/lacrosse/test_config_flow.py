@@ -83,6 +83,13 @@ def test_sensor_entity_key(
     assert sensor_entity_key(sensor_id, sensor_type, friendly_name) == expected_key
 
 
+def test_sensor_subentries_empty_friendly_name_uses_sensor_id() -> None:
+    """Test an empty friendly name falls back to the generated subentry title."""
+    subentries = sensor_subentries({"1_temperature": {"id": 1, "friendly_name": ""}})
+
+    assert subentries[0]["title"] == "LaCrosse sensor 1"
+
+
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a hub with two physical sensor subentries."""
