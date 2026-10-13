@@ -41,7 +41,9 @@ class SerialProxyFilters(TypedDict):
 
 def build_url(entry_id: str, **filters: Unpack[SerialProxyFilters]) -> URL:
     """Build a canonical `esphome-hass://` URL from filters."""
-    trimmed_filters = {k: v for k, v in filters.items() if v is not None}
+    filters_items = cast(dict[str, str | int | None], filters).items()
+    trimmed_filters = {k: v for k, v in filters_items if v is not None}
+
     if not trimmed_filters:
         raise TypeError("Filters are required to connect to an ESPHome serial proxy")
 
