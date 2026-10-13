@@ -392,7 +392,7 @@ async def test_setup_takes_the_type_from_the_masks(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all()) == 36
+    assert len(hass.states.async_all()) == 37
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_pv_power_1"
     )
@@ -433,7 +433,7 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     states = hass.states.async_all()
-    assert len(states) == 36
+    assert len(states) == 37
     assert {state.state for state in states} == {STATE_UNAVAILABLE}
     assert "inverter is not answering" in caplog.text
 
@@ -480,7 +480,7 @@ async def test_setup_takes_the_type_once_the_masks_answer(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all()) == 36
+    assert len(hass.states.async_all()) == 37
 
 
 @pytest.mark.usefixtures("mock_get_unit")
