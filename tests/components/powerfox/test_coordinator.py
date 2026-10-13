@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from powerfox import PowerfoxAuthenticationError
+from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -60,6 +60,8 @@ async def test_persistent_authentication_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_powerfox_client.all_devices.call_count == 1
+    assert not hass.config_entries.flow.async_progress()
 
     freezer.tick(timedelta(seconds=70))
     async_fire_time_changed(hass)
@@ -135,4 +137,38 @@ async def test_authentication_failure_timer_resets(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_powerfox_client.all_devices.call_count == 1
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize("method", ["device", "report"])
+async def test_authentication_recheck_connection_error(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    method: str,
+) -> None:
+    """Test a connection error during credential recheck does not trigger reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    api_method = getattr(mock_powerfox_client, method)
+    api_method.side_effect = PowerfoxAuthenticationError
+    mock_powerfox_client.all_devices.side_effect = PowerfoxConnectionError
+
+    # First authentication failure starts the grace period.
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_powerfox_client.all_devices.call_count == 1
+    assert not hass.config_entries.flow.async_progress()
+
+    # After 60 seconds, credential verification encounters a connection error.
+    freezer.tick(timedelta(seconds=70))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_powerfox_client.all_devices.call_count >= 2
     assert not hass.config_entries.flow.async_progress()

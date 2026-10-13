@@ -1,6 +1,6 @@
 """Coordinator for Powerfox integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import override
 
 from powerfox import (
@@ -50,7 +50,7 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
         )
         self.client = client
         self.device = device
-        self._auth_failure_since = None
+        self._auth_failure_since: datetime | None = None
 
     @override
     async def _async_update_data(self) -> T:
