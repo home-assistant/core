@@ -15,6 +15,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bsblan.climate import BSBLANClimate
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -34,7 +35,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
@@ -230,6 +231,84 @@ async def test_pps_climate_entity_without_sensor_data(
     assert ATTR_PRESET_MODES not in state.attributes
     assert not state.attributes["supported_features"] & ClimateEntityFeature.PRESET_MODE
     assert state.attributes["current_temperature"] is not None
+
+
+@pytest.mark.parametrize(
+    ("bus", "buswritable", "expected_features", "expected_modes"),
+    [
+        pytest.param("PPS", 0, 0, [], id="passive-pps"),
+        pytest.param(
+            "PPS",
+            1,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON,
+            [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF],
+            id="active-pps",
+        ),
+        pytest.param(
+            "BSB",
+            0,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.PRESET_MODE,
+            [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF],
+            id="bsb-unchanged",
+        ),
+        pytest.param(
+            "LPB",
+            0,
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.PRESET_MODE,
+            [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF],
+            id="lpb-unchanged",
+        ),
+    ],
+)
+async def test_pps_climate_write_capabilities(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    bus: str,
+    buswritable: int,
+    expected_features: int,
+    expected_modes: list[HVACMode],
+) -> None:
+    """Test passive PPS devices do not advertise thermostat controls."""
+    mock_bsblan.device.return_value = Device.model_validate(
+        {
+            **mock_bsblan.device.return_value.model_dump(),
+            "bus": bus,
+            "buswritable": buswritable,
+        }
+    )
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["supported_features"] == expected_features
+    assert state.attributes["hvac_modes"] == expected_modes
+    assert state.attributes["current_temperature"] is not None
+
+
+async def test_passive_pps_thermostat_write_error(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test passive PPS mode rejects writes with a specific error."""
+    mock_bsblan.device.return_value = Device.model_validate(
+        {**mock_bsblan.device.return_value.model_dump(), "bus": "PPS", "buswritable": 0}
+    )
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    entity = BSBLANClimate(mock_config_entry.runtime_data, 1)
+    with pytest.raises(ServiceValidationError) as exc:
+        await entity.async_set_temperature(temperature=20)
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "bus_write_not_supported"
+    mock_bsblan.thermostat.assert_not_awaited()
 
 
 async def _async_set_hvac_action(

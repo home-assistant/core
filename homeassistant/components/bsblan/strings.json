@@ -106,6 +106,9 @@
     }
   },
   "exceptions": {
+    "bus_write_not_supported": {
+      "message": "Thermostat control is not supported while the BSB-LAN device is in passive PPS mode."
+    },
     "coordinator_auth_error": {
       "message": "Authentication failed for BSB-LAN device"
     },

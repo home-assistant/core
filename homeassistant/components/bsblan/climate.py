@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -102,9 +102,13 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         self._uses_pps_bus = data.device.is_pps_bus
         mac = format_mac(data.device.MAC)
 
+        self._is_read_only = self._uses_pps_bus and not data.device.is_bus_writable
         if self._uses_pps_bus:
             self._attr_supported_features = SUPPORTED_FEATURES
             self._attr_preset_modes = None
+        if self._is_read_only:
+            self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = []
 
         # Backward compatible unique ID: circuit 1 keeps old format
         if circuit == 1:
@@ -208,6 +212,12 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     async def async_set_data(self, **kwargs: Any) -> None:
         """Set device settings using BSBLAN."""
+        if self._is_read_only:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="bus_write_not_supported",
+            )
+
         data: dict[str, Any] = {}
         if ATTR_TEMPERATURE in kwargs:
             data[ATTR_TARGET_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
