@@ -1,5 +1,6 @@
 """Tests for home_connect camera entities."""
 
+import asyncio
 from collections.abc import Awaitable, Callable, Generator
 from datetime import timedelta
 from http import HTTPStatus
@@ -20,7 +21,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.camera import CameraState
+from homeassistant.components.camera import CameraState, async_get_image
 from homeassistant.components.home_connect.const import (
     DOMAIN,
     IMAGES_REFRESH_DELAY,
@@ -141,7 +142,7 @@ async def test_paired_depaired_devices_flow(
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
 
-    # Now that all everything related to the device is removed, pair it again
+    # Now that everything related to the device is removed, pair it again
     await client.add_events(
         [
             EventMessage(
@@ -330,6 +331,81 @@ async def test_camera_image(
 
 
 @pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_camera_image_concurrent_requests(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that concurrent requests for the same image download it only once."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    http_client = await hass_client()
+    responses = await asyncio.gather(
+        *(
+            http_client.get(f"/api/camera_proxy/{DOOR_CAMERA_ENTITY_ID}")
+            for _ in range(3)
+        )
+    )
+    for response in responses:
+        assert response.status == HTTPStatus.OK
+        assert await response.read() == MOCK_IMAGE_CONTENT
+
+    client.get_image.assert_called_once_with(appliance.ha_id, image_key="door-image-2")
+
+
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_camera_image_replaced_while_downloading(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that an image that is replaced while being downloaded is not cached."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    download_started = asyncio.Event()
+    download_unblocked = asyncio.Event()
+
+    async def get_image_side_effect(ha_id: str, image_key: str) -> bytes:
+        """Block the download until the test unblocks it."""
+        download_started.set()
+        await download_unblocked.wait()
+        return image_key.encode()
+
+    client.get_image = AsyncMock(side_effect=get_image_side_effect)
+    # Use a timeout longer than the images refresh delay, as the time is frozen
+    stale_request = asyncio.create_task(
+        async_get_image(hass, DOOR_CAMERA_ENTITY_ID, timeout=IMAGES_REFRESH_DELAY * 2)
+    )
+    await download_started.wait()
+
+    # A new image is taken while the old one is being downloaded
+    client.get_images = AsyncMock(
+        return_value=ArrayOfImages([*_get_fridge_images(), NEW_DOOR_IMAGE])
+    )
+    await client.add_events(
+        [_get_door_event(appliance, REFRIGERATION_STATUS_DOOR_CLOSED)]
+    )
+    await hass.async_block_till_done()
+    await _wait_for_images_refresh(hass, freezer)
+
+    download_unblocked.set()
+    assert (await stale_request).content == b"door-image-2"
+
+    assert (
+        await async_get_image(hass, DOOR_CAMERA_ENTITY_ID)
+    ).content == b"door-image-3"
+    assert client.get_image.call_count == 2
+
+
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
 async def test_camera_image_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -486,6 +562,48 @@ async def test_new_camera_after_door_closed(
 
     assert hass.states.is_state(DOOR_CAMERA_ENTITY_ID, CameraState.IDLE)
     assert not hass.states.get(INTERIOR_CAMERA_ENTITY_ID)
+
+    client.get_images = AsyncMock(return_value=ArrayOfImages(fridge_images))
+    await client.add_events(
+        [_get_door_event(appliance, REFRIGERATION_STATUS_DOOR_CLOSED)]
+    )
+    await hass.async_block_till_done()
+    await _wait_for_images_refresh(hass, freezer)
+
+    assert hass.states.is_state(DOOR_CAMERA_ENTITY_ID, CameraState.IDLE)
+    assert hass.states.is_state(INTERIOR_CAMERA_ENTITY_ID, CameraState.IDLE)
+
+
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_removed_camera_after_door_closed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that a camera that stops reporting images becomes unavailable."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state(DOOR_CAMERA_ENTITY_ID, CameraState.IDLE)
+    assert hass.states.is_state(INTERIOR_CAMERA_ENTITY_ID, CameraState.IDLE)
+
+    fridge_images = _get_fridge_images()
+    client.get_images = AsyncMock(
+        return_value=ArrayOfImages(
+            [image for image in fridge_images if image.key == DOOR_CAMERA_KEY]
+        )
+    )
+    await client.add_events(
+        [_get_door_event(appliance, REFRIGERATION_STATUS_DOOR_CLOSED)]
+    )
+    await hass.async_block_till_done()
+    await _wait_for_images_refresh(hass, freezer)
+
+    assert hass.states.is_state(DOOR_CAMERA_ENTITY_ID, CameraState.IDLE)
+    assert hass.states.is_state(INTERIOR_CAMERA_ENTITY_ID, STATE_UNAVAILABLE)
 
     client.get_images = AsyncMock(return_value=ArrayOfImages(fridge_images))
     await client.add_events(

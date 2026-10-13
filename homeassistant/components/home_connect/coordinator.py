@@ -201,7 +201,8 @@ class HomeConnectRuntimeData:
     ) -> Callable[[], None]:
         """Listen for special data updates.
 
-        These listeners will not be called on refresh.
+        These listeners are called on PAIRED, CONNECTED and DEPAIRED events,
+        after each appliance refresh and when a camera is discovered.
         """
 
         @callback
@@ -654,16 +655,20 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             return
 
         images = self.data.images
-        new_cameras = latest_images.keys() - images.keys()
-        updated_cameras = [
+        old_image_keys = {key: image.image_key for key, image in images.items()}
+        new_image_keys = {key: image.image_key for key, image in latest_images.items()}
+        new_cameras = new_image_keys.keys() - old_image_keys.keys()
+        # Cameras whose image changed, that stopped reporting images or that
+        # started reporting them again
+        changed_cameras = [
             key
-            for key, image in latest_images.items()
-            if key not in new_cameras and images[key].image_key != image.image_key
+            for key in old_image_keys.keys() | new_image_keys.keys()
+            if old_image_keys.get(key) != new_image_keys.get(key)
         ]
         images.clear()
         images.update(latest_images)
 
-        for key in updated_cameras:
+        for key in changed_cameras:
             for listener in self._get_listeners_for_event_key(key):
                 listener()
         if new_cameras:

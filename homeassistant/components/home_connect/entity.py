@@ -41,9 +41,9 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
     ) -> None:
         """Initialize the entity."""
         appliance_ha_id = appliance_coordinator.data.info.ha_id
-        context = EventKey(desc.key)
-        if context_override is not None:
-            context = context_override
+        context = (
+            context_override if context_override is not None else EventKey(desc.key)
+        )
         super().__init__(appliance_coordinator, context)
         self.appliance = appliance_coordinator.data
         self.entity_description = desc

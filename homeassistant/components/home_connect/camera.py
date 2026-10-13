@@ -1,5 +1,6 @@
 """Provides camera entities for Home Connect."""
 
+import asyncio
 import logging
 from typing import override
 
@@ -85,6 +86,7 @@ class HomeConnectCameraEntity(HomeConnectEntity, Camera):
         """Initialize the entity."""
         super().__init__(appliance_coordinator, desc, context_override=desc.key)
         Camera.__init__(self)
+        self._image_lock = asyncio.Lock()
 
     @property
     @override
@@ -106,12 +108,18 @@ class HomeConnectCameraEntity(HomeConnectEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of the latest image taken by the camera."""
-        if self._image is None and self._image_key is not None:
+        # Serialize the requests so that concurrent ones share a single download
+        async with self._image_lock:
+            if self._image is not None or (image_key := self._image_key) is None:
+                return self._image
             try:
-                self._image = await self.coordinator.client.get_image(
-                    self.appliance.info.ha_id, image_key=self._image_key
+                image = await self.coordinator.client.get_image(
+                    self.appliance.info.ha_id, image_key=image_key
                 )
             except HomeConnectError as error:
                 _LOGGER.error("Error fetching image for %s: %s", self.entity_id, error)
                 return None
-        return self._image
+            if image_key == self._image_key:
+                # Only cache the image if no newer one was taken while downloading
+                self._image = image
+            return image
