@@ -591,7 +591,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         except HomeConnectError:
             commands = set()
 
-        images: dict[str, Image] = {}
+        # Keep the known images if the request fails, so that the cameras stay available
+        images = self.data.images.copy()
         if appliance.type in APPLIANCES_WITH_IMAGES:
             try:
                 images = await self.get_latest_images()

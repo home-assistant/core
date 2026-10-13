@@ -248,6 +248,41 @@ async def test_camera_entity_availability(
         assert hass.states.is_state(entity_id, CameraState.IDLE)
 
 
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_images_kept_on_connected_refresh_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that the cameras stay available if fetching the images fails on reconnect."""
+    entity_ids = [DOOR_CAMERA_ENTITY_ID, INTERIOR_CAMERA_ENTITY_ID]
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    for entity_id in entity_ids:
+        assert hass.states.is_state(entity_id, CameraState.IDLE)
+
+    client.get_images = AsyncMock(
+        side_effect=HomeConnectApiError("error.key", "error description")
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.CONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_images.assert_called_once_with(appliance.ha_id)
+    for entity_id in entity_ids:
+        assert hass.states.is_state(entity_id, CameraState.IDLE)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
