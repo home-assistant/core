@@ -774,7 +774,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class ClimateExtraStoredData(ExtraStoredData):
     """Native temperatures of a climate entity, stored for restoring.
 
-    Integrations storing extra data of their own subclass this and add fields.
+    Integrations which store extra data of their own should subclass this and add
+    fields.
     """
 
     native_current_temperature: float | None
