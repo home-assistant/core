@@ -10,7 +10,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LichessConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LichessConfigEntry) -> None:
     """Set up Lichess from a config entry."""
 
     coordinator = LichessCoordinator(hass, entry)
@@ -21,9 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LichessConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LichessConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LichessConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
