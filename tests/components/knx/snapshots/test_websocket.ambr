@@ -111,11 +111,11 @@
         'optional': True,
         'required': False,
         'selector': dict({
-          'number': dict({
-            'min': 0.0,
-            'mode': 'box',
-            'step': 0.001,
-            'unit_of_measurement': 's',
+          'duration': dict({
+            'allow_negative': False,
+            'enable_day': True,
+            'enable_millisecond': True,
+            'enable_second': True,
           }),
         }),
         'type': 'ha_selector',

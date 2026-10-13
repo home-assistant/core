@@ -1387,6 +1387,60 @@ def test_binary_sensor_reset_after_accepts_milliseconds() -> None:
     assert to_storage_dict(validated)["knx"]["reset_after"] == 1.5
 
 
+def test_binary_sensor_reset_after_accepts_duration_input() -> None:
+    """Duration form data is normalized to seconds before storage."""
+    validated = validate_entity_data(
+        {
+            CONF_PLATFORM: Platform.BINARY_SENSOR,
+            CONF_DATA: {
+                "entity": {"name": "In operation"},
+                "knx": {
+                    "ga_sensor": {"state": "1/2/3"},
+                    "reset_after": {
+                        "days": 1,
+                        "hours": 1,
+                        "seconds": 1,
+                        "milliseconds": 500,
+                    },
+                },
+            },
+        }
+    )[CONF_DATA]
+    assert to_storage_dict(validated)["knx"]["reset_after"] == 90001.5
+
+
+def test_binary_sensor_reset_after_rejects_negative_duration_input() -> None:
+    """Reject a negative Duration selector value."""
+    with pytest.raises(EntityStoreValidationException):
+        validate_entity_data(
+            {
+                CONF_PLATFORM: Platform.BINARY_SENSOR,
+                CONF_DATA: {
+                    "entity": {"name": "In operation"},
+                    "knx": {
+                        "ga_sensor": {"state": "1/2/3"},
+                        "reset_after": {"seconds": -1},
+                    },
+                },
+            }
+        )
+
+
+def test_binary_sensor_reset_after_schema_uses_duration_selector() -> None:
+    """Expose a duration UI while continuing to validate seconds."""
+    schema = get_serialized_schema(Platform.BINARY_SENSOR)
+    assert schema is not None
+    reset_after = next(field for field in schema if field["name"] == "reset_after")
+    assert reset_after["selector"] == {
+        "duration": {
+            "allow_negative": False,
+            "enable_day": True,
+            "enable_millisecond": True,
+            "enable_second": True,
+        }
+    }
+
+
 @pytest.mark.parametrize(
     ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
 )

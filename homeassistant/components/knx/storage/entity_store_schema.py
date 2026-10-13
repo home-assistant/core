@@ -2,6 +2,7 @@
 
 from collections.abc import Hashable
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum, unique
 from typing import Annotated, Any
 
@@ -114,6 +115,24 @@ def _to_entity_data(data: dict[str, Any]) -> KnxEntityData[Any]:
     return KnxEntityData(entity=data[CONF_ENTITY], knx=data[DOMAIN])
 
 
+_RESET_AFTER_SECONDS = selector.NumberSelector(selector.NumberSelectorConfig(min=0))
+
+
+class _ResetAfterDurationSelector(selector.Selector[selector.DurationSelectorConfig]):
+    """Show a duration while validating and storing its value as seconds."""
+
+    selector_type = "duration"
+    CONFIG_SCHEMA = selector.DurationSelector.CONFIG_SCHEMA
+
+    def __call__(self, data: Any) -> float:
+        """Accept stored seconds and Duration selector input."""
+        if isinstance(data, dict):
+            return timedelta(
+                **selector.DurationSelector(self.config)(data)
+            ).total_seconds()
+        return _RESET_AFTER_SECONDS(data)
+
+
 @dataclass(kw_only=True, slots=True)
 class BinarySensorKnxConfig:
     """UI configuration of a KNX binary sensor."""
@@ -139,9 +158,9 @@ class BinarySensorKnxConfig:
     reset_after: Annotated[
         float | None,
         probatio.Maybe(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, step=0.001, unit_of_measurement="s"
+            _ResetAfterDurationSelector(
+                selector.DurationSelectorConfig(
+                    allow_negative=False, enable_day=True, enable_millisecond=True
                 )
             )
         ),
