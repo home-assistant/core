@@ -1,12 +1,17 @@
 """Test the World Air Quality Index (WAQI) config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiowaqi import WAQIAuthenticationError, WAQIConnectionError
 import pytest
 
+from homeassistant.components.waqi import async_setup_entry
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -15,6 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -401,6 +408,39 @@ async def test_reauth_flow(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {CONF_API_KEY: api_key}
     mock_waqi.authenticate.assert_called_with(api_key)
+
+
+@pytest.mark.parametrize(
+    "api_key",
+    [
+        pytest.param("new_key", id="new_key"),
+        pytest.param("asd", id="same_key"),
+    ],
+)
+async def test_reauth_flow_loaded_entry(
+    hass: HomeAssistant,
+    mock_waqi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    api_key: str,
+) -> None:
+    """Test reauthenticating a loaded entry reloads it once."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    with patch(
+        "homeassistant.components.waqi.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: api_key}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: api_key}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_setup.mock_calls) == 1
 
 
 @pytest.mark.parametrize(

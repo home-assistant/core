@@ -126,8 +126,17 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (
                 errors := await self._async_validate_api_key(user_input[CONF_API_KEY])
             ):
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
+                reauth_entry = self._get_reauth_entry()
+                # A loaded entry is reloaded by its update listener when data changes
+                if (
+                    reauth_entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                    or not reauth_entry.update_listeners
+                ):
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return self.async_update_and_abort(
+                    reauth_entry,
                     data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
 
