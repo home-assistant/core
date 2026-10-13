@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final
 
 import probatio
 
@@ -210,6 +210,23 @@ def batched_state_diff_message(
     # one batch - see _StateDiffBatch, which flushes instead, since the groups are
     # applied by the client in a fixed order that need not match the order the events
     # happened in.
+    if len(fragments) == 1:
+        # The median batch carries one change, so that case skips the grouping.
+        key, entry = fragments[0]
+        opening, closing = (b'":[', b"]") if key == _REMOVE_KEY else (b'":{', b"}")
+        return b"".join(
+            (
+                b'{"id":',
+                message_id_as_bytes,
+                b',"type":"event","event":{"',
+                key,
+                opening,
+                entry,
+                closing,
+                b"}}",
+            )
+        )
+
     grouped: dict[bytes, list[bytes]] = {}
     for key, entry in fragments:
         grouped.setdefault(key, []).append(entry)
@@ -240,17 +257,11 @@ def cached_state_diff_fragment(
     """
     diff = _state_diff_event(event)
     key = next(iter(diff))
-    value = diff[key]
     try:
-        if key == ENTITY_EVENT_REMOVE:
-            # {"r": ["light.kitchen"]} -> b'"light.kitchen"'
-            removed = cast(list[str], value)
-            return _REMOVE_KEY, json_bytes(removed[0])
-        # {"c": {"light.kitchen": diff}} -> b'"light.kitchen":{...}'
-        entity_id, payload = next(iter(cast(dict[str, Any], value).items()))
-        return key.encode(), b"".join(
-            (json_bytes(entity_id), b":", json_bytes(payload))
-        )
+        # The group holds exactly one entity, so stripping the brackets from
+        # {"light.kitchen": {...}} or ["light.kitchen"] leaves the entry that goes
+        # inside it. One json_bytes call rather than one per part.
+        return key.encode(), json_bytes(diff[key])[1:-1]
     except ValueError, TypeError:
         # Deliberately not logged here: the caller sends this change on its own, and
         # cached_state_diff_message reports the unserializable path when it does.

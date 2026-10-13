@@ -1,5 +1,6 @@
 """Connection session."""
 
+from collections import deque
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -85,7 +86,7 @@ class ActiveConnection:
         self.logger = logger
         self.hass = hass
         self._raw_send_message = send_message
-        self.pending_state_diff_batches: list[StateDiffBatchFlush] = []
+        self.pending_state_diff_batches: deque[StateDiffBatchFlush] = deque()
         # Everything leaves through _async_send_message so that changes a subscription
         # has collected but not yet sent go first. Those are flushed from the event
         # loop, so without this a handler that changed state and then sent its result
@@ -126,8 +127,16 @@ class ActiveConnection:
         """
         batches = self.pending_state_diff_batches
         send_message = self._raw_send_message
-        while batches:
-            batches.pop(0)(send_message)
+        try:
+            while batches:
+                batches.popleft()(send_message)
+        finally:
+            if batches:
+                # One batch raising must not stop the rest: the loop reports it, but
+                # nothing would schedule another drain, and async_add_pending_state_
+                # diff_batch only schedules one when the queue is empty - so what is
+                # left would sit unsent until some later message happened to flush it.
+                self.hass.loop.call_soon(self.async_flush_state_diff_batches)
 
     @callback
     def async_add_pending_state_diff_batch(self, flush: StateDiffBatchFlush) -> None:

@@ -34,7 +34,10 @@ from homeassistant.components.websocket_api.commands import (
     ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
     ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
 )
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.connection import (
+    ActiveConnection,
+    SendMessage,
+)
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -4149,6 +4152,70 @@ async def test_unsubscribing_discards_a_batch_that_was_not_sent(
     await websocket_client.send_json_auto_id({"type": "ping"})
     msg = await websocket_client.receive_json()
     assert msg["type"] == "pong"
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_a_flush_that_raises_does_not_strand_the_batches_behind_it(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A batch whose flush raises does not stop the rest being sent.
+
+    A drain consumes the one flush scheduled for it, and a batch is only queued for a
+    new one while the queue is empty, so without rescheduling here whatever was left
+    behind would sit unsent until some later message happened to flush it.
+    """
+    handlers = hass.data[DOMAIN]
+    subscribe_entities, schema = handlers["subscribe_entities"]
+    connections: list[ActiveConnection] = []
+
+    @callback
+    def capture_connection(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        """Record the connection, so its pending batches can be driven directly."""
+        connections.append(connection)
+        subscribe_entities(hass, connection, msg)
+
+    handlers["subscribe_entities"] = (capture_connection, schema)
+    try:
+        await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+        msg = await websocket_client.receive_json()
+        assert msg["success"]
+        msg = await websocket_client.receive_json()
+        assert msg["event"] == {"a": {}}
+    finally:
+        handlers["subscribe_entities"] = (subscribe_entities, schema)
+
+    flushed: list[str] = []
+
+    @callback
+    def raising_flush(_send_message: SendMessage) -> None:
+        """Stand in for a batch that cannot be sent."""
+        raise ValueError("flush failed")
+
+    @callback
+    def recording_flush(_send_message: SendMessage) -> None:
+        """Stand in for the batch queued behind it."""
+        flushed.append("sent")
+
+    connection = connections[0]
+    # Queued directly, so that the only flush scheduled on the loop is the one the
+    # drain itself arranges after failing.
+    connection.pending_state_diff_batches.extend((raising_flush, recording_flush))
+
+    with pytest.raises(ValueError):
+        connection.async_flush_state_diff_batches()
+
+    assert flushed == [], "the drain should have stopped at the failing batch"
+    assert connection.pending_state_diff_batches
+
+    await hass.async_block_till_done()
+
+    assert flushed == ["sent"]
+    assert not connection.pending_state_diff_batches
 
     await websocket_client.close()
     await hass.async_block_till_done()

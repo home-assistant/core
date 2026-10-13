@@ -483,7 +483,7 @@ class _StateDiffBatch:
         unserializable = self._unserializable
         self._fragments = []
         self._unserializable = []
-        self._entity_ids = set()
+        self._entity_ids.clear()
         if fragments:
             send_message(
                 messages.batched_state_diff_message(self._message_id, fragments)
@@ -504,7 +504,7 @@ class _StateDiffBatch:
         """
         self._fragments = []
         self._unserializable = []
-        self._entity_ids = set()
+        self._entity_ids.clear()
         self._connection.async_discard_pending_state_diff_batch(self.async_flush)
 
 
