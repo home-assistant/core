@@ -1,5 +1,6 @@
 """Coordinator for Powerfox integration."""
 
+from datetime import timedelta
 from typing import override
 
 from powerfox import (
@@ -13,7 +14,7 @@ from powerfox import (
     Poweropti,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -49,13 +50,38 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
         )
         self.client = client
         self.device = device
+        self._auth_failure_since = None
 
     @override
     async def _async_update_data(self) -> T:
         """Fetch data and normalize Powerfox errors."""
         try:
-            return await self._async_fetch_data()
+            data = await self._async_fetch_data()
         except PowerfoxAuthenticationError as err:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                now = dt_util.utcnow()
+
+                if self._auth_failure_since is None:
+                    self._auth_failure_since = now
+
+                elif now - self._auth_failure_since >= timedelta(seconds=60):
+                    try:
+                        await self.client.all_devices()
+                    except PowerfoxAuthenticationError as auth_err:
+                        raise ConfigEntryAuthFailed(
+                            translation_domain=DOMAIN,
+                            translation_key="auth_failed",
+                        ) from auth_err
+                    except PowerfoxConnectionError:
+                        pass
+
+                    self._auth_failure_since = now
+
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
+
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -77,6 +103,9 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
                 translation_key="privacy_error",
                 translation_placeholders={"device_name": self.device.name},
             ) from err
+        else:
+            self._auth_failure_since = None
+            return data
 
     async def _async_fetch_data(self) -> T:
         """Fetch data from the Powerfox API."""
