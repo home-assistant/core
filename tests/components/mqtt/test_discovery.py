@@ -3072,7 +3072,7 @@ IGNORED_DISABLED_COMPONENT_REMOVAL_WARNING = (
     "was discovered on topic homeassistant/device/bla/config from external "
     "application bla2mqtt, version: 1.0; after migration to device discovery, "
     "a component cannot be removed by publishing an empty payload to its "
-    "single component discovery topic; to remove the component, publish the "
+    "old single component discovery topic; to remove the component, publish the "
     "device discovery payload to homeassistant/device/bla/config with only "
     "the `platform` option for this component, then omit the component from "
     "the device discovery payload"

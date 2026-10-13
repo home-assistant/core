@@ -396,11 +396,11 @@ def _async_cleanup_disabled_entity(
         if discovery_payload.device_discovery:
             how_to_remove = (
                 "after migration to device discovery, a component cannot be "
-                "removed by publishing an empty payload to its single component "
-                "discovery topic; to remove the component, publish the device "
-                f"discovery payload to {discovery_topic} with only the `platform` "
-                "option for this component, then omit the component from the "
-                "device discovery payload"
+                "removed by publishing an empty payload to its old single "
+                "component discovery topic; to remove the component, publish the "
+                f"device discovery payload to {discovery_topic} with only the "
+                "`platform` option for this component, then omit the component "
+                "from the device discovery payload"
             )
         else:
             how_to_remove = (
