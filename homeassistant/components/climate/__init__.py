@@ -775,11 +775,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
 @dataclass(kw_only=True)
 class ClimateExtraStoredData(ExtraStoredData):
-    """Native temperatures of a climate entity, stored for restoring.
-
-    Integrations which store extra data of their own should subclass this and add
-    fields.
-    """
+    """Native temperatures of a climate entity, stored for restoring."""
 
     native_current_temperature: float | None
     native_target_temperature: float | None
@@ -862,9 +858,10 @@ class RestoreClimate(ClimateEntity, RestoreEntity):
         Falls back to the attributes of the last state when it was saved without
         extra data. Temperatures which are not valid numbers are returned as None.
 
-        With validate_range, which suits entities assuming their state, target
-        temperatures outside min_temp and max_temp are returned as None. Those
-        less than half a degree of the stored unit outside are clamped instead,
+        With validate_range, target temperatures outside min_temp and max_temp are
+        returned as None. Use it when the restored targets are sent to the device,
+        e.g. by entities which can't read their state back from it. Targets up to
+        half a degree (in the stored unit) outside the range are clamped instead,
         as the attributes of the last state may be rounded for display.
         """
         if (extra_data := await self.async_get_last_extra_data()) is None or (
@@ -884,12 +881,10 @@ class RestoreClimate(ClimateEntity, RestoreEntity):
 
         def _convert(value: Any) -> float | None:
             try:
-                value = float(value)
-            except TypeError, ValueError:
+                value = TemperatureConverter.convert(float(value), unit, native_unit)
+            except TypeError, ValueError, OverflowError:
                 return None
-            if not math.isfinite(value):
-                return None
-            return TemperatureConverter.convert(value, unit, native_unit)
+            return value if math.isfinite(value) else None
 
         def _convert_target(value: Any) -> float | None:
             if (temperature := _convert(value)) is None or not validate_range:
@@ -897,7 +892,7 @@ class RestoreClimate(ClimateEntity, RestoreEntity):
             min_temp = self.min_temp
             max_temp = self.max_temp
             tolerance = TemperatureDeltaConverter.convert(0.5, unit, native_unit)
-            if not min_temp - tolerance < temperature < max_temp + tolerance:
+            if not min_temp - tolerance <= temperature <= max_temp + tolerance:
                 return None
             return min(max(temperature, min_temp), max_temp)
 

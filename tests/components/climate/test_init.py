@@ -2223,10 +2223,10 @@ def _restored(
                 **STORED_CELSIUS,
                 "native_target_temperature": 30.4,
                 "native_target_temperature_high": 30.5,
-                "native_target_temperature_low": 3.6,
+                "native_target_temperature_low": 3.4,
             },
             True,
-            _restored(21.5, 30, None, 4),
+            _restored(21.5, 30, 30, None),
             id="slightly_out_of_range_clamped",
         ),
         pytest.param(
@@ -2286,6 +2286,37 @@ async def test_restore_climate_restore_state(
     await hass.async_block_till_done()
 
     assert entity.restored == expected
+
+
+async def test_restore_climate_overflow(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test RestoreClimate drops temperatures which overflow a float."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("climate.test", HVACMode.HEAT),
+                {
+                    **STORED_CELSIUS,
+                    # Finite in Celsius, but infinite once converted to Fahrenheit
+                    "native_current_temperature": 1e308,
+                    "native_target_temperature": 10**400,
+                },
+            ),
+        ),
+    )
+    entity = MockRestoreClimate(name="test", entity_id="climate.test")
+    entity._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity.restored is not None
+    assert entity.restored.native_current_temperature is None
+    assert entity.restored.native_target_temperature is None
 
 
 async def test_restore_climate_no_last_state(
