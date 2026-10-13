@@ -27,7 +27,7 @@ PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> None:
     """Set up Cookidoo from a config entry."""
 
     coordinator = CookidooDataUpdateCoordinator(
@@ -39,12 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def _migrate_identifiers(
@@ -92,7 +90,7 @@ def _migrate_identifiers(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: CookidooConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -151,5 +149,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True
