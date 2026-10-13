@@ -600,18 +600,36 @@ async def test_local_binary_sensors_missing_signal(
     }
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_local_binary_sensors_first_refresh_failure(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_powerwall_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a failed first local refresh skips the sensors but loads the entry."""
+    """Test sensors from a failed first local refresh recover without a reload."""
     mock_powerwall_status.side_effect = PowerwallConnectionError("offline")
 
     entry = await _setup_paired(hass)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not _local_entity_ids(entity_registry)
+    entity_ids = _local_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = POWERWALL_STATUS
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_ids["grid_ok"]))
+    assert state.state == STATE_ON
 
 
 async def test_local_binary_sensors_poll_failure(

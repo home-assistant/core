@@ -700,10 +700,11 @@ async def async_setup_entry(
     entities.extend(
         TeslemetryEnergyLocalBinarySensorEntity(energysite, description)
         for energysite in entry.runtime_data.energysites
-        if energysite.local_status_coordinator
-        and energysite.local_status_coordinator.data
+        if (coordinator := energysite.local_status_coordinator)
         for description in ENERGY_LOCAL_STATUS_DESCRIPTIONS
-        if description.value_fn(energysite.local_status_coordinator.data) is not None
+        # Without a first status, add every sensor so they recover with the gateway.
+        if coordinator.data is None
+        or description.value_fn(coordinator.data) is not None
     )
 
     async_remove_stale_vehicle_entities(
