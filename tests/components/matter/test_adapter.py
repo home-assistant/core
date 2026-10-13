@@ -250,6 +250,36 @@ async def test_endpoint_child_devices_pruned_on_setup(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_pruned_collapsed_child_preserves_disabled_entities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a disabled entity is migrated, not deleted, when its child collapses."""
+    entity_registry.async_update_entity(
+        "switch.eve_energy_20ecn4101_top_child_lock",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+
+    # Collapse the top socket by removing its sibling, then re-run node setup.
+    matter_node.endpoints.pop(2)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    migrated = entity_registry.async_get("switch.eve_energy_20ecn4101_top_child_lock")
+    assert migrated is not None
+    assert migrated.device_id == parent.id
+    assert migrated.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_endpoint_child_device_readded_after_removal(
     hass: HomeAssistant,
     matter_client: MagicMock,

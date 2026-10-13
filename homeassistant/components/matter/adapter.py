@@ -240,8 +240,10 @@ class MatterAdapter:
             if child_device.identifiers & current_child_identifiers:
                 # Endpoint still present but no longer split: keep its entities by
                 # moving them back to the node device before removing the child.
+                # Include disabled entities so their customizations are not lost
+                # when the child device is removed below.
                 for entity_entry in er.async_entries_for_device(
-                    entity_registry, child_device.id
+                    entity_registry, child_device.id, include_disabled_entities=True
                 ):
                     entity_registry.async_update_entity(
                         entity_entry.entity_id, device_id=node_device.id
