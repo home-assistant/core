@@ -2,7 +2,6 @@
 
 from asyncio import CancelledError
 from datetime import timedelta
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,6 +9,7 @@ from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorized
 import pytest
 
 from homeassistant.components.watercryst.coordinator import (
+    StateResponse,
     WatercrystMeasurementsUpdateCoordinator,
     WatercrystStateUpdateCoordinator,
 )
@@ -85,7 +85,7 @@ async def test_measurements_update_failed_device_offline(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
-    response: Any,
+    response: StateResponse | None,
 ) -> None:
     """Test failed measurements update because the device is offline."""
     state = MagicMock(spec=WatercrystStateUpdateCoordinator)
