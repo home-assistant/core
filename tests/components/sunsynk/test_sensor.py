@@ -3,12 +3,18 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from modbus_connection import IllegalDataAddressError, ModbusTimeoutError
+from modbus_connection.mock import MockModbusUnit
 import pytest
 from sunsynk.exceptions import SunsynkConnectionError
 from sunsynk.grid import Grid
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sunsynk.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.sunsynk.const import (
+    DOMAIN,
+    MODBUS_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -126,3 +132,90 @@ async def test_no_battery(
         is None
     )
     assert hass.states.get("sensor.battery_2938475610_state_of_charge") is None
+
+
+@pytest.mark.usefixtures(
+    "mock_modbus_connection_class", "entity_registry_enabled_by_default"
+)
+async def test_modbus_sensors(
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the sensor entities of an inverter that uses Modbus."""
+    await setup_integration(hass, mock_modbus_config_entry)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_modbus_config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("mock_modbus_connection_class")
+async def test_modbus_sensors_unavailable_on_error(
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Modbus sensors become unavailable when the inverter does not reply."""
+    entity_id = "sensor.inverter_2201234567_grid_power"
+    await setup_integration(hass, mock_modbus_config_entry)
+    assert hass.states.get(entity_id).state == "20"
+
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("no reply"))
+    freezer.tick(MODBUS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_modbus_unit.fail_requests(None)
+    freezer.tick(MODBUS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "20"
+
+
+@pytest.mark.usefixtures("mock_modbus_connection_class")
+async def test_modbus_sensors_unavailable_on_partial_failure(
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Modbus sensors become unavailable when part of a poll fails."""
+    entity_id = "sensor.inverter_2201234567_grid_import_total"
+    await setup_integration(hass, mock_modbus_config_entry)
+    assert hass.states.get(entity_id).state == "14007.6"
+
+    # Only the energy counter read includes register 63.
+    mock_modbus_unit.fail_read(63, IllegalDataAddressError(0x03))
+    freezer.tick(MODBUS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_modbus_connection_class")
+async def test_modbus_no_battery(
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an inverter without a battery gets no battery device or entities."""
+    # Battery mode 2: the inverter is set to operate without a battery.
+    mock_modbus_unit.load_raw({"holding": {213: 2}})
+    await setup_integration(hass, mock_modbus_config_entry)
+    entry_id = mock_modbus_config_entry.entry_id
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "2201234567"), entry_id)
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2201234567_battery"), entry_id
+        )
+        is None
+    )
+    assert hass.states.get("sensor.inverter_2201234567_grid_power") is not None
+    assert hass.states.get("sensor.battery_2201234567_state_of_charge") is None
