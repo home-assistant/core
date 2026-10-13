@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -43,6 +44,7 @@ from homeassistant.util.unit_system import (
 
 from tests.common import (
     MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
@@ -55,6 +57,13 @@ from tests.components.infrared.common import (
 )
 
 _CLIMATE_ENTITY_ID = "climate.gree_ac"
+_STORED_CLIMATE_DATA = {
+    "native_current_temperature": None,
+    "native_target_temperature": 25.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
 
 
 @pytest.fixture
@@ -661,12 +670,29 @@ async def test_receiver_off_signal_records_the_mode_it_carries(
     )
 
 
+@pytest.mark.parametrize(
+    ("extra_data", "expected_temperature"),
+    [
+        pytest.param(
+            {"last_active_hvac_mode": HVACMode.DRY.value},
+            24,
+            id="legacy_extra_data_falls_back_to_attributes",
+        ),
+        pytest.param(
+            {**_STORED_CLIMATE_DATA, "last_active_hvac_mode": HVACMode.DRY.value},
+            25,
+            id="climate_extra_data",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_last_active_mode_restored_on_restart_while_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
+    extra_data: dict[str, Any],
+    expected_temperature: int,
 ) -> None:
     """Test an off frame after a restart carries the mode the unit was last in.
 
@@ -678,7 +704,7 @@ async def test_last_active_mode_restored_on_restart_while_off(
         [
             (
                 State(_CLIMATE_ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 24.0}),
-                {"last_active_hvac_mode": HVACMode.DRY.value},
+                extra_data,
             )
         ],
     )
@@ -702,7 +728,7 @@ async def test_last_active_mode_restored_on_restart_while_off(
         == GreeAcCommand(
             power=False,
             mode=GreeAcMode.DRY,
-            temperature=24,
+            temperature=expected_temperature,
             fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
@@ -943,6 +969,34 @@ async def test_restore_temperature_unit(
             mode=GreeAcMode.COOL, temperature=17, fan=GreeAcFanSpeed.AUTO
         ).get_raw_timings()
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_data_saved(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the native temperatures are stored along with the last active mode."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ATTR_TEMPERATURE: 25,
+            "hvac_mode": HVACMode.DRY,
+        },
+        blocking=True,
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    stored = {
+        data["state"]["entity_id"]: data["extra_data"]
+        for data in hass_storage[RESTORE_STATE_KEY]["data"]
+    }
+    assert stored[_CLIMATE_ENTITY_ID] == {
+        **_STORED_CLIMATE_DATA,
+        "last_active_hvac_mode": HVACMode.DRY.value,
+    }
 
 
 @pytest.mark.usefixtures("init_integration")
