@@ -55,6 +55,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -73,6 +74,7 @@ from .conftest import MOCK_STATUS_COAP
 
 from tests.common import (
     async_load_json_object_fixture,
+    async_mock_restore_state_shutdown_restart,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
@@ -158,6 +160,43 @@ async def test_climate_hvac_mode(
     mock_block_device.mock_update()
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "target_temp",
+    [pytest.param(22, id="int"), pytest.param(22.5, id="float")],
+)
+async def test_climate_hvac_mode_off_remembers_target(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    target_temp: float,
+) -> None:
+    """Test turning off remembers the target reported by the device for heat."""
+    monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
+    monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
+    monkeypatch.delattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "targetTemp")
+    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    monkeypatch.setattr(
+        mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", target_temp
+    )
+    mock_block_device.mock_update()
+
+    for hvac_mode in (HVACMode.OFF, HVACMode.HEAT):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+            blocking=True,
+        )
+
+    mock_block_device.set_thermostat_state.assert_called_with(
+        0, target_t_enabled=1, target_t=target_temp
+    )
 
 
 async def test_climate_set_temperature(
@@ -414,25 +453,43 @@ async def test_block_restored_climate_us_customary(
     assert state.attributes.get(ATTR_TEMPERATURE) == 50
 
 
+def _saved_climate_data(
+    current: float | None, target: float | None, last_target_temp: float
+) -> dict[str, Any]:
+    """Return the extra data saved by a sleeping block climate."""
+    return {
+        "native_current_temperature": current,
+        "native_target_temperature": target,
+        "native_target_temperature_high": None,
+        "native_target_temperature_low": None,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "last_target_temp": last_target_temp,
+    }
+
+
 @pytest.mark.parametrize(
     (
         "unit_system",
         "attrs",
+        "extra_data",
         "expected_target",
         "expected_current",
         "expected_heat_target",
+        "expected_saved",
     ),
     [
         pytest.param(
             METRIC_SYSTEM,
             {
-                "current_temperature": 64.4,
+                "current_temperature": 50,
                 "temperature": 68,
                 "temperature_unit": UnitOfTemperature.FAHRENHEIT,
             },
+            {"last_target_temp": 15.0},
             20.0,
-            18.0,
+            10.0,
             20.0,
+            _saved_climate_data(10.0, 20.0, 15.0),
             id="fahrenheit_restored_on_metric",
         ),
         pytest.param(
@@ -442,25 +499,31 @@ async def test_block_restored_climate_us_customary(
                 "temperature": 20.0,
                 "temperature_unit": UnitOfTemperature.CELSIUS,
             },
+            {"last_target_temp": 15.0},
             68,
             64,
             20.0,
+            _saved_climate_data(18.0, 20.0, 15.0),
             id="celsius_restored_on_us_customary",
         ),
         pytest.param(
             METRIC_SYSTEM,
             {"current_temperature": 18.0, "temperature": 20},
+            {"last_target_temp": 15.0},
             20.0,
             18.0,
             20.0,
+            _saved_climate_data(18.0, 20.0, 15.0),
             id="legacy_without_unit_metric",
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
-            {"current_temperature": 64.4, "temperature": 68},
+            {"current_temperature": 50, "temperature": 68},
+            {"last_target_temp": 15.0},
             68,
-            64,
+            50,
             20.0,
+            _saved_climate_data(10.0, 20.0, 15.0),
             id="legacy_without_unit_us_customary",
         ),
         pytest.param(
@@ -470,25 +533,70 @@ async def test_block_restored_climate_us_customary(
                 "temperature": 20.0,
                 "temperature_unit": "invalid",
             },
+            {"last_target_temp": 15.0},
             None,
             None,
             15.0,
+            _saved_climate_data(None, None, 15.0),
             id="invalid_unit",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {"current_temperature": 100, "temperature": 100},
+            _saved_climate_data(18.0, 20.0, 15.0),
+            68,
+            64,
+            20.0,
+            _saved_climate_data(18.0, 20.0, 15.0),
+            id="extra_data_us_customary",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {"current_temperature": 100, "temperature": 100},
+            _saved_climate_data(18.0, 20.0, 15.0),
+            20.0,
+            18.0,
+            20.0,
+            _saved_climate_data(18.0, 20.0, 15.0),
+            id="extra_data_metric",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            {},
+            _saved_climate_data(18.0, 40.0, 15.0),
+            None,
+            18.0,
+            15.0,
+            _saved_climate_data(18.0, None, 15.0),
+            id="extra_data_out_of_range",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            {"current_temperature": 50, "temperature": 39},
+            {"last_target_temp": 15.0},
+            39,
+            50,
+            4.0,
+            _saved_climate_data(10.0, 4.0, 15.0),
+            id="legacy_rounded_min_clamped",
         ),
     ],
 )
 async def test_block_restored_climate_temperature_unit(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     mock_block_device: Mock,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
     unit_system: UnitSystem,
     attrs: dict[str, Any],
+    extra_data: dict[str, Any],
     expected_target: float | None,
     expected_current: float | None,
     expected_heat_target: float,
+    expected_saved: dict[str, Any],
 ) -> None:
-    """Test restored temperatures are converted from the stored unit."""
+    """Test restored temperatures are converted to the native unit."""
     hass.config.units = unit_system
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.delattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "targetTemp")
@@ -505,13 +613,7 @@ async def test_block_restored_climate_temperature_unit(
         device_id=device.id,
     )
     mock_restore_cache_with_extra_data(
-        hass,
-        (
-            (
-                State(entity_id, HVACMode.HEAT, attributes=attrs),
-                {"last_target_temp": 15.0},
-            ),
-        ),
+        hass, ((State(entity_id, HVACMode.HEAT, attributes=attrs), extra_data),)
     )
 
     monkeypatch.setattr(mock_block_device, "initialized", False)
@@ -522,6 +624,14 @@ async def test_block_restored_climate_temperature_unit(
     assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_TEMPERATURE) == expected_target
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == expected_current
+
+    # The native values are saved, so they don't drift across restarts
+    await async_mock_restore_state_shutdown_restart(hass)
+    saved = {
+        item["state"]["entity_id"]: item["extra_data"]
+        for item in hass_storage[RESTORE_STATE_KEY]["data"]
+    }
+    assert saved[entity_id] == expected_saved
 
     # Turning off while asleep stores the restored target for the next HEAT
     for hvac_mode in (HVACMode.OFF, HVACMode.HEAT):
@@ -564,6 +674,7 @@ async def test_block_restored_climate_no_last_state(
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_TEMPERATURE) is None
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
 
 
 async def test_block_restored_climate_unavailable(

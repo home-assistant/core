@@ -1,6 +1,7 @@
 """The tests for the generic_thermostat."""
 
 import datetime
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -66,6 +67,7 @@ from tests.common import (
     async_mock_service,
     get_fixture_path,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
 from tests.components.climate import common
@@ -1622,50 +1624,91 @@ async def test_restore_state(hass: HomeAssistant, hvac_mode) -> None:
     assert state.state == hvac_mode
 
 
+def _extra_data(temperature: Any, unit: str) -> dict[str, Any]:
+    """Return stored climate extra data with the given target temperature."""
+    return {
+        "native_current_temperature": None,
+        "native_target_temperature": temperature,
+        "native_target_temperature_high": None,
+        "native_target_temperature_low": None,
+        "native_temperature_unit": unit,
+    }
+
+
 @pytest.mark.parametrize(
-    ("restored_attributes", "unit_system", "expected_temperature"),
+    ("restored_attributes", "extra_data", "unit_system", "expected_temperature"),
     [
         pytest.param(
             {ATTR_TEMPERATURE: 20, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
             METRIC_SYSTEM,
             20,
             id="celsius_to_celsius",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 20, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
             US_CUSTOMARY_SYSTEM,
             68,
             id="celsius_to_fahrenheit",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 68, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            None,
             METRIC_SYSTEM,
             20,
             id="fahrenheit_to_celsius",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 68, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            None,
             US_CUSTOMARY_SYSTEM,
             68,
             id="fahrenheit_to_fahrenheit",
         ),
-        pytest.param({ATTR_TEMPERATURE: 20}, METRIC_SYSTEM, 20, id="legacy_celsius"),
         pytest.param(
-            {ATTR_TEMPERATURE: 68}, US_CUSTOMARY_SYSTEM, 68, id="legacy_fahrenheit"
+            {ATTR_TEMPERATURE: 20}, None, METRIC_SYSTEM, 20, id="legacy_celsius"
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 68},
+            None,
+            US_CUSTOMARY_SYSTEM,
+            68,
+            id="legacy_fahrenheit",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 99, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            _extra_data(20, UnitOfTemperature.CELSIUS),
+            US_CUSTOMARY_SYSTEM,
+            68,
+            id="extra_data_celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 99, "temperature_unit": UnitOfTemperature.CELSIUS},
+            _extra_data(21.5, UnitOfTemperature.CELSIUS),
+            METRIC_SYSTEM,
+            21.5,
+            id="extra_data_celsius_to_celsius",
         ),
     ],
 )
 async def test_restore_temperature_unit(
     hass: HomeAssistant,
     restored_attributes: dict[str, int | str],
+    extra_data: dict[str, Any] | None,
     unit_system: UnitSystem,
-    expected_temperature: int,
+    expected_temperature: float,
 ) -> None:
     """Test restoration uses the saved unit, falling back to the configured unit."""
     hass.config.units = unit_system
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        (State("climate.test_thermostat", HVACMode.OFF, restored_attributes),),
+        (
+            (
+                State("climate.test_thermostat", HVACMode.OFF, restored_attributes),
+                extra_data,
+            ),
+        ),
     )
 
     hass.set_state(CoreState.starting)
@@ -1685,6 +1728,119 @@ async def test_restore_temperature_unit(
     await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
     assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+
+
+@pytest.mark.parametrize(
+    ("config", "restored_attributes", "extra_data", "expected_temperature"),
+    [
+        pytest.param(
+            {},
+            {ATTR_TEMPERATURE: 20, "temperature_unit": "invalid"},
+            None,
+            7,
+            id="invalid_unit_heat",
+        ),
+        pytest.param(
+            {"ac_mode": True},
+            {ATTR_TEMPERATURE: 20, "temperature_unit": "invalid"},
+            None,
+            35,
+            id="invalid_unit_ac_mode",
+        ),
+        pytest.param(
+            {"min_temp": 15, "max_temp": 25},
+            {ATTR_TEMPERATURE: 30, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
+            15,
+            id="out_of_range_heat",
+        ),
+        pytest.param(
+            {"min_temp": 15, "max_temp": 25, "ac_mode": True},
+            {ATTR_TEMPERATURE: 20},
+            _extra_data(30, UnitOfTemperature.CELSIUS),
+            25,
+            id="extra_data_out_of_range_ac_mode",
+        ),
+        pytest.param(
+            {},
+            {ATTR_TEMPERATURE: "abc"},
+            None,
+            7,
+            id="invalid_value_heat",
+        ),
+    ],
+)
+async def test_restore_temperature_falls_back(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config: dict[str, Any],
+    restored_attributes: dict[str, Any],
+    extra_data: dict[str, Any] | None,
+    expected_temperature: float,
+) -> None:
+    """Test an unusable restored target temperature falls back to the default."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("climate.test_thermostat", HVACMode.OFF, restored_attributes),
+                extra_data,
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test_thermostat",
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                **config,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.test_thermostat")
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+    assert "Undefined target temperature, falling back to" in caplog.text
+
+
+async def test_restore_temperature_zero(hass: HomeAssistant) -> None:
+    """Test a restored target temperature of zero is kept."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "climate.test_thermostat",
+                HVACMode.OFF,
+                {ATTR_TEMPERATURE: 0, "temperature_unit": UnitOfTemperature.CELSIUS},
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test_thermostat",
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_temp": -5,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.test_thermostat")
+    assert state.attributes[ATTR_TEMPERATURE] == 0
 
 
 async def test_no_restore_state(hass: HomeAssistant) -> None:
