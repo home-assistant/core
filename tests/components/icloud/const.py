@@ -67,5 +67,28 @@ DEVICE = {
     "deviceDisplayName": "iPhone",
     "prsId": None,
     "lowPowerMode": False,
+    "activationLocked": False,
+    "isLocating": False,
+    "locationEnabled": True,
+    "wipeInProgress": False,
+    "remoteWipe": None,
+    "remoteLock": None,
+    "lockedTimestamp": None,
+    "lostTimestamp": "",
+    "wipedTimestamp": None,
     "location": None,
+}
+
+LOCATION_TIMESTAMP_MS = 1_700_000_000_000
+
+LOCATION = {
+    "latitude": 1.0,
+    "longitude": 2.0,
+    "horizontalAccuracy": 10,
+    "altitude": 5.0,
+    "floorLevel": 2,
+    "positionType": "GPS",
+    "isOld": False,
+    "isInaccurate": False,
+    "timeStamp": LOCATION_TIMESTAMP_MS,
 }
