@@ -65,7 +65,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     _attr_configuration_url = CONF_URL_SECURITY
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
-    _monitoring: bool | None = None
     _attr_name = None
     _webhook_connection: bool | None = None
     _webhook_on: bool | None = None
