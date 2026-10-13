@@ -6,7 +6,6 @@ from typing import override
 
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
-from roborock.exceptions import RoborockException
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
@@ -224,16 +223,7 @@ class RoborockMapQ10(RoborockCoordinatedEntityB01Q10, ImageEntity):
 
 
 class RoborockMapQ7(RoborockCoordinatedEntityB01Q7, ImageEntity):
-    """A class to visualize the current map of a Q7 device.
-
-    `python-roborock` here is pinned to >=5.31.1, which predates the
-    unsolicited-map-push support added in 7.1.0 (see README) — so unlike the
-    Q10 equivalent this entity does not rely on push updates arriving on
-    their own. It does an explicit `map.refresh()` + `map_content.refresh()`
-    once when added to hass so an image is available immediately, and again
-    whenever the coordinator's periodic status poll completes while a clean
-    is in progress (map content only meaningfully changes during cleaning).
-    """
+    """A class to visualize the current map of a Q7 device."""
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -250,18 +240,12 @@ class RoborockMapQ7(RoborockCoordinatedEntityB01Q7, ImageEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register a trait listener and fetch an initial map."""
+        """Fetch the initial map and register for map updates."""
         await super().async_added_to_hass()
+        await self.coordinator.async_refresh_q7_map()
         self.async_on_remove(
             self._map_content_trait.add_update_listener(self._handle_map_update)
         )
-        try:
-            await self.coordinator.api.map.refresh()
-            await self._map_content_trait.refresh()
-        except RoborockException as ex:
-            _LOGGER.debug(
-                "Initial Q7 map fetch failed (will retry on next poll): %s", ex
-            )
         self._handle_map_update()
 
     @callback

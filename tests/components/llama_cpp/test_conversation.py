@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 import openai
 from openai.types.chat import (
     ChatCompletion,
@@ -605,19 +605,21 @@ async def test_streaming_response_redundant_role(
     ("error", "expected_speech"),
     [
         pytest.param(
-            openai.APIConnectionError(request=httpx.Request(method="POST", url="test")),
+            openai.APIConnectionError(
+                request=httpx2.Request(method="POST", url="test")
+            ),
             "Cannot connect to the server: Connection error.",
             id="connection_error",
         ),
         pytest.param(
-            openai.APITimeoutError(request=httpx.Request(method="POST", url="test")),
+            openai.APITimeoutError(request=httpx2.Request(method="POST", url="test")),
             "Connection timed out: Request timed out.",
             id="timeout",
         ),
         pytest.param(
             openai.APIError(
                 message="An error occurred during streaming",
-                request=httpx.Request(method="POST", url="test"),
+                request=httpx2.Request(method="POST", url="test"),
                 body=None,
             ),
             "API error: An error occurred during streaming",
@@ -691,7 +693,7 @@ async def test_conversation_agent_error(
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         side_effect=openai.APIConnectionError(
-            request=httpx.Request(method="POST", url="test")
+            request=httpx2.Request(method="POST", url="test")
         ),
     ):
         result = await conversation.async_converse(
@@ -714,9 +716,9 @@ async def test_conversation_agent_structured_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test handling of OpenAI API structured errors in conversation entity."""
-    response = httpx.Response(
+    response = httpx2.Response(
         status_code=402,
-        request=httpx.Request(
+        request=httpx2.Request(
             method="POST", url="https://api.openai.com/v1/chat/completions"
         ),
         json={

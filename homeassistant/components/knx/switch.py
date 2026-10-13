@@ -32,6 +32,7 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import SwitchSchema
 from .storage.entity_store_schema import KnxEntityData, SwitchKnxConfig
+from .storage.knx_selector import state_and_passive
 
 
 async def async_setup_entry(
@@ -144,7 +145,7 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
             knx_module.xknx,
             name=config.entity.xknx_name,
             group_address=knx_conf.ga_switch.write,
-            group_address_state=knx_conf.ga_switch.state_and_passive(),
+            group_address_state=state_and_passive(knx_conf.ga_switch),
             respond_to_read=knx_conf.respond_to_read,
             sync_state=knx_conf.sync_state,
             invert=knx_conf.invert,

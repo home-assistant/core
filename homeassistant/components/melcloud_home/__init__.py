@@ -37,7 +37,7 @@ async def async_setup_entry(
     client = MELCloudHome(auth=auth, session=session)
 
     coordinator = MelCloudHomeCoordinator(hass, entry, client)
-    telemetry_coordinator = MelCloudHomeTelemetryCoordinator(hass, entry, client)
+    telemetry_coordinator = MelCloudHomeTelemetryCoordinator(hass, entry, coordinator)
 
     # It has to be this order, to avoid a race condition
     await coordinator.async_config_entry_first_refresh()

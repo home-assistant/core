@@ -1,7 +1,9 @@
 """Tests for the Flexit integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     ModbusError,
     ModbusSerialParams,
@@ -11,12 +13,17 @@ from modbus_connection import (
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.flexit import create_modbus_params
-from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
+from homeassistant.components.flexit.const import (
+    CONF_UNIT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    TYPE_TCP,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def test_create_tcp_params() -> None:
@@ -167,6 +174,7 @@ async def test_connection_lost_recovers_on_next_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_connection: MockModbusConnection,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the next update reconnects without reloading the config entry."""
     mock_config_entry.add_to_hass(hass)
@@ -176,7 +184,9 @@ async def test_connection_lost_recovers_on_next_update(
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
-        await mock_config_entry.runtime_data.async_refresh()
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.last_update_success
     assert mock_modbus_connection.connected

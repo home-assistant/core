@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
+    DATA_COMPONENT,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -20,6 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.const import (
@@ -27,11 +29,16 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
     Platform,
+    UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import (
@@ -42,6 +49,8 @@ from .const import (
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
+
+from tests.common import mock_restore_cache
 
 VIN = "LRW3F7EK4NC700000"
 
@@ -445,6 +454,160 @@ async def test_select_streaming(
         "climate.test_cabin_overheat_protection",
     ):
         assert hass.states.get(entity_id) == snapshot(name=entity_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "units", "attributes", "expected_native", "expected_display"),
+    [
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 70,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            (21.111, 22.222),
+            (70.0, 72.0),
+            id="climate_fahrenheit_on_us_customary",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            METRIC_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 70,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            (21.111, 22.222),
+            (21.0, 22.0),
+            id="climate_fahrenheit_on_metric",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 21,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 22,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.CELSIUS
+                ),
+            },
+            (21.0, 22.0),
+            (70.0, 71.5),
+            id="climate_celsius_on_us_customary",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 70,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
+            },
+            (21.111, 22.222),
+            (70.0, 72.0),
+            id="climate_legacy_on_us_customary",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 70,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+            },
+            (None, None),
+            (None, None),
+            id="climate_invalid_unit",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: None,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: None,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            (None, None),
+            (None, None),
+            id="climate_none_values",
+        ),
+        pytest.param(
+            "climate.test_cabin_overheat_protection",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 72,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 95,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            (22.222, 35.0),
+            (72, 95),
+            id="cop_fahrenheit_on_us_customary",
+        ),
+        pytest.param(
+            "climate.test_cabin_overheat_protection",
+            METRIC_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 72,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 95,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+            (22.222, 35.0),
+            (22, 35),
+            id="cop_fahrenheit_on_metric",
+        ),
+        pytest.param(
+            "climate.test_cabin_overheat_protection",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 72,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 95,
+            },
+            (22.222, 35.0),
+            (72, 95),
+            id="cop_legacy_on_us_customary",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_streaming_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    entity_id: str,
+    units: UnitSystem,
+    attributes: dict[str, float | str | None],
+    expected_native: tuple[float | None, float | None],
+    expected_display: tuple[float | None, float | None],
+) -> None:
+    """Tests restored display-unit temperatures are converted to native Celsius."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["config"] = {"cop_user_set_temp_supported": True}
+    mock_metadata.return_value = metadata
+    hass.config.units = units
+    mock_restore_cache(hass, (State(entity_id, HVACMode.OFF, attributes),))
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
+    assert (
+        entity.native_current_temperature,
+        entity.native_target_temperature,
+    ) == pytest.approx(expected_native, abs=1e-3)
+    state = hass.states.get(entity_id)
+    assert (
+        state.attributes[ClimateEntityStateAttribute.CURRENT_TEMPERATURE],
+        state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE],
+    ) == expected_display
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

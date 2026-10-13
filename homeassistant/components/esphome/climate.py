@@ -143,7 +143,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
-        self._attr_temperature_unit = get_temperature_unit(static_info)
+        self._attr_native_temperature_unit = get_temperature_unit(static_info)
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes
@@ -248,7 +248,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     @esphome_float_state_property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if not self._feature_flags & ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE:
             return None
@@ -270,7 +270,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     @esphome_float_state_property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if not (
             self._feature_flags
@@ -283,7 +283,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             return self._state.target_temperature
         # Two point capable devices report both set points but only act on one
         # of them in heat and cool mode, so expose that one here and leave the
-        # range to target_temperature_low/target_temperature_high
+        # range to native_target_temperature_low/native_target_temperature_high
         if self.hvac_mode == HVACMode.HEAT:
             return self._state.target_temperature_low
         if self.hvac_mode == HVACMode.COOL:
@@ -293,14 +293,14 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @property
     @esphome_float_state_property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @property
     @esphome_float_state_property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
 

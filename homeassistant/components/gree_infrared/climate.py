@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.infrared import (
@@ -114,7 +115,7 @@ class GreeAcClimateEntity(
     """Gree AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_min_temp = float(MIN_TEMP)
     _attr_max_temp = float(MAX_TEMP)
@@ -137,7 +138,7 @@ class GreeAcClimateEntity(
         )
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_target_temperature = float(MIN_TEMP)
+        self._attr_native_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
         # Power-off frames still need a mode field; this tracks the mode to send it
         # with, since the protocol has no dedicated OFF mode.
@@ -158,12 +159,15 @@ class GreeAcClimateEntity(
             if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
                 self._attr_fan_mode = fan_mode
             if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-                self._attr_target_temperature = float(
+                self._attr_native_target_temperature = float(
                     round(
                         TemperatureConverter.convert(
                             float(temperature),
-                            self.hass.config.units.temperature_unit,
-                            self.temperature_unit,
+                            last_state.attributes.get(
+                                ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                                self.hass.config.units.temperature_unit,
+                            ),
+                            self.native_temperature_unit,
                         )
                     )
                 )
@@ -203,7 +207,7 @@ class GreeAcClimateEntity(
         """Set HVAC mode."""
         await self._async_send_state(
             hvac_mode,
-            int(self._attr_target_temperature or MIN_TEMP),
+            int(self._attr_native_target_temperature or MIN_TEMP),
             self._attr_fan_mode or FAN_AUTO,
         )
         self._attr_hvac_mode = hvac_mode
@@ -227,7 +231,7 @@ class GreeAcClimateEntity(
         if hvac_mode is not None:
             self._attr_hvac_mode = hvac_mode
 
-        self._attr_target_temperature = float(temp)
+        self._attr_native_target_temperature = float(temp)
         self.async_write_ha_state()
 
     @override
@@ -236,7 +240,9 @@ class GreeAcClimateEntity(
         hvac_mode = self._attr_hvac_mode
         if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
             await self._async_send_state(
-                hvac_mode, int(self._attr_target_temperature or MIN_TEMP), fan_mode
+                hvac_mode,
+                int(self._attr_native_target_temperature or MIN_TEMP),
+                fan_mode,
             )
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
@@ -287,5 +293,5 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
 
         self._attr_hvac_mode = hvac_mode
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
-        self._attr_target_temperature = float(command.temperature)
+        self._attr_native_target_temperature = float(command.temperature)
         self.async_write_ha_state()

@@ -134,6 +134,15 @@ def node(request: pytest.FixtureRequest) -> Node:
         # is the internal relay (Binary Switch + Meter), not a sensor. The BASIC
         # currentValue/targetValue on endpoints 2 and 3 are undocumented.
         pytest.param("climate_heatit_z_trm2fx", id="heatit_z_trm2fx"),
+        # Aeotec ZWA046 Home Energy Meter Gen8 (10-endpoint variant): three current
+        # clamps on endpoints 1-6, each clamp reporting consumption on an odd
+        # endpoint and production on the following even endpoint via the Meter CC,
+        # i.e. clamps (1,2), (3,4), (5,6). Endpoints 7-10 are four whole-device
+        # totals that don't belong to any single clamp: sum of consumption (7),
+        # sum of production (8), net total consumption (9) and net total generation
+        # (10). The 6- and 8-endpoint variants follow the same shape with one or two
+        # clamps and the same four trailing totals.
+        pytest.param("aeotec_zwa046", id="aeotec_zwa046"),
     ],
     indirect=True,
 )

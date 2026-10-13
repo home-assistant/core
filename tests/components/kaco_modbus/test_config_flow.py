@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components.kaco_modbus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -129,3 +130,79 @@ async def test_user_step_aborts_when_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_temporary_unit", "mock_get_unit")
+async def test_reconfigure_moves_the_entry_to_a_new_address(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an inverter that changed address keeps its entry and history."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**MOCK_USER_INPUT, CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"
+    # Still the inverter it was set up for, so its entities keep their ids.
+    assert mock_config_entry.unique_id == MOCK_SERIAL
+
+
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_reconfigure_rejects_a_different_inverter(hass: HomeAssistant) -> None:
+    """Test an address answering as another inverter is refused.
+
+    Accepting it would hand this entry's entities, and their history, to a
+    device that never produced any of it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8.6TL99999999",
+        data=MOCK_USER_INPUT,
+        title=MOCK_MODEL,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_temporary_unit", "mock_get_unit")
+async def test_reconfigure_errors_then_recovers(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a failure shows on the reconfigure form, which still completes.
+
+    Both steps map failures through the same helper, so the error matrix is
+    covered by the user step; this checks the reconfigure form is wired to it.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with _raising(ModbusTimeoutError("no answer")):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**MOCK_USER_INPUT, CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"

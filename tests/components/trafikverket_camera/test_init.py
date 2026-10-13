@@ -161,6 +161,9 @@ async def test_migrate_entry_fails_with_error(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        "Could not connect to the API to migrate the camera at Test location"
+    )
     assert entry.version == version
     assert entry.unique_id == unique_id
     assert len(mock_tvt_camera.mock_calls) == 1
@@ -232,6 +235,9 @@ async def test_migrate_entry_fails_no_id(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        "Could not migrate the camera at Test location because it has no ID"
+    )
     assert entry.version == version
     assert entry.unique_id == unique_id
     assert len(mock_tvt_camera.mock_calls) == 1
