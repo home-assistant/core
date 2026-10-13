@@ -1655,22 +1655,30 @@ async def async_replace_device(
     upper_mac = new_mac.upper()
     old_upper_mac = old_mac.upper()
 
-    dev_reg = dr.async_get(hass)
-    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
-        dev_reg.async_update_device(
-            device.id,
-            new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
-        )
-    for child_device in dr.async_child_entries_for_config_entry(
-        dev_reg, entry.entry_id
-    ):
-        new_identifiers = {
+    def swap_mac(identifiers: set[tuple[str, str]]) -> set[tuple[str, str]]:
+        return {
             (domain, upper_mac + identifier[len(old_upper_mac) :])
             if identifier.startswith(old_upper_mac)
             else (domain, identifier)
-            for domain, identifier in child_device.identifiers
+            for domain, identifier in identifiers
         }
-        if new_identifiers != child_device.identifiers:
+
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if (dr.CONNECTION_NETWORK_MAC, old_mac) in device.connections:
+            dev_reg.async_update_device(
+                device.id,
+                new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
+            )
+        elif (new_identifiers := swap_mac(device.identifiers)) != device.identifiers:
+            # A legacy sub device not yet converted to a child device
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+    for child_device in dr.async_child_entries_for_config_entry(
+        dev_reg, entry.entry_id
+    ):
+        if (new_identifiers := swap_mac(child_device.identifiers)) != (
+            child_device.identifiers
+        ):
             dev_reg.async_update_child_device(
                 child_device.id, new_identifiers=new_identifiers
             )

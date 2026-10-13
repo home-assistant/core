@@ -67,7 +67,10 @@ from homeassistant.components.esphome.entry_data import (
     SAVE_DELAY,
     STATE_TYPE_TO_COMPONENT_TYPE,
 )
-from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
+from homeassistant.components.esphome.manager import (
+    DEVICE_CONFLICT_ISSUE_FORMAT,
+    async_replace_device,
+)
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -2734,6 +2737,51 @@ async def test_legacy_devices_converted_to_child_devices(
     assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == [
         device_registry.async_get(main_device.id)
     ]
+
+
+async def test_replace_device_migrates_legacy_sub_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test replacing the mac keeps legacy sub devices and child devices."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        title="test",
+    )
+    entry.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")},
+    )
+    legacy_sub_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_11111111")},
+        name="Legacy",
+        via_device_id=main_device.id,
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_22222222")},
+        name="Child",
+        parent_device_id=main_device.id,
+    )
+
+    await async_replace_device(
+        hass, entry.entry_id, "11:22:33:44:55:aa", "11:22:33:44:55:ab"
+    )
+
+    main_device = device_registry.async_get(main_device.id)
+    assert main_device is not None
+    assert main_device.connections == {(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab")}
+    legacy_sub_device = device_registry.async_get(legacy_sub_device.id)
+    assert legacy_sub_device is not None
+    assert legacy_sub_device.connections == set()
+    assert legacy_sub_device.identifiers == {(DOMAIN, "11:22:33:44:55:AB_11111111")}
+    child_device = device_registry.async_get(child_device.id)
+    assert child_device is not None
+    assert child_device.identifiers == {(DOMAIN, "11:22:33:44:55:AB_22222222")}
 
 
 async def test_sub_device_with_empty_name(
