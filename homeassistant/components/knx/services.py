@@ -9,7 +9,6 @@ from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import (
     CommunicationError,
     ConversionError,
-    CouldNotParseAddress,
     ManagementConnectionError,
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
@@ -49,7 +48,7 @@ from .const import (
 )
 from .expose import create_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
-from .validation import ia_validator
+from .validation import individual_address_validator
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -380,21 +379,9 @@ async def service_reload_integration(call: ServiceCall) -> None:
     call.hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
 
-def _parse_individual_address(value: str | int) -> IndividualAddress:
-    """Parse a validated individual address, rejecting out of range parts."""
-    try:
-        return IndividualAddress(value)
-    except CouldNotParseAddress as exc:
-        raise probatio.Invalid(
-            f"'{value}' is not a valid KNX individual address: {exc.message}"
-        ) from exc
-
-
 SERVICE_KNX_RESTART_DEVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_KNX_INDIVIDUAL_ADDRESS): probatio.All(
-            ia_validator, _parse_individual_address
-        ),
+        probatio.Required(CONF_KNX_INDIVIDUAL_ADDRESS): individual_address_validator,
     }
 )
 

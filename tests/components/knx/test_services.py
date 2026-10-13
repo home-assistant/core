@@ -462,7 +462,10 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
     assert exc_info.value.translation_key == "integration_not_loaded"
 
 
-async def test_restart_device(hass: HomeAssistant, knx: KNXTestKit) -> None:
+@pytest.mark.parametrize("address", ["1.1.5", 4357])
+async def test_restart_device(
+    hass: HomeAssistant, knx: KNXTestKit, address: str | int
+) -> None:
     """Test `knx.restart_device` sends a basic restart to the device."""
     await knx.setup_integration()
 
@@ -470,7 +473,7 @@ async def test_restart_device(hass: HomeAssistant, knx: KNXTestKit) -> None:
         "homeassistant.components.knx.services.dm_restart", new_callable=AsyncMock
     ) as mock_restart:
         await hass.services.async_call(
-            DOMAIN, "restart_device", {"individual_address": "1.1.5"}, blocking=True
+            DOMAIN, "restart_device", {"individual_address": address}, blocking=True
         )
 
     mock_restart.assert_awaited_once_with(knx.xknx, IndividualAddress("1.1.5"))
