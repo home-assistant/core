@@ -189,7 +189,10 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
                 2: "ClientCredential",
             },
-            return_type="AbstractOAuth2Implementation",
+            return_type=[
+                "AbstractOAuth2Implementation",
+                "AbstractAuthorizationCodeImplementation",
+            ],
             mandatory=True,
         ),
         TypeHintMatch(
