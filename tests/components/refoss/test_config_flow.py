@@ -217,4 +217,37 @@ async def test_user_flow_accepts_chinese_commas(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"] == {CONF_NETWORKS: ["10.1.2.3", "192.168.20.0/24"]}
+    probed = discovery.probes[0]
+    assert probed is not None
+    assert "10.1.2.3" in probed
+    assert "10.1.2.1" not in probed
+    assert "192.168.20.1" in probed
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_ipv4_broadcasts")
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_user_flow_probes_exact_host(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a configured IPv4 address is probed without expanding to its /24."""
+    discovery = FakeDiscovery()
+    with patch(
+        "homeassistant.components.refoss.util.Discovery",
+        return_value=discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NETWORKS: "10.1.2.17"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {CONF_NETWORKS: ["10.1.2.17"]}
+    probed = discovery.probes[0]
+    assert probed is not None
+    assert "10.1.2.17" in probed
+    assert "10.1.2.1" not in probed
+    assert "10.1.2.255" not in probed
     assert len(mock_setup_entry.mock_calls) == 1

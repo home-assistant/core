@@ -130,27 +130,22 @@ async def test_sweep_retries_after_cooldown_without_failures(
 
 
 @pytest.mark.parametrize("configured_networks", [["10.1.2.3"]], indirect=True)
-async def test_configured_host_sweeps_its_subnet_after_cooldown(
+async def test_configured_host_is_probed_without_subnet_sweep(
     fake_discovery: FakeDiscovery, refoss_entry: MockConfigEntry
 ) -> None:
-    """Test a single configured address is expanded to its /24 on a later sweep."""
+    """Test a single configured address is probed as that host only."""
     startup = fake_discovery.probes[0]
     assert startup is not None
-    assert "10.1.2.1" in startup
-    assert "10.1.2.254" in startup
-
-    await refoss_entry.runtime_data.async_scan()
-    within_cooldown = fake_discovery.probes[1]
-    assert within_cooldown is not None
-    assert "10.1.2.3" in within_cooldown
-    assert "10.1.2.1" not in within_cooldown
+    assert "10.1.2.3" in startup
+    assert "10.1.2.1" not in startup
+    assert "10.1.2.255" not in startup
 
     refoss_entry.runtime_data._last_sweep = monotonic() - (SWEEP_COOLDOWN + 1)
     await refoss_entry.runtime_data.async_scan()
-    sweep = fake_discovery.probes[2]
-    assert sweep is not None
-    assert "10.1.2.1" in sweep
-    assert "10.1.2.254" in sweep
+    later = fake_discovery.probes[1]
+    assert later is not None
+    assert "10.1.2.3" in later
+    assert "10.1.2.1" not in later
 
 
 @pytest.mark.parametrize("configured_networks", [[]], indirect=True)

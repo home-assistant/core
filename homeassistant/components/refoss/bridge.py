@@ -55,9 +55,9 @@ class DiscoveryService(Listener):
         """Return whether this scan should unicast every host in configured networks.
 
         Sweeps run at startup and again after the cooldown, including when no device
-        has been found yet. Entries without configured networks are left unchanged.
+        has been found yet. Bare IPv4 addresses are probed as-is and never expanded.
         """
-        if not networks:
+        if not any("/" in network for network in networks):
             return False
 
         now = monotonic()

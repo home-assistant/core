@@ -48,10 +48,7 @@ def build_probe_addresses(
     addresses = [LIMITED_BROADCAST, *local_broadcasts]
     for network in networks:
         if "/" not in network:
-            if include_hosts:
-                addresses.extend(_containing_subnet_targets(network))
-            else:
-                addresses.append(network)
+            addresses.append(network)
             continue
         parsed = ip_network(network)
         if not isinstance(parsed, IPv4Network):
@@ -88,11 +85,3 @@ def _subnet_hosts(network: IPv4Network) -> Iterable[str]:
     if network.prefixlen >= 31:
         return [str(address) for address in network]
     return [str(address) for address in network.hosts()]
-
-
-def _containing_subnet_targets(host: str) -> Iterable[str]:
-    """Return the /24 broadcast and hosts around a configured device address."""
-    network = ip_network(f"{host}/24", strict=False)
-    if not isinstance(network, IPv4Network):
-        return [host]
-    return [str(network.broadcast_address), *_subnet_hosts(network)]

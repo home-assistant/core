@@ -9,12 +9,12 @@
     },
     "step": {
       "user": {
-        "description": "Devices on this network are discovered automatically. To find devices on another VLAN, list its IPv4 addresses or subnets, separated by commas. English and Chinese commas are both accepted. Subnets must be /24.",
+        "description": "Devices on this network are discovered automatically. To reach another VLAN, add IPv4 addresses or /24 subnets, separated by commas. English and Chinese commas are both accepted. An IPv4 address is probed as that host only. A /24 subnet is scanned periodically.",
         "data": {
           "networks": "Networks"
         },
         "data_description": {
-          "networks": "Optional. Leave empty to discover devices on this network. For other VLANs, comma separated, e.g. 192.168.20.0/24, 10.1.2.17"
+          "networks": "Optional. Leave empty to discover devices on this network. Use an IPv4 address for a known device, or a /24 to scan that VLAN, e.g. 192.168.20.0/24, 10.1.2.17"
         }
       }
     }

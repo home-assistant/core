@@ -116,7 +116,7 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
             networks,
             local_broadcasts=local_broadcasts,
             known_ips=(),
-            include_hosts=bool(networks),
+            include_hosts=any("/" in network for network in networks),
         )
         devices = await discovery.broadcast_msg(
             wait_for=DISCOVERY_TIMEOUT, addresses=addresses
