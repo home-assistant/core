@@ -120,6 +120,7 @@ async def test_bluetooth_discovery_curtain_options(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbccddeeff"
     assert result["data"][CONF_SENSOR_TYPE] == sensor_type
     assert result["options"] == {
         CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,

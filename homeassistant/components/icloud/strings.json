@@ -29,6 +29,7 @@
       },
       "user": {
         "data": {
+          "include_completed": "Include completed reminders",
           "password": "Main password (MFA)",
           "username": "[%key:common::config_flow::data::email%]",
           "with_family": "With family"
@@ -85,6 +86,15 @@
     },
     "unsupported_media_type": {
       "message": "Unsupported media type"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "include_completed": "Include completed reminders"
+        }
+      }
     }
   },
   "services": {

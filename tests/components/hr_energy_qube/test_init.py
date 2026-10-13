@@ -3,9 +3,12 @@
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -27,6 +30,22 @@ async def test_setup_and_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_qube_client.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_qube_client")
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device == snapshot
 
 
 @pytest.mark.parametrize(

@@ -3,8 +3,10 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 
+from .const import DOMAIN
 from .hub import PulseHub
 
 CONF_HUBS = "hubs"
@@ -16,7 +18,7 @@ type AcmedaConfigEntry = ConfigEntry[PulseHub]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: AcmedaConfigEntry
-) -> bool:
+) -> None:
     """Set up Rollease Acmeda Automate hub from a config entry."""
 
     await _migrate_unique_ids(hass, config_entry)
@@ -27,8 +29,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 async def _migrate_unique_ids(hass: HomeAssistant, entry: AcmedaConfigEntry) -> None:
@@ -46,15 +46,19 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: AcmedaConfigEntry) -> 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: AcmedaConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     hub = config_entry.runtime_data
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        reset_ok = await hub.async_reset()
 
-    if not await hub.async_reset():
-        return False
-
-    return unload_ok
+    if not reset_ok:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="hub_reset_failed",
+        )

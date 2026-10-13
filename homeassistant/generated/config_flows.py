@@ -322,6 +322,7 @@ FLOWS = {
         "harbor",
         "harman_luxury",
         "harmony",
+        "hase_iq",
         "hdfury",
         "hegel",
         "helty",

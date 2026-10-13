@@ -172,9 +172,12 @@ class IcloudAccount:
                 )
 
         self._devices = {}
-        self.update_devices()
+        # The FindMyiPhoneServiceManager constructor just located every device,
+        # so the first update should only read that fresh data, not request a
+        # second active locate from Apple.
+        self.update_devices(locate=False)
 
-    def update_devices(self) -> None:
+    def update_devices(self, locate: bool = True) -> None:
         """Update iCloud devices."""
         if self.api is None:
             return
@@ -187,11 +190,13 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
-            # Since pyicloud 2.3.0 device reads are cache-only and the library
-            # requests an active locate from Apple only at service creation, so
-            # explicitly refresh with locate=True to get a fresh GPS fix on
-            # every poll instead of Apple's cached location.
-            api_devices.refresh(locate=True)
+            if locate:
+                # Since pyicloud 2.3.0 device reads are cache-only and the
+                # library requests an active locate from Apple only at service
+                # creation, so explicitly refresh with locate=True to get a
+                # fresh GPS fix on every poll instead of Apple's cached
+                # location.
+                api_devices.refresh(locate=True)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2

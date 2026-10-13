@@ -728,7 +728,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.15
+boschshcpy==0.6.20
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -2289,6 +2289,9 @@ pygtfs==0.1.11
 # homeassistant.components.hvv_departures
 pygti==1.1.1
 
+# homeassistant.components.hase_iq
+pyhaseiq==0.2.1
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 
@@ -3566,7 +3569,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.1
+zinvolt==1.1.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
