@@ -42,7 +42,20 @@
       }
     }
   },
+  "device": {
+    "intrusion_system": {
+      "name": "Alarm system"
+    }
+  },
   "entity": {
+    "button": {
+      "reset_tamper": {
+        "name": "Reset tamper"
+      },
+      "smoke_test": {
+        "name": "Start self-test"
+      }
+    },
     "event": {
       "smoke_detector_alarm": {
         "state_attributes": {
@@ -62,6 +75,9 @@
     "number": {
       "bypass_timeout": {
         "name": "Break function timeout"
+      },
+      "energy_saving_enter_duration": {
+        "name": "Energy-saving enter duration"
       },
       "energy_saving_power_threshold": {
         "name": "Energy-saving power threshold"
@@ -85,6 +101,24 @@
           "high": "Loud",
           "low": "Reduced",
           "medium": "Medium"
+        }
+      },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "middle": "Medium"
+        }
+      },
+      "vibration_sensitivity": {
+        "name": "Vibration sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "very_high": "Very high",
+          "very_low": "Very low"
         }
       }
     },
@@ -199,6 +233,11 @@
       "valve": {
         "name": "Valve"
       }
+    }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "This room does not support the HVAC mode {hvac_mode}."
     }
   }
 }

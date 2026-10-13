@@ -126,6 +126,12 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaSelectEntityDescription(
+            key=DPCode.MODE,
+            translation_key="pump_mode",
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaSelectEntityDescription(
             key=DPCode.SPRAY_MODE,

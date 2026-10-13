@@ -172,8 +172,8 @@
       }
     },
     "binary_sensor": {
-      "alarm_sound_detection": {
-        "name": "Alarm sound detection"
+      "alarm_hub_zone": {
+        "name": "Zone {zone}"
       },
       "animal_detected": {
         "name": "Animal detected"
@@ -259,23 +259,8 @@
       "high_fps": {
         "name": "High FPS"
       },
-      "humidity_sensor": {
-        "name": "Humidity sensor"
-      },
-      "humidity_sensor_enabled": {
-        "name": "Humidity sensor enabled"
-      },
       "is_dark": {
         "name": "Is dark"
-      },
-      "light_sensor": {
-        "name": "Light sensor"
-      },
-      "light_sensor_enabled": {
-        "name": "Light sensor enabled"
-      },
-      "motion_detection_enabled": {
-        "name": "Motion detection enabled"
       },
       "object_detected": {
         "name": "Object detected"
@@ -316,12 +301,6 @@
       "system_sounds": {
         "name": "System sounds"
       },
-      "temperature_sensor": {
-        "name": "Temperature sensor"
-      },
-      "temperature_sensor_enabled": {
-        "name": "Temperature sensor enabled"
-      },
       "tracking_person": {
         "name": "Tracking: person"
       },
@@ -348,7 +327,6 @@
     },
     "event": {
       "doorbell": {
-        "name": "[%key:component::event::entity_component::doorbell::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -588,11 +566,14 @@
       }
     },
     "sensor": {
+      "alarm_hub_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "alarm_hub_last_event": {
+        "name": "Last event"
+      },
       "alarm_sound_detected": {
         "name": "Alarm sound detected"
-      },
-      "bluetooth_signal_strength": {
-        "name": "Bluetooth signal strength"
       },
       "chime_type": {
         "name": "[%key:component::unifiprotect::entity::select::chime_type::name%]"
@@ -690,6 +671,9 @@
       "resolution_hd_video": {
         "name": "Resolution: HD video"
       },
+      "signal_quality": {
+        "name": "Signal quality"
+      },
       "storage_used": {
         "name": "Storage used"
       },
@@ -723,7 +707,7 @@
     },
     "switch": {
       "alarm_sound_detection": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::alarm_sound_detection::name%]"
+        "name": "Alarm sound detection"
       },
       "analytics_enabled": {
         "name": "Analytics enabled"
@@ -776,20 +760,17 @@
       "detections_vehicle": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_vehicle::name%]"
       },
-      "hdr_mode": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::hdr_mode::name%]"
-      },
       "high_fps": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::high_fps::name%]"
       },
       "humidity_sensor": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::humidity_sensor::name%]"
+        "name": "Humidity sensor"
       },
       "insights_enabled": {
         "name": "Insights enabled"
       },
       "light_sensor": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::light_sensor::name%]"
+        "name": "Light sensor"
       },
       "motion": {
         "name": "[%key:component::binary_sensor::entity_component::motion::name%]"
@@ -840,6 +821,9 @@
     },
     "cannot_connect": {
       "message": "Could not connect to the UniFi Protect console"
+    },
+    "chime_ringtone_not_set": {
+      "message": "No ringtone is selected for {camera_name} on this chime, so its ring volumes cannot be changed. Select one in the UniFi Protect app."
     },
     "command_error": {
       "message": "Error communicating with UniFi Protect while sending command: {error}"
@@ -923,9 +907,9 @@
       },
       "title": "Ubiquiti Cloud Users are not Supported"
     },
-    "deprecate_hdr_switch": {
-      "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
-      "title": "HDR Mode switch deprecated"
+    "hdr_switch_removed": {
+      "description": "The HDR mode switch `{entity_id}` has been removed. It could not represent the auto HDR mode and was replaced by the HDR mode select.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "HDR mode switch removed"
     },
     "insecure_camera_removed": {
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
@@ -950,13 +934,21 @@
       },
       "title": "No stream is available for camera {camera}"
     },
-    "sense_setting_mirror_deprecated": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "Read-only sensor setting entity deprecated"
+    "sense_setting_mirror_removed": {
+      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only sensor setting entity removed"
     },
-    "sense_setting_mirror_deprecated_no_replacement": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "Read-only sensor setting entity deprecated"
+    "sense_setting_mirror_removed_no_replacement": {
+      "description": "The read-only entity `{entity_id}` has been removed. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only sensor setting entity removed"
+    },
+    "setting_mirror_deprecated": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only setting entity deprecated"
+    },
+    "setting_mirror_deprecated_light_mode": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
     }
   },
   "options": {

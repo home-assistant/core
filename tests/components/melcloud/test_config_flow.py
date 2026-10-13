@@ -66,6 +66,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-email@test-domain.com"
+    assert result2["result"].unique_id == "test-email@test-domain.com"
     assert result2["data"] == {
         "username": "test-email@test-domain.com",
         "token": "test-token",

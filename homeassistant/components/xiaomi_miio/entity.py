@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import GatewayDeviceCoordinator
@@ -141,11 +142,12 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     @staticmethod
     def _parse_datetime_time(initial_time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(  # pylint: disable=home-assistant-enforce-naive-now
+        now = dt_util.now()
+        time = now.replace(
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
-        if time < datetime.datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
+        if time < now:
             time += datetime.timedelta(days=1)
 
         return time.isoformat()

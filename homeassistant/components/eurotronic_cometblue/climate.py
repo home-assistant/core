@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
@@ -59,7 +60,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: CometBlueDataUpdateCoordinator) -> None:
         """Initialize CometBlueClimateEntity."""
@@ -69,13 +70,13 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data.temperatures["currentTemp"]
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         return self.coordinator.data.temperatures["manualTemp"]
 
@@ -99,9 +100,9 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation mode."""
-        if self.target_temperature == MIN_TEMP:
+        if self.native_target_temperature == MIN_TEMP:
             return HVACMode.OFF
-        if self.target_temperature == MAX_TEMP:
+        if self.native_target_temperature == MAX_TEMP:
             return HVACMode.HEAT
         return HVACMode.AUTO
 
@@ -114,15 +115,15 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         if (
             self.coordinator.data.holiday.get("start") is None
             and self.coordinator.data.holiday.get("end") is not None
-            and self.target_temperature
+            and self.native_target_temperature
             == self.coordinator.data.holiday.get("temperature")
         ):
             return PRESET_AWAY
-        if self.target_temperature == MAX_TEMP:
+        if self.native_target_temperature == MAX_TEMP:
             return PRESET_BOOST
-        if self.target_temperature == self._device_comfort_setpoint:
+        if self.native_target_temperature == self._device_comfort_setpoint:
             return PRESET_COMFORT
-        if self.target_temperature == self._device_eco_setpoint:
+        if self.native_target_temperature == self._device_eco_setpoint:
             return PRESET_ECO
         return PRESET_NONE
 
@@ -132,8 +133,8 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
 
         if self.preset_mode == PRESET_AWAY:
             raise ServiceValidationError(
-                "Cannot adjust TRV remotely, manually"
-                " disable 'holiday' mode on TRV first"
+                translation_domain=DOMAIN,
+                translation_key="cannot_adjust_during_holiday",
             )
 
         await self.coordinator.send_command(
@@ -143,7 +144,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
                     # manual temperature always needs to be set,
                     # otherwise TRV will turn OFF
                     "manualTemp": kwargs.get(ATTR_TEMPERATURE)
-                    or self.target_temperature,
+                    or self.native_target_temperature,
                     # other temperatures can be left unchanged by setting them to None
                     "targetTempLow": kwargs.get(ATTR_TARGET_TEMP_LOW),
                     "targetTempHigh": kwargs.get(ATTR_TARGET_TEMP_HIGH),
@@ -157,10 +158,16 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         """Set new target preset mode."""
 
         if self.preset_modes and preset_mode not in self.preset_modes:
-            raise ServiceValidationError(f"Unsupported preset_mode '{preset_mode}'")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_preset_mode",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
         if preset_mode in [PRESET_NONE, PRESET_AWAY]:
             raise ServiceValidationError(
-                f"Unable to set preset '{preset_mode}', display only."
+                translation_domain=DOMAIN,
+                translation_key="display_only_preset",
+                translation_placeholders={"preset_mode": preset_mode},
             )
         if preset_mode == PRESET_ECO:
             return await self.async_set_temperature(
@@ -186,7 +193,11 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return await self.async_set_temperature(
                 temperature=self._device_eco_setpoint
             )
-        raise ServiceValidationError(f"Unknown HVAC mode '{hvac_mode}'")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_hvac_mode",
+            translation_placeholders={"hvac_mode": hvac_mode},
+        )
 
     @override
     async def async_turn_on(self) -> None:

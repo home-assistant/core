@@ -132,6 +132,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
 )
 async def test_config_entry_migration_v2_collapses_duplicates(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     older: dict,
     newer: dict,
     serial_number: str,
@@ -173,6 +174,10 @@ async def test_config_entry_migration_v2_collapses_duplicates(
     assert unique_entry.unique_id == serial_number
     assert unique_entry.data == newer["data"]
     assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+    assert (
+        "Another configuration entry exists for the adapter with serial number"
+        f" {serial_number}"
+    ) in caplog.text
 
 
 @pytest.mark.parametrize(
