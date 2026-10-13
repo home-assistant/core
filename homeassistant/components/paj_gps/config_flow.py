@@ -1,5 +1,6 @@
 """Config flow for PAJ GPS Tracker integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -30,6 +31,17 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 autocomplete="email",
             )
         ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
         probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
@@ -89,5 +101,40 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        email = reauth_entry.data[CONF_EMAIL]
+
+        if user_input is not None:
+            error, auth = await self._validate_credentials(
+                email, user_input[CONF_PASSWORD]
+            )
+            if error is None and auth is not None:
+                await self.async_set_unique_id(str(auth.userID))
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+            if error is not None:
+                errors["base"] = error
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={CONF_EMAIL: email},
             errors=errors,
         )
