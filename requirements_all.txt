@@ -310,7 +310,7 @@ aiohttp_sse==2.2.0
 aiohue==4.9.0
 
 # homeassistant.components.imap
-aioimaplib==2.0.1
+aioimaplib==2.0.3
 
 # homeassistant.components.immich
 aioimmich==0.18.0
