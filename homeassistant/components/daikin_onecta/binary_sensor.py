@@ -1,4 +1,4 @@
-"""Support for Daikin binary sensor sensors."""
+"""Support for Daikin Onecta binary sensors."""
 
 from typing import TYPE_CHECKING, override
 

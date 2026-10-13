@@ -20,7 +20,11 @@ from daikin_onecta.models import GatewayDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -137,6 +141,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         async with self._cloud_lock:
             try:
                 await command(self._client)
+            except OAuth2TokenRequestReauthError:
+                self.config_entry.async_start_reauth(self.hass)
+                return False
+            except OAuth2TokenRequestError:
+                return False
             except OnectaAuthenticationError:
                 self.config_entry.async_start_reauth(self.hass)
                 return False

@@ -888,6 +888,55 @@ def test_unknown_power_characteristic_uses_unknown_hvac_mode(
     assert entity._get_hvac_mode() is None
 
 
+@pytest.mark.parametrize(
+    "operation_mode",
+    [None, SimpleNamespace(value=None)],
+    ids=["missing", "omitted"],
+)
+def test_powered_on_without_operation_mode_uses_unknown_hvac_mode(
+    operation_mode: object | None,
+) -> None:
+    """Do not report an explicitly powered-on unit as off without its mode."""
+    entity = object.__new__(DaikinClimate)
+    entity._climate_control = MagicMock(
+        return_value=SimpleNamespace(
+            on_off_mode=SimpleNamespace(value="on"),
+            operation_mode=operation_mode,
+        )
+    )
+
+    assert entity._get_hvac_mode() is None
+
+
+def test_omitted_fixed_fan_speed_uses_unknown_fan_mode() -> None:
+    """Do not expose an omitted fixed speed as the string None."""
+    entity = object.__new__(DaikinClimate)
+    entity._fan_operation = MagicMock(
+        return_value=SimpleNamespace(
+            fan_speed=SimpleNamespace(
+                current_mode=SimpleNamespace(value=FANMODE_FIXED),
+                modes={FANMODE_FIXED: SimpleNamespace(value=None)},
+            )
+        )
+    )
+
+    assert entity._get_fan_mode() is None
+
+
+@pytest.mark.parametrize("direction", ["vertical", "horizontal"])
+def test_omitted_swing_value_uses_unknown_mode(direction: str) -> None:
+    """Do not lowercase an omitted swing value during a coordinator update."""
+    entity = object.__new__(DaikinClimate)
+    axis = SimpleNamespace(current_mode=SimpleNamespace(value=None))
+    entity._fan_operation = MagicMock(
+        return_value=SimpleNamespace(
+            fan_direction=SimpleNamespace(vertical=axis, horizontal=axis)
+        )
+    )
+
+    assert entity._get_swing_mode_for_direction(direction) is None
+
+
 @pytest.mark.parametrize("power_settable", [False, None])
 def test_hvac_modes_exclude_off_without_writable_power(
     power_settable: bool | None,

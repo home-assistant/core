@@ -188,9 +188,11 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
                 and operation.fan_speed is not None
                 and operation.fan_speed.modes is not None
             )
-            self._attr_percentage = ordered_list_item_to_percentage(
-                speeds, int(operation.fan_speed.modes[FANMODE_FIXED].value)
-            )
+            fixed_speed = operation.fan_speed.modes[FANMODE_FIXED].value
+            if fixed_speed is not None:
+                self._attr_percentage = ordered_list_item_to_percentage(
+                    speeds, int(fixed_speed)
+                )
         self._attr_supported_features = features
 
     @override
@@ -277,6 +279,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         purification = self._air_purification()
         if purification is None or purification.mode is None:
             self._raise_service_validation_error("air_purifier_speed_unavailable")
+        if self.is_on is None:
+            self._raise_service_validation_error("air_purifier_power_unavailable")
         if purification.mode.value != "manualFan":
             await self._async_set_mode("manualFan")
         speeds = self._fixed_speeds()

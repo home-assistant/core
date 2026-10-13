@@ -64,3 +64,45 @@ async def test_system_health_info(hass: HomeAssistant) -> None:
     assert info["oauth2_token_valid"] is True
     assert await info["api_status"] == "ok"
     assert await info["oauth2_status"] == "ok"
+
+
+async def test_system_health_reports_every_loaded_account(
+    hass: HomeAssistant,
+) -> None:
+    """Include cached health data for every configured Daikin account."""
+    for title, unique_id, remaining in (
+        ("Account one", "account-1", 199),
+        ("Account two", "account-2", 399),
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title=title,
+            unique_id=unique_id,
+            state=ConfigEntryState.LOADED,
+        )
+        config_entry.runtime_data = MagicMock(
+            rate_limits={
+                "minute": 10,
+                "day": remaining + 1,
+                "remaining_minutes": 9,
+                "remaining_day": remaining,
+                "retry_after": None,
+                "ratelimit_reset": None,
+            },
+            session=MagicMock(valid_token=True),
+        )
+        config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.daikin_onecta.system_health."
+        "system_health.async_check_can_reach_url",
+        new=AsyncMock(return_value="ok"),
+    ):
+        info = await system_health_info(hass)
+
+    assert "Account one" in info["remaining_day"]
+    assert "199" in info["remaining_day"]
+    assert "Account two" in info["remaining_day"]
+    assert "399" in info["remaining_day"]
+    assert await info["api_status"] == "ok"
+    assert await info["oauth2_status"] == "ok"

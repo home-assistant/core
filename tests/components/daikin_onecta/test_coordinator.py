@@ -32,6 +32,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import device_registry as dr
@@ -385,6 +386,40 @@ class TestOnectaDataUpdateCoordinator:
         assert high_interval == timedelta(seconds=594)
         assert low_interval == timedelta(seconds=1782)
         assert ceil(15 * 3600 / 594) + ceil(9 * 3600 / 1782) == 110
+
+    async def test_command_token_rejection_starts_reauthentication(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Start reauthentication when token renewal rejects a command."""
+        error = OAuth2TokenRequestReauthError(
+            domain=DOMAIN,
+            request_info=MagicMock(),
+            status=401,
+            message="invalid_grant",
+        )
+        command = AsyncMock(side_effect=error)
+        coordinator.config_entry.async_start_reauth = MagicMock()
+
+        assert not await coordinator.async_execute_command(command)
+
+        coordinator.config_entry.async_start_reauth.assert_called_once_with(
+            coordinator.hass
+        )
+        assert coordinator.last_patch_call is None
+
+    async def test_transient_command_token_failure_returns_failure(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Map a transient token renewal failure to a failed command."""
+        error = OAuth2TokenRequestError(
+            domain=DOMAIN,
+            request_info=MagicMock(),
+            status=500,
+            message="server error",
+        )
+
+        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+        assert coordinator.last_patch_call is None
 
     def test_polling_intervals_use_reported_daily_limit(self, coordinator):
         """Adapt the polling budget when Daikin reports a different limit."""

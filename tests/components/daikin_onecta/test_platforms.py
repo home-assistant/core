@@ -25,6 +25,7 @@ from homeassistant.components.daikin_onecta.binary_sensor import (
 )
 from homeassistant.components.daikin_onecta.const import (
     DOMAIN,
+    FANMODE_FIXED,
     SCHEDULE_DISABLED,
     SENSOR_PERIOD_DAILY,
 )
@@ -1361,6 +1362,29 @@ def test_air_purifier_preserves_unknown_power_state() -> None:
     assert entity.percentage is None
 
 
+def test_air_purifier_preserves_unknown_fixed_speed() -> None:
+    """Do not convert an omitted native fixed speed to an integer."""
+    entity = object.__new__(DaikinAirPurifier)
+    operation = SimpleNamespace(
+        fan_speed=SimpleNamespace(
+            modes={FANMODE_FIXED: Characteristic(value=None, settable=True)}
+        )
+    )
+    purification = SimpleNamespace(
+        power=Characteristic(value="on", settable=True),
+        mode=Characteristic(value="manualFan", settable=True),
+        modes=["manualFan"],
+        fan_operation=MagicMock(return_value=operation),
+    )
+    entity._air_purification = MagicMock(return_value=purification)
+    entity._fixed_speeds = MagicMock(return_value=[1, 2, 3, 4])
+    entity._fixed_speed_count = MagicMock(return_value=4)
+
+    entity._update_state()
+
+    assert entity.percentage is None
+
+
 def test_switch_preserves_unknown_state() -> None:
     """Do not interpret an omitted switch value as off."""
     entity = object.__new__(DaikinSwitch)
@@ -1400,6 +1424,28 @@ async def test_air_purifier_rejects_unknown_power_state(method: str) -> None:
 
     assert err.value.translation_key == "air_purifier_power_unavailable"
     entity._async_execute_air_purification_command.assert_not_awaited()
+
+
+async def test_air_purifier_percentage_rejects_unknown_power_before_mode_write() -> (
+    None
+):
+    """Do not partially change purifier mode when its power state is unknown."""
+    entity = object.__new__(DaikinAirPurifier)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    object.__setattr__(entity, "_attr_is_on", None)
+    entity._air_purification = MagicMock(
+        return_value=SimpleNamespace(
+            power=Characteristic(value=None, settable=True),
+            mode=Characteristic(value="autoFan"),
+        )
+    )
+    entity._async_set_mode = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_percentage(100)
+
+    assert err.value.translation_key == "air_purifier_power_unavailable"
+    entity._async_set_mode.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

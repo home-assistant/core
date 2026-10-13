@@ -1,4 +1,4 @@
-"""Support for Daikin AirBase zones."""
+"""Support for Daikin Onecta switches."""
 
 from typing import TYPE_CHECKING, Any, override
 
