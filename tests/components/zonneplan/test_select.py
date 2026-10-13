@@ -47,17 +47,6 @@ def select_only() -> Generator[None]:
         yield
 
 
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Set up the Zonneplan integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_select(
     hass: HomeAssistant,
