@@ -40,12 +40,11 @@ def networks_from_options(options: Mapping[str, Any]) -> list[str]:
 def build_probe_addresses(
     networks: list[str],
     *,
-    local_broadcasts: Iterable[str],
     known_ips: Iterable[str],
     include_hosts: bool,
 ) -> list[str]:
     """Return discovery targets, optionally expanding configured subnets."""
-    addresses = [LIMITED_BROADCAST, *local_broadcasts]
+    addresses = [LIMITED_BROADCAST]
     for network in networks:
         if "/" not in network:
             addresses.append(network)

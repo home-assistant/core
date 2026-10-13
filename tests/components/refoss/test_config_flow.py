@@ -1,14 +1,11 @@
 """Tests for the refoss Integration."""
 
-from collections.abc import Generator
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.refoss.const import CONF_NETWORKS, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,24 +13,7 @@ from . import FakeDiscovery, build_base_device_mock
 
 from tests.common import MockConfigEntry
 
-ADAPTER_BROADCASTS = {
-    IPv4Address("255.255.255.255"),
-    IPv4Address("10.9.8.255"),
-}
 
-
-@pytest.fixture
-def mock_ipv4_broadcasts() -> Generator[AsyncMock]:
-    """Return adapter broadcasts used during config-flow discovery."""
-    with patch(
-        "homeassistant.components.refoss.config_flow.async_get_ipv4_broadcast_addresses",
-        new_callable=AsyncMock,
-        return_value=ADAPTER_BROADCASTS,
-    ) as mock_broadcasts:
-        yield mock_broadcasts
-
-
-@pytest.mark.usefixtures("mock_ipv4_broadcasts")
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_creating_entry_sets_up(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -65,55 +45,13 @@ async def test_creating_entry_sets_up(
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["options"] == {}
-        probed = discovery.probes[0]
-        assert probed is not None
-        assert "255.255.255.255" in probed
-        assert "10.9.8.255" in probed
-        assert "192.168.20.1" not in probed
+        assert discovery.probes == [None]
 
         await hass.async_block_till_done()
 
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_ipv4_broadcasts")
-@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_user_flow_setup_creates_coordinators(hass: HomeAssistant) -> None:
-    """Test config-flow discovery is replayed when the entry is set up."""
-    discovery = FakeDiscovery()
-    with (
-        patch(
-            "homeassistant.components.refoss.util.Discovery",
-            return_value=discovery,
-        ),
-        patch(
-            "homeassistant.components.refoss.bridge.async_build_base_device",
-            return_value=build_base_device_mock(),
-        ),
-        patch(
-            "homeassistant.components.refoss.bridge.async_get_ipv4_broadcast_addresses",
-            new_callable=AsyncMock,
-            return_value=ADAPTER_BROADCASTS,
-        ),
-        patch(
-            "homeassistant.components.refoss.switch.isinstance",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        await hass.async_block_till_done()
-
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        assert entry.state is ConfigEntryState.LOADED
-        assert entry.runtime_data.coordinators
-
-
-@pytest.mark.usefixtures("mock_ipv4_broadcasts")
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_creating_entry_has_no_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -168,7 +106,6 @@ async def test_user_flow_rejects_invalid_networks(
     assert result["errors"] == {CONF_NETWORKS: "invalid_networks"}
 
 
-@pytest.mark.usefixtures("mock_ipv4_broadcasts")
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_user_flow_stores_subnet(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -235,7 +172,6 @@ async def test_options_flow_rejects_invalid_networks(
     assert CONF_NETWORKS not in entry.options
 
 
-@pytest.mark.usefixtures("mock_ipv4_broadcasts")
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_user_flow_accepts_chinese_commas(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -263,7 +199,6 @@ async def test_user_flow_accepts_chinese_commas(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_ipv4_broadcasts")
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_user_flow_probes_exact_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock

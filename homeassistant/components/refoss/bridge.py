@@ -6,7 +6,6 @@ from refoss_ha.device import DeviceInfo
 from refoss_ha.device_manager import async_build_base_device
 from refoss_ha.discovery import Discovery, Listener
 
-from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -34,21 +33,15 @@ class DiscoveryService(Listener):
         self.coordinators: list[RefossDataUpdateCoordinator] = []
         self._last_sweep: float | None = None
 
-    async def async_scan(
-        self, *, force_sweep: bool = False, networks: list[str] | None = None
-    ) -> None:
-        """Probe the local network and any configured VLAN subnets."""
-        if force_sweep:
-            self._last_sweep = None
-        if networks is None:
-            networks = networks_from_options(self.config_entry.options)
-        local_broadcasts = [
-            str(address)
-            for address in await async_get_ipv4_broadcast_addresses(self.hass)
-        ]
+    async def async_scan(self) -> None:
+        """Probe the local network and any configured VLAN targets."""
+        networks = networks_from_options(self.config_entry.options)
+        if not networks:
+            await self.discovery.broadcast_msg()
+            return
+
         addresses = build_probe_addresses(
             networks,
-            local_broadcasts=local_broadcasts,
             known_ips=[device.inner_ip for device in self.discovery.devices],
             include_hosts=self._should_include_hosts(networks),
         )
