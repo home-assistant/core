@@ -60,7 +60,7 @@ def _migrate_device_identifiers(
             break
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> None:
     """Set up Roth Touchline SL from a config entry."""
     account = TouchlineSL(
         username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
@@ -97,11 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TouchlineSLConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

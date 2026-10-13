@@ -30,7 +30,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AirzoneCloudConfigEntry
-) -> bool:
+) -> None:
     """Set up Airzone Cloud from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_USERNAME],
@@ -54,8 +54,6 @@ async def async_setup_entry(
     _async_register_devices(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 @callback
@@ -100,11 +98,9 @@ def _async_register_devices(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AirzoneCloudConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        await coordinator.airzone.logout()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.airzone.logout()
