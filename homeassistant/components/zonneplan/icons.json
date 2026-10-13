@@ -30,6 +30,17 @@
         }
       }
     },
+    "select": {
+      "control_mode": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "day_ahead_arbitrage": "mdi:cash-sync",
+          "dynamic_charging": "mdi:chart-line",
+          "home_optimization": "mdi:home-lightning-bolt",
+          "self_consumption": "mdi:solar-power"
+        }
+      }
+    },
     "sensor": {
       "battery_state": {
         "default": "mdi:battery",

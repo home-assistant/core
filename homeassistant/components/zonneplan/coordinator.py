@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, override
 from pyzonneplan import (
     Account,
     Battery,
+    BatteryControlMode,
     Connection,
     ConsumerPrices,
     ElectricityChart,
@@ -21,12 +22,16 @@ from pyzonneplan import (
     ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
-from pyzonneplan.const import ConsumptionChart, PriceChart
+from pyzonneplan.const import BatteryMode, ConsumptionChart, PriceChart
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -36,6 +41,7 @@ LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=15)
 BATTERY_UPDATE_INTERVAL = timedelta(minutes=5)
+BATTERY_CONTROL_UPDATE_INTERVAL = timedelta(minutes=1)
 
 type ZonneplanConfigEntry = ConfigEntry[ZonneplanRuntimeData]
 
@@ -46,6 +52,7 @@ class ZonneplanRuntimeData:
 
     coordinator: ZonneplanCoordinator
     battery_coordinator: ZonneplanBatteryCoordinator
+    battery_control_coordinator: ZonneplanBatteryControlCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -251,3 +258,73 @@ class ZonneplanBatteryCoordinator(
                 ),
             )
         return batteries
+
+
+class ZonneplanBatteryControlCoordinator(
+    ZonneplanBaseCoordinator[dict[str, BatteryControlMode]]
+):
+    """Coordinator to manage the control mode of the Zonneplan home batteries."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ZonneplanConfigEntry,
+        zonneplan: Zonneplan,
+        connection_uuids: dict[str, str],
+    ) -> None:
+        """Initialize the coordinator with the connection UUID of each battery."""
+        super().__init__(hass, entry, zonneplan, BATTERY_CONTROL_UPDATE_INTERVAL)
+        self.connection_uuids = connection_uuids
+
+    @override
+    async def _async_fetch(self) -> dict[str, BatteryControlMode]:
+        """Fetch the control mode of every battery, keyed by contract UUID."""
+        control_modes = await asyncio.gather(
+            *(
+                self.zonneplan.async_get_battery_control_mode(contract_uuid)
+                for contract_uuid in self.connection_uuids
+            )
+        )
+        return dict(zip(self.connection_uuids, control_modes, strict=True))
+
+    async def async_set_control_mode(
+        self, contract_uuid: str, mode: BatteryMode
+    ) -> None:
+        """Switch a battery to another control mode and refresh the control data."""
+        try:
+            await self.zonneplan.async_set_battery_control_mode(
+                self.connection_uuids[contract_uuid], contract_uuid, mode
+            )
+        except ValueError as err:
+            # Raised when day-ahead arbitrage was never set up in the app.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="day_ahead_arbitrage_not_set_up",
+            ) from err
+        except ZonneplanAuthenticationError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except ZonneplanTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+        except ZonneplanConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except ZonneplanRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+            ) from err
+        except ZonneplanError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
+        await self.async_request_refresh()
