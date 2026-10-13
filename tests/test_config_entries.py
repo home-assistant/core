@@ -71,6 +71,8 @@ from .common import (
     async_capture_events,
     async_fire_time_changed,
     flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -7899,6 +7901,31 @@ async def test_update_entry_and_reload(
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
 
 
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(config_entries)
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "value"),
+    [
+        ("CONN_CLASS_CLOUD_PUSH", "cloud_push"),
+        ("CONN_CLASS_CLOUD_POLL", "cloud_poll"),
+        ("CONN_CLASS_LOCAL_PUSH", "local_push"),
+        ("CONN_CLASS_LOCAL_POLL", "local_poll"),
+        ("CONN_CLASS_ASSUMED", "assumed"),
+        ("CONN_CLASS_UNKNOWN", "unknown"),
+    ],
+)
+def test_deprecated_connection_class_constants(
+    caplog: pytest.LogCaptureFixture, constant_name: str, value: str
+) -> None:
+    """Test deprecated connection class constants."""
+    import_and_test_deprecated_constant(
+        caplog, config_entries, constant_name, None, value, "2027.5.0"
+    )
+
+
 async def test_update_entry_and_reload_with_listener_logs(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -7959,38 +7986,6 @@ async def test_update_entry_and_reload_with_listener_logs(
     await hass.async_block_till_done()
 
     assert message in caplog.text
-
-
-async def test_connection_class_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test setting CONNECTION_CLASS on a config flow logs a deprecation."""
-    mock_integration(hass, MockModule("comp"))
-    mock_platform(hass, "comp.config_flow", None)
-
-    class MockFlowHandler(config_entries.ConfigFlow):
-        """Define a mock flow handler."""
-
-        VERSION = 1
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-        async def async_step_user(self, user_input=None):
-            """Mock user step."""
-            return self.async_abort(reason="test")
-
-    with (
-        mock_config_flow("comp", MockFlowHandler),
-        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
-    ):
-        await hass.config_entries.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert (
-        "Detected that integration 'comp' sets the CONNECTION_CLASS attribute on its"
-        " config flow, which is no longer used and should be removed. This will stop"
-        " working in Home Assistant 2027.5.0"
-    ) in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -58,6 +58,12 @@ from .helpers import (
     storage,
 )
 from .helpers.debounce import Debouncer
+from .helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.discovery_flow import DiscoveryKey
 from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
@@ -242,15 +248,13 @@ class ConfigEntryDisabler(StrEnum):
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
-# Deprecated: Connection classes
-# These aren't used anymore since 2021.6.0
-# Mainly here not to break custom integrations, remove in 2027.5.0.
-CONN_CLASS_CLOUD_PUSH = "cloud_push"
-CONN_CLASS_CLOUD_POLL = "cloud_poll"
-CONN_CLASS_LOCAL_PUSH = "local_push"
-CONN_CLASS_LOCAL_POLL = "local_poll"
-CONN_CLASS_ASSUMED = "assumed"
-CONN_CLASS_UNKNOWN = "unknown"
+# Connection classes aren't used anymore since 2021.6.0
+_DEPRECATED_CONN_CLASS_CLOUD_PUSH = DeprecatedConstant("cloud_push", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_CLOUD_POLL = DeprecatedConstant("cloud_poll", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_LOCAL_PUSH = DeprecatedConstant("local_push", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_LOCAL_POLL = DeprecatedConstant("local_poll", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_ASSUMED = DeprecatedConstant("assumed", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_UNKNOWN = DeprecatedConstant("unknown", None, "2027.5.0")
 
 
 class ConfigError(HomeAssistantError):
@@ -1993,15 +1997,6 @@ class ConfigEntriesFlowManager(
         )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
-
-        if hasattr(handler, "CONNECTION_CLASS"):
-            report_usage(
-                "sets the CONNECTION_CLASS attribute on its config flow, which is "
-                "no longer used and should be removed",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2027.5.0",
-                integration_domain=handler_key,
-            )
 
         flow = handler()
         flow.init_step = context["source"]
@@ -4481,3 +4476,11 @@ def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None
     ):
         if "flow_id" in progress_flow:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+
+# These can be removed if no deprecated constants are in this module anymore
+__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = functools.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
