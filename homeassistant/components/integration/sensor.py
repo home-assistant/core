@@ -403,7 +403,7 @@ class IntegrationSensor(RestoreSensor):
             ):
                 return device_class
             # The user supplied device class is not supported by the sensor so we must
-            # ignore the hint and fail back to inferring the device class.
+            # ignore the hint and fall back to inferring the device class.
             _LOGGER.warning(
                 "%s: Specified device class '%s' is not compatible with the derived unit '%s' or the state class '%s' of this sensor",
                 self.entity_id,
@@ -505,7 +505,6 @@ class IntegrationSensor(RestoreSensor):
             handle_state_change = self._integrate_on_state_change_callback
             handle_state_report = self._integrate_on_state_report_callback
 
-        self._refresh_device_class = True
         if (
             state := self.hass.states.get(self._source_entity)
         ) and state.state != STATE_UNAVAILABLE:
