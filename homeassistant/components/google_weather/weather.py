@@ -214,7 +214,7 @@ class GoogleWeatherEntity(
         """Return the precipitation nowcast for up to the next 6 hours."""
         try:
             response = await self._api.async_get_minute_forecast(
-                self._latitude, self._longitude
+                latitude=self._latitude, longitude=self._longitude
             )
         except GoogleWeatherApiError as err:
             raise HomeAssistantError(
