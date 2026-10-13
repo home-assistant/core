@@ -540,6 +540,10 @@ async def _async_convert_audio(  # noqa: C901
                         raise source_read_error
                     if child_exited_unsuccessfully():
                         break
+                    if process.returncode == 0:
+                        raise HomeAssistantError(
+                            "ffmpeg exited before TTS input was exhausted"
+                        )
                     raise stdin_error
                 writer_task.result()
             if read_task is None:
@@ -578,6 +582,10 @@ async def _async_convert_audio(  # noqa: C901
                         # Keep the reader owned until it actually finishes;
                         # abort cleanup must not start a competing discard.
                         break
+                    if process.returncode == 0:
+                        raise HomeAssistantError(
+                            "ffmpeg exited before TTS input was exhausted"
+                        )
                     raise stdin_error
                 writer_task.result()
             if read_task in done:

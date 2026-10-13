@@ -1668,14 +1668,21 @@ async def test_known_stdin_failure_before_next_output_pull(
             await gen.aclose()
 
 
-@pytest.mark.parametrize("boundary", ["blocked", "paused"])
-async def test_known_exit_precedes_stdin_error_with_original_wait_pending(
+@pytest.mark.parametrize(
+    ("boundary", "wait_pending"),
+    [("blocked", True), ("paused", True), ("paused", False)],
+    ids=["blocked-pending", "paused-pending", "paused-completed"],
+)
+@pytest.mark.parametrize("exit_code", [0, 7], ids=["zero-exit", "failed-child"])
+async def test_known_exit_precedes_stdin_error(
     ffmpeg_ready: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
     boundary: str,
+    wait_pending: bool,
+    exit_code: int,
 ) -> None:
-    """A real failed child wins even while its original wait is still pending."""
+    """A real child exit outranks a pipe error when input is incomplete."""
     release_child = tmp_path / "release-child"
     release_source = asyncio.Event()
     release_finalizer = asyncio.Event()
@@ -1693,8 +1700,8 @@ async def test_known_exit_precedes_stdin_error_with_original_wait_pending(
         + ("os.write(1,b'PREFIX')\n" if boundary == "paused" else "")
         + "while not os.path.exists(sys.argv[1]):time.sleep(.01)\n"
         "os.close(0)\n"
-        "os.write(2,b'known child failure\\n')\n"
-        "sys.exit(7)\n"
+        + ("os.write(2,b'known child failure\\n')\n" if exit_code else "")
+        + f"sys.exit({exit_code})\n"
     )
 
     async def spawn(*args, **kwargs):
@@ -1718,9 +1725,10 @@ async def test_known_exit_precedes_stdin_error_with_original_wait_pending(
         async def delayed_owned_wait():
             if asyncio.current_task().get_name() == "tts_ffmpeg_wait":
                 owned_waits.append(asyncio.current_task())
-                # Only delay the original owned waiter. The actual OS status
-                # is established independently, never fabricated by this gate.
-                await release_wait.wait()
+                if wait_pending:
+                    # Only delay the original owned waiter. The actual OS status
+                    # is established independently, never fabricated by this gate.
+                    await release_wait.wait()
             return await actual_wait()
 
         async def observed_read(n: int = -1) -> bytes:
@@ -1771,14 +1779,21 @@ async def test_known_exit_precedes_stdin_error_with_original_wait_pending(
             else:
                 owner = asyncio.create_task(anext(gen), name="known_exit_owner")
                 await asyncio.wait_for(owner_waiting.wait(), 3)
-            assert len(owned_waits) == 1 and not owned_waits[0].done()
+            if wait_pending:
+                assert len(owned_waits) == 1 and not owned_waits[0].done()
+            else:
+                assert processes[0].returncode is None
+                assert len(owned_waits) == 1 and not owned_waits[0].done()
             release_child.touch()
-            # This is a *new* harness wait, not completion of the original
-            # waiter. It observes the real child's returncode before stdin
-            # fails, as on a runtime with delayed pipe disconnection.
-            assert await asyncio.wait_for(processes[0].wait(), 3) == 7
-            assert processes[0].returncode == 7
-            assert not owned_waits[0].done()
+            # The harness observes the real OS status independently of the
+            # original owned wait, which may be completed or deliberately held.
+            assert await asyncio.wait_for(processes[0].wait(), 3) == exit_code
+            assert processes[0].returncode == exit_code
+            if wait_pending:
+                assert not owned_waits[0].done()
+            else:
+                assert await asyncio.wait_for(owned_waits[0], 3) == exit_code
+                assert not owned_waits[0].cancelled()
             release_source.set()
             await asyncio.wait_for(transport_failed.wait(), 3)
             await asyncio.wait_for(finalizer_entered.wait(), 3)
@@ -1786,23 +1801,33 @@ async def test_known_exit_precedes_stdin_error_with_original_wait_pending(
             assert not release_finalizer.is_set()
             if boundary == "paused":
                 owner = asyncio.create_task(anext(gen), name="known_exit_owner")
-            with pytest.raises(
-                HomeAssistantError, match="Unexpected error while running ffmpeg"
-            ):
-                await _observe(owner, 3)
-            assert processes[0].returncode == 7
-            assert any("known child failure" in r.message for r in caplog.records)
-            assert not release_wait.is_set() and not owned_waits[0].done()
-            assert owned_waits[0] in ffmpeg_ready._background_tasks
+            if exit_code:
+                with pytest.raises(
+                    HomeAssistantError, match="Unexpected error while running ffmpeg"
+                ):
+                    await _observe(owner, 3)
+                assert any("known child failure" in r.message for r in caplog.records)
+            else:
+                with pytest.raises(
+                    HomeAssistantError,
+                    match="ffmpeg exited before TTS input was exhausted",
+                ):
+                    await _observe(owner, 3)
+            assert processes[0].returncode == exit_code
+            assert transport_errors[0] is not None
             assert finalizer_entered.is_set() and not release_finalizer.is_set()
+            if wait_pending:
+                assert not release_wait.is_set() and not owned_waits[0].done()
+                assert owned_waits[0] in ffmpeg_ready._background_tasks
             assert not any(
                 t.get_name() in ("tts_ffmpeg_stdout", "tts_ffmpeg_stdout_discard")
                 and not t.done()
                 for t in asyncio.all_tasks()
             )
-            release_wait.set()
-            assert await asyncio.wait_for(owned_waits[0], 3) == 7
-            assert not owned_waits[0].cancelled()
+            if wait_pending:
+                release_wait.set()
+                assert await asyncio.wait_for(owned_waits[0], 3) == exit_code
+                assert not owned_waits[0].cancelled()
     finally:
         release_child.touch()
         release_source.set()
