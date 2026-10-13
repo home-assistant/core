@@ -129,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Set up Sofar from a config entry."""
     serial = entry.unique_id
     assert serial is not None
@@ -201,7 +201,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 def _battery_pack_number(serial: str, identifier: str) -> int | None:
@@ -248,15 +247,14 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Migrate an old config entry."""
     if entry.version == 1 and entry.minor_version == 1:
         hass.config_entries.async_update_entry(
             entry, data={CONF_TYPE: TYPE_TCP, **entry.data}, minor_version=2
         )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
