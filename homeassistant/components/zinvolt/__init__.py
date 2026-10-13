@@ -22,7 +22,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> None:
     """Set up Zinvolt from a config entry."""
     session = async_get_clientsession(hass)
     client = ZinvoltClient(entry.data[CONF_ACCESS_TOKEN], session=session)
@@ -57,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
