@@ -3047,6 +3047,272 @@ async def test_clear_config_topic_disabled_entity(
     )
 
 
+DISABLED_COMPONENT_DEVICE_CONFIG = {
+    "dev": {"identifiers": ["bla"], "name": "bla"},
+    "o": {"name": "bla2mqtt", "sw": "1.0"},
+    "cmps": {
+        "sens1": {
+            "platform": "sensor",
+            "name": "Enabled",
+            "state_topic": "test-topic",
+            "unique_id": "very_unique1",
+        },
+        "sens2": {
+            "platform": "sensor",
+            "name": "Disabled",
+            "state_topic": "test-topic",
+            "unique_id": "very_unique2",
+            "enabled_by_default": False,
+        },
+    },
+}
+IGNORED_DISABLED_COMPONENT_REMOVAL_WARNING = (
+    "Ignoring empty MQTT discovery payload for disabled sensor 'bla sens2' "
+    "received on topic homeassistant/sensor/bla/sens2/config, the component "
+    "was discovered on topic homeassistant/device/bla/config from external "
+    "application bla2mqtt, version: 1.0; after migration to device discovery, "
+    "a component cannot be removed by publishing an empty payload to its "
+    "single component discovery topic; to remove the component, publish the "
+    "device discovery payload to homeassistant/device/bla/config with only "
+    "the `platform` option for this component, then omit the component from "
+    "the device discovery payload"
+)
+
+
+async def test_disabled_device_component_removal(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removal of a disabled component discovered via device discovery."""
+    mqtt_mock = await mqtt_mock_entry()
+    device_config = copy.deepcopy(DISABLED_COMPONENT_DEVICE_CONFIG)
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_enabled") is not None
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+    mqtt_mock.async_publish.reset_mock()
+
+    # An empty payload on the single component discovery topic, sharing the same
+    # discovery hash, must not remove the disabled component
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/sens2/config", "")
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+    assert hass.states.get("sensor.bla_enabled") is not None
+    assert IGNORED_DISABLED_COMPONENT_REMOVAL_WARNING in caplog.text
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+    # Remove the disabled component through the device discovery payload
+    device_config["cmps"]["sens2"] = {"platform": "sensor"}
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered("sensor.bla_disabled")
+    assert hass.states.get("sensor.bla_enabled") is not None
+    mqtt_mock.async_publish.assert_not_called()
+
+    # Remove the enabled component through the device discovery payload
+    device_config["cmps"]["sens1"] = {"platform": "sensor"}
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered("sensor.bla_enabled")
+    mqtt_mock.async_publish.assert_not_called()
+    # Only removing an entity from the entity registry warns it will be added again
+    assert "will be added again" not in caplog.text
+
+
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+async def test_disabled_device_component_removal_after_entry_reload(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removal of a disabled device component after the MQTT entry reloads."""
+    # Uses a real MQTT client, so the registry hooks are set up again on reload
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_config = copy.deepcopy(DISABLED_COMPONENT_DEVICE_CONFIG)
+    payload = json.dumps(device_config)
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", payload, retain=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_enabled") is not None
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    # The broker replays the retained discovery payload after the reload
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", payload, retain=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_enabled") is not None
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+    mqtt_client_mock.publish.reset_mock()
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/sens2/config", "")
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+    assert hass.states.get("sensor.bla_enabled") is not None
+    assert IGNORED_DISABLED_COMPONENT_REMOVAL_WARNING in caplog.text
+
+    # Remove the disabled component through the device discovery payload
+    device_config["cmps"]["sens2"] = {"platform": "sensor"}
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered("sensor.bla_disabled")
+    assert hass.states.get("sensor.bla_enabled") is not None
+    # Clearing the device discovery topic would remove all device components
+    mqtt_client_mock.publish.assert_not_called()
+
+
+async def test_disabled_single_component_not_removed_via_device_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a disabled single component is not removed via the device topic."""
+    mqtt_mock = await mqtt_mock_entry()
+    config = {
+        "name": "Disabled",
+        "state_topic": "test-topic",
+        "unique_id": "very_unique2",
+        "enabled_by_default": False,
+        "dev": {"identifiers": ["bla"], "name": "bla"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/sens2/config", json.dumps(config)
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+    mqtt_mock.async_publish.reset_mock()
+
+    # A device discovery payload removing a component with the same
+    # discovery hash must not remove the disabled component
+    device_config = {
+        "dev": {"identifiers": ["bla"], "name": "bla"},
+        "o": {"name": "bla2mqtt"},
+        "cmps": {"sens2": {"platform": "sensor"}},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/device/bla/config", json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("sensor.bla_disabled")
+    assert (
+        "Ignoring empty MQTT discovery payload for disabled sensor 'bla sens2' "
+        "received on topic homeassistant/device/bla/config, the component was "
+        "discovered on topic homeassistant/sensor/bla/sens2/config; to remove "
+        "the component, publish an empty payload to "
+        "homeassistant/sensor/bla/sens2/config" in caplog.text
+    )
+    mqtt_mock.async_publish.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "other_entity_id"),
+    [
+        pytest.param("sensor.bla_disabled", "sensor.bla_enabled", id="disabled"),
+        pytest.param("sensor.bla_enabled", "sensor.bla_other", id="enabled"),
+    ],
+)
+async def test_remove_device_component_from_registry(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+    other_entity_id: str,
+) -> None:
+    """Test removing a device discovered component from the entity registry."""
+    mqtt_mock = await mqtt_mock_entry()
+    device_config = copy.deepcopy(DISABLED_COMPONENT_DEVICE_CONFIG)
+    device_config["cmps"]["sens3"] = {
+        "platform": "sensor",
+        "name": "Other",
+        "state_topic": "test-topic",
+        "unique_id": "very_unique3",
+    }
+    payload = json.dumps(device_config)
+    async_fire_mqtt_message(hass, "homeassistant/device/bla/config", payload)
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.reset_mock()
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered(entity_id)
+    assert hass.states.get(other_entity_id) is not None
+    assert (
+        f"Although entity {entity_id} was removed from Home Assistant, it will be "
+        "added again when a new MQTT discovery config is received from bla2mqtt on "
+        "topic homeassistant/device/bla/config. To prevent this, disable the entity "
+        "instead, or configure bla2mqtt to no longer send this entity" in caplog.text
+    )
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+    # The component is discovered again with the next device discovery payload
+    async_fire_mqtt_message(hass, "homeassistant/device/bla/config", payload)
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered(entity_id)
+
+
+async def test_remove_device_discovered_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a device discovered device clears the discovery topic."""
+    mqtt_mock = await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device/bla/config",
+        json.dumps(DISABLED_COMPONENT_DEVICE_CONFIG),
+    )
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "bla"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device_entry is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered("sensor.bla_enabled")
+    assert not entity_registry.async_is_registered("sensor.bla_disabled")
+    mqtt_mock.async_publish.assert_any_call(
+        "homeassistant/device/bla/config",
+        None,
+        0,
+        True,
+        message_expiry_interval=None,
+    )
+
+
 async def test_clean_up_registry_monitoring(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
