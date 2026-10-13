@@ -268,6 +268,16 @@ async def test_config_flow_errors(
             "error_message": "test (bad_request)",
         }
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **USER_INPUT,
+            CONF_KEY_ID: b2_fixture.key_id,
+            CONF_APPLICATION_KEY: b2_fixture.application_key,
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("flow_type", "scenario"),
@@ -319,6 +329,16 @@ async def test_advanced_flows(
             assert result.get("type") is FlowResultType.FORM
             assert result.get("errors") == {"base": "invalid_credentials"}
 
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_KEY_ID: b2_fixture.key_id,
+                    CONF_APPLICATION_KEY: b2_fixture.application_key,
+                },
+            )
+            assert result.get("type") is FlowResultType.ABORT
+            assert result.get("reason") == "reauth_successful"
+
     elif flow_type == "reconfigure":
         source = SOURCE_RECONFIGURE
         step_name = "reconfigure"
@@ -359,6 +379,18 @@ async def test_advanced_flows(
         if scenario == "validation_error":
             assert result.get("type") is FlowResultType.FORM
             assert result.get("errors") == {"base": "invalid_credentials"}
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_KEY_ID: b2_fixture.key_id,
+                    CONF_APPLICATION_KEY: b2_fixture.application_key,
+                    "bucket": "testBucket",
+                    "prefix": "new_prefix/",
+                },
+            )
+            assert result.get("type") is FlowResultType.ABORT
+            assert result.get("reason") == "reconfigure_successful"
         else:
             assert result.get("type") is FlowResultType.ABORT
             assert result.get("reason") == "reconfigure_successful"

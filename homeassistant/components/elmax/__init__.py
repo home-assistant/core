@@ -78,7 +78,7 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
     return panel
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
     """Set up elmax-cloud from a config entry."""
     try:
         client, panel = await _load_elmax_panel_client(entry)
@@ -112,7 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> boo
 
     # Perform platform initialization.
     await hass.config_entries.async_forward_entry_setups(entry, ELMAX_PLATFORMS)
-    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
@@ -120,6 +119,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> No
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ELMAX_PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, ELMAX_PLATFORMS)

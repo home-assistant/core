@@ -59,6 +59,17 @@ async def test_invalid_login_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch("pyvesync.vesync.VeSync.login"),
+        patch("homeassistant.components.vesync.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_user_input(hass: HomeAssistant) -> None:
     """Test config flow with user input."""

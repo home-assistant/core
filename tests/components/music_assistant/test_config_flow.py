@@ -1,10 +1,16 @@
 """Define tests for the Music Assistant Integration config flow."""
 
+import asyncio
+from collections.abc import Generator
 from copy import deepcopy
 from ipaddress import ip_address
+from typing import Any
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
+from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import Discovery
 from music_assistant_client.exceptions import (
     CannotConnect,
     InvalidServerVersion,
@@ -16,11 +22,13 @@ import pytest
 
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
+    CONF_USE_APP,
     MusicAssistantConfigFlow,
     _get_server_info,
     _test_connection,
 )
 from homeassistant.components.music_assistant.const import (
+    APP_SLUG,
     AUTH_SCHEMA_VERSION,
     DEFAULT_NAME,
     DOMAIN,
@@ -35,7 +43,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -97,7 +107,7 @@ async def test_full_flow(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -173,7 +183,7 @@ async def test_duplicate_user(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -227,7 +237,7 @@ async def test_flow_user_server_version_invalid(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -293,7 +303,7 @@ async def test_user_url_different_from_server_base_url(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -341,7 +351,7 @@ async def test_duplicate_user_with_different_urls(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -687,7 +697,7 @@ async def test_user_flow_with_auth_required(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -768,7 +778,7 @@ async def test_auth_flow_success(
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -821,6 +831,7 @@ async def test_finish_auth_token_exchange(
     assert call_args[1]["aiohttp_session"] is not None
 
     # Verify entry was created with long-lived token
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_URL: "http://localhost:8095",
@@ -898,9 +909,9 @@ async def test_reauth_with_manual_token(
         (InvalidToken("invalid_token"), "auth_failed"),
     ],
 )
+@pytest.mark.usefixtures("mock_get_server_info")
 async def test_auth_manual_invalid_token(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
     exception: Exception,
     error_key: str,
 ) -> None:
@@ -927,6 +938,20 @@ async def test_auth_manual_invalid_token(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_manual"
     assert result["errors"] == {"base": error_key}
+
+    with (
+        patch("homeassistant.components.music_assistant.config_flow._test_connection"),
+        patch(
+            "homeassistant.components.music_assistant.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "test_auth_token"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -1123,3 +1148,634 @@ async def test_auth_with_redirect_uri(
         in result["url"]
     )
     assert "device_name=Home+Assistant" in result["url"]
+
+
+APP_DISCOVERY_INFO = {
+    "host": "addon-music-assistant",
+    "port": 8094,
+    "auth_token": "test_token",
+}
+APP_URL = "http://addon-music-assistant:8094"
+
+
+@pytest.fixture(name="supervisor")
+def supervisor_fixture() -> Generator[MagicMock]:
+    """Mock running on Supervisor."""
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.is_hassio",
+        return_value=True,
+    ) as is_hassio:
+        yield is_hassio
+
+
+@pytest.fixture(name="discovery_info")
+def discovery_info_fixture() -> list[Discovery]:
+    """Return the app discovery info."""
+    return [
+        Discovery(
+            addon=APP_SLUG,
+            service="music_assistant",
+            uuid=uuid4(),
+            config=APP_DISCOVERY_INFO,
+        )
+    ]
+
+
+@pytest.fixture(autouse=True)
+def app_wait_time_fixture() -> Generator[None]:
+    """Make the app wait loops run without delay."""
+    with (
+        patch(
+            "homeassistant.components.music_assistant.config_flow.APP_START_INTERVAL",
+            0,
+        ),
+        patch(
+            "homeassistant.components.music_assistant.config_flow.ONBOARDING_POLL_INTERVAL",
+            0,
+        ),
+    ):
+        yield
+
+
+def _app_server_info(onboard_done: bool) -> ServerInfoMessage:
+    """Return server info of the app server."""
+    return ServerInfoMessage.from_dict(
+        {**SERVER_INFO, "homeassistant_addon": True, "onboard_done": onboard_done}
+    )
+
+
+async def test_on_supervisor_without_app(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test opting out of the app on Supervisor leads to manual setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: False}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+
+async def test_app_not_installed(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_not_installed: AsyncMock,
+    install_addon: AsyncMock,
+    start_addon: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test installing and starting the app."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_app"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert install_addon.call_args == call(APP_SLUG)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_app"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert start_addon.call_args == call(APP_SLUG)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
+
+
+async def test_app_installed_not_running(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_installed: AsyncMock,
+    install_addon: AsyncMock,
+    start_addon: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test starting an installed app."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_app"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert install_addon.call_count == 0
+    assert start_addon.call_args == call(APP_SLUG)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
+
+
+async def test_app_running(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    install_addon: AsyncMock,
+    start_addon: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test using an already running app."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert install_addon.call_count == 0
+    assert start_addon.call_count == 0
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
+
+
+async def test_app_info_failed(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_not_installed: AsyncMock,
+    addon_store_info: AsyncMock,
+) -> None:
+    """Test failing to get the app info."""
+    addon_store_info.side_effect = SupervisorError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "app_info_failed"
+
+
+async def test_app_install_failed(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_not_installed: AsyncMock,
+    install_addon: AsyncMock,
+) -> None:
+    """Test app install failure."""
+    install_addon.side_effect = SupervisorError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_app"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "app_install_failed"
+
+
+async def test_app_start_failed(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_installed: AsyncMock,
+    start_addon: AsyncMock,
+) -> None:
+    """Test app start failure."""
+    start_addon.side_effect = SupervisorError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_app"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "app_start_failed"
+
+
+async def test_app_start_timeout(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_installed: AsyncMock,
+    start_addon: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the app server not answering after start."""
+    mock_get_server_info.side_effect = CannotConnect("cannot_connect")
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.APP_START_ROUNDS", 2
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USE_APP: True}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "start_app"
+
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "app_start_failed"
+    assert mock_get_server_info.call_count == 2
+
+
+async def test_app_start_invalid_server_version(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_installed: AsyncMock,
+    start_addon: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test a started app running an incompatible server version."""
+    mock_get_server_info.side_effect = InvalidServerVersion("invalid_server_version")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_app"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_server_version"
+
+
+async def test_app_discovery_info_failed(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test failing to get the app discovery info."""
+    get_addon_discovery_info.return_value = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "app_get_discovery_info_failed"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (CannotConnect("cannot_connect"), "cannot_connect"),
+        (InvalidServerVersion("invalid_server_version"), "invalid_server_version"),
+        (MusicAssistantClientException("unknown"), "unknown"),
+    ],
+)
+async def test_app_running_connect_errors(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test connection errors to a running app."""
+    mock_get_server_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_app_already_configured(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the app server is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_app_onboarding(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the flow waits for the app onboarding to finish."""
+    mock_get_server_info.return_value = _app_server_info(onboard_done=False)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "onboarding"
+    assert result["url"] == f"https://example.com/app/{APP_SLUG}"
+
+    # Continuing the flow before onboarding is done keeps waiting
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "onboarding"
+    assert result["url"] == f"https://example.com/app/{APP_SLUG}"
+
+    # The poll task resumes the flow once onboarding is done
+    mock_get_server_info.return_value = _app_server_info(onboard_done=True)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_app_onboarding_flow_removed(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test removing the flow stops polling for onboarding."""
+    mock_get_server_info.side_effect = [
+        _app_server_info(onboard_done=False),
+        _app_server_info(onboard_done=True),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "onboarding"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+    assert mock_get_server_info.call_count == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_app_onboarding_flow_removed_during_resume(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test removing the flow while the poll task is resuming it."""
+    resume_started = asyncio.Event()
+    flow_removed = asyncio.Event()
+
+    async def get_server_info(*args: Any) -> ServerInfoMessage:
+        # Calls: 1 finish_app_setup, 2 poll task, 3 the resumed onboarding step
+        if mock_get_server_info.call_count == 3:
+            resume_started.set()
+            await flow_removed.wait()
+            return _app_server_info(onboard_done=False)
+        return _app_server_info(onboard_done=mock_get_server_info.call_count > 1)
+
+    mock_get_server_info.side_effect = get_server_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await resume_started.wait()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    flow_removed.set()
+    await hass.async_block_till_done()
+
+    # The removed flow neither raised nor started polling again
+    assert mock_get_server_info.call_count == 3
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_app_onboarding_poll_errors(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the onboarding poll keeps going over server errors."""
+    mock_get_server_info.side_effect = [
+        _app_server_info(onboard_done=False),
+        CannotConnect("cannot_connect"),
+        _app_server_info(onboard_done=True),
+        _app_server_info(onboard_done=True),
+        _app_server_info(onboard_done=True),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await hass.async_block_till_done()
+    assert mock_get_server_info.call_count == 4
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_app_onboarding_verify_error(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test polling restarts when verifying the onboarding state fails."""
+    mock_get_server_info.side_effect = [
+        _app_server_info(onboard_done=False),
+        _app_server_info(onboard_done=True),
+        CannotConnect("cannot_connect"),
+        _app_server_info(onboard_done=True),
+        _app_server_info(onboard_done=True),
+        _app_server_info(onboard_done=True),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await hass.async_block_till_done()
+    assert mock_get_server_info.call_count == 5
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_app_onboarding_poll_timeout(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the onboarding poll stops after its limit without ending the flow."""
+    mock_get_server_info.side_effect = [
+        _app_server_info(onboard_done=False),
+        _app_server_info(onboard_done=False),
+        _app_server_info(onboard_done=True),
+        _app_server_info(onboard_done=True),
+    ]
+
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.ONBOARDING_POLL_ROUNDS",
+        1,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USE_APP: True}
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        await hass.async_block_till_done()
+    assert mock_get_server_info.call_count == 2
+
+    # The user coming back to the flow still completes it
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
+
+
+async def test_app_onboarding_url_without_request(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the onboarding URL falls back to the configured Home Assistant URL."""
+    await async_process_ha_core_config(hass, {"internal_url": "http://hass.local:8123"})
+    mock_get_server_info.return_value = _app_server_info(onboard_done=False)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == f"http://hass.local:8123/app/{APP_SLUG}"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+
+async def test_app_onboarding_no_url_available(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+    addon_running: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test the flow aborts when no URL to open the app is available."""
+    mock_get_server_info.return_value = _app_server_info(onboard_done=False)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.music_assistant.config_flow.get_url",
+        side_effect=NoURLAvailableError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USE_APP: True}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_url_available"
+
+
+async def test_hassio_discovery_during_user_flow(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test hassio discovery aborts while a user flow is in progress."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_DATA
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"

@@ -25,7 +25,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> None:
     """Set up Happiest Baby Snoo from a config entry."""
 
     snoo = Snoo(
@@ -51,10 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> None:
     """Unload a config entry."""
     disconnects = await asyncio.gather(
         *(coordinator.snoo.disconnect() for coordinator in entry.runtime_data.values()),
@@ -65,4 +63,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> boo
             _LOGGER.warning(
                 "Failed to disconnect a logger with exception: %s", disconnect
             )
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

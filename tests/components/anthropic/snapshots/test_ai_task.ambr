@@ -13,8 +13,9 @@
         'role': 'assistant',
       }),
     ]),
-    'model': 'claude-haiku-4-5',
+    'model': 'claude-haiku-5-5',
     'output_config': dict({
+      'effort': 'low',
       'format': dict({
         'schema': dict({
           'additionalProperties': False,
@@ -48,9 +49,8 @@
       }),
     ]),
     'thinking': dict({
-      'budget_tokens': 1024,
       'display': 'summarized',
-      'type': 'enabled',
+      'type': 'adaptive',
     }),
   })
 # ---

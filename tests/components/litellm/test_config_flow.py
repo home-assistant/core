@@ -129,7 +129,7 @@ def _status_error(
     )
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_models")
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -161,6 +161,12 @@ async def test_user_step_proxy_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -579,9 +585,15 @@ async def test_reconfigure_entry_not_loaded(
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        (["assist"], ["assist"], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_models")

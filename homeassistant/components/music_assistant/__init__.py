@@ -40,7 +40,7 @@ from homeassistant.helpers.issue_registry import (
 
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_ID_PREFIX, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
-from .services import register_actions
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -77,7 +77,7 @@ class MusicAssistantEntryData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
-    register_actions(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -127,6 +127,7 @@ async def async_setup_entry(  # noqa: C901
             f"Failed to connect to music assistant server {mass_url}: {err}"
         ) from err
     except MusicAssistantError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
             f"Unknown error connecting to the Music Assistant server {mass_url}"
