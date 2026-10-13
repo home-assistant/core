@@ -305,3 +305,4 @@ async def test_initial_sync_failure_does_not_prevent_other_syncs(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_amazon_devices_client.get_todo_list_items.assert_awaited_once()
     mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+    mock_amazon_devices_client.sync_dnd_state.assert_awaited_once()

@@ -591,7 +591,7 @@ class MySensor(Entity):
 from homeassistant.helpers.entity import Entity
 
 class MyClimateMixin(Entity):
-    _attr_temperature_unit = "C"
+    _attr_native_temperature_unit = "C"
 
 class ActualEntity(MyClimateMixin):
     _attr_unique_id = "x"

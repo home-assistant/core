@@ -75,6 +75,7 @@ async def test_user_form(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "friend"
     assert result2["data"] == expected_data
@@ -133,6 +134,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Harmony Hub"
     assert result2["data"] == {"host": "192.168.1.12", "name": "Harmony Hub"}
+    assert result2["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -231,6 +233,45 @@ async def test_form_errors(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    harmonyapi.name = "friend"
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.2.3.4",
+                "activity": "Watch TV",
+                "delay_secs": 0.2,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_flow_entry_not_loaded(hass: HomeAssistant) -> None:
+    """Test the options flow aborts while the entry is not set up."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="abcde12345",
+        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Guest Room"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> None:

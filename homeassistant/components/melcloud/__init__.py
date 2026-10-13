@@ -10,12 +10,14 @@ from pymelcloud import get_devices
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -25,6 +27,15 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the MELCloud integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
@@ -41,12 +52,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
         if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             raise ConfigEntryAuthFailed from ex
         if ex.status == HTTPStatus.TOO_MANY_REQUESTS:
-            raise UpdateFailed(
-                "MELCloud rate limit exceeded. Your account may be temporarily blocked"
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="rate_limit_exceeded"
             ) from ex
-        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
     except (TimeoutError, ClientConnectionError) as ex:
-        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
 
     # Create per-device coordinators
     coordinators: dict[str, list[MelCloudDeviceUpdateCoordinator]] = {}

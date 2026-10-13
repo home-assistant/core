@@ -1,9 +1,10 @@
 """KNX integration services."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import probatio
+from xknx.core import ValueReader
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import (
     CommunicationError,
@@ -19,10 +20,17 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
@@ -52,6 +60,9 @@ _DESCRIPTION_PLACEHOLDERS = {
     "sensor_value_types_url": "https://www.home-assistant.io/integrations/knx/#value-types"
 }
 
+# Seconds `knx.read` waits for an answer when response data was requested.
+READ_RESPONSE_TIMEOUT = 2.0
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -69,6 +80,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_READ,
         service_read_to_knx_bus,
         schema=SERVICE_KNX_READ_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     async_register_admin_service(
@@ -119,7 +131,7 @@ def get_knx_module(hass: HomeAssistant) -> KNXModule:
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = probatio.Schema(
     {
         probatio.Required(KNX_ADDRESS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [ga_validator],
         ),
         probatio.Optional(CONF_TYPE): dpt_base_type_validator,
@@ -233,7 +245,7 @@ SERVICE_KNX_SEND_SCHEMA = probatio.Any(
     probatio.Schema(
         {
             probatio.Required(KNX_ADDRESS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [ga_validator],
             ),
             probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
@@ -245,7 +257,7 @@ SERVICE_KNX_SEND_SCHEMA = probatio.Any(
         # without type given payload is treated as raw bytes
         {
             probatio.Required(KNX_ADDRESS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [ga_validator],
             ),
             probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): probatio.Any(
@@ -302,24 +314,63 @@ async def service_send_to_knx_bus(call: ServiceCall) -> None:
 SERVICE_KNX_READ_SCHEMA = probatio.Schema(
     {
         probatio.Required(KNX_ADDRESS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [ga_validator],
         )
     }
 )
 
 
-async def service_read_to_knx_bus(call: ServiceCall) -> None:
+async def service_read_to_knx_bus(call: ServiceCall) -> ServiceResponse:
     """Service for sending a GroupValueRead telegram to the KNX bus."""
     knx_module = get_knx_module(call.hass)
+    addresses: list[str] = call.data[KNX_ADDRESS]
 
-    for address in call.data[KNX_ADDRESS]:
+    if call.return_response:
+        if len(addresses) != 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_read_response_single_address",
+            )
+        return await _read_with_response(knx_module, addresses[0])
+
+    for address in addresses:
         telegram = Telegram(
             destination_address=parse_device_group_address(address),
             payload=GroupValueRead(),
             source_address=knx_module.xknx.current_address,
         )
         await knx_module.xknx.telegrams.put(telegram)
+    return None
+
+
+async def _read_with_response(knx_module: KNXModule, address: str) -> ServiceResponse:
+    """Send a GroupValueRead and return the answering telegram."""
+    value_reader = ValueReader(
+        knx_module.xknx,
+        parse_device_group_address(address),
+        timeout_in_seconds=READ_RESPONSE_TIMEOUT,
+    )
+    telegram = await value_reader.read()
+    if telegram is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_read_no_response",
+            translation_placeholders={"address": address},
+        )
+    # Decoded with the DPT the loaded project assigns to the address, if any.
+    telegram_dict = knx_module.telegrams.telegram_to_dict(telegram)
+    payload = telegram_dict["payload"]
+    return {
+        "value": cast(JsonValueType, telegram_dict["value"]),
+        "unit": telegram_dict["unit"],
+        "dpt_main": telegram_dict["dpt_main"],
+        "dpt_sub": telegram_dict["dpt_sub"],
+        "dpt_name": telegram_dict["dpt_name"],
+        "payload": list(payload) if isinstance(payload, tuple) else payload,
+        "source": telegram_dict["source"],
+        "source_name": telegram_dict["source_name"],
+    }
 
 
 async def service_reload_integration(call: ServiceCall) -> None:

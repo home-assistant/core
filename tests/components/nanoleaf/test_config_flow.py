@@ -61,6 +61,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert not result2["last_step"]
 
@@ -218,6 +219,7 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
         result4 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result4["type"] is FlowResultType.FORM
         assert result4["step_id"] == "link"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result4["errors"] == {"base": "unknown"}
 
         mock_nanoleaf.return_value.authorize.side_effect = None
@@ -406,6 +408,7 @@ async def test_import_discovery_integration(
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    assert result["result"].unique_id == TEST_NAME
 
     if remove_config:
         mock_save_json.assert_not_called()
@@ -461,6 +464,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    assert result2["result"].unique_id == TEST_NAME
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -516,6 +520,7 @@ async def test_abort_discovery_flow_with_user_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == TEST_NAME
 
         # Verify the discovery flow was aborted
         assert not hass.config_entries.flow.async_progress(DOMAIN)

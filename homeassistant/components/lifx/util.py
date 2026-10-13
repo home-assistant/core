@@ -10,6 +10,8 @@ from lifx import HSBK, Colors, LifxError
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
@@ -145,10 +147,15 @@ def overwrites_existing_color(changes: HSBKChanges) -> bool:
     )
 
 
+def requested(changes: HSBKChanges) -> bool:
+    """Return whether a service call asked for any color component."""
+    return any(value is not None for value in changes.values())
+
+
 def find_hsbk(base: HSBK, **kwargs: Any) -> HSBK | None:
     """Return a requested color merged onto a base color, or None if unchanged."""
     changes = parse_hsbk_changes(**kwargs)
-    if all(value is None for value in changes.values()):
+    if not requested(changes):
         return None
     return replace_hsbk(base, changes)
 
@@ -158,3 +165,17 @@ def palette_fraction(value: float) -> float:
     # The action examples give these as either a fraction or a percentage, so a
     # value of one or less is a fraction and anything larger is a percentage
     return value if value <= 1 else value / 100
+
+
+def resolve_brightness_step(kwargs: dict[str, Any], current_brightness: int) -> None:
+    """Turn a relative brightness step into the absolute brightness it asks for."""
+    if ATTR_BRIGHTNESS_STEP in kwargs:
+        brightness = current_brightness + kwargs.pop(ATTR_BRIGHTNESS_STEP)
+    elif ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+        brightness_pct = round(current_brightness / 255 * 100)
+        brightness = round(
+            (brightness_pct + kwargs.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+        )
+    else:
+        return
+    kwargs[ATTR_BRIGHTNESS] = max(0, min(255, brightness))

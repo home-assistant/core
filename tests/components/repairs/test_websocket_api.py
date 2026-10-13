@@ -195,6 +195,10 @@ async def test_dismiss_issue(
     )
     msg = await client.receive_json()
     assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_issue",
+        "message": "Issue 'no_such_issue' not found",
+    }
 
     await client.send_json(
         {

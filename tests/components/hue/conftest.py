@@ -241,6 +241,7 @@ def create_config_entry(
         domain=hue.DOMAIN,
         title=f"Mock bridge {api_version}",
         data={"host": host, "api_version": api_version, "api_key": ""},
+        minor_version=2,
     )
 
 
@@ -283,7 +284,6 @@ async def setup_platform(
         platforms = [platforms]
     if hostname is None:
         hostname = "mock-host"
-    hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry(
         api_version=mock_bridge.api_version, host=hostname
     )

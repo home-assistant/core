@@ -1,13 +1,14 @@
 """The tests for the manual_mqtt Alarm Control Panel component."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.manual_mqtt.alarm_control_panel import ManualMQTTAlarm
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -17,8 +18,9 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_VACATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1554,6 +1556,105 @@ async def test_state_changes_are_published_to_mqtt(
         True,
         message_expiry_interval=None,
     )
+
+
+async def test_subscriptions_removed_with_entity(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test a removed alarm ignores commands and stops publishing its state."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            alarm_control_panel.DOMAIN: {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 0,
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+    entity = hass.data[DATA_INSTANCES][alarm_control_panel.DOMAIN].get_entity(entity_id)
+    await entity.async_remove()
+    assert hass.states.get(entity_id) is None
+
+    async_fire_mqtt_message(hass, "alarm/command", "ARM_AWAY")
+    await hass.async_block_till_done()
+    assert entity.alarm_state == AlarmControlPanelState.DISARMED
+
+    mqtt_mock.async_publish.reset_mock()
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_AWAY)
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_not_called()
+
+
+async def _async_setup_timed_alarm(hass: HomeAssistant) -> ManualMQTTAlarm:
+    """Set up an alarm with pending and trigger times and return its entity."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            alarm_control_panel.DOMAIN: {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "pending_time": 10,
+                "trigger_time": 10,
+                "delay_time": 0,
+                "code_arm_required": False,
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return hass.data[DATA_INSTANCES][alarm_control_panel.DOMAIN].get_entity(
+        "alarm_control_panel.test"
+    )
+
+
+@pytest.mark.usefixtures("mqtt_mock")
+async def test_scheduled_updates_cancelled_on_removal(hass: HomeAssistant) -> None:
+    """Test removing the alarm cancels its pending scheduled updates."""
+    entity = await _async_setup_timed_alarm(hass)
+
+    with patch.object(
+        entity, "async_scheduled_update", callback(Mock())
+    ) as mock_scheduled_update:
+        await common.async_alarm_arm_away(hass, entity_id=entity.entity_id)
+        assert len(entity._scheduled_update_unsubs) == 1
+
+        await entity.async_remove()
+        assert entity._scheduled_update_unsubs == []
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+        await hass.async_block_till_done()
+
+    mock_scheduled_update.assert_not_called()
+
+
+@pytest.mark.usefixtures("mqtt_mock")
+async def test_scheduled_updates_replaced_on_state_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test state changes replace obsolete scheduled updates instead of piling up."""
+    entity = await _async_setup_timed_alarm(hass)
+
+    for _ in range(3):
+        await common.async_alarm_arm_home(hass, entity_id=entity.entity_id)
+        assert len(entity._scheduled_update_unsubs) == 1
+
+        await common.async_alarm_arm_away(hass, entity_id=entity.entity_id)
+        assert len(entity._scheduled_update_unsubs) == 1
+
+        await common.async_alarm_trigger(hass, entity_id=entity.entity_id)
+        assert len(entity._scheduled_update_unsubs) == 2
+
+        await common.async_alarm_disarm(hass, entity_id=entity.entity_id)
+        assert entity._scheduled_update_unsubs == []
 
 
 async def test_no_mqtt(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:

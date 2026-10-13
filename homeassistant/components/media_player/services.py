@@ -216,7 +216,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_JOIN,
         {
             probatio.Required(ATTR_GROUP_MEMBERS): probatio.All(
-                cv.ensure_list, [cv.entity_id]
+                probatio.EnsureList(), [cv.entity_id]
             )
         },
         "async_join_players",
@@ -266,7 +266,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
             probatio.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
             probatio.Optional(ATTR_MEDIA_FILTER_CLASSES): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [probatio.In([m.value for m in MediaClass])],
                 lambda x: {MediaClass(item) for item in x},
             ),
