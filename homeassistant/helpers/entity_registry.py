@@ -2856,17 +2856,19 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         """Keep the restored state of an entity in sync with its registry entry."""
         data = event.data
         entity_id = data["entity_id"]
-        if data["action"] != "update":  # remove, per the filter
+        if data["action"] == "remove":
             remove_restored_state(entity_id, event.context)
             return
+
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
 
         had_restored_state = (
             old_entity_id := data.get("old_entity_id")
         ) is not None and remove_restored_state(old_entity_id, event.context)
 
         entry = registry.async_get(entity_id)
-        assert entry is not None
-        if entry.disabled:
+        if entry is None or entry.disabled:
             remove_restored_state(entity_id, event.context)
             return
 
