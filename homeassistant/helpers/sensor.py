@@ -12,6 +12,12 @@ if TYPE_CHECKING:
     from sensor_state_data import SensorDeviceInfo
 
 
+_READ_ONLY = (
+    "The device info returned by sensor_device_info_to_hass_device_info is shared"
+    " and cannot be modified; copy it first with DeviceInfo(**device_info)"
+)
+
+
 class _SharedDeviceInfo(DeviceInfo):
     """A cached device info, which is shared and so cannot be modified."""
 
@@ -20,11 +26,20 @@ class _SharedDeviceInfo(DeviceInfo):
     @override
     def __setattr__(self, name: str, value: Any) -> None:
         """Refuse to modify a shared device info."""
-        raise TypeError(
-            "The device info returned by sensor_device_info_to_hass_device_info is"
-            " shared and cannot be modified; copy it first with"
-            " DeviceInfo(**device_info)"
-        )
+        raise TypeError(_READ_ONLY)
+
+    @override
+    def __delattr__(self, name: str) -> None:
+        """Refuse to modify a shared device info."""
+        raise TypeError(_READ_ONLY)
+
+    def __copy__(self) -> DeviceInfo:
+        """Return a copy which can be modified."""
+        return DeviceInfo(**self)
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> DeviceInfo:
+        """Return a copy which can be modified; the cached values are strings."""
+        return DeviceInfo(**self)
 
 
 def sensor_device_info_to_hass_device_info(

@@ -1,5 +1,8 @@
 """Tests for the sensor helpers."""
 
+from collections.abc import Callable
+import copy
+
 import pytest
 from sensor_state_data import SensorDeviceInfo
 
@@ -64,13 +67,43 @@ def test_sensor_device_info_to_hass_device_info_read_only() -> None:
         device_info["sw_version"] = "1.0"
     with pytest.raises(TypeError, match="is shared and cannot be modified"):
         device_info.sw_version = "1.0"
-    assert "sw_version" not in device_info
-
-    copied = DeviceInfo(**device_info)
-    copied.sw_version = "1.0"
-    assert copied.as_dict() == {
+    with pytest.raises(TypeError, match="is shared and cannot be modified"):
+        del device_info.model
+    assert device_info.as_dict() == {
         "name": "Hygrometer",
         "manufacturer": "Acme",
         "model": "H1",
+    }
+
+
+@pytest.mark.parametrize(
+    "copy_device_info",
+    [
+        pytest.param(lambda device_info: DeviceInfo(**device_info), id="unpack"),
+        pytest.param(copy.copy, id="copy"),
+        pytest.param(copy.deepcopy, id="deepcopy"),
+    ],
+)
+def test_sensor_device_info_to_hass_device_info_copy(
+    copy_device_info: Callable[[DeviceInfo], DeviceInfo],
+) -> None:
+    """Test a copy of the shared device info can be modified."""
+    device_info = sensor_device_info_to_hass_device_info(
+        SensorDeviceInfo(
+            name="Barometer",
+            manufacturer="Acme",
+            model="B1",
+            sw_version=None,
+            hw_version=None,
+        )
+    )
+
+    copied = copy_device_info(device_info)
+    copied.sw_version = "1.0"
+    assert copied.as_dict() == {
+        "name": "Barometer",
+        "manufacturer": "Acme",
+        "model": "B1",
         "sw_version": "1.0",
     }
+    assert "sw_version" not in device_info
