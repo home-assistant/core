@@ -3,9 +3,16 @@
 from datetime import datetime, timedelta
 from itertools import pairwise
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from opower import AggregateType, CostRead, ReadComponent, ReadResolution
+from opower import (
+    Account,
+    AggregateType,
+    CostRead,
+    MeterType,
+    ReadComponent,
+    ReadResolution,
+)
 from opower.exceptions import ApiException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1448,6 +1455,122 @@ async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
         {"state", "sum"},
     )
     assert off_peak_id not in stats
+
+
+async def test_coordinator_rate_periods_of_nested_account_ids_stay_apart(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test an account never takes another account's statistics for its periods.
+
+    Statistic ids replace "-" with "_", so the ids of account "111111" are a
+    prefix of those of account "111111-222". The stored statistics of the
+    second must not be found as periods of the first and written over.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
+    accounts = mock_opower_api.async_get_accounts.return_value
+    nested = Account(
+        customer=Mock(),
+        uuid="111111-222-uuid",
+        utility_account_id="111111-222",
+        id="111111-222",
+        meter_type=MeterType.ELEC,
+        read_resolution=ReadResolution.HOUR,
+    )
+    # The nested account goes first, so a write by the other lands last
+    mock_opower_api.async_get_accounts.return_value = [nested, accounts[0]]
+
+    def mock_get_cost_reads(account, aggregate_type, start, end):
+        period = "ON_PEAK" if account.utility_account_id == "111111-222" else "OFF_PEAK"
+        return [
+            CostRead(
+                start_time=hour[i],
+                end_time=hour[i] + timedelta(hours=1),
+                consumption=float(i + 1),
+                provided_cost=(i + 1) / 4,
+                read_components=[_read_component(period, float(i + 1), (i + 1) / 4)],
+            )
+            for i in range(2)
+        ]
+
+    mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    nested_total = "opower:pge_elec_111111_222_energy_consumption"
+    nested_on_peak = "opower:pge_elec_111111_222_on_peak_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {nested_total, nested_on_peak},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    # Had account 111111 taken them for its periods "222" and "222_on_peak",
+    # it would have written zero points over them.
+    assert [(s["state"], s["sum"]) for s in stats[nested_total]] == [
+        (1.0, 1.0),
+        (2.0, 3.0),
+    ]
+    assert [(s["state"], s["sum"]) for s in stats[nested_on_peak]] == [
+        (1.0, 1.0),
+        (2.0, 3.0),
+    ]
+
+
+async def test_coordinator_rate_periods_fetch_full_history_once_per_run(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the full history is not fetched again for a statistic it cannot fill.
+
+    A statistic deleted by hand on a utility whose history at that age does
+    not add up stays empty after the backfill. It must not cost a full
+    history fetch on every refresh.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
+
+    def read(index: int, adds_up: bool) -> CostRead:
+        return CostRead(
+            start_time=hour[index],
+            end_time=hour[index] + timedelta(hours=1),
+            consumption=1.0,
+            provided_cost=0.25 if adds_up else 0.5,
+            read_components=[_read_component("ON_PEAK", 1.0, 0.25)],
+        )
+
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    account.read_resolution = ReadResolution.BILLING
+    mock_opower_api.async_get_accounts.return_value = [account]
+    mock_opower_api.async_get_cost_reads.return_value = [read(0, True), read(1, True)]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 1
+
+    on_peak_id = "opower:pge_elec_111111_on_peak_energy_consumption"
+    get_instance(hass).async_clear_statistics([on_peak_id])
+    await async_wait_recording_done(hass)
+
+    # The history no longer adds up, so the backfill cannot fill the statistic
+    mock_opower_api.async_get_cost_reads.return_value = [read(0, False), read(1, False)]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 3
+
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 4
 
 
 async def test_coordinator_rate_periods_skip_empty_periods(

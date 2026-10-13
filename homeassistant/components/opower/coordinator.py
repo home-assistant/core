@@ -233,19 +233,34 @@ def _rate_periods(
     return rate_periods
 
 
-def _stored_rate_period_keys(hass: HomeAssistant, id_prefix: str) -> set[str]:
-    """Return the keys of the rate periods with stored statistics."""
+def _stored_rate_period_keys(
+    hass: HomeAssistant, id_prefix: str, name_prefix: str
+) -> set[str]:
+    """Return the keys of the rate periods with stored statistics.
+
+    Statistic ids replace "-" with "_", so the ids of an account whose id is a
+    prefix of another's, e.g. "123" and "123-456", nest. The statistic names
+    keep the account id as is, so a stored statistic only counts as one of
+    this account's periods when its name is the one this account would give
+    that period. Otherwise the totals of the other account would be taken for
+    a period of this one and written over.
+    """
     prefix = f"{DOMAIN}:{id_prefix}_"
     keys = set()
-    for statistic_id in get_metadata(hass, statistic_source=DOMAIN):
+    for statistic_id, (_, metadata) in get_metadata(
+        hass, statistic_source=DOMAIN
+    ).items():
         if not statistic_id.startswith(prefix):
             continue
         for kind in _RATE_PERIOD_KINDS:
             suffix = f"_energy_{kind}"
-            if statistic_id.endswith(suffix):
-                if key := statistic_id[len(prefix) : -len(suffix)]:
-                    keys.add(key)
-                break
+            if not statistic_id.endswith(suffix):
+                continue
+            key = statistic_id[len(prefix) : -len(suffix)]
+            label = key.replace("_", " ")
+            if key and metadata["name"] == f"{name_prefix} {label} {kind}":
+                keys.add(key)
+            break
     return keys
 
 
@@ -266,6 +281,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         config_entry: OpowerConfigEntry,
     ) -> None:
         """Initialize the data handler."""
+        # Rate period statistics the full history has been fetched for.
+        self._rate_period_backfills: set[str] = set()
         super().__init__(
             hass,
             _LOGGER,
@@ -532,7 +549,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 self._add_rate_period_statistics(period_reads, rate_periods, True)
             else:
                 stored_keys = await get_instance(self.hass).async_add_executor_job(
-                    _stored_rate_period_keys, self.hass, id_prefix
+                    _stored_rate_period_keys, self.hass, id_prefix, name_prefix
                 )
                 for key in stored_keys - set(rate_periods):
                     rate_periods[key] = _rate_period_statistics(
@@ -546,12 +563,18 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     await self._async_init_rate_period_sums(
                         rate_periods, dt_util.utc_from_timestamp(last_stats_time)
                     )
-                if missing_statistic_ids := sorted(
+                missing_statistic_ids = sorted(
                     rate_period.metadata[kind]["statistic_id"]
                     for rate_period in rate_periods.values()
                     for kind, start in rate_period.last_stats_time.items()
                     if start is None
-                ):
+                )
+                # A statistic the full history cannot fill, e.g. one deleted
+                # by hand on a utility whose only history at that age does not
+                # add up, would be fetched for on every refresh. Try once per
+                # run of Home Assistant.
+                if set(missing_statistic_ids) - self._rate_period_backfills:
+                    self._rate_period_backfills.update(missing_statistic_ids)
                     # The reads only cover the last few weeks once statistics
                     # exist. A statistic that is not stored yet, e.g. right after
                     # upgrading, for a seasonal period seen for the first time, or
