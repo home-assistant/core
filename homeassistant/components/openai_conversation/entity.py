@@ -71,6 +71,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
+from .chatgpt_auth import (
+    is_chatgpt_entry,
+    shape_request_for_subscription,
+    subscription_error_message,
+)
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
@@ -695,6 +700,10 @@ class OpenAIBaseLLMEntity(Entity):
                 "strict": True,
             }
 
+        if is_chatgpt_entry(self.entry):
+            # ChatGPT plan usage only accepts a subset of the Responses API.
+            shape_request_for_subscription(cast("dict[str, Any]", model_args), messages)
+
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
@@ -712,6 +721,14 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
             except openai.RateLimitError as err:
+                if (
+                    is_chatgpt_entry(self.entry)
+                    and (message := subscription_error_message(err)) is not None
+                ):
+                    # A ChatGPT plan usage limit is reported as HTTP 429 too.
+                    # pylint: disable-next=home-assistant-log-and-raise
+                    LOGGER.error("ChatGPT plan usage rejected the request: %s", err)
+                    raise HomeAssistantError(message) from err
                 if (
                     model_args["service_tier"] == "flex"
                     and "resource unavailable" in (err.message or "").lower()
@@ -733,6 +750,23 @@ class OpenAIBaseLLMEntity(Entity):
                     # pylint: disable-next=home-assistant-log-and-raise
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
+                if (
+                    is_chatgpt_entry(self.entry)
+                    and (message := subscription_error_message(err)) is not None
+                ):
+                    # pylint: disable-next=home-assistant-log-and-raise
+                    LOGGER.error("ChatGPT plan usage rejected the request: %s", err)
+                    raise HomeAssistantError(message) from err
+                if isinstance(err, openai.APIStatusError) and err.status_code >= 500:
+                    # OpenAI reports its own outages through 5xx (a Cloudflare
+                    # 520, for example), which are worth naming instead of the
+                    # generic error message.
+                    # pylint: disable-next=home-assistant-log-and-raise
+                    LOGGER.error("OpenAI is unavailable: %s", err)
+                    raise HomeAssistantError(
+                        f"OpenAI is temporarily unavailable (HTTP "
+                        f"{err.status_code}), please try again later"
+                    ) from err
                 if "Verify Organization" in str(err):
                     ir.async_create_issue(
                         self.hass,

@@ -1,40 +1,91 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "plan_usage_not_granted": "The ChatGPT plan usage permission (chatgpt.tokens.use.direct) was not granted. Sign in again and approve the use of your ChatGPT plan."
     },
     "error": {
+      "access_denied": "The sign in was cancelled in the browser. Try again and approve access.",
+      "api_key_required": "An API key is required when using API key authentication.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "client_id_mismatch": "The browser returned a different ChatGPT registration. Start the sign in again.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_callback_url": "This does not look like the URL your browser ended up on. Copy the full address from the browser address bar.",
+      "invalid_state": "The sign in could not be verified (state mismatch). Start the sign in again.",
+      "registration_incomplete": "The ChatGPT registration did not complete. Start the sign in again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unexpected_error": "Something went wrong while completing the sign in. Check the Home Assistant log and start the sign in again.",
+      "wrong_account": "This sign in belongs to a different ChatGPT account than the entry being reauthenticated. Sign in with the account the entry was created with."
     },
     "step": {
+      "api_key": {
+        "data": {
+          "api_key": "API key from OpenAI"
+        },
+        "data_description": {
+          "api_key": "Your OpenAI API key."
+        },
+        "description": "Enter your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url}).",
+        "title": "API key"
+      },
+      "auth_method": {
+        "data": {
+          "auth_method": "Authentication method"
+        },
+        "data_description": {
+          "auth_method": "Use an OpenAI API key, or sign in with ChatGPT."
+        },
+        "description": "Choose how this integration should authenticate. The ChatGPT option uses an eligible ChatGPT plan instead of API billing and does not include speech-to-text or text-to-speech.",
+        "title": "Authentication method"
+      },
+      "chatgpt": {
+        "data": {
+          "callback_url": "URL from the browser address bar"
+        },
+        "data_description": {
+          "callback_url": "The page will fail to load. Copy the complete URL from your browser's address bar (it contains ?code=... and &state=...)."
+        },
+        "description": "Sign in with ChatGPT to use your ChatGPT plan for eligible requests. Your browser is on a different device, so open this URL on any device signed in to ChatGPT and approve the request:\n\n{auth_url}\n\nThe page that opens afterwards will fail to load. Copy the full URL from the address bar and paste it below.\n\nThis option does not include speech to text, text to speech or image generation."
+      },
+      "chatgpt_model": {
+        "data": {
+          "chat_model": "Model"
+        },
+        "data_description": {
+          "chat_model": "The models your ChatGPT plan offers. If the model catalog could not be read, this list is a suggestion: pick one of them or type another model of your plan."
+        },
+        "description": "Choose the model to use with your ChatGPT plan. The plan usage route rejects the regular API default model, so the model has to be one your account offers.",
+        "title": "Model"
+      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]"
+          "api_key": "[%key:component::openai_conversation::config::step::api_key::data_description::api_key%]"
         },
-        "description": "Reauthentication required. Please enter your updated API key."
+        "description": "Reauthentication required. Please enter your updated API key.",
+        "title": "API key"
       },
       "reconfigure": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]"
+          "api_key": "[%key:component::openai_conversation::config::step::api_key::data_description::api_key%]"
         },
-        "description": "Enter your updated OpenAI API key."
+        "description": "Enter your updated OpenAI API key.",
+        "title": "API key"
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "auth_method": "Authentication method"
         },
         "data_description": {
-          "api_key": "Your OpenAI API key."
+          "auth_method": "Use an OpenAI API key, or sign in with ChatGPT."
         },
-        "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
+        "description": "Choose how to authenticate. The ChatGPT option uses an eligible ChatGPT plan instead of API billing and does not include speech-to-text or text-to-speech.",
+        "title": "Authentication method"
       }
     }
   },
@@ -65,6 +116,7 @@
           "data_description": {
             "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::data_description::store_responses%]"
           },
+          "description": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::description%]",
           "title": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::title%]"
         },
         "init": {
@@ -128,6 +180,7 @@
           "data_description": {
             "store_responses": "If enabled, requests and responses are stored by OpenAI and visible in your OpenAI dashboard logs"
           },
+          "description": "Choose the model and the request parameters.{catalog_note}",
           "title": "Additional settings"
         },
         "init": {
@@ -224,6 +277,12 @@
     }
   },
   "selector": {
+    "auth_method": {
+      "options": {
+        "api_key": "API key",
+        "chatgpt": "Sign in with ChatGPT (ChatGPT plan)"
+      }
+    },
     "reasoning_effort": {
       "options": {
         "high": "[%key:common::state::high%]",

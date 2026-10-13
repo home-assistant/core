@@ -12,6 +12,8 @@ from syrupy.filters import props
 
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
+    AUTH_METHOD_CHATGPT,
+    CONF_AUTH_METHOD,
     CONF_REASONING_SUMMARY,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
@@ -28,8 +30,9 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigSubentryData,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -1454,3 +1457,131 @@ async def test_migration_from_v2_6(
 
     # "concise" already stored on an o* model: concise→auto
     assert subentries_by_id["mock_id_6"].data[CONF_REASONING_SUMMARY] == "auto"
+
+
+def _chatgpt_entry(hass: HomeAssistant, **options: Any) -> MockConfigEntry:
+    """Create a ChatGPT subscription config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ChatGPT subscription",
+        unique_id="chatgpt-user-1:oaiapp_test123",
+        version=2,
+        minor_version=7,
+        data={
+            CONF_AUTH_METHOD: AUTH_METHOD_CHATGPT,
+            CONF_CLIENT_ID: "oaiapp_test123",
+            CONF_ACCESS_TOKEN: "access-1",
+            "refresh_token": "refresh-1",
+            "expires_at": "2030-01-01T00:00:00+00:00",
+        },
+        subentries_data=[
+            ConfigSubentryData(
+                data={**RECOMMENDED_CONVERSATION_OPTIONS, **options},
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data=RECOMMENDED_AI_TASK_OPTIONS,
+                subentry_type="ai_task_data",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_state"),
+    [
+        # A model outside the account's catalog cannot be set up.
+        ({CONF_CHAT_MODEL: "gpt-4o-mini"}, ConfigEntryState.SETUP_RETRY),
+        # Catalog models and entries without a configured model are fine.
+        ({CONF_CHAT_MODEL: "gpt-6-astra"}, ConfigEntryState.LOADED),
+        ({}, ConfigEntryState.LOADED),
+    ],
+)
+async def test_chatgpt_init_validates_catalog_model(
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test that a ChatGPT entry's model is validated against its catalog."""
+    entry = _chatgpt_entry(hass, **options)
+
+    with patch(
+        "homeassistant.components.openai_conversation.async_get_subscription_models",
+        AsyncMock(return_value=["gpt-6.1-sol", "gpt-6-astra"]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is expected_state
+
+
+async def test_chatgpt_init_catalog_auth_error(hass: HomeAssistant) -> None:
+    """Test that a rejected catalog request starts the reauth flow."""
+    entry = _chatgpt_entry(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.async_get_subscription_models",
+        AsyncMock(side_effect=ConfigEntryAuthFailed("nope")),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_chatgpt_init_catalog_unavailable(hass: HomeAssistant) -> None:
+    """Test that a failing catalog request does not keep the entry from loading.
+
+    Reading the catalog can fail for reasons which are not the entry's fault
+    (OpenAI answered with a transient 520 while this was written). The entry has
+    to load anyway; the plan usage route reports an unsupported model itself.
+    """
+    entry = _chatgpt_entry(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.async_get_subscription_models",
+        AsyncMock(side_effect=HomeAssistantError("boom")),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    # Without a readable catalog no model can be bound: the subentries are left
+    # alone rather than bound to a guessed model.
+    assert all(
+        subentry.data.get(CONF_CHAT_MODEL) is None
+        for subentry in entry.subentries.values()
+    )
+
+
+async def test_chatgpt_init_binds_catalog_model(hass: HomeAssistant) -> None:
+    """Test plan subentries without a model are bound to the catalog model.
+
+    Entries created before the model was chosen in the sign in fall back to the
+    API default model, which the plan usage route rejects.
+    """
+    entry = _chatgpt_entry(hass)
+    assert all(
+        subentry.data.get(CONF_CHAT_MODEL) is None
+        for subentry in entry.subentries.values()
+    )
+
+    with patch(
+        "homeassistant.components.openai_conversation.async_get_subscription_models",
+        AsyncMock(return_value=["gpt-6.1-sol", "gpt-5.5"]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert all(
+        subentry.data[CONF_CHAT_MODEL] == "gpt-6.1-sol"
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type in ("conversation", "ai_task_data")
+    )

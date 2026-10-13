@@ -1,7 +1,11 @@
 """Tests for the OpenAI Conversation integration."""
 
-from typing import Literal
+from datetime import timedelta
+from typing import Any, Literal
 
+from cryptography.hazmat.primitives.asymmetric import rsa
+import jwt
+from jwt.algorithms import RSAAlgorithm
 from openai.types.responses import (
     ResponseCodeInterpreterCallCodeDeltaEvent,
     ResponseCodeInterpreterCallCodeDoneEvent,
@@ -37,6 +41,9 @@ from openai.types.responses.response_code_interpreter_tool_call import OutputLog
 from openai.types.responses.response_function_web_search import ActionSearch
 from openai.types.responses.response_output_item import ImageGenerationCall
 from openai.types.responses.response_reasoning_item import Summary
+
+from homeassistant.components.openai_conversation.chatgpt_auth import ISSUER
+from homeassistant.util import dt as dt_util
 
 
 def create_message_item(
@@ -458,3 +465,37 @@ def create_image_gen_call_item(
             type="response.output_item.done",
         ),
     ]
+
+
+def create_chatgpt_rsa_key() -> Any:
+    """Create an RSA private key for Sign in with ChatGPT ID tokens."""
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+def create_chatgpt_jwks(private_key: Any, kid: str = "test-kid") -> dict[str, Any]:
+    """Create the JWKS document for a private key."""
+    jwk = RSAAlgorithm.to_jwk(private_key.public_key(), as_dict=True)
+    jwk["kid"] = kid
+    return {"keys": [jwk]}
+
+
+def create_chatgpt_id_token(
+    private_key: Any,
+    *,
+    client_id: str,
+    nonce: str,
+    kid: str = "test-kid",
+    **claims: Any,
+) -> str:
+    """Create a signed Sign in with ChatGPT ID token."""
+    payload = {
+        "iss": ISSUER,
+        "aud": client_id,
+        "sub": "chatgpt-user-1",
+        "nonce": nonce,
+        "email": "user@example.com",
+        "iat": int(dt_util.utcnow().timestamp()),
+        "exp": int((dt_util.utcnow() + timedelta(hours=1)).timestamp()),
+        **claims,
+    }
+    return jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": kid})
