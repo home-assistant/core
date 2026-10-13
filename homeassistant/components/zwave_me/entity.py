@@ -1,5 +1,7 @@
 """The Z-Wave-Me WS integration."""
 
+from typing import override
+
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.core import callback
@@ -25,6 +27,7 @@ class ZWaveMeEntity(Entity):
         self._attr_should_poll = False
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
@@ -35,6 +38,7 @@ class ZWaveMeEntity(Entity):
             suggested_area=self.device.locationName,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""
         self.async_on_remove(

@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Xthings Cloud."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
@@ -11,12 +11,13 @@ from ha_xthings_cloud import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import CONF_REFRESH_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
 
@@ -67,6 +68,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             },
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest device data from cloud."""
         await self._async_ensure_token_valid()

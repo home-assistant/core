@@ -27,25 +27,6 @@
         "state": {
           "2d_fix": "2D Fix",
           "3d_fix": "3D Fix"
-        },
-        "state_attributes": {
-          "climb": {
-            "name": "[%key:component::gpsd::entity::sensor::climb::name%]"
-          },
-          "elevation": {
-            "name": "[%key:common::config_flow::data::elevation%]"
-          },
-          "gps_time": {
-            "name": "[%key:component::time_date::selector::display_options::options::time%]"
-          },
-          "latitude": { "name": "[%key:common::config_flow::data::latitude%]" },
-          "longitude": {
-            "name": "[%key:common::config_flow::data::longitude%]"
-          },
-          "mode": { "name": "[%key:common::config_flow::data::mode%]" },
-          "speed": {
-            "name": "[%key:component::sensor::entity_component::speed::name%]"
-          }
         }
       },
       "time": {

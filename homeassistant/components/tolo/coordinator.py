@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from tololib import ToloClient, ToloSettings, ToloStatus
 
@@ -45,6 +45,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
             update_interval=timedelta(seconds=5),
         )
 
+    @override
     async def _async_update_data(self) -> ToloSaunaData:
         return await self.hass.async_add_executor_job(self._get_tolo_sauna_data)
 

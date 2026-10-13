@@ -1,16 +1,25 @@
 """WiZ integration entities."""
 
 from abc import abstractmethod
-from typing import Any
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate, override
 
 from pywizlight.bulblibrary import BulbType
+from pywizlight.exceptions import (
+    WizLightConnectionError,
+    WizLightMethodNotFound,
+    WizLightTimeOutError,
+)
 
 from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import WizCoordinator, WizData
 
 
@@ -41,6 +50,7 @@ class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
         self._attr_device_info[ATTR_MODEL] = model
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -52,14 +62,42 @@ class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
         """Handle updating _attr values."""
 
 
+def wiz_exception_handler[_WizEntityT: WizEntity, **_P](
+    func: Callable[Concatenate[_WizEntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_WizEntityT, _P], Coroutine[Any, Any, None]]:
+    """Raise HomeAssistantError when the device rejects or does not answer a command."""
+
+    @wraps(func)
+    async def wrapper(self: _WizEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except WizLightTimeOutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="timeout"
+            ) from err
+        except WizLightMethodNotFound as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_supported"
+            ) from err
+        except WizLightConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="communication_error"
+            ) from err
+
+    return wrapper
+
+
 class WizToggleEntity(WizEntity, ToggleEntity):
     """Representation of WiZ toggle entity."""
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_on = self._device.status
 
+    @override
+    @wiz_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the device to turn off."""
         await self._device.turn_off()

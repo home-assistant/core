@@ -2,11 +2,20 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
-from nyt_games import Connections, NYTGamesClient, NYTGamesError, SpellingBee, Wordle
+from nyt_games import (
+    Connections,
+    NYTGamesAuthenticationError,
+    NYTGamesClient,
+    NYTGamesError,
+    SpellingBee,
+    Wordle,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -45,10 +54,13 @@ class NYTGamesCoordinator(DataUpdateCoordinator[NYTGamesData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> NYTGamesData:
         try:
             stats_data = await self.client.get_latest_stats()
             connections_data = await self.client.get_connections()
+        except NYTGamesAuthenticationError as error:
+            raise ConfigEntryAuthFailed(error) from error
         except NYTGamesError as error:
             raise UpdateFailed(error) from error
         return NYTGamesData(

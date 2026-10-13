@@ -1,9 +1,14 @@
 """Test the IOmeter config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
-from iometer import IOmeterConnectionError, IOmeterNoReadingsError, IOmeterNoStatusError
+from iometer import (
+    IOmeterConnectionError,
+    IOmeterNoStatusError,
+    IOmeterTimeoutError,
+    Status,
+)
 import pytest
 
 from homeassistant.components.iometer.const import DOMAIN
@@ -13,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 
 IP_ADDRESS = "10.0.0.2"
 IOMETER_DEVICE_ID = "658c2b34-2017-45f2-a12b-731235f8bb97"
@@ -29,16 +34,16 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow(
     hass: HomeAssistant,
-    mock_iometer_client: AsyncMock,
+    mock_http_client: MagicMock,
 ) -> None:
     """Test full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -46,7 +51,6 @@ async def test_user_flow(
         result["flow_id"],
         user_input={CONF_HOST: IP_ADDRESS},
     )
-
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IOmeter 1ISK0000000000"
@@ -54,9 +58,10 @@ async def test_user_flow(
     assert result["result"].unique_id == IOMETER_DEVICE_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
-    mock_iometer_client: AsyncMock,
+    mock_http_client: MagicMock,
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -64,7 +69,6 @@ async def test_zeroconf_flow(
         context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
@@ -95,23 +99,22 @@ async def test_zeroconf_flow_abort_duplicate(
 
 
 @pytest.mark.parametrize(
-    ("method_name", "exception", "reason"),
+    ("exception", "reason"),
     [
-        ("get_current_status", IOmeterConnectionError(), "cannot_connect"),
-        ("get_current_status", IOmeterNoStatusError(), "no_status"),
-        ("get_current_reading", IOmeterNoReadingsError(), "no_readings"),
+        (IOmeterConnectionError(), "cannot_connect"),
+        (IOmeterTimeoutError(), "cannot_connect"),
+        (IOmeterNoStatusError(), "no_status"),
     ],
-    ids=["status-connection", "status-missing", "reading-missing"],
+    ids=["connection-error", "timeout", "status-missing"],
 )
 async def test_zeroconf_flow_abort_errors(
     hass: HomeAssistant,
-    mock_iometer_client: AsyncMock,
-    method_name: str,
+    mock_http_client: MagicMock,
     exception: Exception,
     reason: str,
 ) -> None:
-    """Test zeroconf flow aborts when the client raises an exception."""
-    getattr(mock_iometer_client, method_name).side_effect = exception
+    """Test zeroconf flow aborts when the HTTP client raises an exception."""
+    mock_http_client.get_current_status.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -123,31 +126,51 @@ async def test_zeroconf_flow_abort_errors(
     assert result["reason"] == reason
 
 
+async def test_zeroconf_flow_abort_no_meter(
+    hass: HomeAssistant,
+    mock_http_client: MagicMock,
+) -> None:
+    """Test zeroconf flow aborts when the status contains no meter info."""
+    mock_status = MagicMock()
+    mock_status.meter = None
+    mock_http_client.get_current_status.return_value = mock_status
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_readings"
+
+
 @pytest.mark.parametrize(
-    ("method_name", "exception", "error_key"),
+    ("exception", "error_key"),
     [
-        ("get_current_status", IOmeterConnectionError(), "cannot_connect"),
-        ("get_current_status", IOmeterNoStatusError(), "no_status"),
-        ("get_current_reading", IOmeterNoReadingsError(), "no_readings"),
+        (IOmeterConnectionError(), "cannot_connect"),
+        (IOmeterTimeoutError(), "cannot_connect"),
+        (IOmeterNoStatusError(), "no_status"),
     ],
-    ids=["status-connection", "status-missing", "reading-missing"],
+    ids=["connection-error", "timeout", "status-missing"],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
-    mock_iometer_client: AsyncMock,
-    method_name: str,
+    mock_http_client: MagicMock,
     exception: Exception,
     error_key: str,
 ) -> None:
-    """Test user flow returns errors for client exceptions."""
-    getattr(mock_iometer_client, method_name).side_effect = exception
+    """Test user flow shows errors for HTTP client exceptions and recovers on retry."""
+    valid_status = Status.from_json(
+        await async_load_fixture(hass, "status.json", DOMAIN)
+    )
+    mock_http_client.get_current_status.side_effect = [exception, valid_status]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -159,7 +182,41 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_key}
 
-    getattr(mock_iometer_client, method_name).side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_no_meter_error(
+    hass: HomeAssistant,
+    mock_http_client: MagicMock,
+) -> None:
+    """Test user flow shows error when status contains no meter info."""
+    mock_status = MagicMock()
+    mock_status.meter = None
+    valid_status = Status.from_json(
+        await async_load_fixture(hass, "status.json", DOMAIN)
+    )
+    mock_http_client.get_current_status.side_effect = [mock_status, valid_status]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: IP_ADDRESS},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_readings"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -172,7 +229,7 @@ async def test_user_flow_errors(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_abort_duplicate(
     hass: HomeAssistant,
-    mock_iometer_client: AsyncMock,
+    mock_http_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -182,7 +239,6 @@ async def test_flow_abort_duplicate(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -191,6 +247,5 @@ async def test_flow_abort_duplicate(
         {CONF_HOST: IP_ADDRESS},
     )
     await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

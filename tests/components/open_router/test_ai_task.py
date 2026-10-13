@@ -1,14 +1,15 @@
 """Test AI Task structured data generation."""
 
+from collections.abc import AsyncGenerator
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from openai.types import CompletionUsage
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
+from openai.types.chat import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.const import Platform
@@ -17,8 +18,37 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from . import setup_integration
+from .conftest import get_generator_from_data
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+def _image_completion(
+    images: list[dict[str, Any]] | None, content: str | None = None
+) -> AsyncGenerator[ChatCompletionChunk]:
+    """Build a streamed chat completion carrying generated images."""
+    return get_generator_from_data(
+        [
+            ChatCompletionChunk.model_construct(
+                id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                choices=[
+                    ChunkChoice.model_construct(
+                        finish_reason="stop",
+                        index=0,
+                        delta=ChoiceDelta(
+                            content=content,
+                            role="assistant",
+                            images=images,
+                        ),
+                    )
+                ],
+                created=1700000000,
+                model="google/gemini-2.5-flash-image",
+                object="chat.completion.chunk",
+                system_fingerprint=None,
+            )
+        ]
+    )
 
 
 async def test_all_entities(
@@ -46,30 +76,29 @@ async def test_generate_data(
     """Test AI Task data generation."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "ai_task.gemini_1_5_pro"
+    entity_id = "ai_task.gemini_2_5_flash_image"
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="The test data",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content="The test data",
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
@@ -92,38 +121,37 @@ async def test_generate_structured_data(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content='{"characters": ["Mario", "Luigi"]}',
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content='{"characters": ["Mario", "Luigi"]}',
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
     result = await ai_task.async_generate_data(
         hass,
         task_name="Test Task",
-        entity_id="ai_task.gemini_1_5_pro",
+        entity_id="ai_task.gemini_2_5_flash_image",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -135,11 +163,14 @@ async def test_generate_structured_data(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_openai_client.chat.completions.create.call_args.kwargs[
+        "extra_body"
+    ] == {"provider": {"require_parameters": True}}
     assert mock_openai_client.chat.completions.create.call_args_list[0][1][
         "response_format"
     ] == {
         "json_schema": {
-            "name": "Test Task",
+            "name": "test_task",
             "schema": {
                 "properties": {
                     "characters": {
@@ -149,6 +180,7 @@ async def test_generate_structured_data(
                 },
                 "required": ["characters"],
                 "type": "object",
+                "additionalProperties": False,
             },
             "strict": True,
         },
@@ -165,27 +197,26 @@ async def test_generate_invalid_structured_data(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="INVALID JSON RESPONSE",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content="INVALID JSON RESPONSE",
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
@@ -195,11 +226,11 @@ async def test_generate_invalid_structured_data(
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -220,14 +251,17 @@ async def test_generate_data_empty_response(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(completion_tokens=0, prompt_tokens=8, total_tokens=8),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                )
+            ]
         )
     )
 
@@ -235,7 +269,7 @@ async def test_generate_data_empty_response(
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate test data",
         )
 
@@ -248,30 +282,29 @@ async def test_generate_data_with_attachments(
     """Test AI Task data generation with attachments."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "ai_task.gemini_1_5_pro"
+    entity_id = "ai_task.gemini_2_5_flash_image"
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="Hi there!",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content="Hi there!",
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
@@ -337,3 +370,124 @@ async def test_generate_data_with_attachments(
             "image_url": {"url": "data:application/pdf;base64,ZmFrZV9pbWFnZV9kYXRh"},
         },
     ]
+
+
+@pytest.mark.parametrize(
+    ("output_modalities", "supports_image"),
+    [
+        (["text", "image"], True),
+        (["text"], False),
+    ],
+)
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_generate_image_feature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    supports_image: bool,
+) -> None:
+    """Test GENERATE_IMAGE is advertised only for image-capable models."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("ai_task.gemini_2_5_flash_image")
+    assert state is not None
+    features = ai_task.AITaskEntityFeature(state.attributes["supported_features"])
+    assert (ai_task.AITaskEntityFeature.GENERATE_IMAGE in features) is supports_image
+
+
+async def test_generate_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task image generation."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,aGVsbG8="},
+                }
+            ]
+        )
+    )
+
+    with patch.object(
+        media_source.local_source.LocalSource,
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_2_5_flash_image",
+            instructions="Generate a test image",
+        )
+
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "google/gemini-2.5-flash-image"
+
+    image_data = mock_upload_media.call_args[0][1]
+    assert image_data.file.getvalue() == b"hello"
+    assert image_data.content_type == "image/png"
+
+    call_kwargs = mock_openai_client.chat.completions.create.call_args[1]
+    assert call_kwargs["extra_body"]["modalities"] == ["image", "text"]
+
+
+async def test_generate_image_no_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task image generation raises when no image is returned."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(None, content="I cannot generate that image")
+    )
+
+    with pytest.raises(HomeAssistantError, match="No image returned"):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_2_5_flash_image",
+            instructions="Generate a test image",
+        )
+
+
+@pytest.mark.parametrize(
+    "images",
+    [
+        pytest.param([{"type": "image_url"}], id="missing_url"),
+        pytest.param(
+            [{"type": "image_url", "image_url": {"url": "https://example.com/a.png"}}],
+            id="not_a_data_uri",
+        ),
+        pytest.param(
+            [{"type": "image_url", "image_url": {"url": "data:;base64,aGVsbG8="}}],
+            id="empty_mime_type",
+        ),
+    ],
+)
+async def test_generate_image_invalid_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    images: list[dict[str, Any]],
+) -> None:
+    """Test AI Task image generation raises on a malformed image response."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(images)
+    )
+
+    with pytest.raises(HomeAssistantError, match="Invalid image returned"):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_2_5_flash_image",
+            instructions="Generate a test image",
+        )

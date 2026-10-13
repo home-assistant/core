@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -84,6 +84,7 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
     entity_description: UnifiUpdateEntityDescription[_HandlerT, _DataT]
 
     @callback
+    @override
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         self._attr_supported_features = UpdateEntityFeature.PROGRESS
@@ -92,6 +93,7 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -105,6 +107,7 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
             ) from err
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 

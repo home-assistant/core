@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiostreammagic import StreamMagicClient
 from aiostreammagic.models import CallbackType
@@ -61,14 +61,17 @@ class CambridgeAudioEntity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.client.is_connected()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         await self.client.register_state_update_callbacks(self._state_update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         self.client.unregister_state_update_callbacks(self._state_update_callback)

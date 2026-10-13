@@ -1,12 +1,12 @@
 """Config flow for IronOS integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from habluetooth import BluetoothServiceInfoBleak
+import probatio
 from pynecil import CommunicationError, Pynecil
-import voluptuous as vol
 
 from homeassistant.components.bluetooth.api import async_discovered_service_info
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -25,6 +25,7 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, str] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -70,6 +71,7 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -112,8 +114,8 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(self._discovered_devices)}
             ),
             errors=errors,
         )

@@ -2,16 +2,17 @@
 
 from ha_xthings_cloud import XthingsCloudApiClient
 
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_TOKEN, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: XthingsCloudConfigEntry
-) -> bool:
+) -> None:
     """Set up config entry."""
     session = async_get_clientsession(hass)
     client = XthingsCloudApiClient(session, token=entry.data[CONF_TOKEN])
@@ -23,14 +24,11 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_start_websocket()
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: XthingsCloudConfigEntry
-) -> bool:
+) -> None:
     """Unload config entry."""
     coordinator = entry.runtime_data
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await coordinator.async_stop_websocket()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await coordinator.async_stop_websocket()

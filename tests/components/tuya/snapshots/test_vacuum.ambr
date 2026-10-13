@@ -39,8 +39,8 @@
 # name: test_platform_setup_and_discovery[vacuum.hoover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hoover',
-      'supported_features': <VacuumEntityFeature: 8984>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hoover',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 8984>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.hoover',
@@ -57,7 +57,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'normal',
         'strong',
@@ -96,14 +96,14 @@
 # name: test_platform_setup_and_discovery[vacuum.v20-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'strong',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'strong',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'normal',
         'strong',
       ]),
-      'friendly_name': 'V20',
-      'supported_features': <VacuumEntityFeature: 13116>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'V20',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 13116>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.v20',

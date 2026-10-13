@@ -1,6 +1,8 @@
 """Support for One-Time Password (OTP)."""
 
+import asyncio
 import time
+from typing import override
 
 import pyotp
 
@@ -38,6 +40,7 @@ class TOTPSensor(SensorEntity):
     _attr_should_poll = False
     _attr_native_value: StateType = None
     _next_expiration: float | None = None
+    _update_timer: asyncio.TimerHandle | None = None
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -52,9 +55,17 @@ class TOTPSensor(SensorEntity):
             identifiers={(DOMAIN, entry_id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._call_loop()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the update timer when the entity is removed."""
+        if self._update_timer:
+            self._update_timer.cancel()
+            self._update_timer = None
 
     @callback
     def _call_loop(self) -> None:
@@ -64,4 +75,6 @@ class TOTPSensor(SensorEntity):
         # Update must occur at even TIME_STEP, e.g. 12:00:00, 12:00:30,
         # 12:01:00, etc. in order to have synced time (see RFC6238)
         self._next_expiration = TIME_STEP - (time.time() % TIME_STEP)
-        self.hass.loop.call_later(self._next_expiration, self._call_loop)
+        self._update_timer = self.hass.loop.call_later(
+            self._next_expiration, self._call_loop
+        )

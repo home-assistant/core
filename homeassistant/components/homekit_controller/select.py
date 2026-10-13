@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.characteristics.const import (
@@ -26,14 +27,12 @@ class HomeKitSelectEntityDescription(SelectEntityDescription):
     """A generic description of a select entity backed by a single characteristic."""
 
     choices: dict[str, IntEnum]
-    name: str | None = None
 
 
 SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
     CharacteristicsTypes.TEMPERATURE_UNITS: HomeKitSelectEntityDescription(
         key="temperature_display_units",
         translation_key="temperature_display_units",
-        name="Temperature Display Units",
         entity_category=EntityCategory.CONFIG,
         choices={
             "celsius": TemperatureDisplayUnits.CELSIUS,
@@ -43,7 +42,6 @@ SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
     CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: HomeKitSelectEntityDescription(
         key="air_purifier_state_target",
         translation_key="air_purifier_state_target",
-        name="Air Purifier Mode",
         entity_category=EntityCategory.CONFIG,
         choices={
             "automatic": TargetAirPurifierStateValues.AUTOMATIC,
@@ -88,22 +86,18 @@ class HomeKitSelect(BaseHomeKitSelect):
 
         super().__init__(conn, info, char)
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [self._char.type]
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the device if any."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return self.entity_description.name
-
-    @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self._enum_to_choice.get(self._char.value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the current option."""
         await self.async_put_characteristics(
@@ -117,13 +111,7 @@ class EcobeeModeSelect(BaseHomeKitSelect):
     _attr_options = ["home", "sleep", "away"]
     _attr_translation_key = "ecobee_mode"
 
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := super().name:
-            return f"{name} Current Mode"
-        return "Current Mode"
-
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -131,10 +119,12 @@ class EcobeeModeSelect(BaseHomeKitSelect):
         ]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return _ECOBEE_MODE_TO_TEXT.get(self._char.value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the current mode."""
         option_int = _ECOBEE_MODE_TO_NUMBERS[option]

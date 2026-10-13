@@ -51,7 +51,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Set up from a config entry."""
 
     # Remove casts to str
@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     # Create device now as BeoWebsocket needs a device for
     # debug logging, firing events etc.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
         model=entry.data[CONF_MODEL],
@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, entry.unique_id),
+            via_device_id=device.id,
         )
 
     websocket = BeoWebsocket(hass, entry, client)
@@ -106,13 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     # This ensures that the initial WebSocket notifications are dispatched to entities
     await client.connect_notifications(remote_control=True, reconnect=True)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Unload a config entry."""
     # Close the API client and WebSocket notification listener
     entry.runtime_data.client.disconnect_notifications()
     await entry.runtime_data.client.close_api_client()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

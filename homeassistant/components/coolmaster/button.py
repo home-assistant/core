@@ -1,5 +1,7 @@
 """Button platform for CoolMasterNet integration."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -30,6 +32,7 @@ class CoolmasterResetFilter(CoolmasterEntity, ButtonEntity):
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._unit.reset_filter()

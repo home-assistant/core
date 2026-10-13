@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "api_key": "An optional LiteLLM API key or virtual key. Leave empty if your proxy does not require authentication.",
+          "url": "The base URL of your LiteLLM proxy, including the host and port"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "model": "[%key:common::generic::model%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "llm_hass_api": "Select which tools the model can use to interact with your devices and entities.",
+            "model": "The model to use for the conversation agent",
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          },
+          "description": "Configure the conversation agent"
+        }
+      }
+    },
+    "stt": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Speech-to-text",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure speech-to-text service",
+        "user": "Add speech-to-text service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "custom_prompt_keywords": "Custom prompt/keywords",
+            "keywords": "Keywords",
+            "model": "[%key:common::generic::model%]",
+            "prompt": "Prompt"
+          },
+          "data_description": {
+            "custom_prompt_keywords": "Enable optional prompt and keyword hints. The selected LiteLLM backend must support each parameter; unsupported parameters can cause transcription errors.",
+            "keywords": "Comma-separated words or phrases to help the model recognize names and other terms. Supports Home Assistant templates. OpenAI models may support this together with a prompt; other models may not.",
+            "model": "The model to use to transcribe speech",
+            "prompt": "Optional context or instructions for the transcription. Supports Home Assistant templates. The prompt must match the language of the audio and be supported by the selected model."
+          },
+          "description": "Select the speech-to-text model. The transcription language is selected in the Assist pipeline. LiteLLM does not report language capabilities for individual backend models."
+        }
+      }
+    }
+  }
+}

@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "password": "test-password",
         "area_id": "1",
     }
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -466,4 +467,4 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"lock_code_digits": 4}
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED

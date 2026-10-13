@@ -1,8 +1,7 @@
 """Home Assistant SkyConnect firmware update entity."""
 
 import logging
-
-from universal_silabs_flasher.flasher import Zbt1Flasher
+from typing import override
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
@@ -14,6 +13,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import EntityCategory
@@ -151,7 +151,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     def __init__(
         self,
@@ -187,6 +187,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 source="homeassistant_sky_connect",
             )
 
+    @override
     def _update_attributes(self) -> None:
         """Recompute the attributes of the entity."""
         super()._update_attributes()
@@ -202,6 +203,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         )
 
     @callback
+    @override
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         """Handle updated firmware info being pushed by an integration."""
         self.hass.config_entries.async_update_entry(

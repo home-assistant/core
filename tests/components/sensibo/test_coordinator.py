@@ -47,7 +47,7 @@ async def test_coordinator(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == HVACMode.HEAT
     mock_data.reset_mock()
 
@@ -56,7 +56,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == STATE_UNAVAILABLE
     mock_data.reset_mock()
 
@@ -66,7 +66,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == STATE_UNAVAILABLE
     mock_data.reset_mock()
 
@@ -76,7 +76,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == HVACMode.HEAT
     mock_data.reset_mock()
 
@@ -85,7 +85,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hallway_hallway")
     assert state.state == STATE_UNAVAILABLE
 
     assert "Platform sensibo does not generate unique IDs" not in caplog.text

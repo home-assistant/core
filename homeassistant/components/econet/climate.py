@@ -1,6 +1,6 @@
 """Support for Rheem EcoNet thermostats."""
 
-from typing import Any
+from typing import Any, override
 
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import (
@@ -79,7 +79,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     """Define an Econet thermostat."""
 
     _attr_should_poll = True
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, thermostat: Thermostat) -> None:
         """Initialize."""
@@ -102,16 +102,19 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             )
 
     @property
-    def current_temperature(self) -> int:
+    @override
+    def native_current_temperature(self) -> int:
         """Return the current temperature."""
         return self._econet.set_point
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._econet.humidity
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         if self._econet.supports_humidifier:
@@ -119,7 +122,8 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
         return None
 
     @property
-    def target_temperature(self) -> int | None:
+    @override
+    def native_target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self._econet.cool_set_point
@@ -128,19 +132,22 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self) -> int | None:
+    @override
+    def native_target_temperature_low(self) -> int | None:
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._econet.heat_set_point
         return None
 
     @property
-    def target_temperature_high(self) -> int | None:
+    @override
+    def native_target_temperature_high(self) -> int | None:
         """Return the higher bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._econet.cool_set_point
         return None
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
@@ -152,6 +159,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             self._econet.set_set_point(None, target_temp_high, target_temp_low)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation i.e. heat, cool, mode.
 
@@ -164,6 +172,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
         return _current_op
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         hvac_mode_to_set = HA_STATE_TO_ECONET.get(hvac_mode)
@@ -171,11 +180,13 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             raise ValueError(f"{hvac_mode} is not a valid mode.")
         self._econet.set_mode(hvac_mode_to_set)
 
+    @override
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         self._econet.set_dehumidifier_set_point(humidity)
 
     @property
+    @override
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         econet_fan_speed = self._econet.fan_speed
@@ -190,6 +201,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
         return _current_fan_speed
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the fan modes."""
         # Remove the MEDLO MEDHI once we figure out how to handle it
@@ -204,26 +216,31 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             ]
         ]
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         self._econet.set_fan_speed(HA_FAN_STATE_TO_ECONET_FAN_SPEED[fan_mode])
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._econet.set_point_limits[0]
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._econet.set_point_limits[1]
 
     @property
+    @override
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return self._econet.dehumidifier_set_point_limits[0]
 
     @property
+    @override
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._econet.dehumidifier_set_point_limits[1]

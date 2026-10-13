@@ -39,7 +39,7 @@
 # name: test_switches[switch][switch.clou_duo_eco_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Eco mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Eco mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.clou_duo_eco_mode',
@@ -89,7 +89,7 @@
 # name: test_switches[switch][switch.clou_duo_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Timer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Timer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.clou_duo_timer',

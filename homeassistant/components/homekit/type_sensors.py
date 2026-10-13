@@ -2,17 +2,16 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from pyhap.const import CATEGORY_SENSOR
 from pyhap.service import Service
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_HOME,
     STATE_ON,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
@@ -127,10 +126,11 @@ class TemperatureSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update temperature after state changed."""
         unit = new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+            EntityStateAttribute.UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
         )
         if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
@@ -158,6 +158,7 @@ class HumiditySensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (humidity := convert_to_float(new_state.state)) is not None:
@@ -191,6 +192,7 @@ class AirQualitySensor(HomeAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (density := convert_to_float(new_state.state)) is not None:
@@ -206,6 +208,7 @@ class AirQualitySensor(HomeAccessory):
 class PM10Sensor(AirQualitySensor):
     """Generate a PM10Sensor accessory as PM 10 sensor."""
 
+    @override
     def create_services(self) -> None:
         """Override the init function for PM 10 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -215,6 +218,7 @@ class PM10Sensor(AirQualitySensor):
         self.char_density = serv_air_quality.configure_char(CHAR_PM10_DENSITY, value=0)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -233,6 +237,7 @@ class PM10Sensor(AirQualitySensor):
 class PM25Sensor(AirQualitySensor):
     """Generate a PM25Sensor accessory as PM 2.5 sensor."""
 
+    @override
     def create_services(self) -> None:
         """Override the init function for PM 2.5 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -242,6 +247,7 @@ class PM25Sensor(AirQualitySensor):
         self.char_density = serv_air_quality.configure_char(CHAR_PM25_DENSITY, value=0)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -260,6 +266,7 @@ class PM25Sensor(AirQualitySensor):
 class NitrogenDioxideSensor(AirQualitySensor):
     """Generate a NitrogenDioxideSensor accessory as NO2 sensor."""
 
+    @override
     def create_services(self) -> None:
         """Override the init function for PM 2.5 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -271,6 +278,7 @@ class NitrogenDioxideSensor(AirQualitySensor):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -292,6 +300,7 @@ class VolatileOrganicCompoundsSensor(AirQualitySensor):
     Sensor entity must return VOC in μg/m3.
     """
 
+    @override
     def create_services(self) -> None:
         """Override the init function for VOC Sensor."""
         serv_air_quality: Service = self.add_preload_service(
@@ -308,6 +317,7 @@ class VolatileOrganicCompoundsSensor(AirQualitySensor):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -351,6 +361,7 @@ class CarbonMonoxideSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (value := convert_to_float(new_state.state)) is not None:
@@ -391,6 +402,7 @@ class CarbonDioxideSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (value := convert_to_float(new_state.state)) is not None:
@@ -420,6 +432,7 @@ class LightSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (luminance := convert_to_float(new_state.state)) is not None:
@@ -436,7 +449,7 @@ class BinarySensor(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
         assert state
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         service_char = (
             BINARY_SENSOR_SERVICE_MAP[device_class]
             if device_class in BINARY_SENSOR_SERVICE_MAP
@@ -454,6 +467,7 @@ class BinarySensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         state = new_state.state

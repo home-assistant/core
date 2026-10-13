@@ -1,5 +1,7 @@
 """Support for Rheem EcoNet water heaters."""
 
+from typing import override
+
 from pyeconet.equipment import Equipment, EquipmentType
 
 from homeassistant.components.sensor import (
@@ -116,6 +118,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self):
         """Return sensors state."""
         value = getattr(self._econet, self.entity_description.key)

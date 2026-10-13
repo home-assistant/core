@@ -10,6 +10,7 @@ from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
 from homeassistant.components.websocket_api import (
+    DOMAIN,
     async_register_command,
     const,
     http,
@@ -17,6 +18,7 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -412,9 +414,19 @@ async def test_auth_timeout_logs_at_debug(
 ) -> None:
     """Test auth timeout is logged at debug level not warning."""
     # Setup websocket API
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
+
+    disconnected = asyncio.Event()
+
+    @callback
+    def track_disconnected() -> None:
+        disconnected.set()
+
+    async_dispatcher_connect(
+        hass, const.SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected
+    )
 
     # Patch the auth timeout to be very short (0.001 seconds)
     with (
@@ -425,10 +437,11 @@ async def test_auth_timeout_logs_at_debug(
     ):
         # Try to connect - will timeout quickly since we don't send auth
         ws = await client.ws_connect("/api/websocket")
-        # Wait a bit for the timeout to trigger and cleanup to complete
-        await asyncio.sleep(0.1)
-        await ws.close()
-        await asyncio.sleep(0.1)
+        assert (await ws.receive_json())["type"] == "auth_required"
+        # Receiving the close frame lets the client answer it, so the server
+        # finishes closing without waiting for its close timeout
+        assert (await ws.receive()).type is WSMsgType.CLOSE
+        await disconnected.wait()
 
         # Check that "Did not receive auth message" is logged at debug, not warning
         debug_messages = [

@@ -26,7 +26,7 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Qube",
-            model="Heat Pump",
-            sw_version=entry.runtime_data.sw_version,
+            manufacturer="HR-energy",
+            model="Qube",
+            sw_version=coordinator.sw_version,
         )

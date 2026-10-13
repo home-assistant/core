@@ -6,9 +6,10 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
+import probatio
 import pytest
 import requests
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.growatt_server.const import (
@@ -17,19 +18,17 @@ from homeassistant.components.growatt_server.const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
-    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
-    V1_API_ERROR_NO_PRIVILEGE,
-    V1_API_ERROR_RATE_LIMITED,
 )
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
@@ -355,8 +354,8 @@ async def test_password_auth_multiple_plants(
 @pytest.mark.parametrize(
     ("error_code", "expected_error"),
     [
-        (V1_API_ERROR_NO_PRIVILEGE, ERROR_INVALID_AUTH),
-        (V1_API_ERROR_RATE_LIMITED, ERROR_CANNOT_CONNECT),
+        (GrowattV1ApiErrorCode.NO_PRIVILEGE, ERROR_INVALID_AUTH),
+        (GrowattV1ApiErrorCode.RATE_LIMITED, ERROR_CANNOT_CONNECT),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -792,7 +791,7 @@ async def test_reauth_password_success(
     region_key = next(
         k
         for k in result["data_schema"].schema
-        if isinstance(k, vol.Required) and k.schema == CONF_REGION
+        if isinstance(k, probatio.Required) and k.schema == CONF_REGION
     )
     assert region_key.default() == expected_region
 
@@ -967,6 +966,15 @@ async def test_reauth_token_non_auth_api_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    mock_growatt_v1_api.plant_list.side_effect = None
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_password_invalid_response(
@@ -1181,7 +1189,7 @@ async def test_reconfigure_password_success(
     region_key = next(
         k
         for k in result["data_schema"].schema
-        if isinstance(k, vol.Required) and k.schema == CONF_REGION
+        if isinstance(k, probatio.Required) and k.schema == CONF_REGION
     )
     assert region_key.default() == expected_region
 

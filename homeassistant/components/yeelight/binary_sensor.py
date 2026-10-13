@@ -1,6 +1,7 @@
 """Sensor platform support for yeelight."""
 
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,7 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
 
     _attr_translation_key = "nightlight"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(
@@ -43,11 +45,13 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
         await super().async_added_to_hass()
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._unique_id}-nightlight_sensor"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if nightlight mode is on."""
         return self._device.is_nightlight_enabled

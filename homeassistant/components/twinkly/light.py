@@ -1,7 +1,7 @@
 """The Twinkly light component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -62,6 +62,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         self._update_attr()
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         if (current_movie_id := self.coordinator.data.current_movie) is not None:
@@ -71,6 +72,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         return None
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
         return [
@@ -78,6 +80,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
             for identifier, name in self.coordinator.data.movies.items()
         ]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -150,6 +153,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
             await self.client.turn_on()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.client.turn_off()
@@ -160,6 +164,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         self._attr_is_on = self.coordinator.data.is_on
         self._attr_brightness = self.coordinator.data.brightness
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()

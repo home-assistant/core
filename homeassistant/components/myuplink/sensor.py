@@ -1,5 +1,7 @@
 """Sensor for myUplink."""
 
+from typing import override
+
 from myuplink import DevicePoint
 
 from homeassistant.components.sensor import (
@@ -291,6 +293,7 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
             self._attr_native_unit_of_measurement = device_point.parameter_unit
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Sensor state value."""
         device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
@@ -325,6 +328,7 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         }
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]

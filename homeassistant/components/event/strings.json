@@ -12,7 +12,22 @@
       }
     },
     "button": {
-      "name": "Button"
+      "name": "Button",
+      "state_attributes": {
+        "event_type": {
+          "state": {
+            "long_press_end": "Long press end",
+            "long_press_start": "Long press start",
+            "multi_press_end": "Multi-press end",
+            "multi_press_ongoing": "Multi-press ongoing",
+            "press_end": "Press end",
+            "press_start": "Press start"
+          }
+        },
+        "multi_press_count": {
+          "name": "Multi-press count"
+        }
+      }
     },
     "doorbell": {
       "name": "Doorbell",
@@ -31,7 +46,7 @@
   "title": "Event",
   "triggers": {
     "received": {
-      "description": "Triggers after one or more event entities receive a matching event.",
+      "description": "Triggers when one or more event entities receive a matching event.",
       "fields": {
         "event_type": {
           "description": "The event types to trigger on.",

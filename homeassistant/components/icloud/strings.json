@@ -6,6 +6,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
       "validate_verification_code": "Failed to verify your verification code, try again"
@@ -28,6 +29,7 @@
       },
       "user": {
         "data": {
+          "include_completed": "Include completed reminders",
           "password": "Main password (MFA)",
           "username": "[%key:common::config_flow::data::email%]",
           "with_family": "With family"
@@ -37,10 +39,61 @@
       },
       "verification_code": {
         "data": {
+          "request_new_code": "Request a new verification code",
           "verification_code": "Verification code"
         },
         "description": "Please enter the verification code you just received from Apple",
         "title": "Apple Account code"
+      }
+    }
+  },
+  "exceptions": {
+    "account_not_initialized": {
+      "message": "Account not initialized: {entry}"
+    },
+    "album_not_found": {
+      "message": "Album not found"
+    },
+    "album_type_not_specified": {
+      "message": "Album type not specified"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while connecting to iCloud: {error}"
+    },
+    "config_entry_not_found": {
+      "message": "Config entry not found for account: {entry}"
+    },
+    "config_entry_not_loaded": {
+      "message": "Config entry not loaded"
+    },
+    "incomplete_media_source_identifier": {
+      "message": "Incomplete media source identifier"
+    },
+    "invalid_media_source": {
+      "message": "Invalid media source"
+    },
+    "invalid_view_type": {
+      "message": "Invalid album view type"
+    },
+    "no_device_found": {
+      "message": "No iCloud device found"
+    },
+    "photo_not_found": {
+      "message": "Photo not found"
+    },
+    "unknown_media_item": {
+      "message": "Unknown media item"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "include_completed": "Include completed reminders"
+        }
       }
     }
   },
@@ -83,7 +136,7 @@
           "name": "Message"
         },
         "number": {
-          "description": "The phone number to call in lost mode (must contain country code).",
+          "description": "The phone number to call in lost mode. Must contain country code.",
           "name": "Number"
         }
       },
@@ -107,7 +160,7 @@
       "description": "Asks for a state update of all devices linked to an Apple Account.",
       "fields": {
         "account": {
-          "description": "Your Apple Account username (email).",
+          "description": "Your Apple Account username/email.",
           "name": "Account"
         }
       },

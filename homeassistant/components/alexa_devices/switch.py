@@ -2,48 +2,98 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
-from aioamazondevices.structures import AmazonDevice
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
-from .utils import (
-    alexa_api_call,
-    async_remove_dnd_from_virtual_group,
-    async_update_unique_id,
-)
+from .utils import async_remove_entities, async_update_unique_id
 
 PARALLEL_UPDATES = 1
+
+
+def _communication_is_on(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return the local communication settings state."""
+    return (
+        coordinator.data[serial_num].communication_settings[entity_description_key]
+        == "ON"
+    )
+
+
+def _update_communication_state(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+    state: bool,
+) -> None:
+    """Update the local communication settings state."""
+    coordinator.data[serial_num].communication_settings[entity_description_key] = (
+        "ON" if state else "OFF"
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
-    is_on_fn: Callable[[AmazonDevice], bool]
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
-        and (sensor := device.sensors.get(key)) is not None
-        and sensor.error is False
-    )
+    is_on_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
+    is_available_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
     method: str
+    update_state_fn: Callable[[AmazonDevicesCoordinator, str, str, bool], None]
 
 
-SWITCHES: Final = (
+DND_SWITCH: Final = AmazonSwitchEntityDescription(
+    key="dnd",
+    translation_key="do_not_disturb",
+    is_on_fn=lambda coordinator, serial_num, _: coordinator.dnd_states.get(
+        serial_num, False
+    ),
+    is_available_fn=lambda coordinator, serial_num, _: (
+        serial_num in coordinator.dnd_states
+    ),
+    method="set_do_not_disturb",
+    update_state_fn=lambda coordinator, serial_num, _, state: coordinator.set_dnd_state(
+        serial_num, state
+    ),
+)
+COMMUNICATION_SWITCHES: Final = (
     AmazonSwitchEntityDescription(
-        key="dnd",
-        translation_key="do_not_disturb",
-        is_on_fn=lambda device: bool(device.sensors["dnd"].value),
-        method="set_do_not_disturb",
+        key="announcements",
+        translation_key="announcements",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=_communication_is_on,
+        is_available_fn=lambda coordinator, serial_num, key: (
+            (settings := coordinator.data[serial_num].communication_settings).get(key)
+            is not None
+            and settings.get("communications") != "OFF"
+        ),
+        method="set_announcement_status",
+        update_state_fn=_update_communication_state,
+    ),
+    AmazonSwitchEntityDescription(
+        key="communications",
+        translation_key="communications",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=_communication_is_on,
+        is_available_fn=lambda coordinator, serial_num, key: (
+            coordinator.data[serial_num].communication_settings.get(key) is not None
+        ),
+        method="set_communication_status",
+        update_state_fn=_update_communication_state,
     ),
 )
 
@@ -62,24 +112,47 @@ async def async_setup_entry(
     new_key = "dnd"
 
     # Remove old DND switch from virtual groups
-    await async_remove_dnd_from_virtual_group(hass, coordinator, old_key)
+    await async_remove_entities(
+        hass,
+        coordinator,
+        SWITCH_DOMAIN,
+        old_key,
+        remove_fn=lambda device: device.device_family == SPEAKER_GROUP_FAMILY,
+    )
 
     # Replace unique id for DND switch
     await async_update_unique_id(hass, coordinator, SWITCH_DOMAIN, old_key, new_key)
 
     known_devices: set[str] = set()
+    known_dnd_devices: set[str] = set()
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            async_add_entities(
+
+        # DND state may arrive after device discovery (initial sync failure,
+        # or a later push), so track it separately from `known_devices`.
+        known_dnd_devices.intersection_update(current_devices)
+        new_dnd_devices = (
+            current_devices & coordinator.dnd_states.keys()
+        ) - known_dnd_devices
+
+        async_add_entities(
+            [
+                AmazonSwitchEntity(coordinator, serial_num, DND_SWITCH)
+                for serial_num in new_dnd_devices
+            ]
+            + [
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
-                for switch_desc in SWITCHES
+                for switch_desc in COMMUNICATION_SWITCHES
                 for serial_num in new_devices
-                if switch_desc.key in coordinator.data[serial_num].sensors
-            )
+                if switch_desc.key
+                in coordinator.data[serial_num].communication_settings
+            ]
+        )
+        known_dnd_devices.update(new_dnd_devices)
+        known_devices.update(new_devices)
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
@@ -90,7 +163,6 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
     entity_description: AmazonSwitchEntityDescription
 
-    @alexa_api_call
     async def _switch_set_state(self, state: bool) -> None:
         """Set desired switch state."""
         method = getattr(self.coordinator.api, self.entity_description.method)
@@ -98,31 +170,41 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method(self.device, state)
-        self.coordinator.data[self.device.serial_number].sensors[
-            self.entity_description.key
-        ].value = state
+        async with alexa_api_call(self.coordinator):
+            await method(self.device, state)
+        self.entity_description.update_state_fn(
+            self.coordinator,
+            self.device.serial_number,
+            self.entity_description.key,
+            state,
+        )
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._switch_set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._switch_set_state(False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
-        return self.entity_description.is_on_fn(self.device)
+
+        return self.entity_description.is_on_fn(
+            self.coordinator,
+            self.device.serial_number,
+            self.entity_description.key,
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            self.entity_description.is_available_fn(
-                self.device, self.entity_description.key
-            )
-            and super().available
+        return super().available and self.entity_description.is_available_fn(
+            self.coordinator, self.device.serial_number, self.entity_description.key
         )

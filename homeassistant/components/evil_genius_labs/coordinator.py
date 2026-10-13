@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ContentTypeError
 import pyevilgenius
@@ -55,6 +55,7 @@ class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
 
         return cast(str, self.product["productName"])
 
+    @override
     async def _async_update_data(self) -> dict:
         """Update Evil Genius data."""
         if not hasattr(self, "info"):

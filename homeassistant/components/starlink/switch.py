@@ -2,13 +2,14 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,14 +44,17 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
     entity_description: StarlinkSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         return await self.entity_description.turn_on_fn(self.coordinator)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         return await self.entity_description.turn_off_fn(self.coordinator)
@@ -76,5 +80,17 @@ SWITCHES = [
         turn_off_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
             False
         ),
+    ),
+    StarlinkSwitchEntityDescription(
+        key="starlink_positioning_exclusive",
+        translation_key="starlink_positioning_exclusive",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda data: (
+            None
+            if (gps_enabled := data.status.get("gps_enabled")) is None
+            else not gps_enabled
+        ),
+        turn_on_fn=lambda coordinator: coordinator.async_set_gps_enabled(False),
+        turn_off_fn=lambda coordinator: coordinator.async_set_gps_enabled(True),
     ),
 ]

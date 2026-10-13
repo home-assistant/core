@@ -1,6 +1,7 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -79,16 +80,19 @@ class KaiterraSensor(SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the sensor."""
         return self._api.data.get(self._device_id) is not None
 
     @property
+    @override
     def native_value(self):
         """Return the state."""
         return self._sensor.get("value")
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if not self._sensor.get("units"):
@@ -102,6 +106,7 @@ class KaiterraSensor(SensorEntity):
             return UnitOfTemperature.CELSIUS
         return value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.async_on_remove(

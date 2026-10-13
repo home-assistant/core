@@ -45,7 +45,10 @@ async def test_reauthentication_trigger_in_setup(
     flows = hass.config_entries.flow.async_progress()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == "could not authenticate"
+    assert (
+        mock_config_entry.reason
+        == "API authentication failed, please check your API key"
+    )
 
     assert len(flows) == 1
     flow = flows[0]

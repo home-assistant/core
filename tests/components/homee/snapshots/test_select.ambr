@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'target',
         'current',
       ]),
@@ -44,8 +44,8 @@
 # name: test_select_snapshot[select.test_select_displayed_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Displayed temperature',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Select Displayed temperature',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'target',
         'current',
       ]),
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'level1',
         'level2',
@@ -104,8 +104,8 @@
 # name: test_select_snapshot[select.test_select_repeater_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Repeater mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Select Repeater mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'level1',
         'level2',

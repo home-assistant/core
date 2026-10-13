@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "step": {
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
@@ -66,6 +63,9 @@
       "init": {
         "data": {
           "server_name": "Select test server"
+        },
+        "data_description": {
+          "server_name": "The Speedtest.net server to use for tests. Select auto detect to automatically choose a server."
         }
       }
     }

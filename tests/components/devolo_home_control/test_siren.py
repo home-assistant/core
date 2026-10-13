@@ -2,11 +2,18 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
@@ -27,20 +34,20 @@ async def test_siren(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test_test") == snapshot
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("devolo.SirenMultiLevelSwitch:Test", 1))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_ON
+    assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_ON
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_UNAVAILABLE
 
 
 async def test_siren_switching(
@@ -57,17 +64,17 @@ async def test_siren_switching(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test_test") == snapshot
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as property_set:
         await hass.services.async_call(
-            "siren",
-            "turn_on",
-            {"entity_id": f"{SIREN_DOMAIN}.test"},
+            SIREN_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
         # The real device state is changed by a websocket message
@@ -81,9 +88,9 @@ async def test_siren_switching(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as property_set:
         await hass.services.async_call(
-            "siren",
-            "turn_off",
-            {"entity_id": f"{SIREN_DOMAIN}.test"},
+            SIREN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
         # The real device state is changed by a websocket message
@@ -91,8 +98,24 @@ async def test_siren_switching(
             "Test", ("devolo.SirenMultiLevelSwitch:Test", 0)
         )
         await hass.async_block_till_done()
-        assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_OFF
+        assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_OFF
         property_set.assert_called_once_with(0)
+
+    with (
+        patch(
+            "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            SIREN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
+            blocking=True,
+        )
+    assert error.value.translation_key == "set_failed"
+    assert error.value.translation_domain == DOMAIN
 
 
 async def test_siren_change_default_tone(
@@ -109,18 +132,18 @@ async def test_siren_change_default_tone(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test_test") == snapshot
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as property_set:
         test_gateway.publisher.dispatch("Test", ("mss:Test", 2))
         await hass.services.async_call(
-            "siren",
-            "turn_on",
-            {"entity_id": f"{SIREN_DOMAIN}.test"},
+            SIREN_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
         property_set.assert_called_once_with(2)
@@ -137,7 +160,7 @@ async def test_remove_from_hass(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

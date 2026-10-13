@@ -1,12 +1,12 @@
 """Config Flow for PlayStation 4."""
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyps4_2ndscreen.errors import CredentialTimeout
 from pyps4_2ndscreen.helpers import Helper
 from pyps4_2ndscreen.media_art import COUNTRIES
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -50,7 +50,6 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.helper = Helper()
         self.creds: str | None = None
-        self.name = None
         self.host = None
         self.region = None
         self.pin: str | None = None
@@ -58,6 +57,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         self.location: location_util.LocationInfo | None = None
         self.device_list: list[str] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -112,12 +112,14 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return await self.async_step_link()
 
-        mode_schema = OrderedDict[vol.Marker, Any]()
-        mode_schema[vol.Required(CONF_MODE, default=CONF_AUTO)] = vol.In(list(mode))
-        mode_schema[vol.Optional(CONF_IP_ADDRESS)] = str
+        mode_schema = OrderedDict[probatio.Marker, Any]()
+        mode_schema[probatio.Required(CONF_MODE, default=CONF_AUTO)] = probatio.In(
+            list(mode)
+        )
+        mode_schema[probatio.Optional(CONF_IP_ADDRESS)] = str
 
         return self.async_show_form(
-            step_id="mode", data_schema=vol.Schema(mode_schema), errors=errors
+            step_id="mode", data_schema=probatio.Schema(mode_schema), errors=errors
         )
 
     async def async_step_link(
@@ -165,7 +167,6 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         # Login to PS4 with user data.
         if user_input is not None:
             self.region = user_input[CONF_REGION]
-            self.name = user_input[CONF_NAME]
             # Assume pin had leading zeros, before coercing to int.
             self.pin = str(user_input[CONF_CODE]).zfill(PIN_LENGTH)
             self.host = user_input[CONF_IP_ADDRESS]
@@ -186,7 +187,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 device = {
                     CONF_HOST: self.host,
-                    CONF_NAME: self.name,
+                    CONF_NAME: DEFAULT_NAME,
                     CONF_REGION: self.region,
                 }
 
@@ -207,18 +208,17 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
                 default_region = country
 
         # Show User Input form.
-        link_schema = OrderedDict[vol.Marker, Any]()
-        link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(list(self.device_list))
-        link_schema[vol.Required(CONF_REGION, default=default_region)] = vol.In(
-            list(regions)
+        link_schema = OrderedDict[probatio.Marker, Any]()
+        link_schema[probatio.Required(CONF_IP_ADDRESS)] = probatio.In(
+            list(self.device_list)
         )
-        link_schema[vol.Required(CONF_CODE)] = vol.All(
-            vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
+        link_schema[probatio.Required(CONF_REGION, default=default_region)] = (
+            probatio.In(list(regions))
         )
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
+        link_schema[probatio.Required(CONF_CODE)] = probatio.All(
+            probatio.Strip, probatio.Length(max=PIN_LENGTH), probatio.Coerce(int)
+        )
 
         return self.async_show_form(
-            step_id="link", data_schema=vol.Schema(link_schema), errors=errors
+            step_id="link", data_schema=probatio.Schema(link_schema), errors=errors
         )

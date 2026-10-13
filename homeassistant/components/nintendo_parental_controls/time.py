@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynintendoparental.exceptions import BedtimeOutOfRangeError
 
@@ -91,10 +91,12 @@ class NintendoParentalControlsTimeEntity(NintendoDevice, TimeEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the time."""
         return self.entity_description.value_fn(self._device)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the value."""
         try:

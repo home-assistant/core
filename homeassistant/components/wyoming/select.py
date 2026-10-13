@@ -1,6 +1,6 @@
 """Select entities for Wyoming integration."""
 
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
@@ -58,6 +58,7 @@ class WyomingSatellitePipelineSelect(WyomingSatelliteEntity, AssistPipelineSelec
         WyomingSatelliteEntity.__init__(self, device)
         AssistPipelineSelect.__init__(self, hass, DOMAIN, device.satellite_id)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await super().async_select_option(option)
@@ -78,6 +79,7 @@ class WyomingSatelliteNoiseSuppressionLevelSelect(
     _attr_current_option = _DEFAULT_NOISE_SUPPRESSION_LEVEL
     _attr_options = list(_NOISE_SUPPRESSION_LEVEL.keys())
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -86,6 +88,7 @@ class WyomingSatelliteNoiseSuppressionLevelSelect(
         if state is not None and state.state in self.options:
             self._attr_current_option = state.state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._attr_current_option = option
@@ -105,6 +108,7 @@ class WyomingSatelliteVadSensitivitySelect(
         WyomingSatelliteEntity.__init__(self, device)
         VadSensitivitySelect.__init__(self, hass, device.satellite_id)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await super().async_select_option(option)

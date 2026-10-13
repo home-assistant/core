@@ -121,7 +121,7 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 57
+    assert len(conditions) == 58
     assert conditions == unordered(expected_conditions)
 
 
@@ -510,7 +510,7 @@ async def test_if_state_not_above_below(
             ]
         },
     )
-    assert "must contain at least one of below, above" in caplog.text
+    assert "at least one of ['below', 'above'] is required" in caplog.text
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

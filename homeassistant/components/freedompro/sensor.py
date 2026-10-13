@@ -1,6 +1,6 @@
 """Support for Freedompro sensor."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -80,6 +80,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SensorEntity):
         self._attr_native_value = 0
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -95,6 +96,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SensorEntity):
             self._attr_native_value = state[DEVICE_KEY_MAP[self._type]]
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

@@ -1,11 +1,11 @@
 """Config flow to configure the Azure DevOps integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,11 +30,11 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ORG, default=self._organization): str,
-                    vol.Required(CONF_PROJECT, default=self._project): str,
-                    vol.Optional(CONF_PAT): str,
+                    probatio.Required(CONF_ORG, default=self._organization): str,
+                    probatio.Required(CONF_PROJECT, default=self._project): str,
+                    probatio.Optional(CONF_PAT): str,
                 }
             ),
             errors=errors or {},
@@ -62,6 +62,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return errors
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -117,7 +118,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "project_url": f"{self._organization}/{self._project}"
             },
-            data_schema=vol.Schema({vol.Required(CONF_PAT): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PAT): str}),
             errors=errors or {},
         )
 

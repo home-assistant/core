@@ -39,8 +39,8 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Gotham City Alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_alarm',
@@ -90,8 +90,8 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Gotham City Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_connectivity',
@@ -141,8 +141,8 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_connectivity_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Gotham City Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_connectivity_2',
@@ -192,7 +192,7 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_extern_adjustment_climate_system_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Extern. adjust\xadment climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Extern. adjust\xadment climate system 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_extern_adjustment_climate_system_1',
@@ -242,7 +242,7 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_extern_adjustment_climate_system_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Extern. adjust\xadment climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Extern. adjust\xadment climate system 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_extern_adjustment_climate_system_1_2',
@@ -292,7 +292,7 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_pump_heating_medium_gp1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Pump: Heating medium (GP1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Pump: Heating medium (GP1)',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_pump_heating_medium_gp1',
@@ -342,7 +342,7 @@
 # name: test_binary_sensor_states[binary_sensor.gotham_city_pump_heating_medium_gp1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Pump: Heating medium (GP1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Pump: Heating medium (GP1)',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gotham_city_pump_heating_medium_gp1_2',

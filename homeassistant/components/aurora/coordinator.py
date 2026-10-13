@@ -1,7 +1,8 @@
-"""The aurora component."""
+"""The Aurora integration."""
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError
 from auroranoaa import AuroraForecast
@@ -42,6 +43,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
             self.config_entry.options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
         )
 
+    @override
     async def _async_update_data(self) -> int:
         """Fetch the data from the NOAA Aurora Forecast."""
 

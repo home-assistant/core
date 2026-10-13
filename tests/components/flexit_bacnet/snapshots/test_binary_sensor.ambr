@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.device_name_air_filter_polluted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Device Name Air filter polluted',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Name Air filter polluted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.device_name_air_filter_polluted',

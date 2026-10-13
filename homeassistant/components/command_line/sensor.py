@@ -4,9 +4,9 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import json
-from typing import Any
+from typing import Any, override
 
-from jsonpath import jsonpath
+from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -62,7 +62,9 @@ async def async_setup_platform(
     json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     value_template: ValueTemplate | None = sensor_config.get(CONF_VALUE_TEMPLATE)
-    data = CommandSensorData(hass, command, command_timeout)
+    data = CommandSensorData(
+        hass, command, command_timeout, SENSOR_DOMAIN, sensor_config[CONF_NAME]
+    )
 
     trigger_entity_config = {
         CONF_NAME: Template(sensor_config[CONF_NAME], hass),
@@ -109,10 +111,12 @@ class CommandSensor(ManualTriggerSensorEntity):
         self._process_updates: asyncio.Lock | None = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         return self._attr_extra_state_attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -160,11 +164,8 @@ class CommandSensor(ManualTriggerSensorEntity):
                 try:
                     json_dict = json.loads(value)
                     if self._json_attributes_path is not None:
-                        json_dict = jsonpath(json_dict, self._json_attributes_path)
-                    # jsonpath will always store the result in json_dict[0]
-                    # so the next line happens to work exactly as needed to
-                    # find the result
-                    if isinstance(json_dict, list):
+                        json_dict = search(self._json_attributes_path, json_dict)
+                    if isinstance(json_dict, list) and json_dict:
                         json_dict = json_dict[0]
                     if isinstance(json_dict, Mapping):
                         self._attr_extra_state_attributes = {
@@ -174,7 +175,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                         }
                     else:
                         LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
+                except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
                     LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 LOGGER.warning("Empty reply found when expecting JSON data")
@@ -206,15 +207,28 @@ class CommandSensor(ManualTriggerSensorEntity):
 class CommandSensorData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, hass: HomeAssistant, command: str, command_timeout: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        command: str,
+        command_timeout: int,
+        platform: str,
+        name: str,
+    ) -> None:
         """Initialize the data object."""
         self.value: str | None = None
         self.hass = hass
         self.command = command
         self.timeout = command_timeout
+        self.platform = platform
+        self.name = name
 
     async def async_update(self) -> None:
         """Get the latest data with a shell command."""
-        if not (command := render_template_args(self.hass, self.command)):
+        if not (
+            command := render_template_args(
+                self.hass, self.command, self.platform, self.name
+            )
+        ):
             return
         self.value = await async_check_output_or_log(command, self.timeout)

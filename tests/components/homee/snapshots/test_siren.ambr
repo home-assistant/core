@@ -39,8 +39,8 @@
 # name: test_siren_snapshot[siren.test_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.test_siren',

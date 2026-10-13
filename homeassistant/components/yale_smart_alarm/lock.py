@@ -1,6 +1,6 @@
 """Lock for Yale Alarm."""
 
-from typing import Any
+from typing import Any, override
 
 from yalesmartalarmclient import YaleLock, YaleLockState
 
@@ -54,11 +54,13 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
         super().__init__(coordinator, lock)
         self._attr_code_format = rf"^\d{{{code_format}}}$"
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
         code: str | None = kwargs.get(ATTR_CODE)
         return await self.async_set_lock(YaleLockState.UNLOCKED, code)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
         return await self.async_set_lock(YaleLockState.LOCKED, None)
@@ -95,11 +97,13 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
         )
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return LOCK_STATE_MAP.get(self.lock_data.state()) == LockState.LOCKED
 
     @property
+    @override
     def is_open(self) -> bool | None:
         """Return true if the lock is open."""
         return LOCK_STATE_MAP.get(self.lock_data.state()) == LockState.OPEN

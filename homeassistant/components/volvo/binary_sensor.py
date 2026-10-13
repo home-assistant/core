@@ -1,6 +1,7 @@
 """Volvo binary sensors."""
 
 from dataclasses import dataclass, field
+from typing import override
 
 from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsValue
 
@@ -378,6 +379,7 @@ class VolvoBinarySensor(VolvoEntity, BinarySensorEntity):
 
     entity_description: VolvoBinarySensorDescription
 
+    @override
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
         if api_field is None:

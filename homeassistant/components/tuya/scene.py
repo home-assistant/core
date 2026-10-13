@@ -1,6 +1,6 @@
 """Support for Tuya scenes."""
 
-from typing import Any
+from typing import Any, override
 
 from tuya_sharing import Manager, SharingScene
 
@@ -39,6 +39,7 @@ class TuyaSceneEntity(Scene):
         self.scene = scene
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
@@ -50,10 +51,12 @@ class TuyaSceneEntity(Scene):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the scene is enabled."""
         return self.scene.enabled
 
+    @override
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.home_manager.trigger_scene(self.scene.home_id, self.scene.scene_id)

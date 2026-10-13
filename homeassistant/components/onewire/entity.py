@@ -1,13 +1,16 @@
 """Support for 1-Wire entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_ownet.exceptions import OWServerError
 from aio_ownet.proxy import OWServerStatelessProxy
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +38,7 @@ class OneWireEntity(Entity):
         self._owproxy = owproxy
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
@@ -43,7 +47,14 @@ class OneWireEntity(Entity):
 
     async def _write_value(self, value: bytes) -> None:
         """Write a value to the server."""
-        await self._owproxy.write(self._device_file, value)
+        try:
+            await self._owproxy.write(self._device_file, value)
+        except OWServerError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={"device_file": self._device_file},
+            ) from exc
 
     async def async_update(self) -> None:
         """Get the latest data from the device."""

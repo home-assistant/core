@@ -1,7 +1,7 @@
 """Matter water heater platform."""
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable
@@ -64,7 +64,7 @@ class MatterWaterHeaterEntityDescription(
 class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
 
-    _attr_current_temperature: float | None = None
+    _attr_native_current_temperature: float | None = None
     _attr_current_operation: str
     _attr_operation_list = [
         STATE_ECO,
@@ -77,8 +77,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_target_temperature: float | None = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_target_temperature: float | None = None
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _platform_translation_key = "water_heater"
 
     async def async_set_boost(
@@ -108,12 +108,13 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             raise HomeAssistantError(f"Error sending Boost command: {err}") from err
         self._update_from_device()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
         if (
             target_temperature is not None
-            and self.target_temperature != target_temperature
+            and self.native_target_temperature != target_temperature
         ):
             matter_attribute = clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
             await self.write_attribute(
@@ -121,6 +122,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 matter_attribute=matter_attribute,
             )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
@@ -152,21 +154,24 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 clusters.WaterHeaterManagement.Commands.CancelBoost()
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""
         await self.async_set_operation_mode("eco")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off water heater."""
         await self.async_set_operation_mode("off")
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_current_temperature = self._get_temperature_in_degrees(
+        self._attr_native_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
-        self._attr_target_temperature = self._get_temperature_in_degrees(
+        self._attr_native_target_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
         )
         system_mode = self.get_matter_attribute_value(

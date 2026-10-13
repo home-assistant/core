@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientConnectionError
 from faadelays import Airport
@@ -34,6 +35,7 @@ class FAADataUpdateCoordinator(DataUpdateCoordinator[Airport]):
         self.session = aiohttp_client.async_get_clientsession(hass)
         self.data = Airport(code, self.session)
 
+    @override
     async def _async_update_data(self) -> Airport:
         try:
             async with asyncio.timeout(10):

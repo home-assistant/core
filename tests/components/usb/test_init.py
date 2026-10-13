@@ -4,6 +4,8 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
+from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
@@ -18,6 +20,7 @@ from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1327,12 +1330,14 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
     assert devices == [
         SerialDevice(
             device="/dev/ttyAMA1",
+            resolved_device="/dev/ttyAMA1",
             serial_number=None,
             manufacturer=None,
             description="ttyAMA1",
         ),
         USBDevice(
             device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+            resolved_device="/dev/ttyACM0",
             vid="303A",
             pid="4001",
             serial_number="10B41DE589FC",
@@ -1693,6 +1698,7 @@ async def test_list_serial_ports(
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
+            resolved_device="/dev/ttyUSB0",
             vid="10C4",
             pid="EA60",
             serial_number="001234",
@@ -1704,6 +1710,7 @@ async def test_list_serial_ports(
         ),
         USBDevice(
             device="/dev/ttyUSB1",
+            resolved_device="/dev/ttyUSB1",
             vid="DEAD",
             pid="BEEF",
             serial_number=None,
@@ -1712,6 +1719,7 @@ async def test_list_serial_ports(
         ),
         USBDevice(
             device="/dev/ttyUSB2",
+            resolved_device="/dev/ttyUSB2",
             vid="0000",
             pid="0000",
             serial_number=None,
@@ -1720,6 +1728,7 @@ async def test_list_serial_ports(
         ),
         SerialDevice(
             device="/dev/ttyS0",
+            resolved_device="/dev/ttyS0",
             serial_number=None,
             manufacturer=None,
             description="ttyS0",
@@ -1741,6 +1750,7 @@ async def test_list_serial_ports(
     assert response["result"] == [
         {
             "device": "/dev/ttyUSB0",
+            "resolved_device": "/dev/ttyUSB0",
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "001234",
@@ -1750,9 +1760,11 @@ async def test_list_serial_ports(
             "interface_description": "CP2102 USB to UART Bridge",
             "interface_num": 0,
             "matching_integrations": ["homeassistant_sky_connect"],
+            "present": True,
         },
         {
             "device": "/dev/ttyUSB1",
+            "resolved_device": "/dev/ttyUSB1",
             "vid": "DEAD",
             "pid": "BEEF",
             "serial_number": None,
@@ -1762,9 +1774,11 @@ async def test_list_serial_ports(
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": ["custom_component"],
+            "present": True,
         },
         {
             "device": "/dev/ttyUSB2",
+            "resolved_device": "/dev/ttyUSB2",
             "vid": "0000",
             "pid": "0000",
             "serial_number": None,
@@ -1774,30 +1788,37 @@ async def test_list_serial_ports(
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": [],
+            "present": True,
         },
         {
             "device": "/dev/ttyS0",
+            "resolved_device": "/dev/ttyS0",
             "serial_number": None,
             "manufacturer": None,
             "description": "ttyS0",
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": [],
+            "present": True,
         },
     ]
 
 
-async def test_list_serial_ports_require_admin(
+@pytest.mark.parametrize(
+    "command", ["usb/list_serial_ports", "usb/list_serial_integrations"]
+)
+async def test_ws_commands_require_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
     setup_usb: MagicMock,
+    command: str,
 ) -> None:
-    """Test that listing serial ports requires admin."""
+    """Test that listing serial ports and integrations requires admin."""
     hass_admin_user.groups = []
 
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    await ws_client.send_json({"id": 1, "type": command})
     response = await ws_client.receive_json()
 
     assert not response["success"]
@@ -1819,6 +1840,71 @@ async def test_list_serial_ports_os_error(
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert "Permission denied" in response["error"]["message"]
+
+
+async def _async_list_serial_integrations(
+    hass_ws_client: WebSocketGenerator, hass: HomeAssistant
+) -> list[str]:
+    """Return the result of the `usb/list_serial_integrations` command."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    return response["result"]
+
+
+@pytest.mark.usefixtures("setup_usb")
+async def test_list_serial_integrations(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing the integrations configurable with a serial port."""
+    result = await _async_list_serial_integrations(hass_ws_client, hass)
+
+    assert result == sorted(result)
+    assert {"alarmdecoder", "elkm1", "zha"} <= set(result)
+    assert not {"bluetooth", "esphome", "hue"} & set(result)
+
+
+@pytest.mark.usefixtures("setup_usb")
+@pytest.mark.parametrize(
+    ("domain", "manifest", "listed"),
+    [
+        pytest.param("custom_serial", {"dependencies": ["usb"]}, True, id="dependency"),
+        pytest.param(
+            "custom_serial",
+            {"after_dependencies": ["usb"]},
+            True,
+            id="after_dependency",
+        ),
+        pytest.param("custom_serial", {}, False, id="no_dependency"),
+        pytest.param("zha", {}, False, id="core_override_without_usb"),
+    ],
+)
+async def test_list_serial_integrations_custom(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    manifest: dict[str, Any],
+    listed: bool,
+) -> None:
+    """Test listing custom integrations configurable with a serial port."""
+    integration = Integration(
+        hass,
+        f"custom_components.{domain}",
+        Path(hass.config.config_dir) / "custom_components" / domain,
+        MockModule(domain, partial_manifest=manifest).mock_manifest(),
+    )
+
+    with patch(
+        "homeassistant.components.usb.consumers.async_get_custom_components",
+        return_value={domain: integration},
+    ):
+        result = await _async_list_serial_integrations(hass_ws_client, hass)
+
+    assert (domain in result) is listed
+    assert "elkm1" in result
 
 
 async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:

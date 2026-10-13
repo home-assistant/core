@@ -20,7 +20,7 @@ from homeassistant.components.workday.const import (
     DEFAULT_WORKDAYS,
     DOMAIN,
 )
-from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util.dt import UTC
@@ -40,7 +40,6 @@ async def test_form(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "DE",
         },
     )
@@ -59,9 +58,8 @@ async def test_form(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor DE"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -84,7 +82,6 @@ async def test_form_province_no_alias(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "US",
         },
     )
@@ -102,9 +99,8 @@ async def test_form_province_no_alias(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor US"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "US",
         "excludes": ["sat", "sun", "holiday"],
         "language": "en_US",
@@ -126,9 +122,7 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_NAME: "Workday Sensor",
-        },
+        {},
     )
     await hass.async_block_till_done()
     result3 = await hass.config_entries.flow.async_configure(
@@ -146,7 +140,6 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
@@ -167,7 +160,6 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "SE",
         },
     )
@@ -185,9 +177,8 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor SE"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "SE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -205,7 +196,6 @@ async def test_options_form(hass: HomeAssistant) -> None:
     entry = await init_integration(
         hass,
         {
-            "name": "Workday Sensor",
             "country": "DE",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
@@ -233,7 +223,6 @@ async def test_options_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -257,7 +246,6 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "DE",
         },
     )
@@ -305,9 +293,8 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor DE"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -325,7 +312,6 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
     entry = await init_integration(
         hass,
         {
-            "name": "Workday Sensor",
             "country": "DE",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
@@ -383,7 +369,6 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -402,7 +387,6 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
     await init_integration(
         hass,
         {
-            "name": "Workday Sensor",
             "country": "CH",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
@@ -417,7 +401,6 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
     entry2 = await init_integration(
         hass,
         {
-            "name": "Workday Sensor2",
             "country": "CH",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
@@ -448,6 +431,21 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
 
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0.0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": ["2023-03-29"],
+            "remove_holidays": [],
+            "province": "FR",
+            "category": [OPTIONAL],
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
@@ -461,7 +459,6 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "DE",
         },
     )
@@ -509,9 +506,8 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor DE"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -529,7 +525,6 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
     entry = await init_integration(
         hass,
         {
-            "name": "Workday Sensor",
             "country": "DE",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
@@ -587,7 +582,6 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -620,7 +614,6 @@ async def test_language(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "DE",
         },
     )
@@ -639,9 +632,8 @@ async def test_language(
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor DE"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -651,7 +643,7 @@ async def test_language(
         "language": language,
     }
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de")
     assert state is not None
     assert state.state == "on"
 
@@ -667,7 +659,6 @@ async def test_form_with_categories(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "CH",
         },
     )
@@ -687,9 +678,8 @@ async def test_form_with_categories(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor CH"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "CH",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -712,7 +702,6 @@ async def test_form_with_categories_can_remove_day(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Workday Sensor",
             CONF_COUNTRY: "CH",
         },
     )
@@ -733,9 +722,8 @@ async def test_form_with_categories_can_remove_day(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Workday Sensor"
+    assert result3["title"] == "Workday Sensor CH FR"
     assert result3["options"] == {
-        "name": "Workday Sensor",
         "country": "CH",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,
@@ -754,7 +742,6 @@ async def test_options_form_removes_subdiv(hass: HomeAssistant) -> None:
     entry = await init_integration(
         hass,
         {
-            "name": "Workday Sensor",
             "country": "DE",
             "excludes": ["sat", "sun", "holiday"],
             "days_offset": 0,
@@ -782,7 +769,6 @@ async def test_options_form_removes_subdiv(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
-        "name": "Workday Sensor",
         "country": "DE",
         "excludes": ["sat", "sun", "holiday"],
         "days_offset": 0,

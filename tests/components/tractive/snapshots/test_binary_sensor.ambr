@@ -39,8 +39,8 @@
 # name: test_binary_sensor[binary_sensor.tracker_device_id_123_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Tracker device_id_123 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tracker device_id_123 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.tracker_device_id_123_charging',
@@ -90,7 +90,7 @@
 # name: test_binary_sensor[binary_sensor.tracker_device_id_123_power_saving-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tracker device_id_123 Power saving',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tracker device_id_123 Power saving',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.tracker_device_id_123_power_saving',

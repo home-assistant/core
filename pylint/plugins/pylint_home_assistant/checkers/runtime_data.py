@@ -4,6 +4,10 @@ New integrations should store per-entry data on ``entry.runtime_data`` (typed
 via a ``type`` alias) rather than the legacy ``hass.data[DOMAIN][entry.entry_id]``
 dictionary pattern. The ``runtime_data`` approach is type-safe, automatically
 cleaned up on unload, and is the current Home Assistant core standard.
+
+Both the subscript form (``hass.data[DOMAIN]``) and the equivalent method-call
+forms (``hass.data.setdefault(DOMAIN, ...)`` and ``hass.data.get(DOMAIN)``) are
+flagged.
 """
 
 from astroid import nodes
@@ -54,22 +58,7 @@ class HassEnforceRuntimeDataChecker(BaseChecker):
         if not _is_hass_data_domain_access(node):
             return
 
-        parsed = parse_module(node.root().name)
-        if parsed is None:
-            return
-
-        current_module = parsed.module or ""
-        if current_module in _SKIP_MODULES:
-            return
-
-        # Only flag integrations that have a config flow (and thus can use
-        # entry.runtime_data). YAML-only integrations legitimately need
-        # hass.data[DOMAIN].
-        if not has_config_flow(parsed.domain, node.root()):
-            return
-
-        func = enclosing_function(node)
-        if func and func.name in _SKIP_FUNCTIONS:
+        if not self._should_flag(node):
             return
 
         # Don't flag deletion: del hass.data[DOMAIN] or hass.data[DOMAIN].pop(...)
@@ -81,20 +70,73 @@ class HassEnforceRuntimeDataChecker(BaseChecker):
 
         self.add_message("home-assistant-use-runtime-data", node=node)
 
+    def visit_call(self, node: nodes.Call) -> None:
+        """Check for hass.data.setdefault(DOMAIN, ...) and hass.data.get(DOMAIN)."""
+        if not _is_hass_data_domain_call(node):
+            return
+
+        if not self._should_flag(node):
+            return
+
+        self.add_message("home-assistant-use-runtime-data", node=node)
+
+    def _should_flag(self, node: nodes.NodeNG) -> bool:
+        """Return True if node is in an integration that should use runtime_data."""
+        parsed = parse_module(node.root().name)
+        if parsed is None:
+            return False
+
+        current_module = parsed.module or ""
+        if current_module in _SKIP_MODULES:
+            return False
+
+        # Only flag integrations that have a config flow (and thus can use
+        # entry.runtime_data). YAML-only integrations legitimately need
+        # hass.data[DOMAIN].
+        if not has_config_flow(parsed.domain, node.root()):
+            return False
+
+        func = enclosing_function(node)
+        return not (func and func.name in _SKIP_FUNCTIONS)
+
+
+def _is_hass_data(node: nodes.NodeNG) -> bool:
+    """Return True if node is hass.data or self.hass.data."""
+    match node:
+        case nodes.Attribute(
+            expr=(
+                nodes.Name(name="hass")
+                | nodes.Attribute(expr=nodes.Name(name="self"), attrname="hass")
+            ),
+            attrname="data",
+        ):
+            return True
+        case _:
+            return False
+
 
 def _is_hass_data_domain_access(node: nodes.Subscript) -> bool:
     """Return True if node is hass.data[DOMAIN] or self.hass.data[DOMAIN]."""
     match node:
-        case nodes.Subscript(
-            value=nodes.Attribute(
-                expr=(
-                    nodes.Name(name="hass")
-                    | nodes.Attribute(expr=nodes.Name(name="self"), attrname="hass")
-                ),
-                attrname="data",
-            ),
-            slice=nodes.Name(name="DOMAIN"),
+        case nodes.Subscript(value=value, slice=nodes.Name(name="DOMAIN")) if (
+            _is_hass_data(value)
         ):
+            return True
+        case _:
+            return False
+
+
+def _is_hass_data_domain_call(node: nodes.Call) -> bool:
+    """Return True for hass.data.setdefault(DOMAIN, ...) or hass.data.get(DOMAIN).
+
+    These read/write DOMAIN data just like the subscript form. Deletion helpers
+    such as ``hass.data.pop(DOMAIN)`` are intentionally not matched.
+    """
+    match node:
+        case nodes.Call(
+            func=nodes.Attribute(expr=value, attrname="setdefault" | "get"),
+            args=[nodes.Name(name="DOMAIN"), *_],
+        ) if _is_hass_data(value):
             return True
         case _:
             return False

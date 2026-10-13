@@ -1,6 +1,7 @@
 """Data update coordinator for Homevolt integration."""
 
 import logging
+from typing import override
 
 from homevolt import (
     Homevolt,
@@ -42,6 +43,7 @@ class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Homevolt]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> Homevolt:
         """Fetch data from the Homevolt API."""
         try:
@@ -49,6 +51,10 @@ class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Homevolt]):
         except HomevoltAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except (HomevoltConnectionError, HomevoltError) as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         return self.client

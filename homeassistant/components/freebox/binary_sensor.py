@@ -1,7 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 RAID_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="raid_degraded",
-        name="degraded",
+        translation_key="raid_degraded",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -68,7 +68,7 @@ async def async_setup_entry(
 class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox binary sensor."""
 
-    _sensor_name = "trigger"
+    _endpoint_name = "trigger"
 
     def __init__(
         self,
@@ -79,10 +79,13 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         """Initialize a Freebox binary sensor."""
         super().__init__(router, node, sub_node)
         self._command_id = self.get_command_id(
-            node["type"]["endpoints"], "signal", self._sensor_name
+            node["type"]["endpoints"], "signal", self._endpoint_name
         )
-        self._attr_is_on = self._edit_state(self.get_value("signal", self._sensor_name))
+        self._attr_is_on = self._edit_state(
+            self.get_value("signal", self._endpoint_name)
+        )
 
+    @override
     async def async_update_signal(self) -> None:
         """Update name & state."""
         self._attr_is_on = self._edit_state(
@@ -91,10 +94,10 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         await FreeboxHomeEntity.async_update_signal(self)
 
     def _edit_state(self, state: bool | None) -> bool | None:
-        """Edit state depending on sensor name."""
+        """Edit state depending on endpoint name."""
         if state is None:
             return None
-        if self._sensor_name == "trigger":
+        if self._endpoint_name == "trigger":
             return not state
         return state
 
@@ -103,12 +106,14 @@ class FreeboxPirSensor(FreeboxHomeBinarySensor):
     """Representation of a Freebox motion binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_name = None
 
 
 class FreeboxDwsSensor(FreeboxHomeBinarySensor):
     """Representation of a Freebox door opener binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
+    _attr_name = None
 
 
 class FreeboxCoverSensor(FreeboxHomeBinarySensor):
@@ -121,14 +126,15 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     _attr_device_class = BinarySensorDeviceClass.SAFETY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "cover"
 
-    _sensor_name = "cover"
+    _endpoint_name = "cover"
 
     def __init__(self, router: FreeboxRouter, node: dict[str, Any]) -> None:
         """Initialize a cover for another device."""
         cover_node = next(
             filter(
-                lambda x: x["name"] == self._sensor_name and x["ep_type"] == "signal",
+                lambda x: x["name"] == self._endpoint_name and x["ep_type"] == "signal",
                 node["type"]["endpoints"],
             ),
             None,
@@ -153,7 +159,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         self._router = router
         self._attr_device_info = router.device_info
         self._raid = raid
-        self._attr_name = f"Raid array {raid['id']} {description.name}"
+        self._attr_translation_placeholders = {"id": str(raid["id"])}
         self._attr_unique_id = (
             f"{router.mac} {description.key} {raid['name']} {raid['id']}"
         )
@@ -164,6 +170,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         self._raid = self._router.raids[self._raid["id"]]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if degraded."""
         return self._raid["degraded"]
@@ -174,6 +181,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()

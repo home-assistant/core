@@ -1,16 +1,11 @@
 """Viessmann ViCare select device."""
 
 from contextlib import suppress
-import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -19,9 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_device_serial, is_supported
-
-_LOGGER = logging.getLogger(__name__)
+from .utils import is_supported
 
 # Map API values to snake_case for HA, and back
 DHW_MODE_API_TO_HA: dict[str, str] = {
@@ -38,7 +31,7 @@ def _build_entities(
     """Create ViCare select entities for a device."""
     return [
         ViCareDHWOperatingModeSelect(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
         )
@@ -88,7 +81,7 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
 
     def update(self) -> None:
         """Update state from the ViCare API."""
-        try:
+        with self.vicare_api_handler():
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_options = [
                     DHW_MODE_API_TO_HA.get(mode, mode)
@@ -98,15 +91,8 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 active = self._api.getDomesticHotWaterActiveOperatingMode()
                 self._attr_current_option = DHW_MODE_API_TO_HA.get(active, active)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
+    @override
     def select_option(self, option: str) -> None:
         """Set the DHW operating mode."""
         api_mode = DHW_MODE_HA_TO_API.get(option, option)

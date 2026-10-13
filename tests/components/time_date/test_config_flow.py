@@ -3,11 +3,12 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.time_date.const import CONF_DISPLAY_OPTIONS, DOMAIN
+from homeassistant.components.time_date.const import DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -43,7 +44,7 @@ async def test_user_flow_does_not_allow_beat(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"display_options": ["beat"]},
@@ -85,6 +86,7 @@ async def test_timezone_not_set(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timezone_not_exist"}
 
 

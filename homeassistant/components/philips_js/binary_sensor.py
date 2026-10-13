@@ -1,6 +1,7 @@
 """Philips TV binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from haphilipsjs import PhilipsTV
 
@@ -88,6 +89,7 @@ class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEnti
         super().__init__(coordinator)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 

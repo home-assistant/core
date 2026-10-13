@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -88,6 +88,7 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
         self._attr_unique_id = f"{self.mac_or_serial}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._attr_is_on = True
@@ -96,6 +97,7 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
             profile, self.entity_description.turn_on_data
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._attr_is_on = False

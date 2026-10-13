@@ -2,6 +2,7 @@
 
 ATTRIBUTION = "Data provided by D-Link"
 ATTR_TOTAL_CONSUMPTION = "total_consumption"
+ATTR_CURRENT_CONSUMPTION = "current_consumption"
 
 CONF_USE_LEGACY_PROTOCOL = "use_legacy_protocol"
 

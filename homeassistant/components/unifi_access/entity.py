@@ -1,5 +1,7 @@
 """Base entity for the UniFi Access integration."""
 
+from typing import override
+
 from unifi_access_api import Door
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,6 +33,7 @@ class UnifiAccessEntity(CoordinatorEntity[UnifiAccessCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._door_id in self.coordinator.data.doors

@@ -1,6 +1,6 @@
 """Telegram bot notification entity."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import (
     NotifyEntity,
@@ -9,10 +9,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TelegramBotConfigEntry
-from .const import ATTR_TITLE, CONF_CHAT_ID
+from .const import ATTR_TITLE, CONF_CHAT_ID, DOMAIN
 from .entity import TelegramBotEntity
 
 
@@ -33,6 +34,7 @@ async def async_setup_entry(
 class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     """Representation of a telegram bot notification entity."""
 
+    _attr_name = None
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(
@@ -45,8 +47,18 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
             config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
         )
         self.chat_id = subentry.data[CONF_CHAT_ID]
-        self._attr_name = subentry.title
+        # Each chat gets its own device (keyed per chat) linked to the shared bot device.
+        device_info = self._attr_device_info
+        assert device_info is not None
+        device_info["identifiers"] = {(DOMAIN, f"{self.bot_id}_{self.chat_id}")}
+        device_info["name"] = subentry.title
+        device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+            config_entry.runtime_data.hass,
+            (DOMAIN, f"{self.bot_id}"),
+            config_entry_id=config_entry.entry_id,
+        )
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         kwargs: dict[str, Any] = {ATTR_TITLE: title}

@@ -7,9 +7,11 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
@@ -18,9 +20,11 @@ from reolink_aio.exceptions import (
 from homeassistant import config_entries
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
@@ -42,15 +46,19 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import (
     DHCP_FORMATTED_MAC,
+    TEST_BC_CON,
     TEST_BC_PORT,
     TEST_HOST,
     TEST_HOST2,
     TEST_MAC,
+    TEST_MAC2,
+    TEST_MAC_CAM,
     TEST_NVR_NAME,
     TEST_PASSWORD,
     TEST_PASSWORD2,
     TEST_PORT,
     TEST_PRIVACY,
+    TEST_UID,
     TEST_USE_HTTPS,
     TEST_USERNAME,
     TEST_USERNAME2,
@@ -91,7 +99,9 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
+        CONF_UID: TEST_UID,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -146,7 +156,9 @@ async def test_config_flow_privacy_success(
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
+        CONF_UID: TEST_UID,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -188,7 +200,9 @@ async def test_config_flow_baichuan_only(
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: True,
+        CONF_UID: TEST_UID,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -240,6 +254,23 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
+    reolink_host.get_host_data.side_effect = None
+    reolink_host.mac_address = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_HOST: "no_mac_address"}
+    assert result["description_placeholders"]["error"] == ""
+
+    reolink_host.mac_address = TEST_MAC
     reolink_host.get_host_data.side_effect = ReolinkWebhookException("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -298,6 +329,20 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "update_needed"}
 
+    reolink_host.get_host_data.side_effect = LoginAccountDeviceError("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "account_device"}
+
     reolink_host.valid_password.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -350,7 +395,9 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
+        CONF_UID: TEST_UID,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -370,7 +417,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: "rtsp",
@@ -411,7 +460,9 @@ async def test_reauth(hass: HomeAssistant) -> None:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -442,56 +493,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth_abort_unique_id_mismatch(
-    hass: HomeAssistant, reolink_host: MagicMock
-) -> None:
-    """Test a reauth flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=format_mac(TEST_MAC),
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_PORT: TEST_PORT,
-            CONF_USE_HTTPS: TEST_USE_HTTPS,
-            CONF_BC_PORT: TEST_BC_PORT,
-            CONF_BC_ONLY: False,
-        },
-        options={
-            CONF_PROTOCOL: DEFAULT_PROTOCOL,
-        },
-        title=TEST_NVR_NAME,
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    reolink_host.mac_address = "aa:aa:aa:aa:aa:aa"
-
-    result = await config_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: TEST_USERNAME2,
-            CONF_PASSWORD: TEST_PASSWORD2,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
-    assert config_entry.data[CONF_HOST] == TEST_HOST
-    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
-    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -529,11 +530,14 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
+        CONF_UID: TEST_UID,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_dhcp_ip_update_aborted_if_wrong_mac(
@@ -553,7 +557,9 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -595,7 +601,9 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=ANY,
             bc_port=TEST_BC_PORT,
+            bc_connection=ConnectionEnum(TEST_BC_CON),
             bc_only=False,
+            uid=TEST_UID,
         )
         assert expected_call in reolink_host_class.call_args_list
 
@@ -677,7 +685,9 @@ async def test_dhcp_ip_update(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -720,7 +730,9 @@ async def test_dhcp_ip_update(
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=ANY,
             bc_port=TEST_BC_PORT,
+            bc_connection=ConnectionEnum(TEST_BC_CON),
             bc_only=False,
+            uid=TEST_UID,
         )
         assert expected_call in reolink_host_class.call_args_list
 
@@ -753,7 +765,9 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -786,7 +800,9 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
         timeout=DEFAULT_TIMEOUT,
         aiohttp_get_session_callback=ANY,
         bc_port=TEST_BC_PORT,
+        bc_connection=ConnectionEnum(TEST_BC_CON),
         bc_only=False,
+        uid=TEST_UID,
     )
     assert expected_call in reolink_host_class.call_args_list
 
@@ -815,7 +831,9 @@ async def test_reconfig(hass: HomeAssistant) -> None:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -850,10 +868,72 @@ async def test_reconfig(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfig_abort_unique_id_mismatch(
-    hass: HomeAssistant, reolink_host: MagicMock
+@pytest.mark.parametrize(
+    ("source", "user_input", "success_reason"),
+    [
+        pytest.param(
+            config_entries.SOURCE_REAUTH,
+            {CONF_USERNAME: TEST_USERNAME2, CONF_PASSWORD: TEST_PASSWORD2},
+            "reauth_successful",
+            id="reauth",
+        ),
+        pytest.param(
+            config_entries.SOURCE_RECONFIGURE,
+            {
+                CONF_HOST: TEST_HOST2,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+            "reconfigure_successful",
+            id="reconfigure",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("uid_supported", "device_uid", "other_entry_mac", "abort_reason"),
+    [
+        pytest.param(
+            True,
+            TEST_UID,
+            TEST_MAC_CAM,
+            None,
+            id="same_device_on_other_interface",
+        ),
+        pytest.param(
+            True,
+            "OTHER0123456789A",
+            TEST_MAC_CAM,
+            "unique_id_mismatch",
+            id="different_device",
+        ),
+        pytest.param(
+            False,
+            TEST_UID,
+            TEST_MAC_CAM,
+            "unique_id_mismatch",
+            id="uid_not_supported",
+        ),
+        pytest.param(
+            True,
+            TEST_UID,
+            TEST_MAC2,
+            "already_configured",
+            id="other_interface_has_its_own_entry",
+        ),
+    ],
+)
+async def test_reauth_reconfig_mac_change(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    source: str,
+    user_input: dict[str, str],
+    success_reason: str,
+    uid_supported: bool,
+    device_uid: str,
+    other_entry_mac: str,
+    abort_reason: str | None,
 ) -> None:
-    """Test a reconfiguration flow aborts if the unique id does not match."""
+    """Test a reauth or reconfigure flow when the device reports another MAC address."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -864,7 +944,9 @@ async def test_reconfig_abort_unique_id_mismatch(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -872,29 +954,44 @@ async def test_reconfig_abort_unique_id_mismatch(
         title=TEST_NVR_NAME,
     )
     config_entry.add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id=format_mac(other_entry_mac)).add_to_hass(
+        hass
+    )
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    reolink_host.mac_address = "aa:aa:aa:aa:aa:aa"
+    reolink_host.mac_address = TEST_MAC2
+    reolink_host.uid = device_uid
+    reolink_host.supported.side_effect = lambda channel, capability: (
+        capability != "UID" or uid_supported
+    )
 
-    result = await config_entry.start_reconfigure_flow(hass)
+    if source == config_entries.SOURCE_REAUTH:
+        result = await config_entry.start_reauth_flow(hass)
+    else:
+        result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: TEST_HOST2,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
+        result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
+    if abort_reason is None:
+        # the entry follows the device to its new MAC address
+        assert result["reason"] == success_reason
+        assert config_entry.data[CONF_HOST] == user_input.get(CONF_HOST, TEST_HOST)
+        assert config_entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]
+        assert config_entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
+        assert config_entry.unique_id == format_mac(TEST_MAC2)
+        return
+
+    assert result["reason"] == abort_reason
     assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+    assert config_entry.unique_id == format_mac(TEST_MAC)

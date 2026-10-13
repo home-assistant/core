@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
 from bthome_ble.parser import EncryptionScheme
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
@@ -15,6 +15,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .const import DOMAIN
 
@@ -43,6 +44,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -59,7 +61,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info = discovery_info
         self._discovered_device = device
 
-        if device.encryption_scheme == EncryptionScheme.BTHOME_BINDKEY:
+        if device.encryption_scheme is EncryptionScheme.BTHOME_BINDKEY:
             return await self.async_step_get_encryption_key()
         return await self.async_step_bluetooth_confirm()
 
@@ -93,7 +95,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="get_encryption_key",
             description_placeholders=self.context["title_placeholders"],
-            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            data_schema=probatio.Schema(
+                {probatio.Required("bindkey"): probatio.All(str, probatio.Strip)}
+            ),
             errors=errors,
         )
 
@@ -110,6 +114,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,7 +130,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = discovery.discovery_info
             self._discovered_device = discovery.device
 
-            if discovery.device.encryption_scheme == EncryptionScheme.BTHOME_BINDKEY:
+            if discovery.device.encryption_scheme is EncryptionScheme.BTHOME_BINDKEY:
                 return await self.async_step_get_encryption_key()
 
             return self._async_get_or_create_entry()
@@ -152,7 +157,9 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(titles)}
+            ),
         )
 
     async def async_step_reauth(
@@ -164,11 +171,13 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = device.last_service_info
 
-        if device.encryption_scheme == EncryptionScheme.BTHOME_BINDKEY:
+        if device.encryption_scheme is EncryptionScheme.BTHOME_BINDKEY:
             return await self.async_step_get_encryption_key()
 
         # Otherwise there wasn't actually encryption so abort
-        return self.async_abort(reason="reauth_successful")
+        return self.async_abort(
+            reason="reauth_successful", translation_domain=HOMEASSISTANT_DOMAIN
+        )
 
     def _async_get_or_create_entry(
         self, bindkey: str | None = None

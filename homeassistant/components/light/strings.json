@@ -35,7 +35,7 @@
     "field_white_name": "White",
     "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
     "field_xy_color_name": "XY-color",
-    "section_advanced_fields_name": "Advanced options",
+    "section_additional_fields_name": "Additional options",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
@@ -396,8 +396,8 @@
       },
       "name": "Toggle light",
       "sections": {
-        "advanced_fields": {
-          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        "additional_fields": {
+          "name": "[%key:component::light::common::section_additional_fields_name%]"
         }
       }
     },
@@ -415,8 +415,8 @@
       },
       "name": "Turn off light",
       "sections": {
-        "advanced_fields": {
-          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        "additional_fields": {
+          "name": "[%key:component::light::common::section_additional_fields_name%]"
         }
       }
     },
@@ -490,8 +490,8 @@
       },
       "name": "Turn on light",
       "sections": {
-        "advanced_fields": {
-          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        "additional_fields": {
+          "name": "[%key:component::light::common::section_additional_fields_name%]"
         }
       }
     }
@@ -499,7 +499,7 @@
   "title": "Light",
   "triggers": {
     "brightness_changed": {
-      "description": "Triggers after the brightness of one or more lights changes.",
+      "description": "Triggers when the brightness of one or more lights changes.",
       "fields": {
         "threshold": {
           "name": "[%key:component::light::common::trigger_threshold_name%]"
@@ -508,7 +508,7 @@
       "name": "Light brightness changed"
     },
     "brightness_crossed_threshold": {
-      "description": "Triggers after the brightness of one or more lights crosses a threshold.",
+      "description": "Triggers when the brightness of one or more lights crosses a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::trigger_behavior_name%]"
@@ -523,7 +523,7 @@
       "name": "Light brightness crossed threshold"
     },
     "turned_off": {
-      "description": "Triggers after one or more lights turn off.",
+      "description": "Triggers when one or more lights turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::trigger_behavior_name%]"
@@ -535,7 +535,7 @@
       "name": "Light turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more lights turn on.",
+      "description": "Triggers when one or more lights turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::trigger_behavior_name%]"

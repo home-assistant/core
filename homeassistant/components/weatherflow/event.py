@@ -1,6 +1,7 @@
 """Event entities for the WeatherFlow integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyweatherflowudp.device import EVENT_RAIN_START, EVENT_STRIKE, WeatherFlowDevice
 
@@ -87,6 +88,7 @@ class WeatherFlowEventEntity(EventEntity):
         )
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the configured WeatherFlow device event."""
         self.async_on_remove(

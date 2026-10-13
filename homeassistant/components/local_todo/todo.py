@@ -3,9 +3,11 @@
 import asyncio
 import datetime
 import logging
+from typing import override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
 
@@ -62,6 +64,16 @@ def _migrate_calendar(calendar: Calendar) -> bool:
     return migrated
 
 
+def _repair_legacy_crlf_newlines(content: str) -> str:
+    r"""Repair ICS content corrupted by CRLF newlines from ical <= 12.1.3.
+
+    In ical <= 12.1.3, TextEncoder escaped \n to \\n but left \r unescaped.
+    When read with Python's universal newlines mode (newline=None), any lone \r
+    before \\n was converted into \n\\n, breaking property line parsing.
+    """
+    return content.replace("\r\\n", "\\n").replace("\n\\n", "\\n").replace("\r", "")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LocalTodoConfigEntry,
@@ -69,20 +81,37 @@ async def async_setup_entry(
 ) -> None:
     """Set up the local_todo todo platform."""
 
+    name = config_entry.data[CONF_TODO_LIST_NAME]
     store = config_entry.runtime_data
     ics = await store.async_load()
 
-    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-        # calendar_from_ics will dynamically load packages
-        # the first time it is called, so we need to do it
-        # in a separate thread to avoid blocking the event loop
-        calendar: Calendar = await hass.async_add_import_executor_job(
-            IcsCalendarStream.calendar_from_ics, ics
+    migrated = False
+    try:
+        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+            # calendar_from_ics will dynamically load packages
+            # the first time it is called, so we need to do it
+            # in a separate thread to avoid blocking the event loop
+            calendar: Calendar = await hass.async_add_import_executor_job(
+                IcsCalendarStream.calendar_from_ics, ics
+            )
+    except CalendarParseError:
+        # Attempt to repair malformed newlines from ical <= 12.1.3 CRLF bug
+        repaired_ics = _repair_legacy_crlf_newlines(ics)
+        if repaired_ics == ics:
+            raise
+        calendar = await hass.async_add_import_executor_job(
+            IcsCalendarStream.calendar_from_ics, repaired_ics
         )
-    migrated = _migrate_calendar(calendar)
+        _LOGGER.warning(
+            "Repaired malformed iCalendar file for to-do list %s",
+            name,
+        )
+        migrated = True
+
+    if _migrate_calendar(calendar):
+        migrated = True
     calendar.prodid = PRODID
 
-    name = config_entry.data[CONF_TODO_LIST_NAME]
     entity = LocalTodoListEntity(store, calendar, name, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)
 
@@ -159,6 +188,7 @@ class LocalTodoListEntity(TodoListEntity):
             )
         self._attr_todo_items = todo_items
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         todo = _convert_item(item)
@@ -168,8 +198,9 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
+        """Update an item in the To-do list."""
         todo = _convert_item(item)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
@@ -177,15 +208,17 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        store = self._new_todo_store()
         async with self._calendar_lock:
+            todo_store = self._new_todo_store()
             for uid in uids:
-                store.delete(uid)
+                todo_store.delete(uid)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:

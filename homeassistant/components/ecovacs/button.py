@@ -1,6 +1,7 @@
 """Ecovacs button module."""
 
 from dataclasses import dataclass
+from typing import override
 
 from deebot_client.capabilities import (
     CapabilityExecute,
@@ -116,6 +117,7 @@ class EcovacsButtonEntity(
 
     entity_description: EcovacsLifespanButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.execute_command(self._capability.execute())
@@ -129,6 +131,7 @@ class EcovacsResetLifespanButtonEntity(
 
     entity_description: EcovacsLifespanButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.execute_command(
@@ -144,6 +147,7 @@ class EcovacsStationActionButtonEntity(
 
     entity_description: EcovacsStationActionButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._device.execute_command(

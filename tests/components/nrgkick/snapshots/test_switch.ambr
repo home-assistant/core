@@ -39,7 +39,7 @@
 # name: test_switch_entities[switch.nrgkick_test_charging_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NRGkick Test Charging enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NRGkick Test Charging enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nrgkick_test_charging_enabled',

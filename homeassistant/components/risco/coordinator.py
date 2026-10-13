@@ -2,19 +2,20 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyrisco import CannotConnectError, OperationError, RiscoCloud, UnauthorizedError
 from pyrisco.cloud.alarm import Alarm
 from pyrisco.cloud.event import Event
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from .models import RiscoConfigEntry
 
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
@@ -24,12 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
     """Class to manage fetching risco data."""
 
-    config_entry: ConfigEntry
+    config_entry: RiscoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RiscoConfigEntry,
         risco: RiscoCloud,
     ) -> None:
         """Initialize global risco data updater."""
@@ -39,13 +40,10 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> Alarm:
         """Fetch data from risco."""
         try:
@@ -57,12 +55,12 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
 class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     """Class to manage fetching risco data."""
 
-    config_entry: ConfigEntry
+    config_entry: RiscoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RiscoConfigEntry,
         risco: RiscoCloud,
     ) -> None:
         """Initialize global risco data updater."""
@@ -80,6 +78,7 @@ class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self) -> list[Event]:
         """Fetch data from risco."""
         last_store = await self._store.async_load() or {}

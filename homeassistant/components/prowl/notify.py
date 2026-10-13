@@ -2,11 +2,11 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
-import httpx
+import httpx2
+import probatio
 import prowlpy
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -27,7 +27,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
+)
 
 
 async def async_get_service(
@@ -58,12 +60,13 @@ class ProwlNotificationService(BaseNotificationService):
     """
 
     def __init__(
-        self, hass: HomeAssistant, api_key: str, httpx_client: httpx.AsyncClient
+        self, hass: HomeAssistant, api_key: str, httpx_client: httpx2.AsyncClient
     ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
         data = kwargs.get(ATTR_DATA, {})
@@ -80,19 +83,17 @@ class ProwlNotificationService(BaseNotificationService):
                     url=data.get("url"),
                 )
         except TimeoutError as ex:
-            _LOGGER.error("Timeout accessing Prowl API")
             raise HomeAssistantError("Timeout accessing Prowl API") from ex
         except prowlpy.APIError as ex:
             if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
                 raise HomeAssistantError("Invalid API key for Prowl service") from ex
             if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
                 raise HomeAssistantError(
                     "Prowl service reported: exceeded rate limit"
                 ) from ex
-            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
-            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+            raise HomeAssistantError(
+                f"Unexpected error when calling Prowl API: {ex}"
+            ) from ex
 
 
 class ProwlNotificationEntity(NotifyEntity):
@@ -106,7 +107,7 @@ class ProwlNotificationEntity(NotifyEntity):
         hass: HomeAssistant,
         name: str,
         api_key: str,
-        httpx_client: httpx.AsyncClient,
+        httpx_client: httpx2.AsyncClient,
     ) -> None:
         """Initialize the service."""
         self._hass = hass
@@ -114,6 +115,7 @@ class ProwlNotificationEntity(NotifyEntity):
         self._attr_name = name
         self._attr_unique_id = name
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message."""
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
@@ -127,16 +129,14 @@ class ProwlNotificationEntity(NotifyEntity):
                     url=None,
                 )
         except TimeoutError as ex:
-            _LOGGER.error("Timeout accessing Prowl API")
             raise HomeAssistantError("Timeout accessing Prowl API") from ex
         except prowlpy.APIError as ex:
             if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
                 raise HomeAssistantError("Invalid API key for Prowl service") from ex
             if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
                 raise HomeAssistantError(
                     "Prowl service reported: exceeded rate limit"
                 ) from ex
-            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
-            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+            raise HomeAssistantError(
+                f"Unexpected error when calling Prowl API: {ex}"
+            ) from ex

@@ -9,11 +9,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -42,6 +38,10 @@ async def test_unsupported_utility_fix_flow(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.reason
+        == "The utility Unsupported Utility is no longer supported"
+    )
 
     # Verify the issue was created correctly
     issue_id = f"unsupported_utility_{mock_config_entry.entry_id}"
@@ -55,7 +55,6 @@ async def test_unsupported_utility_fix_flow(
         "title": "My Unsupported Utility",
     }
 
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     # Start the repair flow

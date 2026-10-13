@@ -1,7 +1,7 @@
 """Amber Electric Coordinator."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 import amberelectric
 from amberelectric.models.actual_interval import ActualInterval
@@ -132,6 +132,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Fetched new Amber data: %s", intervals)
         return result
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
         return await self.hass.async_add_executor_job(self.update_price_data)

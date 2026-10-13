@@ -1,6 +1,6 @@
 """API for Google Photos bound to Home Assistant OAuth."""
 
-from typing import cast
+from typing import cast, override
 
 import aiohttp
 from google_photos_library_api import api
@@ -21,6 +21,7 @@ class AsyncConfigEntryAuth(api.AbstractAuth):
         super().__init__(websession)
         self._session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
@@ -39,6 +40,7 @@ class AsyncConfigFlowAuth(api.AbstractAuth):
         super().__init__(websession)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return self._token

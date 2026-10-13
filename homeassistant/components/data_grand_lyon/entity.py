@@ -1,5 +1,7 @@
 """Base entity for the Data Grand Lyon integration."""
 
+from typing import override
+
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -9,7 +11,11 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from .coordinator import DataGrandLyonTclCoordinator, DataGrandLyonVelovCoordinator
+from .coordinator import (
+    DataGrandLyonParkAndRideCoordinator,
+    DataGrandLyonTclCoordinator,
+    DataGrandLyonVelovCoordinator,
+)
 
 
 class DataGrandLyonEntity[_CoordinatorT: DataUpdateCoordinator](
@@ -43,6 +49,7 @@ class DataGrandLyonEntity[_CoordinatorT: DataUpdateCoordinator](
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if subentry data is available."""
         return super().available and self._subentry_id in self.coordinator.data
@@ -72,3 +79,18 @@ class DataGrandLyonVelovEntity(DataGrandLyonEntity[DataGrandLyonVelovCoordinator
     ) -> None:
         """Initialize the Vélo'v entity."""
         super().__init__(coordinator, subentry, description, "JCDecaux", "Station")
+
+
+class DataGrandLyonParkAndRideEntity(
+    DataGrandLyonEntity[DataGrandLyonParkAndRideCoordinator]
+):
+    """Base entity for Data Grand Lyon park-and-ride facilities."""
+
+    def __init__(
+        self,
+        coordinator: DataGrandLyonParkAndRideCoordinator,
+        subentry: ConfigSubentry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the park-and-ride entity."""
+        super().__init__(coordinator, subentry, description, "TCL", "Park & Ride")

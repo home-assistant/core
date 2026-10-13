@@ -1,8 +1,7 @@
 """Text to speech support for OpenAI."""
 
 from collections.abc import Mapping
-import logging
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from openai import OpenAIError
 from propcache.api import cached_property
@@ -15,17 +14,19 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, CONF_PROMPT, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
+from .const import CONF_CHAT_MODEL, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -144,11 +145,13 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
         self._attr_name = subentry.title
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
 
     @cached_property
+    @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
@@ -156,6 +159,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
             ATTR_PREFERRED_FORMAT: "mp3",
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -188,7 +192,6 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
                 async for chunk in response.iter_bytes():
                     response_data.extend(chunk)
         except OpenAIError as exc:
-            _LOGGER.exception("Error during TTS")
             raise HomeAssistantError(exc) from exc
 
         return response_format, bytes(response_data)

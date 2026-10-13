@@ -9,6 +9,18 @@
     'config_entry_options': dict({
       'code': '**REDACTED**',
     }),
+    'panel_info': dict({
+      'firmware': dict({
+        'release_date': '2025-03-12',
+        'version': '1.24',
+      }),
+      'language_code': 0,
+      'model': dict({
+        'name': 'INTEGRA 64',
+      }),
+      'settings_stored_in_flash': True,
+      'type_code': 2,
+    }),
     'subentries': dict({
       'ID_OUTPUT': dict({
         'data': dict({
@@ -66,6 +78,18 @@
     }),
     'config_entry_options': dict({
       'code': '**REDACTED**',
+    }),
+    'panel_info': dict({
+      'firmware': dict({
+        'release_date': '2025-03-12',
+        'version': '1.24',
+      }),
+      'language_code': 0,
+      'model': dict({
+        'name': 'INTEGRA 64',
+      }),
+      'settings_stored_in_flash': True,
+      'type_code': 2,
     }),
     'subentries': dict({
       'ID_ZONE': dict({

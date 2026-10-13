@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -600,6 +601,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
     SensorDeviceClass.PRESSURE: (
+        UnitOfPressure.ATM,
         UnitOfPressure.BAR,
         UnitOfPressure.CBAR,
         UnitOfPressure.HPA,
@@ -609,6 +611,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfPressure.MILLIPASCAL,
         UnitOfPressure.PA,
     ),
+    SensorDeviceClass.RADON: (UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,),
     SensorDeviceClass.SPEED: (
         UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -641,6 +644,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         SensorDeviceClass.PRECIPITATION,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
         SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.RADON,
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
@@ -857,6 +861,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
+    SensorDeviceClass.RADON: (UnitOfRadiationConcentration.PICOCURIES_PER_LITER,),
     SensorDeviceClass.SPEED: (
         UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.FEET_PER_SECOND,
@@ -891,6 +896,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         SensorDeviceClass.PRECIPITATION,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
         SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.RADON,
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,

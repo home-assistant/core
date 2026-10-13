@@ -1,7 +1,7 @@
 """Support for Litter-Robot updates."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pylitterbot import LitterRobot4
 
@@ -70,20 +70,24 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
     )
 
     @property
+    @override
     def installed_version(self) -> str:
         """Version installed and in use."""
         return self.robot.firmware
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation progress."""
         return self.robot.firmware_update_triggered
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Set polling to True."""
         return True
 
+    @override
     async def async_update(self) -> None:
         """Update the entity."""
         # If the robot has a firmware update already in progress, checking for the
@@ -96,6 +100,7 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
             self._attr_latest_version = latest_version
 
     @whisker_command
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

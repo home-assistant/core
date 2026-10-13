@@ -2,9 +2,9 @@
 
 import logging
 
+import probatio
 from requests.exceptions import RequestException
 import thingspeak
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY,
@@ -13,8 +13,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, event, state as state_helper
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.helpers import config_validation as cv, state as state_helper
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,30 +24,30 @@ DOMAIN = "thingspeak"
 
 TIMEOUT = 5
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_ID): int,
-                vol.Required(CONF_WHITELIST): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+                probatio.Required(CONF_ID): int,
+                probatio.Required(CONF_WHITELIST): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Thingspeak environment."""
     conf = config[DOMAIN]
     api_key = conf.get(CONF_API_KEY)
     channel_id = conf.get(CONF_ID)
     entity = conf.get(CONF_WHITELIST)
 
+    channel = thingspeak.Channel(channel_id, api_key=api_key, timeout=TIMEOUT)
     try:
-        channel = thingspeak.Channel(channel_id, api_key=api_key, timeout=TIMEOUT)
-        channel.get()
+        await hass.async_add_executor_job(channel.get)
     except RequestException:
         _LOGGER.error(
             "Error while accessing the ThingSpeak channel. "
@@ -54,8 +55,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         return False
 
-    def thingspeak_listener(entity_id, old_state, new_state):
+    def thingspeak_listener(event: Event[EventStateChangedData]):
         """Listen for new events and send them to Thingspeak."""
+        new_state = event.data["new_state"]
         if new_state is None or new_state.state in (
             STATE_UNKNOWN,
             "",
@@ -73,6 +75,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except RequestException:
             _LOGGER.error("Error while sending value '%s' to Thingspeak", _state)
 
-    event.track_state_change(hass, entity, thingspeak_listener)
+    async_track_state_change_event(hass, entity, thingspeak_listener)
 
     return True

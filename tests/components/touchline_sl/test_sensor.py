@@ -11,7 +11,7 @@ from .conftest import make_mock_module, make_mock_zone
 
 from tests.common import MockConfigEntry
 
-BATTERY_ENTITY_ID = "sensor.zone_1_battery"
+BATTERY_ENTITY_ID = "sensor.zone_1_zone_1_battery"
 
 
 async def test_battery_sensor_with_battery(
@@ -70,8 +70,8 @@ async def test_battery_sensor_only_created_for_zones_with_battery(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.wired_zone_battery") is None
-    assert hass.states.get("sensor.wireless_zone_battery") is not None
+    assert hass.states.get("sensor.wired_zone_wired_zone_battery") is None
+    assert hass.states.get("sensor.wireless_zone_wireless_zone_battery") is not None
 
 
 @pytest.mark.parametrize("alarm", ["no_communication", "sensor_damaged"])

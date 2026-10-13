@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -195,7 +196,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     ),
     RehlkoSensorEntityDescription(
         key="lastMaintenanceTimestamp",
-        translation_key="last_maintainance",
+        translation_key="last_maintenance",
         device_class=SensorDeviceClass.TIMESTAMP,
         document_key=GENERATOR_DATA_DEVICE,
         value_fn=datetime.fromisoformat,
@@ -203,7 +204,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     ),
     RehlkoSensorEntityDescription(
         key="nextMaintenanceTimestamp",
-        translation_key="next_maintainance",
+        translation_key="next_maintenance",
         device_class=SensorDeviceClass.TIMESTAMP,
         document_key=GENERATOR_DATA_DEVICE,
         value_fn=datetime.fromisoformat,
@@ -257,6 +258,7 @@ class RehlkoSensorEntity(RehlkoEntity, SensorEntity):
     entity_description: RehlkoSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the sensor state."""
         if self.entity_description.value_fn:

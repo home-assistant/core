@@ -43,6 +43,11 @@
         "name": "[%key:component::light::title%]"
       }
     },
+    "number": {
+      "breeze_intensity": {
+        "name": "Breeze intensity"
+      }
+    },
     "sensor": {
       "fan_timer_remaining_time": {
         "name": "Fan sleep time"
@@ -58,6 +63,17 @@
       "away_mode": {
         "name": "Away mode"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with the Modern Forms device"
+    },
+    "invalid_response": {
+      "message": "Invalid response from the Modern Forms device"
+    },
+    "sleep_timer_not_supported": {
+      "message": "This fan does not support sleep timers"
     }
   },
   "services": {

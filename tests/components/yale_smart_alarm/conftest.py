@@ -46,7 +46,7 @@ async def load_config_entry(
             entry_id="1",
             unique_id="username",
             version=2,
-            minor_version=2,
+            minor_version=3,
         )
 
         config_entry.add_to_hass(hass)

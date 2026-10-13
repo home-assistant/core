@@ -6,10 +6,9 @@ import pytest
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant import config_entries
-from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -76,6 +75,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     bulb.async_close.assert_awaited_once()
@@ -133,7 +133,7 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_form_exceptions(
-    hass: HomeAssistant, side_effect, error_base
+    hass: HomeAssistant, side_effect: type[Exception], error_base: str
 ) -> None:
     """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
@@ -152,6 +152,19 @@ async def test_user_form_exceptions(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
     bulb.async_close.assert_awaited_once()
+
+    with (
+        _patch_wizlight(),
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=True),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            TEST_CONNECTION,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
@@ -303,6 +316,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     bulb.async_close.assert_awaited_once()
@@ -422,6 +436,7 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result3["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     bulb.async_close.assert_awaited_once()
@@ -544,6 +559,7 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -580,6 +596,7 @@ async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -623,5 +640,6 @@ async def test_flow_replace_ignored_device(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import LIGHT_AND_SIGNAL_SERVICE_INFO, NO_DATA_SERVICE_INFO
+from . import LIGHT_SERVICE_INFO, NO_DATA_SERVICE_INFO
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
@@ -38,7 +38,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    inject_bluetooth_service_info(hass, LIGHT_AND_SIGNAL_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, LIGHT_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 1
 
@@ -66,7 +66,7 @@ async def test_binary_sensor_restore_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    inject_bluetooth_service_info(hass, LIGHT_AND_SIGNAL_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, LIGHT_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 1
 

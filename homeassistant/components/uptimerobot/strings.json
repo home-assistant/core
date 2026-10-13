@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -57,7 +56,16 @@
     }
   },
   "exceptions": {
-    "api_exception": {
+    "api_authentication_exception": {
+      "message": "API authentication failed, please check your API key"
+    },
+    "api_generic_exception": {
+      "message": "API error: {error}"
+    },
+    "api_key_wrong_type": {
+      "message": "Wrong API key type detected, use the 'main' API key"
+    },
+    "api_switch_exception": {
       "message": "Could not turn on/off monitoring: {error}"
     }
   }

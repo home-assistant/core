@@ -44,7 +44,9 @@ def get_and_check_entity_basics(
     assert ha_state is not None
     if device_model:
         assert ha_state.attributes[ATTR_MODEL_TYPE] == device_model
-    assert ha_state.name == entity_name
+    assert ha_state.name == entity_name, (
+        f"Expected '{entity_name}', got '{ha_state.name}'"
+    )
 
     hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
 

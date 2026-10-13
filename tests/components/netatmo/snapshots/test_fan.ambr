@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'slow',
         'fast',
       ]),
@@ -44,14 +44,14 @@
 # name: test_entity[fan.centralized_ventilation_controler-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Centralized ventilation controler',
-      'preset_mode': 'slow',
-      'preset_modes': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Centralized ventilation controler',
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'slow',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'slow',
         'fast',
       ]),
-      'supported_features': <FanEntityFeature: 8>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 8>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.centralized_ventilation_controler',

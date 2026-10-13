@@ -2,28 +2,22 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from openevsehttp.__main__ import OpenEVSE
+from openevsehttp import OpenEVSE
 
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_SERIAL_NUMBER,
-    EntityCategory,
-    UnitOfElectricCurrent,
-)
+from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
+from .entity import OpenEVSEEntity
+from .helpers import openevse_exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -42,10 +36,10 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
     OpenEVSENumberDescription(
         key="charge_rate",
         translation_key="charge_rate",
-        value_fn=lambda ev: ev.max_current_soft,
-        min_value_fn=lambda ev: ev.min_amps,
-        max_value_fn=lambda ev: ev.max_amps,
-        set_value_fn=lambda ev, value: ev.set_current(value),
+        value_fn=lambda ev: ev.max_current_soft or 0,
+        min_value_fn=lambda ev: ev.min_amps or 0,
+        max_value_fn=lambda ev: ev.max_amps or 0,
+        set_value_fn=lambda ev, value: ev.set_current(int(value)),
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -68,49 +62,31 @@ async def async_setup_entry(
     )
 
 
-class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEntity):
+class OpenEVSENumber(OpenEVSEEntity, NumberEntity):
     """Implementation of an OpenEVSE sensor."""
 
-    _attr_has_entity_name = True
     entity_description: OpenEVSENumberDescription
 
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSENumberDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{identifier}-{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            manufacturer="OpenEVSE",
-        )
-        if unique_id:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, unique_id)
-            }
-            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
-
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.charger)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         return self.entity_description.min_value_fn(self.coordinator.charger)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self.entity_description.max_value_fn(self.coordinator.charger)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.entity_description.set_value_fn(self.coordinator.charger, value)
+        with openevse_exception_handler(value):
+            await self.entity_description.set_value_fn(self.coordinator.charger, value)

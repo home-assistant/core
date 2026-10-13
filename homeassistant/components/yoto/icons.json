@@ -1,0 +1,74 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "default": "mdi:bluetooth-audio"
+      },
+      "headphones": {
+        "default": "mdi:headphones"
+      }
+    },
+    "number": {
+      "day_mode_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "day_mode_max_volume": {
+        "default": "mdi:volume-high"
+      },
+      "night_mode_brightness": {
+        "default": "mdi:brightness-4"
+      },
+      "night_mode_max_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "select": {
+      "day_mode_color": {
+        "default": "mdi:palette"
+      },
+      "night_mode_color": {
+        "default": "mdi:palette"
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "none": "mdi:card-bulleted-off-outline",
+          "physical": "mdi:card-bulleted",
+          "remote": "mdi:cast-audio",
+          "streaming": "mdi:radio-tower"
+        }
+      },
+      "day_mode": {
+        "default": "mdi:theme-light-dark",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "night": "mdi:weather-night"
+        }
+      }
+    },
+    "switch": {
+      "bluetooth_pairing": {
+        "default": "mdi:bluetooth"
+      },
+      "day_mode_auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
+      "max_headphone_volume": {
+        "default": "mdi:headphones-settings"
+      },
+      "night_mode_auto_brightness": {
+        "default": "mdi:brightness-auto"
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_mode_start": {
+        "default": "mdi:weather-night"
+      }
+    }
+  }
+}

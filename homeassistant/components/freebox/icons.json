@@ -1,7 +1,26 @@
 {
-  "services": {
-    "reboot": {
-      "service": "mdi:restart"
+  "entity": {
+    "sensor": {
+      "missed": {
+        "default": "mdi:phone-missed"
+      },
+      "partition_free_space": {
+        "default": "mdi:harddisk"
+      },
+      "rate_down": {
+        "default": "mdi:download-network"
+      },
+      "rate_up": {
+        "default": "mdi:upload-network"
+      }
+    },
+    "switch": {
+      "wifi": {
+        "default": "mdi:wifi",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      }
     }
   }
 }

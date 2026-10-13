@@ -50,7 +50,10 @@ async def test_setup_disconnect(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get("lawn_mower.husqvarna_automower").state != STATE_UNAVAILABLE
+    assert (
+        hass.states.get("lawn_mower.garden_husqvarna_automower").state
+        != STATE_UNAVAILABLE
+    )
 
     mock_automower_client.is_connected.side_effect = is_connected_side_effect
     mock_automower_client.is_connected.return_value = is_connected_return_value
@@ -61,7 +64,10 @@ async def test_setup_disconnect(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("lawn_mower.husqvarna_automower").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("lawn_mower.garden_husqvarna_automower").state
+        == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize(
@@ -93,7 +99,10 @@ async def test_invalid_data_received(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("lawn_mower.husqvarna_automower").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("lawn_mower.garden_husqvarna_automower").state
+        == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize(
@@ -125,7 +134,10 @@ async def test_bleak_error_data_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("lawn_mower.husqvarna_automower").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("lawn_mower.garden_husqvarna_automower").state
+        == STATE_UNAVAILABLE
+    )
 
 
 OPERATIONAL_STATES = [
@@ -138,18 +150,25 @@ OPERATIONAL_STATES = [
 @pytest.mark.parametrize(
     ("mower_states", "mower_activities", "expected_state"),
     [
-        # MowerState ERROR, FATAL_ERROR, OFF, STOPPED, WAIT_FOR_SAFETYPIN -> Mapped to
-        # LawnMowerActivity.ERROR
+        # MowerState ERROR, FATAL_ERROR -> Mapped to LawnMowerActivity.ERROR
         (
             [
                 MowerState.ERROR,
                 MowerState.FATAL_ERROR,
+            ],
+            list(MowerActivity),
+            LawnMowerActivity.ERROR,
+        ),
+        # MowerState OFF, STOPPED, WAIT_FOR_SAFETYPIN -> Mapped to
+        # LawnMowerActivity.IDLE
+        (
+            [
                 MowerState.OFF,
                 MowerState.STOPPED,
                 MowerState.WAIT_FOR_SAFETYPIN,
             ],
             list(MowerActivity),
-            LawnMowerActivity.ERROR,
+            LawnMowerActivity.IDLE,
         ),
         # MowerState PAUSED -> Mapped to LawnMowerActivity.PAUSED
         ([MowerState.PAUSED], list(MowerActivity), LawnMowerActivity.PAUSED),
@@ -214,6 +233,6 @@ async def test_mower_activity_mapping(
             await hass.async_block_till_done()
 
             assert (
-                hass.states.get("lawn_mower.husqvarna_automower").state
+                hass.states.get("lawn_mower.garden_husqvarna_automower").state
                 == expected_state
             )

@@ -1,7 +1,7 @@
 """Class to hold all alarm control panel accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
@@ -13,13 +13,13 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -84,7 +84,7 @@ class SecuritySystem(HomeAccessory):
         self._alarm_code = self.config.get(ATTR_CODE)
 
         supported_states = state.attributes.get(
-            ATTR_SUPPORTED_FEATURES,
+            EntityStateAttribute.SUPPORTED_FEATURES,
             (
                 AlarmControlPanelEntityFeature.ARM_HOME
                 | AlarmControlPanelEntityFeature.ARM_VACATION
@@ -152,6 +152,7 @@ class SecuritySystem(HomeAccessory):
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state: str | AlarmControlPanelState = new_state.state

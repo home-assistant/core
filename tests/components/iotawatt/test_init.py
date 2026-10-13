@@ -2,8 +2,9 @@
 
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 
+from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -18,7 +19,7 @@ async def test_setup_unload(
 ) -> None:
     """Test we can setup and unload an entry."""
     mock_iotawatt.getSensors.return_value["sensors"]["my_sensor_key"] = INPUT_SENSOR
-    assert await async_setup_component(hass, "iotawatt", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     assert await hass.config_entries.async_unload(entry.entry_id)
 
@@ -27,8 +28,8 @@ async def test_setup_connection_failed(
     hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
 ) -> None:
     """Test connection error during startup."""
-    mock_iotawatt.connect.side_effect = httpx.ConnectError("")
-    assert await async_setup_component(hass, "iotawatt", {})
+    mock_iotawatt.connect.side_effect = httpx2.ConnectError("")
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -38,6 +39,18 @@ async def test_setup_auth_failed(
 ) -> None:
     """Test auth error during startup."""
     mock_iotawatt.connect.return_value = False
-    assert await async_setup_component(hass, "iotawatt", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_update_failed(
+    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
+) -> None:
+    """Test error while fetching sensor data during startup."""
+    mock_iotawatt.update.side_effect = httpx2.HTTPStatusError(
+        "", request=MagicMock(), response=MagicMock()
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY

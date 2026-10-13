@@ -1,5 +1,7 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
 
+from typing import override
+
 from pyinsteon.groups import (
     CO_SENSOR,
     DOOR_SENSOR,
@@ -80,6 +82,7 @@ class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
         self._attr_device_class = SENSOR_TYPES.get(self._insteon_device_group.name)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_group.value)

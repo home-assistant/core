@@ -57,7 +57,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "twitch", context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
@@ -86,7 +86,7 @@ async def test_already_configured(
     """Check flow aborts when account already configured."""
     await setup_integration(hass, config_entry)
     result = await hass.config_entries.flow.async_init(
-        "twitch", context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     await _do_get_token(hass, result, hass_client_no_auth, scopes)
 

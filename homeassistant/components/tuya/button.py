@@ -1,5 +1,8 @@
 """Support for Tuya buttons."""
 
+from dataclasses import dataclass
+from typing import override
+
 from tuya_device_handlers.definition.button import (
     ButtonDefinition,
     get_default_definition,
@@ -18,57 +21,63 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
+
+@dataclass(frozen=True)
+class TuyaButtonEntityDescription(TuyaEntityDescription, ButtonEntityDescription):
+    """Describes a Tuya button entity."""
+
+
+BUTTONS: dict[DeviceCategory, tuple[TuyaButtonEntityDescription, ...]] = {
     DeviceCategory.HXD: (
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.SWITCH_USB6,
             translation_key="snooze",
         ),
     ),
     DeviceCategory.MSP: (
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.FACTORY_RESET,
             translation_key="factory_reset",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
         ),
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.MANUAL_CLEAN,
             translation_key="manual_clean",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SD: (
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.RESET_DUSTER_CLOTH,
             translation_key="reset_duster_cloth",
             entity_category=EntityCategory.CONFIG,
         ),
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.RESET_EDGE_BRUSH,
             translation_key="reset_edge_brush",
             entity_category=EntityCategory.CONFIG,
         ),
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.RESET_FILTER,
             translation_key="reset_filter",
             entity_category=EntityCategory.CONFIG,
         ),
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.RESET_MAP,
             translation_key="reset_map",
             entity_category=EntityCategory.CONFIG,
         ),
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.RESET_ROLL_BRUSH,
             translation_key="reset_roll_brush",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SP: (
-        ButtonEntityDescription(
+        TuyaButtonEntityDescription(
             key=DPCode.DEVICE_RESTART,
             device_class=ButtonDeviceClass.RESTART,
             entity_category=EntityCategory.CONFIG,
@@ -114,13 +123,14 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: ButtonEntityDescription,
+        description: TuyaButtonEntityDescription,
         definition: ButtonDefinition,
     ) -> None:
         """Init Tuya button."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.button_wrapper
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

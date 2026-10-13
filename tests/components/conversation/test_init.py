@@ -3,12 +3,13 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
+    DOMAIN,
     ConversationInput,
     async_get_agent,
     async_get_chat_log,
@@ -16,7 +17,13 @@ from homeassistant.components.conversation import (
     async_handle_sentence_triggers,
     default_agent,
 )
-from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
+from homeassistant.components.conversation.agent_manager import agent_id_validator
+from homeassistant.components.conversation.const import (
+    ATTR_AGENT_ID,
+    ATTR_CONVERSATION_ID,
+    ATTR_TEXT,
+    HOME_ASSISTANT_AGENT,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -50,11 +57,11 @@ async def test_turn_on_intent(
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
-    data = {conversation.ATTR_TEXT: sentence}
+    data = {ATTR_TEXT: sentence}
     if agent_id is not None:
-        data[conversation.ATTR_AGENT_ID] = agent_id
+        data[ATTR_AGENT_ID] = agent_id
     if conversation_id is not None:
-        data[conversation.ATTR_CONVERSATION_ID] = conversation_id
+        data[ATTR_CONVERSATION_ID] = conversation_id
     result = await hass.services.async_call(
         "conversation",
         "process",
@@ -77,7 +84,7 @@ async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     with (
         pytest.raises(HomeAssistantError),
         patch(
-            "homeassistant.components.conversation.async_converse",
+            "homeassistant.components.conversation.services.async_converse",
             side_effect=intent.IntentHandleError,
         ),
     ):
@@ -95,9 +102,7 @@ async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
-    await hass.services.async_call(
-        "conversation", "process", {conversation.ATTR_TEXT: sentence}
-    )
+    await hass.services.async_call("conversation", "process", {ATTR_TEXT: sentence})
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -206,11 +211,11 @@ async def test_agent_id_validator_invalid_agent(
     hass: HomeAssistant, init_components
 ) -> None:
     """Test validating agent id."""
-    with pytest.raises(vol.Invalid):
-        conversation.agent_id_validator("invalid_agent")
+    with pytest.raises(probatio.Invalid):
+        agent_id_validator("invalid_agent")
 
-    conversation.agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
-    conversation.agent_id_validator("conversation.home_assistant")
+    agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
+    agent_id_validator("conversation.home_assistant")
 
 
 async def test_get_agent_info(
@@ -269,7 +274,7 @@ async def test_async_handle_sentence_triggers(
 ) -> None:
     """Test handling sentence triggers with async_handle_sentence_triggers."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert await async_setup_component(
         hass,
@@ -311,7 +316,7 @@ async def test_async_handle_sentence_triggers(
 async def test_async_handle_intents(hass: HomeAssistant) -> None:
     """Test handling registered intents with async_handle_intents."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Reuse custom sentences in test config to trigger default agent.
     class OrderBeerIntentHandler(intent.IntentHandler):

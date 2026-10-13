@@ -65,7 +65,7 @@ async def test_light_turn_on_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on
     await hass.services.async_call(
@@ -99,7 +99,7 @@ async def test_light_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Simulate update from library
@@ -126,7 +126,7 @@ async def test_light_transition(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on with transition
     await hass.services.async_call(
@@ -161,7 +161,7 @@ async def test_light_flash(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Short flash
     await hass.services.async_call(
@@ -195,7 +195,7 @@ async def test_light_brightness_restore(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "light.test_light"
+    entity_id = "light.test_area_test_light"
 
     # Turn on first time - uses default (50%)
     await hass.services.async_call(
@@ -226,3 +226,79 @@ async def test_light_brightness_restore(
     )
     # HA level 127 -> Lutron level ~49.8
     light.set_level.assert_called_with(new_level=pytest.approx(50.0, abs=0.5))
+
+
+async def test_light_state_published_without_waiting_for_a_report(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """State follows the command without waiting for the controller to report.
+
+    The subscription still delivers the authoritative value later, but it can
+    be slow, and on a HomeWorks QS system driven by keypad scenes it never
+    arrives for zone levels at all.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    light = mock_lutron.areas[0].outputs[0]
+    light.last_level.return_value = 0
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "light.test_area_test_light"
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # No callback is fired here: nothing reports the change back.
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_a_later_report_wins_over_the_commanded_value(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """The controller remains authoritative when it does report."""
+    mock_config_entry.add_to_hass(hass)
+
+    light = mock_lutron.areas[0].outputs[0]
+    light.last_level.return_value = 0
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "light.test_area_test_light"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes[ATTR_BRIGHTNESS] == 128
+
+    # The controller says the zone actually landed on 100%.
+    light.last_level.return_value = 100
+    callback = light.subscribe.call_args[0][0]
+    callback(light, None, None, None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes[ATTR_BRIGHTNESS] == 255

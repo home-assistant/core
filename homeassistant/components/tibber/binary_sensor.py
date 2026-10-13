@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 import tibber
 from tibber.data_api import TibberDevice
@@ -102,13 +103,14 @@ class TibberDataAPIBinarySensor(
         self._attr_unique_id = f"{device.id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.external_id)},
+            identifiers={(DOMAIN, device.id)},
             name=device.name,
             manufacturer=device.brand,
             model=device.model,
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -121,6 +123,7 @@ class TibberDataAPIBinarySensor(
         return self.coordinator.sensors_by_device[self._device_id]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(

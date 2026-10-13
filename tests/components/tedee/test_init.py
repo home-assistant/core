@@ -61,6 +61,21 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_not_ready_no_locks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+) -> None:
+    """Test a dedicated error is reported when the bridge has no locks."""
+    mock_tedee.locks_dict = {}
+    mock_tedee.get_locks.side_effect = TedeeClientException("No lock found")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "no_locks"
+
+
 async def test_cleanup_on_shutdown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -137,7 +152,9 @@ async def test_lock_device(
     """Ensure the lock device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(mock_config_entry.domain, "12345")})
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, "12345"), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot
 
@@ -152,8 +169,9 @@ async def test_bridge_device(
     """Ensure the bridge device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        {(mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial)}
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial),
+        mock_config_entry.entry_id,
     )
     assert device
     assert device == snapshot

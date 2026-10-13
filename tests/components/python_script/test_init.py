@@ -28,7 +28,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -42,9 +42,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         ),
         patch("homeassistant.components.python_script.execute") as mock_ex,
     ):
-        await hass.services.async_call(
-            "python_script", "hello", {"some": "data"}, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, "hello", {"some": "data"}, blocking=True)
 
     assert len(mock_ex.mock_calls) == 1
     test_hass, script, source, data = mock_ex.mock_calls[0][1]
@@ -62,7 +60,7 @@ async def test_setup_fails_on_no_dir(
     with patch(
         "homeassistant.components.python_script.os.path.isdir", return_value=False
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert not res
     assert "Folder python_scripts not found in configuration folder" in caplog.text
@@ -373,7 +371,7 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -392,7 +390,7 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await hass.services.async_call("python_script", "reload", {}, blocking=True)
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
 
     assert not hass.services.has_service("python_script", "hello")
     assert hass.services.has_service("python_script", "hello2")
@@ -539,7 +537,7 @@ async def test_execute_with_output(
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = {"result": f"hello {data.get('name', 'World')}"}
@@ -551,7 +549,7 @@ output = {"result": f"hello {data.get('name', 'World')}"}
         create=True,
     ):
         response = await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,
@@ -583,7 +581,7 @@ async def test_execute_no_output(
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 no_output = {"result": f"hello {data.get('name', 'World')}"}
@@ -595,7 +593,7 @@ no_output = {"result": f"hello {data.get('name', 'World')}"}
         create=True,
     ):
         response = await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,
@@ -622,7 +620,7 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = f"hello {data.get('name', 'World')}"
@@ -637,7 +635,7 @@ output = f"hello {data.get('name', 'World')}"
         pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from kaleidescape import Device as KaleidescapeDevice
 
@@ -151,6 +152,7 @@ class KaleidescapeSensor(KaleidescapeEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(self._device)

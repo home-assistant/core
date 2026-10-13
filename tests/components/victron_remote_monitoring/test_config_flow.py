@@ -7,11 +7,11 @@ from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
 from homeassistant.components.victron_remote_monitoring.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -63,6 +63,7 @@ async def test_full_flow_success(
         CONF_API_TOKEN: "test_token",
         CONF_SITE_ID: site1.id,
     }
+    assert result["result"].unique_id == str(site1.id)
     assert mock_setup_entry.call_count == 1
 
 
@@ -253,6 +254,7 @@ async def test_select_site_duplicate_aborts(
         CONF_API_TOKEN: "token3",
         CONF_SITE_ID: other_site.id,
     }
+    assert result_new2["result"].unique_id == str(other_site.id)
 
 
 async def test_reauth_flow_success(

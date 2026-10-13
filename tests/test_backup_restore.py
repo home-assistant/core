@@ -1,5 +1,6 @@
 """Test methods in backup_restore."""
 
+from io import BytesIO
 import json
 from pathlib import Path
 import tarfile
@@ -386,8 +387,8 @@ def test_restore_backup(
     }
 
 
-def test_restore_backup_filter_files(tmp_path: Path) -> None:
-    """Test filtering dangerous files when restoring a backup."""
+def test_restore_backup_rejects_unsafe_files(tmp_path: Path) -> None:
+    """Test that a backup with unsafe paths is rejected."""
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
     get_fixture_path(
@@ -410,7 +411,100 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
             "data/home-assistant_v2.db-wal",
         }
 
-    real_extractone = tarfile.TarFile._extract_one
+    with (
+        mock.patch(
+            "homeassistant.backup_restore.restore_backup_file_content",
+            return_value=backup_restore.RestoreBackupFileContent(
+                backup_file_path=backup_file_path,
+                password=None,
+                remove_after_restore=False,
+                restore_database=True,
+                restore_homeassistant=True,
+            ),
+        ),
+        pytest.raises(tarfile.FilterError),
+    ):
+        backup_restore.restore_backup(tmp_path.as_posix())
+
+    result = restore_result_file_content(tmp_path)
+    assert result is not None
+    assert result["success"] is False
+    assert result["error_type"] in {"AbsolutePathError", "OutsideDestinationError"}
+
+
+def _tar_member(
+    name: str, *, data: bytes = b"", linkname: str | None = None
+) -> tuple[tarfile.TarInfo, bytes | None]:
+    """Return a tar member and its data."""
+    info = tarfile.TarInfo(name=name)
+    if linkname is not None:
+        info.type = tarfile.SYMTYPE
+        info.linkname = linkname
+        return info, None
+    info.size = len(data)
+    return info, data
+
+
+BACKUP_JSON = json.dumps(
+    {"homeassistant": {"version": "0.0.0"}, "compressed": False}
+).encode()
+
+
+@pytest.mark.parametrize(
+    ("members", "missing_member"),
+    [
+        pytest.param([], "backup.json", id="no_backup_json"),
+        pytest.param(
+            [_tar_member("./backup.json", linkname="/etc/passwd")],
+            "backup.json",
+            id="backup_json_symlink",
+        ),
+        pytest.param(
+            [_tar_member("./backup.json", data=BACKUP_JSON)],
+            "homeassistant.tar",
+            id="no_homeassistant_tar",
+        ),
+        pytest.param(
+            [
+                _tar_member("./backup.json", data=BACKUP_JSON),
+                _tar_member("homeassistant.tar", linkname="/etc/passwd"),
+            ],
+            "homeassistant.tar",
+            id="homeassistant_tar_absolute_symlink",
+        ),
+        pytest.param(
+            [
+                _tar_member("./backup.json", data=BACKUP_JSON),
+                _tar_member("other.tar", data=b"not a tar"),
+                _tar_member("homeassistant.tar", linkname="other.tar"),
+            ],
+            "homeassistant.tar",
+            id="homeassistant_tar_relative_symlink",
+        ),
+        pytest.param(
+            [
+                _tar_member("./backup.json", data=BACKUP_JSON),
+                # Would escape the destination if the outer tar was extracted
+                _tar_member("pwn", linkname="/tmp"),  # noqa: S108
+                _tar_member("pwn/ha_escape_target", data=b"pwned"),
+            ],
+            "homeassistant.tar",
+            id="outer_symlink_escape",
+        ),
+    ],
+)
+def test_restore_backup_rejects_invalid_outer_members(
+    members: list[tuple[tarfile.TarInfo, bytes | None]],
+    missing_member: str,
+    tmp_path: Path,
+) -> None:
+    """Test only regular files are read from the outer backup tar."""
+    backup_file_path = tmp_path / "backups" / "test.tar"
+    backup_file_path.parent.mkdir()
+
+    with tarfile.open(backup_file_path, "w") as tar:
+        for info, data in members:
+            tar.addfile(info, BytesIO(data) if data is not None else None)
 
     with (
         mock.patch(
@@ -423,27 +517,16 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
                 restore_homeassistant=True,
             ),
         ),
-        mock.patch(
-            "tarfile.TarFile._extract_one", autospec=True, wraps=real_extractone
-        ) as extractone_mock,
+        pytest.raises(ValueError, match=f"Backup does not contain {missing_member}"),
     ):
-        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
+        backup_restore.restore_backup(tmp_path.as_posix())
 
-    # Check the unsafe files are not extracted, and that the safe files are extracted
-    extracted_files = {call.args[1].name for call in extractone_mock.mock_calls}
-    assert extracted_files == {
-        "./backup.json",  # From the outer tar
-        "homeassistant.tar.gz",  # From the outer tar
-        ".",
-        "data",
-        "data/home-assistant_v2.db",
-        "data/home-assistant_v2.db-wal",
-    }
     assert restore_result_file_content(tmp_path) == {
-        "error": None,
-        "error_type": None,
-        "success": True,
+        "error": f"Backup does not contain {missing_member}",
+        "error_type": "ValueError",
+        "success": False,
     }
+    assert not Path("/tmp/ha_escape_target").exists()  # noqa: S108
 
 
 @pytest.mark.parametrize(("remove_after_restore"), [True, False])

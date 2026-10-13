@@ -20,12 +20,22 @@ from homeassistant.components.shelly.const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_REBOOT_TIMEOUT,
+    OTA_SUCCESS,
     RPC_RECONNECT_INTERVAL,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
@@ -48,6 +58,7 @@ from tests.common import (
     mock_restore_cache,
 )
 
+RECONNECT_ERROR = "An error occurred while reconnecting to Test name"
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 SENSOR_BLOCK_ID = 3
@@ -511,6 +522,21 @@ async def test_rpc_connection_error_during_unload(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_block_shutdown_on_ha_stop(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the device is shut down when Home Assistant stops."""
+    await init_integration(hass, 1)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert "Stopping RPC device coordinator for Test name" in caplog.text
+    mock_block_device.shutdown.assert_called()
+
+
 async def test_rpc_click_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -796,6 +822,98 @@ async def test_rpc_reconnect_error(
     assert state.state == STATE_UNAVAILABLE
 
 
+def _inject_ota_event(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock, event_type: str
+) -> None:
+    """Inject an OTA event for rpc device."""
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [{"event": event_type, "id": 1, "ts": 1668522399.2}],
+            "ts": 1668522399.2,
+        },
+    )
+
+
+async def _mock_rpc_device_rebooting(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Disconnect the rpc device and fail to reconnect while it reboots."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("event_type", [OTA_BEGIN, OTA_PROGRESS, OTA_SUCCESS])
+async def test_rpc_reconnect_error_during_ota_reboot(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    event_type: str,
+) -> None:
+    """Test RPC reconnect error is not logged while the device reboots after OTA."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    await init_integration(hass, 2)
+
+    _inject_ota_event(monkeypatch, mock_rpc_device, event_type)
+    await _mock_rpc_device_rebooting(hass, mock_rpc_device, monkeypatch)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+    assert RECONNECT_ERROR not in caplog.text
+
+    # Device did not come back after the firmware update
+    freezer.tick(timedelta(seconds=OTA_REBOOT_TIMEOUT))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+    assert RECONNECT_ERROR in caplog.text
+
+
+async def test_rpc_reconnect_error_after_ota_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test RPC reconnect error is logged when the OTA update failed."""
+    await init_integration(hass, 2)
+
+    _inject_ota_event(monkeypatch, mock_rpc_device, OTA_BEGIN)
+    _inject_ota_event(monkeypatch, mock_rpc_device, OTA_ERROR)
+    await _mock_rpc_device_rebooting(hass, mock_rpc_device, monkeypatch)
+
+    assert RECONNECT_ERROR in caplog.text
+
+
+async def test_rpc_reconnect_error_after_ota_reboot_completed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test RPC reconnect error is logged once the device is back after OTA."""
+    await init_integration(hass, 2)
+
+    _inject_ota_event(monkeypatch, mock_rpc_device, OTA_SUCCESS)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+    await _mock_rpc_device_rebooting(hass, mock_rpc_device, monkeypatch)
+
+    assert RECONNECT_ERROR in caplog.text
+
+
 async def test_rpc_error_running_connected_events(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -892,9 +1010,8 @@ async def test_rpc_update_entry_fw_ver(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.unique_id
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.sw_version == "some fw string"
@@ -904,9 +1021,8 @@ async def test_rpc_update_entry_fw_ver(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.sw_version == "99.0.0"
@@ -1027,7 +1143,7 @@ async def test_block_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device did not update" in caplog.text
+    assert "Sleeping device Test name did not update" in caplog.text
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1081,7 +1197,7 @@ async def test_rpc_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device did not update" in caplog.text
+    assert "Sleeping device Test name did not update" in caplog.text
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1145,9 +1261,8 @@ async def test_xmod_model_lookup(
     monkeypatch.setattr(mock_rpc_device, "xmod_info", {"n": xmod_model})
     entry = await init_integration(hass, 2)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.model == xmod_model
@@ -1184,7 +1299,7 @@ async def test_sub_device_area_from_main_device(
 
     # verify sub-devices have the same area as main device
     for relay_index in range(2):
-        entity_id = f"switch.test_name_output_{relay_index}"
+        entity_id = f"switch.living_room_test_name_output_{relay_index}"
         assert hass.states.get(entity_id) is not None
         entry = entity_registry.async_get(entity_id)
         assert entry

@@ -1,5 +1,7 @@
 """Support for valves through the SmartThings cloud API."""
 
+from typing import override
+
 from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
 from homeassistant.components.valve import (
@@ -49,6 +51,7 @@ class SmartThingsValve(SmartThingsEntity, ValveEntity):
             or device.device.components[MAIN].manufacturer_category
         )
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self.execute_device_command(
@@ -56,6 +59,7 @@ class SmartThingsValve(SmartThingsEntity, ValveEntity):
             Command.OPEN,
         )
 
+    @override
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self.execute_device_command(
@@ -64,6 +68,7 @@ class SmartThingsValve(SmartThingsEntity, ValveEntity):
         )
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the valve is closed."""
         return self.get_attribute_value(Capability.VALVE, Attribute.VALVE) == "closed"

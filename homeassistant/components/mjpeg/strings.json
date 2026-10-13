@@ -20,6 +20,14 @@
       }
     }
   },
+  "exceptions": {
+    "error_getting_image": {
+      "message": "Error getting a new image from {name}."
+    },
+    "timeout_getting_image": {
+      "message": "Timeout getting an image from {name}."
+    }
+  },
   "options": {
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

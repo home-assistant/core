@@ -1,6 +1,7 @@
 """Support for Verisure alarm control panels."""
 
 import asyncio
+from typing import override
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -41,6 +42,7 @@ class VerisureAlarm(
     )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
@@ -52,6 +54,7 @@ class VerisureAlarm(
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self.coordinator.config_entry.data[CONF_GIID]
@@ -97,6 +100,7 @@ class VerisureAlarm(
             self._attr_alarm_state = ALARM_STATE_TO_HA.get(state)
             self.async_write_ha_state()
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._attr_alarm_state = AlarmControlPanelState.DISARMING
@@ -105,6 +109,7 @@ class VerisureAlarm(
             "DISARMED", self.coordinator.verisure.disarm(code)
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._attr_alarm_state = AlarmControlPanelState.ARMING
@@ -113,6 +118,7 @@ class VerisureAlarm(
             "ARMED_HOME", self.coordinator.verisure.arm_home(code)
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._attr_alarm_state = AlarmControlPanelState.ARMING
@@ -129,11 +135,13 @@ class VerisureAlarm(
         self._attr_changed_by = self.coordinator.data["alarm"].get("name")
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_alarm_attributes()
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

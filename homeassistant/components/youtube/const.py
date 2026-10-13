@@ -7,8 +7,14 @@ DOMAIN = "youtube"
 MANUFACTURER = "Google, Inc."
 CHANNEL_CREATION_HELP_URL = "https://support.google.com/youtube/answer/1646861"
 
+CONF_CHANNEL_ID = "channel_id"
 CONF_CHANNELS = "channels"
 CONF_UPLOAD_PLAYLIST = "upload_playlist_id"
+
+SUBENTRY_TYPE_CHANNEL = "channel"
+
+# The YouTube channels.list API accepts at most 50 ids per request
+MAX_CHANNEL_IDS_PER_REQUEST = 50
 
 LOGGER = logging.getLogger(__package__)
 
@@ -20,3 +26,7 @@ ATTR_DESCRIPTION = "description"
 ATTR_THUMBNAIL = "thumbnail"
 ATTR_VIDEO_ID = "video_id"
 ATTR_PUBLISHED_AT = "published_at"
+ATTR_VIDEO_COUNT = "video_count"
+ATTR_LATEST_SHORT = "latest_short"
+ATTR_LATEST_VIDEO_NON_SHORT = "latest_video_non_short"
+ATTR_IS_SHORT = "is_short"

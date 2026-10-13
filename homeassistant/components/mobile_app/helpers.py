@@ -9,7 +9,12 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONTENT_TYPE_JSON,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.json import json_bytes
@@ -21,14 +26,13 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
     CONF_SECRET,
     CONF_USER_ID,
     DATA_DELETED_IDS,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
 )
 
@@ -167,10 +171,11 @@ def safe_registration(registration: dict) -> dict:
 
 def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
+    # pylint: disable-next=home-assistant-use-runtime-data
+    domain_data = hass.data[DOMAIN]
     return {
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
+        DATA_DELETED_IDS: domain_data[DATA_DELETED_IDS],
+        DATA_LIVE_ACTIVITY_TOKENS: domain_data[DATA_LIVE_ACTIVITY_TOKENS],
     }
 
 

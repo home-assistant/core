@@ -1,5 +1,7 @@
 """Support for Flipr binary sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -45,6 +47,7 @@ class FliprBinarySensor(FliprEntity, BinarySensorEntity):
     """Representation of Flipr binary sensors."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on in case of a Problem is detected."""
         return self.coordinator.data[self.entity_description.key] in (

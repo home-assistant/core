@@ -1,6 +1,6 @@
 """Generic Hue Entity Model."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
@@ -21,8 +21,12 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light import Light
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
+    from aiohue.v2.models.room import Room
+    from aiohue.v2.models.zone import Zone
 
-    type HueResource = Light | DevicePower | GroupedLight | LightLevel | Motion
+    type HueResource = (
+        Light | DevicePower | GroupedLight | LightLevel | Motion | Room | Zone
+    )
 
 
 RESOURCE_TYPE_NAMES = {
@@ -68,6 +72,7 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
         self._ignore_availability = None
         self._last_state = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         self._check_availability()
@@ -100,6 +105,7 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         # entities without a device attached should be always available

@@ -1,5 +1,7 @@
 """Number entities for musiccast."""
 
+from typing import override
+
 from aiomusiccast.capabilities import NumberSetter
 
 from homeassistant.components.number import NumberEntity
@@ -52,10 +54,12 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
         self._attr_native_step = capability.value_range.step
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.capability.current
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self.capability.set(value)

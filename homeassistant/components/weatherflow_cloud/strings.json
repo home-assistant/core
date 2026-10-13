@@ -41,9 +41,6 @@
       "heat_index": {
         "name": "Heat index"
       },
-      "illuminance": {
-        "name": "Illuminance"
-      },
       "lightning_strike_count": {
         "name": "Lightning count"
       },
@@ -110,9 +107,6 @@
       },
       "wind_chill": {
         "name": "Wind chill"
-      },
-      "wind_direction": {
-        "name": "Wind direction"
       },
       "wind_gust": {
         "name": "Wind gust"

@@ -8,8 +8,10 @@ from homeassistant.const import Platform
 
 LOGGER: Logger = getLogger(__package__)
 
-# The free plan is limited to 10 requests/minute
-COORDINATOR_UPDATE_INTERVAL: timedelta = timedelta(seconds=10)
+# The free plan is formally limited to 10 requests/minute
+# But real world says 5 requests/minute is the real limit
+# Opened a ticket with support with no response for 2 months
+COORDINATOR_UPDATE_INTERVAL: timedelta = timedelta(seconds=15)
 
 DOMAIN: Final = "uptimerobot"
 PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]

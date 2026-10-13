@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -89,6 +90,7 @@ class TrafikverketCameraSensor(TrafikverketCameraNonCameraEntity, SensorEntity):
     entity_description: TVCameraSensorEntityDescription
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Update _attr."""
         self._attr_native_value = self.entity_description.value_fn(

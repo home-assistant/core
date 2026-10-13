@@ -3,7 +3,7 @@
 from datetime import timedelta
 from enum import StrEnum, auto
 import logging
-from typing import Any
+from typing import Any, override
 
 from ring_doorbell import RingStickUpCam
 
@@ -70,6 +70,7 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
         self._no_updates_until = dt_util.utcnow()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
@@ -89,10 +90,12 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on for 30 seconds."""
         await self._async_set_light(OnOffState.ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_set_light(OnOffState.OFF)

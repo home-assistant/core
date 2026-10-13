@@ -122,7 +122,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 57
+    assert len(triggers) == 58
     assert triggers == unordered(expected_triggers)
 
 
@@ -464,7 +464,7 @@ async def test_if_fires_not_on_above_below(
             ]
         },
     )
-    assert "must contain at least one of below, above" in caplog.text
+    assert "at least one of ['below', 'above'] is required" in caplog.text
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

@@ -344,13 +344,10 @@ class ONVIFDevice:
             firmware_version = device_info.FirmwareVersion
             serial_number = device_info.SerialNumber
 
-        # Grab the last MAC address for backwards compatibility
         mac = None
         try:
             network_interfaces = await device_mgmt.GetNetworkInterfaces()
-            for interface in network_interfaces:
-                if interface.Enabled:
-                    mac = interface.Info.HwAddress
+            mac = get_mac_address(network_interfaces)
         except Fault as fault:
             if "not implemented" not in fault.message:
                 raise
@@ -500,7 +497,12 @@ class ONVIFDevice:
         tilt=None,
         zoom=None,
     ):
-        """Perform a PTZ action on the camera."""
+        """Perform a PTZ action on the camera.
+
+        For ContinuousMove operations, calling this service with
+        continuous_duration = 0 disables the automatic Stop call; other move
+        modes do not auto-stop.
+        """
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
@@ -544,12 +546,17 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
-                req = ptz_service.create_type("Stop")
-                req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                if continuous_duration > 0:
+                    await asyncio.sleep(continuous_duration)
+                    req = ptz_service.create_type("Stop")
+                    req.ProfileToken = profile.token
+                    await ptz_service.Stop(
+                        {
+                            "ProfileToken": req.ProfileToken,
+                            "PanTilt": True,
+                            "Zoom": False,
+                        }
+                    )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.relative:
@@ -692,3 +699,16 @@ def get_device(
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
         no_cache=True,
     )
+
+
+def get_mac_address(network_interfaces: list[Any]) -> str | None:
+    """Get the MAC address of the last enabled network interface.
+
+    Existing entries and entities are keyed on the last one. Some cameras also
+    list a dummy interface first that has the same MAC address on every unit.
+    """
+    mac = None
+    for interface in network_interfaces:
+        if interface.Enabled:
+            mac = interface.Info.HwAddress
+    return mac

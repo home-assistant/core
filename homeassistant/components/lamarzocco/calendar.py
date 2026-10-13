@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from datetime import datetime, timedelta
+from typing import override
 
 from pylamarzocco.const import WeekDay
 
@@ -62,6 +63,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         self._attr_translation_placeholders = {"id": identifier}
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         now = dt_util.now()
@@ -72,6 +74,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         )
         return next(iter(events), None)
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

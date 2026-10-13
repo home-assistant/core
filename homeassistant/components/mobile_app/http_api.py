@@ -6,12 +6,17 @@ import secrets
 
 from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import cloud
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
@@ -21,8 +26,6 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
@@ -43,22 +46,22 @@ class RegistrationsView(HomeAssistantView):
     name = "api:mobile_app:register"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Optional(ATTR_APP_DATA, default={}): SCHEMA_APP_DATA,
-                vol.Required(ATTR_APP_ID): cv.string,
-                vol.Required(ATTR_APP_NAME): cv.string,
-                vol.Required(ATTR_APP_VERSION): cv.string,
-                vol.Required(ATTR_DEVICE_NAME): cv.string,
-                vol.Required(ATTR_MANUFACTURER): cv.string,
-                vol.Required(ATTR_MODEL): cv.string,
-                vol.Optional(ATTR_DEVICE_ID): cv.string,  # Added in 0.104
-                vol.Required(ATTR_OS_NAME): cv.string,
-                vol.Optional(ATTR_OS_VERSION): cv.string,
-                vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
+                probatio.Optional(ATTR_APP_DATA, default={}): SCHEMA_APP_DATA,
+                probatio.Required(ATTR_APP_ID): cv.string,
+                probatio.Required(ATTR_APP_NAME): cv.string,
+                probatio.Required(ATTR_APP_VERSION): cv.string,
+                probatio.Required(ATTR_DEVICE_NAME): cv.string,
+                probatio.Required(ATTR_MANUFACTURER): cv.string,
+                probatio.Required(ATTR_MODEL): cv.string,
+                probatio.Optional(ATTR_DEVICE_ID): cv.string,  # Added in 0.104
+                probatio.Required(ATTR_OS_NAME): cv.string,
+                probatio.Optional(ATTR_OS_VERSION): cv.string,
+                probatio.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
             },
             # To allow future apps to send more data
-            extra=vol.REMOVE_EXTRA,
+            extra=probatio.REMOVE_EXTRA,
         )
     )
     async def post(self, request: Request, data: dict) -> Response:

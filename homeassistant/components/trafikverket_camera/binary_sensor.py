@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -56,6 +57,7 @@ class TrafikverketCameraBinarySensor(
     entity_description: TVCameraSensorEntityDescription
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Update _attr."""
         self._attr_is_on = self.entity_description.value_fn(self.coordinator.data)

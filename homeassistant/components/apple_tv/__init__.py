@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from random import randrange
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyatv import connect, exceptions, scan
 from pyatv.conf import AppleTV
@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> None:
     """Set up a config entry for Apple TV."""
     manager = AppleTVManager(hass, entry)
 
@@ -120,12 +120,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.init()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload an Apple TV config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class AppleTVManager(DeviceListener):
@@ -152,6 +150,7 @@ class AppleTVManager(DeviceListener):
         if self.is_on:
             await self.connect()
 
+    @override
     def connection_lost(self, exception: Exception) -> None:
         """Device was unexpectedly disconnected.
 
@@ -163,6 +162,7 @@ class AppleTVManager(DeviceListener):
         self._connection_was_lost = True
         self._handle_disconnect()
 
+    @override
     def connection_closed(self) -> None:
         """Device connection was (intentionally) closed.
 
@@ -369,7 +369,7 @@ class AppleTVManager(DeviceListener):
 
             attrs[ATTR_MODEL] = (
                 dev_info.raw_model
-                if dev_info.model == DeviceModel.Unknown and dev_info.raw_model
+                if dev_info.model is DeviceModel.Unknown and dev_info.raw_model
                 else model_str(dev_info.model)
             )
             attrs[ATTR_SW_VERSION] = dev_info.version

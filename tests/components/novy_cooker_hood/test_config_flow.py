@@ -1,18 +1,15 @@
 """Test the Novy Hood config flow."""
 
 from collections.abc import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
-from homeassistant.components.novy_cooker_hood.commands import COMMAND_LIGHT
-from homeassistant.components.novy_cooker_hood.const import (
-    CONF_CODE,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.components.radio_frequency import DATA_COMPONENT, DOMAIN as RF_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -52,7 +49,6 @@ async def _start_user_flow(hass: HomeAssistant, code: str = "1") -> dict:
 
 async def test_user_flow_test_then_finish(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     mock_rf_entity: MockRadioFrequencyEntity,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -61,8 +57,10 @@ async def test_user_flow_test_then_finish(
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "test_light"
-    mock_get_codes.async_load_command.assert_awaited_with(COMMAND_LIGHT)
     assert len(mock_rf_entity.send_command_calls) == 2
+    sent = mock_rf_entity.send_command_calls[0].command
+    assert sent.key == NovyCookerHoodButton.LIGHT.code
+    assert sent.channel == 3
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
@@ -80,7 +78,6 @@ async def test_user_flow_test_then_finish(
 
 async def test_user_flow_retry_picks_different_code(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     mock_rf_entity: MockRadioFrequencyEntity,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -102,15 +99,21 @@ async def test_user_flow_retry_picks_different_code(
         },
     )
     assert result["type"] is FlowResultType.MENU
-    # One load per test x two tests; two sends per test x two tests.
-    assert mock_get_codes.async_load_command.await_count == 2
     assert len(mock_rf_entity.send_command_calls) == 4
+    assert [c.command.channel for c in mock_rf_entity.send_command_calls] == [
+        1,
+        1,
+        7,
+        7,
+    ]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CODE] == 7
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
+    assert result["result"].unique_id == f"{entity_entry.id}_7"
 
 
 async def test_user_flow_test_transmit_failure(
@@ -130,7 +133,6 @@ async def test_user_flow_test_transmit_failure(
 
 async def test_recover_after_transmit_failure(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
     """The user can Retry from test_failed and complete the flow."""
@@ -186,7 +188,6 @@ async def test_unique_id_already_configured(
 
 async def test_same_transmitter_different_code_is_allowed(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_rf_entity: MockRadioFrequencyEntity,
     entity_registry: er.EntityRegistry,
@@ -208,7 +209,6 @@ async def test_same_transmitter_different_code_is_allowed(
 
 async def test_reconfigure_updates_entry(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     init_novy_cooker_hood: MockConfigEntry,
     mock_rf_entity: MockRadioFrequencyEntity,
     entity_registry: er.EntityRegistry,
@@ -227,7 +227,9 @@ async def test_reconfigure_updates_entry(
     )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "test_light"
-    mock_get_codes.async_load_command.assert_awaited_with(COMMAND_LIGHT)
+    sent = mock_rf_entity.send_command_calls[-1].command
+    assert sent.key == NovyCookerHoodButton.LIGHT.code
+    assert sent.channel == 4
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
@@ -242,9 +244,9 @@ async def test_reconfigure_updates_entry(
 
 async def test_reconfigure_frees_old_unique_id(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     init_novy_cooker_hood: MockConfigEntry,
     mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """After reconfigure, the previous (transmitter, code) can be reused."""
     # Reconfigure away from code 1.
@@ -266,6 +268,8 @@ async def test_reconfigure_frees_old_unique_id(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CODE] == 1
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
+    assert result["result"].unique_id == f"{entity_entry.id}_1"
 
 
 async def test_reconfigure_aborts_on_collision(
@@ -298,7 +302,6 @@ async def test_reconfigure_aborts_on_collision(
 
 async def test_reconfigure_retry_returns_to_picker(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     init_novy_cooker_hood: MockConfigEntry,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
@@ -329,7 +332,6 @@ async def test_no_transmitters(hass: HomeAssistant) -> None:
 
 async def test_recover_after_no_transmitters(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
 ) -> None:
     """User can re-init the flow after the radio_frequency integration loads."""
     result = await hass.config_entries.flow.async_init(

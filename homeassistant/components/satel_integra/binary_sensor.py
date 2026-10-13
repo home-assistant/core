@@ -1,5 +1,7 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -30,12 +32,7 @@ async def async_setup_entry(
 
     runtime_data = config_entry.runtime_data
 
-    zone_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in zone_subentries:
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
         zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
 
@@ -52,14 +49,9 @@ async def async_setup_entry(
             config_subentry_id=subentry.subentry_id,
         )
 
-    output_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_OUTPUT,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in output_subentries:
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_OUTPUT):
         output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
-        ouput_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
+        output_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
 
         async_add_entities(
             [
@@ -68,7 +60,7 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     subentry,
                     output_num,
-                    ouput_type,
+                    output_type,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -103,6 +95,7 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
         self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self._get_state_from_coordinator()

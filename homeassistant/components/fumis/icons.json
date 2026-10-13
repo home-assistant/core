@@ -2,7 +2,7 @@
   "entity": {
     "button": {
       "sync_clock": {
-        "default": "mdi:clock-sync"
+        "default": "mdi:clock-check"
       }
     },
     "number": {
@@ -107,6 +107,11 @@
       "timer": {
         "default": "mdi:timer"
       }
+    }
+  },
+  "triggers": {
+    "fuel_became_low": {
+      "trigger": "mdi:gauge-empty"
     }
   }
 }

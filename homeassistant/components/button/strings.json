@@ -30,7 +30,7 @@
   "title": "Button",
   "triggers": {
     "pressed": {
-      "description": "Triggers when a button was pressed",
+      "description": "Triggers when one or more buttons are pressed.",
       "name": "Button pressed"
     }
   }

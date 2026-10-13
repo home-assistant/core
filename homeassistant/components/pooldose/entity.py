@@ -1,7 +1,7 @@
 """Base entity for Seko Pooldose integration."""
 
 from collections.abc import Callable, Coroutine
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from pooldose.type_definitions import DeviceInfoDict, ValueDict
 
@@ -71,6 +71,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.get_data() is not None

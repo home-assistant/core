@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
@@ -31,9 +31,7 @@ class XboxBinarySensor(StrEnum):
     """Xbox binary sensor."""
 
     ONLINE = "online"
-    IN_PARTY = "in_party"
     IN_GAME = "in_game"
-    IN_MULTIPLAYER = "in_multiplayer"
     HAS_GAME_PASS = "has_game_pass"
 
 
@@ -82,24 +80,15 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         attributes_fn=profile_attributes,
     ),
     XboxBinarySensorEntityDescription(
-        key=XboxBinarySensor.IN_PARTY,
-        is_on_fn=lambda _: None,
-        deprecated=True,
-    ),
-    XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_GAME,
         translation_key=XboxBinarySensor.IN_GAME,
         is_on_fn=in_game,
     ),
     XboxBinarySensorEntityDescription(
-        key=XboxBinarySensor.IN_MULTIPLAYER,
-        is_on_fn=lambda _: None,
-        deprecated=True,
-    ),
-    XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.HAS_GAME_PASS,
         translation_key=XboxBinarySensor.HAS_GAME_PASS,
-        is_on_fn=lambda x: x.detail.has_game_pass if x.detail else None,
+        is_on_fn=lambda _: None,
+        deprecated=True,
     ),
 )
 
@@ -146,6 +135,7 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
     entity_description: XboxBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the status of the requested attribute."""
 

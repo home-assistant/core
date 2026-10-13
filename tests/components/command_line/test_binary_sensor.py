@@ -9,7 +9,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.command_line.binary_sensor import CommandBinarySensor
 from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.components.homeassistant import (
@@ -53,33 +52,6 @@ async def test_setup_integration_yaml(
     assert entity_state
     assert entity_state.state == STATE_ON
     assert entity_state.name == "Test"
-
-
-async def test_setup_platform_yaml(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "binary_sensor_platform_yaml_not_supported"
-    )
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.ERROR
-    assert issue.translation_placeholders == {"platform": BINARY_SENSOR_DOMAIN}
 
 
 @pytest.mark.parametrize(
@@ -438,3 +410,52 @@ async def test_availability_blocks_value_template(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert error in caplog.text
+
+
+async def test_template_with_shell_features_uses_shell_and_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Templated command with shell metacharacters keeps shell path and creates a repair issue."""
+    hass.states.async_set("sensor.input_sensor", "1")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "binary_sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }} | cat",
+                        "payload_on": "1",
+                        "payload_off": "0",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"1\n") as mock_shell:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        "echo 1 | cat",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    issues = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.translation_key == "shell_command_template_deprecation"
+    ]
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.4.0"
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].translation_placeholders == {
+        "program": "echo",
+        "platform": "binary_sensor",
+        "name": "Test",
+    }

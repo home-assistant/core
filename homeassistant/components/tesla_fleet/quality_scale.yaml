@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom service actions in async_setup.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -13,12 +11,16 @@ rules:
     status: todo
     comment: Review feedback questioned whether the custom OAuth flow implementation can be simplified, including whether `CONFIG_SCHEMA` and the custom `OAuth2FlowHandler` are both needed.
   dependency-transparency: done
-  docs-actions:
+  docs-actions: done
+  docs-conditions:
     status: exempt
-    comment: Integration does not provide custom service actions beyond standard entity services.
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done

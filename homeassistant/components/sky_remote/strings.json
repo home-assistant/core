@@ -17,5 +17,10 @@
         "title": "Add Sky Remote"
       }
     }
+  },
+  "exceptions": {
+    "invalid_command": {
+      "message": "Invalid command: {command}"
+    }
   }
 }

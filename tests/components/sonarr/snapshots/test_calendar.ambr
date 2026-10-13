@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_calendar_attributes[calendar.sonarr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.sonarr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'sonarr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01KWBTJ4XT0A69H6RJ5ES66CV7_calendar',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_attributes[calendar.sonarr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'To compete with fellow "restaurateur," Jimmy Pesto, and his blowout Super Bowl event, Bob is determined to create a Bob\'s Burgers commercial to air during the "big game." In an effort to outshine Pesto, the Belchers recruit Randy, a documentarian, to assist with the filmmaking and hire on former pro football star Connie Frye to be the celebrity endorser.',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2014-01-27 02:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sonarr',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: "Bob's Burgers - S04E11 - Easy Com-mercial, Easy Go-mercial",
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2014-01-27 01:30:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.sonarr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -1,5 +1,7 @@
 """The Nibe Heat Pump numbers."""
 
+from typing import override
+
 from nibe.coil import Coil, CoilData
 
 from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity, NumberMode
@@ -23,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(
         Number(coordinator, coil)
         for coil in coordinator.coils
-        if coil.is_writable and not coil.mappings
+        if coil.is_writable and not coil.mappings and not coil.is_date
     )
 
 
@@ -59,6 +61,7 @@ class Number(CoilEntity, NumberEntity):
         self._attr_native_unit_of_measurement = coil.unit
         self._attr_mode = NumberMode.BOX
 
+    @override
     def _async_read_coil(self, data: CoilData) -> None:
         if data.value is None:
             self._attr_native_value = None
@@ -69,6 +72,7 @@ class Number(CoilEntity, NumberEntity):
         except ValueError:
             self._attr_native_value = None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._async_write_coil(value)

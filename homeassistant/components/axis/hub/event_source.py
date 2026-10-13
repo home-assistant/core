@@ -1,17 +1,22 @@
 """Axis network device abstraction."""
 
+from typing import TYPE_CHECKING
+
 import axis
 from axis.errors import Unauthorized
-from axis.interfaces.mqtt import mqtt_json_to_event
-from axis.models.mqtt import ClientState
+from axis.models.mqtt import ClientState, mqtt_json_to_event
 from axis.stream_manager import Signal, State
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN, ReceiveMessage
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_when_setup
+
+if TYPE_CHECKING:
+    from homeassistant.components.mqtt import ReceiveMessage
+
+# MQTT is only imported once it is set up, as it is heavy to load
+MQTT_DOMAIN = "mqtt"
 
 
 class AxisEventSource:
@@ -60,6 +65,8 @@ class AxisEventSource:
             return
 
         if status.status.state == ClientState.ACTIVE:
+            from homeassistant.components import mqtt  # noqa: PLC0415
+
             self.config_entry.async_on_unload(
                 await mqtt.async_subscribe(
                     hass, f"{status.config.device_topic_prefix}/#", self._mqtt_message

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pydiscovergy import Discovergy
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
@@ -43,6 +44,7 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
             update_interval=timedelta(seconds=30),
         )
 
+    @override
     async def _async_update_data(self) -> Reading:
         """Get last reading for meter."""
         try:

@@ -126,12 +126,16 @@ async def test_async_step_user_with_devices_found(
     hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test setup from service info cache with devices found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
+    with patch(
+        "homeassistant.components.victron_ble.config_flow.bluetooth.async_request_active_scan"
+    ) as mock_request_active_scan:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -292,7 +296,7 @@ async def test_async_step_reauth_device_not_found(
     with patch(
         "homeassistant.components.victron_ble.config_flow.async_discovered_service_info",
         return_value=[],
-    ):
+    ) as mock_discovered:
         result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -304,6 +308,14 @@ async def test_async_step_reauth_device_not_found(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "no_devices_found"}
+
+        mock_discovered.return_value = [VICTRON_VEBUS_SERVICE_INFO]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_flow_sets_title_placeholders(

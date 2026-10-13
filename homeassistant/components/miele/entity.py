@@ -1,5 +1,7 @@
 """Entity base class for the Miele integration."""
 
+from typing import override
+
 from pymiele import MieleAction, MieleAPI, MieleDevice, MieleFillingLevel
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -83,6 +85,7 @@ class MieleEntity(MieleBaseEntity[MieleDataUpdateCoordinator]):
         return self.coordinator.data.actions[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 

@@ -84,7 +84,7 @@ def registries(
 async def test_async_handle_message(hass: HomeAssistant) -> None:
     """Test the async handle message method."""
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
@@ -172,7 +172,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     hass.states.async_set("light.not_expose", "on")
 
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
@@ -267,8 +267,20 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-@pytest.mark.parametrize("area_on_device", [True, False])
-async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> None:
+@pytest.mark.parametrize(
+    ("area_on_device", "expected_name"),
+    [
+        pytest.param(True, "Test Device Demo Light", id="area_on_device"),
+        # The entity has an area of its own, so its name skips the device
+        pytest.param(False, "Demo Light", id="area_on_entity"),
+    ],
+)
+async def test_sync_in_area(
+    area_on_device: bool,
+    expected_name: str,
+    hass: HomeAssistant,
+    registries: SimpleNamespace,
+) -> None:
     """Test a sync message where room hint comes from area."""
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -334,7 +346,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
             "devices": [
                 {
                     "id": "light.demo_light",
-                    "name": {"name": "Test Device Demo Light"},
+                    "name": {"name": expected_name},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ON_OFF,
@@ -1392,7 +1404,7 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
     hass.states.async_set("lock.has_2fa", "on")
 
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
     )
 
     user_agent_id = "mock-user-id"

@@ -1,14 +1,20 @@
 """Test the File Upload integration."""
 
+import asyncio
 from contextlib import contextmanager
+from io import StringIO
 from pathlib import Path
 from random import getrandbits
-from typing import Any
-from unittest.mock import patch
+import threading
+from typing import Any, Self
+from unittest.mock import AsyncMock, patch
 
+from aiohttp import BodyPartReader
 import pytest
 
 from homeassistant.components import file_upload
+from homeassistant.components.file_upload import DOMAIN, FileUploadView
+from homeassistant.components.http import KEY_HASS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -16,12 +22,12 @@ from tests.components.image_upload import TEST_IMAGE
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture
-async def uploaded_file_dir(
+@pytest.fixture(name="uploaded_file_dir")
+async def upload_file_dir(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> Path:
     """Test uploading and using a file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with (
@@ -50,7 +56,6 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
         assert file_path.parent == uploaded_file_dir
         assert file_path.read_bytes() == TEST_IMAGE.read_bytes()
 
-    # Test it's removed
     assert not uploaded_file_dir.exists()
 
 
@@ -83,7 +88,7 @@ async def test_upload_large_file(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading large file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with (
@@ -117,7 +122,7 @@ async def test_upload_with_wrong_key_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading fails."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with patch(
@@ -134,7 +139,7 @@ async def test_upload_large_file_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading large file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     @contextmanager
@@ -170,3 +175,340 @@ async def test_upload_large_file_fails(
     response = await res.content.read()
 
     assert b"Boom" in response
+
+
+async def test_upload_stream_error_releases_lock(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    large_file_io: StringIO,
+) -> None:
+    """Test a mid-upload stream error propagates and releases the upload lock.
+
+    Models a client disconnect: aiohttp raises from read_chunk when the
+    connection is lost mid-transfer. If the queue consumer's terminating sentinel
+    is skipped on the error path, awaiting the consumer deadlocks while holding
+    the upload lock, wedging every later upload; this guards that regression.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_client()
+
+    with (
+        patch(
+            # Patch temp dir name to avoid tests fail running in parallel
+            "homeassistant.components.file_upload.TEMP_DIR_NAME",
+            file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+        ),
+        patch.object(
+            BodyPartReader,
+            "read_chunk",
+            AsyncMock(
+                side_effect=[b"partial", ConnectionResetError("Connection lost")]
+            ),
+        ),
+    ):
+        # Bound the request so a reintroduced deadlock fails fast instead of hanging
+        async with asyncio.timeout(10):
+            res = await client.post("/api/file_upload", data={"file": large_file_io})
+
+    assert res.status == 500
+
+    # The failed upload must not leave a partially written file orphaned on disk
+    file_upload_data = hass.data[file_upload.DOMAIN]
+    assert list(file_upload_data.temp_dir.iterdir()) == []
+
+    # The upload lock must have been released: a subsequent normal upload succeeds
+    large_file_io.seek(0)
+    with patch(
+        "homeassistant.components.file_upload.TEMP_DIR_NAME",
+        file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+    ):
+        async with asyncio.timeout(10):
+            res = await client.post("/api/file_upload", data={"file": large_file_io})
+
+    assert res.status == 200
+
+
+async def test_upload_cancelled_releases_consumer(hass: HomeAssistant) -> None:
+    """Test cancelling an upload mid-transfer does not deadlock the consumer.
+
+    Driven at the view level because the test HTTP client cannot produce a true
+    task cancellation mid-request. Without delivering the queue sentinel on the
+    cancellation path, awaiting the consumer future would hang forever.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    view = FileUploadView()
+
+    first_chunk_sent = asyncio.Event()
+    blocked = asyncio.Event()  # never set, so the stream blocks until cancelled
+
+    class _BlockingPart:
+        """Fake BodyPartReader that blocks after yielding one chunk."""
+
+        name = "file"
+        filename = "blocking.bin"
+
+        async def read_chunk(self, size: int) -> bytes:
+            if first_chunk_sent.is_set():
+                await blocked.wait()
+                return b""
+            first_chunk_sent.set()
+            return b"chunk"
+
+    part = _BlockingPart()
+
+    class _Reader:
+        async def next(self) -> _BlockingPart:
+            return part
+
+    class _Request:
+        app = {KEY_HASS: hass}
+
+        async def multipart(self) -> _Reader:
+            return _Reader()
+
+    with (
+        patch(
+            "homeassistant.components.file_upload.TEMP_DIR_NAME",
+            file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+        ),
+        patch("homeassistant.components.file_upload.BodyPartReader", _BlockingPart),
+    ):
+        task = asyncio.create_task(view._upload_file(_Request()))
+        await first_chunk_sent.wait()
+        task.cancel()
+        # asyncio.wait does not cancel on timeout, so a deadlocked task stays
+        # pending and the assertion fails fast instead of the run hanging.
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
+
+    # The cancelled upload must not orphan its file directory on disk.
+    file_upload_data = hass.data[file_upload.DOMAIN]
+    assert list(file_upload_data.temp_dir.iterdir()) == []
+
+
+async def test_receive_file_field_cancelled_while_joining_writer(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test a cancel while joining the writer waits for the writer to finish.
+
+    A cancellation delivered while _receive_file_field is awaiting the executor
+    writer (the whole field already streamed, sentinel queued) must not return
+    until the writer thread has finished, so the caller's cleanup cannot race it.
+    """
+    # Nested under a directory that does not exist yet, so the writer's mkdir runs.
+    file_path = tmp_path / "upload_dir" / "uploaded.bin"
+    writing_started = asyncio.Event()
+    release_writer = threading.Event()  # blocks the writer thread mid-write
+    writes: list[bytes] = []
+    blocked_once = False
+
+    class _BlockingHandle:
+        """A file handle whose first write parks the writer thread until released."""
+
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *exc: object) -> bool:
+            return False
+
+        def write(self, data: bytes) -> int:
+            nonlocal blocked_once
+            if not blocked_once:
+                blocked_once = True
+                hass.loop.call_soon_threadsafe(writing_started.set)
+                release_writer.wait()
+            writes.append(bytes(data))
+            return len(data)
+
+    real_open = Path.open
+
+    def _blocking_open(self: Path, *args: object, **kwargs: object) -> object:
+        if self != file_path:
+            return real_open(self, *args, **kwargs)
+        return _BlockingHandle()
+
+    chunks = iter([b"chunk1", b"chunk2"])
+
+    class _Part:
+        """Fake BodyPartReader yielding two chunks then EOF."""
+
+        async def read_chunk(self, size: int) -> bytes:
+            return next(chunks, b"")
+
+    with patch.object(Path, "open", _blocking_open):
+        task = asyncio.create_task(
+            file_upload._receive_file_field(hass, _Part(), file_path)
+        )
+        try:
+            # The writer thread is now blocked on its first write, so the task has
+            # queued every chunk plus the sentinel and is parked at the join; let it
+            # settle there so the cancel lands on the join.
+            await writing_started.wait()
+            for _ in range(3):
+                await asyncio.sleep(0)
+            task.cancel()
+            for _ in range(10):
+                await asyncio.sleep(0)
+            # The task must still be waiting for the writer thread to finish before it
+            # returns, so the caller's cleanup cannot race the writer.
+            assert not task.done()
+        finally:
+            # Always release the writer so a failed assertion can't leak the blocked
+            # thread and hang teardown.
+            release_writer.set()
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
+    # The writer finished writing both chunks before the cancellation propagated.
+    assert b"".join(writes) == b"chunk1chunk2"
+    # The writer created the parent directory as part of the joined job, so cleanup
+    # cannot race an in-flight mkdir.
+    assert file_path.parent.is_dir()
+
+
+async def test_receive_file_field_cancel_wins_over_writer_error(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test a writer error during the join does not mask the cancellation.
+
+    When the task is cancelled while joining the writer and the writer then fails,
+    the caller must still observe CancelledError, not the writer's exception.
+    """
+    file_path = tmp_path / "upload_dir" / "uploaded.bin"
+    writing_started = asyncio.Event()
+    release_writer = threading.Event()  # blocks the writer thread mid-write
+
+    class _FailingHandle:
+        """A file handle whose first write parks the writer, then fails."""
+
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *exc: object) -> bool:
+            return False
+
+        def write(self, data: bytes) -> int:
+            hass.loop.call_soon_threadsafe(writing_started.set)
+            release_writer.wait()
+            raise OSError("write failed")
+
+    real_open = Path.open
+
+    def _failing_open(self: Path, *args: object, **kwargs: object) -> object:
+        if self != file_path:
+            return real_open(self, *args, **kwargs)
+        return _FailingHandle()
+
+    chunks = iter([b"chunk1", b"chunk2"])
+
+    class _Part:
+        """Fake BodyPartReader yielding two chunks then EOF."""
+
+        async def read_chunk(self, size: int) -> bytes:
+            return next(chunks, b"")
+
+    with patch.object(Path, "open", _failing_open):
+        task = asyncio.create_task(
+            file_upload._receive_file_field(hass, _Part(), file_path)
+        )
+        try:
+            # Let the task settle at the join with the writer blocked mid-write, so
+            # the cancel lands on the join and the writer fails afterwards.
+            await writing_started.wait()
+            for _ in range(3):
+                await asyncio.sleep(0)
+            task.cancel()
+            for _ in range(10):
+                await asyncio.sleep(0)
+            assert not task.done()
+        finally:
+            # Always release the writer so a failed assertion can't leak the blocked
+            # thread and hang teardown.
+            release_writer.set()
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    # The cancellation wins over the writer's OSError.
+    assert task.cancelled()
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
+
+
+async def test_receive_file_field_cancel_in_stream_wins_over_writer_error(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test a cancel in the streaming loop is not masked by a writer error.
+
+    When the cancellation lands in read_chunk (not the join) and the writer has
+    already failed, the caller must still observe CancelledError, not the writer's
+    exception.
+    """
+    file_path = tmp_path / "upload_dir" / "uploaded.bin"
+    writer_failed = asyncio.Event()  # set once the writer thread has raised
+    reading_blocked = asyncio.Event()  # set when the stream parks on its 2nd read
+    blocked = asyncio.Event()  # never set, so the 2nd read blocks until cancelled
+
+    class _FailingHandle:
+        """A file handle whose first write fails the writer thread."""
+
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(self, *exc: object) -> bool:
+            return False
+
+        def write(self, data: bytes) -> int:
+            hass.loop.call_soon_threadsafe(writer_failed.set)
+            raise OSError("write failed")
+
+    real_open = Path.open
+
+    def _failing_open(self: Path, *args: object, **kwargs: object) -> object:
+        if self != file_path:
+            return real_open(self, *args, **kwargs)
+        return _FailingHandle()
+
+    reads = 0
+
+    class _Part:
+        """Fake BodyPartReader yielding one chunk, then blocking on the next read."""
+
+        async def read_chunk(self, size: int) -> bytes:
+            nonlocal reads
+            reads += 1
+            if reads == 1:
+                return b"chunk1"
+            reading_blocked.set()
+            await blocked.wait()
+            return b""
+
+    with patch.object(Path, "open", _failing_open):
+        task = asyncio.create_task(
+            file_upload._receive_file_field(hass, _Part(), file_path)
+        )
+        try:
+            # The stream is parked on its second read and the writer has failed, so
+            # the cancel lands in the streaming loop with the writer future already
+            # done with an error.
+            await reading_blocked.wait()
+            await writer_failed.wait()
+            for _ in range(5):
+                await asyncio.sleep(0)
+            task.cancel()
+            for _ in range(10):
+                await asyncio.sleep(0)
+        finally:
+            # Always unblock the stream so a failed assertion can't hang teardown.
+            blocked.set()
+        _done, pending = await asyncio.wait({task}, timeout=10)
+
+    assert not pending
+    # The cancellation wins over the writer's OSError.
+    assert task.cancelled()
+    with pytest.raises(asyncio.CancelledError):
+        task.result()

@@ -11,11 +11,16 @@ from homeassistant.helpers.trigger import (
 
 from .const import DOMAIN
 
+SELECT_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(),
+    INPUT_SELECT_DOMAIN: DomainSpec(),
+}
+
 
 class SelectionChangedTrigger(EntityTriggerBase):
     """Trigger for select entity when its selection changes."""
 
-    _domain_specs = {DOMAIN: DomainSpec(), INPUT_SELECT_DOMAIN: DomainSpec()}
+    _domain_specs = SELECT_DOMAIN_SPECS
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
 

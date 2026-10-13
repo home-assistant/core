@@ -6,9 +6,9 @@ import functools
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -60,6 +60,7 @@ GAS_PRICE_UNITS = tuple(
 )
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
+GAS_PRICE_UNIT_MISMATCH_ERROR = "entity_gas_price_unit_mismatch"
 WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
 WATER_USAGE_UNITS: dict[str, tuple[UnitOfVolume, ...]] = {
     sensor.SensorDeviceClass.WATER: (
@@ -231,13 +232,13 @@ def _async_validate_stat_common(
     if check_negative and current_value is not None and current_value < 0:
         issues.add_issue(hass, "entity_negative_state", entity_id, current_value)
 
-    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
     if device_class not in allowed_device_classes:
         issues.add_issue(
             hass, "entity_unexpected_device_class", entity_id, device_class
         )
     else:
-        unit = state.attributes.get("unit_of_measurement")
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
         if device_class and unit not in allowed_units.get(device_class, []):
             issues.add_issue(hass, unit_error, entity_id, unit)
@@ -272,7 +273,9 @@ def _async_validate_usage_stat(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
+    state_class = state.attributes.get(
+        sensor.SensorEntityCapabilityAttribute.STATE_CLASS
+    )
 
     allowed_state_classes = [
         sensor.SensorStateClass.MEASUREMENT,
@@ -310,10 +313,40 @@ def _async_validate_price_entity(
         issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
         return
 
-    unit = state.attributes.get("unit_of_measurement")
+    unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     if unit is None or not unit.endswith(allowed_units):
         issues.add_issue(hass, unit_error, entity_id, unit)
+
+
+@callback
+def _async_validate_gas_price_unit_mismatch(
+    hass: HomeAssistant,
+    usage_entity_id: str,
+    price_entity_id: str,
+    issues: ValidationIssues,
+) -> None:
+    """Validate that the gas price unit can be converted to the usage unit."""
+    if (usage_state := hass.states.get(usage_entity_id)) is None or (
+        price_state := hass.states.get(price_entity_id)
+    ) is None:
+        return
+
+    usage_unit = usage_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    price_unit = (
+        price_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) or ""
+    )
+    price_usage_unit = price_unit.partition("/")[2]
+    energy_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]
+    volume_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.GAS]
+    # Unknown price units are reported by _async_validate_price_entity, and the
+    # cost sensor still uses them as a price per meter unit
+    if (usage_unit in energy_units and price_usage_unit in volume_units) or (
+        usage_unit in volume_units and price_usage_unit in energy_units
+    ):
+        issues.add_issue(
+            hass, GAS_PRICE_UNIT_MISMATCH_ERROR, price_entity_id, price_unit
+        )
 
 
 @callback
@@ -343,7 +376,9 @@ def _async_validate_power_stat(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
+    state_class = state.attributes.get(
+        sensor.SensorEntityCapabilityAttribute.STATE_CLASS
+    )
 
     if state_class != sensor.SensorStateClass.MEASUREMENT:
         issues.add_issue(hass, "entity_unexpected_state_class", entity_id, state_class)
@@ -372,7 +407,9 @@ def _async_validate_cost_stat(
         issues.add_issue(hass, "entity_not_defined", stat_id)
         return
 
-    state_class = state.attributes.get("state_class")
+    state_class = state.attributes.get(
+        sensor.SensorEntityCapabilityAttribute.STATE_CLASS
+    )
 
     supported_state_classes = [
         sensor.SensorStateClass.MEASUREMENT,
@@ -584,6 +621,15 @@ def _validate_gas_source(
                 source_result,
                 GAS_PRICE_UNITS,
                 GAS_PRICE_UNIT_ERROR,
+            )
+        )
+        validate_calls.append(
+            functools.partial(
+                _async_validate_gas_price_unit_mismatch,
+                hass,
+                source["stat_energy_from"],
+                entity_energy_price,
+                source_result,
             )
         )
 

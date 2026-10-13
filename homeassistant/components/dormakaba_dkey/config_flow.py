@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
+import probatio
 from py_dormakaba_dkey import DKEYLock, device_filter, errors as dkey_errors
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -20,9 +20,9 @@ from .const import CONF_ASSOCIATION_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_ASSOCIATE_SCHEMA = vol.Schema(
+STEP_ASSOCIATE_SCHEMA = probatio.Schema(
     {
-        vol.Required("activation_code"): str,
+        probatio.Required("activation_code"): str,
     }
 )
 
@@ -40,6 +40,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         # Populated by bluetooth, reauth_confirm and user steps
         self._discovery_info: BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,9 +69,9 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: (
                             f"{service_info.name} ({service_info.address})"
@@ -86,6 +87,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -137,7 +139,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_associate()
 
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=vol.Schema({}), errors=errors
+            step_id="reauth_confirm", data_schema=probatio.Schema({}), errors=errors
         )
 
     async def async_step_associate(

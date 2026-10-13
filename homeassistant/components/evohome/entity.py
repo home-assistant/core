@@ -1,23 +1,41 @@
 """Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
+from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync2 as evo
-from evohomeasync2.schemas.const import (
+from evohomeasync2.const import (
+    SZ_SINCE,
+    SZ_TIME_UNTIL,
+    SZ_UNTIL,
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
-from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
+from evohomeasync2.typedefs import EvoDhwScheduleDayOfWeekT, EvoZonScheduleDayOfWeekT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _recurse_and_revert(val: Any, _key: str | None = None) -> Any:
+    """Recursively revert any values to native format."""
+    if isinstance(val, dict):
+        return {k: _recurse_and_revert(v, k) for k, v in val.items()}
+    if isinstance(val, (list, tuple)):
+        return type(val)(_recurse_and_revert(v) for v in val)
+    if isinstance(val, datetime) and _key in (SZ_SINCE, SZ_TIME_UNTIL, SZ_UNTIL):
+        return val.isoformat()
+    if isinstance(val, StrEnum):
+        return "".join(word.capitalize() for word in val.value.split("_"))
+    return val
 
 
 def is_valid_zone(zone: evo.Zone) -> bool:
@@ -58,11 +76,13 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         self._device_state_attrs: dict[str, Any] = {}
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -70,6 +90,8 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
         for attr in self._evo_state_attr_names:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+
+        self._device_state_attrs = _recurse_and_revert(self._device_state_attrs)
 
         super()._handle_coordinator_update()
 
@@ -96,11 +118,13 @@ class EvoChild(EvoEntity):
         self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: list[DayOfWeekDhwT] | None = None
+        self._schedule: (
+            list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT] | None
+        ) = None
         self._setpoints: dict[str, Any] = {}
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
@@ -120,8 +144,13 @@ class EvoChild(EvoEntity):
         if not self._schedule:
             return self._setpoints
 
-        this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
-        next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
+        if (this_sp := self._evo_device.this_switchpoint) is None or (
+            next_sp := self._evo_device.next_switchpoint
+        ) is None:
+            return self._setpoints
+
+        this_sp_dtm, this_sp_val = this_sp
+        next_sp_dtm, next_sp_val = next_sp
 
         key = "temp" if isinstance(self._evo_device, evo.Zone) else "state"
 
@@ -140,7 +169,7 @@ class EvoChild(EvoEntity):
         async def get_schedule() -> None:
             try:
                 schedule = await self.coordinator.call_client_api(
-                    self._evo_device.get_schedule(),  # type: ignore[arg-type]
+                    self._evo_device.get_schedule(),
                     request_refresh=False,
                 )
             except evo.InvalidScheduleError as err:
@@ -161,7 +190,7 @@ class EvoChild(EvoEntity):
             or self._schedule is None
             or (
                 (until := self._setpoints.get("next_sp_from")) is not None
-                and until < datetime.now(UTC)
+                and until < dt_util.utcnow()
             )
         ):  # must use self._setpoints, not self.setpoints
             await get_schedule()
@@ -169,6 +198,7 @@ class EvoChild(EvoEntity):
         _ = self.setpoints  # update the setpoints attr
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -179,6 +209,7 @@ class EvoChild(EvoEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
         await self._update_schedule()

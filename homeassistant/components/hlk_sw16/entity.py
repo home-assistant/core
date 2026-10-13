@@ -1,6 +1,7 @@
 """Support for HLK-SW16 relay switches."""
 
 import logging
+from typing import override
 
 from hlk_sw16.protocol import SW16Client
 
@@ -37,6 +38,7 @@ class SW16Entity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._client.is_connected)
@@ -46,6 +48,7 @@ class SW16Entity(Entity):
         """Update availability state."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self._client.register_status_callback(

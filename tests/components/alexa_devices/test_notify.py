@@ -1,5 +1,6 @@
 """Tests for the Alexa Devices notify platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,8 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import setup_integration
-from .const import TEST_DEVICE_1_SN
+from . import assert_device_removed_and_readded, setup_integration
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -101,3 +102,54 @@ async def test_offline_device(
 
     assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_device_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities are recreated when a device is removed and re-added."""
+    await assert_device_removed_and_readded(
+        hass,
+        freezer,
+        mock_amazon_devices_client,
+        mock_config_entry,
+        entity_id="notify.echo_test_2_announce",
+        devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1, TEST_DEVICE_2_SN: TEST_DEVICE_2},
+        devices_without={TEST_DEVICE_1_SN: TEST_DEVICE_1},
+    )
+
+
+async def test_announce_unavailable_when_communications_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test announce entity availability when communication is disabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "notify.echo_test_announce"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
+
+    device_data = deepcopy(TEST_DEVICE_1)
+    device_data.communication_settings = {
+        "announcements": "ON",
+        "communications": "OFF",
+        "dropin": "All",
+    }
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

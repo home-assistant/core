@@ -2,6 +2,7 @@
 
 import html
 import logging
+from typing import override
 
 from feedparser import FeedParserDict
 
@@ -62,6 +63,7 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (data := self.coordinator.data) is None or not data:

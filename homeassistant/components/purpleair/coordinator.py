@@ -1,6 +1,7 @@
 """Define a PurpleAir DataUpdateCoordinator."""
 
 from datetime import timedelta
+from typing import override
 
 from aiopurpleair import API
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
@@ -67,6 +68,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> GetSensorsResponse:
         """Get the latest sensor information."""
         try:

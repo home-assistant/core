@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import time
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -60,10 +60,12 @@ class JellyfinRemote(JellyfinClientEntity, RemoteEntity):
         self._attr_unique_id = f"{coordinator.server_id}-{session_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the client is on."""
         return self.session_data["IsActive"] if self.session_data else False
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to the client."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)

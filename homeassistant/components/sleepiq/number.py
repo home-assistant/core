@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asyncsleepiq import (
     CoreTemps,
@@ -253,10 +253,12 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
         super().__init__(coordinator, bed)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update number attributes."""
         self._attr_native_value = float(self.entity_description.value_fn(self.device))
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         await self.entity_description.set_value_fn(self.device, int(value))

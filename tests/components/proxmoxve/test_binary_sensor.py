@@ -16,7 +16,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from . import setup_integration
+from . import PVEVMUSER_PERMISSIONS, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -80,3 +80,48 @@ async def test_refresh_exceptions(
 
     state = hass.states.get("binary_sensor.ct_nginx_status")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensors_according_to_permissions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that binary_sensors are created when allowed."""
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    assert "binary_sensor.pve1_status" in {e.entity_id for e in entries}
+    assert "binary_sensor.pve1_backup_status" in {e.entity_id for e in entries}
+
+
+async def test_binary_sensors_absent_according_to_permissions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that binary_sensors are not created when not allowed."""
+    mock_proxmox_client.access.permissions.get.return_value = PVEVMUSER_PERMISSIONS
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    assert "binary_sensor.pve1_status" in {e.entity_id for e in entries}
+    assert "binary_sensor.pve1_backup_status" not in {e.entity_id for e in entries}

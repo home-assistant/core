@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import os
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -149,6 +150,7 @@ class OneWireBinarySensorEntity(OneWireEntity, BinarySensorEntity):
     """Implementation of a 1-Wire binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         if (state := self._state) is None:

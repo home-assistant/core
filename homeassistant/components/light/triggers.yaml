@@ -5,7 +5,7 @@
   fields:
     behavior: &trigger_behavior
       required: true
-      default: any
+      default: each
       selector:
         automation_behavior:
           mode: trigger
@@ -26,7 +26,8 @@
 .brightness_threshold_number: &brightness_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 turned_on: *trigger_common

@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from aiohttp import ClientError
@@ -104,6 +104,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
     async def _send_message(self, message: str) -> None:
         """Send a Habitica message."""
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         try:
@@ -113,7 +114,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="send_message_forbidden",
                 translation_placeholders={
-                    **self.translation_placeholders,
+                    CONF_NAME: self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
@@ -122,7 +123,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="send_message_not_found",
                 translation_placeholders={
-                    **self.translation_placeholders,
+                    CONF_NAME: self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
@@ -164,6 +165,7 @@ class HabiticaPartyChatNotifyEntity(HabiticaBaseNotifyEntity):
         self.party = party
         super().__init__(coordinator)
 
+    @override
     async def _send_message(self, message: str) -> None:
         """Send a Habitica party chat message."""
 
@@ -190,6 +192,7 @@ class HabiticaPrivateMessageNotifyEntity(HabiticaBaseNotifyEntity):
         self.member = member
         super().__init__(coordinator)
 
+    @override
     async def _send_message(self, message: str) -> None:
         """Send a Habitica private message."""
         if TYPE_CHECKING:

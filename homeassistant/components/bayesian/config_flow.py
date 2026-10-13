@@ -4,15 +4,12 @@
 from collections.abc import Mapping
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -52,6 +49,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector, translation
@@ -127,11 +125,11 @@ class OptionsFlowSteps(StrEnum):
     ADD_OBSERVATION = OBSERVATION_SELECTOR
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_PROBABILITY_THRESHOLD, default=DEFAULT_PROBABILITY_THRESHOLD * 100
-        ): vol.All(
+        ): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.SLIDER,
@@ -141,7 +139,7 @@ OPTIONS_SCHEMA = vol.Schema(
                     unit_of_measurement="%",
                 ),
             ),
-            vol.Range(
+            probatio.Range(
                 min=0,
                 max=100,
                 min_included=False,
@@ -149,7 +147,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 msg="extreme_threshold_error",
             ),
         ),
-        vol.Required(CONF_PRIOR, default=DEFAULT_PROBABILITY_THRESHOLD * 100): vol.All(
+        probatio.Required(
+            CONF_PRIOR, default=DEFAULT_PROBABILITY_THRESHOLD * 100
+        ): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.SLIDER,
@@ -159,7 +159,7 @@ OPTIONS_SCHEMA = vol.Schema(
                     unit_of_measurement="%",
                 ),
             ),
-            vol.Range(
+            probatio.Range(
                 min=0,
                 max=100,
                 min_included=False,
@@ -167,26 +167,21 @@ OPTIONS_SCHEMA = vol.Schema(
                 msg="extreme_prior_error",
             ),
         ),
-        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[cls.value for cls in BinarySensorDeviceClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="binary_sensor_device_class",
-                sort=True,
-            ),
+        probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+            selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-OBSERVATION_BOILERPLATE = vol.Schema(
+OBSERVATION_BOILERPLATE = probatio.Schema(
     {
-        vol.Required(CONF_P_GIVEN_T): vol.All(
+        probatio.Required(CONF_P_GIVEN_T): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.SLIDER,
@@ -196,7 +191,7 @@ OBSERVATION_BOILERPLATE = vol.Schema(
                     unit_of_measurement="%",
                 ),
             ),
-            vol.Range(
+            probatio.Range(
                 min=0,
                 max=100,
                 min_included=False,
@@ -204,7 +199,7 @@ OBSERVATION_BOILERPLATE = vol.Schema(
                 msg="extreme_prob_given_error",
             ),
         ),
-        vol.Required(CONF_P_GIVEN_F): vol.All(
+        probatio.Required(CONF_P_GIVEN_F): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.SLIDER,
@@ -214,7 +209,7 @@ OBSERVATION_BOILERPLATE = vol.Schema(
                     unit_of_measurement="%",
                 ),
             ),
-            vol.Range(
+            probatio.Range(
                 min=0,
                 max=100,
                 min_included=False,
@@ -222,16 +217,16 @@ OBSERVATION_BOILERPLATE = vol.Schema(
                 msg="extreme_prob_given_error",
             ),
         ),
-        vol.Required(CONF_NAME): selector.TextSelector(),
+        probatio.Required(CONF_NAME): selector.TextSelector(),
     }
 )
 
-STATE_SUBSCHEMA = vol.Schema(
+STATE_SUBSCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+        probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=ALLOWED_STATE_DOMAINS)
         ),
-        vol.Required(CONF_TO_STATE): selector.TextSelector(
+        probatio.Required(CONF_TO_STATE): selector.TextSelector(
             selector.TextSelectorConfig(
                 multiline=False, type=selector.TextSelectorType.TEXT, multiple=False
             )  # ideally this would be a state selector
@@ -240,17 +235,17 @@ STATE_SUBSCHEMA = vol.Schema(
     },
 ).extend(OBSERVATION_BOILERPLATE.schema)
 
-NUMERIC_STATE_SUBSCHEMA = vol.Schema(
+NUMERIC_STATE_SUBSCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+        probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=ALLOWED_NUMERIC_DOMAINS)
         ),
-        vol.Optional(CONF_ABOVE): selector.NumberSelector(
+        probatio.Optional(CONF_ABOVE): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
-        vol.Optional(CONF_BELOW): selector.NumberSelector(
+        probatio.Optional(CONF_BELOW): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
@@ -259,9 +254,9 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
 ).extend(OBSERVATION_BOILERPLATE.schema)
 
 
-TEMPLATE_SUBSCHEMA = vol.Schema(
+TEMPLATE_SUBSCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
+        probatio.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
             selector.TemplateSelectorConfig(),
         ),
     },
@@ -310,7 +305,7 @@ def _convert_fractions_to_percentages(
 
 def _select_observation_schema(
     obs_type: ObservationTypes,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the schema for editing the correct observation (SubEntry) type."""
     if obs_type == str(ObservationTypes.STATE):
         return STATE_SUBSCHEMA
@@ -375,7 +370,7 @@ def _validate_observation_subentry(
         try:
             above_greater_than_below(user_input)
             no_overlapping([*other_subentries, user_input])
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise SchemaFlowError(err) from err
 
     _LOGGER.debug("Processed observation with settings: %s", user_input)
@@ -439,17 +434,20 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"observation": ObservationSubentryFlowHandler}
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, str]) -> str:
         """Return config entry title."""
         name: str = options[CONF_NAME]
         return name
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow when config entry has been created."""
         subentry_result = await self.hass.config_entries.subentries.async_init(

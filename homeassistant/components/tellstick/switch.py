@@ -1,5 +1,7 @@
 """Support for Tellstick switches."""
 
+from typing import override
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,16 +45,20 @@ class TellstickSwitch(TellstickDevice, SwitchEntity):
 
     _attr_force_update = True
 
+    @override
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""
 
+    @override
     def _parse_tellcore_data(self, tellcore_data):
         """Turn the value received from tellcore into something useful."""
 
+    @override
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
         self._attr_is_on = new_state
 
+    @override
     def _send_device_command(self, requested_state, requested_data):
         """Let tellcore update the actual device to the requested state."""
         if requested_state:

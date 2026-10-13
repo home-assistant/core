@@ -1,5 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
 
+from typing import override
+
 from homeassistant.components.weather import (
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -12,9 +14,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -45,8 +46,6 @@ from .const import (
 )
 from .coordinator import OWMUpdateCoordinator
 
-SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -64,14 +63,6 @@ async def async_setup_entry(
         owm_weather = OpenWeatherMapWeather(unique_id, mode, weather_coordinator)
 
         async_add_entities([owm_weather], False)
-
-        platform = entity_platform.async_get_current_platform()
-        platform.async_register_entity_service(
-            name=SERVICE_GET_MINUTE_FORECAST,
-            schema=None,
-            func="async_get_minute_forecast",
-            supports_response=SupportsResponse.ONLY,
-        )
 
 
 class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]):
@@ -124,16 +115,19 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
         )
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_CONDITION)
 
     @property
+    @override
     def cloud_coverage(self) -> float | None:
         """Return the Cloud coverage in %."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_CLOUDS)
 
     @property
+    @override
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
         return self.coordinator.data[ATTR_API_CURRENT].get(
@@ -141,51 +135,61 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_TEMPERATURE)
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_PRESSURE)
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_HUMIDITY)
 
     @property
+    @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_DEW_POINT)
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_GUST)
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_SPEED)
 
     @property
+    @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_BEARING)
 
     @property
+    @override
     def native_visibility(self) -> float | None:
         """Return visibility."""
         return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_VISIBILITY_DISTANCE)
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.coordinator.data[ATTR_API_DAILY_FORECAST]
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self.coordinator.data[ATTR_API_HOURLY_FORECAST]

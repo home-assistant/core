@@ -2,14 +2,19 @@
 
 from typing import TYPE_CHECKING, Final
 
+from aioesphomeapi import TemperatureUnit
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.const import UnitOfTemperature, __version__ as ha_version
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .domain_data import DomainData
 
 DOMAIN = "esphome"
+
+CLIENT_INFO = f"Home Assistant {ha_version}"
 
 ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
@@ -18,13 +23,15 @@ CONF_SUBSCRIBE_LOGS = "subscribe_logs"
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
+CONF_BLUETOOTH_SCANNING_MODE = "bluetooth_scanning_mode"
 
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
+DEFAULT_BLUETOOTH_SCANNING_MODE = BluetoothScanningMode.AUTO.value
 
 DEFAULT_PORT: Final = 6053
 
-STABLE_BLE_VERSION_STR = "2025.11.0"
+STABLE_BLE_VERSION_STR = "2026.5.1"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -37,3 +44,9 @@ NO_WAKE_WORD: Final[str] = "no_wake_word"
 
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
+
+TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
+    TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}

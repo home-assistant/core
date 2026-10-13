@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import json
+from threading import Thread
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
@@ -16,6 +17,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import (
     CastRuntimeData,
+    _process_cast_platform,
     media_player as cast_media_player,
 )
 from homeassistant.components.cast.const import (
@@ -23,8 +25,10 @@ from homeassistant.components.cast.const import (
     SIGNAL_HASS_CAST_SHOW_VIEW,
     HomeAssistantControllerData,
 )
+from homeassistant.components.cast.helpers import CastStatusListener
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
@@ -33,6 +37,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -42,6 +47,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -127,7 +133,7 @@ async def async_setup_cast(
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:
-        entry = MockConfigEntry(data=data, domain="cast")
+        entry = MockConfigEntry(data=data, domain=DOMAIN)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -226,7 +232,7 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
         ),
     ):
         data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
-        entry = MockConfigEntry(data=data, domain="cast")
+        entry = MockConfigEntry(data=data, domain=DOMAIN)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -284,6 +290,13 @@ def get_status_callbacks(chromecast_mock, mz_mock=None):
     mz_listener = mz_mock.register_listener.call_args[0][1]
     group_media_status_cb = mz_listener.multizone_new_media_status
     return cast_status_cb, conn_status_cb, media_status_cb, group_media_status_cb
+
+
+async def async_send_connection_status(hass: HomeAssistant, callback, status) -> None:
+    """Send a connection status and wait for its state update."""
+    callback(status)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def test_start_discovery_called_once(
@@ -487,9 +500,12 @@ async def test_stop_discovery_called_on_stop(
 
 async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
-    entry = MockConfigEntry(domain="cast")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform),
+        refresh_token="mock-token",
+    )
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
@@ -497,9 +513,12 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
 
 async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
-    entry = MockConfigEntry(domain="cast")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform),
+        refresh_token="mock-token",
+    )
     added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
@@ -749,6 +768,96 @@ async def test_update_cast_chromecasts(hass: HomeAssistant) -> None:
     assert add_dev1.call_count == 1
 
 
+async def test_connection_status_after_invalidation(hass: HomeAssistant) -> None:
+    """Test a late connection callback after the Cast device was invalidated."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    info = get_fake_chromecast_info()
+    entity = cast_media_player.CastMediaPlayerEntity(hass, entry, info)
+
+    entity.entity_id = "media_player.speaker"
+
+    entity._chromecast = MagicMock()
+    entity.mz_mgr = MagicMock()
+
+    entity._invalidate()
+
+    assert entity._chromecast is None
+    assert entity.mz_mgr is None
+
+    connection_status = MagicMock(status="CONNECTED")
+
+    entity.new_connection_status(connection_status)
+
+    assert not entity.available
+
+
+async def test_connection_status_not_scheduled_after_listener_invalidation(
+    hass: HomeAssistant,
+) -> None:
+    """Test an invalidated listener does not schedule connection callbacks."""
+    entity = MagicMock()
+    entity.hass = hass
+    entity._cast_info.is_audio_group = False
+
+    chromecast = MagicMock()
+    mz_mgr = MagicMock()
+    listener = CastStatusListener(entity, chromecast, mz_mgr)
+    listener.invalidate()
+
+    with patch.object(hass.loop, "call_soon_threadsafe") as schedule:
+        thread = Thread(
+            target=listener.new_connection_status,
+            args=(MagicMock(status="CONNECTED"),),
+        )
+        thread.start()
+        thread.join()
+
+    schedule.assert_not_called()
+    entity.new_connection_status.assert_not_called()
+
+
+async def test_connection_status_ignored_if_invalidated_before_execution(
+    hass: HomeAssistant,
+) -> None:
+    """Test a queued connection callback is ignored after invalidation."""
+    entity = MagicMock()
+    entity.hass = hass
+    entity._cast_info.is_audio_group = False
+
+    chromecast = MagicMock()
+    mz_mgr = MagicMock()
+    listener = CastStatusListener(entity, chromecast, mz_mgr)
+
+    thread = Thread(
+        target=listener.new_connection_status,
+        args=(MagicMock(status="CONNECTED"),),
+    )
+    thread.start()
+    thread.join()
+
+    # The event loop cannot run the scheduled callback until we yield control.
+    listener.invalidate()
+
+    await hass.async_block_till_done()
+
+    entity.new_connection_status.assert_not_called()
+
+
+async def test_media_content_type_without_chromecast(hass: HomeAssistant) -> None:
+    """Test media content type when the Chromecast is unavailable."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    info = get_fake_chromecast_info()
+    entity = cast_media_player.CastMediaPlayerEntity(hass, entry, info)
+
+    entity.media_status = MagicMock(
+        media_is_tvshow=False,
+        media_is_movie=False,
+        media_is_musictrack=False,
+    )
+
+    assert entity.media_content_type is None
+
+
 async def test_entity_availability(hass: HomeAssistant) -> None:
     """Test handling of connection status."""
     entity_id = "media_player.speaker"
@@ -762,37 +871,32 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
     connection_status = MagicMock()
     connection_status.status = "LOST"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
     connection_status = MagicMock()
     connection_status.status = "DISCONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
 
     # Can't reconnect after receiving DISCONNECTED
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
 
@@ -816,12 +920,10 @@ async def test_device_registry(
     chromecast, _ = await async_setup_media_player_cast(hass, info)
     chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
-    cast_entry = hass.config_entries.async_entries("cast")[0]
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -839,7 +941,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -864,8 +966,7 @@ async def test_entity_cast_status(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -993,8 +1094,7 @@ async def test_supported_features(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1024,8 +1124,7 @@ async def test_entity_browse_media(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -1047,6 +1146,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1060,6 +1160,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1084,8 +1185,7 @@ async def test_entity_browse_media_audio_only(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -1119,6 +1219,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1138,8 +1239,7 @@ async def test_entity_play_media(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1187,8 +1287,7 @@ async def test_entity_play_media_cast(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1235,8 +1334,7 @@ async def test_entity_play_media_cast_invalid(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1289,8 +1387,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) 
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # Play_media
     await common.async_play_media(hass, "audio", "/best.mp3", entity_id)
@@ -1376,8 +1473,7 @@ async def test_entity_play_media_playlist(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # Play_media
     await common.async_play_media(hass, "audio", url, entity_id)
@@ -1413,8 +1509,7 @@ async def test_entity_media_content_type(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1469,8 +1564,7 @@ async def test_entity_control(
     # Fake connection status
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # Fake media status
     media_status = MagicMock(images=None)
@@ -1599,8 +1693,7 @@ async def test_entity_media_states(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1681,8 +1774,7 @@ async def test_entity_media_states_lovelace_app(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1759,8 +1851,7 @@ async def test_entity_media_states_active_input(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # Unknown input status
     cast_status.is_active_input = None
@@ -1808,8 +1899,7 @@ async def test_group_media_states(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -1883,15 +1973,13 @@ async def test_group_media_states_early(
     # Check group state is polled when player is first created
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     assert hass.states.get(entity_id).state == "buffering"
 
     connection_status = MagicMock()
     connection_status.status = "LOST"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     assert hass.states.get(entity_id).state == "unavailable"
 
@@ -1902,9 +1990,7 @@ async def test_group_media_states_early(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     assert hass.states.get(entity_id).state == "playing"
 
@@ -1925,8 +2011,7 @@ async def test_group_media_control(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -2104,11 +2189,47 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert chromecast.disconnect.call_count == 1
+    assert hass.states.get("media_player.speaker").state == STATE_UNAVAILABLE
+
+
+async def test_disable_entity_does_not_write_state(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling the entity doesn't write its state while it is removed."""
+    info = get_fake_chromecast_info()
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+
+    entity_registry.async_update_entity(
+        "media_player.speaker", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert chromecast.disconnect.call_count == 1
+    assert hass.states.get("media_player.speaker") is None
+    assert "incorrectly being triggered" not in caplog.text
+
+
+async def test_stop_listener_removed_with_entity(hass: HomeAssistant) -> None:
+    """Test the stop listener is removed when the entity is removed."""
+    info = get_fake_chromecast_info()
+    await async_setup_media_player_cast(hass, info)
+    stop_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP]
+
+    entity = hass.data[MP_DOMAIN].get_entity("media_player.speaker")
+    await entity.async_remove()
+    await hass.async_block_till_done()
+
+    assert (
+        hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0)
+        == stop_listeners - 1
+    )
 
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     """Test deprecated empty yaml config.."""
-    await async_setup_component(hass, "cast", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries("cast")
@@ -2130,6 +2251,10 @@ async def test_invalid_cast_platform(
 
     info = get_fake_chromecast_info()
     await async_setup_media_player_cast(hass, info)
+
+    # Cast platforms are loaded lazily on first use
+    entry = hass.config_entries.async_entries("cast")[0]
+    await entry.runtime_data.cast_platforms.async_get_platforms()
 
     assert "Invalid cast platform <Mock id" in caplog.text
 
@@ -2163,8 +2288,7 @@ async def test_cast_platform_play_media(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # This will play using the cast platform
     await hass.services.async_call(
@@ -2256,8 +2380,7 @@ async def test_cast_platform_browse_media(
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -2277,6 +2400,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2302,6 +2426,7 @@ async def test_cast_platform_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],
@@ -2323,8 +2448,7 @@ async def test_cast_platform_play_media_local_media(
     # Bring Chromecast online
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # This will play using the cast platform
     await hass.services.async_call(
@@ -2457,8 +2581,7 @@ async def test_entity_media_states_active_app_reported_idle(
     # Connect the device
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
-    conn_status_cb(connection_status)
-    await hass.async_block_till_done()
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
 
     # Scenario: Custom App is running (e.g. DashCast), but device reports is_idle=True
     chromecast.app_id = "84912283"  # Example Custom App ID

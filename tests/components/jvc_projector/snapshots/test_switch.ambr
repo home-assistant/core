@@ -39,7 +39,7 @@
 # name: test_entities[switch.jvc_projector_e_shift-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'JVC Projector E-Shift',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'JVC Projector E-Shift',
     }),
     'context': <ANY>,
     'entity_id': 'switch.jvc_projector_e_shift',
@@ -89,7 +89,7 @@
 # name: test_entities[switch.jvc_projector_low_latency_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'JVC Projector Low latency mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'JVC Projector Low latency mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.jvc_projector_low_latency_mode',

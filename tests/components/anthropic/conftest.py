@@ -2,8 +2,10 @@
 
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime
-from unittest.mock import DEFAULT, AsyncMock, patch
+from typing import Unpack
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
+from anthropic import AsyncStream
 from anthropic.pagination import AsyncPage
 from anthropic.types import (
     Container,
@@ -18,17 +20,20 @@ from anthropic.types import (
     ToolUseBlock,
     Usage,
 )
+from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
 from homeassistant.components.anthropic.const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import model_list
 
@@ -40,7 +45,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="Claude",
-        domain="anthropic",
+        domain=DOMAIN,
         data={
             "api_key": "bla",
         },
@@ -87,7 +92,7 @@ async def mock_init_component(
         new_callable=AsyncMock,
         return_value=AsyncPage(data=model_list),
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 
@@ -118,16 +123,20 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
 
-    async def mock_generator(events: Iterable[RawMessageStreamEvent], **kwargs):
+    async def mock_generator(
+        events: Iterable[RawMessageStreamEvent],
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> AsyncGenerator[RawMessageStreamEvent]:
         """Create a stream of messages with the specified content blocks."""
         stop_reason = "end_turn"
         container = None
+        has_message_delta = False
         refusal_magic_string = (
             "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_"
             "1FAEFB6177B4672DEE07F9D3AFC62588"
             "CCD2631EDCF22E8CCC1FB35B501C9C86"
         )
-        for message in kwargs.get("messages"):
+        for message in kwargs["messages"]:
             if message["role"] != "user":
                 continue
             if isinstance(message["content"], str):
@@ -154,6 +163,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
             type="message_start",
         )
         for event in events:
+            if isinstance(event, RawMessageDeltaEvent):
+                has_message_delta = True
             if isinstance(event, RawContentBlockStartEvent) and isinstance(
                 event.content_block, ToolUseBlock
             ):
@@ -169,29 +180,39 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 ]
             ):
                 container = Container(
-                    id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
-                    expires_at=datetime.datetime.now(tz=datetime.UTC)
-                    + datetime.timedelta(minutes=5),
+                    id=kwargs.get("container") or "container_1234567890ABCDEFGHIJKLMN",
+                    expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
                 )
 
             yield event
-        yield RawMessageDeltaEvent(
-            type="message_delta",
-            delta=Delta(
-                stop_reason=stop_reason,
-                stop_sequence="",
-                container=container,
-            ),
-            usage=MessageDeltaUsage(output_tokens=0),
-        )
+        if not has_message_delta:
+            yield RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(
+                    stop_reason=stop_reason,
+                    stop_sequence="",
+                    container=container,
+                ),
+                usage=MessageDeltaUsage(output_tokens=0),
+            )
         yield RawMessageStopEvent(type="message_stop")
+
+    def mock_stream(
+        events: Iterable[RawMessageStreamEvent],
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> MagicMock:
+        """Create a stream supporting asynchronous iteration and cleanup."""
+        stream = MagicMock(spec=AsyncStream)
+        stream.__aenter__.return_value = stream
+        stream.__aiter__.side_effect = lambda: mock_generator(events, **kwargs)
+        return stream
 
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
     ) as mock_create:
         mock_create.side_effect = lambda **kwargs: (
-            mock_generator(mock_create.return_value.pop(0), **kwargs)
+            mock_stream(mock_create.return_value.pop(0), **kwargs)
             if isinstance(mock_create.return_value, list)
             else DEFAULT
         )

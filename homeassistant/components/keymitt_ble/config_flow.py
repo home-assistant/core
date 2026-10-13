@@ -1,7 +1,7 @@
 """Adds config flow for MicroBot."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.backends.device import BLEDevice
 from microbot import (
@@ -10,8 +10,9 @@ from microbot import (
     parse_advertisement_data,
     randomid,
 )
-import voluptuous as vol
+import probatio
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -50,6 +51,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._bdaddr: str | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -67,6 +69,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_init()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,6 +86,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovered_adv:
             self._discovered_advs[discovery.address] = discovery
         else:
+            await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery_info in async_discovered_service_info(self.hass):
                 self._ble_device = discovery_info.device
@@ -108,9 +112,9 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             address: f"{parsed.data['local_name']} ({address})"
                             for address, parsed in self._discovered_advs.items()

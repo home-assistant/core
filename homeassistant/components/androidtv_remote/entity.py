@@ -1,6 +1,6 @@
 """Base entity for Android TV Remote."""
 
-from typing import Any
+from typing import Any, override
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
@@ -52,11 +52,13 @@ class AndroidTVRemoteBaseEntity(Entity):
         self._attr_is_on = is_on
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._api.add_is_available_updated_callback(self._is_available_updated)
         self._api.add_is_on_updated_callback(self._is_on_updated)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         self._api.remove_is_available_updated_callback(self._is_available_updated)

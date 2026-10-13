@@ -1,5 +1,7 @@
 """Interfaces with TotalConnect alarm control panels."""
 
+from typing import override
+
 from total_connect_client import ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 from total_connect_client.location import TotalConnectLocation
@@ -12,15 +14,11 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CODE_REQUIRED, DOMAIN
 from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
-
-SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
-SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(
@@ -36,21 +34,6 @@ async def async_setup_entry(
         TotalConnectAlarm(coordinator, location, partition_id, code_required)
         for location in coordinator.client.locations.values()
         for partition_id in location.partitions
-    )
-
-    # Set up services
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_AWAY_INSTANT,
-        None,
-        "async_alarm_arm_away_instant",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_HOME_INSTANT,
-        None,
-        "async_alarm_arm_home_instant",
     )
 
 
@@ -93,6 +76,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             self._attr_code_format = CodeFormat.NUMBER
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         state: AlarmControlPanelState | None = None
@@ -119,6 +103,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
 
         return state
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._check_usercode(code)
@@ -142,6 +127,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Disarm synchronous."""
         ArmingHelper(self._partition).disarm()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._check_usercode(code)
@@ -165,6 +151,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Arm home synchronous."""
         ArmingHelper(self._partition).arm_stay()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._check_usercode(code)
@@ -188,6 +175,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Arm away synchronous."""
         ArmingHelper(self._partition).arm_away()
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._check_usercode(code)

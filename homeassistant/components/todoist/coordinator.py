@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 import logging
+from typing import override
 
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Label, Project, Section, Task
@@ -34,7 +35,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        entry: ConfigEntry | None,
+        entry: TodoistConfigEntry | None,
         update_interval: timedelta,
         api: TodoistAPIAsync,
         token: str,
@@ -52,6 +53,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         self._labels: list[Label] | None = None
         self.token = token
 
+    @override
     async def _async_update_data(self) -> list[Task]:
         """Fetch tasks from the Todoist API."""
         try:

@@ -3,11 +3,20 @@
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
 from pylint_home_assistant.checkers.class_module import HassEnforceClassModule
+from pylint_home_assistant.checkers.config_flow.no_connection_class import (
+    HassEnforceConfigFlowNoConnectionClassChecker,
+)
 from pylint_home_assistant.checkers.config_flow.no_name import (
     HassEnforceConfigFlowNoNameChecker,
 )
 from pylint_home_assistant.checkers.config_flow.no_polling import (
     HassEnforceConfigFlowNoPollingChecker,
+)
+from pylint_home_assistant.checkers.config_flow.serial_port_usb_dependency import (
+    HassEnforceSerialPortSelectorUsbChecker,
+)
+from pylint_home_assistant.checkers.config_flow.step_id_match_method import (
+    HassEnforceConfigEntryStepIdMatchMethodChecker,
 )
 from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
     HassEnforceConfigEntryUniqueIdNoIpChecker,
@@ -17,12 +26,15 @@ from pylint_home_assistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
 from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
+from pylint_home_assistant.checkers.naive_now import HassEnforceNaiveNowChecker
+from pylint_home_assistant.checkers.now import HassEnforceNowChecker
 from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
 from pylint_home_assistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
 )
 from pylint_home_assistant.checkers.super_call import HassEnforceSuperCallChecker
 from pylint_home_assistant.checkers.type_hints import HassTypeHintChecker
+from pylint_home_assistant.checkers.utcnow import HassEnforceUtcnowChecker
 from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
 
@@ -92,6 +104,28 @@ def enforce_config_entry_unique_id_no_ip_checker_fixture(
     return checker
 
 
+@pytest.fixture(name="enforce_serial_port_selector_usb_checker")
+def enforce_serial_port_selector_usb_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a serial_port_selector usb dependency checker."""
+    clear_caches()
+    checker = HassEnforceSerialPortSelectorUsbChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="enforce_config_flow_no_connection_class_checker")
+def enforce_config_flow_no_connection_class_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a config_flow_no_connection_class checker."""
+    clear_caches()
+    checker = HassEnforceConfigFlowNoConnectionClassChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="enforce_config_flow_no_name_checker")
 def enforce_config_flow_no_name_checker_fixture(
     linter: UnittestLinter,
@@ -113,6 +147,16 @@ def enforce_config_flow_no_polling_checker_fixture(
     return checker
 
 
+@pytest.fixture(name="step_id_match_method_checker")
+def step_id_match_method_checker(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a step_id_match_method checker."""
+    checker = HassEnforceConfigEntryStepIdMatchMethodChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="enforce_runtime_data_checker")
 def enforce_runtime_data_checker_fixture(linter: UnittestLinter) -> BaseChecker:
     """Fixture to provide a runtime_data checker."""
@@ -128,3 +172,27 @@ def enforce_greek_micro_char_checker_fixture(linter: UnittestLinter) -> BaseChec
     enforce_greek_micro_char_checker = HassEnforceGreekMicroCharChecker(linter)
     enforce_greek_micro_char_checker.module = "homeassistant.components.pylint_test"
     return enforce_greek_micro_char_checker
+
+
+@pytest.fixture(name="enforce_now_checker")
+def enforce_now_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a now checker."""
+    enforce_now_checker = HassEnforceNowChecker(linter)
+    enforce_now_checker.module = "homeassistant.components.pylint_test"
+    return enforce_now_checker
+
+
+@pytest.fixture(name="enforce_utcnow_checker")
+def enforce_utcnow_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a utcnow checker."""
+    enforce_utcnow_checker = HassEnforceUtcnowChecker(linter)
+    enforce_utcnow_checker.module = "homeassistant.components.pylint_test"
+    return enforce_utcnow_checker
+
+
+@pytest.fixture(name="enforce_naive_now_checker")
+def enforce_naive_now_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a naive_now checker."""
+    enforce_naive_now_checker = HassEnforceNaiveNowChecker(linter)
+    enforce_naive_now_checker.module = "homeassistant.components.pylint_test"
+    return enforce_naive_now_checker

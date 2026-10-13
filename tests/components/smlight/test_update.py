@@ -1,5 +1,6 @@
 """Tests for the SMLIGHT update platform."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -273,15 +274,12 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
-@patch("homeassistant.components.smlight.const.LOGGER.warning")
 async def test_update_reboot_timeout(
-    mock_warning: MagicMock,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """Test firmware updates."""
+    """Test reboot timeout raises a translated user-facing error."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -299,26 +297,32 @@ async def test_update_reboot_timeout(
             return_value=None,
         ),
     ):
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=False,
+        install_task = hass.async_create_task(
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
         )
+        await asyncio.sleep(0)
 
         assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
         event_function = get_mock_event_function(
             mock_smlight_client, SmEvents.FW_UPD_done
         )
-
         event_function(MOCK_FIRMWARE_DONE)
 
-        freezer.tick(timedelta(seconds=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"Timeout waiting for .* to reboot after update",
+        ):
+            await install_task
 
-        mock_warning.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
 @pytest.mark.parametrize(
@@ -391,3 +395,40 @@ async def test_update_blank_release_notes(
     result = await ws_client.receive_json()
     await hass.async_block_till_done()
     assert result["result"] is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")
+async def test_zwave_update_naming(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Z-Wave radio (index 2) update entity naming."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.mock_title_z_wave_firmware")
+    assert state is not None
+    assert state.name == "Mock Title Z-Wave firmware"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_zwave_update_naming_mr10(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test Z-Wave radio (index 1) update entity naming for MR10/MRW10."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        model="SLZB-MRW10",
+        u_device=True,
+        radios=[
+            Radio(zb_type=0, chip_index=0),
+            Radio(zb_type=5, chip_index=1),
+        ],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.mock_title_z_wave_firmware")
+    assert state is not None
+    assert state.name == "Mock Title Z-Wave firmware"

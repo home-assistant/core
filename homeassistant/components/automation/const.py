@@ -1,9 +1,44 @@
 """Constants for the automation integration."""
 
+from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING
+
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .entity import BaseAutomationEntity
 
 CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
+
+ATTR_SOURCE = "source"
+EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
+
+ATTR_VARIABLES = "variables"
+CONF_SKIP_CONDITION = "skip_condition"
+CONF_STOP_ACTIONS = "stop_actions"
+DEFAULT_STOP_ACTIONS = True
+SERVICE_TRIGGER = "trigger"
+
+
+class AutomationEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for automation entities."""
+
+    ID = "id"
+
+
+class AutomationEntityStateAttribute(StrEnum):
+    """State attributes for automation entities."""
+
+    LAST_TRIGGERED = "last_triggered"
+    MODE = "mode"
+    CUR = "current"
+    MAX = "max"
+
 
 CONF_HIDE_ENTITY = "hide_entity"
 

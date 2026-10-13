@@ -3,11 +3,12 @@
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any
+from typing import Any, override
 
 from google_drive_api.exceptions import GoogleDriveApiError
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
@@ -70,6 +71,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         self.unique_id = slugify(config_entry.unique_id)
         self._client = config_entry.runtime_data.client
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -84,31 +86,49 @@ class GoogleDriveBackupAgent(BackupAgent):
         :param backup: Metadata about the backup that should be uploaded.
         """
 
+        bytes_uploaded = 0
+
         @wraps(open_stream)
         async def wrapped_open_stream() -> AsyncIterator[bytes]:
             stream = await open_stream()
 
             async def _progress_stream() -> AsyncIterator[bytes]:
-                bytes_uploaded = 0
+                nonlocal bytes_uploaded
+                position = 0
                 async for chunk in stream:
                     yield chunk
-                    bytes_uploaded += len(chunk)
-                    on_progress(bytes_uploaded=bytes_uploaded)
+                    position += len(chunk)
+                    # A retried upload reopens the stream from the beginning and
+                    # skips whatever the server already received, so only report
+                    # progress once it passes what was previously uploaded.
+                    if position > bytes_uploaded:
+                        bytes_uploaded = position
+                        on_progress(bytes_uploaded=bytes_uploaded)
 
             return _progress_stream()
 
         try:
             await self._client.async_upload_backup(wrapped_open_stream, backup)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
-            raise BackupAgentError(f"Failed to upload backup: {err}") from err
+            _LOGGER.error("Failed to upload backup: %s", err)
+            raise BackupAgentError(
+                translation_domain=DOMAIN,
+                translation_key="upload_failed",
+            ) from err
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         try:
             return await self._client.async_list_backups()
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
-            raise BackupAgentError(f"Failed to list backups: {err}") from err
+            _LOGGER.error("Failed to list backups: %s", err)
+            raise BackupAgentError(
+                translation_domain=DOMAIN,
+                translation_key="list_failed",
+            ) from err
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -119,8 +139,13 @@ class GoogleDriveBackupAgent(BackupAgent):
         for backup in backups:
             if backup.backup_id == backup_id:
                 return backup
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -139,9 +164,18 @@ class GoogleDriveBackupAgent(BackupAgent):
                 stream = await self._client.async_download(file_id)
                 return ChunkAsyncStreamIterator(stream)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
-            raise BackupAgentError(f"Failed to download backup: {err}") from err
-        raise BackupNotFound(f"Backup {backup_id} not found")
+            _LOGGER.error("Failed to download backup: %s", err)
+            raise BackupAgentError(
+                translation_domain=DOMAIN,
+                translation_key="download_failed",
+            ) from err
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -160,5 +194,13 @@ class GoogleDriveBackupAgent(BackupAgent):
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
                 return
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
-            raise BackupAgentError(f"Failed to delete backup: {err}") from err
-        raise BackupNotFound(f"Backup {backup_id} not found")
+            _LOGGER.error("Failed to delete backup: %s", err)
+            raise BackupAgentError(
+                translation_domain=DOMAIN,
+                translation_key="delete_failed",
+            ) from err
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )

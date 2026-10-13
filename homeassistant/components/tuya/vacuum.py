@@ -1,6 +1,7 @@
 """Support for Tuya Vacuums."""
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, override
 
 from tuya_device_handlers.definition.vacuum import (
     VacuumDefinition,
@@ -24,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
     TuyaVacuumActivity.CLEANING: VacuumActivity.CLEANING,
@@ -35,8 +36,14 @@ _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
     TuyaVacuumActivity.ERROR: VacuumActivity.ERROR,
 }
 
-VACUUMS: dict[DeviceCategory, StateVacuumEntityDescription] = {
-    DeviceCategory.SD: StateVacuumEntityDescription(key=""),
+
+@dataclass(frozen=True)
+class TuyaVacuumEntityDescription(TuyaEntityDescription, StateVacuumEntityDescription):
+    """Describes a Tuya vacuum entity."""
+
+
+VACUUMS: dict[DeviceCategory, TuyaVacuumEntityDescription] = {
+    DeviceCategory.SD: TuyaVacuumEntityDescription(key=""),
 }
 
 
@@ -78,7 +85,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: StateVacuumEntityDescription,
+        description: TuyaVacuumEntityDescription,
         definition: VacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""
@@ -110,50 +117,59 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self._read_wrapper(self._fan_speed_wrapper)
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return Tuya vacuum device state."""
         tuya_value = self._read_wrapper(self._activity_wrapper)
         return _TUYA_TO_HA_ACTIVITY_MAPPINGS.get(tuya_value) if tuya_value else None
 
+    @override
     async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaVacuumAction.START
         )
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the device."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaVacuumAction.STOP
         )
 
+    @override
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause the device."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaVacuumAction.PAUSE
         )
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaVacuumAction.RETURN_TO_BASE
         )
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaVacuumAction.LOCATE
         )
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         await self._async_send_wrapper_updates(self._fan_speed_wrapper, fan_speed)
 
+    @override
     async def async_send_command(
         self,
         command: str,

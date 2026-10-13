@@ -1,8 +1,8 @@
 """Set up some common test helper things."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
-from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
+from contextlib import AsyncExitStack, asynccontextmanager, contextmanager, suppress
 import datetime
 import functools
 import gc
@@ -18,6 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
+import time
 from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
@@ -32,6 +33,8 @@ from aiohttp.test_utils import (
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import bcrypt
+from bleak_retry_connector import bleak_manager
+import execnet
 import freezegun
 import multidict
 import pytest
@@ -40,7 +43,6 @@ import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
-from syrupy.session import SnapshotSession
 
 # Setup patching of JSON functions before any other Home Assistant imports
 from . import patch_json  # isort:skip
@@ -59,6 +61,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
@@ -89,6 +92,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
     config_entry_oauth2_flow,
+    deprecation,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -108,7 +112,7 @@ from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_han
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
+from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -151,12 +155,15 @@ _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
-# Disable fixtures overriding our beautiful policy
-asyncio.set_event_loop_policy = lambda policy: None
 
 # Capture the real socket functions before any test patches them
 _real_getaddrinfo = socket.getaddrinfo
+
+# Guard for CI jobs that pin the SQLite version via tests.sqlite3_shim
+if expected_sqlite := os.environ.get("EXPECTED_SQLITE_VERSION"):
+    assert sqlite3.sqlite_version == expected_sqlite, (
+        f"Expected SQLite {expected_sqlite}, got {sqlite3.sqlite_version}"
+    )
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -173,10 +180,14 @@ def pytest_configure(config: pytest.Config) -> None:
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Override default finish to detect unused snapshots despite xdist
-    # Temporary workaround until it is finalised inside syrupy
-    # See https://github.com/syrupy-project/syrupy/pull/901
-    SnapshotSession.finish = override_syrupy_finish
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_setupnodes(
+    config: pytest.Config, specs: Sequence[execnet.XSpec]
+) -> None:
+    """Log the number of xdist workers, also when running with -qq."""
+    if reporter := config.pluginmanager.get_plugin("terminalreporter"):
+        reporter.write_line(f"xdist workers: {len(specs)}")
 
 
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
@@ -207,6 +218,13 @@ def pytest_runtest_setup() -> None:
     - Modified to include
       https://github.com/spulec/freezegun/pull/424
       and improve class str.
+
+    - Modified to not force lazily imported module attributes to be resolved
+      when scanning the loaded modules for time related objects.
+
+    - Modified to tolerate a thread reading the time while another thread
+      stops freeze_time, which otherwise raises IndexError, see
+      https://github.com/spulec/freezegun/issues/345.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
@@ -241,6 +259,12 @@ def pytest_runtest_setup() -> None:
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
+    freezegun.api._get_module_attributes = patch_time.ha_get_module_attributes  # type: ignore[attr-defined]
+    freezegun.api._get_module_attributes_hash = (  # type: ignore[attr-defined]
+        patch_time.ha_get_module_attributes_hash
+    )
+    freezegun.api._should_use_real_time = patch_time.ha_should_use_real_time  # type: ignore[attr-defined]
+    freezegun.api.get_current_time = patch_time.ha_get_current_time
 
     def adapt_datetime(val):
         return val.isoformat(" ")
@@ -378,6 +402,18 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
+async def configure_event_loop() -> None:
+    """Configure the loop the way Home Assistant configures its own."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def configure_session_event_loop() -> None:
+    """Configure the session loop, which session scoped fixtures run on."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
+@pytest.fixture(autouse=True)
 async def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
     asyncio.get_running_loop().set_debug(True)
@@ -439,7 +475,7 @@ def verify_cleanup(
     for thread in threads:
         assert (
             isinstance(thread, threading._DummyThread)
-            or thread.name.startswith("waitpid-")
+            or thread.name.startswith("asyncio-waitpid-")
             or "_run_safe_shutdown_loop" in thread.name
         )
 
@@ -483,6 +519,7 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+    deprecation._REPORTED_DEPRECATED_ENTITY_USAGE.clear()
 
     # Reset patch_json
     if patch_json.mock_objects:
@@ -869,11 +906,17 @@ async def hass_read_only_access_token(
 async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return the Home Assistant Supervisor user."""
+    """Return the Home Assistant Supervisor user.
+
+    The user is published the same way the hassio integration does, so
+    commands restricted to the Supervisor accept it.
+    """
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
-    return MockUser(
+    user = MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
     ).add_to_hass(hass)
+    hass.data[DATA_SUPERVISOR_USER] = user
+    return user
 
 
 @pytest.fixture
@@ -965,22 +1008,31 @@ def hass_ws_client(
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(
-        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+        hass: HomeAssistant = hass,
+        access_token: str | None = hass_access_token,
+        supervisor_unix_socket: bool = False,
     ) -> MockHAClientWebSocket:
-        """Create a websocket client."""
+        """Create a client, skipping token auth for Supervisor Unix sockets."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
         auth_resp = await websocket.receive_json()
-        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
-
-        if access_token is None:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        if supervisor_unix_socket:
+            assert auth_resp["type"] == TYPE_AUTH_OK
         else:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
+            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        auth_ok = await websocket.receive_json()
-        assert auth_ok["type"] == TYPE_AUTH_OK
+            if access_token is None:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
+            else:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": access_token}
+                )
+
+            auth_ok = await websocket.receive_json()
+            assert auth_ok["type"] == TYPE_AUTH_OK
 
         def _get_next_id() -> Generator[int]:
             i = 0
@@ -993,11 +1045,10 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
+        async def _remove_device(device_id: str) -> Any:
             await _send_json_auto_id(
                 {
-                    "type": "config/device_registry/remove_config_entry",
-                    "config_entry_id": config_entry_id,
+                    "type": "config/device_registry/remove",
                     "device_id": device_id,
                 }
             )
@@ -1074,7 +1125,9 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain, properties=None):
-            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
+            async_fire_mqtt_message(
+                hass, topic, payload or b"", qos, retain, properties=properties
+            )
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
@@ -1628,31 +1681,69 @@ def recorder_db_url(
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
     drop_existing_db = pytestconfig.getoption("drop_existing_db")
+    worker_db = False
+    if db_url.startswith(("mysql://", "postgresql://")) and (
+        worker := os.environ.get("PYTEST_XDIST_WORKER")
+    ):
+        import sqlalchemy as sa  # noqa: PLC0415
 
-    def drop_db() -> None:
+        # One database per xdist worker so the workers can run in parallel,
+        # and per test run so concurrent runs on one server don't collide
+        suffix = f"-{os.environ['PYTEST_XDIST_TESTRUNUID'][:8]}-{worker}"
+        url = sa.make_url(db_url)
+        # Postgres limits names to 63 bytes, MySQL to 64 characters
+        base = url.database.encode()[: 63 - len(suffix)].decode(errors="ignore")
+        database = f"{base}{suffix}"
+        db_url = url.set(database=database).render_as_string(hide_password=False)
+        # The database belongs to this worker, so a leftover from a failed
+        # teardown must not fail all following tests on the worker
+        drop_existing_db = True
+        worker_db = True
+
+    def drop_db(*, terminate: bool = False) -> None:
         import sqlalchemy as sa  # noqa: PLC0415
         import sqlalchemy_utils  # noqa: PLC0415
 
+        made_url = sa.make_url(db_url)
+        db = made_url.database
         if db_url.startswith("mysql://"):
-            made_url = sa.make_url(db_url)
-            db = made_url.database
+            query = sa.text(
+                "select id FROM information_schema.processlist"
+                " WHERE db=:db and id != CONNECTION_ID()"
+            )
+            kill = "KILL {}"
             engine = sa.create_engine(db_url)
-            # Check for any open connections to the database before dropping it
-            # to ensure that InnoDB does not deadlock.
+        else:
+            query = sa.text(
+                "select pid FROM pg_stat_activity"
+                " WHERE datname=:db and pid != pg_backend_pid()"
+                " and backend_type = 'client backend'"
+            )
+            kill = "select pg_terminate_backend({})"
+            engine = sa.create_engine(made_url.set(database="postgres"))
+        # Check for any open connections to the database before dropping it:
+        # MySQL can deadlock and Postgres refuses to drop a database in use.
+        # Connections of the test can take a moment to close on a busy
+        # machine, so wait for them.
+        for _ in range(30):
             with engine.begin() as connection:
-                query = sa.text(
-                    "select id FROM information_schema.processlist"
-                    " WHERE db=:db and id != CONNECTION_ID()"
-                )
                 rows = connection.execute(query, parameters={"db": db}).fetchall()
-                if rows:
-                    raise RuntimeError(
-                        f"Unable to drop database {db} because it is in use by {rows}"
-                    )
-            engine.dispose()
-            sqlalchemy_utils.drop_database(db_url)
-        elif db_url.startswith("postgresql://"):
-            sqlalchemy_utils.drop_database(db_url)
+                if rows and terminate:
+                    # The database belongs to this worker, so a connection
+                    # still open after its tests can safely be closed
+                    for (session_id,) in rows:
+                        # The session can close between the query and the kill
+                        with suppress(sa.exc.OperationalError):
+                            connection.execute(sa.text(kill.format(int(session_id))))
+            if not rows:
+                break
+            time.sleep(0.1)
+        engine.dispose()
+        if rows:
+            raise RuntimeError(
+                f"Unable to drop database {db} because it is in use by {rows}"
+            )
+        sqlalchemy_utils.drop_database(db_url)
 
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
@@ -1661,7 +1752,7 @@ def recorder_db_url(
         import sqlalchemy_utils  # noqa: PLC0415
 
         if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
-            drop_db()
+            drop_db(terminate=worker_db)
 
         if sqlalchemy_utils.database_exists(db_url):
             raise RuntimeError(
@@ -1679,7 +1770,7 @@ def recorder_db_url(
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
     elif db_url.startswith(("mysql://", "postgresql://")):
-        drop_db()
+        drop_db(terminate=worker_db)
 
 
 async def _async_init_recorder_component(
@@ -1971,6 +2062,8 @@ async def mock_enable_bluetooth(
 @pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
+    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
+
     with (
         # Simulate the Bluetooth management API being unavailable, as it is on
         # CI and most dev machines. Letting the real setup() run would attempt
@@ -2018,7 +2111,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
     # Mock BlueZ management controller to successfully setup
@@ -2028,7 +2120,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
+            bluetooth_scanner.OriginalBleakScanner,
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
@@ -2067,7 +2159,7 @@ async def hassio_stubs(
 ) -> None:
     """Create mock hassio http client."""
     with patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):
         await async_setup_component(hass, "hassio", {})
 
@@ -2258,8 +2350,11 @@ DhcpServiceInfo.__init__ = _dhcp_service_info_init
 def disable_http_server() -> Generator[None]:
     """Disable automatic start of HTTP server during tests.
 
-    This prevents the HTTP server from starting in tests that setup
-    integrations which depend on the HTTP component.
+    This prevents the HTTP server from binding sockets and starting in tests
+    that setup integrations which depend on the HTTP component.
     """
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with (
+        patch("homeassistant.components.http.HomeAssistantHTTP.async_bind"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
+    ):
         yield

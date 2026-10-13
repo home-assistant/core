@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import switchbot
 from switchbot import AirQualityLevel, HumidifierWaterLevel, SwitchbotModel
@@ -14,16 +15,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -65,14 +65,14 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
     ),
     "battery": SwitchBotSensorEntityDescription(
         key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "co2": SwitchBotSensorEntityDescription(
         key="co2",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
     ),
@@ -83,7 +83,7 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
     ),
     "humidity": SwitchBotSensorEntityDescription(
         key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
@@ -150,9 +150,24 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
     ),
     "pm25": SwitchBotSensorEntityDescription(
         key="pm25",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
+    ),
+    "pir_triggered_level": SwitchBotSensorEntityDescription(
+        key="pir_triggered_level",
+        translation_key="pir_triggered_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "radar_triggered_distance": SwitchBotSensorEntityDescription(
+        key="radar_triggered_distance",
+        translation_key="radar_triggered_distance",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "radar_triggered_level": SwitchBotSensorEntityDescription(
+        key="radar_triggered_level",
+        translation_key="radar_triggered_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -232,6 +247,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
             self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.parsed_data.get(self._sensor))
@@ -241,6 +257,7 @@ class SwitchbotRSSISensor(SwitchBotSensor):
     """Representation of a Switchbot RSSI sensor."""
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         # Switchbot supports both connectable and non-connectable devices

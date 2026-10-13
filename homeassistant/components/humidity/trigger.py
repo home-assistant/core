@@ -1,5 +1,7 @@
 """Provides triggers for humidity."""
 
+from typing import override
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
@@ -44,6 +46,7 @@ class _HumidityTriggerMixin(EntityNumericalStateTriggerBase):
     _domain_specs = HUMIDITY_DOMAIN_SPECS
     _valid_unit = "%"
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip attribute-source entities that lack the humidity attribute.
 

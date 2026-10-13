@@ -1,6 +1,7 @@
 """Support for Netgear routers."""
 
 import logging
+from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
@@ -70,6 +71,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         return hostname
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
@@ -77,26 +79,31 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the router."""
         return self._active
 
     @property
+    @override
     def ip_address(self) -> str:
         """Return the IP address."""
         return self._device["ip"]
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address."""
         return self._mac
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return the hostname."""
         return self._hostname
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon."""
         return self._icon

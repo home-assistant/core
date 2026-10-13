@@ -4,10 +4,10 @@ import pytest
 
 from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
-    CONF_MODEL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -109,3 +109,4 @@ async def test_user_flow_title_from_model(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+    assert result["result"].unique_id == f"{model}_{MOCK_INFRARED_EMITTER_ENTITY_ID}"

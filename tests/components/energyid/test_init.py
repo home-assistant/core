@@ -4,14 +4,10 @@ from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
+import pytest
 
-from homeassistant.components.energyid import (
-    DOMAIN,
-    _async_handle_state_change,
-    async_unload_entry,
-)
+from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
@@ -19,7 +15,7 @@ from homeassistant.components.energyid.const import (
     CONF_PROVISIONING_SECRET,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -68,6 +64,7 @@ async def test_setup_fails_on_auth_error(
 
     # Unexpected errors cause retry, not reauth (might be temporary network issues)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "auth_unexpected_error"
 
 
 async def test_setup_fails_when_not_claimed(
@@ -83,6 +80,7 @@ async def test_setup_fails_when_not_claimed(
 
     # Device not claimed raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "device_not_claimed"
 
     # Verify that a reauth flow was initiated (reviewer comment at line 56-81)
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -109,6 +107,7 @@ async def test_setup_auth_error_401_triggers_reauth(
 
     # 401 error raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_credentials"
 
     # Verify that a reauth flow was initiated
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -135,6 +134,7 @@ async def test_setup_auth_error_403_triggers_reauth(
 
     # 403 error raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_credentials"
 
     # Verify that a reauth flow was initiated
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -161,6 +161,7 @@ async def test_setup_http_error_triggers_retry(
 
     # 500 error raises ConfigEntryNotReady, resulting in SETUP_RETRY state
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "auth_http_error"
 
 
 async def test_setup_network_error_triggers_retry(
@@ -176,6 +177,7 @@ async def test_setup_network_error_triggers_retry(
 
     # Network error raises ConfigEntryNotReady, resulting in SETUP_RETRY state
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "auth_connection_error"
 
 
 async def test_state_change_sends_data(
@@ -550,6 +552,7 @@ async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
 
         assert not result
         assert entry.state is ConfigEntryState.SETUP_RETRY
+        assert entry.error_reason_translation_key == "auth_timeout"
 
 
 async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
@@ -1034,6 +1037,8 @@ async def test_unload_entry_unexpected_exception(hass: HomeAssistant) -> None:
 
             # Should return False due to exception (line 384)
             assert not result
+            assert entry.state is ConfigEntryState.FAILED_UNLOAD
+            assert entry.reason == "Error while unloading the EnergyID entry"
 
 
 # ============================================================================
@@ -1381,6 +1386,7 @@ async def test_direct_state_change_handler(
     _async_handle_state_change(hass, mock_config_entry.entry_id, event)
 
 
+@pytest.mark.usefixtures("mock_webhook_client")
 async def test_subentry_unload_during_entry_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -1390,6 +1396,7 @@ async def test_subentry_unload_during_entry_unload(
     # Setup the entry
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Create a subentry with the correct attribute
     sub_entry = MockConfigEntry(
@@ -1416,12 +1423,12 @@ async def test_subentry_unload_during_entry_unload(
     # Replace the async_unload method
     hass.config_entries.async_unload = mock_async_unload
 
-    # ACT: Directly call the unload function
-    result = await async_unload_entry(hass, mock_config_entry)
+    # ACT: Unload the main entry through the normal pipeline
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # ASSERT: Line 363 should have been executed
+    # ASSERT: async_unload should have been called for the subentry
     assert subentry_unload_called, (
-        "async_unload should have been called for the subentry (line 363)"
+        "async_unload should have been called for the subentry"
     )
     assert result is True

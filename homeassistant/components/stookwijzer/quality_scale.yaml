@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       The integration doesn't provide any additional service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -30,9 +36,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: |
-      This integration is read-only and doesn't provide any actions.
+    status: todo
+    comment: get_forecast action returns an empty list instead of raising when no data is available
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo

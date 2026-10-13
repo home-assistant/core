@@ -1,7 +1,7 @@
 """Support for Met Éireann weather service."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -103,6 +103,7 @@ class MetEireannWeather(SingleCoordinatorWeatherEntity[MetEireannUpdateCoordinat
         )
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(
@@ -110,36 +111,43 @@ class MetEireannWeather(SingleCoordinatorWeatherEntity[MetEireannUpdateCoordinat
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
         return self.coordinator.data.current_weather_data.get("wind_gust")
 
     @property
+    @override
     def cloud_coverage(self) -> float | None:
         """Return the cloud coverage."""
         return self.coordinator.data.current_weather_data.get("cloudiness")
@@ -177,11 +185,13 @@ class MetEireannWeather(SingleCoordinatorWeatherEntity[MetEireannUpdateCoordinat
         return ha_forecast
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(False)
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(True)

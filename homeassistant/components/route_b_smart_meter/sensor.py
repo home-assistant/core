@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -123,6 +123,7 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
         self._attr_device_info = _build_device_info(coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_accessor(self.coordinator.data)

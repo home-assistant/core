@@ -1,0 +1,49 @@
+{
+  "entity": {
+    "select": {
+      "light_mode": {
+        "default": "mdi:lightbulb-auto"
+      },
+      "light_schedule_frequency": {
+        "default": "mdi:calendar-refresh"
+      }
+    },
+    "sensor": {
+      "chlorine": {
+        "default": "mdi:gauge"
+      },
+      "conductivity": {
+        "default": "mdi:gauge"
+      },
+      "electrolysis": {
+        "default": "mdi:flash"
+      },
+      "filtration_intel_time": {
+        "default": "mdi:timer-outline"
+      },
+      "hydrolysis": {
+        "default": "mdi:flash"
+      },
+      "redox_potential": {
+        "default": "mdi:gauge"
+      },
+      "uv": {
+        "default": "mdi:weather-sunny-alert"
+      }
+    },
+    "time": {
+      "filtration_interval_end": {
+        "default": "mdi:clock-end"
+      },
+      "filtration_interval_start": {
+        "default": "mdi:clock-start"
+      },
+      "light_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "light_schedule_start": {
+        "default": "mdi:clock-start"
+      }
+    }
+  }
+}
