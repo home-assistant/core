@@ -1,10 +1,10 @@
 """Test STT component setup."""
 
-from collections.abc import AsyncGenerator, Generator, Iterable
+from collections.abc import AsyncGenerator, AsyncIterable, Generator, Iterable
 from contextlib import ExitStack
 from http import HTTPStatus
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -540,6 +540,59 @@ async def test_partial_results_with_speaker_id(
         PartialSpeechResult("no wait", speaker_id="speaker_1"),
         SpeechResult("turn on the lights no wait", SpeechResultState.SUCCESS),
     ]
+
+
+async def test_stream_audio_partial_only_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test the REST API returns the final result of an entity that only streams partials."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    client = await hass_client()
+    response = await client.post(
+        f"/api/stt/{mock_provider_partial_entity.url_path}",
+        headers={
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            )
+        },
+        data=b"audio",
+    )
+
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {"text": "hello world again", "result": "success"}
+    assert mock_provider_partial_entity.received == [b"audio"]
+    assert mock_provider_partial_entity.closed is True
+
+
+async def test_process_audio_stream_without_final_result(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test an entity that never yields a final result raises an error."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    async def only_partials(
+        metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult]:
+        yield PartialSpeechResult("hello")
+
+    with (
+        patch.object(
+            mock_provider_partial_entity,
+            "async_process_audio_stream_with_progress",
+            only_partials,
+        ),
+        pytest.raises(RuntimeError, match="did not yield a final speech result"),
+    ):
+        await mock_provider_partial_entity.internal_async_process_audio_stream(
+            _TEST_METADATA, _one_chunk_stream()
+        )
 
 
 @pytest.mark.parametrize(

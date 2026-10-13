@@ -37,7 +37,7 @@ class PartialSpeechResult:
     """Partial result of audio Speech."""
 
     text: str
-    """Full transcript up to this point. Words may change."""
+    """Full transcript of this speaker up to this point. Words may change."""
 
     speaker_id: str | None = None
     """Speaker this transcript belongs to, or None if speakers are not identified."""

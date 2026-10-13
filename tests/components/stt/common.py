@@ -112,24 +112,31 @@ class MockSTTProviderEntity(BaseProvider, SpeechToTextEntity):
 
 
 class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
-    """Mock provider entity that emits partial results."""
+    """Mock provider entity that only implements the partial results method."""
 
     url_path = "stt.test_partial"
     _attr_name = "test partial"
     closed = False
+
+    async def async_process_audio_stream(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> SpeechResult:
+        """Not implemented, like an integration that only streams partials."""
+        raise NotImplementedError
 
     async def async_process_audio_stream_with_progress(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
         """Process an audio stream, yielding a partial per word."""
         try:
+            async for data in stream:
+                self.received.append(data)
+
             words = self.text.split()
             for index in range(1, len(words)):
                 yield PartialSpeechResult(" ".join(words[:index]))
 
-            yield await self.async_process_audio_stream(
-                metadata=metadata, stream=stream
-            )
+            yield SpeechResult(self.text, SpeechResultState.SUCCESS)
         finally:
             self.closed = True
 

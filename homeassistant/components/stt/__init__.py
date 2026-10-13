@@ -230,10 +230,17 @@ class SpeechToTextEntity(RestoreEntity):
     async def internal_async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
-        """Process an audio stream to STT service."""
-        self.__last_processed = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        return await self.async_process_audio_stream(metadata=metadata, stream=stream)
+        """Process an audio stream to STT service, returning only the final result."""
+        async with aclosing(
+            self.internal_async_process_audio_stream_with_progress(
+                metadata=metadata, stream=stream
+            )
+        ) as results:
+            async for result in results:
+                if isinstance(result, SpeechResult):
+                    return result
+
+        raise RuntimeError(f"{self.entity_id} did not yield a final speech result")
 
     @final
     async def internal_async_process_audio_stream_with_progress(
