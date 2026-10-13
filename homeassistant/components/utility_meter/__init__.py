@@ -11,6 +11,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
@@ -190,13 +191,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
-    except probatio.Invalid:
+    except probatio.Invalid as err:
         # The entity is identified by an unknown entity registry ID
-        _LOGGER.error(
-            "Failed to setup utility_meter for unknown entity %s",
-            entry.options[CONF_SOURCE_SENSOR],
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_entity",
+            translation_placeholders={"entity_id": entry.options[CONF_SOURCE_SENSOR]},
+        ) from err
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(

@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -144,10 +144,10 @@ async def async_attach_trigger(
     )
 
     if not device:
-        return lambda: None
+        return async_noop
 
     if device.model not in DEVICES:
-        return lambda: None
+        return async_noop
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",

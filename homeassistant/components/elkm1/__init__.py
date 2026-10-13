@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -256,8 +256,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
                 _included(conf[item]["include"], True, config[item]["included"])
                 _included(conf[item]["exclude"], False, config[item]["included"])
             except (ValueError, probatio.Invalid) as err:
-                _LOGGER.error("Config item: %s; %s", item, err)
-                return False
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_config_item",
+                    translation_placeholders={"item": item},
+                ) from err
 
     elk = Elk(
         {
@@ -289,9 +292,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
     try:
         await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
         sync_success = True
-    except LoginFailed:
-        _LOGGER.error("ElkM1 login failed for %s", conf[CONF_HOST])
-        return False
+    except LoginFailed as exc:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+            translation_placeholders={"host": conf[CONF_HOST]},
+        ) from exc
     except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
     finally:

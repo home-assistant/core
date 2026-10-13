@@ -41,12 +41,23 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
@@ -55,6 +66,13 @@ from tests.components.infrared.common import (
 )
 
 _CLIMATE_ENTITY_ID = "climate.lg_ac"
+_STORED_CLIMATE_DATA = {
+    "native_current_temperature": None,
+    "native_target_temperature": 25.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
 
 
 @pytest.fixture
@@ -293,6 +311,44 @@ async def test_set_temperature_sends_command_when_active(
     assert float(state.attributes["temperature"]) == 26.0
 
 
+@pytest.mark.parametrize(
+    ("fahrenheit", "celsius"),
+    [(61, 16), (62, 17), (63, 17), (64, 18)],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_fahrenheit_rounds(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fahrenheit: int,
+    celsius: int,
+) -> None:
+    """Test a Fahrenheit target is rounded to the nearest Celsius degree."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: fahrenheit},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=celsius, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_no_command_when_off(
     hass: HomeAssistant,
@@ -513,6 +569,7 @@ async def test_target_temperature_feature_follows_configured_modes(
             {
                 "fan_mode": FAN_HIGH,
                 "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
                 ATTR_SWING_MODE: "high",
                 ATTR_SWING_HORIZONTAL_MODE: "left",
             },
@@ -527,7 +584,11 @@ async def test_target_temperature_feature_follows_configured_modes(
         ),
         pytest.param(
             HVACMode.HEAT,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
             (HVACMode.OFF, FAN_HIGH, 29.0, "off", "off"),
             id="mode_no_longer_configured_is_ignored",
         ),
@@ -562,6 +623,121 @@ async def test_state_restored_on_restart(
     assert state.attributes["temperature"] == expected_temp
     assert state.attributes[ATTR_SWING_MODE] == expected_swing
     assert state.attributes[ATTR_SWING_HORIZONTAL_MODE] == expected_swing_h
+
+
+@pytest.mark.parametrize(
+    (
+        "restored_attributes",
+        "extra_data",
+        "unit_system",
+        "expected_temperature",
+        "expected_native",
+    ),
+    [
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
+            METRIC_SYSTEM,
+            17,
+            17,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
+            US_CUSTOMARY_SYSTEM,
+            63,
+            17,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            None,
+            METRIC_SYSTEM,
+            17,
+            17,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            None,
+            US_CUSTOMARY_SYSTEM,
+            63,
+            17,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature": 17}, None, METRIC_SYSTEM, 17, 17, id="legacy_celsius"
+        ),
+        pytest.param(
+            {"temperature": 63},
+            None,
+            US_CUSTOMARY_SYSTEM,
+            63,
+            17,
+            id="legacy_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            _STORED_CLIMATE_DATA,
+            US_CUSTOMARY_SYSTEM,
+            77,
+            25,
+            id="extra_data_preferred_over_attributes",
+        ),
+    ],
+)
+async def test_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    restored_attributes: dict[str, int | str],
+    extra_data: dict[str, Any] | None,
+    unit_system: UnitSystem,
+    expected_temperature: int,
+    expected_native: int,
+) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    hass.config.units = unit_system
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    _CLIMATE_ENTITY_ID,
+                    HVACMode.COOL,
+                    restored_attributes,
+                ),
+                extra_data,
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.lg_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == expected_temperature
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=expected_native, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
