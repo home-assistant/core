@@ -1,8 +1,9 @@
 """Tests for Refoss discovery scans."""
 
 from collections.abc import AsyncGenerator
+from ipaddress import IPv4Address
 from time import monotonic
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -47,6 +48,11 @@ async def refoss_entry(
             "homeassistant.components.refoss.bridge.async_build_base_device",
             return_value=build_base_device_mock(),
         ),
+        patch(
+            "homeassistant.components.refoss.bridge.async_get_ipv4_broadcast_addresses",
+            new_callable=AsyncMock,
+            return_value={IPv4Address("255.255.255.255"), IPv4Address("10.9.8.255")},
+        ),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -61,10 +67,11 @@ async def refoss_entry(
 async def test_startup_scan_sweeps_subnet(
     fake_discovery: FakeDiscovery, refoss_entry: MockConfigEntry
 ) -> None:
-    """Test the first scan includes the broadcast and every host in the subnet."""
+    """Test the first scan includes broadcasts and every host in the subnet."""
     startup = fake_discovery.probes[0]
     assert startup is not None
     assert "255.255.255.255" in startup
+    assert "10.9.8.255" in startup
     assert "192.168.20.255" in startup
     assert "192.168.20.1" in startup
     assert "192.168.20.254" in startup
@@ -81,6 +88,7 @@ async def test_later_scan_uses_known_ip_without_subnet_sweep(
     steady = fake_discovery.probes[1]
     assert steady is not None
     assert "255.255.255.255" in steady
+    assert "10.9.8.255" in steady
     assert "192.168.20.255" in steady
     assert "1.1.1.1" in steady
     assert "192.168.20.1" not in steady
@@ -135,13 +143,23 @@ async def test_configured_host_is_probed_without_subnet_sweep(
 
 
 @pytest.mark.parametrize("configured_networks", [[]], indirect=True)
-async def test_entry_without_networks_keeps_default_broadcast(
+async def test_entry_without_networks_uses_adapter_broadcasts(
     fake_discovery: FakeDiscovery, refoss_entry: MockConfigEntry
 ) -> None:
-    """Test an entry without networks uses the library's default broadcast."""
-    await refoss_entry.runtime_data.async_scan()
+    """Test an entry without networks broadcasts on every enabled adapter."""
+    startup = fake_discovery.probes[0]
+    assert startup is not None
+    assert "255.255.255.255" in startup
+    assert "10.9.8.255" in startup
+    assert "192.168.20.1" not in startup
 
-    assert fake_discovery.probes == [None, None]
+    await refoss_entry.runtime_data.async_scan()
+    later = fake_discovery.probes[1]
+    assert later is not None
+    assert "255.255.255.255" in later
+    assert "10.9.8.255" in later
+    assert "1.1.1.1" in later
+    assert "192.168.20.1" not in later
 
 
 async def test_device_update_replaces_ip(refoss_entry: MockConfigEntry) -> None:

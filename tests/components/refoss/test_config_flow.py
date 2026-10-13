@@ -1,5 +1,7 @@
 """Tests for the refoss Integration."""
 
+from collections.abc import Generator
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,6 +14,17 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import FakeDiscovery, build_base_device_mock
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_ipv4_broadcasts() -> Generator[AsyncMock]:
+    """Return the enabled-adapter broadcasts used by config-flow discovery."""
+    with patch(
+        "homeassistant.components.refoss.config_flow.async_get_ipv4_broadcast_addresses",
+        new_callable=AsyncMock,
+        return_value={IPv4Address("255.255.255.255"), IPv4Address("10.9.8.255")},
+    ) as mock_broadcasts:
+        yield mock_broadcasts
 
 
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
@@ -45,7 +58,11 @@ async def test_creating_entry_sets_up(
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["options"] == {}
-        assert discovery.probes == [None]
+        probed = discovery.probes[0]
+        assert probed is not None
+        assert "255.255.255.255" in probed
+        assert "10.9.8.255" in probed
+        assert "192.168.20.1" not in probed
 
         await hass.async_block_till_done()
 

@@ -4,6 +4,7 @@ from typing import Any, override
 
 import probatio
 
+from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -102,17 +103,19 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_discover(self, networks: list[str]) -> bool:
         """Return whether a probe found at least one device."""
         discovery = await refoss_discovery_server(self.hass)
-        if networks:
-            addresses = build_probe_addresses(
-                networks,
-                known_ips=(),
-                include_hosts=any("/" in network for network in networks),
-            )
-            devices = await discovery.broadcast_msg(
-                wait_for=DISCOVERY_TIMEOUT, addresses=addresses
-            )
-        else:
-            devices = await discovery.broadcast_msg(wait_for=DISCOVERY_TIMEOUT)
+        local_broadcasts = [
+            str(address)
+            for address in await async_get_ipv4_broadcast_addresses(self.hass)
+        ]
+        addresses = build_probe_addresses(
+            networks,
+            local_broadcasts=local_broadcasts,
+            known_ips=(),
+            include_hosts=any("/" in network for network in networks),
+        )
+        devices = await discovery.broadcast_msg(
+            wait_for=DISCOVERY_TIMEOUT, addresses=addresses
+        )
 
         LOGGER.debug(
             "Discovered devices: [%s]",
