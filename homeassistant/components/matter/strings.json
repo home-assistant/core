@@ -704,6 +704,9 @@
       "privacy_mode_button": {
         "name": "Privacy mode button"
       },
+      "reverse_motor_direction": {
+        "name": "Reverse motor direction"
+      },
       "speaker_mute": {
         "name": "Mute"
       },
@@ -739,6 +742,12 @@
     },
     "addon_not_running": {
       "message": "The Matter Server app is not running yet."
+    },
+    "bitmap_write_failed": {
+      "message": "Failed to change {name}: the device returned status {status}."
+    },
+    "bitmap_write_not_supported": {
+      "message": "The device does not support changing {name}."
     },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."

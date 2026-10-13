@@ -27,6 +27,7 @@
         'sensor.aqara_shutter_switch_h2_eu_thread_routing_role': 'Thread routing role',
         'sensor.aqara_shutter_switch_h2_eu_uptime': 'Uptime',
         'sensor.aqara_shutter_switch_h2_eu_voltage': 'Voltage',
+        'switch.aqara_shutter_switch_h2_eu_reverse_motor_direction': 'Reverse motor direction',
         'update.aqara_shutter_switch_h2_eu_firmware': 'Firmware',
       }),
       'name': 'Aqara Shutter Switch H2 EU',
