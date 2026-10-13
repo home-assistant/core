@@ -461,6 +461,8 @@ class DeviceAuthorization:
                 or response["verification_url"],
                 verification_uri_complete=response.get("verification_uri_complete"),
                 expires_in=int(response["expires_in"]),
+                # At least the RFC 8628 default, so a zero or negative interval
+                # can't make the poll loop hammer the token endpoint
                 interval=max(int(response.get("interval", 5)), 5),
             )
         except (KeyError, TypeError, ValueError) as err:
@@ -545,9 +547,9 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
         Each poll posts grant_type device_code, the device_code and
         client_id (RFC 8628 section 3.4). Error codes (section 3.5):
         authorization_pending keeps polling, slow_down adds 5 seconds (or takes
-        the server's interval), access_denied raises DeviceFlowUnauthorized,
-        expired_token raises DeviceFlowTimeout and any other raises
-        DeviceFlowError. Connection timeouts, 429 and 5xx double the interval.
+        the server's interval, at most 120 seconds), access_denied raises
+        DeviceFlowUnauthorized, expired_token raises DeviceFlowTimeout and any
+        other raises DeviceFlowError. Connection timeouts, 429 and 5xx double the interval.
         """
         deadline = time.monotonic() + device.expires_in
         interval = device.interval
@@ -590,6 +592,7 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
                     interval += 5
                     with suppress(KeyError, TypeError, ValueError):
                         interval = max(interval, int(response["interval"]))
+                    interval = min(interval, 120)
                     _LOGGER.debug("Asked to slow down, polling every %s s", interval)
                 case "access_denied":
                     raise DeviceFlowUnauthorized

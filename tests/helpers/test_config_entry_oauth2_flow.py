@@ -1440,6 +1440,9 @@ async def test_device_flow_check_activation_errors(
             {"error": "slow_down", "interval": "20"}, [5, 20], id="server_interval"
         ),
         pytest.param(
+            {"error": "slow_down", "interval": 600}, [5, 120], id="capped_interval"
+        ),
+        pytest.param(
             {"error": "slow_down", "interval": "soon"},
             [5, 10],
             id="invalid_server_interval",
