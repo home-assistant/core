@@ -2,10 +2,12 @@
 
 from datetime import datetime, timedelta
 import logging
+import re
 from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_CAN_BE_TEMPORARY,
     SZ_DURATION,
     SZ_MODE,
     SZ_PERIOD,
@@ -13,6 +15,7 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
+    SZ_TIMING_MODE,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -30,7 +33,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -58,6 +60,60 @@ EVO_PRESET_TO_HA = {
     EvoZoneMode.PERMANENT_OVERRIDE: "permanent",
 }
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
+
+
+def _as_snake_case(mode: str) -> str:
+    """Convert a CamelCase string to the snake_case used by the library."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
+
+
+def _validate_set_system_mode_params(
+    tcs: evo.ControlSystem,
+    mode: str,
+    duration: timedelta | None,
+    period: timedelta | None,
+) -> None:
+    """Validate that a set_system_mode service call is properly formed."""
+
+    tcs_modes = {m[SZ_SYSTEM_MODE].value: m for m in tcs.allowed_system_modes}
+
+    # Validation occurs here, instead of in the library, because it uses a slightly
+    # different schema (until instead of duration/period) for the method invoked
+    # via this service call
+
+    if (mode_info := tcs_modes.get(_as_snake_case(mode))) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_not_supported",
+            translation_placeholders={SZ_MODE: mode},
+        )
+
+    # probatio schema ensures that duration and period are not both present
+
+    if not mode_info[SZ_CAN_BE_TEMPORARY]:
+        if duration is not None or period is not None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mode_cant_be_temporary",
+                translation_placeholders={SZ_MODE: mode},
+            )
+        return
+
+    timing_mode = mode_info.get(SZ_TIMING_MODE)  # will not be None, as can_be_temporary
+
+    if timing_mode == SZ_DURATION and period is not None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_cant_have_period",
+            translation_placeholders={SZ_MODE: mode},
+        )
+
+    if timing_mode == SZ_PERIOD and duration is not None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_cant_have_duration",
+            translation_placeholders={SZ_MODE: mode},
+        )
 
 
 async def async_setup_platform(
@@ -120,6 +176,19 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
+    ) -> None:
+        """Set the system mode; only supported by controllers."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": EvoService.SET_SYSTEM_MODE},
+        )
 
     async def async_set_zone_override(
         self, setpoint: float, duration: timedelta | None = None
@@ -340,41 +409,24 @@ class EvoController(EvoClimateEntity):
         )
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
+    ) -> None:
+        """Set the system mode, either indefinitely or for a duration/period."""
 
-        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
+        _validate_set_system_mode_params(self._evo_device, mode, duration, period)
 
-    async def process_signal(self, payload: dict | None = None) -> None:
-        """Process any signals."""
-
-        if payload is None:
-            raise NotImplementedError
-        if payload["unique_id"] != self._attr_unique_id:
-            return
-        await self.async_tcs_svc_request(payload["service"], payload["data"])
-
-    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (system mode) for a controller.
-
-        Data validation must be performed upstream in the service handler, before the
-        dispatcher call, so a ServiceValidationError can be seen, if raised.
-        """
-
-        mode = data[SZ_MODE]  # service is EvoService.SET_SYSTEM_MODE
-
-        if SZ_PERIOD in data:
-            until = dt_util.start_of_local_day()
-            until += data[SZ_PERIOD]
-
-        elif SZ_DURATION in data:
-            until = dt_util.now() + data[SZ_DURATION]
-
+        if period is not None:
+            until = dt_util.start_of_local_day() + period
+        elif duration is not None:
+            until = dt_util.now() + duration
         else:
             until = None
 
-        await self._set_tcs_mode(mode, until=until)
+        await self._set_tcs_mode(EvoSystemMode(_as_snake_case(mode)), until=until)
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None
