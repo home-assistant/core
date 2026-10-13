@@ -195,6 +195,7 @@ async def test_directive_grant_appears_without_reconnect(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a directive granted after setup is discovered by the coordinator."""
     resource, schedule = _directive_fixture()
@@ -211,8 +212,9 @@ async def test_directive_grant_appears_without_reconnect(
     mock_webhook_client.get_directives.return_value = [resource]
     mock_webhook_client.get_directive_data.return_value = schedule
 
-    await mock_config_entry.runtime_data.directive_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL + dt.timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
