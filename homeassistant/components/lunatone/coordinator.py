@@ -38,6 +38,17 @@ class LunatoneData:
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
 
 
+def _remove_stale_devices(
+    device_registry: dr.DeviceRegistry, config_entry_id: str, stale_devices: set[str]
+) -> None:
+    for device_unique_id in stale_devices:
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_unique_id), config_entry_id
+        )
+        if device:
+            device_registry.async_remove_device(device.id)
+
+
 class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
     """Data update coordinator for Lunatone info."""
 
@@ -75,18 +86,16 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
 
         data = self.info_api.data
 
+        device_registry = dr.async_get(self.hass)
         assert self.config_entry.unique_id is not None
         current_devices = {
             f"{self.config_entry.unique_id}-line{line_id}" for line_id in data.lines
         }
-        if stale_devices := self.previous_devices - current_devices:
-            device_registry = dr.async_get(self.hass)
-            for device_unique_id in stale_devices:
-                device = device_registry.async_get_device_by_identifier(
-                    (DOMAIN, device_unique_id), self.config_entry.entry_id
-                )
-                if device:
-                    device_registry.async_remove_device(device.id)
+        _remove_stale_devices(
+            device_registry,
+            self.config_entry.entry_id,
+            stale_devices=self.previous_devices - current_devices,
+        )
         self.previous_devices = current_devices
 
         return data
@@ -132,20 +141,18 @@ class LunatoneDevicesDataUpdateCoordinator(
         for d in self.devices_api.devices.values():
             data[d.data.line][d.data.id] = d
 
+        device_registry = dr.async_get(self.hass)
         assert self.config_entry.unique_id is not None
         current_devices = {
             f"{self.config_entry.unique_id}-device{device_id}"
             for devices in data.values()
             for device_id in devices
         }
-        if stale_devices := self.previous_devices - current_devices:
-            device_registry = dr.async_get(self.hass)
-            for device_unique_id in stale_devices:
-                device = device_registry.async_get_device_by_identifier(
-                    (DOMAIN, device_unique_id), self.config_entry.entry_id
-                )
-                if device:
-                    device_registry.async_remove_device(device.id)
+        _remove_stale_devices(
+            device_registry,
+            self.config_entry.entry_id,
+            stale_devices=self.previous_devices - current_devices,
+        )
         self.previous_devices = current_devices
 
         return dict(data)
@@ -188,6 +195,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
 
         data = self.sensors_api.sensors
 
+        device_registry = dr.async_get(self.hass)
         assert self.config_entry.unique_id is not None
         current_devices = {
             (
@@ -198,14 +206,11 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             for sensor in data.values()
             if sensor.data.dali_sensor_address is not None
         }
-        if stale_devices := self.previous_devices - current_devices:
-            device_registry = dr.async_get(self.hass)
-            for device_unique_id in stale_devices:
-                device = device_registry.async_get_device_by_identifier(
-                    (DOMAIN, device_unique_id), self.config_entry.entry_id
-                )
-                if device:
-                    device_registry.async_remove_device(device.id)
+        _remove_stale_devices(
+            device_registry,
+            self.config_entry.entry_id,
+            stale_devices=self.previous_devices - current_devices,
+        )
         self.previous_devices = current_devices
 
         return data
