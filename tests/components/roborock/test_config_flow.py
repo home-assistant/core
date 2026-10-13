@@ -745,3 +745,92 @@ async def test_reconfigure_flow_with_region(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_roborock_entry.data[CONF_BASE_URL] == "https://euiot.roborock.com"
+
+
+async def test_reconfigure_flow_request_code_error(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow recovers from a request-code error."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4",
+        side_effect=RoborockInvalidEmail,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_email_format"}
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    new_user_data = deepcopy(USER_DATA)
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+            return_value=new_user_data,
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_invalid_code(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow recovers from an invalid OTP code."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+
+    assert result["step_id"] == "code"
+
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+        side_effect=RoborockInvalidCode,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "wrong"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+    assert result["errors"] == {"base": "invalid_code"}
+
+    new_user_data = deepcopy(USER_DATA)
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login_v4",
+            return_value=new_user_data,
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

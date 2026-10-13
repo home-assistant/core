@@ -52,8 +52,12 @@ from .const import (
     DOMAIN,
     DRAWABLES,
     REGION_AUTO,
+    REGION_CN,
     REGION_CUSTOM,
+    REGION_EU,
     REGION_OPTIONS,
+    REGION_RU,
+    REGION_US,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,9 +114,18 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         if self.source == SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
+            stored_url = entry.data.get(CONF_BASE_URL)
+            region = REGION_AUTO
+            if stored_url:
+                for r in (REGION_US, REGION_EU, REGION_RU, REGION_CN):
+                    if stored_url == f"https://{r}iot.roborock.com":
+                        region = r
+                        break
+                else:
+                    region = REGION_CUSTOM
             data_schema = self.add_suggested_values_to_schema(
                 data_schema,
-                {CONF_USERNAME: entry.data[CONF_USERNAME]},
+                {CONF_USERNAME: entry.data[CONF_USERNAME], CONF_REGION: region},
             )
         return self.async_show_form(
             step_id="user",
@@ -147,17 +160,21 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not errors:
                     return await self.async_step_code()
 
+        if user_input is not None:
+            default_url = user_input[CONF_ROBOROCK_SERVER_URL]
+        elif self.source == SOURCE_RECONFIGURE:
+            default_url = self._get_reconfigure_entry().data.get(
+                CONF_BASE_URL, "https://usiot.roborock.com"
+            )
+        else:
+            default_url = "https://usiot.roborock.com"
         return self.async_show_form(
             step_id="custom_url",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
                         CONF_ROBOROCK_SERVER_URL,
-                        default=(
-                            user_input[CONF_ROBOROCK_SERVER_URL]
-                            if user_input is not None
-                            else "https://usiot.roborock.com"
-                        ),
+                        default=default_url,
                     ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
                 }
             ),
