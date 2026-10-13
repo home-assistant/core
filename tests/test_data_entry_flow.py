@@ -206,6 +206,43 @@ async def test_flow_step_restores_outer_step_id(manager: MockFlowManager) -> Non
     assert form["flow_id"] in [flow["flow_id"] for flow in manager.async_progress()]
 
 
+async def test_flow_step_concurrent_configure(
+    hass: HomeAssistant, manager: MockFlowManager
+) -> None:
+    """Test overlapping configure calls on one flow keep their own step ids."""
+    confirm_entered = asyncio.Event()
+    release = asyncio.Event()
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_user(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(data_schema=probatio.Schema([str]))
+            if user_input == ["confirm"]:
+                return await self.async_step_confirm()
+            # Suspend here so the other call reaches the confirm step meanwhile
+            await confirm_entered.wait()
+            return self.async_show_form(errors={"base": "invalid"})
+
+        @data_entry_flow.flow_step
+        async def async_step_confirm(self, user_input=None):
+            confirm_entered.set()
+            await release.wait()
+            return self.async_show_form()
+
+    form = await manager.async_init("test", context={"init_step": "user"})
+    erroring = hass.async_create_task(
+        manager.async_configure(form["flow_id"], ["error"])
+    )
+    confirming = hass.async_create_task(
+        manager.async_configure(form["flow_id"], ["confirm"])
+    )
+    assert (await erroring)["step_id"] == "user"
+    release.set()
+    assert (await confirming)["step_id"] == "confirm"
+
+
 async def test_flow_step_explicit_step_id_wins(manager: MockFlowManager) -> None:
     """Test an explicit step_id overrides the decorated step's id."""
 

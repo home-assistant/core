@@ -13,6 +13,7 @@ from collections.abc import (
     Mapping,
 )
 from contextlib import contextmanager, suppress
+from contextvars import ContextVar
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
@@ -31,6 +32,8 @@ from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
+
+_current_step_id: ContextVar[str | None] = ContextVar("current_step_id", default=None)
 
 
 class FlowResultType(StrEnum):
@@ -650,9 +653,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     # Set by flow manager
     cur_step: _FlowResultT | None = None
 
-    # Set by _as_step while a step runs
-    _current_step_id: str | None = None
-
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     flow_id: str = None  # type: ignore[assignment]
@@ -733,12 +733,11 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     @contextmanager
     def _as_step(self, step_id: str) -> Generator[None]:
         """Default the step id of results built inside the block."""
-        previous = self._current_step_id
-        self._current_step_id = step_id
+        token = _current_step_id.set(step_id)
         try:
             yield
         finally:
-            self._current_step_id = previous
+            _current_step_id.reset(token)
 
     @callback
     def async_show_form(
@@ -763,7 +762,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             preview=preview,  # Display preview component in frontend
         )
         if step_id is None:
-            step_id = self._current_step_id
+            step_id = _current_step_id.get()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -832,7 +831,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
         )
         if step_id is None:
-            step_id = self._current_step_id
+            step_id = _current_step_id.get()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -884,7 +883,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             progress_task=progress_task,
         )
         if step_id is None:
-            step_id = self._current_step_id
+            step_id = _current_step_id.get()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
@@ -942,7 +941,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if sort:
             flow_result["sort"] = sort
         if step_id is None:
-            step_id = self._current_step_id
+            step_id = _current_step_id.get()
         if step_id is not None:
             flow_result["step_id"] = step_id
         return flow_result
