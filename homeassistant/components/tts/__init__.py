@@ -158,6 +158,9 @@ async def _async_ffmpeg_join(task: asyncio.Task | None) -> None:
     """Wait a finite phase for cooperative shutdown; supervise late results."""
     if task is None:
         return
+    if task.done():
+        _ffmpeg_late_result(task)
+        return
     done, _ = await asyncio.wait({task}, timeout=_FFMPEG_CLEANUP_TIMEOUT)
     if not done:
         _LOGGER.warning("TTS ffmpeg cleanup task did not stop promptly")

@@ -44,6 +44,78 @@ async def _observe(task: asyncio.Task, seconds: float = 1.5):
     return await asyncio.wait_for(asyncio.shield(task), seconds)
 
 
+@pytest.mark.parametrize("outcome", ["success", "error", "cancelled"])
+async def test_completed_ffmpeg_join_does_not_yield(
+    outcome: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Retrieving an already-completed task cannot suspend its owner."""
+
+    async def complete() -> None:
+        if outcome == "error":
+            raise ValueError("finished ffmpeg cleanup failed")
+        if outcome == "cancelled":
+            raise asyncio.CancelledError
+
+    task = asyncio.create_task(complete())
+    await asyncio.wait({task})
+    assert task.done()
+    scheduled: list[str] = []
+    asyncio.get_running_loop().call_soon(scheduled.append, "owner yielded")
+    await tts._async_ffmpeg_join(task)
+    assert not scheduled
+    assert task.cancelled() == (outcome == "cancelled")
+    if outcome == "error":
+        assert any(
+            "finished ffmpeg cleanup failed" in r.message for r in caplog.records
+        )
+    else:
+        assert not any("cleanup task failed" in r.message for r in caplog.records)
+
+
+@pytest.mark.parametrize("outcome", ["success", "error", "cancelled"])
+async def test_pending_ffmpeg_join_keeps_finite_wait_and_supervised_late_result(
+    hass: HomeAssistant, outcome: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A still-pending cleanup retains its owner, deadline and late retrieval."""
+    release = asyncio.Event()
+
+    async def complete() -> None:
+        await release.wait()
+        if outcome == "error":
+            raise ValueError("pending ffmpeg cleanup failed")
+        if outcome == "cancelled":
+            raise asyncio.CancelledError
+
+    task = hass.async_create_background_task(complete(), "tts_ffmpeg_pending_join")
+    assert not task.done()
+    try:
+        loop = asyncio.get_running_loop()
+        start = loop.time()
+        await tts._async_ffmpeg_join(task)
+        elapsed = loop.time() - start
+        assert tts._FFMPEG_CLEANUP_TIMEOUT * 0.8 <= elapsed < 2.5
+        assert task in hass._background_tasks and not task.done()
+        assert not task.cancelling()
+        assert any("did not stop promptly" in r.message for r in caplog.records)
+        release.set()
+        await asyncio.wait({task}, timeout=2)
+        assert task.done()
+        assert task.cancelled() == (outcome == "cancelled")
+        # The done callback retrieves/logs the eventual error after the timeout.
+        await asyncio.sleep(0)
+        if outcome == "error":
+            assert any(
+                "pending ffmpeg cleanup failed" in r.message for r in caplog.records
+            )
+        else:
+            assert not any("cleanup task failed" in r.message for r in caplog.records)
+    finally:
+        release.set()
+        if not task.done():
+            task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
 @pytest.mark.parametrize("output", ["flac", "wav", "mp3"])
 async def test_normal_eof_reaps_and_decodes(
     ffmpeg_ready: HomeAssistant, wav_audio: bytes, output: str, tmp_path: Path
