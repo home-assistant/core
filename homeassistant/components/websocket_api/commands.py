@@ -95,7 +95,7 @@ from .automation import (
     async_get_services_for_target,
     async_get_triggers_for_target,
 )
-from .connection import ActiveConnection, SendMessage
+from .connection import ActiveConnection, QueueMessage
 from .messages import construct_event_message, construct_result_message
 
 ALL_CONDITION_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_condition_descriptions_json"
@@ -476,7 +476,7 @@ class _StateDiffBatch:
             connection.async_flush_state_diff_batches()
 
     @callback
-    def async_flush(self, send_message: SendMessage) -> None:
+    def async_flush(self, send_message: QueueMessage) -> None:
         """Send everything collected so far, if anything.
 
         Only called by the connection, which owns the order batches are sent in and
@@ -491,7 +491,8 @@ class _StateDiffBatch:
         self._entity_ids.clear()
         if fragments:
             send_message(
-                messages.batched_state_diff_message(self._message_id, fragments)
+                messages.batched_state_diff_message(self._message_id, fragments),
+                changes=len(fragments),
             )
         # One change that will not serialize must not cost the rest of the batch their
         # update. cached_state_diff_message logs the bad data and substitutes the error

@@ -53,6 +53,32 @@ async def test_pending_msg_overflow(
     assert msg.type is WSMsgType.CLOSE
 
 
+async def test_pending_msg_overflow_counts_batched_entity_changes(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """A batched message counts the changes it carries, not one for the message.
+
+    MAX_PENDING_MSG bounds the entity changes a client that has stopped reading can
+    leave queued. One subscribe_entities message now describes many changes, so
+    counting queue entries would let a stalled client hold that limit multiplied by
+    the size of a batch.
+    """
+    await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == {"a": {}}
+
+    # One message carrying ten changes, against a limit of five.
+    with patch("homeassistant.components.websocket_api.http.MAX_PENDING_MSG", 5):
+        for index in range(10):
+            hass.states.async_set(f"light.bulb_{index}", "on")
+        await hass.async_block_till_done()
+
+    msg = await websocket_client.receive()
+    assert msg.type is WSMsgType.CLOSE
+
+
 async def test_cleanup_on_cancellation(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:

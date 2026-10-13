@@ -36,7 +36,7 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.connection import (
     ActiveConnection,
-    SendMessage,
+    QueueMessage,
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
@@ -4192,12 +4192,12 @@ async def test_a_flush_that_raises_does_not_strand_the_batches_behind_it(
     flushed: list[str] = []
 
     @callback
-    def raising_flush(_send_message: SendMessage) -> None:
+    def raising_flush(_send_message: QueueMessage) -> None:
         """Stand in for a batch that cannot be sent."""
         raise ValueError("flush failed")
 
     @callback
-    def recording_flush(_send_message: SendMessage) -> None:
+    def recording_flush(_send_message: QueueMessage) -> None:
         """Stand in for the batch queued behind it."""
         flushed.append("sent")
 

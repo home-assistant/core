@@ -3,7 +3,7 @@
 from collections import deque
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, Protocol, override
 
 from aiohttp import web
 import probatio
@@ -45,7 +45,21 @@ REDACT_KEYS = {
 type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 type SendMessage = Callable[[bytes | str | dict[str, Any]], None]
-type StateDiffBatchFlush = Callable[[SendMessage], None]
+
+
+class QueueMessage(Protocol):
+    """Put one message on the queue waiting to be written to the client."""
+
+    def __call__(self, message: bytes | str | dict[str, Any], changes: int = 1) -> None:
+        """Queue the message.
+
+        changes is how many entity state changes it carries. MAX_PENDING_MSG bounds
+        entity changes rather than messages, and one message can now describe many, so
+        the queue counts this rather than its own length.
+        """
+
+
+type StateDiffBatchFlush = Callable[[QueueMessage], None]
 
 
 class ActiveConnection:
@@ -77,7 +91,7 @@ class ActiveConnection:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: SendMessage,
+        send_message: QueueMessage,
         user: User,
         refresh_token: RefreshToken | None,
         remote: str | None,

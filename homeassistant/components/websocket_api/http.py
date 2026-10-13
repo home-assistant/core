@@ -79,8 +79,10 @@ class WebSocketHandler:
         "_hass",
         "_logger",
         "_loop",
+        "_message_changes",
         "_message_queue",
         "_peak_checker_unsub",
+        "_pending_changes",
         "_ready_future",
         "_release_ready_queue_size",
         "_request",
@@ -109,6 +111,11 @@ class WebSocketHandler:
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
         self._message_queue: deque[bytes] = deque()
+        # Entity changes carried by each queued message, and their total. One message
+        # can describe many, and MAX_PENDING_MSG bounds changes rather than messages,
+        # so the queue's own length no longer measures what that limit is about.
+        self._message_changes: deque[int] = deque()
+        self._pending_changes: int = 0
         self._ready_future: asyncio.Future[int] | None = None
         self._release_ready_queue_size: int = 0
         self._async_logging_changed()
@@ -145,6 +152,7 @@ class WebSocketHandler:
         """Write outgoing messages."""
         # Variables are set locally to avoid lookups in the loop
         message_queue = self._message_queue
+        message_changes = self._message_changes
         logger = self._logger
         wsock = self._wsock
         loop = self._loop
@@ -167,6 +175,7 @@ class WebSocketHandler:
 
                 if not can_coalesce or ready_message_count == 1:
                     message = message_queue.popleft()
+                    self._pending_changes -= message_changes.popleft()
                     if self._debug:
                         debug("%s: Sending %s", self.description, message)
                     await send_bytes_text(message)
@@ -174,6 +183,8 @@ class WebSocketHandler:
 
                 coalesced_messages = b"".join((b"[", b",".join(message_queue), b"]"))
                 message_queue.clear()
+                message_changes.clear()
+                self._pending_changes = 0
                 if self._debug:
                     debug("%s: Sending %s", self.description, coalesced_messages)
                 await send_bytes_text(coalesced_messages)
@@ -195,10 +206,14 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | bytes | dict[str, Any]) -> None:
+    def _send_message(
+        self, message: str | bytes | dict[str, Any], changes: int = 1
+    ) -> None:
         """Queue sending a message to the client.
 
-        Closes connection if the client is not reading the messages.
+        Closes connection if the client is not reading the messages. changes is how
+        many entity state changes the message carries, which is what MAX_PENDING_MSG
+        bounds - one batched message can describe many.
 
         Async friendly.
         """
@@ -215,13 +230,16 @@ class WebSocketHandler:
 
         message_queue = self._message_queue
         message_queue.append(message)
-        if (queue_size_after_add := len(message_queue)) >= MAX_PENDING_MSG:
+        self._message_changes.append(changes)
+        self._pending_changes += changes
+        queue_size_after_add = len(message_queue)
+        if self._pending_changes >= MAX_PENDING_MSG:
             self._logger.error(
                 (
                     "%s: Client unable to keep up with"
                     " pending messages. Reached %s pending"
-                    " messages. The system's load is too high or an integration is"
-                    " misbehaving; Last message was: %s"
+                    " entity changes. The system's load is too high or an integration"
+                    " is misbehaving; Last message was: %s"
                 ),
                 self.description,
                 MAX_PENDING_MSG,
@@ -582,6 +600,7 @@ class WebSocketHandler:
                 self._hass = None  # type: ignore[assignment]
                 self._logger = None  # type: ignore[assignment]
                 self._message_queue = None  # type: ignore[assignment]
+                self._message_changes = None  # type: ignore[assignment]
                 self._handle_task = None
                 self._writer_task = None
                 self._ready_future = None

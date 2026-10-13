@@ -15,7 +15,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util.json import JsonValueType
 
-from .connection import ActiveConnection
+from .connection import ActiveConnection, QueueMessage
 from .error import Disconnect
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ class AuthPhase:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[bytes | str | dict[str, Any]], None],
+        send_message: QueueMessage,
         cancel_ws: CALLBACK_TYPE,
         request: Request,
         send_bytes_text: Callable[[bytes], Coroutine[Any, Any, None]],
