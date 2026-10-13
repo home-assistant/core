@@ -49,6 +49,9 @@
     "firmware_too_old": {
       "message": "OPNsense firmware at {url} is below the minimum supported version"
     },
+    "firmware_update_failed": {
+      "message": "Could not start the OPNsense firmware update"
+    },
     "invalid_auth": {
       "message": "Authentication failure while connecting to OPNsense API endpoint at {url}"
     },
@@ -72,6 +75,10 @@
     }
   },
   "issues": {
+    "firmware_privilege_missing": {
+      "description": "Home Assistant cannot check firmware updates for {url} because the API user is missing the System: Firmware privilege. In OPNsense, edit the API user under System > Access > Users, add System: Firmware to its privileges, and save. Reload this integration entry to resume firmware updates. Device tracking continues to work while this permission is missing.",
+      "title": "OPNsense firmware privilege is missing"
+    },
     "import_failed_cannot_connect": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"
