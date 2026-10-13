@@ -334,7 +334,7 @@ class IssueRegistry(BaseRegistry):
         # Assign before waiting, config entries update their issues while loading
         self.issues = issues
 
-        if not any(issue.config_entry_id for issue in issues.values()):
+        if not any(issue.config_entry_id is not None for issue in issues.values()):
             return
 
         # Config entries load concurrently with the issue registry

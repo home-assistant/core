@@ -1,5 +1,6 @@
 """Test the repairs websocket API."""
 
+import asyncio
 import dataclasses
 from functools import partial
 from typing import Any
@@ -665,6 +666,73 @@ async def test_load_removes_issues_of_unknown_config_entries(
 
     await flush_store(registry._store)
     assert hass_storage[ir.STORAGE_KEY]["data"]["issues"] == kept
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_load_waits_for_config_entries(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test load waits for config entries before removing unknown entries' issues.
+
+    Config entries initialize concurrently with the issue registry, and may
+    create issues while the issue registry waits for them.
+    """
+    present_entry = MockConfigEntry(domain="test")
+    present_entry.add_to_hass(hass)
+    late_entry = MockConfigEntry(domain="test")
+
+    def _stored_issue(issue_id: str, config_entry_id: str) -> dict[str, Any]:
+        return {
+            "config_entry_id": config_entry_id,
+            "created": "2022-07-19T09:41:13.746514+00:00",
+            "dismissed_version": None,
+            "domain": "test",
+            "is_persistent": False,
+            "issue_id": issue_id,
+        }
+
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                _stored_issue("late_entry", late_entry.entry_id),
+                _stored_issue("unknown_entry", "unknown_entry"),
+            ]
+        },
+    }
+    # The hass fixture marks config entries as initialized
+    hass.config_entries._initialized.clear()
+
+    load_task = asyncio.create_task(ir.async_load(hass))
+    await asyncio.sleep(0)
+    assert not load_task.done()
+
+    ir.async_create_issue(
+        hass,
+        "test",
+        "created_while_waiting",
+        config_entry_id=present_entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="abc_123",
+    )
+    # The entry of a stored issue only becomes known when config entries
+    # finish initializing
+    late_entry.add_to_hass(hass)
+    hass.config_entries._initialized.set()
+    await load_task
+
+    registry = ir.async_get(hass)
+    assert list(registry.issues) == [
+        ("test", "late_entry"),
+        ("test", "created_while_waiting"),
+    ]
+
+    await flush_store(registry._store)
+    assert [
+        issue["issue_id"] for issue in hass_storage[ir.STORAGE_KEY]["data"]["issues"]
+    ] == ["late_entry", "created_while_waiting"]
 
 
 async def test_get_or_create_thread_safety(
