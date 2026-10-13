@@ -1,8 +1,31 @@
 {
   "config": {
+    "error": {
+      "invalid_networks": "Enter IPv4 addresses or networks from /24 to /32, separated by commas."
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "description": "Devices on this network are discovered automatically. To find devices on another VLAN, list its IPv4 addresses or subnets, separated by commas. English and Chinese commas are both accepted. Subnets must be /24 to /32.",
+        "data": {
+          "networks": "Networks"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_networks": "[%key:component::refoss::config::error::invalid_networks%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "networks": "[%key:component::refoss::config::step::user::data::networks%]"
+        },
+        "description": "[%key:component::refoss::config::step::user::description%]"
       }
     }
   },

@@ -7,7 +7,7 @@ from refoss_ha.controller.device import BaseDevice
 from refoss_ha.exceptions import DeviceTimeoutError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, MAX_ERRORS
 
@@ -37,20 +37,24 @@ class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device = device
         self._error_count = 0
 
+    @property
+    def error_count(self) -> int:
+        """Return consecutive update timeouts."""
+        return self._error_count
+
     @override
     async def _async_update_data(self) -> None:
         """Update the state of the device."""
         try:
             await self.device.async_handle_update()
-            self.last_update_success = True
-            self._error_count = 0
-        except DeviceTimeoutError:
+        except DeviceTimeoutError as err:
             LOGGER.debug(
                 "Update device %s status timeout,ip: %s",
                 self.device.dev_name,
                 self.device.inner_ip,
             )
             self._error_count += 1
-
             if self._error_count >= MAX_ERRORS:
-                self.last_update_success = False
+                raise UpdateFailed(f"Timeout updating {self.device.dev_name}") from err
+        else:
+            self._error_count = 0
