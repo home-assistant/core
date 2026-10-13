@@ -90,13 +90,20 @@ class MideaEntity(Entity):
 
     def update_state(self, status: Any) -> None:
         """Update entity state."""
-        if self.hass.is_stopping:
+        if not self.hass.is_running or self.hass.loop.is_closed():
             LOGGER.debug(
-                "MideaEntity update_state for %s [%s] with status %s: HASS is stopping",
+                "MideaEntity update_state for %s [%s] with status %s: "
+                "HASS is not running or its event loop is closed",
                 self.name,
                 type(self),
                 status,
             )
             return
 
-        self.schedule_update_ha_state()
+        try:
+            self.schedule_update_ha_state()
+        except RuntimeError:
+            # A device callback can pass the guard and then have the loop
+            # close before it schedules; only that race is benign.
+            if not self.hass.loop.is_closed():
+                raise
