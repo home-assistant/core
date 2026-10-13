@@ -214,8 +214,30 @@ def _checkout(dest: Path, sha: str) -> None:
     patterns = ["/*"] if whole else ["/custom_components/", "/hacs.json"]
     patterns += [f"!{glob}" for glob in BINARY_GLOBS]
     patterns += [f"!{glob.upper()}" for glob in BINARY_GLOBS]
+    # Symlinks become plain files holding the target path, so nothing in the
+    # copy can resolve to a file outside it (such as local credentials)
+    _git("config", "core.symlinks", "false", cwd=dest)
     _git("sparse-checkout", "set", "--no-cone", *patterns, cwd=dest)
     _git("reset", "--quiet", "--hard", sha, cwd=dest)
+    _replace_symlinks(dest)
+
+
+def _replace_symlinks(dest: Path) -> None:
+    """Rewrite symlinks left by a checkout made before core.symlinks was off."""
+    links = []
+    for dirpath, dirnames, filenames in os.walk(dest):
+        if Path(dirpath) == dest:
+            dirnames[:] = [name for name in dirnames if name != ".git"]
+        links.extend(
+            Path(dirpath, name).relative_to(dest).as_posix()
+            for name in dirnames + filenames
+            if Path(dirpath, name).is_symlink()
+        )
+    if not links:
+        return
+    for link in links:
+        (dest / link).unlink()
+    _git("checkout", "--", *links, cwd=dest)
 
 
 def download(root: Path, repo: str, sha: str) -> None:
@@ -235,6 +257,8 @@ def download(root: Path, repo: str, sha: str) -> None:
         _git(
             "clone",
             "--quiet",
+            "--config",
+            "core.symlinks=false",
             "--filter=blob:none",
             "--no-checkout",
             f"https://github.com/{repo}.git",
