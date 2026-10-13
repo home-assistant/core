@@ -30,12 +30,15 @@ PLATFORMS = [
 ]
 
 # pyicloud.AppleDevice status
+DEVICE_ACTION_STATUS_CODE = "statusCode"
+DEVICE_ACTION_STATUS_PENDING = "2201"
 DEVICE_ACTIVATION_LOCKED = "activationLocked"
 DEVICE_BATTERY_LEVEL = "batteryLevel"
 DEVICE_BATTERY_STATUS = "batteryStatus"
 DEVICE_CLASS = "deviceClass"
 DEVICE_DISPLAY_NAME = "deviceDisplayName"
 DEVICE_FEATURES = "features"
+DEVICE_FEATURE_LOCK = "LCK"
 DEVICE_FEATURE_SOUND = "SND"
 DEVICE_ID = "id"
 DEVICE_IS_LOCATING = "isLocating"

@@ -76,9 +76,6 @@
       "remote_lock": {
         "name": "Remote lock"
       },
-      "remote_wipe": {
-        "name": "Remote wipe"
-      },
       "wipe_in_progress": {
         "name": "Wipe in progress"
       }

@@ -23,7 +23,7 @@ class IcloudBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes an iCloud binary sensor."""
 
     value_fn: Callable[[IcloudDevice], bool]
-    available_fn: Callable[[IcloudDevice], bool] | None = None
+    supported_fn: Callable[[IcloudDevice], bool] | None = None
 
 
 BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
@@ -37,7 +37,7 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         key="lost_mode",
         translation_key="lost_mode",
         value_fn=lambda device: device.lost_mode_enabled,
-        available_fn=lambda device: device.lost_mode_available,
+        supported_fn=lambda device: device.lost_mode_available,
     ),
     IcloudBinarySensorEntityDescription(
         key="low_power_mode",
@@ -51,6 +51,7 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LOCK,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.activation_locked,
+        supported_fn=lambda device: device.lock_available,
     ),
     IcloudBinarySensorEntityDescription(
         key="locating",
@@ -70,7 +71,7 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_is_old,
-        available_fn=lambda device: device.location is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudBinarySensorEntityDescription(
         key="location_is_inaccurate",
@@ -78,7 +79,7 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_is_inaccurate,
-        available_fn=lambda device: device.location is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudBinarySensorEntityDescription(
         key="wipe_in_progress",
@@ -86,19 +87,14 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.wipe_in_progress,
-    ),
-    IcloudBinarySensorEntityDescription(
-        key="remote_wipe",
-        translation_key="remote_wipe",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: device.remote_wipe_pending,
+        supported_fn=lambda device: device.erase_available,
     ),
     IcloudBinarySensorEntityDescription(
         key="remote_lock",
         translation_key="remote_lock",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.remote_lock_pending,
+        supported_fn=lambda device: device.lock_available,
     ),
 )
 
@@ -137,7 +133,7 @@ def add_entities(
         for description in BINARY_SENSORS:
             if f"{dev_id}_{description.key}" in tracked:
                 continue
-            if description.available_fn is not None and not description.available_fn(
+            if description.supported_fn is not None and not description.supported_fn(
                 device
             ):
                 continue

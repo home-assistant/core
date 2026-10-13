@@ -9,10 +9,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import DEVICE, LOCATION
+from .const import DEVICE, FEATURES, LOCATION
 
 from tests.common import MockConfigEntry
 from tests.typing import MagicMock
+
+LOCATION_UNIQUE_IDS = ["device1_location_is_old", "device1_location_is_inaccurate"]
 
 
 @pytest.mark.parametrize(
@@ -60,16 +62,16 @@ from tests.typing import MagicMock
             id="wipe_in_progress",
         ),
         pytest.param(
-            {"remoteWipe": {"statusCode": "2201"}},
-            "device1_remote_wipe",
-            "on",
-            id="remote_wipe",
-        ),
-        pytest.param(
             {"remoteLock": {"statusCode": "2201"}},
             "device1_remote_lock",
             "on",
-            id="remote_lock",
+            id="remote_lock_pending",
+        ),
+        pytest.param(
+            {"remoteLock": {"statusCode": "200"}},
+            "device1_remote_lock",
+            "off",
+            id="remote_lock_completed",
         ),
         pytest.param(
             {"lostModeCapable": True, "lostModeEnabled": True},
@@ -106,22 +108,55 @@ async def test_binary_sensor_state(
     assert state.state == expected
 
 
-async def test_lost_mode_binary_sensor_not_added_without_support(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("status", "unique_id"),
+    [
+        pytest.param(
+            {"lostModeCapable": False},
+            "device1_lost_mode",
+            id="lost_mode_unsupported",
+        ),
+        pytest.param(
+            {"features": {**FEATURES, "LCK": False}},
+            "device1_activation_lock",
+            id="activation_lock_unsupported",
+        ),
+        pytest.param(
+            {"features": {**FEATURES, "LCK": False}},
+            "device1_remote_lock",
+            id="remote_lock_unsupported",
+        ),
+        pytest.param(
+            {"features": {**FEATURES, "WIP": False}},
+            "device1_wipe_in_progress",
+            id="wipe_in_progress_unsupported",
+        ),
+        pytest.param(
+            {"features": {**FEATURES, "LOC": False}, "location": LOCATION},
+            "device1_location_is_old",
+            id="location_is_old_unsupported",
+        ),
+        pytest.param(
+            {"features": {**FEATURES, "LOC": False}, "location": LOCATION},
+            "device1_location_is_inaccurate",
+            id="location_is_inaccurate_unsupported",
+        ),
+    ],
+)
+async def test_binary_sensor_not_added_when_unsupported(
     entity_registry: er.EntityRegistry,
     icloud_service: MagicMock,
     setup_entry: Callable[[Platform], Awaitable[None]],
+    status: dict,
+    unique_id: str,
 ) -> None:
-    """No lost mode binary sensor is added for devices that do not support it."""
-    icloud_service.devices.add({**DEVICE, "lostModeCapable": False})
+    """Binary sensors are only added for devices that support them."""
+    icloud_service.devices.add({**DEVICE, **status})
 
     await setup_entry(Platform.BINARY_SENSOR)
 
     assert (
-        entity_registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, "device1_lost_mode"
-        )
-        is None
+        entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id) is None
     )
 
 
@@ -140,18 +175,40 @@ async def test_location_binary_sensors_not_added_without_location(
         entity_registry.async_get_entity_id("binary_sensor", DOMAIN, "device1_online")
         is not None
     )
-    assert (
-        entity_registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, "device1_location_is_old"
+    for unique_id in LOCATION_UNIQUE_IDS:
+        assert (
+            entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+            is None
         )
-        is None
-    )
-    assert (
-        entity_registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, "device1_location_is_inaccurate"
+
+
+async def test_location_binary_sensors_added_when_location_appears(
+    hass: HomeAssistant,
+    devices_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """Location derived binary sensors are added once a location is reported."""
+    apple_device = icloud_service.devices.add({**DEVICE, "location": None})
+
+    await setup_entry(Platform.BINARY_SENSOR)
+
+    for unique_id in LOCATION_UNIQUE_IDS:
+        assert (
+            entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+            is None
         )
-        is None
-    )
+
+    apple_device.status()["location"] = LOCATION
+    await hass.async_add_executor_job(devices_config_entry.runtime_data.update_devices)
+    await hass.async_block_till_done()
+
+    for unique_id in LOCATION_UNIQUE_IDS:
+        assert (
+            entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+            is not None
+        )
 
 
 async def test_lost_mode_binary_sensor_tracks_state(

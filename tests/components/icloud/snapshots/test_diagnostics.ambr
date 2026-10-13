@@ -16,6 +16,13 @@
         'deviceClass': 'iPhone',
         'deviceDisplayName': 'iPhone',
         'deviceStatus': '200',
+        'features': dict({
+          'LCK': True,
+          'LOC': True,
+          'MSG': True,
+          'SND': True,
+          'WIP': True,
+        }),
         'id': '**REDACTED**',
         'isLocating': False,
         'location': dict({
@@ -31,6 +38,7 @@
         }),
         'locationEnabled': True,
         'lockedTimestamp': None,
+        'lostModeCapable': True,
         'lostTimestamp': '',
         'lowPowerMode': False,
         'name': '**REDACTED**',
@@ -62,6 +70,13 @@
     'deviceClass': 'iPhone',
     'deviceDisplayName': 'iPhone',
     'deviceStatus': '200',
+    'features': dict({
+      'LCK': True,
+      'LOC': True,
+      'MSG': True,
+      'SND': True,
+      'WIP': True,
+    }),
     'id': '**REDACTED**',
     'isLocating': False,
     'location': dict({
@@ -77,6 +92,7 @@
     }),
     'locationEnabled': True,
     'lockedTimestamp': None,
+    'lostModeCapable': True,
     'lostTimestamp': '',
     'lowPowerMode': False,
     'name': '**REDACTED**',

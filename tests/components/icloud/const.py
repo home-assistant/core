@@ -56,6 +56,14 @@ TRUSTED_DEVICES = [
     {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
 ]
 
+FEATURES = {
+    "MSG": True,
+    "SND": True,
+    "WIP": True,
+    "LOC": True,
+    "LCK": True,
+}
+
 DEVICE = {
     "id": "device1",
     "name": "iPhone",
@@ -66,6 +74,8 @@ DEVICE = {
     "deviceClass": "iPhone",
     "deviceDisplayName": "iPhone",
     "prsId": None,
+    "features": FEATURES,
+    "lostModeCapable": True,
     "lowPowerMode": False,
     "activationLocked": False,
     "isLocating": False,

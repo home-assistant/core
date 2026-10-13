@@ -55,12 +55,6 @@
           "on": "mdi:lock-alert"
         }
       },
-      "remote_wipe": {
-        "default": "mdi:delete-sweep",
-        "state": {
-          "on": "mdi:alert-outline"
-        }
-      },
       "wipe_in_progress": {
         "default": "mdi:eraser",
         "state": {

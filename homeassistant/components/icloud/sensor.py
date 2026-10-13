@@ -69,7 +69,7 @@ class IcloudSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[IcloudDevice], Any]
     icon_fn: Callable[[IcloudDevice], str] | None = None
-    available_fn: Callable[[IcloudDevice], bool] | None = None
+    supported_fn: Callable[[IcloudDevice], bool] | None = None
 
 
 SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
@@ -79,7 +79,7 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.battery_level,
         icon_fn=_battery_icon,
-        available_fn=lambda device: device.battery_level is not None,
+        supported_fn=lambda device: device.battery_level is not None,
     ),
     IcloudSensorEntityDescription(
         key="battery_status",
@@ -109,7 +109,7 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_timestamp,
-        available_fn=lambda device: device.location_timestamp is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudSensorEntityDescription(
         key="location_type",
@@ -118,7 +118,7 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         options=_LOCATION_TYPE_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_location_type,
-        available_fn=lambda device: device.location is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudSensorEntityDescription(
         key="location_accuracy",
@@ -127,7 +127,7 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_accuracy,
-        available_fn=lambda device: device.location is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudSensorEntityDescription(
         key="altitude",
@@ -136,35 +136,41 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_altitude,
-        available_fn=lambda device: device.location is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudSensorEntityDescription(
         key="floor_level",
         translation_key="floor_level",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_floor_level,
-        available_fn=lambda device: device.location is not None,
+        supported_fn=lambda device: device.location_available,
     ),
     IcloudSensorEntityDescription(
         key="last_locked",
         translation_key="last_locked",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda device: device.last_locked,
+        supported_fn=lambda device: device.lock_available,
     ),
     IcloudSensorEntityDescription(
         key="last_lost",
         translation_key="last_lost",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda device: device.last_lost,
+        supported_fn=lambda device: device.lost_mode_available,
     ),
     IcloudSensorEntityDescription(
         key="last_wiped",
         translation_key="last_wiped",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda device: device.last_wiped,
+        supported_fn=lambda device: device.erase_available,
     ),
 )
 
@@ -196,14 +202,14 @@ def add_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
-    """Add sensors for devices that report the matching data."""
+    """Add sensors for devices that support them."""
     new_entities = []
 
     for dev_id, device in account.devices.items():
         for description in SENSORS:
             if f"{dev_id}_{description.key}" in tracked:
                 continue
-            if description.available_fn is not None and not description.available_fn(
+            if description.supported_fn is not None and not description.supported_fn(
                 device
             ):
                 continue

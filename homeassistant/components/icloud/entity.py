@@ -1,6 +1,6 @@
 """Base entity for the iCloud integration."""
 
-from typing import override
+from typing import Any, override
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -29,6 +29,12 @@ class IcloudDeviceEntity(Entity):
             model=device.device_model,
             name=device.name,
         )
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the device attributes."""
+        return self._device.extra_state_attributes
 
     @callback
     def _async_device_updated(self) -> None:

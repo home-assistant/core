@@ -36,12 +36,14 @@ from .const import (
     ATTR_DEVICE_STATUS,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
+    DEVICE_ACTION_STATUS_CODE,
+    DEVICE_ACTION_STATUS_PENDING,
     DEVICE_ACTIVATION_LOCKED,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
     DEVICE_DISPLAY_NAME,
-    DEVICE_FEATURE_SOUND,
+    DEVICE_FEATURE_LOCK,
     DEVICE_FEATURES,
     DEVICE_ID,
     DEVICE_IS_LOCATING,
@@ -65,7 +67,6 @@ from .const import (
     DEVICE_PERSON_ID,
     DEVICE_RAW_DEVICE_MODEL,
     DEVICE_REMOTE_LOCK,
-    DEVICE_REMOTE_WIPE,
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
@@ -657,14 +658,14 @@ class IcloudDevice:
         return bool(self._status.get(DEVICE_WIPE_IN_PROGRESS, False))
 
     @property
-    def remote_wipe_pending(self) -> bool:
-        """Return whether a remote wipe is pending on the device."""
-        return self._status.get(DEVICE_REMOTE_WIPE) is not None
-
-    @property
     def remote_lock_pending(self) -> bool:
         """Return whether a remote lock is pending on the device."""
-        return self._status.get(DEVICE_REMOTE_LOCK) is not None
+        remote_lock = self._status.get(DEVICE_REMOTE_LOCK)
+        if not isinstance(remote_lock, dict):
+            return False
+        return (
+            remote_lock.get(DEVICE_ACTION_STATUS_CODE) == DEVICE_ACTION_STATUS_PENDING
+        )
 
     @property
     def last_locked(self) -> datetime | None:
@@ -687,15 +688,30 @@ class IcloudDevice:
         return self._attrs.get(ATTR_OWNER_NAME)
 
     @property
-    def sound_available(self) -> bool:
-        """Return whether the device can play a sound."""
+    def erase_available(self) -> bool:
+        """Return whether the device can be remotely erased."""
+        return self._device.erase_available
+
+    @property
+    def lock_available(self) -> bool:
+        """Return whether the device can be remotely locked."""
         features = self._status.get(DEVICE_FEATURES) or {}
-        return bool(features.get(DEVICE_FEATURE_SOUND, False))
+        return bool(features.get(DEVICE_FEATURE_LOCK, False))
+
+    @property
+    def location_available(self) -> bool:
+        """Return whether the device reports a location."""
+        return self._device.location_available
 
     @property
     def lost_mode_available(self) -> bool:
         """Return whether the device supports lost mode."""
-        return bool(self._status.get(DEVICE_LOST_MODE_CAPABLE, False))
+        return self._device.lost_mode_available
+
+    @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._device.sound_available
 
     @property
     def lost_mode_enabled(self) -> bool:
