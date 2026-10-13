@@ -438,6 +438,10 @@ async def test_tts_cache_shutdown_completes_before_teardown(
     original_stop = hass.async_stop
     original_client_close = client.close
     state_at_stop: list[tuple[tuple[str, bool, int], ...]] = []
+    eof_held = asyncio.Event()
+    hold_eof = asyncio.Event()
+    cancel_ack = asyncio.Event()
+    real_eof: list[tuple[asyncio.subprocess.Process, bytes]] = []
 
     def tracked_background(target, name, eager_start=True):
         task = original_background(target, name, eager_start=eager_start)
@@ -453,16 +457,17 @@ async def test_tts_cache_shutdown_completes_before_teardown(
             processes.append(process)
             assert process.stdout is not None
             original_read = process.stdout.read
-            reads = 0
-            hold = asyncio.Event()
 
             async def ordered_read(n: int = -1) -> bytes:
-                nonlocal reads
-                reads += 1
                 result = await original_read(n)
-                if reads == 2 and not result:
-                    assert process.returncode == 0
-                    await hold.wait()
+                if not result and not real_eof:
+                    real_eof.append((process, result))
+                    eof_held.set()
+                    try:
+                        await hold_eof.wait()
+                    except asyncio.CancelledError:
+                        cancel_ack.set()
+                        raise
                 return result
 
             process.stdout.read = ordered_read
@@ -489,31 +494,52 @@ async def test_tts_cache_shutdown_completes_before_teardown(
             return_value="test_token",
         ),
     ):
-        req = await client.post(
-            "/api/tts_get_url",
-            json={
-                "engine_id": "tts.home_assistant_cloud",
-                "message": "There is someone at the door.",
-            },
-        )
-        assert req.status == HTTPStatus.OK
-        response = await req.json()
-        assert (await client.get(response["path"])).status == HTTPStatus.OK
-        await original_client_close()
-        await hass.async_stop()
+        try:
+            req = await client.post(
+                "/api/tts_get_url",
+                json={
+                    "engine_id": "tts.home_assistant_cloud",
+                    "message": "There is someone at the door.",
+                },
+            )
+            assert req.status == HTTPStatus.OK
+            response = await req.json()
+            assert (await client.get(response["path"])).status == HTTPStatus.OK
+            await asyncio.wait_for(eof_held.wait(), 3)
+            assert real_eof == [(processes[0], b"")]
+            assert cache_tasks and not cache_tasks[0].done()
+            assert await asyncio.wait_for(processes[0].wait(), 3) == 0
+            await original_client_close()
+            await hass.async_stop()
 
-    assert cache_tasks and converter_tasks and processes
-    assert processes[0].returncode == 0
-    assert all(
-        done for name, done, _ in state_at_stop[0] if name == "tts_ffmpeg_cleanup"
-    ), state_at_stop
-    assert all(
-        cancelling
-        for name, _, cancelling in state_at_stop[0]
-        if name.startswith("tts_load_data_into_cache_")
-    ), state_at_stop
-    await asyncio.wait({*cache_tasks}, timeout=2)
-    assert all(task.done() for task in (*cache_tasks, *converter_tasks))
+            assert cache_tasks and converter_tasks and processes
+            assert eof_held.is_set() and cancel_ack.is_set()
+            assert processes[0].returncode == 0
+            assert all(
+                done
+                for name, done, _ in state_at_stop[0]
+                if name == "tts_ffmpeg_cleanup"
+            ), state_at_stop
+            assert all(
+                cancelling
+                for name, _, cancelling in state_at_stop[0]
+                if name.startswith("tts_load_data_into_cache_")
+            ), state_at_stop
+            await asyncio.wait({*cache_tasks}, timeout=2)
+            assert all(task.done() for task in (*cache_tasks, *converter_tasks))
+        finally:
+            # Harness release is not credited as production shutdown.
+            hold_eof.set()
+            await original_client_close()
+            if hass.is_running:
+                await hass.async_stop()
+            pending = [
+                task for task in (*cache_tasks, *converter_tasks) if not task.done()
+            ]
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.wait(pending, timeout=2)
 
 
 async def test_migrating_pipelines(
