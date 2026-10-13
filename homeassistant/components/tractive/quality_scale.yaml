@@ -5,12 +5,10 @@ rules:
     comment: Integration does not register custom actions.
   appropriate-polling:
     status: exempt
-    comment: Integration is push-based (cloud_push).
+    comment: Integration is push-based (cloud push).
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: Add data_description for email and password to the user.
+  config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
@@ -21,9 +19,7 @@ rules:
     comment: Integration does not provide any custom conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: Docs are missing the "Removing the integration" section.
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: Integration does not provide any custom triggers.
@@ -43,18 +39,14 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration has no options flow.
-  docs-installation-parameters:
-    status: todo
-    comment: Docs are missing a configuration_basic block describing the email and password fields.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable:
     status: todo
-    comment: The push path logs when the connection is lost but never logs when it is restored.
-  parallel-updates: todo
-  reauthentication-flow:
-    status: todo
-    comment: The reauth_confirm step only reloads the entry and never stores the new credentials, and it does not check that the account matches the entry being reauthenticated; use _abort_if_unique_id_mismatch and async_update_reload_and_abort, and assert the updated entry data in tests.
+    comment: The loss of the push connection is logged, but its recovery is not.
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -62,45 +54,33 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: Tractive is a cloud service configured with account credentials, devices cannot be discovered on the network.
+    comment: Tractive is a cloud service.
   discovery:
     status: exempt
-    comment: Tractive is a cloud service configured with account credentials, devices cannot be discovered on the network.
-  docs-data-update: todo
+    comment: Tractive is a cloud service.
+  docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: The activity, rest, day sleep, night sleep and daily goal sensors report minutes but have no device class; use SensorDeviceClass.DURATION.
-  entity-disabled-by-default:
-    status: todo
-    comment: No entity is disabled by default; the diagnostic tracker status and power saving entities are rarely used and should be disabled by default, otherwise document the exemption.
+  entity-device-class: done
+  entity-disabled-by-default: todo
   entity-translations: done
   exception-translations:
     status: todo
-    comment: ConfigEntryAuthFailed and UpdateFailed raised in the coordinator have no translation_key; switch errors are already translated.
-  icon-translations:
-    status: done
-    comment: icons.json still contains stale keys (activity, calories, sleep) for removed sensors that should be cleaned up.
-  reconfiguration-flow:
-    status: exempt
-    comment: The only configurable values are the account credentials, which are handled by the reauthentication flow.
+    comment: Exceptions raised in the coordinator have no translation_key.
+  icon-translations: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: Integration has no cases that require user action via a repair issue, authentication failures are handled by the reauthentication flow.
-  stale-devices:
-    status: todo
-    comment: Devices of trackers removed from the account are never removed; implement async_remove_config_entry_device and remove devices missing after a trackables re-fetch.
+    comment: Integration doesn't create repair issues.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: The config flow creates aiotractive.api.API without a session; pass session=async_get_clientsession(hass).
+  inject-websession: done
   strict-typing: done
