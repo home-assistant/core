@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -68,6 +68,15 @@ def _is_ip(host: str, ipv6_link_local: bool = False) -> bool:
     if ipv6_link_local:
         return ip.version == 6 and ip.is_link_local
     return True
+
+
+async def _async_resolves_to(hass: HomeAssistant, host: str, ip: str) -> bool:
+    """Return whether host resolves to the given IP address."""
+    try:
+        addresses = await hass.loop.getaddrinfo(host, None)
+    except OSError:
+        return False
+    return any(address[4][0] == ip for address in addresses)
 
 
 class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -168,12 +177,12 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         assert isinstance(discovery_info.ssdp_location, str)
-        host = URL(discovery_info.ssdp_location).host
-        assert isinstance(host, str)
+        ssdp_host = URL(discovery_info.ssdp_location).host
+        assert isinstance(ssdp_host, str)
 
-        self._url = str(URL.build(scheme="http", host=host))
+        self._url = str(URL.build(scheme="http", host=ssdp_host))
 
-        if _is_ip(host, ipv6_link_local=True):
+        if _is_ip(ssdp_host, ipv6_link_local=True):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
@@ -184,7 +193,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 and existing_entry.source != SOURCE_IGNORE
                 and (existing_host := URL(existing_entry.data[CONF_HOST]).host)
                 and _is_ip(existing_host)
-                and _is_ip(host)
+                and _is_ip(ssdp_host)
             ):
                 # keep user-configured hostnames
                 updates = {CONF_HOST: self._url}
@@ -197,7 +206,17 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == self._url:
+            if (entry_host := URL(entry.data[CONF_HOST]).host) and (
+                (entry_host == ssdp_host)
+                or (
+                    _is_ip(entry_host)
+                    and await _async_resolves_to(self.hass, ssdp_host, entry_host)
+                )
+                or (
+                    _is_ip(ssdp_host)
+                    and await _async_resolves_to(self.hass, entry_host, ssdp_host)
+                )
+            ):
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")

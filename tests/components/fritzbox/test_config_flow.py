@@ -1,6 +1,7 @@
 """Tests for AVM Fritz!Box config flow."""
 
 import dataclasses
+import socket
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -586,12 +587,81 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock) -
     assert result["reason"] == "already_in_progress"
 
 
-async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None:
+@pytest.mark.parametrize(
+    ("configured_host", "ssdp_host", "expected_type", "expected_reason", "unique_id"),
+    [
+        pytest.param(
+            "http://192.168.178.1",
+            "http://192.168.178.1",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="ip-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://192.168.178.1",
+            "http://fritz.box",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="ip-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://fritz.box",
+            "http://192.168.178.1",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="hostname-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://fritz.box",
+            "http://fritz.box",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="hostname-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://192.168.178.10",
+            "http://192.168.178.1",
+            FlowResultType.FORM,
+            None,
+            None,
+            id="other-ip-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://192.168.178.10",
+            "http://fritz.box",
+            FlowResultType.FORM,
+            None,
+            None,
+            id="other-ip-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://fritz.box",
+            "http://192.168.178.10",
+            FlowResultType.FORM,
+            None,
+            None,
+            id="hostname-entry-other-ip-discovery",
+        ),
+    ],
+)
+async def test_ssdp_already_configured(
+    hass: HomeAssistant,
+    fritz: Mock,
+    configured_host: str,
+    ssdp_host: str,
+    expected_type: FlowResultType,
+    expected_reason: str | None,
+    unique_id: str | None,
+) -> None:
     """Test starting a flow from discovery when already configured."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "http://10.0.0.1",
+            CONF_HOST: configured_host,
             CONF_PASSWORD: "fake_pass",
             CONF_USERNAME: "fake_user",
             CONF_VERIFY_SSL: False,
@@ -600,12 +670,30 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None
     mock_config.add_to_hass(hass)
     assert not mock_config.unique_id
 
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
+    discovery_info = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location=f"{ssdp_host}:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: ssdp_host,
+        },
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
-    assert mock_config.unique_id == "only-a-test"
+
+    async def mock_getaddrinfo(host: str, port: int | None) -> list[tuple]:
+        if host == "fritz.box":
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("192.168.178.1", 0))]
+        raise socket.gaierror
+
+    with patch.object(hass.loop, "getaddrinfo", mock_getaddrinfo):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
+        )
+
+    assert result["type"] is expected_type
+    assert result.get("reason") == expected_reason
+    assert mock_config.unique_id == unique_id
 
 
 @pytest.mark.parametrize(
