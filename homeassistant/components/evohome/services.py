@@ -28,7 +28,7 @@ from .const import DOMAIN, EVOHOME_DATA, REFRESH_BREAKS_IN_HA_VERSION, EvoServic
 from .helpers import async_create_deprecation_issue_once
 
 
-def _as_snake_case(mode: str) -> str:
+def as_snake_case(mode: str) -> str:
     """Convert a CamelCase string to the snake_case used by the library."""
     return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
 
@@ -107,7 +107,7 @@ def _register_dhw_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
+def validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
     """Validate that a set_system_mode service call is properly formed."""
 
     mode = data[SZ_MODE]
@@ -117,7 +117,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
     # different schema (until instead of duration/period) for the method invoked
     # via this service call
 
-    if (mode_info := tcs_modes.get(_as_snake_case(mode))) is None:
+    if (mode_info := tcs_modes.get(as_snake_case(mode))) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",

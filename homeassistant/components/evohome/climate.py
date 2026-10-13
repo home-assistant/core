@@ -37,7 +37,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
-from .services import _as_snake_case, _validate_set_system_mode_params
+from .services import as_snake_case, validate_set_system_mode_params
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -366,7 +366,7 @@ class EvoController(EvoClimateEntity):
             data[SZ_DURATION] = duration
         if period is not None:
             data[SZ_PERIOD] = period
-        _validate_set_system_mode_params(self._evo_device, data)
+        validate_set_system_mode_params(self._evo_device, data)
 
         if period is not None:
             until = dt_util.start_of_local_day() + period
@@ -375,7 +375,7 @@ class EvoController(EvoClimateEntity):
         else:
             until = None
 
-        await self._set_tcs_mode(EvoSystemMode(_as_snake_case(mode)), until=until)
+        await self._set_tcs_mode(EvoSystemMode(as_snake_case(mode)), until=until)
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None
