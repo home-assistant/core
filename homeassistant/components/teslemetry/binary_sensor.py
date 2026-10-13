@@ -591,9 +591,12 @@ class TeslemetryLocalBinarySensorEntityDescription(BinarySensorEntityDescription
     value_fn: Callable[[dict[str, Any]], bool | None]
 
 
+_site_shut_down = _status_bool("control", "siteShutdown", "isShutDown")
+
+
 def _site_running(data: dict[str, Any]) -> bool | None:
     """Return if the site is running, which the gateway reports as shut down."""
-    shut_down = _status_bool("control", "siteShutdown", "isShutDown")(data)
+    shut_down = _site_shut_down(data)
     return None if shut_down is None else not shut_down
 
 
@@ -604,6 +607,7 @@ ENERGY_LOCAL_STATUS_DESCRIPTIONS: tuple[
         key="grid_ok",
         value_fn=_status_bool("control", "islanding", "gridOK"),
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryLocalBinarySensorEntityDescription(
         key="microgrid_ok",
