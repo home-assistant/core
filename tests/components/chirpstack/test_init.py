@@ -38,10 +38,15 @@ async def test_setup_and_unload(
     )
     assert connection_entry.runtime_data.connection is mock_connection
     assert await hass.config_entries.async_unload(connection_entry.entry_id)
-    mock_connection.on_disconnect.return_value.assert_called()
-    mock_registration.return_value.assert_called()
+    mock_connection.on_disconnect.return_value.assert_called_once_with()
+    mock_registration.return_value.assert_called_once_with()
     mock_connection.close.assert_awaited_once_with()
     assert connection_entry.state is ConfigEntryState.NOT_LOADED
+
+    await hass.async_stop()
+    mock_connection.close.assert_awaited_once_with()
+    mock_connection.on_disconnect.return_value.assert_called_once_with()
+    mock_registration.return_value.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -119,5 +124,6 @@ async def test_shutdown(
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
         await hass.async_stop()
     reload.assert_not_called()
-    mock_registration.return_value.assert_called()
+    mock_connection.on_disconnect.return_value.assert_called_once_with()
+    mock_registration.return_value.assert_called_once_with()
     mock_connection.close.assert_awaited_once_with()

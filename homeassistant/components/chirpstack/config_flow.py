@@ -166,6 +166,8 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
                         ),
                         data=self._input,
                     )
+        if errors.get("base") == "invalid_auth":
+            return self._show_user_form(errors)
         return self.async_show_form(
             step_id="applications",
             errors=errors,

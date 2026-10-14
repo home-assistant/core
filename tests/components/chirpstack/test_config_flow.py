@@ -259,27 +259,16 @@ async def test_empty_selection(hass: HomeAssistant, mock_connection: Mock) -> No
 
 
 @pytest.mark.parametrize(
-    ("error", "expected"),
+    "error",
     [
-        (ConnectionUnavailable("Application removed"), "cannot_connect"),
-        (
-            grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
-            "cannot_connect",
-        ),
-        (
-            grpc.aio.AioRpcError(grpc.StatusCode.UNAUTHENTICATED, (), (), "rejected"),
-            "invalid_auth",
-        ),
-        (
-            grpc.aio.AioRpcError(grpc.StatusCode.PERMISSION_DENIED, (), (), "denied"),
-            "invalid_auth",
-        ),
+        ConnectionUnavailable("Application removed"),
+        grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
     ],
 )
 async def test_inventory_access_failure(
-    hass: HomeAssistant, mock_connection: Mock, error: Exception, expected: str
+    hass: HomeAssistant, mock_connection: Mock, error: Exception
 ) -> None:
-    """Application listing alone does not establish device/profile read access."""
+    """Retry inventory connection failures without losing the application selection."""
     mock_connection.inventory.side_effect = error
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
@@ -290,17 +279,52 @@ async def test_inventory_access_failure(
         result["flow_id"], {"application_ids": ["application"]}
     )
     assert result["step_id"] == "applications"
-    assert result["errors"] == {"base": expected}
+    assert result["errors"] == {"base": "cannot_connect"}
     mock_connection.inventory.assert_awaited_once()
     assert mock_connection.close.await_count == 3
     assert not hass.config_entries.async_entries("chirpstack")
 
     mock_connection.inventory.side_effect = None
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"application_ids": ["application"]}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "tenant"
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "status", [grpc.StatusCode.UNAUTHENTICATED, grpc.StatusCode.PERMISSION_DENIED]
+)
+async def test_inventory_auth_failure(
+    hass: HomeAssistant, mock_connection: Mock, status: grpc.StatusCode
+) -> None:
+    """A key without inventory access can be replaced in the same flow."""
+    mock_connection.inventory.side_effect = grpc.aio.AioRpcError(status, (), (), "")
+    result = await hass.config_entries.flow.async_init(
+        "chirpstack",
+        context={"source": SOURCE_USER},
+        data={"endpoint": "http://server:8080", "api_key": "rejected"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+    mock_connection.inventory.assert_awaited_once()
+    assert mock_connection.close.await_count == 3
+    assert not hass.config_entries.async_entries("chirpstack")
+
+    mock_connection.inventory.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "replacement"}
+    )
+    assert result["step_id"] == "applications"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["api_key"] == "replacement"
     assert result["result"].unique_id == "tenant"
     await hass.async_block_till_done()
 

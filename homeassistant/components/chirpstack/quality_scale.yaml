@@ -2,7 +2,9 @@ rules:
   action-setup:
     status: exempt
     comment: No actions are registered.
-  appropriate-polling: done
+  appropriate-polling:
+    status: done
+    comment: The library polls the device list every 30 seconds; device readings arrive through event streams.
   brands: done
   common-modules: done
   config-flow: done

@@ -55,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -
     except BaseException:
         await connection.close()
         raise
-    entry.async_on_unload(unregister)
 
     @callback
     def disconnected() -> None:
@@ -63,12 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     unsubscribe_disconnect = connection.on_disconnect(disconnected)
-    entry.async_on_unload(unsubscribe_disconnect)
     entry.runtime_data = ChirpStackData(connection, unregister, unsubscribe_disconnect)
 
     async def async_stop(_: Event) -> None:
-        unregister()
-        await connection.close()
+        await async_unload_entry(hass, entry)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
