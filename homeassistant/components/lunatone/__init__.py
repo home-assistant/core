@@ -72,7 +72,7 @@ async def _update_unique_id(
     _LOGGER.debug("Update of unique ID successful")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> None:
     """Set up Lunatone from a config entry."""
     auth_api = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
 
@@ -125,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, line_unique_id)},
-            name=f"DALI Line {line_id}",
+            translation_key="dali_line",
+            translation_placeholders={"line_id": str(line_id)},
             via_device_id=dr.async_get_device_id_by_identifier(
                 hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
             ),
@@ -156,9 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

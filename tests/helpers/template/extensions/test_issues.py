@@ -43,6 +43,7 @@ async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> 
     issue = ir.IssueEntry(
         active=False,
         breaks_in_ha_version="2025.12",
+        config_entry_id=None,
         created=dt_util.utcnow(),
         data=None,
         dismissed_version=None,

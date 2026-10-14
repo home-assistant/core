@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> None:
     """Set up EC as config entry."""
     lat = config_entry.data.get(CONF_LATITUDE)
     lon = config_entry.data.get(CONF_LONGITUDE)
@@ -124,9 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

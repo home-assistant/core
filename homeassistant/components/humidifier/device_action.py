@@ -46,7 +46,16 @@ ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend(
     {probatio.Required(CONF_DOMAIN): DOMAIN}
 )
 
-_ACTION_SCHEMA = probatio.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "set_humidity": SET_HUMIDITY_SCHEMA,
+        "set_mode": SET_MODE_SCHEMA,
+        "toggle": ONOFF_SCHEMA,
+        "turn_off": ONOFF_SCHEMA,
+        "turn_on": ONOFF_SCHEMA,
+    },
+)
 
 
 async def async_validate_action_config(
