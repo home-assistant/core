@@ -1081,6 +1081,12 @@ async def test_device_trigger_update_registration_error(
         f"{device.id}_button_short_press_button_1"
     ]
 
+    # An identical retry is processed again, and not ignored as an unchanged payload
+    caplog.clear()
+    async_fire_mqtt_message(hass, TRIGGER_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+
 
 async def test_tag_update_registration_error(
     hass: HomeAssistant,
