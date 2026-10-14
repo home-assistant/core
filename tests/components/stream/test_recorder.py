@@ -20,7 +20,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -29,6 +29,7 @@ from .common import (
     assert_mp4_has_transform_matrix,
     dynamic_stream_settings,
     generate_h264_video,
+    generate_h265_video,
     remux_with_audio,
 )
 
@@ -81,6 +82,36 @@ async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
     assert os.path.exists(filename)
 
 
+async def test_record_stream_h265_is_hvc1(hass: HomeAssistant, filename: str) -> None:
+    """Test a h265 recording gets muxed as hvc1, so Apple devices can play it."""
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    source = await hass.async_add_executor_job(generate_h265_video)
+    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        make_recording = hass.async_create_task(stream.async_record(filename))
+        await worker_finished.wait()
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
+
+    with av.open(filename) as recording:
+        assert recording.streams.video[0].codec_tag == "hvc1"
+
+
 async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
     """Exercise record with lookback."""
 
@@ -104,9 +135,29 @@ async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
     stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
     with (
         patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            ServiceValidationError,
+            match="Cannot write to /example/path because access to this path is not allowed",
+        ),
     ):
         await stream.async_record("/example/path")
+
+
+async def test_record_already_recording(hass: HomeAssistant, h264_video) -> None:
+    """Test recording a stream that is already recording."""
+
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+    recorder = stream.add_provider(RECORDER_PROVIDER)
+    recorder.video_path = "/example/first.mp4"
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        pytest.raises(
+            ServiceValidationError,
+            match="The stream is already recording to /example/first.mp4",
+        ),
+    ):
+        await stream.async_record("/example/second.mp4")
 
 
 def add_parts_to_segment(segment, source):

@@ -12,7 +12,7 @@ from aiohasupervisor import SupervisorBadRequestError
 import pytest
 
 from homeassistant import bootstrap
-from homeassistant.components import hassio, onboarding
+from homeassistant.components import hassio, onboarding, person
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.onboarding import DOMAIN, const, views
 from homeassistant.const import EVENT_COMPONENT_LOADED
@@ -204,7 +204,7 @@ async def test_onboarding_user(
     assert user is not None
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
-    assert len(hass.data["person"][1].async_items()) == 1
+    assert len(hass.data[person.DATA_PERSON].storage_collection.async_items()) == 1
 
     # Validate refresh token 1
     resp = await client.post(

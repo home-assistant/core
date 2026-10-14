@@ -13,7 +13,11 @@ from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy.const import DOMAIN, Platform
+from homeassistant.components.enphase_envoy.const import (
+    DAILY_ENERGY_UPPER_LIMIT,
+    DOMAIN,
+    Platform,
+)
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.enphase_envoy.sensor import aggregate_acb_sleep_state
 from homeassistant.components.sensor import SensorStateClass
@@ -1848,3 +1852,180 @@ async def test_acb_inventory_becomes_none(
     assert state.state == STATE_UNKNOWN
     assert (state := hass.states.get(aggregate))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_1p_metered",
+        "envoy_eu_batt",
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+        "envoy_acb_batt",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_daily_production_consumption_upper_limit(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test production and consumption daily entities values limited by upper_limit."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.serial_number
+    ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
+
+    production_data = mock_envoy.data.system_production
+    consumption_data = mock_envoy.data.system_consumption
+    NAMES: tuple[str, ...] = (
+        "energy_production_today",
+        "energy_consumption_today",
+    )
+
+    TARGETS: tuple[float, ...] = (
+        production_data.watt_hours_today / 1000.0,
+        consumption_data.watt_hours_today / 1000.0,
+    )
+
+    for name, target in list(zip(NAMES, TARGETS, strict=False)):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == target
+
+    # test upper limit is applied
+    mock_envoy.data.system_production.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT + 1
+    mock_envoy.data.system_consumption.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT + 1
+    mock_envoy.data.raw = {"change": 1}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for name in NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert entity_state.state == "unknown"
+
+    # test values are restored when not exceeding upper limit anymore
+    mock_envoy.data.system_production.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+    mock_envoy.data.system_consumption.watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+    mock_envoy.data.raw = {"change": 2}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == DAILY_ENERGY_UPPER_LIMIT / 1000.0
+
+    # test upper limit is applied for reported issue value
+    mock_envoy.data.system_production.watt_hours_today = 2**32 - 669_000
+    mock_envoy.data.system_consumption.watt_hours_today = 2**32 - 669_000
+    mock_envoy.data.raw = {"change": 3}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for name in NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert entity_state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_daily_production_consumption_phase_upper_limit(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test production and consumption daily entities phase values limited by upper_limit."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.serial_number
+    ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
+
+    NAMES: tuple[str, ...] = (
+        "energy_production_today",
+        "energy_consumption_today",
+    )
+
+    PHASE_NAMES: list[str] = [
+        f"{name}_{phase.lower()}" for name in NAMES for phase in PHASENAMES
+    ]
+    PHASE_TARGETS = chain(
+        *[
+            (phase_data.watt_hours_today / 1000.0,)
+            for phase_data in mock_envoy.data.system_production_phases.values()
+        ],
+        *[
+            (phase_data.watt_hours_today / 1000.0,)
+            for phase_data in mock_envoy.data.system_consumption_phases.values()
+        ],
+    )
+    for name, target in list(zip(PHASE_NAMES, PHASE_TARGETS, strict=False)):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == target
+
+    # test upper limit is applied
+    for phase in PHASENAMES:
+        mock_envoy.data.system_production_phases[phase].watt_hours_today = (
+            DAILY_ENERGY_UPPER_LIMIT + 1
+        )
+        mock_envoy.data.system_consumption_phases[phase].watt_hours_today = (
+            DAILY_ENERGY_UPPER_LIMIT + 1
+        )
+
+    mock_envoy.data.raw = {"change": 1}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in PHASE_NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert entity_state.state == "unknown"
+
+    # test values are restored when not exceeding upper limit anymore
+    for phase in PHASENAMES:
+        mock_envoy.data.system_production_phases[
+            phase
+        ].watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+        mock_envoy.data.system_consumption_phases[
+            phase
+        ].watt_hours_today = DAILY_ENERGY_UPPER_LIMIT
+
+    mock_envoy.data.raw = {"change": 2}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in PHASE_NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == DAILY_ENERGY_UPPER_LIMIT / 1000.0
+
+    # test upper limit is applied for reported issue value
+    mock_envoy.data.system_production.watt_hours_today = 2**32 - 669_000
+    mock_envoy.data.system_consumption.watt_hours_today = 2**32 - 669_000
+
+    # test upper limit is applied for reported values
+    for phase in PHASENAMES:
+        mock_envoy.data.system_production_phases[phase].watt_hours_today = (
+            2**32 - 669_000
+        )
+        mock_envoy.data.system_consumption_phases[phase].watt_hours_today = (
+            2**32 - 669_000
+        )
+
+    mock_envoy.data.raw = {"change": 3}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for name in PHASE_NAMES:
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert entity_state.state == "unknown"

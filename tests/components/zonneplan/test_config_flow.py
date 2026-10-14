@@ -9,6 +9,7 @@ from pyzonneplan import (
     Token,
     ZonneplanConnectionError,
     ZonneplanInvalidOtpError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
 
@@ -64,6 +65,9 @@ async def test_full_flow(hass: HomeAssistant, mock_zonneplan_client: AsyncMock) 
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
 )
@@ -114,6 +118,9 @@ async def test_step_user_exceptions(
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(ZonneplanInvalidOtpError("bad otp"), "invalid_auth"),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
@@ -225,6 +232,9 @@ async def test_reauth_flow(
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
 )
@@ -335,6 +345,9 @@ async def test_reconfigure_flow(
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
 )

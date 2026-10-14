@@ -27,7 +27,7 @@
     "sensors": {
       "dhw_temperature": 51.2,
       "intended_boiler_temperature": 17.0,
-      "modulation_level": 0.0,
+      "modulation_level": 0,
       "return_temperature": 21.7,
       "water_pressure": 1.2,
       "water_temperature": 23.6

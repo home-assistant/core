@@ -29,7 +29,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Optional(CONF_PASSWORD): cv.string,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
                 probatio.Optional(CONF_PORT, default=80): cv.string,
                 probatio.Optional(CONF_SSL, default=False): cv.boolean,
                 probatio.Optional(CONF_USERNAME): cv.string,

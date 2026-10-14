@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from pyicloud.exceptions import PyiCloudConnectionException
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -135,7 +136,41 @@ def mock_icloud_service_fixture():
         service_instance.requires_2fa = False
 
         service_mock.return_value = service_instance
-        yield service_instance
+        yield service_mock
+
+
+async def test_setup_connection_error(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test a transport failure during setup asks for a retry."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=PyiCloudConnectionException(reason="Connection error"),
+        ),
+        pytest.raises(ConfigEntryNotReady) as err,
+    ):
+        account.setup()
+
+    assert err.value.translation_key == "cannot_connect"
 
 
 async def test_setup_success_with_devices(
@@ -170,10 +205,17 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
-    # An active locate must be requested on every poll (pyicloud >= 2.3.0
-    # only locates at service creation, so the account has to ask for it)
-    assert mock_icloud_service.devices.refresh_calls == [True]
+    # The account polls devices itself, so pyicloud's own Find My monitor is disabled.
+    assert mock_icloud_service.call_args.kwargs["refresh_interval"] is None
+    # The FindMyiPhoneServiceManager constructor just located every device, so
+    # the first update must read that fresh data without a second active locate.
+    assert mock_icloud_service.return_value.devices.refresh_calls == []
     assert "device1" in account.devices
+
+    # Later updates request a fresh GPS fix on every poll.
+    with patch.object(account, "_schedule_next_fetch"):
+        account.update_devices()
+    assert mock_icloud_service.return_value.devices.refresh_calls == [True]
 
 
 async def test_a_failed_locate_does_not_cost_the_poll(
@@ -202,25 +244,32 @@ async def test_a_failed_locate_does_not_cost_the_poll(
         MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
         config_entry,
     )
-
-    mock_icloud_service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+    service = mock_icloud_service.return_value
 
     with patch.object(account, "_schedule_next_fetch"):
-        account.setup()
+        await hass.async_add_executor_job(account.setup)
 
+        # A later poll asks for a locate, and iCloud refuses it.
+        service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+        await hass.async_add_executor_job(account.update_devices)
+
+    service.devices.refresh.assert_called_once_with(locate=True)
+    # An error ending the poll early would have left the two minute retry
+    # interval in place; reading the devices recomputes it.
+    assert account.fetch_interval != 2
     assert "device1" in account.devices
 
 
-async def test_a_failed_locate_with_no_devices_still_schedules_the_next_poll(
+async def test_a_poll_with_no_devices_still_schedules_the_next_one(
     hass: HomeAssistant,
     mock_store: Mock,
     mock_icloud_service: MagicMock,
 ) -> None:
-    """Test that an empty device list after a failed locate is not indexed.
+    """Test that an empty device list is not indexed after a failed locate.
 
-    Carrying on past a failed locate means reaching the pending-device check
-    with whatever iCloud had, which can be nothing. Indexing that ends the
-    poll before it arms the next one, leaving the account stopped.
+    Carrying on past a failed locate reaches the pending-device check with
+    whatever iCloud had, which can be nothing. Indexing that ends the poll
+    before it arms the next one, leaving the account stopped.
     """
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
@@ -237,12 +286,14 @@ async def test_a_failed_locate_with_no_devices_still_schedules_the_next_poll(
         MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
         config_entry,
     )
-
-    mock_icloud_service.devices = MockDevicesContainer(USER_INFO, [])
-    mock_icloud_service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+    service = mock_icloud_service.return_value
 
     with patch.object(account, "_schedule_next_fetch") as schedule:
-        account.setup()
+        await hass.async_add_executor_job(account.setup)
+        schedule.reset_mock()
 
-    assert account.devices == {}
-    assert schedule.called
+        service.devices = MockDevicesContainer(USER_INFO, [])
+        service.devices.refresh = Mock(side_effect=Exception("locate failed"))
+        await hass.async_add_executor_job(account.update_devices)
+
+    schedule.assert_called_once()

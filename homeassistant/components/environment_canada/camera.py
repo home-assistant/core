@@ -3,27 +3,15 @@
 from typing import override
 
 from env_canada import ECMap
-import probatio
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
-from homeassistant.helpers.typing import VolDictType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_OBSERVATION_TIME
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
-
-SERVICE_SET_RADAR_TYPE = "set_radar_type"
-SET_RADAR_TYPE_SCHEMA: VolDictType = {
-    probatio.Required("radar_type"): probatio.In(
-        ["Auto", "Rain", "Snow", "Precipitation type"]
-    ),
-}
 
 _RADAR_TYPE_TO_LAYER: dict[str, str] = {
     "Rain": "rain",
@@ -40,13 +28,6 @@ async def async_setup_entry(
     """Add a weather entity from a config_entry."""
     coordinator = config_entry.runtime_data.radar_coordinator
     async_add_entities([ECCameraEntity(coordinator)])
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_RADAR_TYPE,
-        SET_RADAR_TYPE_SCHEMA,
-        "async_set_radar_type",
-    )
 
 
 class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):

@@ -33,12 +33,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): probatio.Any(
             cv.boolean, cv.isfile
         ),
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_HTTP_ID): cv.string,
     }

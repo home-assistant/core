@@ -207,6 +207,7 @@ class ISYVariableNumberEntity(NumberEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status_events.subscribe(self.async_on_update)
+        self.async_on_remove(self._change_handler.unsubscribe)
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
@@ -277,6 +278,7 @@ class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._memory_change_handler.unsubscribe)
 
     @callback
     def async_on_memory_write(self, event: NodeChangedEvent, key: str) -> None:

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -281,7 +281,7 @@ async def test_thermostat_set_temperature(
             id="timeout",
         ),
         pytest.param(
-            httpx.HTTPError("boom"),
+            httpx2.HTTPError("boom"),
             HomeAssistantError,
             "Aqualink error: boom",
             id="http",

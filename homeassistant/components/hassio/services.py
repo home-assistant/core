@@ -142,17 +142,23 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         probatio.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         probatio.Optional(ATTR_FOLDERS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
             probatio.Unique(),
             probatio.Coerce(set),
         ),
         probatio.Exclusive(ATTR_APPS, "apps_or_addons"): probatio.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
         # Legacy "addons", "apps" is preferred
         probatio.Exclusive(ATTR_ADDONS, "apps_or_addons"): probatio.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
     }
 )
@@ -168,17 +174,23 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         probatio.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         probatio.Optional(ATTR_FOLDERS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
             probatio.Unique(),
             probatio.Coerce(set),
         ),
         probatio.Exclusive(ATTR_APPS, "apps_or_addons"): probatio.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
         # Legacy "addons", "apps" is preferred
         probatio.Exclusive(ATTR_ADDONS, "apps_or_addons"): probatio.All(
-            cv.ensure_list, [VALID_ADDON_SLUG], probatio.Unique(), probatio.Coerce(set)
+            probatio.EnsureList(),
+            [VALID_ADDON_SLUG],
+            probatio.Unique(),
+            probatio.Coerce(set),
         ),
     }
 )

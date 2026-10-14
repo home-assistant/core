@@ -269,7 +269,7 @@ def async_create_catching_coro[_T](
     return catch_log_coro_exception(
         target,
         lambda: (
-            f"Exception in {target.__name__} called from\n"
+            f"Exception in {target.__name__} called from\n"  # type: ignore[attr-defined]
             + "".join(traceback.format_list(trace[:-1]))
         ),
     )

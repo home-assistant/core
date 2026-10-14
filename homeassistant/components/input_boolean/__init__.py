@@ -1,5 +1,6 @@
 """Support to keep track of user controlled booleans for within automation."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
@@ -16,25 +17,23 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputBooleanEntityStateAttribute
-
-DOMAIN = "input_boolean"
+from .const import DATA_INPUT_BOOLEAN, DOMAIN, InputBooleanEntityStateAttribute
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = "initial"
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_INITIAL): cv.boolean,
     probatio.Optional(CONF_ICON): cv.icon,
 }
@@ -55,7 +54,6 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -88,6 +86,14 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@dataclass(slots=True)
+class InputBooleanData:
+    """Runtime data for the input_boolean integration."""
+
+    component: EntityComponent[InputBoolean]
+    yaml_collection: collection.YamlCollection
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input boolean."""
     component = EntityComponent[InputBoolean](_LOGGER, DOMAIN, hass)
@@ -118,29 +124,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all input booleans and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [
-                {CONF_ID: id_, **(conf or {})}
-                for id_, conf in conf.get(DOMAIN, {}).items()
-            ]
-        )
+    hass.data[DATA_INPUT_BOOLEAN] = InputBooleanData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    async_setup_services(hass)
 
     return True
 

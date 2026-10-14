@@ -60,6 +60,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._async_create_entry()
 
         self._set_confirm_only()
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"serial_number": self.serial_number},
