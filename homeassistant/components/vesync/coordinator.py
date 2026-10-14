@@ -1,7 +1,8 @@
 """Class to manage VeSync data updates."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from pyvesync import VeSync
@@ -22,7 +23,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     """Class representing data coordinator for VeSync devices."""
 
     config_entry: VesyncConfigEntry
-    update_time: datetime | None = None
+    update_time: float | None = None
 
     def __init__(
         self, hass: HomeAssistant, config_entry: VesyncConfigEntry, manager: VeSync
@@ -43,9 +44,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
         if self.update_time is None:
             return True
 
-        return datetime.now() - self.update_time >= timedelta(  # pylint: disable=home-assistant-enforce-naive-now
-            seconds=UPDATE_INTERVAL_ENERGY
-        )
+        return time.time() - self.update_time >= UPDATE_INTERVAL_ENERGY
 
     @override
     async def _async_update_data(self) -> None:
@@ -54,7 +53,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
             await self.manager.update_all_devices()
 
             if self.should_update_energy():
-                self.update_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+                self.update_time = time.time()
                 for outlet in self.manager.devices.outlets:
                     await outlet.update_energy()
         except VeSyncError as err:

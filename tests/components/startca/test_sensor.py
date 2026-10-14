@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+import pytest
+
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
@@ -227,3 +229,27 @@ async def test_bad_json_decode(
 
     result = await scd.async_update()
     assert result is False
+
+
+async def test_invalid_api_key(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setup stops when Start.ca rejects the key."""
+    config = {
+        "platform": "startca",
+        "api_key": "NOTAKEY",
+        "total_bandwidth": 400,
+        "monitored_variables": ["usage"],
+    }
+    aioclient_mock.get(
+        "https://www.start.ca/support/usage/api?key=NOTAKEY",
+        status=HTTPStatus.NOT_FOUND,
+    )
+
+    await async_setup_component(hass, "sensor", {"sensor": config})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.start_ca_usage") is None
+    assert "Invalid Start.ca API key" in caplog.text

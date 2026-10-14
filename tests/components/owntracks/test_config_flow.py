@@ -9,7 +9,7 @@ from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -130,8 +130,15 @@ async def test_unload(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
     ) as mock_forward:
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert len(mock_forward.mock_calls) == 1
@@ -167,8 +174,15 @@ async def test_with_cloud_sub(hass: HomeAssistant) -> None:
             return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
         ),
     ):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -196,9 +210,17 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
             return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
         ),
     ):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN

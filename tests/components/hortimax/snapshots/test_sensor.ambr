@@ -564,6 +564,63 @@
     'state': '1.75',
   })
 # ---
+# name: test_all_entities[sensor.valve_group_003_ph-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.valve_group_003_ph',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ph',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'Ph',
+    'platform': 'hortimax',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'HOR00000000.000::IrrigationValveGroup::Valve group 003::Ph-Measured',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.valve_group_003_ph-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Valve group 003 Ph',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.valve_group_003_ph',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.2',
+  })
+# ---
 # name: test_all_entities[sensor.valve_group_003_substrate_conductivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

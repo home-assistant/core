@@ -63,10 +63,15 @@ async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -
         "homeassistant.components.romy.config_flow.romy.create_romy",
         return_value=_create_mocked_romy(False, False),
     ):
-        result1 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=INPUT_CONFIG_HOST,
+        result1 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result1["type"] is FlowResultType.FORM
+        assert result1["step_id"] == "user"
+
+        result1 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"], user_input=INPUT_CONFIG_HOST
         )
 
         assert result1["errors"].get("host") == "cannot_connect"
@@ -105,10 +110,15 @@ async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) ->
         "homeassistant.components.romy.config_flow.romy.create_romy",
         return_value=_create_mocked_romy(True, False),
     ):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=INPUT_CONFIG_HOST,
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=INPUT_CONFIG_HOST
         )
 
     with patch(
@@ -155,10 +165,15 @@ async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None
         "homeassistant.components.romy.config_flow.romy.create_romy",
         return_value=_create_mocked_romy(False, False),
     ):
-        result1 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=INPUT_CONFIG_HOST,
+        result1 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result1["type"] is FlowResultType.FORM
+        assert result1["step_id"] == "user"
+
+        result1 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"], user_input=INPUT_CONFIG_HOST
         )
 
         assert result1["errors"].get("host") == "cannot_connect"
@@ -215,6 +230,7 @@ async def test_zero_conf_locked_interface_robot(hass: HomeAssistant) -> None:
 
         assert "errors" not in result2
         assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["result"].unique_id == "aicu-aicgsbksisfapcjqmqjq"
 
 
 async def test_zero_conf_uninitialized_robot(hass: HomeAssistant) -> None:

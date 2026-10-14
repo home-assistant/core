@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from wirelesstagpy import SensorTag
 
 from homeassistant.components.switch import (
@@ -12,7 +12,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -48,8 +47,8 @@ SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_KEYS)]
+        probatio.Required(CONF_MONITORED_CONDITIONS, default=[]): probatio.All(
+            probatio.EnsureList(), [probatio.In(SWITCH_KEYS)]
         )
     }
 )

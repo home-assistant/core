@@ -1,28 +1,39 @@
 """Config flow to configure the iCloud integration."""
 
 from collections.abc import Mapping
+from functools import partial
 import logging
 import os
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloudConnectionException,
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
+    CONF_INCLUDE_COMPLETED,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
+    DEFAULT_INCLUDE_COMPLETED,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
     DOMAIN,
@@ -50,6 +61,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._with_family = None
         self._max_interval = None
         self._gps_accuracy_threshold = None
+        self._include_completed = None
 
         self._trusted_device = None
         self._verification_code = None
@@ -65,27 +77,35 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if step_id == "user":
             schema = {
-                vol.Required(
+                probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                 ): str,
-                vol.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                probatio.Required(
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WITH_FAMILY,
                     default=user_input.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY),
+                ): bool,
+                probatio.Optional(
+                    CONF_INCLUDE_COMPLETED,
+                    default=user_input.get(
+                        CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED
+                    ),
                 ): bool,
             }
         else:
             schema = {
-                vol.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                probatio.Required(
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
             }
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors or {},
             description_placeholders=self._description_placeholders,
         )
@@ -136,6 +156,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._gps_accuracy_threshold = extra_inputs.get(
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
         )
+        self._include_completed = extra_inputs.get(
+            CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED
+        )
 
         # Check if already configured.
         if self.unique_id is None:
@@ -145,18 +168,24 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if self.api is None:
             try:
                 self.api = await self.hass.async_add_executor_job(
-                    PyiCloudService,
-                    self._username,
-                    self._password,
-                    Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
-                    True,
-                    None,
-                    self._with_family,
+                    partial(
+                        PyiCloudService,
+                        self._username,
+                        self._password,
+                        Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
+                        with_family=self._with_family,
+                        refresh_interval=None,
+                    )
                 )
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error("Error logging into iCloud service: %s", error)
                 self.api = None
                 errors = {CONF_PASSWORD: "invalid_auth"}
+                return self._show_setup_form(user_input, errors, step_id)
+            except PyiCloudConnectionException as error:
+                _LOGGER.error("Error connecting to iCloud service: %s", error)
+                self.api = None
+                errors = {"base": "cannot_connect"}
                 return self._show_setup_form(user_input, errors, step_id)
 
         if self.api.requires_2fa:
@@ -182,6 +211,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_WITH_FAMILY: self._with_family,
             CONF_MAX_INTERVAL: self._max_interval,
             CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
+            CONF_INCLUDE_COMPLETED: self._include_completed,
         }
 
         # If this is a password update attempt, don't try creating a new one.
@@ -289,10 +319,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="trusted_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TRUSTED_DEVICE): vol.All(
-                        vol.Coerce(int), vol.In(trusted_devices)
+                    probatio.Required(CONF_TRUSTED_DEVICE): probatio.All(
+                        probatio.Coerce(int), probatio.In(trusted_devices)
                     )
                 }
             ),
@@ -360,6 +390,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_WITH_FAMILY: self._with_family,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
+                CONF_INCLUDE_COMPLETED: self._include_completed,
             }
         )
 
@@ -370,11 +401,48 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="verification_code",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_VERIFICATION_CODE): str,
-                    vol.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
+                    probatio.Optional(CONF_VERIFICATION_CODE): str,
+                    probatio.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
                 }
             ),
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> IcloudOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return IcloudOptionsFlowHandler()
+
+
+class IcloudOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an iCloud options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the iCloud options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_INCLUDE_COMPLETED,
+                        default=self.config_entry.options.get(
+                            CONF_INCLUDE_COMPLETED,
+                            self.config_entry.data.get(
+                                CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED
+                            ),
+                        ),
+                    ): bool,
+                }
+            ),
         )

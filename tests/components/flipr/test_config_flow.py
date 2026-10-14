@@ -23,10 +23,17 @@ async def test_full_flow(hass: HomeAssistant, mock_flipr_client: AsyncMock) -> N
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "dummylogin",
             CONF_PASSWORD: "dummypass",
         },
@@ -60,10 +67,17 @@ async def test_errors(
     """Test we handle any error."""
     mock_flipr_client.search_all_ids.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "nada",
             CONF_PASSWORD: "nadap",
         },
@@ -99,14 +113,22 @@ async def test_no_flipr_found(
 
     mock_flipr_client.search_all_ids.return_value = {"flipr": [], "hub": []}
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "nada",
             CONF_PASSWORD: "nadap",
         },
     )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_flipr_id_found"}
@@ -114,10 +136,9 @@ async def test_no_flipr_found(
     # Test of recover in normal state after correction of the 1st error
     mock_flipr_client.search_all_ids.return_value = {"flipr": ["myfliprid"], "hub": []}
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_EMAIL: "dummylogin",
             CONF_PASSWORD: "dummypass",
         },

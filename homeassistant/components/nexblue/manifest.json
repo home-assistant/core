@@ -1,0 +1,11 @@
+{
+  "domain": "nexblue",
+  "name": "NexBlue",
+  "codeowners": ["@nexblue-maintainer"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nexblue",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["nexblue-api==0.1.3"]
+}

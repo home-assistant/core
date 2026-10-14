@@ -9,8 +9,8 @@ from hatasmota.utils import (
     get_topic_tele_state,
     get_topic_tele_will,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -223,7 +223,7 @@ async def test_invalid_fan_speed_percentage(
     # Set an unsupported speed and verify MQTT message is not sent
     with pytest.raises(MultipleInvalid) as excinfo:
         await common.async_set_percentage(hass, "fan.tasmota", 101)
-    assert "value must be at most 100" in str(excinfo.value)
+    assert "expected a percentage between 0 and 100" in str(excinfo.value)
     mqtt_mock.async_publish.assert_not_called()
 
 

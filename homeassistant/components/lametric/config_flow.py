@@ -1,15 +1,21 @@
 """Config flow to configure the LaMetric integration."""
 
+import asyncio
 from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from demetriek import (
+    AuthChallenge,
     CloudDevice,
+    LaMetricAuthenticationError,
     LaMetricCloud,
     LaMetricConnectionError,
     LaMetricDevice,
+    LaMetricError,
+    LaMetricLocalAuth,
+    LaMetricUnsupportedError,
     Model,
     Notification,
     NotificationIconType,
@@ -18,11 +24,12 @@ from demetriek import (
     Simple,
     Sound,
 )
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -48,6 +55,13 @@ from .const import DOMAIN, LOGGER
 
 DEVICES_URL = "https://developer.lametric.com/user/devices"
 
+# How often to check whether the button on the device has been pressed.
+BUTTON_POLL_INTERVAL = 1
+
+
+class ButtonNotPressed(Exception):
+    """The button on the device was not pressed in time."""
+
 
 class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a LaMetric config flow."""
@@ -56,6 +70,11 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     VERSION = 1
 
     devices: dict[str, CloudDevice]
+    button_challenge: AuthChallenge
+    button_error: str | None = None
+    button_host: str
+    button_task: asyncio.Task[str] | None = None
+    removed: bool = False
     discovered_host: str
     discovered_serial: str
     discovered: bool = False
@@ -65,6 +84,12 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Handle the flow being removed, for example closed by the user."""
+        self.removed = True
 
     @property
     @override
@@ -118,17 +143,96 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle initiation of re-authentication with LaMetric."""
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and API key of a device."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            lametric = LaMetricDevice(
+                host=user_input[CONF_HOST],
+                api_key=user_input[CONF_API_KEY],
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                device = await lametric.device()
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except LaMetricConnectionError as ex:
+                LOGGER.error("Error connecting to LaMetric: %s", ex)
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error occurred")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): TextSelector(),
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                        ),
+                    }
+                ),
+                {CONF_HOST: reconfigure_entry.data[CONF_HOST]},
+            ),
+            description_placeholders={"devices_url": DEVICES_URL},
+            errors=errors,
+        )
+
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user's choice.
 
-        Either enter the manual credentials or fetch the cloud credentials.
+        Either press the button on the device, enter the manual credentials,
+        or fetch the cloud credentials.
         """
+        menu_options = ["press_button", "pick_implementation", "manual_entry"]
+
+        # With the host known, ask the device whether it supports the button
+        # press. Nothing shows on its screen for that. A device that does goes
+        # straight to it, one that does not (like an LM 37X8) is not offered it.
+        if host := self._known_host():
+            auth = LaMetricLocalAuth(
+                host=host, session=async_get_clientsession(self.hass)
+            )
+            try:
+                supported = await auth.supported()
+            except LaMetricConnectionError as ex:
+                # No telling, so offer every way to set it up.
+                LOGGER.debug("Could not check for the button press: %s", ex)
+            else:
+                if supported:
+                    return await self.async_step_press_button()
+                menu_options.remove("press_button")
+
         return self.async_show_menu(
             step_id="choice_enter_manual_or_fetch_cloud",
-            menu_options=["pick_implementation", "manual_entry"],
+            menu_options=menu_options,
         )
+
+    def _known_host(self) -> str | None:
+        """Return the host of the device, when it is known already."""
+        if self.discovered:
+            return self.discovered_host
+        if self.source == SOURCE_REAUTH:
+            return str(self._get_reauth_entry().data[CONF_HOST])
+        return None
 
     async def async_step_manual_entry(
         self, user_input: dict[str, Any] | None = None
@@ -149,6 +253,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except AbortFlow:
                 raise
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -158,21 +264,140 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # Don't ask for a host if it was discovered
         schema = {
-            vol.Required(CONF_API_KEY): TextSelector(
+            probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }
         if not self.discovered and self.source != SOURCE_REAUTH:
-            schema = {vol.Required(CONF_HOST): TextSelector()} | schema
+            schema = {probatio.Required(CONF_HOST): TextSelector()} | schema
 
         return self.async_show_form(
             step_id="manual_entry",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             description_placeholders={
                 "devices_url": DEVICES_URL,
             },
             errors=errors,
         )
+
+    async def async_step_press_button(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle getting the API key from the device, with a press on its button.
+
+        Devices from 2022 onward hand out their API key locally, after someone
+        presses the button on top of the device. No LaMetric account needed.
+        """
+        errors: dict[str, str] = {}
+        if self.button_error:
+            errors["base"] = self.button_error
+            self.button_error = None
+
+        if user_input is not None:
+            self.button_host = user_input[CONF_HOST]
+            auth = LaMetricLocalAuth(
+                host=self.button_host, session=async_get_clientsession(self.hass)
+            )
+            try:
+                self.button_challenge = await auth.request_challenge()
+            except LaMetricUnsupportedError:
+                # A device without this flow, like an LM 37X8, ends up here.
+                errors["base"] = "button_not_supported"
+            except LaMetricConnectionError as ex:
+                LOGGER.error("Error connecting to LaMetric: %s", ex)
+                errors["base"] = "cannot_connect"
+            except LaMetricError as ex:
+                LOGGER.error("Error asking LaMetric for a button press: %s", ex)
+                errors["base"] = "unknown"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error occurred")
+                errors["base"] = "unknown"
+            else:
+                # Closed while the device answered, so no one waits for a press.
+                if self.removed:
+                    return self.async_abort(reason="unknown")
+                self.button_task = self.hass.async_create_task(
+                    self._async_wait_for_button(auth)
+                )
+                return await self.async_step_press_button_wait()
+
+        return self.async_show_form(
+            step_id="press_button",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): TextSelector()}),
+                {CONF_HOST: self._known_host()},
+            ),
+            errors=errors,
+        )
+
+    async def _async_wait_for_button(self, auth: LaMetricLocalAuth) -> str:
+        """Wait for the button on the device to be pressed, and get the API key."""
+        challenge = self.button_challenge
+        while challenge.state == "in-progress":
+            await asyncio.sleep(BUTTON_POLL_INTERVAL)
+            challenge = await auth.challenge(challenge_id=challenge.challenge_id)
+
+        if not challenge.resolved:
+            raise ButtonNotPressed
+        return await auth.api_key(challenge_id=challenge.challenge_id)
+
+    async def async_step_press_button_wait(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Wait for the button on the device to be pressed."""
+        if TYPE_CHECKING:
+            assert self.button_task is not None
+
+        if not self.button_task.done():
+            return self.async_show_progress(
+                step_id="press_button_wait",
+                progress_action="press_button",
+                description_placeholders={
+                    "duration": str(self.button_challenge.duration)
+                },
+                progress_task=self.button_task,
+            )
+
+        if isinstance(exception := self.button_task.exception(), ButtonNotPressed):
+            return self.async_show_progress_done(next_step_id="press_button_timeout")
+        if exception is not None:
+            LOGGER.error("Error getting the API key from LaMetric: %s", exception)
+            self.button_error = (
+                "cannot_connect"
+                if isinstance(exception, LaMetricConnectionError)
+                else "unknown"
+            )
+            return self.async_show_progress_done(next_step_id="press_button")
+        return self.async_show_progress_done(next_step_id="press_button_finish")
+
+    async def async_step_press_button_timeout(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the button not being pressed in time."""
+        if user_input is None:
+            return self.async_show_form(step_id="press_button_timeout")
+        return await self.async_step_press_button({CONF_HOST: self.button_host})
+
+    async def async_step_press_button_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up the device with the API key it handed out."""
+        if TYPE_CHECKING:
+            assert self.button_task is not None
+
+        try:
+            return await self._async_step_create_entry(
+                self.button_host, self.button_task.result()
+            )
+        except AbortFlow:
+            raise
+        except LaMetricConnectionError as ex:
+            LOGGER.error("Error connecting to LaMetric: %s", ex)
+            self.button_error = "cannot_connect"
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error occurred")
+            self.button_error = "unknown"
+        return await self.async_step_press_button()
 
     async def async_step_cloud_fetch_devices(
         self, data: dict[str, Any]
@@ -215,6 +440,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except AbortFlow:
                 raise
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -224,9 +451,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="cloud_select_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             mode=SelectSelectorMode.DROPDOWN,
                             options=[
@@ -255,11 +482,15 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         device = await lametric.device()
 
-        if self.source != SOURCE_REAUTH:
-            await self.async_set_unique_id(
-                device.serial_number,
-                raise_on_progress=False,
-            )
+        await self.async_set_unique_id(
+            device.serial_number,
+            raise_on_progress=False,
+        )
+        if self.source == SOURCE_REAUTH:
+            # The host can differ from the one set up, so make sure it is
+            # still the same device before touching its entry.
+            self._abort_if_unique_id_mismatch()
+        else:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
             )
@@ -305,7 +536,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle dhcp discovery to update existing entries."""
         mac = format_mac(discovery_info.macaddress)
         for entry in self._async_current_entries():
-            if format_mac(entry.data[CONF_MAC]) == mac:
+            if (entry_mac := entry.data.get(CONF_MAC)) and format_mac(entry_mac) == mac:
                 self.hass.config_entries.async_update_entry(
                     entry,
                     data=entry.data | {CONF_HOST: discovery_info.ip},

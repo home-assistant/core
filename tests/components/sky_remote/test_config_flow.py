@@ -42,10 +42,16 @@ async def test_device_exists_abort(
     """Test we abort flow if device already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: mock_config_entry.data[CONF_HOST]},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: mock_config_entry.data[CONF_HOST]},
     )
 
     assert result["type"] is FlowResultType.ABORT

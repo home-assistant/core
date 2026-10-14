@@ -17,5 +17,10 @@
         "title": "Lupus Electronics LUPUSEC connection"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to Lupusec device at {host}"
+    }
   }
 }

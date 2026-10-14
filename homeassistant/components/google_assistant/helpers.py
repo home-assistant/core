@@ -15,12 +15,7 @@ from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import webhook
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -494,7 +489,7 @@ def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
     """Return all supported traits for state."""
     domain = state.domain
     attributes = state.attributes
-    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     if not isinstance(features, int):
         _LOGGER.warning(
@@ -504,7 +499,7 @@ def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
         )
         return []
 
-    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
     return [
         Trait
         for Trait in trait.TRAITS
@@ -555,7 +550,8 @@ class GoogleEntity:
         return (
             self.should_expose()
             and get_google_type(
-                self.state.domain, self.state.attributes.get(ATTR_DEVICE_CLASS)
+                self.state.domain,
+                self.state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
             )
             not in NOT_EXPOSE_LOCAL
             and not self.might_2fa()
@@ -579,8 +575,8 @@ class GoogleEntity:
         """Return if the entity might encounter 2FA based on just traits."""
         state = self.state
         domain = state.domain
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         return any(
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
@@ -607,7 +603,7 @@ class GoogleEntity:
             "traits": [trait.name for trait in traits],
             "willReportState": self.config.should_report_state,
             "type": get_google_type(
-                state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
+                state.domain, state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             ),
         }
         # Add name and aliases.
@@ -768,7 +764,7 @@ def async_get_google_entity_if_supported_cached(
     """
     entity_id = state.entity_id
     is_supported_cache = config.is_supported_cache
-    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    features: int | None = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
     if result := is_supported_cache.get(entity_id):
         cached_features, supported = result
         if cached_features == features:
@@ -785,7 +781,7 @@ def async_get_google_entity_if_supported(
 
     This function will update the cache, but it does not check the cache first.
     """
-    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+    features: int | None = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
     entity = GoogleEntity(hass, config, state)
     is_supported = bool(entity.traits())
     config.is_supported_cache[state.entity_id] = (features, is_supported)
@@ -804,7 +800,9 @@ def async_get_entities(
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here
-        features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        features: int | None = state.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES
+        )
         if result := is_supported_cache.get(entity_id):
             cached_features, supported = result
             if cached_features == features:

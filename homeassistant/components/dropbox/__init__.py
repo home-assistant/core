@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -22,15 +21,9 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH2_SCOPES
 type DropboxConfigEntry = ConfigEntry[DropboxAPIClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> None:
     """Set up Dropbox from a config entry."""
-    try:
-        oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
 
     token = entry.data["token"]
     if not set(token.get("scope", "").split()).issuperset(OAUTH2_SCOPES):
@@ -73,9 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> None:
     """Unload a config entry."""
-    return True

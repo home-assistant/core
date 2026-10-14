@@ -70,10 +70,16 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         unique_id=ACCOUNT_USER_ID,
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=CONFIG[DOMAIN],
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG[DOMAIN],
     )
 
     assert result["type"] is FlowResultType.ABORT

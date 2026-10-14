@@ -8,7 +8,7 @@ from iometer import (
     IOmeterNoStatusError,
     IOmeterTimeoutError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -17,7 +17,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
+CONFIG_SCHEMA: Final = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):

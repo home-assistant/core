@@ -86,9 +86,15 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     """Check classic use case."""
     hass.data[DOMAIN] = {}
     with patch.object(SomaApi, "list_devices", return_value={"result": "success"}):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"host": MOCK_HOST, "port": MOCK_PORT},
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": MOCK_HOST, "port": MOCK_PORT},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY

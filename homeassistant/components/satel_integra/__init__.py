@@ -2,6 +2,8 @@
 
 import logging
 
+from satel_integra import SatelIntegraError
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -42,7 +44,7 @@ PLATFORMS = [
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
     """Set up  Satel Integra from a config entry."""
 
     client = SatelClient(hass, entry)
@@ -67,8 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     )
     await coordinator_temperatures.async_config_entry_first_refresh()
 
+    try:
+        panel_info = await client.controller.read_panel_info()
+    except SatelIntegraError:
+        _LOGGER.warning("Unable to read Satel panel information", exc_info=True)
+        panel_info = None
+
     entry.runtime_data = SatelIntegraData(
         client=client,
+        panel_info=panel_info,
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
@@ -89,21 +98,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Satel",
+        model=panel_info.model.name if panel_info and panel_info.model else None,
+        sw_version=str(panel_info.firmware) if panel_info else None,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
     """Unloading the Satel platforms."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        runtime_data = entry.runtime_data
-        await runtime_data.client.async_close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    runtime_data = entry.runtime_data
+    await runtime_data.client.async_close()
 
 
 async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
@@ -113,7 +120,7 @@ async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SatelConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -180,5 +187,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

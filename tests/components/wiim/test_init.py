@@ -1,14 +1,16 @@
 """Tests for the WiiM integration initialization."""
 
+from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from wiim.exceptions import WiimDeviceException, WiimRequestException
 
+from homeassistant.components.wiim.util import async_get_event_callback_host
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 
@@ -101,53 +103,86 @@ async def test_setup_raises_config_entry_not_ready(
     }
 
 
-async def test_setup_raises_config_entry_not_ready_when_no_url(
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_setup_uses_route_to_device_for_event_callback(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wiim_controller: AsyncMock,
+    mock_wiim_device: AsyncMock,
+    mock_local_ip: AsyncMock,
 ) -> None:
-    """Test a missing internal URL raises a translated ConfigEntryNotReady."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test the callback address is resolved from the route to the device."""
+    await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "missing_homeassistant_url"
-    assert mock_config_entry.error_reason_translation_placeholders is None
+    mock_local_ip.assert_awaited_once_with(
+        "http://192.168.1.100:49152/description.xml", hass.loop
+    )
+    assert (
+        mock_wiim_device.create_mock.await_args.kwargs["local_host"] == "192.168.1.10"
+    )
+
+
+@pytest.mark.parametrize(
+    ("family", "local_ip"),
+    [
+        (AddressFamily.AF_INET, "192.168.1.10"),
+        (AddressFamily.AF_INET6, "2001:db8::5"),
+    ],
+)
+async def test_event_callback_host_preserves_address_family(
+    hass: HomeAssistant,
+    mock_local_ip: AsyncMock,
+    family: AddressFamily,
+    local_ip: str,
+) -> None:
+    """Test the resolved address is used as-is for both IPv4 and IPv6."""
+    mock_local_ip.return_value = (family, local_ip)
+
+    assert (
+        await async_get_event_callback_host(
+            hass, "http://192.168.1.100:49152/description.xml"
+        )
+        == local_ip
+    )
+
+
+async def test_event_callback_host_falls_back_to_source_ip(
+    hass: HomeAssistant,
+    mock_local_ip: AsyncMock,
+) -> None:
+    """Test an unroutable device falls back to the announced source address."""
+    mock_local_ip.side_effect = OSError("network is unreachable")
+
+    with patch(
+        "homeassistant.components.wiim.util.async_get_source_ip",
+        return_value="192.168.1.10",
+    ) as mock_source_ip:
+        assert (
+            await async_get_event_callback_host(
+                hass, "http://192.168.1.100:49152/description.xml"
+            )
+            == "192.168.1.10"
+        )
+
+    mock_source_ip.assert_awaited_once_with(hass, target_ip="192.168.1.100")
 
 
 @pytest.mark.usefixtures("mock_wiim_controller")
-async def test_setup_retries_when_url_has_no_hostname(
+async def test_setup_retries_when_no_local_address(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_local_ip: AsyncMock,
 ) -> None:
-    """Test a Home Assistant URL without a hostname causes setup to retry."""
-    mock_config_entry.add_to_hass(hass)
+    """Test setup retries when no local address can be determined."""
+    mock_local_ip.side_effect = OSError("network is unreachable")
 
     with patch(
-        "homeassistant.components.wiim.util.get_url",
-        return_value="not-a-url",
+        "homeassistant.components.wiim.util.async_get_source_ip",
+        side_effect=HomeAssistantError("no enabled IPv4 addresses"),
     ):
+        mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "missing_homeassistant_url"
+    assert mock_config_entry.error_reason_translation_key == "callback_host_unavailable"
     assert mock_config_entry.error_reason_translation_placeholders is None
-
-
-async def test_setup_no_url_after_core_config(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_wiim_device: AsyncMock,
-    mock_wiim_controller: AsyncMock,
-) -> None:
-    """Test that setup succeeds once internal_url is configured."""
-    await async_process_ha_core_config(
-        hass, {"internal_url": "http://192.168.1.10:8123"}
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED

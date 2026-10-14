@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import COVER, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -79,7 +79,7 @@ async def test_cover_open(
 
     # Finish opening, update status
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Cover0",
             status=0,
@@ -203,7 +203,7 @@ async def test_cover_dynamic(
     entity_id_2 = "cover.cover1"
 
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Cover0",
             status=0,
@@ -215,7 +215,7 @@ async def test_cover_dynamic(
             power=0.0,
             power_unit=WATT,
         ),
-        1: ComelitSerialBridgeObject(
+        1: ComelitDeviceObject(
             index=1,
             name="Cover1",
             status=0,

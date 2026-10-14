@@ -28,16 +28,15 @@ async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_DATA,
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == APP_ID
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_APP_ID] == APP_ID
     assert result["data"][CONF_API_KEY] == API_KEY
+    assert result["result"].unique_id == APP_ID
 
 
 @pytest.mark.parametrize(
@@ -51,20 +50,24 @@ async def test_user_errors(
 
     # Test error
     mock_ttnclient.return_value.fetch_data.side_effect = fetch_data_exception
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=USER_DATA,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_DATA
     )
     assert result["type"] is FlowResultType.FORM
     assert base_error in result["errors"]["base"]
 
     # Recover
     mock_ttnclient.return_value.fetch_data.side_effect = None
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_DATA,
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -84,10 +87,8 @@ async def test_duplicate_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_DATA,
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_DATA
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -717,7 +717,7 @@
     'state': '2025-04-12T14:00:00+00:00',
   })
 # ---
-# name: test_sensors[sensor.generator_1_last_maintainance-entry]
+# name: test_sensors[sensor.generator_1_last_maintenance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -731,7 +731,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.generator_1_last_maintainance',
+    'entity_id': 'sensor.generator_1_last_maintenance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -739,29 +739,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Last maintainance',
+    'object_id_base': 'Last maintenance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Last maintainance',
+    'original_name': 'Last maintenance',
     'platform': 'rehlko',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'last_maintainance',
+    'translation_key': 'last_maintenance',
     'unique_id': 'myemail@email.com_12345_lastMaintenanceTimestamp',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.generator_1_last_maintainance-state]
+# name: test_sensors[sensor.generator_1_last_maintenance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Last maintainance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Last maintenance',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.generator_1_last_maintainance',
+    'entity_id': 'sensor.generator_1_last_maintenance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -928,7 +928,7 @@
     'state': '2025-04-19T14:00:00+00:00',
   })
 # ---
-# name: test_sensors[sensor.generator_1_next_maintainance-entry]
+# name: test_sensors[sensor.generator_1_next_maintenance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -942,7 +942,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.generator_1_next_maintainance',
+    'entity_id': 'sensor.generator_1_next_maintenance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -950,29 +950,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Next maintainance',
+    'object_id_base': 'Next maintenance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Next maintainance',
+    'original_name': 'Next maintenance',
     'platform': 'rehlko',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'next_maintainance',
+    'translation_key': 'next_maintenance',
     'unique_id': 'myemail@email.com_12345_nextMaintenanceTimestamp',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.generator_1_next_maintainance-state]
+# name: test_sensors[sensor.generator_1_next_maintenance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Next maintainance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Next maintenance',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.generator_1_next_maintainance',
+    'entity_id': 'sensor.generator_1_next_maintenance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

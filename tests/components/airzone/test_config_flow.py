@@ -129,8 +129,16 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             side_effect=InvalidMethod,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -176,8 +184,16 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -191,11 +207,37 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.validate",
         side_effect=AirzoneError,
     ):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.airzone.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.validate",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:

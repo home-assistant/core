@@ -148,8 +148,16 @@ async def test_unsupported_model_error(
 ) -> None:
     """Test unsupported printer model error."""
     mock_brother.create.side_effect = UnsupportedModelError("error")
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -164,8 +172,16 @@ async def test_device_exists_abort(
     """Test we abort config flow if Brother printer already configured."""
     await init_integration(hass, mock_config_entry)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
     )
 
     assert result["type"] is FlowResultType.ABORT

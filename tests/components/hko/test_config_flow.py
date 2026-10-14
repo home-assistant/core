@@ -36,10 +36,16 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user config flow without connection to the API."""
     with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
         client_mock.side_effect = HKOError()
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_LOCATION: DEFAULT_LOCATION},
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LOCATION: DEFAULT_LOCATION},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -47,10 +53,9 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
 
         client_mock.side_effect = None
 
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_LOCATION: DEFAULT_LOCATION},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LOCATION: DEFAULT_LOCATION},
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -62,10 +67,16 @@ async def test_config_flow_timeout(hass: HomeAssistant) -> None:
     """Test user config flow with timedout connection to the API."""
     with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
         client_mock.side_effect = TimeoutError()
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_LOCATION: DEFAULT_LOCATION},
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LOCATION: DEFAULT_LOCATION},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -73,10 +84,9 @@ async def test_config_flow_timeout(hass: HomeAssistant) -> None:
 
         client_mock.side_effect = None
 
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_LOCATION: DEFAULT_LOCATION},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LOCATION: DEFAULT_LOCATION},
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -97,6 +107,7 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         user_input={CONF_LOCATION: DEFAULT_LOCATION},
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+    assert result1["result"].unique_id == DEFAULT_LOCATION
 
     r2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

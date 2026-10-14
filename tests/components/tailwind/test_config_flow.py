@@ -71,10 +71,16 @@ async def test_user_flow_errors(
     """Test we show user form on a connection error."""
     mock_tailwind.status.side_effect = side_effect
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "127.0.0.1",
             CONF_TOKEN: "987654",
         },
@@ -108,10 +114,16 @@ async def test_user_flow_unsupported_firmware_version(
 ) -> None:
     """Test configuration flow aborts when the firmware version is not supported."""
     mock_tailwind.status.side_effect = TailwindUnsupportedFirmwareVersionError
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "127.0.0.1",
             CONF_TOKEN: "987654",
         },
@@ -132,10 +144,16 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.127"
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_HOST: "127.0.0.1",
             CONF_TOKEN: "987654",
         },

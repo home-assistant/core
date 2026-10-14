@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 from wirelesstagpy import SensorTag, constants as WT_CONSTANTS
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,8 +39,8 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        probatio.Required(CONF_MONITORED_CONDITIONS, default=[]): probatio.All(
+            probatio.EnsureList(), [probatio.In(SENSOR_TYPES)]
         )
     }
 )
@@ -85,7 +84,10 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         tag_id = self.tag_id
-        event_type = self.device_class
+        # Use the raw event type, not the device class: the push side dispatches
+        # with the library's event type, and device_class is None for some
+        # events (e.g. dry/wet), which would never match the dispatched signal.
+        event_type = self._sensor_type
         mac = self.tag_manager_mac
         self.async_on_remove(
             async_dispatcher_connect(

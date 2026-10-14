@@ -118,10 +118,17 @@ async def test_config_flow_error_handling(
     """Test user step shows correct error for various client initialization issues."""
     mock_paperless.initialize.side_effect = side_effect
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=USER_INPUT_ONE,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_ONE,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -176,6 +183,15 @@ async def test_reauth_flow_error_handling(
     assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == expected_error
 
+    mock_paperless.initialize.side_effect = None
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"], USER_INPUT_REAUTH
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reauth_successful"
+
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
@@ -214,6 +230,16 @@ async def test_reconfigure_flow_error_handling(
     assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == expected_error
 
+    mock_paperless.initialize.side_effect = None
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_TWO,
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reconfigure_successful"
+
 
 async def test_config_already_exists(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -221,11 +247,19 @@ async def test_config_already_exists(
     """Test we only allow a single config flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=USER_INPUT_ONE,
         context={"source": config_entries.SOURCE_USER},
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_ONE,
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 

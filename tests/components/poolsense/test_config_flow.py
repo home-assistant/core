@@ -46,10 +46,16 @@ async def test_invalid_credentials(
 ) -> None:
     """Test we handle invalid credentials."""
     mock_poolsense_client.test_poolsense_credentials.return_value = False
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -72,10 +78,16 @@ async def test_duplicate_entry(
 ) -> None:
     """Test we can't add the same entry twice."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
     )
     await hass.async_block_till_done()
 

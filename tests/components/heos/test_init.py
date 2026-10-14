@@ -200,6 +200,38 @@ async def test_device_info(
     assert device.model == "Speaker"
 
 
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await async_setup_component(hass, "config", {})
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
+    assert parent_device is not None
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
 async def test_device_id_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

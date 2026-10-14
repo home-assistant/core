@@ -25,7 +25,7 @@
         'timestamp': None,
         'width': 2,
       }),
-      'payload': 'chunk1',
+      'payload': b'chunk1',
       'type': 'audio-chunk',
     }),
     dict({
@@ -35,7 +35,7 @@
         'timestamp': None,
         'width': 2,
       }),
-      'payload': 'chunk2',
+      'payload': b'chunk2',
       'type': 'audio-chunk',
     }),
     dict({

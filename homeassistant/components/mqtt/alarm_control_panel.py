@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
@@ -69,43 +69,47 @@ DEFAULT_NAME = "MQTT Alarm"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_SUPPORTED_FEATURES,
             default=list(ALARM_CONTROL_PANEL_SUPPORTED_FEATURES),
-        ): [vol.In(ALARM_CONTROL_PANEL_SUPPORTED_FEATURES)],
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_TRIGGER_REQUIRED, default=True): cv.boolean,
-        vol.Optional(
+        ): [probatio.In(ALARM_CONTROL_PANEL_SUPPORTED_FEATURES)],
+        probatio.Optional(CONF_CODE): cv.string,
+        probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        probatio.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
+        probatio.Optional(CONF_CODE_TRIGGER_REQUIRED, default=True): cv.boolean,
+        probatio.Optional(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE
         ): cv.template,
-        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(
+        probatio.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(
             CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_PAYLOAD_ARM_AWAY
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_ARM_HOME, default=DEFAULT_PAYLOAD_ARM_HOME
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_PAYLOAD_ARM_NIGHT
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_ARM_VACATION, default=DEFAULT_PAYLOAD_ARM_VACATION
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_PAYLOAD_ARM_CUSTOM_BYPASS
         ): cv.string,
-        vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_PAYLOAD_DISARM): cv.string,
-        vol.Optional(CONF_PAYLOAD_TRIGGER, default=DEFAULT_PAYLOAD_TRIGGER): cv.string,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(
+            CONF_PAYLOAD_DISARM, default=DEFAULT_PAYLOAD_DISARM
+        ): cv.string,
+        probatio.Optional(
+            CONF_PAYLOAD_TRIGGER, default=DEFAULT_PAYLOAD_TRIGGER
+        ): cv.string,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -134,7 +138,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     @staticmethod
     @override
-    def config_schema() -> vol.Schema:
+    def config_schema() -> probatio.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

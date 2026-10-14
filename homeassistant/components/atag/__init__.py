@@ -9,7 +9,7 @@ DOMAIN = "atag"
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AtagConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AtagConfigEntry) -> None:
     """Set up Atag integration from a config entry."""
 
     coordinator = AtagDataUpdateCoordinator(hass, entry)
@@ -21,9 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AtagConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AtagConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AtagConfigEntry) -> None:
     """Unload Atag config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

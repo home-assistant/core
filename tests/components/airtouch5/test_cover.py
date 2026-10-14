@@ -10,12 +10,12 @@ from airtouch5py.packets.zone_status import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -95,7 +95,9 @@ async def test_cover_callbacks(
     zone_2_initial = hass.states.get(COVER_ZONE_2_ENTITY_ID)
     assert zone_2_initial
     zone_2_initial_state = zone_2_initial.state
-    zone_2_initial_position = zone_2_initial.attributes.get(ATTR_CURRENT_POSITION)
+    zone_2_initial_position = zone_2_initial.attributes.get(
+        CoverEntityStateAttribute.CURRENT_POSITION
+    )
 
     # Define a method to call all zone_status_callbacks, as the real client would
     async def _call_zone_status_callback(open_percentage: float) -> None:
@@ -122,37 +124,49 @@ async def test_cover_callbacks(
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.state == CoverState.OPEN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 70
+    assert state.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION) == 70
     zone_2 = hass.states.get(COVER_ZONE_2_ENTITY_ID)
     assert zone_2 and zone_2.state == zone_2_initial_state
-    assert zone_2.attributes.get(ATTR_CURRENT_POSITION) == zone_2_initial_position
+    assert (
+        zone_2.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        == zone_2_initial_position
+    )
 
     # Fully open
     await _call_zone_status_callback(1)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.state == CoverState.OPEN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
+    assert state.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION) == 100
     zone_2 = hass.states.get(COVER_ZONE_2_ENTITY_ID)
     assert zone_2 and zone_2.state == zone_2_initial_state
-    assert zone_2.attributes.get(ATTR_CURRENT_POSITION) == zone_2_initial_position
+    assert (
+        zone_2.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        == zone_2_initial_position
+    )
 
     # Fully closed
     await _call_zone_status_callback(0.0)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.state == CoverState.CLOSED
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
+    assert state.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION) == 0
     zone_2 = hass.states.get(COVER_ZONE_2_ENTITY_ID)
     assert zone_2 and zone_2.state == zone_2_initial_state
-    assert zone_2.attributes.get(ATTR_CURRENT_POSITION) == zone_2_initial_position
+    assert (
+        zone_2.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        == zone_2_initial_position
+    )
 
     # Partly reopened
     await _call_zone_status_callback(0.3)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.state == CoverState.OPEN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 30
+    assert state.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION) == 30
     zone_2 = hass.states.get(COVER_ZONE_2_ENTITY_ID)
     assert zone_2 and zone_2.state == zone_2_initial_state
-    assert zone_2.attributes.get(ATTR_CURRENT_POSITION) == zone_2_initial_position
+    assert (
+        zone_2.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        == zone_2_initial_position
+    )
