@@ -203,6 +203,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
     client.public_bootstrap.nvr.type = None
+    client.public_bootstrap.nvr.unifi_dict.return_value = {"name": nvr.name}
     client.public_bootstrap.nvr.doorbell_settings = PublicDoorbellSettings(
         default_message_text="Welcome", custom_messages=["Test"]
     )

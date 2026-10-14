@@ -2,6 +2,7 @@
 
 from typing import Any, cast
 
+from uiprotect.data.public_bootstrap import PublicBootstrap
 from uiprotect.test_util.anonymize import anonymize_data
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -14,41 +15,48 @@ from .data import UFPConfigEntry
 TO_REDACT = {"rtspsStreams"}
 
 
+# Device stores of the public cache; liveviews, users and arm profiles are
+# configuration, not devices.
+_PUBLIC_DEVICE_STORES = (
+    "cameras",
+    "lights",
+    "sensors",
+    "chimes",
+    "viewers",
+    "sirens",
+    "relays",
+    "fobs",
+    "speakers",
+    "link_stations",
+    "bridges",
+)
+
+
+def _public_cache(pb: PublicBootstrap) -> dict[str, Any]:
+    """Return the anonymized public cache."""
+    public: dict[str, Any] = {
+        "nvr": anonymize_data(pb.nvr.unifi_dict()) if pb.nvr is not None else None,
+        "arm_mode": pb.arm_mode is not None,
+    }
+    for store in _PUBLIC_DEVICE_STORES:
+        public[store] = [
+            async_redact_data(
+                cast(dict[str, Any], anonymize_data(device.unifi_dict())), TO_REDACT
+            )
+            for device in getattr(pb, store).values()
+        ]
+    return public
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: UFPConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    data = config_entry.runtime_data
-    api = data.api
-    if api.is_public_only:
-        # No private bootstrap in API-key-only mode; dump the public cache.
-        pb = api.public_bootstrap
-        public = {
-            "nvr": anonymize_data(pb.nvr.unifi_dict()) if pb.nvr is not None else None,
-            "cameras": [
-                async_redact_data(
-                    cast(dict[str, Any], anonymize_data(camera.unifi_dict())),
-                    TO_REDACT,
-                )
-                for camera in pb.cameras.values()
-            ],
-            "alarm_hubs": [
-                anonymize_data(hub.unifi_dict()) for hub in pb.alarm_hubs.values()
-            ],
-            "arm_mode": pb.arm_mode is not None,
-        }
-        return {"public_bootstrap": public, "options": dict(config_entry.options)}
-    bootstrap = cast(dict[str, Any], anonymize_data(api.bootstrap.unifi_dict()))
-    diagnostics: dict[str, Any] = {
-        "bootstrap": bootstrap,
-        "options": dict(config_entry.options),
-    }
-    # Alarm hubs live in the public bootstrap (not the private one above) and
-    # are absent on firmware/configs without the public Integration API.
+    api = config_entry.runtime_data.api
+    diagnostics: dict[str, Any] = {"options": dict(config_entry.options)}
+    if not api.is_public_only:
+        diagnostics["bootstrap"] = anonymize_data(api.bootstrap.unifi_dict())
     if api.has_public_bootstrap:
-        diagnostics["alarm_hubs"] = [
-            anonymize_data(hub.unifi_dict())
-            for hub in api.public_bootstrap.alarm_hubs.values()
-        ]
+        diagnostics["public_bootstrap"] = _public_cache(api.public_bootstrap)
     return diagnostics

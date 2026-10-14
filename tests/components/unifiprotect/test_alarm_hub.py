@@ -42,9 +42,10 @@ def _make_public_bootstrap(hub: LinkStation | None) -> Mock:
     nvr.display_name = "Test NVR"
     nvr.device_type = None
     nvr.type = None
-    return make_public_bootstrap(
-        alarm_hubs={hub.id: hub} if hub is not None else {}, nvr=nvr
-    )
+    nvr.unifi_dict.return_value = {"name": "Test NVR"}
+    hubs = {hub.id: hub} if hub is not None else {}
+    # Alarm hubs are the alarm-hub subset of the link stations.
+    return make_public_bootstrap(alarm_hubs=hubs, link_stations=dict(hubs), nvr=nvr)
 
 
 @pytest.fixture(name="alarm_hub")
@@ -229,9 +230,9 @@ async def test_alarm_hub_in_diagnostics(
         hass, hass_client, ufp_with_alarm_hub.entry
     )
 
-    assert "alarm_hubs" in diag
-    assert len(diag["alarm_hubs"]) == 1
-    hub = diag["alarm_hubs"][0]
+    hubs = diag["public_bootstrap"]["link_stations"]
+    assert len(hubs) == 1
+    hub = hubs[0]
     # Anonymized: the real MAC must not leak.
     assert hub["mac"] != ALARM_HUB_MAC
     assert "alarmHub" in hub
