@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusError, ModbusTimeoutError
+from modbus_connection import ModbusTimeoutError
 from sofar_modbus.modern.device import BATTERY_STRING_COMPONENTS, SofarInverter
 
 from homeassistant.components.modbus import async_get_unit
@@ -48,8 +48,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-_IDENTITY_ATTEMPTS = 3
-
 _REMOVED_SENSOR_KEYS = ("serial_number", "waiting_time")
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -83,18 +81,6 @@ def _async_remove_denied_meter_energy(
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
-
-
-async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
-    """Read identity once, retrying a few times against a transient blip."""
-    for attempt in range(_IDENTITY_ATTEMPTS):
-        try:
-            await device.identity.async_update()
-        except ModbusError as err:
-            if attempt == _IDENTITY_ATTEMPTS - 1:
-                _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
-        else:
-            return
 
 
 def _async_seed_high_water_marks(
@@ -184,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     else:
         await settings.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
-        await _async_read_identity(entry, device)
+        await device.async_read_identity()
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create(
