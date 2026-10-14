@@ -9,7 +9,7 @@ from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import CONF_LOCATION_IDX, DOMAIN
+from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -188,7 +188,7 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     [
         pytest.param(
             install,
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "password", CONF_LOCATION_IDX: i},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "password", "location_idx": i},
             id=f"{install}-location_idx_{i}",
         )
         for install, i in (("sys_004", 1), ("sys_004", 2), ("sys_006", 1))
