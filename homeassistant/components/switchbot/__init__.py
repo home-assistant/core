@@ -66,7 +66,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.METER.value: [Platform.SENSOR],
     SupportedModels.METER_PLUS.value: [Platform.SENSOR],
-    SupportedModels.METER_PRO.value: [Platform.SENSOR],
+    SupportedModels.METER_PRO.value: [Platform.BUTTON, Platform.SENSOR],
     SupportedModels.INDOOR_OUTDOOR_THERMO_HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.METER_PRO_CO2.value: [
         Platform.BUTTON,
@@ -289,6 +289,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.METER_PRO.value: switchbot.SwitchbotMeterPro,
     SupportedModels.METER_PRO_CO2.value: switchbot.SwitchbotMeterProCO2,
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,

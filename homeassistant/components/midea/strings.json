@@ -970,6 +970,12 @@
       "disinfect": {
         "name": "Disinfect"
       },
+      "megawater": {
+        "name": "Mega Water"
+      },
+      "memo_u": {
+        "name": "Memo-U"
+      },
       "night_light": {
         "name": "Night light"
       },
