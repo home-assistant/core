@@ -336,7 +336,7 @@ async def test_cover_stale_moving_operational_status(
     """Test moving operational status is ignored when the cover is at its target.
 
     Replays the Matter Server debug log of a Rademacher SmartHome Box bridged
-    shutter (home-assistant/addons#4724): resting at 42% lift with the tilt
+    shutter (home-assistant/core#186168): resting at 42% lift with the tilt
     closed, it answers GoToLiftPercentage(10000) within ~100 ms with three
     attribute updates, OperationalStatus 0b001010, then target and current
     lift both 10000, and never reports the operational status clearing.
