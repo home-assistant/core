@@ -18,6 +18,7 @@ from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothMan
 from homeassistant.components.teslemetry.const import DOMAIN, SUBENTRY_TYPE_VEHICLE
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -145,8 +146,8 @@ async def test_binary_sensors_streaming(
 @pytest.mark.parametrize(
     ("driver_seat_belt", "expected_state"),
     [
-        pytest.param(True, "on", id="occupied_unbuckled"),
-        pytest.param(False, "off", id="buckled_or_empty"),
+        pytest.param(True, STATE_ON, id="occupied_unbuckled"),
+        pytest.param(False, STATE_OFF, id="buckled_or_empty"),
     ],
 )
 async def test_driver_seat_belt_warning(
@@ -170,7 +171,7 @@ async def test_driver_seat_belt_warning(
 
     state = hass.states.get("binary_sensor.test_driver_seat_belt_warning")
     assert state.state == expected_state
-    assert state.attributes["device_class"] == BinarySensorDeviceClass.SAFETY
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.SAFETY
 
 
 @pytest.mark.parametrize("restored_state", [STATE_UNKNOWN, STATE_UNAVAILABLE])
