@@ -12,12 +12,7 @@ from homeassistant.components.indevolt.const import (
     CONF_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    SOURCE_DHCP,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -149,11 +144,7 @@ async def test_reconfigure_flow_success(
     mock_config_entry.add_to_hass(hass)
 
     # Initiate reconfigure flow
-    # pylint: disable-next=home-assistant-test-flow-start-helper
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # Verify correct form is returned
     assert result["type"] is FlowResultType.FORM
@@ -196,11 +187,7 @@ async def test_reconfigure_flow_error(
     mock_config_entry.add_to_hass(hass)
 
     # Initiate reconfigure flow
-    # pylint: disable-next=home-assistant-test-flow-start-helper
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # Configure mock to raise exception
     mock_indevolt.get_config.side_effect = exception
@@ -244,11 +231,7 @@ async def test_reconfigure_flow_different_device(
     }
 
     # Initiate reconfigure flow
-    # pylint: disable-next=home-assistant-test-flow-start-helper
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     # Configure mock to cause host collision with different device
     result = await hass.config_entries.flow.async_configure(
