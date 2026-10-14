@@ -72,6 +72,14 @@
         "name": "Live view SD"
       }
     },
+    "number": {
+      "count_down_switch": {
+        "name": "Countdown timer (min)"
+      },
+      "overcharge_switch": {
+        "name": "Max power (W)"
+      }
+    },
     "select": {
       "collection_point": {
         "name": "Go to collection point",
@@ -198,6 +206,9 @@
     },
     "select_option_failed": {
       "message": "Imou rejected the new option"
+    },
+    "set_text_value_failed": {
+      "message": "Imou rejected the new value"
     },
     "siren_operation_failed": {
       "message": "Imou rejected the siren change"
