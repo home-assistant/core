@@ -114,7 +114,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         probatio.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
         probatio.Optional(CONF_DATARATE): cv.positive_int,
-        probatio.Optional(CONF_DEVICE, default="/dev/ttyUSB0"): cv.string,
+        probatio.Optional(CONF_DEVICE): cv.string,
         probatio.Optional(CONF_FREQUENCY): cv.positive_int,
         probatio.Optional(CONF_JEELINK_LED): cv.boolean,
         probatio.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,

@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
+import probatio
 import pytest
 from serial import SerialException
 
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -123,124 +125,87 @@ async def test_user_flow(
     frequency: float | str,
     expected_frequency: int,
 ) -> None:
-    """Test configuring a receiver and multiple types of one sensor."""
-    with patch(
-        "homeassistant.components.lacrosse.config_flow.uuid4",
-        side_effect=[UUID(int=1), UUID(int=2)],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["step_id"] == "user"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {**RECEIVER_DATA, "frequency": frequency}
-        )
-        assert result["step_id"] == "add_sensor"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEMPERATURE_SENSOR
-        )
-        assert result["step_id"] == "add_sensor_or_finish"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "add_sensor"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {**TEMPERATURE_SENSOR, "temperature": False, "humidity": True},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "finish"}
-        )
+    """Test configuring a receiver creates an entry without sensor subentries."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    probatio.to_field_list(
+        result["data_schema"], custom_serializer=cv.custom_serializer
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**RECEIVER_DATA, "frequency": frequency}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {**RECEIVER_DATA, "frequency": expected_frequency}
     assert type(result["data"]["frequency"]) is int
     entry = result["result"]
-    assert len(entry.subentries) == 1
-    subentry = next(iter(entry.subentries.values()))
-    assert subentry.unique_id == "1"
-    assert subentry.title == "Outdoor"
-    assert subentry.data["sensors"] == {
-        "outdoor_temperature": {
-            **SENSORS["1_temperature"],
-            "unique_id": UUID(int=1).hex,
-        },
-        "outdoor_humidity": {
-            **SENSORS["1_humidity"],
-            "expire_after": 300,
-            "unique_id": UUID(int=2).hex,
-        },
-    }
+    assert not entry.subentries
     mock_setup_entry.assert_called_once()
 
 
-async def test_user_flow_same_friendly_name_and_type_keeps_both_sensors(
+@pytest.mark.parametrize(
+    ("sensors", "sensor_ids", "expected_keys"),
+    [
+        pytest.param(
+            {"shared_temperature": {"id": 3, "type": "temperature"}},
+            (4, 5),
+            {
+                "shared_temperature": 3,
+                "shared_temperature_2": 4,
+                "shared_temperature_3": 5,
+            },
+            id="same-friendly-name",
+        ),
+        pytest.param(
+            {
+                "shared_temperature": {"id": 3, "type": "temperature"},
+                "shared_temperature_2": {"id": 5, "type": "temperature"},
+                "shared_temperature_3": {"id": 6, "type": "temperature"},
+            },
+            (4,),
+            {
+                "shared_temperature": 3,
+                "shared_temperature_2": 5,
+                "shared_temperature_3": 6,
+                "shared_temperature_4": 4,
+            },
+            id="colliding-suffixed-keys",
+        ),
+    ],
+)
+async def test_add_sensors_with_colliding_keys(
     hass: HomeAssistant,
+    sensors: dict[str, dict[str, int | str]],
+    sensor_ids: tuple[int, ...],
+    expected_keys: dict[str, int],
 ) -> None:
-    """Test sensors with colliding friendly-name keys are both retained."""
-    first_sensor = {**TEMPERATURE_SENSOR, "id": 3, "friendly_name": "Shared"}
-    second_sensor = {**TEMPERATURE_SENSOR, "id": 4, "friendly_name": "Shared"}
-    third_sensor = {**TEMPERATURE_SENSOR, "id": 5, "friendly_name": "Shared"}
-    assert (
-        sensor_entity_key(first_sensor["id"], LaCrosseSensorType.TEMPERATURE, "Shared")
-        == sensor_entity_key(
-            second_sensor["id"], LaCrosseSensorType.TEMPERATURE, "Shared"
-        )
-        == sensor_entity_key(
-            third_sensor["id"], LaCrosseSensorType.TEMPERATURE, "Shared"
-        )
+    """Test sensors with colliding keys are retained with unique suffixes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={**RECEIVER_DATA, "sensors": sensors},
     )
-
-    with patch(
-        "homeassistant.components.lacrosse.config_flow.uuid4",
-        side_effect=[UUID(int=1), UUID(int=2), UUID(int=3)],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=RECEIVER_DATA
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], first_sensor
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "add_sensor"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], second_sensor
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "add_sensor"}
-        )
-        flow = hass.config_entries.flow._progress[result["flow_id"]]
-        flow._sensors["shared_temperature_5"] = {
-            "id": 6,
-            "type": "temperature",
-            "friendly_name": "Occupied key",
-            "unique_id": "occupied_key_unique",
-        }
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], third_sensor
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "finish"}
-        )
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    entry = result["result"]
-    assert {subentry.unique_id for subentry in entry.subentries.values()} == {
-        "3",
-        "4",
-        "5",
-        "6",
-    }
-    configured_sensors = [
-        (key, sensor)
-        for subentry in entry.subentries.values()
+    config_entry = result["result"]
+    original = dict(config_entry.subentries)
+    for sensor_id in sensor_ids:
+        result = await hass.config_entries.subentries.async_init(
+            (config_entry.entry_id, "sensor"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {**TEMPERATURE_SENSOR, "id": sensor_id, "friendly_name": "Shared"},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert {
+        key: sensor["id"]
+        for subentry in config_entry.subentries.values()
         for key, sensor in subentry.data["sensors"].items()
-    ]
-    assert {sensor["id"] for _, sensor in configured_sensors} == {3, 4, 5, 6}
-    assert len({key for key, _ in configured_sensors}) == 4
-    assert any(
-        key == "shared_temperature_5_2" and sensor["id"] == 5
-        for key, sensor in configured_sensors
-    )
+    } == expected_keys
+    assert {key: config_entry.subentries[key] for key in original} == original
 
 
 @pytest.mark.parametrize(
@@ -265,14 +230,6 @@ async def test_user_flow_receiver_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], RECEIVER_DATA
     )
-    assert result["step_id"] == "add_sensor"
-    assert not result["errors"]
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TEMPERATURE_SENSOR
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "finish"}
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -287,15 +244,29 @@ async def test_duplicate_receiver(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("receiver_data", "expected_device"),
+    [
+        pytest.param({"baud": 57600}, "/dev/ttyUSB0", id="default-device"),
+        pytest.param(
+            {"device": "/dev/ttyUSB1", "baud": 57600},
+            "/dev/ttyUSB1",
+            id="explicit-device",
+        ),
+    ],
+)
 async def test_import_flow(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    receiver_data: dict[str, str | int],
+    expected_device: str,
 ) -> None:
     """Test grouping YAML entities into physical sensor subentries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
         data={
-            **RECEIVER_DATA,
+            **receiver_data,
             "frequency": 868300,
             "sensors": {
                 "heating": {"id": 34, "type": "humidity"},
@@ -309,6 +280,7 @@ async def test_import_flow(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["device"] == expected_device
     assert result["data"]["frequency"] == 868300
     assert type(result["data"]["frequency"]) is int
     assert "sensors" not in result["data"]
@@ -323,44 +295,6 @@ async def test_import_flow(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
-
-
-@pytest.mark.parametrize(
-    ("sensor_input", "error"),
-    [
-        pytest.param(TEMPERATURE_SENSOR, "sensor_already_configured", id="duplicate"),
-        pytest.param(
-            {**TEMPERATURE_SENSOR, "id": 3, "temperature": False, "battery": True},
-            "value_type_required",
-            id="battery-only",
-        ),
-    ],
-)
-async def test_initial_sensor_validation(
-    hass: HomeAssistant, sensor_input: dict[str, object], error: str
-) -> None:
-    """Test invalid sensor configurations and subsequent recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=RECEIVER_DATA
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TEMPERATURE_SENSOR
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "add_sensor"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], sensor_input
-    )
-    assert result["errors"] == {"base": error}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**TEMPERATURE_SENSOR, "id": 4}
-    )
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "finish"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("receiver_device", ["/dev/ttyUSB0", "/dev/manual_receiver"])
@@ -400,7 +334,10 @@ async def test_update_receiver(
     subentries = dict(config_entry.subentries)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "update_receiver"
+    assert result["step_id"] == "reconfigure"
+    probatio.to_field_list(
+        result["data_schema"], custom_serializer=cv.custom_serializer
+    )
     device_field = next(
         field for field in result["data_schema"].schema if field == "device"
     )
@@ -516,6 +453,16 @@ async def test_update_sensor(
             {**TEMPERATURE_SENSOR, "id": 2}, "sensor_already_configured", id="duplicate"
         ),
         pytest.param(
+            {
+                **TEMPERATURE_SENSOR,
+                "id": 2,
+                "temperature": False,
+                "humidity": True,
+            },
+            "sensor_already_configured",
+            id="duplicate-different-type",
+        ),
+        pytest.param(
             {**TEMPERATURE_SENSOR, "temperature": False, "battery": True},
             "value_type_required",
             id="battery-only",
@@ -607,6 +554,15 @@ async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) ->
     ("user_input", "error"),
     [
         pytest.param(TEMPERATURE_SENSOR, "sensor_already_configured", id="duplicate"),
+        pytest.param(
+            {
+                **TEMPERATURE_SENSOR,
+                "temperature": False,
+                "humidity": True,
+            },
+            "sensor_already_configured",
+            id="duplicate-different-type",
+        ),
         pytest.param(
             {**TEMPERATURE_SENSOR, "id": 3, "temperature": False, "battery": True},
             "value_type_required",
