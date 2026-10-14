@@ -26,14 +26,7 @@ PARALLEL_UPDATES = 0
 class ImouSirenEntityDescription(SirenEntityDescription):
     """Describes an Imou siren entity."""
 
-    start_param: str = PARAM_SIREN_START
-    stop_param: str = PARAM_SIREN_STOP
-
-
-SIREN_DESCRIPTION = ImouSirenEntityDescription(
-    key="siren",
-    translation_key="siren",
-)
+    supported_features: SirenEntityFeature
 
 
 async def async_setup_entry(
@@ -46,15 +39,29 @@ async def async_setup_entry(
 
     def _add_sirens(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
-        async_add_entities(
-            ImouSiren(coordinator, device)
-            for device in coordinator.devices
-            if imou_device_identifier(device) in device_keys
-            and (
-                PARAM_SIREN_START in device.buttons
-                or PARAM_SIREN_STOP in device.buttons
+        entities: list[ImouSiren] = []
+        for device in coordinator.devices:
+            if imou_device_identifier(device) not in device_keys:
+                continue
+            features = SirenEntityFeature(0)
+            if PARAM_SIREN_START in device.buttons:
+                features |= SirenEntityFeature.TURN_ON
+            if PARAM_SIREN_STOP in device.buttons:
+                features |= SirenEntityFeature.TURN_OFF
+            if not features:
+                continue
+            entities.append(
+                ImouSiren(
+                    coordinator,
+                    ImouSirenEntityDescription(
+                        key="siren",
+                        translation_key="siren",
+                        supported_features=features,
+                    ),
+                    device,
+                )
             )
-        )
+        async_add_entities(entities)
 
     entry.async_on_unload(coordinator.register_new_device_callback(_add_sirens))
     _add_sirens(coordinator.devices)
@@ -73,32 +80,12 @@ class ImouSiren(ImouEntity, SirenEntity):
     def __init__(
         self,
         coordinator: ImouDataUpdateCoordinator,
+        description: ImouSirenEntityDescription,
         device: ImouHaDevice,
     ) -> None:
         """Initialize the siren entity."""
-        super().__init__(coordinator, SIREN_DESCRIPTION, device)
-        description = self.entity_description
-        features = SirenEntityFeature(0)
-        if description.start_param in device.buttons:
-            features |= SirenEntityFeature.TURN_ON
-        if description.stop_param in device.buttons:
-            features |= SirenEntityFeature.TURN_OFF
-        self._attr_supported_features = features
-
-    def _tracks_local_siren_state(self) -> bool:
-        """Return whether turn on/off can both be issued for toggle semantics."""
-        features = self.supported_features
-        return bool(
-            features & SirenEntityFeature.TURN_ON
-            and features & SirenEntityFeature.TURN_OFF
-        )
-
-    def _set_local_siren_state(self, is_on: bool) -> None:
-        """Remember siren on/off after a successful command when toggle is supported."""
-        if not self._tracks_local_siren_state():
-            return
-        self._attr_is_on = is_on
-        self.async_write_ha_state()
+        super().__init__(coordinator, description, device)
+        self._attr_supported_features = description.supported_features
 
     @override
     @async_wrap_imou_command("siren_operation_failed")
@@ -106,10 +93,12 @@ class ImouSiren(ImouEntity, SirenEntity):
         """Sound the siren."""
         await self.coordinator.device_manager.async_press_button(
             self.device,
-            self.entity_description.start_param,
+            PARAM_SIREN_START,
             0,
         )
-        self._set_local_siren_state(True)
+        if self._attr_supported_features & SirenEntityFeature.TURN_OFF:
+            self._attr_is_on = True
+            self.async_write_ha_state()
 
     @override
     @async_wrap_imou_command("siren_operation_failed")
@@ -117,7 +106,9 @@ class ImouSiren(ImouEntity, SirenEntity):
         """Silence the siren."""
         await self.coordinator.device_manager.async_press_button(
             self.device,
-            self.entity_description.stop_param,
+            PARAM_SIREN_STOP,
             0,
         )
-        self._set_local_siren_state(False)
+        if self._attr_supported_features & SirenEntityFeature.TURN_ON:
+            self._attr_is_on = False
+            self.async_write_ha_state()
