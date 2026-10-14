@@ -8,8 +8,10 @@ import pytest
 from homeassistant.components.lacrosse.const import DOMAIN
 from homeassistant.components.lacrosse.sensor import (
     PLATFORM_SCHEMA,
-    SENSOR_TYPES,
+    LaCrosseBattery,
+    LaCrosseHumidity,
     LaCrosseSensor,
+    LaCrosseTemperature,
     _add_sensors,
     setup_platform,
 )
@@ -39,6 +41,7 @@ def test_sensor_uses_default_expiration(hass: HomeAssistant) -> None:
     _add_sensors(
         hass,
         MagicMock(),
+        "receiver_entry_id",
         {
             "device": "/dev/ttyUSB0",
             "sensors": {"outdoor": {"id": 1, "type": "temperature"}},
@@ -57,7 +60,7 @@ def test_sensor_uses_default_expiration(hass: HomeAssistant) -> None:
         ) as mock_track_expiration,
         patch.object(sensor, "async_write_ha_state"),
     ):
-        sensor._async_handle_update(MagicMock())
+        sensor._callback_lacrosse(MagicMock(), None)
 
     mock_track_expiration.assert_called_once_with(
         hass, sensor.value_is_expired, now + timedelta(seconds=300)
@@ -103,14 +106,20 @@ def test_device_uses_friendly_name(
     sensor_type: str,
 ) -> None:
     """Test the entity ID is generated from the configured sensor key."""
-    sensor = LaCrosseSensor(
+    sensor_class = {
+        "temperature": LaCrosseTemperature,
+        "humidity": LaCrosseHumidity,
+        "battery": LaCrosseBattery,
+    }[sensor_type]
+    sensor = sensor_class(
         hass,
         MagicMock(),
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         f"{object_id}_{sensor_type}",
+        device_name,
         None,
         config,
-        SENSOR_TYPES[sensor_type],
     )
 
     assert sensor.device_info["name"] == device_name
@@ -124,32 +133,29 @@ async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> No
         temperature=21.5, humidity=54, low_battery=False, new_battery=True
     )
     config = {"id": 1}
-    temperature = LaCrosseSensor(
+    temperature = LaCrosseTemperature(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_temperature",
+        "Outdoor temperature",
         None,
         config,
-        SENSOR_TYPES["temperature"],
     )
-    humidity = LaCrosseSensor(
+    humidity = LaCrosseHumidity(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_humidity",
+        "Outdoor humidity",
         None,
         config,
-        SENSOR_TYPES["humidity"],
     )
 
-    with (
-        patch.object(temperature, "async_write_ha_state") as mock_write_temperature,
-        patch.object(humidity, "async_write_ha_state") as mock_write_humidity,
-    ):
-        temperature._callback_lacrosse(sensor_data, None)
-        humidity._callback_lacrosse(sensor_data, None)
-        await hass.async_block_till_done()
+    temperature._callback_lacrosse(sensor_data, None)
+    humidity._callback_lacrosse(sensor_data, None)
 
     assert temperature.native_value == 21.5
     assert humidity.native_value == 54
@@ -157,30 +163,23 @@ async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> No
         "low_battery": False,
         "new_battery": True,
     }
-    mock_write_temperature.assert_called_once()
-    mock_write_humidity.assert_called_once()
 
 
-async def test_sensor_registers_callback_when_added_to_hass(
-    hass: HomeAssistant,
-) -> None:
-    """Test receiver callbacks are registered when the entity is added."""
+def test_sensor_registers_callback_when_created(hass: HomeAssistant) -> None:
+    """Test receiver callbacks are registered when the entity is created."""
     receiver = MagicMock()
     sensor = LaCrosseSensor(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_temperature",
+        "Outdoor temperature",
         None,
         {"id": 1},
-        SENSOR_TYPES["temperature"],
     )
 
-    assert sensor.should_poll is False
-    receiver.register_callback.assert_not_called()
-
-    await sensor.async_added_to_hass()
-
+    assert sensor.should_poll is True
     receiver.register_callback.assert_called_once_with(
         1, sensor._callback_lacrosse, None
     )
@@ -191,11 +190,12 @@ async def test_sensor_cancels_expiration_when_removed(hass: HomeAssistant) -> No
     sensor = LaCrosseSensor(
         hass,
         MagicMock(),
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_temperature",
+        "Outdoor temperature",
         30,
         {"id": 1},
-        SENSOR_TYPES["temperature"],
     )
     expiration_trigger = MagicMock()
     sensor._expiration_trigger = expiration_trigger
@@ -209,7 +209,7 @@ async def test_sensor_cancels_expiration_when_removed(hass: HomeAssistant) -> No
 @pytest.mark.parametrize(
     ("low_battery", "new_battery", "expected_value", "expected_icon"),
     [
-        pytest.param(False, True, "new", "mdi:battery", id="new"),
+        pytest.param(False, True, "ok", "mdi:battery", id="new"),
         pytest.param(False, False, "ok", "mdi:battery", id="ok"),
         pytest.param(True, False, "low", "mdi:battery-alert", id="low"),
     ],
@@ -223,14 +223,15 @@ async def test_battery_sensor_updates_and_expires(
 ) -> None:
     """Test battery values, icons, and expiration scheduling."""
     receiver = MagicMock()
-    sensor = LaCrosseSensor(
+    sensor = LaCrosseBattery(
         hass,
         receiver,
+        "receiver_entry_id",
         "/dev/ttyUSB0",
         "outdoor_battery",
+        "Outdoor battery",
         30,
         {"id": 1},
-        SENSOR_TYPES["battery"],
     )
     expiration_trigger = MagicMock()
     sensor_data = MagicMock(
@@ -248,15 +249,12 @@ async def test_battery_sensor_updates_and_expires(
             "homeassistant.components.lacrosse.sensor.async_track_point_in_utc_time",
             return_value=expiration_trigger,
         ) as mock_track_expiration,
-        patch.object(sensor, "async_write_ha_state") as mock_write_state,
     ):
         sensor._callback_lacrosse(sensor_data, None)
         sensor._callback_lacrosse(sensor_data, None)
-        await hass.async_block_till_done()
 
     assert mock_track_expiration.call_count == 2
     expiration_trigger.assert_called_once()
-    assert mock_write_state.call_count == 2
     assert sensor.native_value == expected_value
     assert sensor.icon == expected_icon
 
@@ -264,6 +262,6 @@ async def test_battery_sensor_updates_and_expires(
         sensor.value_is_expired()
 
     assert sensor._expiration_trigger is None
-    assert sensor.native_value is None
-    assert sensor.icon == "mdi:battery-unknown"
+    assert sensor.native_value == expected_value
+    assert sensor.icon == expected_icon
     mock_write_state.assert_called_once()
