@@ -402,6 +402,19 @@ class RestoreStateData:
 
         del self.entities[entity_id]
 
+    @callback
+    def async_restore_entity_moved(
+        self, entity: RestoreEntity, old_entity_id: str
+    ) -> None:
+        """Track an entity whose entity_id was changed in place."""
+        # When removed and re-added, it is already tracked under its new
+        # entity_id, this is backwards compatibility for custom integrations
+        # not yet migrated to async_entity_id_changed, can be removed in
+        # Home Assistant Core 2027.11.
+        if self.entities.get(old_entity_id) is entity:
+            del self.entities[old_entity_id]
+            self.entities[entity.entity_id] = entity
+
 
 @callback
 def _entity_registry_entry_created_filter(
@@ -445,6 +458,13 @@ class RestoreEntity(Entity):
             self.entity_id, state, extra_data, self.__added_entity_registry_id
         )
         await super().async_internal_will_remove_from_hass()
+
+    @callback
+    @override
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Track restore state under the new entity_id."""
+        super().async_internal_entity_id_changed(old_entity_id)
+        async_get(self.hass).async_restore_entity_moved(self, old_entity_id)
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:

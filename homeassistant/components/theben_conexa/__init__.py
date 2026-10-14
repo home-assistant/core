@@ -8,7 +8,7 @@ from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> None:
     """Set up Theben Conexa Smartmeter gateway from a config entry."""
 
     coordinator = SmgwSensorCoordinator(hass, entry)
@@ -20,12 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> None:
     """Unload a config entry.
 
     The Conexa http based query protocol does not need any cleanup
     """
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

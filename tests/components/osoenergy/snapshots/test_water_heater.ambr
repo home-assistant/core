@@ -51,6 +51,7 @@
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 63,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 57,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 60,
+      <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.test_device',

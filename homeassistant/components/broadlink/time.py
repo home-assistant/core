@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BroadlinkDevice
-from .const import DOMAIN
+from .const import BROADLINK_DATA
 from .entity import BroadlinkEntity
 
 
@@ -20,9 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink time."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     async_add_entities([BroadlinkTime(device)])
 
 

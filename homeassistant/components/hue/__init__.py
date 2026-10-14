@@ -3,7 +3,9 @@
 from aiohue.util import normalize_bridge_id
 
 from homeassistant.config_entries import SOURCE_IGNORE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -23,13 +25,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Migrate old entry."""
     if entry.minor_version < 2:
         _migrate_zigbee_connections(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True
 
 
 @callback
@@ -51,7 +51,7 @@ def _migrate_zigbee_connections(hass: HomeAssistant, entry: HueConfigEntry) -> N
         dev_reg.async_update_device(device.id, new_connections=new_connections)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Set up a bridge from a config entry."""
     # check (and run) migrations if needed
     await check_migration(hass, entry)
@@ -59,7 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     # setup the bridge instance
     bridge = HueBridge(hass, entry)
     if not await bridge.async_initialize_bridge():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="bridge_initialization_failed",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
+        )
 
     api = bridge.api
 
@@ -95,7 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             # There is another entry that already has the right unique
             # ID. Delete this entry
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="duplicate_entry",
+            )
 
     # v1 bridges already register their device before platform forwarding, so
     # light/sensor entities can resolve it as their via_device parent; only
@@ -110,9 +117,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     ):
         _async_register_bridge_device(hass, entry, api, bridge.api_version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Unload a config entry."""
-    return await entry.runtime_data.async_reset()
+    if not await entry.runtime_data.async_reset():
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unload_failed",
+        )

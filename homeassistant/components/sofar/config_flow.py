@@ -9,7 +9,7 @@ import probatio
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -70,12 +70,10 @@ STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
 
 
 async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
-    """Connect to the inverter and read its identity, or raise."""
+    """Connect to the inverter and identify it, or raise."""
     params = create_modbus_params(data)
     async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
-        device = await SofarInverter.async_detect(unit)
-        await device.async_update()
-    return device
+        return await SofarInverter.async_detect(unit)
 
 
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -136,16 +134,16 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle updating an existing entry's connection details."""
-        entry = self._get_reconfigure_entry()
-        if entry.data.get(CONF_TYPE, TYPE_TCP) == TYPE_SERIAL:
-            return await self.async_step_reconfigure_serial()
-        return await self.async_step_reconfigure_tcp()
+        """Let the user pick how the inverter is reached from now on."""
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=[STEP_RECONFIGURE_TCP, STEP_RECONFIGURE_SERIAL],
+        )
 
     async def async_step_reconfigure_tcp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle updating an inverter reached over the network."""
+        """Reach this inverter over the network from now on."""
         return await self._async_step_reconfigure_link(
             STEP_RECONFIGURE_TCP, TYPE_TCP, STEP_TCP_DATA_SCHEMA, user_input
         )
@@ -153,7 +151,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure_serial(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle updating an inverter reached over a serial port."""
+        """Reach this inverter over a serial port from now on."""
         return await self._async_step_reconfigure_link(
             STEP_RECONFIGURE_SERIAL, TYPE_SERIAL, STEP_SERIAL_DATA_SCHEMA, user_input
         )
@@ -171,17 +169,36 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
+
+            relinking = False
+            if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
+                current = create_modbus_params(entry.data)
+                new = create_modbus_params(data)
+                if new.endpoint == current.endpoint and new != current:
+                    relinking = await self.hass.config_entries.async_unload(
+                        entry.entry_id
+                    )
+
             device, errors, description_placeholders = await self._async_validate(data)
+            probed = device.serial_number if device is not None else None
+
+            if relinking and probed != entry.unique_id:
+                await self.hass.config_entries.async_setup(entry.entry_id)
+
             if device is not None:
-                await self.async_set_unique_id(device.serial_number)
+                await self.async_set_unique_id(probed)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(entry, data=data)
 
+        suggested = user_input or (
+            entry.data
+            if entry.data.get(CONF_TYPE, TYPE_TCP) == connection_type
+            else {CONF_UNIT_ID: entry.data[CONF_UNIT_ID]}
+        )
+
         return self.async_show_form(
             step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(
-                schema, user_input or entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, suggested),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -195,7 +212,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         except (ModbusError, HomeAssistantError) as err:
             return None, {"base": "cannot_connect"}, {"error": str(err)}
 
-        if not device.inverter_type:
+        if device.unrecognized:
             return None, {"base": "unrecognized_inverter"}, {}
 
         return device, {}, {}

@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
     """Set up Netatmo from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -58,11 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & set(required_scopes)):
-        _LOGGER.warning(
-            "Session is missing scopes: %s",
-            set(required_scopes) - set(session.token["scope"]),
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+            translation_placeholders={
+                "scopes": ", ".join(
+                    sorted(set(required_scopes) - set(session.token["scope"]))
+                )
+            },
         )
-        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     auth = api.AsyncConfigEntryNetatmoAuth(
         aiohttp_client.async_get_clientsession(hass), session
@@ -97,8 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
-    return True
-
 
 async def async_config_entry_updated(
     hass: HomeAssistant, entry: NetatmoConfigEntry
@@ -107,7 +109,7 @@ async def async_config_entry_updated(
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
     """Unload a config entry."""
     if CONF_WEBHOOK_ID in entry.data:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
@@ -117,7 +119,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> 
             _LOGGER.debug("No webhook to be dropped")
         _LOGGER.debug("Unregister Netatmo webhook")
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:

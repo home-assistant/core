@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from boschshcpy.services_impl import (
     OutdoorSirenService,
     PirSensorConfigurationService,
+    SmokeSensitivityService,
     VibrationSensorService,
 )
 import pytest
@@ -19,12 +20,14 @@ from .conftest import (
     setup_integration,
     shutter_contact2_device,
     shutter_contact2_plus_device,
+    smoke_detector_device,
 )
 
 from tests.common import MockConfigEntry
 
 SOUND_LEVEL_ENTITY_ID = "select.outdoor_siren_siren_volume"
 MOTION_SENSITIVITY_ENTITY_ID = "select.motion_detector_motion_sensitivity"
+SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
 
 
@@ -229,3 +232,79 @@ async def test_vibration_sensitivity_not_supported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(VIBRATION_SENSITIVITY_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smoke_detectors": [
+                smoke_detector_device(
+                    smoke_sensitivity=SmokeSensitivityService.SmokeSensitivityLevel.LOW
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_sensitivity_current_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Smoke Detector's current smoke sensitivity is reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(SMOKE_SENSITIVITY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "low"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smoke_detectors": [
+                smoke_detector_device(
+                    smoke_sensitivity=SmokeSensitivityService.SmokeSensitivityLevel.LOW
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_sensitivity_select_option(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting a smoke sensitivity writes it to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: SMOKE_SENSITIVITY_ENTITY_ID, "option": "high"},
+        blocking=True,
+    )
+    assert (
+        device.smoke_sensitivity == SmokeSensitivityService.SmokeSensitivityLevel.HIGH
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_sensitivity_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No select is created without smoke sensitivity support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SMOKE_SENSITIVITY_ENTITY_ID) is None

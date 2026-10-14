@@ -306,6 +306,69 @@ async def test_get_events(
     assert isinstance(results[0]["when"], float)
 
 
+async def test_get_events_automation_and_script_run_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test entries of an automation and the scripts it calls identify their runs."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(
+        hass, "script", {"script": {"callee": {"sequence": {"event": "callee_event"}}}}
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "caller",
+                "alias": "Caller",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": [{"action": "script.callee"}, {"action": "script.callee"}],
+            }
+        },
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+    assert response["success"]
+    automation_run_ids = [trace["run_id"] for trace in response["result"]]
+    await client.send_json_auto_id({"type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    script_run_ids = [trace["run_id"] for trace in response["result"]]
+    assert len(automation_run_ids) == 1
+    assert len(script_run_ids) == 2
+
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    entries = [entry for entry in response["result"] if "run_id" in entry]
+
+    # One shared context, but each entry points to the trace of its own run
+    assert len({entry["context_id"] for entry in entries}) == 1
+    assert [
+        (entry["domain"], entry["item_id"], entry["run_id"], entry["message"])
+        for entry in entries
+    ] == [
+        (
+            "automation",
+            "caller",
+            automation_run_ids[0],
+            "triggered by event 'test_event'",
+        ),
+        ("script", "callee", script_run_ids[0], "started"),
+        ("script", "callee", script_run_ids[1], "started"),
+    ]
+
+
 async def test_get_events_entities_filtered_away(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

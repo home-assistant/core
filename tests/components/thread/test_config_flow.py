@@ -72,6 +72,7 @@ async def test_single_instance_allowed_zeroconf(
             thread.DOMAIN, context={"source": source}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     with patch(
@@ -151,6 +152,7 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Thread"
     assert result["data"] == {}
@@ -175,6 +177,7 @@ async def test_import_and_user(
             thread.DOMAIN, context={"source": first_source}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -205,6 +208,7 @@ async def test_zeroconf_then_import_user(
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     with patch(
@@ -241,6 +245,7 @@ async def test_zeroconf_in_progress_then_import_user(
             thread.DOMAIN, context={"source": source}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_setup_entry.call_count == 1
 

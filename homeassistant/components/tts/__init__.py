@@ -405,6 +405,7 @@ async def _async_convert_audio(
         if retcode != 0:
             assert process.stderr
             stderr_data = await process.stderr.read()
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(stderr_data.decode())
             raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
@@ -871,7 +872,11 @@ class SpeechManager:
     ) -> ResultStream:
         """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
@@ -913,7 +918,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
@@ -950,7 +959,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
@@ -1120,7 +1133,12 @@ class SpeechManager:
 
             if data is None or extension is None:
                 raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
+                    translation_domain=DOMAIN,
+                    translation_key="no_tts_audio",
+                    translation_placeholders={
+                        "engine": str(engine_instance.name),
+                        "message": message,
+                    },
                 )
 
             async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:
@@ -1219,7 +1237,9 @@ class SpeechManager:
         try:
             tts_file = mutagen.File(data_bytes)
             if tts_file is not None:
-                if not tts_file.tags:
+                # An ID3 tag with no frames is falsy but present, and adding
+                # another one raises.
+                if tts_file.tags is None:
                     tts_file.add_tags()
                 tts_file.tags.add(TPE1(encoding=Encoding.UTF8, text=artist))  # type: ignore[no-untyped-call]
                 tts_file.tags.add(TALB(encoding=Encoding.UTF8, text=album))  # type: ignore[no-untyped-call]
