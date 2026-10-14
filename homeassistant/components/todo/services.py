@@ -205,7 +205,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cv.make_entity_service_schema(
                 {
                     probatio.Required(ATTR_ITEM): probatio.All(
-                        cv.string, str.strip, probatio.Length(min=1)
+                        cv.string, str.strip, probatio.NonEmpty()
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
@@ -221,10 +221,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cv.make_entity_service_schema(
                 {
                     probatio.Required(ATTR_ITEM): probatio.All(
-                        cv.string, probatio.Length(min=1)
+                        cv.string, probatio.NonEmpty()
                     ),
                     probatio.Optional(ATTR_RENAME): probatio.All(
-                        cv.string, str.strip, probatio.Length(min=1)
+                        cv.string, str.strip, probatio.NonEmpty()
                     ),
                     probatio.Optional(ATTR_STATUS): probatio.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},

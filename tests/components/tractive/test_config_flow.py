@@ -1,5 +1,7 @@
 """Test the tractive config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -11,12 +13,33 @@ from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 USER_INPUT = {
     "email": "test-email@example.com",
     "password": "test-password",
 }
+NEW_USER_INPUT = {
+    "email": "test-email@example.com",
+    "password": "new-password",
+}
+OTHER_USER_INPUT = {
+    "email": "other-email@example.com",
+    "password": "other-password",
+}
+
+
+@contextmanager
+def _patch_success(user_id: str = "user_id") -> Generator[None]:
+    """Patch a successful login without setting up the entry."""
+    with (
+        patch("aiotractive.api.API.user_id", return_value=user_id),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -44,6 +67,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-email@example.com"
     assert result2["data"] == USER_INPUT
+    assert result2["result"].unique_id == "user_id"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -65,6 +89,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle connection error."""
@@ -83,6 +115,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_rate_limit_exceeded(hass: HomeAssistant) -> None:
@@ -111,6 +151,14 @@ async def test_form_rate_limit_exceeded(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "rate_limit_exceeded"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
@@ -129,6 +177,14 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
@@ -171,6 +227,10 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "email")
+        == USER_INPUT["email"]
+    )
 
     with (
         patch("aiotractive.api.API.user_id", return_value="USERID"),
@@ -181,12 +241,13 @@ async def test_reauthentication(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            USER_INPUT,
+            NEW_USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+    assert old_entry.data == NEW_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -219,6 +280,15 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
 
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication with connection error."""
@@ -248,6 +318,15 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "cannot_connect"
+
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None:
@@ -284,6 +363,15 @@ async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "rate_limit_exceeded"
 
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication failure."""
@@ -314,15 +402,30 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "unknown"
 
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
-async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -> None:
-    """Test Tractive reauthentication with no existing entry."""
+
+async def test_reauthentication_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test Tractive reauthentication with credentials of a different account."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data=USER_INPUT,
         unique_id="USERID",
     )
     old_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=OTHER_USER_INPUT,
+        unique_id="USERID_DIFFERENT",
+    )
+    other_entry.add_to_hass(hass)
 
     result = await old_entry.start_reauth_flow(hass)
 
@@ -330,12 +433,20 @@ async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"):
+    with (
+        patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            USER_INPUT,
+            OTHER_USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_failed_existing"
+    assert result2["reason"] == "unique_id_mismatch"
+    assert old_entry.data == USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 0

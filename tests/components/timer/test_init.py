@@ -22,21 +22,23 @@ from homeassistant.components.timer import (
     CONF_RESTORE,
     DEFAULT_DURATION,
     DOMAIN,
+    SERVICE_CANCEL,
+    SERVICE_CHANGE,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
+    Timer,
+)
+from homeassistant.components.timer.const import (
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_CHANGED,
     EVENT_TIMER_FINISHED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
-    SERVICE_CANCEL,
-    SERVICE_CHANGE,
-    SERVICE_FINISH,
-    SERVICE_PAUSE,
-    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
-    Timer,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -50,7 +52,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
@@ -426,7 +428,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
         ATTR_LAST_TRANSITION: "cancelled",
     }
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CHANGE,
@@ -453,8 +455,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond duration",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 beyond its duration",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -464,8 +466,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
         )
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 to negative time remaining",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 to a negative remaining time",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -522,8 +524,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Timer timer.test1 is not running, only active timers can be changed",
+        ServiceValidationError,
+        match="Timer timer.test1 is not running. Only active timers can be changed",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1376,7 +1378,7 @@ async def test_restore_active_resume(
 
     # In patch make sure we ignore microseconds
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow",
+        "homeassistant.components.timer.entity.dt_util.utcnow",
         return_value=simulated_utc_now.replace(microsecond=999),
     ):
         await entity.async_added_to_hass()
@@ -1434,7 +1436,8 @@ async def test_restore_active_finished_outside_grace(
     entity.entity_id = "timer.test"
 
     with patch(
-        "homeassistant.components.timer.dt_util.utcnow", return_value=simulated_utc_now
+        "homeassistant.components.timer.entity.dt_util.utcnow",
+        return_value=simulated_utc_now,
     ):
         await entity.async_added_to_hass()
         await hass.async_block_till_done()

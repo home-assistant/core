@@ -28,5 +28,10 @@
         "title": "Set up Azure Data Explorer"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Could not authenticate to Azure Data Explorer"
+    }
   }
 }

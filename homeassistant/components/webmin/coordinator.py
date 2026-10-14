@@ -1,9 +1,8 @@
 """Data update coordinator for the Webmin integration."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -16,15 +15,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, LOGGER
 from .helpers import get_instance_from_options, get_sorted_mac_addresses
 
+if TYPE_CHECKING:
+    from . import WebminConfigEntry
+
 
 class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The Webmin data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WebminConfigEntry
     mac_address: str
     unique_id: str
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: WebminConfigEntry) -> None:
         """Initialize the Webmin data update coordinator."""
 
         super().__init__(
@@ -48,10 +50,10 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if len(mac_addresses) > 0:
             self.mac_address = mac_addresses[0]
             self.unique_id = self.mac_address
-            self.device_info[ATTR_CONNECTIONS] = {
+            self.device_info.connections = {
                 (CONNECTION_NETWORK_MAC, mac_address) for mac_address in mac_addresses
             }
-            self.device_info[ATTR_IDENTIFIERS] = {
+            self.device_info.identifiers = {
                 (DOMAIN, format_mac(mac_address)) for mac_address in mac_addresses
             }
         else:

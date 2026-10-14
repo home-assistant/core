@@ -337,19 +337,31 @@ async def test_options_flow_closes_sessions(
     assert "Could not find session ID" in response_data
 
 
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        pytest.param("GET", SSE_API, id="sse"),
+        pytest.param(
+            "POST", MESSAGES_API.format(session_id="session-id"), id="messages"
+        ),
+        pytest.param("POST", STREAMABLE_API, id="streamable"),
+        pytest.param(
+            "POST", f"{STREAMABLE_API}/{TEST_LLM_API_ID}", id="streamable-api"
+        ),
+    ],
+)
 async def test_http_requires_authentication(
     hass: HomeAssistant,
     setup_integration: None,
     hass_client_no_auth: ClientSessionGenerator,
+    method: str,
+    path: str,
 ) -> None:
-    """Test the SSE endpoint requires authentication."""
+    """Test every MCP endpoint requires authentication."""
 
     client = await hass_client_no_auth()
 
-    response = await client.get(SSE_API)
-    assert response.status == HTTPStatus.UNAUTHORIZED
-
-    response = await client.post(MESSAGES_API.format(session_id="session-id"))
+    response = await client.request(method, path)
     assert response.status == HTTPStatus.UNAUTHORIZED
 
 
@@ -446,7 +458,7 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
         pytest.param(
             mcp.types.ClientRequest(
                 mcp.types.GetPromptRequest(
-                    params=mcp.types.GetPromptRequestParams(name="Assist")
+                    params=mcp.types.GetPromptRequestParams(name="Device control")
                 )
             ),
             mcp.types.GetPromptResult,
@@ -710,7 +722,7 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "device-control__homeassistant__GetLiveContext" in tool_names
     assert "test-api__test_tool" in tool_names
 
 
@@ -834,6 +846,34 @@ async def test_mcp_tool_call(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the read-only option only exposes tools that do not change anything."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+        tool_names = {tool.name for tool in result.tools}
+        assert "homeassistant__GetLiveContext" in tool_names
+        assert "intent__HassTurnOn" not in tool_names
+        assert all(tool.annotations.readOnlyHint for tool in result.tools)
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.isError
+    assert "not found" in result.content[0].text
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
 async def test_mcp_tool_call_failed(
     hass: HomeAssistant,
     setup_integration: None,
@@ -870,8 +910,8 @@ async def test_prompt_list(
 
     assert len(result.prompts) == 1
     prompt = result.prompts[0]
-    assert prompt.name == "Assist"
-    assert prompt.description == "Default prompt for Home Assistant Assist API"
+    assert prompt.name == "Device control"
+    assert prompt.description == "Default prompt for Home Assistant Device control API"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
@@ -885,9 +925,9 @@ async def test_prompt_get(
     """Test the get prompt endpoint."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.get_prompt(name="Assist")
+        result = await session.get_prompt(name="Device control")
 
-    assert result.description == "Default prompt for Home Assistant Assist API"
+    assert result.description == "Default prompt for Home Assistant Device control API"
     assert len(result.messages) == 1
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
@@ -1108,6 +1148,34 @@ async def test_streamable_api_id_exposes_registered_api(
     assert result.prompts[0].name == "Test API"
 
 
+@pytest.mark.parametrize("read_only", [True])
+async def test_streamable_api_id_ignores_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the keyed endpoint keeps write controls when the read-only option is on."""
+    client = await hass_client()
+    mcp_url = str(client.make_url(f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}"))
+
+    async with mcp_streamable_session(
+        hass, mcp_url, hass_supervisor_access_token
+    ) as session:
+        result = await session.list_tools()
+        assert "intent__HassTurnOn" in {tool.name for tool in result.tools}
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert not result.isError
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+
+
 async def test_streamable_api_id_requires_admin(
     hass: HomeAssistant,
     setup_integration: None,
@@ -1125,7 +1193,7 @@ async def test_streamable_api_id_requires_admin(
         json=INITIALIZE_MESSAGE,
         headers={"accept": CONTENT_TYPE_JSON},
     )
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.FORBIDDEN
 
 
 async def test_streamable_api_id_assist_allows_non_admin(
@@ -1164,7 +1232,7 @@ async def test_streamable_api_id_unknown(
     ("require_admin", "expected_status"),
     [
         pytest.param(False, HTTPStatus.OK, id="not_required"),
-        pytest.param(True, HTTPStatus.UNAUTHORIZED, id="required"),
+        pytest.param(True, HTTPStatus.FORBIDDEN, id="required"),
     ],
 )
 async def test_require_admin_option(
@@ -1196,10 +1264,10 @@ async def test_require_admin_blocks_sse_endpoints(
     client = await hass_client(hass_read_only_access_token)
 
     response = await client.get(SSE_API)
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.FORBIDDEN
 
     response = await client.post(MESSAGES_API.format(session_id="session-id"))
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.parametrize("require_admin", [True])

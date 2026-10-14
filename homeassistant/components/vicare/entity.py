@@ -33,6 +33,7 @@ class ViCareEntity(Entity):
     """Base class for ViCare entities."""
 
     _attr_has_entity_name = True
+    _logged_api_error: tuple[str, tuple[str, ...]] | None = None
 
     @contextmanager
     def vicare_api_handler(self) -> Generator[None]:
@@ -40,17 +41,32 @@ class ViCareEntity(Entity):
         try:
             yield
         except RequestConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
+            self._log_once(logging.ERROR, "Unable to retrieve data from ViCare server")
         except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
+            self._log_once(logging.ERROR, "Unable to decode data from ViCare server")
         except PyViCareRateLimitError as err:
-            _LOGGER.error("ViCare API rate limit exceeded: %s", err)
+            self._log_once(logging.ERROR, "ViCare API rate limit exceeded: %s", err)
         except PyViCareInvalidDataError as err:
-            _LOGGER.error("Invalid data from ViCare server: %s", err)
+            self._log_once(logging.ERROR, "Invalid data from ViCare server: %s", err)
         except PyViCareDeviceCommunicationError as err:
-            _LOGGER.warning("Device communication error: %s", err)
+            self._log_once(logging.WARNING, "Device communication error: %s", err)
         except PyViCareInternalServerError as err:
-            _LOGGER.warning("ViCare server error: %s", err)
+            self._log_once(logging.WARNING, "ViCare server error: %s", err)
+        else:
+            self._logged_api_error = None
+
+    def _log_once(self, level: int, message: str, *args: object) -> None:
+        """Log an API error when it appears, then at debug while it lasts.
+
+        Every entity of a device runs this on every poll, so an outage logged
+        per read writes a line per entity per poll.
+        """
+        error = (message, tuple(str(arg) for arg in args))
+        if error == self._logged_api_error:
+            _LOGGER.debug(message, *args)
+            return
+        self._logged_api_error = error
+        _LOGGER.log(level, message, *args)
 
     def __init__(
         self,

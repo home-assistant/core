@@ -171,6 +171,8 @@ async def async_setup_legacy(
             )
 
         service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")
+        # Cannot be moved: actions are registered per legacy platform
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN, service_name, async_say_handle, schema=SCHEMA_SERVICE_SAY
         )

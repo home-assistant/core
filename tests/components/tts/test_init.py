@@ -1,7 +1,7 @@
 """The tests for the TTS component."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from http import HTTPStatus
 import io
 from pathlib import Path
@@ -25,10 +25,11 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.tts import DOMAIN
+from homeassistant.components.tts.const import DEFAULT_TIME_MEMORY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -48,6 +49,7 @@ from .common import (
 
 from tests.common import (
     MockModule,
+    async_fire_time_changed,
     async_mock_service,
     load_fixture_bytes,
     mock_integration,
@@ -427,7 +429,7 @@ async def test_service_wrong_language(
     """Set up a TTS platform and call service."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match="Language lang is not supported"):
         await hass.services.async_call(
             tts.DOMAIN,
             tts_service,
@@ -706,7 +708,7 @@ async def test_service_wrong_options(
     """Set up a TTS platform and call service with wrong options."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match="Unsupported options: "):
         await hass.services.async_call(
             tts.DOMAIN,
             tts_service,
@@ -1386,11 +1388,21 @@ async def test_generate_media_source_id(
     indirect=["setup"],
 )
 @pytest.mark.parametrize(
-    ("engine", "language", "options"),
+    ("engine", "language", "options", "message"),
     [
-        ("not-loaded-engine", None, None),
-        (None, "unsupported-language", None),
-        (None, None, {"option": "not-supported"}),
+        (
+            "not-loaded-engine",
+            None,
+            None,
+            "The selected text-to-speech provider is not available",
+        ),
+        (
+            None,
+            "unsupported-language",
+            None,
+            "Language unsupported-language is not supported",
+        ),
+        (None, None, {"option": "not-supported"}, "Unsupported options: option"),
     ],
 )
 async def test_generate_media_source_id_invalid_options(
@@ -1399,9 +1411,10 @@ async def test_generate_media_source_id_invalid_options(
     engine: str | None,
     language: str | None,
     options: dict[str, Any] | None,
+    message: str,
 ) -> None:
     """Test generating a media source ID."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match=message):
         tts.generate_media_source_id(hass, "msg", engine, language, options, None)
 
 
@@ -1851,6 +1864,166 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
             pass
 
 
+def _streaming_wav_header(
+    sample_rate: int = 22050,
+    sample_width: int = 2,
+    sample_channels: int = 1,
+) -> bytes:
+    """Create a WAV header like a streaming TTS source does, with no frames."""
+    with io.BytesIO() as wav_io:
+        wav_writer: wave.Wave_write = wave.open(wav_io, "wb")
+        with wav_writer:
+            wav_writer.setframerate(sample_rate)
+            wav_writer.setsampwidth(sample_width)
+            wav_writer.setnchannels(sample_channels)
+
+        return wav_io.getvalue()
+
+
+async def _async_chunks(*chunks: bytes) -> AsyncGenerator[bytes]:
+    """Yield audio chunks."""
+    for chunk in chunks:
+        yield chunk
+
+
+@pytest.mark.parametrize(
+    ("chunks", "expected_input_args", "expected_stdin"),
+    [
+        pytest.param(
+            [_streaming_wav_header(), b"chunk1", b"chunk2"],
+            ["-f", "s16le", "-ar", "22050", "-ac", "1", "-probesize", "32"],
+            b"chunk1chunk2",
+            id="header_in_first_chunk",
+        ),
+        pytest.param(
+            [_streaming_wav_header()[:20], _streaming_wav_header()[20:] + b"chunk1"],
+            ["-f", "s16le", "-ar", "22050", "-ac", "1", "-probesize", "32"],
+            b"chunk1",
+            id="header_split_across_chunks",
+        ),
+        pytest.param(
+            [
+                _streaming_wav_header(
+                    sample_rate=48000, sample_channels=2, sample_width=4
+                )
+            ],
+            ["-f", "s32le", "-ar", "48000", "-ac", "2", "-probesize", "32"],
+            b"",
+            id="header_48khz_stereo_32bit",
+        ),
+    ],
+)
+async def test_async_convert_audio_streaming_wav_is_unwrapped(
+    hass: HomeAssistant,
+    chunks: list[bytes],
+    expected_input_args: list[str],
+    expected_stdin: bytes,
+) -> None:
+    """Test that a streaming WAV source is fed to ffmpeg as raw samples."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass, "wav", _async_chunks(*chunks), "flac"
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    assert command[4 : command.index("-i")] == expected_input_args
+
+    written = b"".join(call.args[0] for call in mock_process.stdin.write.call_args_list)
+    assert written == expected_stdin
+
+
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        pytest.param([b"NOTRIFF" + bytes(64)], id="not_a_wav_file"),
+        pytest.param([b""], id="empty"),
+        # A known data size means other chunks may follow the audio
+        pytest.param(
+            [_streaming_wav_header()[:40] + (100).to_bytes(4, "little"), bytes(100)],
+            id="complete_wav_file",
+        ),
+        # 3 == WAVE_FORMAT_IEEE_FLOAT
+        pytest.param(
+            [
+                _streaming_wav_header()[:20]
+                + (3).to_bytes(2, "little")
+                + _streaming_wav_header()[22:]
+            ],
+            id="not_pcm",
+        ),
+    ],
+)
+async def test_async_convert_audio_wav_fallback(
+    hass: HomeAssistant, chunks: list[bytes]
+) -> None:
+    """Test that audio which cannot be unwrapped is passed to ffmpeg as a WAV file."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass, "wav", _async_chunks(*chunks), "flac"
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    assert command[4 : command.index("-i")] == ["-f", "wav", "-probesize", "32"]
+
+    written = b"".join(call.args[0] for call in mock_process.stdin.write.call_args_list)
+    assert written == b"".join(chunks)
+
+
+async def test_async_convert_audio_streaming_wav_roundtrip(hass: HomeAssistant) -> None:
+    """Test that unwrapped audio is converted correctly by ffmpeg."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    # 0.1 seconds of silence at 22050 Hz
+    audio = bytes(2 * 2205)
+
+    converted = b"".join(
+        [
+            chunk
+            async for chunk in tts._async_convert_audio(
+                hass,
+                "wav",
+                _async_chunks(_streaming_wav_header(), audio),
+                "wav",
+                to_sample_rate=16000,
+                to_sample_channels=1,
+                to_sample_bytes=2,
+            )
+        ]
+    )
+
+    with (
+        io.BytesIO(converted) as converted_io,
+        wave.open(converted_io, "rb") as wav_file,
+    ):
+        assert wav_file.getframerate() == 16000
+        assert wav_file.getnchannels() == 1
+        assert wav_file.getsampwidth() == 2
+
+    # ffmpeg cannot rewind a pipe to fill in the size, so measure the audio that
+    # follows the 44 byte header. 0.1 seconds at 16Khz is 1600 16-bit samples.
+    assert (len(converted) - 44) == pytest.approx(1600 * 2, abs=200)
+
+
 async def _audio_data_gen() -> AsyncGenerator[bytes]:
     """Yield test audio data."""
     yield b"audio"
@@ -2082,6 +2255,66 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert stream2.extension == "wav"
     result_data = b"".join([chunk async for chunk in stream2.async_stream_result()])
     assert result_data == data
+
+
+async def _message_stream() -> AsyncGenerator[str]:
+    """Stream a message."""
+    yield "beer"
+
+
+@pytest.mark.parametrize(
+    "set_message",
+    [
+        pytest.param(lambda stream: stream.async_set_message("beer"), id="message"),
+        pytest.param(
+            lambda stream: stream.async_set_message_stream(_message_stream()),
+            id="message_stream",
+        ),
+    ],
+)
+async def test_stream_set_message_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    set_message: Callable[[tts.ResultStream], None],
+) -> None:
+    """Test a stream created long before its message is set can still be fetched.
+
+    A pipeline creates its stream when the run starts, for example before
+    waiting for the wake word, which can be long before the message is known.
+    """
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    set_message(stream)
+
+    assert tts.async_get_stream(hass, stream.token) is stream
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data
+
+
+async def test_stream_override_result_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    tmp_path: Path,
+) -> None:
+    """Test a stream overridden long after it was created can still be fetched."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The Assist pipeline overrides the result for its local acknowledgment
+    stream.async_override_result(tmp_path / "acknowledge.mp3")
+
+    assert tts.async_get_stream(hass, stream.token) is stream
 
 
 async def test_result_stream_message_set_idempotent(
@@ -2378,6 +2611,29 @@ def test_write_tags_adds_tag_to_untagged_audio() -> None:
     assert tags["TIT2"].text == ["There is someone at the door."]
 
 
+def test_write_tags_fills_empty_id3_tag() -> None:
+    """Test audio arriving with an ID3 tag holding no frames gets the frames."""
+    data = b"ID3\x04\x00\x00\x00\x00\x00\x00" + load_fixture_bytes(
+        "untagged.mp3", DOMAIN
+    )
+    assert not mutagen.File(io.BytesIO(data)).tags
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.count(b"ID3") == 1
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["en"]
+    assert tags["TALB"].text == ["Test"]
+    assert tags["TIT2"].text == ["There is someone at the door."]
+
+
 def test_write_tags_overwrites_id3v1_metadata() -> None:
     """Test audio arriving with only an ID3v1 trailer gets the frames rewritten."""
     data = load_fixture_bytes("id3v1.mp3", DOMAIN)
@@ -2441,3 +2697,27 @@ def test_write_tags_uses_voice_as_artist() -> None:
 
     tags = mutagen.File(io.BytesIO(tagged)).tags
     assert tags["TPE1"].text == ["JennyNeural"]
+
+
+@pytest.mark.parametrize("setup", ["mock_config_entry_setup"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_cache_message_unknown_provider(hass: HomeAssistant) -> None:
+    """Test caching a message for an unknown provider raises a translated error."""
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+
+    async def message_gen() -> AsyncGenerator[str]:
+        yield "hello"
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        manager.async_cache_message_in_memory("non-existing", "hello", False, "en", {})
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "provider_not_found"
+    assert exc_info.value.translation_placeholders == {"engine": "non-existing"}
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        manager.async_cache_message_stream_in_memory(
+            "non-existing", message_gen(), "en", {}
+        )
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "provider_not_found"
+    assert exc_info.value.translation_placeholders == {"engine": "non-existing"}
