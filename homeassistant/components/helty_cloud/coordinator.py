@@ -48,6 +48,12 @@ class HeltyCloudDataUpdateCoordinator(DataUpdateCoordinator[HeltyState]):
         follow it. Prompting it to report would be a message to the panel
         itself, which the manufacturer asks to keep for the confirmation
         after a command.
+
+        The cloud keeps the last message of a panel that has gone offline,
+        so the library only searches the last two hours of history and
+        raises when that window is empty. That is the freshness limit: the
+        panel reports at least every 33 minutes at the 99th percentile, and
+        a failed read is what makes the entities unavailable.
         """
         try:
             return await self.client.get_last_telemetry(self.device.serial_number)
