@@ -1,10 +1,12 @@
 """Config flow for ElevenLabs text-to-speech integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
+from httpx2 import ConnectError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -74,6 +76,24 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    async def _validate_api_key(
+        self, api_key: str
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Validate the API key and return the available voices and errors."""
+        errors: dict[str, str] = {}
+        try:
+            voices, _ = await get_voices_models(self.hass, api_key)
+        except ConnectError:
+            errors["base"] = "cannot_connect"
+            return {}, errors
+        except ApiError as exc:
+            errors["base"] = "unknown"
+            details = getattr(exc, "body", {}).get("detail", {})
+            if details.get("status") == "invalid_api_key":
+                errors["base"] = "invalid_api_key"
+            return {}, errors
+        return voices, errors
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -81,16 +101,8 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
-            except ApiError as exc:
-                errors["base"] = "unknown"
-                details = getattr(exc, "body", {}).get("detail", {})
-                if details:
-                    status = details.get("status")
-                    if status == "invalid_api_key":
-                        errors["base"] = "invalid_api_key"
-            else:
+            voices, errors = await self._validate_api_key(user_input[CONF_API_KEY])
+            if not errors:
                 return self.async_create_entry(
                     title="ElevenLabs",
                     data=user_input,
@@ -103,6 +115,28 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user", data_schema=USER_STEP_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            _, errors = await self._validate_api_key(user_input[CONF_API_KEY])
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=USER_STEP_SCHEMA, errors=errors
         )
 
     @staticmethod
