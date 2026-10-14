@@ -53,9 +53,8 @@ from anthropic.types.web_fetch_tool_result_block import (
     Content as WebFetchToolResultBlockContent,
 )
 
-# Preserve null lifecycle values returned by the live API.
 model_list = [
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-haiku-5-5",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -95,14 +94,14 @@ model_list = [
         created_at=datetime.datetime(2026, 10, 7, 18, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Haiku 5.5",
-        lifecycle=None,
+        lifecycle="active",
         line="haiku",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-sonnet-5-5",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -142,14 +141,14 @@ model_list = [
         created_at=datetime.datetime(2026, 9, 28, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Sonnet 5.5",
-        lifecycle=None,
+        lifecycle="active",
         line="sonnet",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-opus-5-5",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -189,14 +188,14 @@ model_list = [
         created_at=datetime.datetime(2026, 9, 21, 16, 24, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Opus 5.5",
-        lifecycle=None,
+        lifecycle="active",
         line="opus",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-fable-5-1",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -236,14 +235,14 @@ model_list = [
         created_at=datetime.datetime(2026, 8, 28, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Fable 5.1",
-        lifecycle=None,
+        lifecycle="active",
         line="fable",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-opus-5",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -283,14 +282,14 @@ model_list = [
         created_at=datetime.datetime(2026, 7, 24, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Opus 5",
-        lifecycle=None,
+        lifecycle="active",
         line="opus",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-sonnet-5",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -330,14 +329,14 @@ model_list = [
         created_at=datetime.datetime(2026, 6, 29, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Sonnet 5",
-        lifecycle=None,
+        lifecycle="active",
         line="sonnet",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-fable-5",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -377,14 +376,14 @@ model_list = [
         created_at=datetime.datetime(2026, 6, 7, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Fable 5",
-        lifecycle=None,
+        lifecycle="active",
         line="fable",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-opus-4-8",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -424,14 +423,14 @@ model_list = [
         created_at=datetime.datetime(2026, 5, 28, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Opus 4.8",
-        lifecycle=None,
+        lifecycle="active",
         line="opus",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-opus-4-7",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -471,14 +470,14 @@ model_list = [
         created_at=datetime.datetime(2026, 4, 14, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Opus 4.7",
-        lifecycle=None,
+        lifecycle="active",
         line="opus",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-sonnet-4-6",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -518,14 +517,14 @@ model_list = [
         created_at=datetime.datetime(2026, 2, 17, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Sonnet 4.6",
-        lifecycle=None,
+        lifecycle="active",
         line="sonnet",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-opus-4-6",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -565,14 +564,14 @@ model_list = [
         created_at=datetime.datetime(2026, 2, 4, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Opus 4.6",
-        lifecycle=None,
+        lifecycle="active",
         line="opus",
         max_input_tokens=1000000,
         max_tokens=128000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-opus-4-5-20251101",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -612,14 +611,14 @@ model_list = [
         created_at=datetime.datetime(2025, 11, 24, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Opus 4.5",
-        lifecycle=None,
+        lifecycle="active",
         line="opus",
         max_input_tokens=200000,
         max_tokens=64000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-haiku-4-5-20251001",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -659,14 +658,14 @@ model_list = [
         created_at=datetime.datetime(2025, 10, 15, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Haiku 4.5",
-        lifecycle=None,
+        lifecycle="active",
         line="haiku",
         max_input_tokens=200000,
         max_tokens=64000,
         retires_at=None,
         type="model",
     ),
-    ModelInfo.model_construct(
+    ModelInfo(
         id="claude-sonnet-4-5-20250929",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
@@ -706,9 +705,9 @@ model_list = [
         created_at=datetime.datetime(2025, 9, 29, 0, 0, tzinfo=datetime.UTC),
         deprecated_at=None,
         display_name="Claude Sonnet 4.5",
-        lifecycle=None,
+        lifecycle="active",
         line="sonnet",
-        max_input_tokens=1000000,
+        max_input_tokens=200000,
         max_tokens=64000,
         retires_at=None,
         type="model",

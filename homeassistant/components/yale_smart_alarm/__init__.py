@@ -12,7 +12,7 @@ from .coordinator import YaleDataUpdateCoordinator
 type YaleConfigEntry = ConfigEntry[YaleDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Set up Yale from a config entry."""
 
     coordinator = YaleDataUpdateCoordinator(hass, entry)
@@ -29,15 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -77,5 +75,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
     LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-
-    return True

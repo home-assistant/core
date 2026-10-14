@@ -162,13 +162,16 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_FILTERS): probatio.All(
             probatio.EnsureList(),
             [
-                probatio.Any(
-                    FILTER_OUTLIER_SCHEMA,
-                    FILTER_LOWPASS_SCHEMA,
-                    FILTER_TIME_SMA_SCHEMA,
-                    FILTER_THROTTLE_SCHEMA,
-                    FILTER_TIME_THROTTLE_SCHEMA,
-                    FILTER_RANGE_SCHEMA,
+                probatio.TaggedUnion(
+                    CONF_FILTER_NAME,
+                    [
+                        FILTER_OUTLIER_SCHEMA,
+                        FILTER_LOWPASS_SCHEMA,
+                        FILTER_TIME_SMA_SCHEMA,
+                        FILTER_THROTTLE_SCHEMA,
+                        FILTER_TIME_THROTTLE_SCHEMA,
+                        FILTER_RANGE_SCHEMA,
+                    ],
                 )
             ],
         ),

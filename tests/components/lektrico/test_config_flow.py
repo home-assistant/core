@@ -138,6 +138,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
         ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
     }
     assert result2["title"] == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
+    assert result2["result"].unique_id == MOCKED_DEVICE_SERIAL_NUMBER
 
 
 async def test_zeroconf_setup_already_exists(

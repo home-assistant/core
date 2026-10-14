@@ -26,7 +26,11 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser, mock_restore_cache
+from tests.common import (
+    MockUser,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -277,6 +281,40 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("input_number.b1")
     assert state
     assert float(state.state) == 70
+
+    state = hass.states.get("input_number.b2")
+    assert state
+    assert float(state.state) == 10
+
+
+async def test_restore_number_data(hass: HomeAssistant) -> None:
+    """Ensure the native value is restored from the number extra data."""
+    number_data = {
+        "native_max_value": 100.0,
+        "native_min_value": 10.0,
+        "native_step": 1.0,
+        "native_unit_of_measurement": None,
+    }
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            # The extra data takes precedence over the state
+            (State("input_number.b1", "70"), number_data | {"native_value": 40.0}),
+            (State("input_number.b2", "70"), number_data | {"native_value": 200.0}),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"b1": {"min": 10, "max": 100}, "b2": {"min": 10, "max": 100}}},
+    )
+
+    state = hass.states.get("input_number.b1")
+    assert state
+    assert float(state.state) == 40
 
     state = hass.states.get("input_number.b2")
     assert state

@@ -94,7 +94,7 @@ async def test_meter_pro_co2_sync_datetime_button(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_set_datetime = AsyncMock(return_value=True)
@@ -157,7 +157,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_set_datetime = AsyncMock(return_value=True)
