@@ -326,3 +326,36 @@ async def test_update_streaming_restore_channel(hass: HomeAssistant) -> None:
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_CHANNEL] == "Test Station"
     assert ATTR_MEDIA_PLAYLIST not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("restored", "expected"),
+    [
+        pytest.param(MediaPlayerState.PLAYING, MediaPlayerState.PLAYING, id="playing"),
+        pytest.param(MediaPlayerState.PAUSED, MediaPlayerState.PAUSED, id="paused"),
+        pytest.param(MediaPlayerState.OFF, MediaPlayerState.IDLE, id="off"),
+    ],
+)
+async def test_streaming_center_display_keeps_restored_playback(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    restored: MediaPlayerState,
+    expected: MediaPlayerState,
+) -> None:
+    """Test a center display change keeps a restored playback state."""
+
+    entity_id = "media_player.test_media_player"
+    mock_restore_cache(hass, (State(entity_id, restored),))
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+    assert hass.states.get(entity_id).state == restored
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.CENTER_DISPLAY: "On"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == expected
