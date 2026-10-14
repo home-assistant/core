@@ -10,11 +10,33 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModbusApi
 
 from tests.common import MockConfigEntry
+
+
+async def test_setup_entry_translates_shared_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A shared Modbus link conflict becomes a translated setup error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.aerosmart.async_get_unit",
+        side_effect=HomeAssistantError("incompatible shared connection"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "connect_failed"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "error": "incompatible shared connection"
+    }
 
 
 async def test_setup_entry_keeps_retrying_after_background_connect_failure(

@@ -309,6 +309,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         component="coarse_dust_filter",
         attribute="grobstaubfilter_max_foerdervolume",
         native_unit_of_measurement="m³",
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
@@ -458,6 +459,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         component="ventilation",
         attribute="befoerderte_kubikmeter",
         native_unit_of_measurement="m³",
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AerosmartSensorEntityDescription(
@@ -466,6 +468,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         component="ventilation",
         attribute="befoerderte_luftmenge_seit_filterwechsel",
         native_unit_of_measurement="m³",
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
@@ -476,6 +479,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         component="ventilation",
         attribute="soll_volumenstrom_abluft",
         native_unit_of_measurement="m³/h",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
@@ -486,6 +490,7 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         component="ventilation",
         attribute="soll_volumenstrom_zuluft",
         native_unit_of_measurement="m³/h",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
