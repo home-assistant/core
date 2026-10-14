@@ -184,7 +184,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            new_data = {**entry.data, **user_input}
+            new_data = {
+                **entry.data,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
             _, error = await self._async_query_status(new_data)
             if error:
                 errors["base"] = error
