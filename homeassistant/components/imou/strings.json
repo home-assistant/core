@@ -124,6 +124,11 @@
         "name": "Usage duration"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
     "switch": {
       "ab_alarm_sound": {
         "name": "Abnormal sound alarm"
@@ -193,6 +198,9 @@
     },
     "select_option_failed": {
       "message": "Imou rejected the new option"
+    },
+    "siren_operation_failed": {
+      "message": "Imou rejected the siren change"
     },
     "switch_operation_failed": {
       "message": "Imou rejected the switch change"

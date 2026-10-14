@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 
 from homeassistant.components import plant
+from homeassistant.components.plant.const import ATTR_MAX_BRIGHTNESS_HISTORY
+from homeassistant.components.plant.entity import DailyHistory
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -206,7 +208,7 @@ async def test_load_from_db(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     state = hass.states.get(f"plant.{plant_name}")
     assert state.state == STATE_PROBLEM
-    max_brightness = state.attributes.get(plant.ATTR_MAX_BRIGHTNESS_HISTORY)
+    max_brightness = state.attributes.get(ATTR_MAX_BRIGHTNESS_HISTORY)
     assert max_brightness == 30
 
 
@@ -234,13 +236,13 @@ async def test_brightness_history(hass: HomeAssistant) -> None:
 
 def test_daily_history_no_data(hass: HomeAssistant) -> None:
     """Test with empty history."""
-    dh = plant.DailyHistory(3)
+    dh = DailyHistory(3)
     assert dh.max is None
 
 
 def test_daily_history_one_day(hass: HomeAssistant) -> None:
     """Test storing data for the same day."""
-    dh = plant.DailyHistory(3)
+    dh = DailyHistory(3)
     values = [-2, 10, 0, 5, 20]
     for i, value in enumerate(values):
         dh.add_measurement(value)
@@ -251,7 +253,7 @@ def test_daily_history_one_day(hass: HomeAssistant) -> None:
 
 def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     """Test storing data for different days."""
-    dh = plant.DailyHistory(3)
+    dh = DailyHistory(3)
     today = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     today_minus_1 = today - timedelta(days=1)
     today_minus_2 = today_minus_1 - timedelta(days=1)

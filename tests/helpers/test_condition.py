@@ -1426,7 +1426,8 @@ async def test_state_for_list_of_states(
     """Test state with duration and a list of states.
 
     The entity must stay in one of the listed states for the whole duration;
-    changing between listed states restarts the duration.
+    changing between listed states restarts the duration. This matches the
+    state trigger with a duration and a list of states.
     """
     config = {
         "condition": "state",
