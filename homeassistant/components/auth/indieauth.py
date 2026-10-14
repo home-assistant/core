@@ -3,11 +3,11 @@
 from contextlib import suppress
 from html.parser import HTMLParser
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import json
 import logging
 from typing import override
-from urllib.parse import ParseResult, urljoin, urlparse
+from urllib.parse import ParseResult, urljoin, urlparse, urlsplit
 
 import aiohttp
 import aiohttp.client_exceptions
@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # We limit reads of a client_id page to the first 10kB.
 MAX_FETCH_BYTES = 10240
+
+DEFAULT_PORTS = {"http": 80, "https": 443}
 
 
 async def verify_redirect_uri(
@@ -354,6 +356,35 @@ def _parse_url(url: str) -> ParseResult:
     return parts
 
 
+def _normalize_ip_netloc(
+    scheme: str, netloc: str
+) -> tuple[str, str | None, IPv4Address | IPv6Address, int | None] | None:
+    """Normalize the scheme, username, IP address and port of an IP netloc."""
+    try:
+        parts = urlsplit(f"{scheme}://{netloc}")
+        scheme = parts.scheme
+        hostname = parts.hostname
+        username = parts.username
+        port = parts.port
+    except ValueError:
+        return None
+
+    if hostname is None:
+        return None
+
+    try:
+        address = ip_address(hostname)
+    except ValueError:
+        return None
+
+    return (
+        scheme,
+        username,
+        address,
+        port or DEFAULT_PORTS.get(scheme),
+    )
+
+
 def _parse_client_id(
     client_id: str,
     *,
@@ -398,7 +429,7 @@ def _parse_client_id(
     # MAY contain a port
     try:
         # parts raises ValueError when port cannot be parsed as int
-        _ = parts.port
+        port = parts.port
     except ValueError as ex:
         raise ValueError("Client ID contains invalid port") from ex
 
@@ -421,7 +452,13 @@ def _parse_client_id(
     if address is None or is_loopback(address):
         return parts
 
-    if parts.scheme == request_scheme and parts.netloc == request_netloc.lower():
+    # Compare parsed values so default ports and IPv6 notation do not matter.
+    if _normalize_ip_netloc(request_scheme, request_netloc) == (
+        parts.scheme,
+        parts.username,
+        address,
+        port or DEFAULT_PORTS.get(parts.scheme),
+    ):
         return parts
 
     raise ValueError(

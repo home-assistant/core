@@ -274,6 +274,21 @@ def test_client_id_hostname() -> None:
             "http://192.168.1.10:8123/", "http", "192.168.1.10:8123", id="private"
         ),
         pytest.param(
+            "http://100.64.1.1/", "http", "100.64.1.1:80", id="http-default-port"
+        ),
+        pytest.param(
+            "https://[2001:db8::1]/",
+            "https",
+            "[2001:db8::1]:443",
+            id="https-default-port",
+        ),
+        pytest.param(
+            "http://100.64.1.1:80/", "http", "100.64.1.1", id="client-id-default-port"
+        ),
+        pytest.param(
+            "http://[2001:db8::1]/", "http", "[2001:db8:0:0::1]", id="ipv6-notation"
+        ),
+        pytest.param(
             "https://203.0.113.5:8443/", "https", "203.0.113.5:8443", id="port"
         ),
     ],
@@ -293,6 +308,14 @@ def test_client_id_request_origin_allowed(
         pytest.param("http://[2001:db8::1]/", "http", "[2001:db8::2]", id="host"),
         pytest.param("http://100.64.1.1/", "https", "100.64.1.1", id="scheme"),
         pytest.param("http://203.0.113.5:8443/", "http", "203.0.113.5:9000", id="port"),
+        pytest.param(
+            "http://100.64.1.1/", "http", "100.64.1.1:443", id="other-default-port"
+        ),
+        pytest.param(
+            "https://100.64.1.1/", "https", "100.64.1.1:80", id="https-port-80"
+        ),
+        pytest.param("http://100.64.1.1/", "http", "100.64.1.1:abc", id="invalid-port"),
+        pytest.param("http://100.64.1.1/", "http", "user@100.64.1.1", id="username"),
         pytest.param("http://100.64.1.1/", "http", "ha.example.com", id="domain"),
         pytest.param("http://192.168.1.10/", "http", "192.168.1.11", id="private-host"),
     ],
