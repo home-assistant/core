@@ -1132,16 +1132,22 @@ async def test_cancelled_exhausted_writer_aborts_live_child(
 
 
 @pytest.mark.parametrize("primary", ["cancel", "source-error"])
+@pytest.mark.parametrize("cleanup_outcome", ["success", "late-error"])
 async def test_second_owner_cancel_during_notification_join_reaps_child(
-    ffmpeg_ready: HomeAssistant, primary: str
+    ffmpeg_ready: HomeAssistant,
+    primary: str,
+    cleanup_outcome: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Teardown survives a second cancellation at its first suspended join."""
+    """An interrupted join still retrieves a later supervised teardown failure."""
     pulling = asyncio.Event()
     fail_source = asyncio.Event()
     source_error = RuntimeError("observed source failure")
     source_closed = asyncio.Event()
     join_entered = asyncio.Event()
     release_join = asyncio.Event()
+    cleanup_observed = asyncio.Event()
+    late_error = RuntimeError("late teardown failure after owner return")
     processes = []
     tasks: dict[str, asyncio.Task] = {}
     spawn_os = asyncio.create_subprocess_exec
@@ -1173,6 +1179,8 @@ async def test_second_owner_cancel_during_notification_join_reaps_child(
         if task is tasks.get("tts_ffmpeg_source_failure"):
             join_entered.set()
             await release_join.wait()
+            if cleanup_outcome == "late-error":
+                raise late_error
         await original_join(task)
 
     gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
@@ -1200,14 +1208,27 @@ async def test_second_owner_cancel_during_notification_join_reaps_child(
                 with pytest.raises(RuntimeError) as caught:
                     await _observe(owner, 3)
                 assert caught.value is source_error
+                assert owner.exception() is source_error
             assert source_closed.is_set()
             assert processes[0].returncode is not None  # Before harness kill.
             assert tasks["tts_ffmpeg_conversion"].done()
             cleanup_task = tasks["tts_ffmpeg_cleanup"]
             assert cleanup_task in ffmpeg_ready._background_tasks
             assert not cleanup_task.done()  # Held join remains strongly supervised.
-            release_join.set()  # Harness release after owner outcome/reaping.
-            await asyncio.wait_for(cleanup_task, 3)
+            cleanup_task.add_done_callback(lambda _: cleanup_observed.set())
+            release_join.set()  # Only now can the late teardown error occur.
+            await asyncio.wait_for(cleanup_observed.wait(), 3)
+            assert cleanup_task.done()
+            assert cleanup_task not in ffmpeg_ready._background_tasks
+            if cleanup_outcome == "late-error":
+                assert any(
+                    record.message == (f"TTS ffmpeg cleanup task failed: {late_error}")
+                    for record in caplog.records
+                )
+            else:
+                assert not any(
+                    str(late_error) in record.message for record in caplog.records
+                )
             assert not any(
                 task.get_name().startswith("tts_ffmpeg") and not task.done()
                 for task in asyncio.all_tasks()
@@ -1215,10 +1236,15 @@ async def test_second_owner_cancel_during_notification_join_reaps_child(
     finally:
         fail_source.set()
         release_join.set()
+        if cleanup_task := tasks.get("tts_ffmpeg_cleanup"):
+            await asyncio.wait_for(
+                asyncio.gather(cleanup_task, return_exceptions=True), 5
+            )
         for process in processes:
             if process.returncode is None:
                 process.kill()
             await asyncio.wait_for(process.wait(), 5)
+        await asyncio.gather(*tasks.values(), return_exceptions=True)
         if owner is not None:
             if not owner.done():
                 owner.cancel()

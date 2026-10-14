@@ -905,8 +905,9 @@ async def _async_convert_audio(  # noqa: C901
         try:
             await _async_ffmpeg_join(cleanup_task)
         except asyncio.CancelledError:
-            # Preserve the original outcome; teardown remains HA-owned even
-            # if the owner is cancelled while observing its finite join.
+            # An interrupted join has not installed its late-result callback.
+            # HA still owns teardown, but its task bucket only removes it.
+            cleanup_task.add_done_callback(_ffmpeg_late_result)
             if primary_error is not None:
                 raise primary_error from None
             raise
