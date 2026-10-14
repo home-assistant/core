@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Assistant SDK from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -60,16 +60,12 @@ async def async_setup_entry(
     entry.async_on_unload(agent.async_close)
     conversation.async_set_agent(hass, entry, agent)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     conversation.async_unset_agent(hass, entry)
-
-    return True
 
 
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):

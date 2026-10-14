@@ -55,23 +55,13 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_load_config() -> Generator[MagicMock]:
     """Mock load config."""
 
-    with patch(
-        "homeassistant.components.html5.notify._load_config", return_value={}
-    ) as mock_load_config:
+    with (
+        patch(
+            "homeassistant.components.html5.notify._load_config", return_value={}
+        ) as mock_load_config,
+        patch("homeassistant.components.html5._load_config", new=mock_load_config),
+    ):
         yield mock_load_config
-
-
-@pytest.fixture
-def mock_wp() -> Generator[AsyncMock]:
-    """Mock WebPusher."""
-
-    with patch(
-        "homeassistant.components.html5.notify.WebPusher", autospec=True
-    ) as mock_client:
-        client = mock_client.return_value
-        client.cls = mock_client
-        client.send_async.return_value = AsyncMock(spec=ClientResponse, status=201)
-        yield client
 
 
 @pytest.fixture(name="webpush_async")
@@ -106,23 +96,6 @@ def mock_uuid() -> Generator[MagicMock]:
         patch("homeassistant.components.html5.notify.uuid") as mock_client,
     ):
         mock_client.uuid4.return_value = "12345678-1234-5678-1234-567812345678"
-        yield mock_client
-
-
-@pytest.fixture
-def mock_vapid() -> Generator[MagicMock]:
-    """Mock VAPID headers."""
-
-    with (
-        patch(
-            "homeassistant.components.html5.notify.Vapid", autospec=True
-        ) as mock_client,
-    ):
-        mock_client.from_string.return_value.sign.return_value = {
-            "Authorization": "vapid t=signed!!!",
-            "urgency": "normal",
-            "priority": "normal",
-        }
         yield mock_client
 
 

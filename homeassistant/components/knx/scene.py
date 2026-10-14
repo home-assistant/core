@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from .const import KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -24,9 +24,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SceneSchema
-from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY
-from .storage.entity_store_schema import SceneKnxConfig
+from .storage.entity_store_schema import KnxEntityData, SceneKnxConfig
 
 
 async def async_setup_entry(
@@ -117,12 +115,12 @@ class KnxUiScene(_KnxScene, KnxUiEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = config[DOMAIN]
+        knx_conf = config.knx
         self._device = XknxScene(
             xknx=knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             group_address=knx_conf.ga_scene.write,
             scene_number=knx_conf.scene_number,
         )

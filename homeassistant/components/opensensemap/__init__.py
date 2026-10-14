@@ -14,7 +14,7 @@ PLATFORMS: list[Platform] = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: OpenSenseMapConfigEntry
-) -> bool:
+) -> None:
     """Set up openSenseMap from a config entry."""
     session = async_get_clientsession(hass)
     api = OpenSenseMap(entry.data[CONF_STATION_ID], session)
@@ -23,11 +23,10 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OpenSenseMapConfigEntry
-) -> bool:
+) -> None:
     """Unload an openSenseMap config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

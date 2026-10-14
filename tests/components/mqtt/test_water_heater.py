@@ -504,8 +504,7 @@ async def test_receive_mqtt_temperature(
     async_fire_mqtt_message(hass, "current_temperature", "")
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert (
-        "Invalid empty payload for attribute _attr_current_temperature, ignoring update"
-        in caplog.text
+        "Invalid empty payload for current temperature, ignoring update" in caplog.text
     )
     assert state.attributes.get("current_temperature") == 53
 

@@ -113,9 +113,6 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = probatio.Schema(
 async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
     """Get travel times."""
     httpx_client = get_async_client(service.hass)
-    client = WazeRouteCalculator(
-        region=service.data[CONF_REGION].upper(), client=httpx_client
-    )
 
     origin_coordinates = find_coordinates(service.hass, service.data[CONF_ORIGIN])
     destination_coordinates = find_coordinates(
@@ -135,21 +132,24 @@ async def async_get_travel_times_service(service: ServiceCall) -> ServiceRespons
         / 60
     )
 
-    response = await async_get_travel_times(
-        client=client,
-        origin=origin,
-        destination=destination,
-        vehicle_type=service.data[CONF_VEHICLE_TYPE],
-        avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
-        avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
-        avoid_ferries=service.data[CONF_AVOID_FERRIES],
-        realtime=service.data[CONF_REALTIME],
-        units=service.data[CONF_UNITS],
-        incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
-        excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
-        time_delta=time_delta,
-        base_coordinates=base_coordinates,
-    )
+    async with WazeRouteCalculator(
+        region=service.data[CONF_REGION].upper(), client=httpx_client
+    ) as client:
+        response = await async_get_travel_times(
+            client=client,
+            origin=origin,
+            destination=destination,
+            vehicle_type=service.data[CONF_VEHICLE_TYPE],
+            avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
+            avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
+            avoid_ferries=service.data[CONF_AVOID_FERRIES],
+            realtime=service.data[CONF_REALTIME],
+            units=service.data[CONF_UNITS],
+            incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
+            excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
+            time_delta=time_delta,
+            base_coordinates=base_coordinates,
+        )
     return {"routes": [vars(route) for route in response]}
 
 

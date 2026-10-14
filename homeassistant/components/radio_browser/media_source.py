@@ -3,8 +3,6 @@
 import mimetypes
 from typing import override
 
-from aiodns.error import DNSError
-import pycountry
 from radios import FilterBy, Order, RadioBrowser, RadioBrowserError, Station
 
 from homeassistant.components.media_player import (
@@ -34,6 +32,8 @@ CODEC_TO_MIMETYPE = {
     "AAC+": "audio/aac",
     "OGG": "application/ogg",
 }
+
+MAX_SEARCH_RESULTS = 100
 
 
 async def async_get_media_source(hass: HomeAssistant) -> RadioMediaSource:
@@ -72,16 +72,22 @@ class RadioMediaSource(MediaSource):
         radios = self.radios
         try:
             station = await radios.station(uuid=item.identifier)
-        except (DNSError, RadioBrowserError) as e:
+        except RadioBrowserError as e:
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="radio_browser_error",
             ) from e
         if not station:
-            raise Unresolvable("Radio station is no longer available")
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="station_not_found",
+            )
 
         if not (mime_type := self._async_get_station_mime_type(station)):
-            raise Unresolvable("Could not determine stream type of radio station")
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="unknown_stream_type",
+            )
 
         # Register "click" with Radio Browser
         await radios.station_click(uuid=station.uuid)
@@ -121,7 +127,7 @@ class RadioMediaSource(MediaSource):
                     *await self._async_build_by_country(radios, item),
                 ],
             )
-        except (DNSError, RadioBrowserError) as e:
+        except RadioBrowserError as e:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="radio_browser_error",
@@ -144,10 +150,17 @@ class RadioMediaSource(MediaSource):
             return SearchMedia(
                 result=self._async_build_stations(
                     radios,
-                    await radios.search(name=query.search_query, hide_broken=True),
+                    # Order by popularity so the limit keeps the best matches
+                    await radios.search(
+                        name=query.search_query,
+                        hide_broken=True,
+                        limit=MAX_SEARCH_RESULTS,
+                        order=Order.CLICK_COUNT,
+                        reverse=True,
+                    ),
                 )
             )
-        except (DNSError, RadioBrowserError) as e:
+        except RadioBrowserError as e:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="radio_browser_error",
@@ -207,9 +220,6 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
-            # Trigger the lazy loading of the country database
-            # to happen inside the executor
-            await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [
                 BrowseMediaSource(

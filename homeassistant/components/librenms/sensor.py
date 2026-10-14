@@ -15,9 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import (
+    LibrenmsCentralData,
+    LibrenmsCentralDataUpdateCoordinator,
     LibrenmsConfigEntry,
-    LibrenmsData,
-    LibrenmsDataUpdateCoordinator,
 )
 from .entity import LibrenmsSystemEntity
 
@@ -29,8 +29,8 @@ PARALLEL_UPDATES = 0
 class LibrenmsSystemSensorEntityDescription(SensorEntityDescription):
     """Librenms system sensor entity description."""
 
-    value: Callable[[LibrenmsData], StateType]
-    is_suitable: Callable[[LibrenmsData], bool] = lambda _: True
+    value: Callable[[LibrenmsCentralData], StateType]
+    is_suitable: Callable[[LibrenmsCentralData], bool] = lambda _: True
 
 
 SYSTEM_SENSOR_TYPES: tuple[LibrenmsSystemSensorEntityDescription, ...] = (
@@ -99,7 +99,7 @@ class LibrenmsSystemSensorEntity(LibrenmsSystemEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: LibrenmsDataUpdateCoordinator,
+        coordinator: LibrenmsCentralDataUpdateCoordinator,
         description: LibrenmsSystemSensorEntityDescription,
     ) -> None:
         """Initialize."""

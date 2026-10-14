@@ -99,7 +99,7 @@ class WithingsData:
         }
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
     """Set up Withings from a config entry."""
     if CONF_WEBHOOK_ID not in entry.data or entry.unique_id is None:
         new_data = entry.data.copy()
@@ -185,14 +185,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
     """Unload Withings config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_subscribe_webhooks(client: WithingsClient, webhook_url: str) -> None:

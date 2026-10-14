@@ -25,8 +25,8 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): probatio.Port(),
     }
 )
 

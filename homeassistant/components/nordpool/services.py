@@ -66,7 +66,7 @@ SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
         ),
         probatio.Required(ATTR_DATE): cv.date,
         probatio.Optional(ATTR_AREAS, default=[]): probatio.All(
-            cv.ensure_list, _validate_areas
+            probatio.EnsureList(), _validate_areas
         ),
         probatio.Optional(ATTR_CURRENCY): probatio.All(
             cv.string,

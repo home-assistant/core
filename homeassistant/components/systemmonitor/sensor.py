@@ -892,7 +892,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         """When added to hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.entity_id)
+        ].add(self._attr_unique_id)
         return await super().async_added_to_hass()
 
     @override
@@ -900,7 +900,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         """When removed from hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].remove(self.entity_id)
+        ].remove(self._attr_unique_id)
         return await super().async_will_remove_from_hass()
 
     @callback

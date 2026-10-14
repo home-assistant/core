@@ -30,7 +30,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_NAME, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -468,7 +468,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
             if not self._async_acquire_addon_ownership():
-                return self.async_abort(reason="already_in_progress")
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             # If we have updates to the add-on config,
             # set them before starting the add-on.
             self._addon_config_updates = {}
@@ -634,7 +637,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # at least for a short time.
             # Zeroconf flows never touch the add-on,
             # so an idle discovery prompt should not block USB discovery.
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         if current_config_entries := self._async_current_entries(include_ignore=False):
             self._reconfigure_config_entry = next(
                 (
@@ -785,7 +790,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # prompt should not block the add-on discovery.
             if flow["context"].get("source") != SOURCE_ZEROCONF
         ):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         if discovery_info.slug != ADDON_SLUG:
             return self.async_abort(reason="not_zwave_js_addon")
@@ -1270,7 +1277,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if not self._async_acquire_addon_ownership():
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         # Remaining prompts, e.g. for other discovered adapters,
         # are superseded by this migration.
@@ -1477,7 +1486,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
 
                 if not self._async_acquire_addon_ownership():
-                    return self.async_abort(reason="already_in_progress")
+                    return self.async_abort(
+                        reason="already_in_progress",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
                 self._addon_config_updates = {}
@@ -1719,7 +1731,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         # Config entry already has correct config
                         return self.async_abort(reason="already_configured")
                     if not self._async_acquire_addon_ownership():
-                        return self.async_abort(reason="already_in_progress")
+                        return self.async_abort(
+                            reason="already_in_progress",
+                            translation_domain=HOMEASSISTANT_DOMAIN,
+                        )
                     await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
                     )
@@ -1741,7 +1756,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 flow["context"].get("unique_id") == placeholder_unique_id
                 for flow in self._async_in_progress()
             ):
-                return self.async_abort(reason="already_in_progress")
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set
             # We will update a USB based config entry

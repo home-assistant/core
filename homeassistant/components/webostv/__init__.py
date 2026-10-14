@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
     """Set the config entry up."""
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
@@ -65,15 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        client = entry.runtime_data.client
-        await hass_notify.async_reload(hass, DOMAIN)
-        client.clear_state_update_callbacks()
-        await client.disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    client = entry.runtime_data.client
+    await hass_notify.async_reload(hass, DOMAIN)
+    client.clear_state_update_callbacks()
+    await client.disconnect()
