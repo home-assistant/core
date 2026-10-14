@@ -6,11 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,9 +37,6 @@ from .const import (
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
     SCHEDULE_TYPE_FIXED,
-    SCHEDULE_TYPE_FLEX,
-    SERVICE_SET_ZONE_MOISTURE,
-    SERVICE_START_WATERING,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -71,7 +65,6 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
-ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
@@ -90,30 +83,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
-    has_flex_sched = False
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
-    for entity in entities:
-        if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
-            has_flex_sched = True
-
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_START_WATERING,
-        {
-            vol.Optional(ATTR_DURATION): cv.positive_int,
-        },
-        "turn_on",
-    )
-
-    if has_flex_sched:
-        platform = entity_platform.async_get_current_platform()
-        platform.async_register_entity_service(
-            SERVICE_SET_ZONE_MOISTURE,
-            {vol.Required(ATTR_PERCENT): cv.positive_int},
-            "set_moisture_percent",
-        )
 
 
 def _create_entities(
@@ -368,7 +339,11 @@ class RachioZone(RachioSwitch):
                 )
             )
         # The API limit is 3 hours, and requires an int be passed
-        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
+        self._controller.start_zone_watering(self.zone_id, manual_run_time.seconds)
+        # Rachio does not send a zone-status webhook for changes made by the
+        # same API client, so reflect a successful command immediately.
+        self._attr_is_on = True
+        self.schedule_update_ha_state()
         _LOGGER.debug(
             "Watering %s on %s for %s",
             self.name,
@@ -380,6 +355,9 @@ class RachioZone(RachioSwitch):
     def turn_off(self, **kwargs: Any) -> None:
         """Stop watering all zones."""
         self._controller.stop_watering()
+        # Rachio does not deliver the stop webhook, so keep the state current.
+        self._attr_is_on = False
+        self.schedule_update_ha_state()
 
     def set_moisture_percent(self, percent) -> None:
         """Set the zone moisture percent."""

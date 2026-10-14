@@ -55,7 +55,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube switches."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     async_add_entities(
         QubeSwitch(coordinator, entry, description) for description in SWITCH_TYPES
@@ -98,7 +98,7 @@ class QubeSwitch(QubeEntity, SwitchEntity):
         register_key = self.entity_description.register_key
         try:
             success = await self.coordinator.client.write_switch(register_key, value)
-        except (ConnectionError, TimeoutError, OSError) as err:
+        except OSError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",

@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
+import probatio
 import pylacrosse
 from serial import SerialException
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -49,25 +49,25 @@ DEFAULT_EXPIRE_AFTER = 300
 
 TYPES = ["battery", "humidity", "temperature"]
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ID): cv.positive_int,
-        vol.Required(CONF_TYPE): vol.In(TYPES),
-        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ID): cv.positive_int,
+        probatio.Required(CONF_TYPE): probatio.In(TYPES),
+        probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
-        vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
-        vol.Optional(CONF_DATARATE): cv.positive_int,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-        vol.Optional(CONF_FREQUENCY): cv.positive_int,
-        vol.Optional(CONF_JEELINK_LED): cv.boolean,
-        vol.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
-        vol.Optional(CONF_TOGGLE_MASK): cv.positive_int,
+        probatio.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
+        probatio.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,
+        probatio.Optional(CONF_DATARATE): cv.positive_int,
+        probatio.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+        probatio.Optional(CONF_FREQUENCY): cv.positive_int,
+        probatio.Optional(CONF_JEELINK_LED): cv.boolean,
+        probatio.Optional(CONF_TOGGLE_INTERVAL): cv.positive_int,
+        probatio.Optional(CONF_TOGGLE_MASK): cv.positive_int,
     }
 )
 

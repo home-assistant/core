@@ -1,0 +1,20 @@
+{
+  "protocol_version": "00.16.00",
+  "charging_state": 2,
+  "power": 7.2,
+  "energy": 1.5,
+  "lifetime_energy": 42.0,
+  "is_lock": true,
+  "network_status": 1,
+  "is_disable": false,
+  "cable_current_limit": 32,
+  "circuit_fuse": 32,
+  "current_limit": 16,
+  "cable_lock_mode": 0,
+  "access_level": 0,
+  "phase_charging": 1,
+  "brightness": 100,
+  "uk_reg": null,
+  "current_list": [0.05, 0.0, 0.0],
+  "voltage_list": [224, 0, 0]
+}

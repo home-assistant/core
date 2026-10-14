@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type EcowittConfigEntry = ConfigEntry[EcoWittListener]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> None:
     """Set up the Ecowitt component from UI."""
     ecowitt = entry.runtime_data = EcoWittListener()
 
@@ -40,11 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_ecowitt)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

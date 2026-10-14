@@ -3,8 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -83,7 +83,7 @@ async def test_set_value_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Persang speaker has already been configured with this transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_emitter_entity_id": "Infrared transmitter"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
+        },
+        "description": "Select the infrared transmitter entity to use for controlling your Persang speaker.",
+        "title": "Set up Persang IR speaker"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "eq": {
+        "name": "Equalizer"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "num_0": {
+        "name": "[%key:common::entity::button::num_0::name%]"
+      },
+      "num_1": {
+        "name": "[%key:common::entity::button::num_1::name%]"
+      },
+      "num_2": {
+        "name": "[%key:common::entity::button::num_2::name%]"
+      },
+      "num_3": {
+        "name": "[%key:common::entity::button::num_3::name%]"
+      },
+      "num_4": {
+        "name": "[%key:common::entity::button::num_4::name%]"
+      },
+      "num_5": {
+        "name": "[%key:common::entity::button::num_5::name%]"
+      },
+      "num_6": {
+        "name": "[%key:common::entity::button::num_6::name%]"
+      },
+      "num_7": {
+        "name": "[%key:common::entity::button::num_7::name%]"
+      },
+      "num_8": {
+        "name": "[%key:common::entity::button::num_8::name%]"
+      },
+      "num_9": {
+        "name": "[%key:common::entity::button::num_9::name%]"
+      },
+      "repeat": {
+        "name": "Repeat"
+      },
+      "scan": {
+        "name": "Scan"
+      }
+    }
+  }
+}

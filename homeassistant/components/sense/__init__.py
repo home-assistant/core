@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from functools import partial
-import logging
 
 from sense_energy import (
     ASyncSenseable,
@@ -27,8 +26,6 @@ from .const import (
 )
 from .coordinator import SenseRealtimeCoordinator, SenseTrendCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type SenseConfigEntry = ConfigEntry[SenseData]
 
@@ -42,7 +39,7 @@ class SenseData:
     rt: SenseRealtimeCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> None:
     """Set up Sense from a config entry."""
 
     entry_data = entry.data
@@ -73,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         gateway.set_monitor_id(monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
-        _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
     except SENSE_TIMEOUT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
@@ -94,6 +90,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SenseAPIException as err:
         raise ConfigEntryNotReady(
             str(err) or "API error retrieving realtime data"
+        ) from err
+    except SenseAuthenticationException as err:
+        # We just authenticated, sense_energy also raises this for a 404 while
+        # the monitor is reconnecting
+        raise ConfigEntryNotReady(
+            str(err) or "Monitor not available for realtime data"
         ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
@@ -133,9 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -5,8 +5,8 @@ from enum import Enum, StrEnum
 from itertools import chain
 from unittest.mock import AsyncMock, Mock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
@@ -124,7 +124,7 @@ async def setup_mock_devices(
         f"{FAKE_DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_actions=_async_get_actions,
             async_call_action_from_config=AsyncMock(),
@@ -645,3 +645,82 @@ async def assert_extra_template_attributes(
         assert (
             attr not in state.attributes and style == ConfigurationStyle.MODERN
         ) or state.attributes[attr] == value
+
+
+async def assert_attributes_template(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test extra attributes template."""
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        {
+            **config,
+            "attributes": "{{ state_attr('sensor.test_extra_attributes', 'attributes') or {} }}",
+        },
+    )
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": {"beer": "empty", "happiness": "low"},
+        },
+    )
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["beer"] == "empty"
+    assert "level" not in state.attributes
+    assert state.attributes["happiness"] == "low"
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": {"beer": "full", "level": 100, "happiness": "high"},
+        },
+    )
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["beer"] == "full"
+    assert state.attributes["level"] == 100
+    assert state.attributes["happiness"] == "high"
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": {"run": True},
+        },
+    )
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["run"] is True
+    assert "beer" not in state.attributes
+    assert "level" not in state.attributes
+    assert "happiness" not in state.attributes
+
+    error = "Error validating template result"
+    assert error not in caplog.text
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": ["not a dict"],
+        },
+    )
+
+    assert error in caplog.text
+    state = hass.states.get(platform_setup.entity_id)
+    assert "run" not in state.attributes

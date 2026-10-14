@@ -192,8 +192,6 @@ EXCEPTIONS = {
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
-    # numpy: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
-    "numpy",  # CC0-1.0 is not OSI approved
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
@@ -201,12 +199,12 @@ EXCEPTIONS = {
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "tempora",  # https://github.com/jaraco/tempora/issues/61
     "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
 # fmt: off
-TODO = {
-    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
+TODO: dict[str, AwesomeVersion] = {
 }
 # fmt: on
 

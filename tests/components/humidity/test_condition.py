@@ -11,15 +11,18 @@ from homeassistant.components.climate import (
 from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
 )
+from homeassistant.components.humidity.condition import CONDITIONS
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_numerical_attribute_condition_above_below_all,
     parametrize_numerical_attribute_condition_above_below_any,
     parametrize_numerical_condition_above_below_all,
@@ -58,6 +61,11 @@ async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
 _PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_value": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -79,6 +87,11 @@ async def test_humidity_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

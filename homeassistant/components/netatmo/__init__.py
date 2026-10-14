@@ -2,24 +2,16 @@
 
 import logging
 
-from aiohttp import ClientError
-
 from homeassistant.components import cloud
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -46,35 +38,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
     """Set up Netatmo from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     # Set unique id if non was set (migration)
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as ex:
-        raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-    except (OAuth2TokenRequestError, ClientError) as ex:
-        raise ConfigEntryNotReady from ex
+    await session.async_ensure_token_valid()
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & set(required_scopes)):
-        _LOGGER.warning(
-            "Session is missing scopes: %s",
-            set(required_scopes) - set(session.token["scope"]),
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+            translation_placeholders={
+                "scopes": ", ".join(
+                    sorted(set(required_scopes) - set(session.token["scope"]))
+                )
+            },
         )
-        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     auth = api.AsyncConfigEntryNetatmoAuth(
         aiohttp_client.async_get_clientsession(hass), session
@@ -109,8 +94,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
-    return True
-
 
 async def async_config_entry_updated(
     hass: HomeAssistant, entry: NetatmoConfigEntry
@@ -119,14 +102,14 @@ async def async_config_entry_updated(
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
     """Unload a config entry."""
     # Through the manager, so the drop cannot overtake a registration in flight.
     # A setup that never got as far as the data handler has nothing to drop.
     if (data_handler := getattr(entry, "runtime_data", None)) is not None:
         await data_handler.webhook_manager.async_unregister()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:

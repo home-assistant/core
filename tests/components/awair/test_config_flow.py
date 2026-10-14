@@ -33,12 +33,14 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_invalid_access_token(hass: HomeAssistant) -> None:
+async def test_invalid_access_token(
+    hass: HomeAssistant, user: dict[str, Any], cloud_devices: dict[str, Any]
+) -> None:
     """Test that errors are shown when the access token is invalid."""
 
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(
@@ -53,13 +55,30 @@ async def test_invalid_access_token(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
+    with (
+        patch(
+            "python_awair.AwairClient.query",
+            side_effect=[user, cloud_devices],
+        ),
+        patch(
+            "homeassistant.components.awair.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CLOUD_CONFIG,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_unexpected_api_error(hass: HomeAssistant) -> None:
     """Test that we abort on generic errors."""
 
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(
@@ -88,7 +107,7 @@ async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices) -> None
         ).add_to_hass(hass)
 
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(
@@ -110,7 +129,7 @@ async def test_no_devices_error(hass: HomeAssistant, user, no_devices) -> None:
 
     with patch("python_awair.AwairClient.query", side_effect=[user, no_devices]):
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(
@@ -210,7 +229,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices) -> N
         ),
     ):
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(
@@ -240,7 +259,7 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices) -> None:
         ),
     ):
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(
@@ -271,7 +290,7 @@ async def test_create_local_entry_from_discovery(
     """Test local API when device discovered after instructions shown."""
 
     menu_step = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     form_step = await hass.config_entries.flow.async_configure(
@@ -319,7 +338,7 @@ async def test_create_local_entry_awair_error(hass: HomeAssistant) -> None:
         side_effect=AwairError(),
     ):
         menu_step = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         form_step = await hass.config_entries.flow.async_configure(

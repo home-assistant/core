@@ -35,7 +35,9 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
+    ProxmoxPermission,
 )
+from .helpers import is_granted
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
 
@@ -52,6 +54,8 @@ class NodeResources:
     containers: list[dict[str, Any]]
     storages: list[dict[str, Any]]
     backups: list[dict[str, Any]]
+    version: dict[str, Any]
+    update: list[dict[str, Any]] | bool
 
 
 @dataclass(slots=True, kw_only=True)
@@ -63,6 +67,8 @@ class ProxmoxNodeData:
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
     storages: dict[str, dict[str, Any]] = field(default_factory=dict)
     backups: list[dict[str, Any]] = field(default_factory=list)
+    version: dict[str, Any] = field(default_factory=dict)
+    update: list[dict[str, Any]] | bool = False
 
 
 def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
@@ -212,6 +218,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 },
                 storages={s["storage"]: s for s in resources.storages},
                 backups=resources.backups,
+                version=resources.version,
+                update=resources.update,
             )
 
         self._async_add_remove_nodes(data)
@@ -258,7 +266,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ProxmoxServerError from err
 
     def _fetch_all_nodes(self) -> list[tuple[dict[str, Any], NodeResources]]:
-        """Fetch all nodes with their VMs, containers, storages, and backups."""
+        """Fetch all nodes with their VMs, containers, storages, etc."""
         nodes = self.proxmox.nodes.get() or []
         return [(node, self._get_node_data(node)) for node in nodes]
 
@@ -266,13 +274,20 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self,
         node: dict[str, Any],
     ) -> NodeResources:
-        """Get vms, containers, storages, and backups for a node."""
+        """Get vms, containers, storages, etc. for a node."""
         if node.get("status") != NODE_ONLINE:
             _LOGGER.debug(
                 "Node %s is offline, skipping VM/container/storage fetch",
                 node[CONF_NODE],
             )
-            return NodeResources(vms=[], containers=[], storages=[], backups=[])
+            return NodeResources(
+                vms=[],
+                containers=[],
+                storages=[],
+                backups=[],
+                version={},
+                update=False,
+            )
 
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
@@ -281,9 +296,23 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             self.proxmox.nodes(node[CONF_NODE]).tasks.get(typefilter="vzdump", limit=1)
             or []
         )
+        version = self.proxmox.nodes(node[CONF_NODE]).version.get() or {}
+        update: list | bool = False
+        if is_granted(
+            self.permissions,
+            p_type="nodes",
+            p_id=node[CONF_NODE],
+            permission=ProxmoxPermission.SYSMOD,
+        ):
+            update = self.proxmox.nodes(node[CONF_NODE]).apt.update.get() or []
 
         return NodeResources(
-            vms=vms, containers=containers, storages=storages, backups=backups
+            vms=vms,
+            containers=containers,
+            storages=storages,
+            backups=backups,
+            version=version,
+            update=update,
         )
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:

@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> None:
     """Set up Suez Water from a config entry."""
 
     coordinator = SuezWaterCoordinator(hass, entry)
@@ -23,17 +23,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SuezWaterConfigEntry
-) -> bool:
+) -> None:
     """Migrate old suez water config entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -57,5 +55,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

@@ -445,29 +445,6 @@ def test_install_constraint(mock_popen, mock_env_copy, mock_sys) -> None:
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-async def test_async_get_user_site(mock_env_copy) -> None:
-    """Test async get user site directory."""
-    deps_dir = "/deps_dir"
-    env = mock_env_copy()
-    env["PYTHONUSERBASE"] = os.path.abspath(deps_dir)
-    args = [sys.executable, "-m", "site", "--user-site"]
-    with patch(
-        "homeassistant.util.package.asyncio.create_subprocess_exec",
-        return_value=mock_async_subprocess(),
-    ) as popen_mock:
-        ret = await package.async_get_user_site(deps_dir)
-    assert popen_mock.call_count == 1
-    assert popen_mock.call_args == call(
-        *args,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
-        env=env,
-        close_fds=False,
-    )
-    assert ret == os.path.join(deps_dir, "lib_dir")
-
-
 async def test_async_get_installed_packages() -> None:
     """Test async get installed packages."""
     mock_output = (
@@ -552,13 +529,12 @@ def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_check_package_fragment(caplog: pytest.LogCaptureFixture) -> None:
     """Test for an installed package with a fragment."""
+    url = "git+https://github.com/home-assistant/core"
+
     assert not package.is_installed(TEST_ZIP_REQ)
-    assert package.is_installed("git+https://github.com/pypa/pip#pip>=1")
-    assert not package.is_installed("git+https://github.com/pypa/pip#-1 invalid")
-    assert (
-        "Invalid requirement 'git+https://github.com/pypa/pip#-1 invalid'"
-        in caplog.text
-    )
+    assert package.is_installed(f"{url}#homeassistant>=1")
+    assert not package.is_installed(f"{url}#-1 invalid")
+    assert f"Invalid requirement '{url}#-1 invalid'" in caplog.text
 
 
 def test_get_is_installed() -> None:

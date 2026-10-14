@@ -54,7 +54,7 @@ async def test_form_single_site(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OC200 (Display Name)"
+    assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
     assert result["result"].unique_id == "12345_SiteId"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -94,7 +94,7 @@ async def test_form_multiple_sites(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OC200 (Site 2)"
+    assert result["title"] == "Test Omada Controller (Site 2)"
     assert result["data"] == {
         "host": "https://fake.omada.host",
         "verify_ssl": True,
@@ -148,7 +148,7 @@ async def test_form_errors_and_recovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OC200 (Display Name)"
+    assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 

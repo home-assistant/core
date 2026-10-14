@@ -2,15 +2,15 @@
 
 import logging
 
-import aiohttp
-from async_upnp_client.client import UpnpError
 from openhomedevice.device import Device
+from openhomedevice.exceptions import OpenhomeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -33,15 +33,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OpenhomeConfigEntry,
-) -> bool:
+) -> None:
     """Set up the configuration config entry."""
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = await hass.async_add_executor_job(Device, config_entry.data[CONF_HOST])
+    device = Device(config_entry.data[CONF_HOST], session=async_get_clientsession(hass))
 
     try:
         await device.init()
-    except (TimeoutError, aiohttp.ClientError, UpnpError) as exc:
+    except OpenhomeError as exc:
         raise ConfigEntryNotReady from exc
 
     _LOGGER.debug("Initialised device: %s", device.uuid())
@@ -50,11 +50,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: OpenhomeConfigEntry
-) -> bool:
+) -> None:
     """Cleanup before removing config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
