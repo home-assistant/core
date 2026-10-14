@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.diagnostics import REDACTED
@@ -116,3 +117,49 @@ async def test_diagnostics_redacts_sensitive_data(
     )
     assert device_only_diagnostics["name"] == REDACTED
     assert device_only_diagnostics["location"]["latitude"] == REDACTED
+
+
+@pytest.mark.parametrize(
+    ("identifier", "entry_type"),
+    [
+        pytest.param(
+            "test_account_id_account",
+            dr.DeviceEntryType.SERVICE,
+            id="account_device",
+        ),
+        pytest.param("missing_device", None, id="device_no_longer_reported"),
+    ],
+)
+async def test_device_diagnostics_without_device_data(
+    hass: HomeAssistant,
+    icloud_service: MagicMock,
+    devices_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+    hass_client: ClientSessionGenerator,
+    identifier: str,
+    entry_type: dr.DeviceEntryType | None,
+) -> None:
+    """Test diagnostics for devices that have no device data of their own."""
+    icloud_service.devices.add({**DEVICE, "location": LOCATION})
+
+    await setup_entry(Platform.SENSOR)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=devices_config_entry.entry_id,
+        identifiers={(DOMAIN, identifier)},
+        name=devices_config_entry.title,
+        entry_type=entry_type,
+    )
+
+    assert await get_diagnostics_for_device(
+        hass, hass_client, devices_config_entry, device
+    ) == {
+        "account": {
+            "device_count": 1,
+            "family_members": REDACTED,
+            "fetch_interval": 15,
+            "owner_fullname": REDACTED,
+            "username": REDACTED,
+        }
+    }

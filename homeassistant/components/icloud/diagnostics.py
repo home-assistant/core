@@ -44,13 +44,7 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "data": entry.data,
         },
-        "account": {
-            "username": account.username,
-            "owner_fullname": account.owner_fullname,
-            "family_members": list(account.family_members_fullname.values()),
-            "fetch_interval": account.fetch_interval,
-            "device_count": len(account.devices),
-        },
+        "account": _account_diagnostics(entry),
         "devices": [device.raw_status for device in account.devices.values()],
     }
     return async_redact_data(data, TO_REDACT)
@@ -60,14 +54,36 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: IcloudConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    return async_redact_data(_get_icloud_device(entry, device).raw_status, TO_REDACT)
+    icloud_device = _get_icloud_device(entry, device)
+    if icloud_device is None:
+        # The account device carries the calendars and to-do lists of the
+        # account, and devices iCloud no longer reports have no data at all.
+        return async_redact_data({"account": _account_diagnostics(entry)}, TO_REDACT)
+
+    return async_redact_data(icloud_device.raw_status, TO_REDACT)
+
+
+def _account_diagnostics(entry: IcloudConfigEntry) -> dict[str, Any]:
+    """Return the account information."""
+    account = entry.runtime_data
+    return {
+        "username": account.username,
+        "owner_fullname": account.owner_fullname,
+        "family_members": list(account.family_members_fullname.values()),
+        "fetch_interval": account.fetch_interval,
+        "device_count": len(account.devices),
+    }
 
 
 def _get_icloud_device(
     entry: IcloudConfigEntry, device: AnyDeviceEntry
-) -> IcloudDevice:
-    """Return the iCloud device linked to a device registry entry."""
+) -> IcloudDevice | None:
+    """Return the iCloud device linked to a device registry entry, if any."""
     identifier = next(
-        identifier for domain, identifier in device.identifiers if domain == DOMAIN
+        (identifier for domain, identifier in device.identifiers if domain == DOMAIN),
+        None,
     )
-    return entry.runtime_data.devices[identifier]
+    if identifier is None:
+        return None
+
+    return entry.runtime_data.devices.get(identifier)
