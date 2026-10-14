@@ -2716,6 +2716,7 @@ class ConfigEntries:
 
         entry.disabled_by = disabled_by
         self._async_schedule_save()
+        ir.async_get(self.hass).async_config_entry_disabled_by_changed(entry_id)
 
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)

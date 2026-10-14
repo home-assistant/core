@@ -177,6 +177,9 @@
       }
     },
     "button": {
+      "reset_filter": {
+        "name": "Reset filter counters"
+      },
       "start": {
         "name": "Start"
       }
