@@ -62,12 +62,50 @@ def is_annexb(data: bytes) -> bool:
     return data[:3] == b"\x00\x00\x01" or data[:4] == b"\x00\x00\x00\x01"
 
 
-def hevc_parameter_sets(data: bytes) -> dict[int, tuple[bytes, ...]]:
-    """Return the VPS, SPS and PPS NAL units ahead of the first slice, by NAL type.
+def hevc_parameter_set_id(nal_type: int, nal_unit: bytes) -> int:
+    """Return the ID of a VPS (32), SPS (33) or PPS (34) NAL unit.
 
-    The data is Annex B: an access unit or extradata.
+    Raises ValueError if the NAL unit is too short to hold its ID.
     """
-    parameter_sets: dict[int, tuple[bytes, ...]] = {}
+    # RBSP after the 2-byte NAL unit header, emulation prevention bytes removed
+    rbsp = nal_unit[2:].replace(b"\x00\x00\x03", b"\x00\x00")
+    bits = "".join(f"{byte:08b}" for byte in rbsp)
+    if nal_type == 32:
+        # vps_video_parameter_set_id u(4)
+        if len(bits) < 4:
+            raise ValueError("VPS too short")
+        return int(bits[:4], 2)
+    pos = 0
+    if nal_type == 33:
+        # sps_video_parameter_set_id u(4), sps_max_sub_layers_minus1 u(3),
+        # sps_temporal_id_nesting_flag u(1), then profile_tier_level():
+        # general profile 88 bits, general_level_idc 8 bits
+        max_sub_layers_minus1 = int(bits[4:7], 2)
+        pos = 8 + 88 + 8
+        # Sub-layer present flags, 2 bits each, padded to 8 sub-layers
+        flags = bits[pos : pos + 2 * max_sub_layers_minus1]
+        if len(flags) < 2 * max_sub_layers_minus1:
+            raise ValueError("SPS too short")
+        pos += 16 if max_sub_layers_minus1 else 0
+        for i in range(max_sub_layers_minus1):
+            pos += (88 if flags[2 * i] == "1" else 0) + (
+                8 if flags[2 * i + 1] == "1" else 0
+            )
+    # sps_seq_parameter_set_id or pps_pic_parameter_set_id, unsigned Exp-Golomb
+    leading_zeros = bits.index("1", pos) - pos
+    code = bits[pos + leading_zeros : pos + 2 * leading_zeros + 1]
+    if len(code) < leading_zeros + 1:
+        raise ValueError("Parameter set ID truncated")
+    return int(code, 2) - 1
+
+
+def hevc_parameter_sets(data: bytes) -> dict[tuple[int, int], bytes]:
+    """Return the VPS, SPS and PPS NAL units ahead of the first slice.
+
+    The data is Annex B: an access unit or extradata. Keys are (NAL type,
+    parameter set ID); a NAL unit whose ID does not parse is left out.
+    """
+    parameter_sets: dict[tuple[int, int], bytes] = {}
     start = data.find(b"\x00\x00\x01")
     while 0 <= start < len(data) - 3:
         start += 3
@@ -78,7 +116,12 @@ def hevc_parameter_sets(data: bytes) -> dict[int, tuple[bytes, ...]]:
         if nal_type in (32, 33, 34):
             # A NAL unit never ends in a zero byte; those belong to a start code
             nal_unit = data[start : end if end >= 0 else None].rstrip(b"\x00")
-            parameter_sets[nal_type] = (*parameter_sets.get(nal_type, ()), nal_unit)
+            try:
+                parameter_set_id = hevc_parameter_set_id(nal_type, nal_unit)
+            except ValueError:
+                pass
+            else:
+                parameter_sets[nal_type, parameter_set_id] = nal_unit
         start = end
     return parameter_sets
 
@@ -194,7 +237,7 @@ class StreamMuxer:
         self._follow_parameter_sets = video_stream.name == "hevc" and is_annexb(
             extradata
         )
-        # The parameter sets of the current init; a keyframe may repeat only some types
+        # The parameter sets of the current init; a keyframe may repeat only some of them
         self._parameter_sets = (
             hevc_parameter_sets(extradata) if self._follow_parameter_sets else {}
         )
@@ -354,10 +397,9 @@ class StreamMuxer:
             # Its output was already created from the stream's extradata
             self._parameter_sets = parameter_sets
             return False
+        # VPS, SPS, PPS, each in ID order
         extradata = b"".join(
-            b"\x00\x00\x00\x01" + nal_unit
-            for nal_type in sorted(parameter_sets)
-            for nal_unit in parameter_sets[nal_type]
+            b"\x00\x00\x00\x01" + parameter_sets[key] for key in sorted(parameter_sets)
         )
         try:
             self._video_size = hevc_picture_size(extradata)

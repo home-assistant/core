@@ -237,6 +237,15 @@ BOTH_SIZES = [(480, 320), (640, 480)]
             BOTH_SIZES,
             id="h265-sets-first-in-band-at-change",
         ),
+        # Keyframes that repeat some of the stream's parameter sets
+        pytest.param(
+            "libx265",
+            {"extra_pps": True},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-extra-pps",
+        ),
         # Parameter sets that do not parse keep the current init
         pytest.param(
             "libx265", {}, None, [(480, 320)], [(480, 320)], id="h265-unparsed"
@@ -324,6 +333,8 @@ async def test_hls_stream_picture_size_change(
     # Every frame decodes at its source size, in source order
     assert [size for size, _ in itertools.groupby(decoded_sizes)] == decoded
     assert [init_size(init) for init in inits.values()] == init_sizes
+    # One discontinuity sequence per size
+    assert list(inits) == [f"./init/{index}.mp4" for index in range(len(init_sizes))]
     assert playlist.count("#EXT-X-DISCONTINUITY") == len(init_sizes) - 1
 
 
@@ -640,6 +651,46 @@ async def test_hls_playlist_view_discontinuity(
         assert await resp.read() == init
     resp = await hls_client.get("/init/2.mp4")
     assert resp.status == HTTPStatus.NOT_FOUND
+
+    stream_worker_sync.resume()
+    await stream.stop()
+
+
+async def test_hls_playlist_view_discontinuity_first_segment(
+    hass: HomeAssistant, setup_component, hls_stream, stream_worker_sync
+) -> None:
+    """Test a discontinuity segment that becomes the first playlist segment."""
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream_worker_sync.pause()
+    hls = stream.add_provider(HLS_PROVIDER)
+    hls.put(Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION))
+    hls.put(Segment(sequence=1, stream_id=1, duration=SEGMENT_DURATION))
+    await hass.async_block_till_done()
+
+    hls_client = await hls_stream(stream)
+
+    # Rendered behind a segment of the previous discontinuity sequence
+    resp = await hls_client.get("/playlist.m3u8")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.text() == make_playlist(
+        sequence=0,
+        segments=[make_segment(0), make_segment(1, discontinuity_sequence=1)],
+    )
+
+    for sequence in range(2, NUM_PLAYLIST_SEGMENTS + 1):
+        hls.put(Segment(sequence=sequence, stream_id=1, duration=SEGMENT_DURATION))
+    await hass.async_block_till_done()
+
+    # EXT-X-DISCONTINUITY-SEQUENCE counts the discontinuity that left the window
+    resp = await hls_client.get("/playlist.m3u8")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.text() == make_playlist(
+        sequence=1,
+        discontinuity_sequence=1,
+        segments=[
+            make_segment(sequence) for sequence in range(1, NUM_PLAYLIST_SEGMENTS + 1)
+        ],
+    )
 
     stream_worker_sync.resume()
     await stream.stop()

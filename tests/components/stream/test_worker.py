@@ -49,6 +49,7 @@ from homeassistant.components.stream.worker import (
     StreamMuxer,
     StreamState,
     StreamWorkerError,
+    hevc_parameter_set_id,
     hevc_parameter_sets,
     stream_worker,
 )
@@ -1220,29 +1221,99 @@ def test_add_stream_from_template_decoder_only_fallback() -> None:
     ]
 
 
+def hevc_nal_unit(nal_type: int, bits: str) -> bytes:
+    """Return a NAL unit with the RBSP bits, stop bit and emulation prevention."""
+    bits += "1"
+    bits += "0" * (-len(bits) % 8)
+    nal_unit = bytearray([nal_type << 1, 1])
+    zeros = 0
+    for byte in int(bits, 2).to_bytes(len(bits) // 8):
+        if zeros >= 2 and byte <= 3:
+            nal_unit.append(3)
+            zeros = 0
+        nal_unit.append(byte)
+        zeros = zeros + 1 if byte == 0 else 0
+    return bytes(nal_unit)
+
+
+# Unsigned Exp-Golomb codes
+UE_0, UE_1, UE_2, UE_5 = "1", "010", "011", "00110"
+# Profile_tier_level() general part: 88 profile bits, 8 level bits
+GENERAL_PTL = "0" * 88 + "01011101"
+# SPS VPS ID 0, sps_max_sub_layers_minus1, sps_temporal_id_nesting_flag
+SPS_ONE_LAYER = "00000001"
+SPS_THREE_SUB_LAYERS = "00000100"
+
+
+@pytest.mark.parametrize(
+    ("nal_type", "bits", "parameter_set_id"),
+    [
+        pytest.param(32, "0011" + "1" * 12, 3, id="vps"),
+        pytest.param(34, UE_0 + UE_0, 0, id="pps-0"),
+        pytest.param(34, UE_5 + UE_0, 5, id="pps-5"),
+        # One layer; the zero profile bits need emulation prevention bytes
+        pytest.param(33, SPS_ONE_LAYER + GENERAL_PTL + UE_5, 5, id="sps"),
+        # Three sub-layers: profile and level of the first, level of the second
+        pytest.param(
+            33,
+            SPS_THREE_SUB_LAYERS
+            + GENERAL_PTL
+            + "1101"
+            + "0" * 12
+            + "1" * 88
+            + "0" * 8
+            + "1" * 8
+            + UE_2,
+            2,
+            id="sps-sub-layers",
+        ),
+    ],
+)
+def test_hevc_parameter_set_id(nal_type: int, bits: str, parameter_set_id: int) -> None:
+    """Test the ID of a VPS, SPS or PPS NAL unit."""
+    assert hevc_parameter_set_id(nal_type, hevc_nal_unit(nal_type, bits)) == (
+        parameter_set_id
+    )
+
+
+def test_hevc_parameter_set_id_truncated() -> None:
+    """Test a NAL unit that ends before its ID."""
+    sps = hevc_nal_unit(33, SPS_ONE_LAYER + GENERAL_PTL + UE_5)
+    with pytest.raises(ValueError):
+        hevc_parameter_set_id(33, sps[:12])
+    # Ends before the sub-layer flags
+    sps = bytes([33 << 1, 1]) + int(SPS_THREE_SUB_LAYERS + GENERAL_PTL, 2).to_bytes(13)
+    with pytest.raises(ValueError):
+        hevc_parameter_set_id(33, sps)
+    with pytest.raises(ValueError):
+        hevc_parameter_set_id(34, bytes([34 << 1, 1, 0x00]))
+    with pytest.raises(ValueError):
+        hevc_parameter_set_id(32, bytes([32 << 1, 1]))
+
+
 def test_hevc_parameter_sets() -> None:
-    """Test the parameter sets ahead of the first slice, by NAL unit type."""
+    """Test the parameter sets ahead of the first slice, by NAL type and ID."""
     aud = bytes([35 << 1, 1, 0x50])
-    vps = bytes([32 << 1, 1, 0x0C])
-    sps = bytes([33 << 1, 1, 0x01])
-    pps_0 = bytes([34 << 1, 1, 0xC1])
-    pps_1 = bytes([34 << 1, 1, 0xC2])
+    vps = hevc_nal_unit(32, "0000" + "1" * 12)
+    sps = hevc_nal_unit(33, SPS_ONE_LAYER + GENERAL_PTL + UE_0)
+    pps_0 = hevc_nal_unit(34, UE_0 + UE_0)
+    pps_1 = hevc_nal_unit(34, UE_1 + UE_0)
     idr = bytes([19 << 1, 1, 0xAF])
     # A NAL unit after a slice is not a parameter set of this access unit
-    late_sps = bytes([33 << 1, 1, 0x02])
+    late_sps = hevc_nal_unit(33, SPS_ONE_LAYER + GENERAL_PTL + UE_1)
 
     access_unit = b"".join(
         b"\x00\x00\x00\x01" + nal_unit
         for nal_unit in (aud, vps, sps, pps_0, pps_1, idr, late_sps)
     )
     assert hevc_parameter_sets(access_unit) == {
-        32: (vps,),
-        33: (sps,),
-        34: (pps_0, pps_1),
+        (32, 0): vps,
+        (33, 0): sps,
+        (34, 0): pps_0,
+        (34, 1): pps_1,
     }
-    # Extradata has no slice; 3-byte start codes
-    assert hevc_parameter_sets(b"\x00\x00\x01" + sps + b"\x00\x00\x01" + pps_0) == {
-        33: (sps,),
-        34: (pps_0,),
-    }
+    # Extradata has no slice; 3-byte start codes; a set whose ID does not parse
+    assert hevc_parameter_sets(
+        b"\x00\x00\x01" + sps + b"\x00\x00\x01" + pps_0 + b"\x00\x00\x01" + sps[:12]
+    ) == {(33, 0): sps, (34, 0): pps_0}
     assert hevc_parameter_sets(b"\x00\x00\x01" + idr) == {}

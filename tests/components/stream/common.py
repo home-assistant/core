@@ -123,8 +123,33 @@ def split_hevc_nal_units(data, nal_types):
     )
 
 
+def hevc_pps_with_id(pps, pps_id):
+    """Return a copy of a PPS NAL unit whose ID is 0 with the ID set to pps_id."""
+    rbsp = pps[2:].replace(b"\x00\x00\x03", b"\x00\x00")
+    # RBSP bits without the stop bit and alignment zeros
+    bits = "".join(f"{byte:08b}" for byte in rbsp).rstrip("0")[:-1]
+    assert bits[0] == "1"  # pps_pic_parameter_set_id 0, unsigned Exp-Golomb
+    code = f"{pps_id + 1:b}"
+    bits = "0" * (len(code) - 1) + code + bits[1:] + "1"
+    bits += "0" * (-len(bits) % 8)
+    nal_unit = bytearray(pps[:2])
+    zeros = 0
+    for byte in int(bits, 2).to_bytes(len(bits) // 8):
+        if zeros >= 2 and byte <= 3:
+            nal_unit.append(3)
+            zeros = 0
+        nal_unit.append(byte)
+        zeros = zeros + 1 if byte == 0 else 0
+    return bytes(nal_unit)
+
+
 def generate_video_with_size_change(
-    encoder, sizes, duration, keyframe_vps=True, first_size_keyframe_sets=True
+    encoder,
+    sizes,
+    duration,
+    keyframe_vps=True,
+    first_size_keyframe_sets=True,
+    extra_pps=False,
 ):
     """Generate an MPEG-TS video whose picture size changes at a keyframe.
 
@@ -133,7 +158,9 @@ def generate_video_with_size_change(
     False, only the first keyframe carries a VPS. With
     `first_size_keyframe_sets` False, the keyframes of the first size carry no
     parameter sets; they come once, ahead of the second packet (the stream's
-    extradata), as with a source that sends them out of band.
+    extradata), as with a source that sends them out of band. With
+    `extra_pps`, the first keyframe (the stream's extradata) also carries a
+    copy of its PPS with ID 1, which no later keyframe repeats.
     """
     options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
     output = io.BytesIO()
@@ -154,12 +181,23 @@ def generate_video_with_size_change(
                 nal_types.add(32)
             if not first_size_keyframe_sets and not part_index:
                 nal_types.update((32, 33, 34))
+            data = bytes(packet)
             if nal_types:
-                removed, data = split_hevc_nal_units(bytes(packet), nal_types)
+                removed, data = split_hevc_nal_units(data, nal_types)
                 if first:
                     out_of_band = removed
                 elif packet_index == 1:
                     data = out_of_band + data
+            if extra_pps and first:
+                pps, _ = split_hevc_nal_units(data, {34})
+                data = data.replace(
+                    pps,
+                    pps
+                    + b"\x00\x00\x01"
+                    + hevc_pps_with_id(pps[3:].rstrip(b"\x00"), 1),
+                    1,
+                )
+            if data != bytes(packet):
                 stripped = av.Packet(data)
                 stripped.pts, stripped.dts = packet.pts, packet.dts
                 stripped.time_base = packet.time_base
