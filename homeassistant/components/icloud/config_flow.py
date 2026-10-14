@@ -154,6 +154,12 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(
                 user_input, {CONF_PASSWORD: "invalid_auth"}, step_id
             )
+        except PyiCloudConnectionException as retry_error:
+            _LOGGER.error("Error connecting to iCloud service: %s", retry_error)
+            self.api = None
+            return self._show_setup_form(
+                user_input, {"base": "cannot_connect"}, step_id
+            )
         except (
             PyiCloudAuthRequiredException,
             PyiCloudAPIResponseException,
@@ -348,6 +354,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
             return self.async_abort(reason="no_device")
+        except PyiCloudConnectionException as error:
+            # Unreachable rather than refusing, so the session is kept as it is
+            # for an outage.
+            _LOGGER.error("Error connecting to iCloud service: %s", error)
+            return self._show_setup_form(
+                user_input, {"base": "cannot_connect"}, step_id
+            )
         except PyiCloudServiceUnavailable as error:
             # iCloud failing rather than refusing. The stored session is not at
             # fault and must not be thrown away over an outage: it carries the

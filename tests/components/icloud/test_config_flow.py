@@ -7,6 +7,7 @@ from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
     PyiCloudServiceUnavailable,
@@ -1098,3 +1099,62 @@ async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_device_fetch_unreachable_keeps_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that being unable to reach iCloud reading the devices is reported as such.
+
+    It says nothing about the credentials or the session, which has to
+    survive for the trust token it carries.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudConnectionException(reason="Connection error")
+    ) as service_mock:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    service_mock.assert_called_once()
+
+
+async def test_retry_login_unreachable_is_a_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test that iCloud being unreachable on the second login is reported as such.
+
+    The stored session is rejected, so the flow logs in again without it; the
+    outage is then not a reason to blame the password or report an unknown
+    error.
+    """
+    retry_service = MagicMock()
+    retry_service.authenticate.side_effect = PyiCloudConnectionException(
+        reason="Connection error"
+    )
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            retry_service,
+        ],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}

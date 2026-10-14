@@ -127,6 +127,15 @@ def code_can_be_delivered(api: PyiCloudService | None) -> bool:
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
+def _cannot_connect(err: PyiCloudConnectionException) -> ConfigEntryNotReady:
+    """Return the error that has Home Assistant retry an unreachable iCloud."""
+    return ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="cannot_connect",
+        translation_placeholders={"error": str(err)},
+    )
+
+
 class IcloudAccount:
     """Representation of an iCloud account."""
 
@@ -210,11 +219,7 @@ class IcloudAccount:
         except PyiCloudConnectionException as err:
             # iCloud is unreachable; this says nothing about the credentials, so
             # let the config entry retry instead of asking the user to log in.
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            raise _cannot_connect(err) from err
 
         except PyiCloudFailedLoginException:
             # PyiCloudService authenticates while constructing, so this means
@@ -282,6 +287,8 @@ class IcloudAccount:
                 two_factor=challenged, keep_session=challenged, start_reauth=False
             )
             raise ConfigEntryAuthFailed from err
+        except PyiCloudConnectionException as err:
+            raise _cannot_connect(err) from err
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
