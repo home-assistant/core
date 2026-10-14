@@ -215,20 +215,36 @@ BOTH_SIZES = [(480, 320), (640, 480)]
 
 
 @pytest.mark.parametrize(
-    ("encoder", "keyframe_vps", "size_parses", "init_sizes", "decoded"),
+    ("encoder", "source_options", "size_errors", "init_sizes", "decoded"),
     [
         # hvc1 keeps parameter sets in the init only
-        pytest.param("libx265", True, True, BOTH_SIZES, BOTH_SIZES, id="h265"),
+        pytest.param("libx265", {}, 0, BOTH_SIZES, BOTH_SIZES, id="h265"),
         # Keyframes that repeat SPS and PPS only keep the stream's VPS
         pytest.param(
-            "libx265", False, True, BOTH_SIZES, BOTH_SIZES, id="h265-no-keyframe-vps"
+            "libx265",
+            {"keyframe_vps": False},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-no-keyframe-vps",
+        ),
+        # Keyframes that carry no parameter sets until the change
+        pytest.param(
+            "libx265",
+            {"first_size_keyframe_sets": False},
+            0,
+            BOTH_SIZES,
+            BOTH_SIZES,
+            id="h265-sets-first-in-band-at-change",
         ),
         # Parameter sets that do not parse keep the current init
         pytest.param(
-            "libx265", True, False, [(480, 320)], [(480, 320)], id="h265-unparsed"
+            "libx265", {}, None, [(480, 320)], [(480, 320)], id="h265-unparsed"
         ),
+        # and are tried again on the next keyframe
+        pytest.param("libx265", {}, 1, BOTH_SIZES, BOTH_SIZES, id="h265-unparsed-once"),
         # avc1 samples keep their in-band parameter sets
-        pytest.param("libx264", True, True, [(480, 320)], BOTH_SIZES, id="h264"),
+        pytest.param("libx264", {}, 0, [(480, 320)], BOTH_SIZES, id="h264"),
     ],
 )
 async def test_hls_stream_picture_size_change(
@@ -236,18 +252,22 @@ async def test_hls_stream_picture_size_change(
     setup_component: None,
     hls_stream,
     encoder: str,
-    keyframe_vps: bool,
-    size_parses: bool,
+    source_options: dict[str, bool],
+    size_errors: int | None,
     init_sizes: list[tuple[int, int]],
     decoded: list[tuple[int, int]],
 ) -> None:
     """Test that every playlist segment decodes with its init after a size change."""
     source = generate_video_with_size_change(
-        encoder, BOTH_SIZES, duration=3, keyframe_vps=keyframe_vps
+        encoder, BOTH_SIZES, duration=4, **source_options
     )
-    picture_size_error = (
-        None if size_parses else av.FFmpegError(1094995529, "Invalid data")
-    )
+    size_calls = itertools.count()
+
+    def picture_size(extradata: bytes) -> tuple[int, int]:
+        """Fail the first `size_errors` calls, or every call for None."""
+        if size_errors is None or next(size_calls) < size_errors:
+            raise av.FFmpegError(1094995529, "Invalid data")
+        return hevc_picture_size(extradata)
 
     # Hold the worker at the end of the stream so the segments stay available
     worker_ended = threading.Event()
@@ -265,8 +285,7 @@ async def test_hls_stream_picture_size_change(
         ),
         patch(
             "homeassistant.components.stream.worker.hevc_picture_size",
-            side_effect=picture_size_error,
-            wraps=hevc_picture_size,
+            side_effect=picture_size,
         ),
     ):
         stream = create_stream(hass, source, {}, dynamic_stream_settings())

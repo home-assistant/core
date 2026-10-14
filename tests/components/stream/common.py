@@ -107,37 +107,60 @@ def generate_h265_video(container_format="mp4", duration=5):
     return generate_video("libx265", container_format, duration)
 
 
-def strip_hevc_vps(data):
-    """Return an Annex B access unit without its VPS NAL units."""
+def split_hevc_nal_units(data, nal_types):
+    """Split an Annex B access unit into the NAL units of the given types and the rest."""
     nal_units = data.split(b"\x00\x00\x01")
-    return b"\x00\x00\x01".join(
+    selected = [
+        nal_unit for nal_unit in nal_units[1:] if (nal_unit[0] >> 1) & 0x3F in nal_types
+    ]
+    rest = [nal_units[0]] + [
         nal_unit
-        for i, nal_unit in enumerate(nal_units)
-        if i == 0 or (nal_unit[0] >> 1) & 0x3F != 32
+        for nal_unit in nal_units[1:]
+        if (nal_unit[0] >> 1) & 0x3F not in nal_types
+    ]
+    return b"".join(b"\x00\x00\x01" + nal_unit for nal_unit in selected), (
+        b"\x00\x00\x01".join(rest)
     )
 
 
-def generate_video_with_size_change(encoder, sizes, duration, keyframe_vps=True):
+def generate_video_with_size_change(
+    encoder, sizes, duration, keyframe_vps=True, first_size_keyframe_sets=True
+):
     """Generate an MPEG-TS video whose picture size changes at a keyframe.
 
     Each size is encoded separately for `duration` seconds and carries its own
     in-band parameter sets, repeated at every keyframe. With `keyframe_vps`
-    False, only the first keyframe carries a VPS.
+    False, only the first keyframe carries a VPS. With
+    `first_size_keyframe_sets` False, the keyframes of the first size carry no
+    parameter sets; they come once, ahead of the second packet (the stream's
+    extradata), as with a source that sends them out of band.
     """
     options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
     output = io.BytesIO()
     container = av.open(output, mode="w", format="mpegts")
     stream = None
     offset = 0
-    for size in sizes:
+    for part_index, size in enumerate(sizes):
         part = av.open(generate_video(encoder, "mpegts", duration, size, options))
         if stream is None:
             stream = container.add_stream_from_template(part.streams.video[0])
         packets = [packet for packet in part.demux(video=0) if packet.dts is not None]
         shift = offset - packets[0].dts
-        for packet in packets:
-            if not keyframe_vps and (offset or packet is not packets[0]):
-                stripped = av.Packet(strip_hevc_vps(bytes(packet)))
+        out_of_band = b""
+        for packet_index, packet in enumerate(packets):
+            first = not part_index and not packet_index
+            nal_types = set()
+            if not keyframe_vps and not first:
+                nal_types.add(32)
+            if not first_size_keyframe_sets and not part_index:
+                nal_types.update((32, 33, 34))
+            if nal_types:
+                removed, data = split_hevc_nal_units(bytes(packet), nal_types)
+                if first:
+                    out_of_band = removed
+                elif packet_index == 1:
+                    data = out_of_band + data
+                stripped = av.Packet(data)
                 stripped.pts, stripped.dts = packet.pts, packet.dts
                 stripped.time_base = packet.time_base
                 stripped.is_keyframe = packet.is_keyframe

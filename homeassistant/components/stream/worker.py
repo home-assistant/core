@@ -342,17 +342,17 @@ class StreamMuxer:
 
     def _parameter_sets_changed(self, packet: av.Packet) -> bool:
         """Return True if a keyframe carries parameter sets the init lacks."""
+        first_keyframe, self._first_keyframe = self._first_keyframe, False
         if not self._follow_parameter_sets or not (
             found := hevc_parameter_sets(bytes(packet))
         ):
             return False
         parameter_sets = self._parameter_sets | found
-        first_keyframe, self._first_keyframe = self._first_keyframe, False
         if parameter_sets == self._parameter_sets:
             return False
-        self._parameter_sets = parameter_sets
         if first_keyframe:
             # Its output was already created from the stream's extradata
+            self._parameter_sets = parameter_sets
             return False
         extradata = b"".join(
             b"\x00\x00\x00\x01" + nal_unit
@@ -367,6 +367,7 @@ class StreamMuxer:
                 redact_av_error_string(err),
             )
             return False
+        self._parameter_sets = parameter_sets
         self._video_extradata = extradata
         _LOGGER.debug("Video parameter sets changed, size %sx%s", *self._video_size)
         return True
