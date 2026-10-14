@@ -11,7 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import EMAIL, PASSWORD
+from .conftest import EMAIL, PASSWORD, USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == EMAIL
     assert result["data"] == USER_INPUT
-    assert result["result"].unique_id == EMAIL
+    assert result["result"].unique_id == USER_ID
 
 
 @pytest.mark.parametrize(
@@ -54,7 +54,7 @@ async def test_flow_errors_and_recovery(
     error: str,
 ) -> None:
     """Test the flow shows the error and recovers once the cloud answers."""
-    mock_helty_cloud.get_devices.side_effect = side_effect
+    mock_helty_cloud.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -65,7 +65,7 @@ async def test_flow_errors_and_recovery(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_helty_cloud.get_devices.side_effect = None
+    mock_helty_cloud.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -85,6 +85,24 @@ async def test_duplicate_account(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_same_account_under_another_email(
+    hass: HomeAssistant,
+    mock_helty_cloud: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an account is recognised by its id, not by the email it logs in with."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_EMAIL: "renamed@example.com"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

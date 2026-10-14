@@ -2308,7 +2308,7 @@ pyhaversion==22.8.0
 pyhelty==0.2.0
 
 # homeassistant.components.helty_cloud
-pyheltycloud==0.1.0
+pyheltycloud==0.2.0
 
 # homeassistant.components.heos
 pyheos==1.0.6

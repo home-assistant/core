@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
+USER_ID = "00000000-1111-2222-3333-444444444444"
 DEVICE_NAME = "VMC Soggiorno"
 SERIAL = "64000175853003"
 BOARD_SERIAL = "DCB4D9A8C966"
@@ -75,6 +76,7 @@ def mock_helty_cloud() -> Generator[AsyncMock]:
             return make_state(mode)
 
         client = mock_client.return_value
+        client.user_id = USER_ID
         client.get_devices.return_value = [DEVICE]
         client.set_mode_verified.side_effect = set_mode_verified
         # Polls read; only the confirmation after a command wakes the panel.
@@ -89,6 +91,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=EMAIL,
         data={CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD},
-        unique_id=EMAIL,
+        unique_id=USER_ID,
         entry_id="01HHHHHHHHHHHHHHHHHHHHHHHH",
     )
