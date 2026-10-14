@@ -269,7 +269,7 @@ wrap calls in an executor.` (Same verdict for both modes.)
 - File I/O on the request path: `open(` /
   `pathlib.Path.read_*` / `.write_*` for non-trivial sizes (small
   one-shot reads during import are OK).
-- Sync DB drivers: `sqlite3`, `psycopg2`, `pymysql`, sync `pymongo` /
+- Sync DB drivers: `sqlite3`, `psycopg`, `pymysql`, sync `pymongo` /
   `redis.Redis`.
 - `subprocess.run` / `subprocess.call` / `os.system`.
 

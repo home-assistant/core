@@ -594,12 +594,12 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     # Check if excluded entity_ids are in database
     entity_filter = instance.entity_filter
     has_more_to_purge = False
-    excluded_metadata_ids: list[str] = [
+    excluded_metadata_ids: list[int] = [
         metadata_id
         for (metadata_id, entity_id) in session.query(
             StatesMeta.metadata_id, StatesMeta.entity_id
         ).all()
-        if entity_filter and not entity_filter(entity_id)
+        if entity_filter and entity_id and not entity_filter(entity_id)
     ]
     if excluded_metadata_ids:
         has_more_to_purge |= not _purge_filtered_states(
@@ -629,7 +629,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
 def _purge_filtered_states(
     instance: Recorder,
     session: Session,
-    metadata_ids_to_purge: list[str],
+    metadata_ids_to_purge: list[int],
     database_engine: DatabaseEngine,
     purge_before_timestamp: float,
 ) -> bool:
@@ -727,12 +727,12 @@ def purge_entity_data(
     assert database_engine is not None
     purge_before_timestamp = purge_before.timestamp()
     with session_scope(session=instance.get_session()) as session:
-        selected_metadata_ids: list[str] = [
+        selected_metadata_ids: list[int] = [
             metadata_id
             for (metadata_id, entity_id) in session.query(
                 StatesMeta.metadata_id, StatesMeta.entity_id
             ).all()
-            if entity_filter and entity_filter(entity_id)
+            if entity_filter and entity_id and entity_filter(entity_id)
         ]
         _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
         if not selected_metadata_ids:
