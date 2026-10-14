@@ -85,7 +85,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AerosmartConfigEntry) 
     if legacy_entry is None or CONF_HOST not in legacy_entry.data:
         return False
 
-    host = str(legacy_entry.data[CONF_HOST])
+    host = str(legacy_entry.data[CONF_HOST]).strip().lower()
     port = int(legacy_entry.data.get(CONF_PORT, DEFAULT_PORT))
     data = {
         CONF_HOST: host,
@@ -96,7 +96,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AerosmartConfigEntry) 
     hass.config_entries.async_update_entry(
         entry,
         data=data,
-        unique_id=f"{host.lower()}:{port}_{data[CONF_UNIT_VENTILATION]}_{data[CONF_UNIT_HEAT_PUMP]}",
+        unique_id=f"{host}:{port}_{data[CONF_UNIT_VENTILATION]}_{data[CONF_UNIT_HEAT_PUMP]}",
         version=2,
     )
     return True

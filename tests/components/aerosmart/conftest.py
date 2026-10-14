@@ -38,6 +38,7 @@ HEAT_PUMP_HOLDING: dict[int, list[int]] = {
     1044: [0, 1],  # heat_pump.waermepumpe
     1314: [0, 1],  # heat_pump.wp_status: Wärmepumpe aus
     212: [0, 45000],  # hot_water_heat_pump.warmwasser_speicher_oben (-> 45.0)
+    1212: [0, 45],  # hot_water_heat_pump.wp_vorruebergehende_boilertemperatur
 }
 
 

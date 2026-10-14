@@ -6,6 +6,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -97,6 +98,17 @@ async def test_setup_entry_creates_entities(
     assert outside_temp is not None
     assert outside_temp.state == "0.123"
 
+    temporary_boiler_temperature = hass.states.get(
+        "sensor.aerosmart_temporary_boiler_temperature"
+    )
+    assert temporary_boiler_temperature is not None
+    assert temporary_boiler_temperature.state == "45"
+    assert temporary_boiler_temperature.attributes["unit_of_measurement"] == "°C"
+    assert (
+        temporary_boiler_temperature.attributes["device_class"]
+        == SensorDeviceClass.TEMPERATURE
+    )
+
     heat_pump_status = hass.states.get("sensor.aerosmart_heat_pump_status")
     assert heat_pump_status is not None
     assert heat_pump_status.state == "off"
@@ -138,7 +150,7 @@ async def test_migrates_legacy_shared_connection_entry(hass: HomeAssistant) -> N
     """Version 1 entries copy host and port from their former connection entry."""
     legacy_connection = MockConfigEntry(
         domain="modbus_connection",
-        data={CONF_HOST: "gateway.local", CONF_PORT: 8899},
+        data={CONF_HOST: "  GATEWAY.local  ", CONF_PORT: 8899},
     )
     legacy_connection.add_to_hass(hass)
     entry = MockConfigEntry(

@@ -723,6 +723,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         translation_key="hot_water_heat_pump_wp_vorruebergehende_boilertemperatur",
         component="hot_water_heat_pump",
         attribute="wp_vorruebergehende_boilertemperatur",
+        native_unit_of_measurement="°C",
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
