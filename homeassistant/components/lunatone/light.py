@@ -1,5 +1,6 @@
 """Platform for Lunatone light integration."""
 
+import contextlib
 from typing import Any, override
 
 import aiohttp
@@ -188,7 +189,8 @@ class LunatoneLight(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data[self._line_id][self._device_id]
+        with contextlib.suppress(KeyError):
+            self._device = self.coordinator.data[self._line_id][self._device_id]
         self.async_write_ha_state()
 
     @override
