@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError, ModbusTimeoutError
 from sofar_modbus.modern.device import BATTERY_STRING_COMPONENTS, SofarInverter
-from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -142,9 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry.data[CONF_UNIT_ID],
     )
 
-    link = TimedUnit(unit)
-    tuner = LinkTuner(link)
-    device = SofarInverter(link, serial_number=serial)
+    device = SofarInverter(unit, serial_number=serial)
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
@@ -153,7 +150,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
-        tuner,
     )
     settings = SofarDataUpdateCoordinator(
         hass,
@@ -161,14 +157,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
-        tuner,
     )
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         failure = readings.last_exception
         if not (
-            link.connected
+            device.connected
             and isinstance(failure, UpdateFailed)
             and isinstance(failure.__cause__, ModbusTimeoutError)
         ):
@@ -195,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     inverter = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
     _async_remove_denied_meter_energy(
         hass, serial, entry.runtime_data.served_components
     )
