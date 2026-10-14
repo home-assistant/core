@@ -506,11 +506,7 @@ async def test_config_flow_reauth_success(
         return_value=mock_client,
     ):
         # Start reauth flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm"
 
@@ -613,11 +609,7 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
             return_value=mock_client,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         # Check initial reauth form
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -826,14 +818,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.config_flow.WebhookClient",
         return_value=mock_client,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_entry.entry_id,
-            },
-            data=mock_entry.data,
-        )
+        result = await mock_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 

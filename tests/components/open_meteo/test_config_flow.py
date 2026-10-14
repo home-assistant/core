@@ -50,10 +50,11 @@ async def test_flow_cannot_connect(
     """Test the flow shows an error when Open-Meteo can't be reached, and recovers."""
     mock_open_meteo.forecast.side_effect = OpenMeteoConnectionError
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_ZONE: ENTITY_ID_HOME},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ZONE: ENTITY_ID_HOME}
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -72,10 +73,11 @@ async def test_flow_cannot_connect(
 @pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")
 async def test_flow_zone_not_found(hass: HomeAssistant) -> None:
     """Test the flow shows an error for a zone that does not exist."""
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_ZONE: "zone.gone"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ZONE: "zone.gone"}
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -96,10 +98,11 @@ async def test_flow_already_configured(
     """Test the flow aborts for a zone that is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_ZONE: ENTITY_ID_HOME},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ZONE: ENTITY_ID_HOME}
     )
 
     assert result.get("type") is FlowResultType.ABORT

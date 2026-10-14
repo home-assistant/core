@@ -458,10 +458,13 @@ async def test_user_already_configured(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.100"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -499,10 +502,13 @@ async def test_user_no_mac_already_configured(
 
     mock_gds_api.device_mac = None
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.100"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -525,10 +531,13 @@ async def test_user_no_mac_new_device(
     """Test user flow creates entry without unique_id when no MAC is known."""
     mock_gds_api.device_mac = None
 
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.200"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.200"},
     )
 
     result = await hass.config_entries.flow.async_configure(

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import inspect
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import broadlink as blk
+import broadlink_async as blk
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.core import HomeAssistant

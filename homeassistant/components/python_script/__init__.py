@@ -44,6 +44,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle reload service calls."""
         discover_scripts(hass)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
 
     return True
@@ -76,6 +78,8 @@ def discover_scripts(hass: HomeAssistant) -> None:
 
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
+        # Cannot be moved: action names come from the script files
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(
             DOMAIN,
             name,

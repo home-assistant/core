@@ -120,6 +120,31 @@ async def test_entity_id_change_disabled_camera(
     )
 
 
+async def test_entity_removed(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test prefs are dropped when the camera is removed from the registry."""
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "unique", suggested_object_id="old"
+    )
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    await prefs.async_update("camera.old", preload_stream=True)
+    settings = await prefs.get_dynamic_stream_settings("camera.old")
+
+    entity_registry.async_remove("camera.old")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN]["data"] == {}
+    # A camera created later with the same entity_id does not inherit the prefs
+    new_settings = await prefs.get_dynamic_stream_settings("camera.old")
+    assert new_settings is not settings
+    assert new_settings == DynamicStreamSettings()
+
+
 async def test_entity_id_change_drops_stale_prefs(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

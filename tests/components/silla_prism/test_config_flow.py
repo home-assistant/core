@@ -71,11 +71,12 @@ async def test_user_flow_no_device(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test the user flow errors when no traffic is seen, then recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     with patch(_PROBE_PATH, return_value=False):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_BASE_TOPIC: BASE_TOPIC},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_BASE_TOPIC: BASE_TOPIC}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_device"}
@@ -93,11 +94,12 @@ async def test_user_flow_mqtt_unavailable(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test the user flow aborts when MQTT is not available."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     with patch(_MQTT_CLIENT_PATH, return_value=False):
-        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_BASE_TOPIC: BASE_TOPIC},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_BASE_TOPIC: BASE_TOPIC}
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "mqtt_unavailable"
@@ -112,10 +114,11 @@ async def test_user_flow_invalid_base_topic(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, base_topic: str
 ) -> None:
     """Test the user flow rejects invalid base topics, then recovers."""
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_BASE_TOPIC: base_topic},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_BASE_TOPIC: base_topic}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE_TOPIC: "invalid_base_topic"}
@@ -135,10 +138,11 @@ async def test_user_flow_already_configured(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the user flow aborts when the base topic is already configured."""
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_BASE_TOPIC: BASE_TOPIC},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_BASE_TOPIC: BASE_TOPIC}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
