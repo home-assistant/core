@@ -1,12 +1,17 @@
 """Support for functionality to interact with Android / Fire TV devices."""
 
+import base64
 from datetime import datetime, timedelta
+import gzip
 import hashlib
+from io import BytesIO
 import logging
+import struct
 from typing import override
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
+from PIL import Image
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
@@ -47,6 +52,33 @@ ANDROIDTV_STATES = {
     "playing": MediaPlayerState.PLAYING,
     "paused": MediaPlayerState.PAUSED,
 }
+
+
+def _encode_raw_screencap(encoded: str) -> bytes | None:
+    """Encode Android raw pixels on the host instead of the TV CPU."""
+    raw = gzip.decompress(base64.b64decode(encoded))
+    if len(raw) < 12:
+        raise ValueError("Truncated screenshot header")
+    width, height, pixel_format = struct.unpack_from("<III", raw)
+    formats = {
+        1: ("RGBA", "RGBA", 4),
+        2: ("RGB", "RGBX", 4),
+        3: ("RGB", "RGB", 3),
+        4: ("RGB", "BGR;16", 2),
+        5: ("RGBA", "BGRA", 4),
+    }
+    if pixel_format not in formats:
+        return None
+    mode, raw_mode, bytes_per_pixel = formats[pixel_format]
+    pixel_bytes = width * height * bytes_per_pixel
+    # Newer Android versions add a dataspace field to the raw header.
+    header_bytes = len(raw) - pixel_bytes
+    if width == 0 or height == 0 or header_bytes not in (12, 16):
+        raise ValueError("Invalid screenshot dimensions or pixel length")
+    image = Image.frombytes(mode, (width, height), raw[header_bytes:], "raw", raw_mode)
+    output = BytesIO()
+    image.save(output, format="PNG")
+    return output.getvalue()
 
 
 async def async_setup_entry(
@@ -144,6 +176,19 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     @adb_decorator()
     async def _adb_screencap(self) -> bytes | None:
         """Take a screen capture from the device."""
+        encoded = await self.aftv.adb_shell("screencap | gzip -1 | base64")
+        if not isinstance(encoded, str) or not encoded.strip():
+            return None
+        try:
+            image = await self.hass.async_add_executor_job(
+                _encode_raw_screencap, encoded
+            )
+        except (ValueError, OSError, EOFError) as err:
+            _LOGGER.warning("Unable to decode raw screenshot: %s", err)
+            return None
+        if image is not None:
+            return image
+        # Preserve PNG support for pixel formats Pillow cannot decode here.
         return await self.aftv.adb_screencap()  # type: ignore[no-any-return]
 
     async def _async_get_screencap(self, prev_app_id: str | None = None) -> None:
