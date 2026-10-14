@@ -89,10 +89,8 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         except ApiError as exc:
             errors["base"] = "unknown"
             details = getattr(exc, "body", {}).get("detail", {})
-            if details:
-                status = details.get("status")
-                if status == "invalid_api_key":
-                    errors["base"] = "invalid_api_key"
+            if details.get("status") == "invalid_api_key":
+                errors["base"] = "invalid_api_key"
             return {}, errors
         return voices, errors
 
