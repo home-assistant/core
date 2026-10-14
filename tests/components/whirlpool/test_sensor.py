@@ -18,7 +18,13 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
-from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
+from . import (
+    create_mock_entry,
+    init_integration,
+    init_integration_with_entry,
+    snapshot_whirlpool_entities,
+    trigger_attr_callback,
+)
 
 from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
@@ -438,12 +444,15 @@ async def test_oven_cook_mode_sensor_kept_when_used_by_automation(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a disabled cook mode sensor used by an automation is kept and flagged."""
+    entry = create_mock_entry()
+    entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         Platform.SENSOR,
         DOMAIN,
         DEPRECATED_COOK_MODE_UNIQUE_ID,
         suggested_object_id="single_cavity_oven_cook_mode",
         disabled_by=er.RegistryEntryDisabler.USER,
+        config_entry=entry,
     )
     assert await async_setup_component(
         hass,
@@ -460,7 +469,7 @@ async def test_oven_cook_mode_sensor_kept_when_used_by_automation(
         },
     )
 
-    await init_integration(hass)
+    await init_integration_with_entry(hass, entry)
 
     # The sensor is still referenced by an automation, so it is kept and the
     # repair issue switches to the variant that lists the usage.
@@ -473,6 +482,11 @@ async def test_oven_cook_mode_sensor_kept_when_used_by_automation(
     issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_COOK_MODE_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_oven_cook_mode_scripts"
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (DOMAIN, DEPRECATED_COOK_MODE_ISSUE_ID) not in issue_registry.issues
 
 
 # The oven target temperature sensor has been replaced by a number entity.
@@ -550,12 +564,15 @@ async def test_oven_target_temperature_sensor_kept_when_used_by_automation(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a disabled target temperature sensor used by an automation is kept."""
+    entry = create_mock_entry()
+    entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         Platform.SENSOR,
         DOMAIN,
         DEPRECATED_TARGET_TEMP_UNIQUE_ID,
         suggested_object_id="single_cavity_oven_target_temperature",
         disabled_by=er.RegistryEntryDisabler.USER,
+        config_entry=entry,
     )
     assert await async_setup_component(
         hass,
@@ -572,7 +589,7 @@ async def test_oven_target_temperature_sensor_kept_when_used_by_automation(
         },
     )
 
-    await init_integration(hass)
+    await init_integration_with_entry(hass, entry)
 
     # The sensor is still referenced by an automation, so it is kept and the
     # repair issue switches to the variant that lists the usage.
@@ -585,3 +602,8 @@ async def test_oven_target_temperature_sensor_kept_when_used_by_automation(
     issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_TARGET_TEMP_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_oven_target_temperature_scripts"
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (DOMAIN, DEPRECATED_TARGET_TEMP_ISSUE_ID) not in issue_registry.issues

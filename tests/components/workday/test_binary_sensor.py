@@ -457,10 +457,14 @@ async def test_only_repairs_for_current_next_year(
         "remove_holidays": remove_dates,
         "language": "de",
     }
-    await init_integration(hass, config)
+    entry = await init_integration(hass, config)
 
     assert len(issue_registry.issues) == 2
     assert issue_registry.issues == snapshot
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_missing_language(

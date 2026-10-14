@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.v2c.const import DOMAIN
 from homeassistant.components.v2c.sensor import _METER_ERROR_OPTIONS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import init_integration
 
@@ -65,3 +66,31 @@ async def test_sensor(
         "empty_message",
         "undefined_error",
     ]
+
+
+@pytest.mark.usefixtures("mock_v2c_client")
+async def test_deprecated_voltage_sensor_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the deprecated voltage sensor issue is linked to the config entry."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_voltage_installation",
+        config_entry=mock_config_entry,
+    )
+    with patch("homeassistant.components.v2c.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    issue_id = f"deprecated_sensor_{mock_config_entry.entry_id}_voltage_installation"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

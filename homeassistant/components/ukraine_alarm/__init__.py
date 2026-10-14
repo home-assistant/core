@@ -72,6 +72,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 hass,
                 DOMAIN,
                 f"deprecated_state_region_{config_entry.entry_id}",
+                config_entry_id=config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,

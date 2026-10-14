@@ -217,7 +217,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         ):
             try:
                 # Ignore all exceptions during probing, they shouldn't halt setup
-                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                if await warn_on_wrong_silabs_firmware(
+                    hass, device_path, config_entry.entry_id
+                ):
                     raise ConfigEntryError("Incorrect firmware installed") from exc
             except AlreadyRunningEZSP as ezsp_exc:
                 raise ConfigEntryNotReady from ezsp_exc

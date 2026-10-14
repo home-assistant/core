@@ -303,10 +303,12 @@ async def test_binary_sensor_deprecation_issue(
 ) -> None:
     """Test sensor deprecation issue."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
         f"271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        config_entry=config_entry,
         suggested_object_id="gsr_ae_subscribed_to_xbox_game_pass",
         disabled_by=None,
     )
@@ -334,7 +336,6 @@ async def test_binary_sensor_deprecation_issue(
         },
     )
 
-    config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
@@ -353,6 +354,7 @@ async def test_binary_sensor_deprecation_issue(
             issue_id=f"deprecated_entity_271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
         )
     )
+    assert repair_issue.config_entry_id == config_entry.entry_id
 
     client = await hass_client()
 
