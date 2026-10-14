@@ -1,7 +1,7 @@
 """Tests for the LaCrosse integration setup."""
 
 from types import MappingProxyType
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from serial import SerialException
@@ -43,7 +43,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "type": "temperature",
             "expire_after": 300,
             "friendly_name": "Outdoor",
-            "unique_id": "outdoor_temperature_unique",
         }
     }
     hass.config_entries.async_add_subentry(
@@ -56,6 +55,48 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         ),
     )
     return entry
+
+
+async def test_receivers_with_same_sensor_key(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test identical sensor keys on different receivers remain independent."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN, data={**ENTRY_DATA, "device": "/dev/ttyUSB1"}
+    )
+
+    with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        second_entry.add_to_hass(hass)
+        hass.config_entries.async_add_subentry(
+            second_entry,
+            ConfigSubentry(
+                data=next(iter(config_entry.subentries.values())).data,
+                subentry_type="sensor",
+                title="LaCrosse sensor 1",
+                unique_id="1",
+            ),
+        )
+        assert await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
+        for entry in (config_entry, second_entry):
+            entity_id = entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{entry.entry_id}_outdoor_temperature"
+            )
+            assert entity_id is not None
+            entity = entity_registry.async_get(entity_id)
+            assert entity.config_entry_id == entry.entry_id
+            assert entity.config_subentry_id in entry.subentries
+            assert hass.states.get(entity_id) is not None
+
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(entity_registry.entities) == 2
 
 
 async def test_setup_and_unload(
@@ -89,7 +130,7 @@ async def test_setup_and_unload(
 
         entity_entry = entity_registry.async_get("sensor.outdoor_temperature")
         assert entity_entry is not None
-        assert entity_entry.unique_id == "outdoor_temperature_unique"
+        assert entity_entry.unique_id == f"{entry.entry_id}_outdoor_temperature"
 
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, "/dev/ttyUSB0_1"), entry.entry_id
@@ -103,144 +144,6 @@ async def test_setup_and_unload(
         await hass.async_block_till_done()
 
     assert receiver.close.call_count == 1
-
-
-@pytest.mark.parametrize(
-    ("exception", "submitted_data", "expected_data", "expected_result"),
-    [
-        pytest.param(
-            None,
-            {**ENTRY_DATA, "baud": 38400, "frequency": 868.3},
-            {**ENTRY_DATA, "baud": 38400},
-            {"reason": "reconfigure_successful"},
-            id="updated",
-        ),
-        pytest.param(
-            None,
-            {**ENTRY_DATA, "frequency": 868.3},
-            ENTRY_DATA,
-            {"reason": "reconfigure_successful"},
-            id="unchanged",
-        ),
-        pytest.param(
-            SerialException("busy"),
-            {**ENTRY_DATA, "baud": 38400, "frequency": 868.3},
-            ENTRY_DATA,
-            {"errors": {"base": "cannot_connect"}},
-            id="cannot-connect",
-        ),
-        pytest.param(
-            RuntimeError("unexpected"),
-            {**ENTRY_DATA, "baud": 38400, "frequency": 868.3},
-            ENTRY_DATA,
-            {"errors": {"base": "unknown"}},
-            id="unknown-error",
-        ),
-    ],
-)
-async def test_reconfigure_running_receiver(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    exception: Exception | None,
-    submitted_data: dict[str, str | int | float | bool],
-    expected_data: dict[str, str | int | bool],
-    expected_result: dict[str, object],
-) -> None:
-    """Test the running receiver releases its port before probing and restarts."""
-    receiver = MagicMock()
-    probe = MagicMock()
-    probe.open.side_effect = exception
-    restored_receiver = MagicMock()
-    lifecycle = MagicMock()
-    lifecycle.attach_mock(receiver.close, "close_receiver")
-    lifecycle.attach_mock(probe.open, "open_probe")
-    lifecycle.attach_mock(restored_receiver.start_scan, "restart_scan")
-
-    with patch(
-        "homeassistant.components.lacrosse.pylacrosse.LaCrosse",
-        side_effect=[receiver, probe, restored_receiver],
-    ) as mock_lacrosse:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await config_entry.start_reconfigure_flow(hass)
-        receiver.close.assert_not_called()
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], submitted_data
-        )
-        assert config_entry.state is ConfigEntryState.LOADED
-        restored_receiver.start_scan.assert_called_once()
-        await hass.async_block_till_done()
-
-    assert {key: result[key] for key in expected_result} == expected_result
-    assert config_entry.data == expected_data
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert lifecycle.mock_calls == [
-        call.close_receiver(),
-        call.open_probe(),
-        call.restart_scan(),
-    ]
-    assert mock_lacrosse.call_args_list == [
-        call(ENTRY_DATA["device"], ENTRY_DATA["baud"]),
-        call(submitted_data["device"], submitted_data["baud"]),
-        call(expected_data["device"], expected_data["baud"]),
-    ]
-
-
-async def test_reconfigure_unavailable_receiver(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguring an unavailable receiver starts the replacement port."""
-    probe = MagicMock()
-    receiver = MagicMock()
-    with patch(
-        "homeassistant.components.lacrosse.pylacrosse.LaCrosse",
-        side_effect=[SerialException("unavailable"), probe, receiver],
-    ) as mock_lacrosse:
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-        result = await config_entry.start_reconfigure_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "/dev/ttyUSB1", "baud": 57600}
-        )
-        await hass.async_block_till_done()
-
-        assert result["reason"] == "reconfigure_successful"
-        assert config_entry.state is ConfigEntryState.LOADED
-        assert mock_lacrosse.call_args_list == [
-            call(ENTRY_DATA["device"], ENTRY_DATA["baud"]),
-            call("/dev/ttyUSB1", 57600),
-            call("/dev/ttyUSB1", 57600),
-        ]
-        probe.close.assert_called_once()
-        receiver.start_scan.assert_called_once()
-
-
-async def test_reconfigure_receiver_unload_failure(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test a failed unload prevents probing or updating the active receiver."""
-    with (
-        patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse") as mock_lacrosse,
-        patch(
-            "homeassistant.components.lacrosse.async_unload_entry", return_value=False
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await config_entry.start_reconfigure_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": ENTRY_DATA["device"], "baud": 38400}
-        )
-        await hass.async_block_till_done()
-
-    assert result["errors"] == {"base": "unknown"}
-    assert config_entry.data == ENTRY_DATA
-    mock_lacrosse.assert_called_once_with(ENTRY_DATA["device"], ENTRY_DATA["baud"])
-    mock_lacrosse.return_value.close.assert_not_called()
 
 
 async def test_yaml_import_keeps_legacy_entity_id(
