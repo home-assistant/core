@@ -33,5 +33,10 @@
         "title": "PAJ GPS configuration"
       }
     }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Authentication with the PAJ GPS account failed. Please reauthenticate."
+    }
   }
 }
