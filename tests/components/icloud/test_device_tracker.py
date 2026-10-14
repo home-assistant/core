@@ -147,6 +147,31 @@ async def test_cached_location_without_a_timestamp_is_kept(
     assert state.attributes[ATTR_LONGITUDE] == 2.0
 
 
+async def test_tracker_is_created_once_a_stale_first_fix_is_replaced(
+    hass: HomeAssistant,
+    locating_service: tuple,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a device first seen with a stale fix gets its tracker later.
+
+    The tracker platform skips a device without a location, so the entity can
+    only appear when a fresh fix arrives and announces the device.
+    """
+    _, status = locating_service
+    status["location"] = location(
+        is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
+    )
+    await setup_account(hass)
+    assert hass.states.get(ENTITY_ID) is None
+
+    status["location"] = location(is_old=False, age=timedelta(seconds=30))
+    await next_fetch(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_LATITUDE] == 1.0
+    assert state.attributes[ATTR_LONGITUDE] == 2.0
+
+
 async def test_recovered_location_is_stored_before_it_is_announced(
     hass: HomeAssistant,
     locating_service: tuple,
