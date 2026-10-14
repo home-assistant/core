@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.const import ATTR_SUGGESTED_AREA, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -115,7 +115,7 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
         )
         if area != UNASSIGNED_AREA:
-            self._attr_device_info[ATTR_SUGGESTED_AREA] = area
+            self._attr_device_info.suggested_area = area
 
     @property
     @override

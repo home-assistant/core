@@ -3,7 +3,6 @@
 import logging
 from typing import Any, override
 
-from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -66,7 +65,7 @@ class LutronCasetaEntity(Entity):
             configuration_url=CONFIG_URL,
         )
         if area != UNASSIGNED_AREA:
-            info[ATTR_SUGGESTED_AREA] = area
+            info.suggested_area = area
         self._attr_device_info = info
 
     @override

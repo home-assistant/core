@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CONTRIBUTING_USER, PLATFORMS
+from .const import CONF_CONTRIBUTING_USER, DOMAIN, PLATFORMS
 from .coordinator import OpenSkyConfigEntry, OpenSkyDataUpdateCoordinator
 
 
@@ -27,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> N
                 contributing_user=entry.options.get(CONF_CONTRIBUTING_USER, False),
             )
         except OpenSkyError as exc:
-            raise ConfigEntryNotReady from exc
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from exc
 
     coordinator = OpenSkyDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()

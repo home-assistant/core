@@ -127,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     # The oauth smartthings entry will have a token, older ones are version 3
     # after migration but still require reauthentication
     if CONF_TOKEN not in entry.data:
-        raise ConfigEntryAuthFailed("Config entry missing token")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="missing_token"
+        )
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
@@ -174,7 +176,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         try:
             await client.delete_subscription(old_identifier)
         except SmartThingsConnectionError as err:
-            raise ConfigEntryNotReady("Could not delete old subscription") from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="delete_subscription_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     _LOGGER.debug("Trying to create a new subscription")
     try:
@@ -183,7 +189,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
-        raise ConfigEntryNotReady(f"Couldn't create a new subscription: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="create_subscription_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
@@ -227,9 +237,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             )
         }
     except SmartThingsAuthenticationFailedError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
     except SmartThingsConnectionError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
