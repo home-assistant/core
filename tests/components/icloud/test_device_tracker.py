@@ -143,3 +143,35 @@ async def test_cached_location_without_a_timestamp_is_kept(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_LATITUDE] == 1.0
     assert state.attributes[ATTR_LONGITUDE] == 2.0
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        pytest.param(None, id="null"),
+        pytest.param("not-a-number", id="not_a_number"),
+    ],
+)
+async def test_cached_location_with_an_unusable_timestamp_is_kept(
+    hass: HomeAssistant,
+    locating_service: tuple,
+    freezer: FrozenDateTimeFactory,
+    timestamp: object,
+) -> None:
+    """Test that a timestamp that is there but cannot be read does not end the poll.
+
+    iCloud has no reason to send anything but a number, but arithmetic on
+    anything else raises inside the poll. A fix that cannot be dated is kept,
+    the same as one that carries no timestamp at all.
+    """
+    _, status = locating_service
+    await setup_account(hass)
+
+    status["location"] = location(
+        is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
+    ) | {"timeStamp": timestamp}
+    await next_fetch(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_LATITUDE] == 1.0
+    assert state.attributes[ATTR_LONGITUDE] == 2.0

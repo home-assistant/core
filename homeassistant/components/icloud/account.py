@@ -503,7 +503,10 @@ class IcloudDevice:
         if not location.get(DEVICE_LOCATION_IS_OLD):
             return False
 
-        if (timestamp := location.get(DEVICE_LOCATION_TIMESTAMP)) is None:
+        timestamp = location.get(DEVICE_LOCATION_TIMESTAMP)
+        if not isinstance(timestamp, int | float):
+            # Without a time there is nothing to judge the fix by, and one that
+            # is not a number cannot be read as one.
             return False
 
         # iCloud reports the fix time in milliseconds.
