@@ -26,7 +26,8 @@
 .brightness_threshold_number: &brightness_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 is_off: *condition_common

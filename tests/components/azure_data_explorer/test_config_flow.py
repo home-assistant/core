@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_data_explorer.const import (
@@ -89,12 +89,12 @@ async def test_config_flow_errors(
     assert result2["errors"] == {"base": expected}
 
     schema = result2["data_schema"]
-    assert isinstance(schema, vol.Schema)
+    assert isinstance(schema, probatio.Schema)
 
     suggested_values = {
         key.schema: key.description.get("suggested_value")
         for key in schema.schema
-        if isinstance(key, vol.Marker)
+        if isinstance(key, probatio.Marker)
         and key.description
         and "suggested_value" in key.description
     }

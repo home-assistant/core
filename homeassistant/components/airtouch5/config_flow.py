@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -13,7 +13,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):

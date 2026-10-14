@@ -1,17 +1,11 @@
 """Real integration tests for Greencell EVSE sensors."""
 
-import time
-from unittest.mock import patch
+import logging
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import mqtt as real_mqtt
-from homeassistant.components.greencell.const import (
-    GREENCELL_DISC_TOPIC,
-    GREENCELL_HABU_DEN,
-)
-from homeassistant.components.mqtt import ReceiveMessage
+from homeassistant.components.greencell.const import GREENCELL_HABU_DEN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
@@ -21,6 +15,8 @@ from .conftest import (
     TEST_CURRENT_PAYLOAD_3PHASE,
     TEST_CURRENT_PAYLOAD_SINGLE,
     TEST_CURRENT_TOPIC,
+    TEST_DEVICE_STATE_PAYLOAD_EXECUTE,
+    TEST_DEVICE_STATE_TOPIC,
     TEST_POWER_PAYLOAD_CHARGING,
     TEST_POWER_TOPIC,
     TEST_SERIAL_NUMBER,
@@ -39,46 +35,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
-
-
-@pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mqtt_mock: MqttMockHAClient,
-):
-    """Set up the greencell integration with device-ready fired synchronously."""
-
-    mock_config_entry.add_to_hass(hass)
-    real_async_subscribe = real_mqtt.async_subscribe
-
-    async def _mock_init_subscribe(hass_arg, topic, msg_callback, *args, **kwargs):
-        """Fire discovery payload immediately, pass everything else through."""
-        if topic == GREENCELL_DISC_TOPIC:
-            msg_callback(
-                ReceiveMessage(
-                    topic=GREENCELL_DISC_TOPIC,
-                    payload=f'{{"id": "{TEST_SERIAL_NUMBER}"}}',
-                    qos=0,
-                    retain=False,
-                    subscribed_topic=GREENCELL_DISC_TOPIC,
-                    timestamp=time.time(),
-                )
-            )
-            return lambda: None
-        return await real_async_subscribe(
-            hass_arg, topic, msg_callback, *args, **kwargs
-        )
-
-    with patch(
-        "homeassistant.components.greencell.mqtt.async_subscribe",
-        side_effect=_mock_init_subscribe,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
 
 
 async def test_sensor_states_and_snapshots(
@@ -178,3 +134,39 @@ async def test_sensor_availability_and_errors(
     state = hass.states.get(curr_l1)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def _cycle_offline_and_back(hass: HomeAssistant) -> None:
+    """Take the device offline and bring it back, repeating each message."""
+    for _ in range(2):
+        async_fire_mqtt_message(
+            hass, TEST_STATUS_TOPIC, TEST_STATUS_PAYLOAD_UNAVAILABLE
+        )
+    await hass.async_block_till_done()
+
+    for _ in range(2):
+        async_fire_mqtt_message(
+            hass, TEST_DEVICE_STATE_TOPIC, TEST_DEVICE_STATE_PAYLOAD_EXECUTE
+        )
+    await hass.async_block_till_done()
+
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Losing and regaining the device is logged exactly once per transition."""
+    caplog.set_level(logging.INFO)
+    unavailable = f"Device {TEST_SERIAL_NUMBER} is unavailable"
+    recovered = f"Device {TEST_SERIAL_NUMBER} is available again"
+
+    await _cycle_offline_and_back(hass)
+
+    assert caplog.text.count(unavailable) == 1
+    assert caplog.text.count(recovered) == 1
+
+    await _cycle_offline_and_back(hass)
+
+    assert caplog.text.count(unavailable) == 2
+    assert caplog.text.count(recovered) == 2

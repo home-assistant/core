@@ -75,11 +75,6 @@ def async_handle_api_call[_T: CieloDeviceEntity, **_P](
         )
 
         if not isinstance(res, dict):
-            LOGGER.error(
-                "API function did not return a dictionary for entity %s, got %s",
-                entity.entity_id,
-                type(res),
-            )
             raise HomeAssistantError("Invalid API response format")
 
         data: dict[str, Any] | None = res.get("data")
@@ -137,15 +132,15 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the low target temperature for HEAT_COOL mode."""
-        return self.client.target_temperature_low(self.temperature_unit)
+        return self.client.target_temperature_low(self.native_temperature_unit)
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the high target temperature for HEAT_COOL mode."""
-        return self.client.target_temperature_high(self.temperature_unit)
+        return self.client.target_temperature_high(self.native_temperature_unit)
 
     @property
     @override
@@ -163,13 +158,13 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current indoor temperature."""
         return self.client.current_temperature()
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self.client.target_temperature()
 
@@ -189,7 +184,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     @override
     def target_temperature_step(self) -> float | None:
         """Return the precision of the thermostat."""
-        return self.client.target_temperature_step(self.temperature_unit)
+        return self.client.target_temperature_step(self.native_temperature_unit)
 
     @property
     @override
@@ -249,7 +244,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     @override
     def precision(self) -> float:
         """Return the precision of the thermostat."""
-        return self.client.precision(self.temperature_unit)
+        return self.client.precision(self.native_temperature_unit)
 
     @async_handle_api_call
     @override
@@ -257,14 +252,14 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         """Set new target temperature."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return await self.client.async_set_temperature(
-                self.temperature_unit,
+                self.native_temperature_unit,
                 **{
                     ATTR_TARGET_TEMP_LOW: kwargs.get(ATTR_TARGET_TEMP_LOW),
                     ATTR_TARGET_TEMP_HIGH: kwargs.get(ATTR_TARGET_TEMP_HIGH),
                 },
             )
         return await self.client.async_set_temperature(
-            self.temperature_unit,
+            self.native_temperature_unit,
             **{ATTR_TEMPERATURE: kwargs.get(ATTR_TEMPERATURE)},
         )
 

@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 type ZimiConfigEntry = ConfigEntry[ControlPoint]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> None:
     """Connect to Zimi Controller and register device."""
 
     try:
@@ -59,13 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
 
     _LOGGER.debug("Zimi setup complete")
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> None:
     """Unload a config entry."""
 
     api = entry.runtime_data
     api.disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

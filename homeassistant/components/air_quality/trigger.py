@@ -5,7 +5,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import STATE_OFF, STATE_ON, UnitOfDensity, UnitOfRatio
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    UnitOfDensity,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -23,6 +29,7 @@ from homeassistant.util.unit_conversion import (
     NitrogenDioxideConcentrationConverter,
     NitrogenMonoxideConcentrationConverter,
     OzoneConcentrationConverter,
+    RadiationConcentrationConverter,
     SulphurDioxideConcentrationConverter,
     UnitlessRatioConverter,
 )
@@ -163,6 +170,18 @@ TRIGGERS: dict[str, type[Trigger]] = {
             {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
             UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             SulphurDioxideConcentrationConverter,
+        )
+    ),
+    "radon_changed": make_entity_numerical_state_changed_with_unit_trigger(
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.RADON)},
+        UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        RadiationConcentrationConverter,
+    ),
+    "radon_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.RADON)},
+            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            RadiationConcentrationConverter,
         )
     ),
     # Numerical sensor triggers without unit conversion (single-unit device classes)

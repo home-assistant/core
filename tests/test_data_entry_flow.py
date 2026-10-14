@@ -5,8 +5,8 @@ import dataclasses
 import logging
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
@@ -89,20 +89,24 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="first", data_schema=probatio.Schema([str])
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
                 return self.async_create_entry(
                     title="Test Entry", data=self.init_data + user_input
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="second", data_schema=probatio.Schema([str])
+            )
 
     form = await manager.async_init(
         "test", context={"init_step": "first"}, data=["INIT-DATA"]
     )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         form = await manager.async_configure(form["flow_id"], "INCORRECT-DATA")
 
     form = await manager.async_configure(form["flow_id"], ["SECOND-DATA"])
@@ -116,7 +120,9 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
 
 async def test_show_form(manager: MockFlowManager) -> None:
     """Test that we can show a form."""
-    schema = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
+    schema = probatio.Schema(
+        {probatio.Required("username"): str, probatio.Required("password"): str}
+    )
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -136,7 +142,9 @@ async def test_show_form(manager: MockFlowManager) -> None:
 async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
     """Test that we can show a form with suggested values."""
 
-    def compare_schemas(schema: vol.Schema, expected_schema: vol.Schema) -> None:
+    def compare_schemas(
+        schema: probatio.Schema, expected_schema: probatio.Schema
+    ) -> None:
         """Compare two schemas."""
         assert schema.schema is not expected_schema.schema
 
@@ -148,14 +156,14 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
                 continue
             assert validator == expected_schema.schema[key]
 
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("username"): str,
-            vol.Required("password"): str,
-            vol.Required("section_1"): data_entry_flow.section(
-                vol.Schema(
+            probatio.Required("username"): str,
+            probatio.Required("password"): str,
+            probatio.Required("section_1"): data_entry_flow.section(
+                probatio.Schema(
                     {
-                        vol.Optional("full_name"): str,
+                        probatio.Optional("full_name"): str,
                     }
                 ),
                 {"collapsed": False},
@@ -444,7 +452,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if input is not None:
                 return self.async_create_entry(title="init", data=input)
             return self.async_show_form(
-                step_id="init", data_schema=vol.Schema({"count": int})
+                step_id="init", data_schema=probatio.Schema({"count": int})
             )
 
     class FlowManager(data_entry_flow.FlowManager):
@@ -457,7 +465,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
                 if result["data"] is None or result["data"].get("count", 0) <= 1:
                     return flow.async_show_form(
-                        step_id="init", data_schema=vol.Schema({"count": int})
+                        step_id="init", data_schema=probatio.Schema({"count": int})
                     )
                 result["result"] = result["data"]["count"]
             return result
@@ -1224,7 +1232,9 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="first", data_schema=probatio.Schema([str])
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
@@ -1232,7 +1242,9 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
                     title="Test Entry",
                     data={"init": self.init_data, "user": user_input},
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="second", data_schema=probatio.Schema([str])
+            )
 
     bluetooth_data = BluetoothDiscoveryData("aa:bb:cc:dd:ee:ff")
     wifi_data = WiFiDiscoveryData("host")
@@ -1303,10 +1315,10 @@ def test_section_in_serializer() -> None:
     """Test section with custom_serializer."""
     assert cv.custom_serializer(
         data_entry_flow.section(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional("option_1", default=False): bool,
-                    vol.Required("option_2"): int,
+                    probatio.Optional("option_1", default=False): bool,
+                    probatio.Required("option_2"): int,
                 }
             ),
             {"collapsed": False},
@@ -1334,13 +1346,13 @@ def test_nested_section_in_serializer() -> None:
     ):
         cv.custom_serializer(
             data_entry_flow.section(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required("section_1"): data_entry_flow.section(
-                            vol.Schema(
+                        probatio.Required("section_1"): data_entry_flow.section(
+                            probatio.Schema(
                                 {
-                                    vol.Optional("option_1", default=False): bool,
-                                    vol.Required("option_2"): int,
+                                    probatio.Optional("option_1", default=False): bool,
+                                    probatio.Required("option_2"): int,
                                 }
                             )
                         )

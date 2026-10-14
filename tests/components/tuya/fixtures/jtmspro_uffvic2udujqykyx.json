@@ -1,0 +1,242 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Serviço",
+  "category": "jtmspro",
+  "product_id": "uffvic2udujqykyx",
+  "product_name": "Network DoorLock",
+  "online": false,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2025-10-10T19:04:47+00:00",
+  "create_time": "2025-10-10T19:04:47+00:00",
+  "update_time": "2025-10-10T19:04:47+00:00",
+  "function": {
+    "create_type_ack": {
+      "type": "Enum",
+      "value": "{\"range\":[\"type_finger\",\"type_card\",\"type_password\",\"type_ad_finger\",\"type_ad_card\",\"type_ad_psw\",\"type_face\",\"type_finger_vein\",\"type_hand\",\"type_eye\"]}"
+    },
+    "create_ok": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "remote_delete_fp": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "remote_delete_psw": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "cancle_remote_create": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "remote_delete_cd": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "remote_no_pd_setkey": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "remote_no_dp_key": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "remote_delete_face": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "lock_motor_state": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "door_input_ok_kit": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "video_request_realtime": {
+      "type": "Raw",
+      "value": "{}"
+    }
+  },
+  "status_range": {
+    "unlock_fingerprint": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "unlock_password": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "unlock_card": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "unlock_face": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "alarm_lock": {
+      "type": "Enum",
+      "value": "{\"range\":[\"wrong_finger\",\"wrong_password\",\"wrong_card\",\"wrong_face\",\"tongue_bad\",\"too_hot\",\"unclosed_time\",\"tongue_not_out\",\"pry\",\"key_in\",\"low_battery\",\"power_off\",\"shock\",\"defense\"]}"
+    },
+    "unlock_request": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": "{\"range\":[\"high\",\"medium\",\"low\",\"poweroff\"]}"
+    },
+    "reverse_lock": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "unlock_app": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "hijack": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "open_inside": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "doorbell": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "update_all_finger": {
+      "type": "List",
+      "value": "{}"
+    },
+    "update_all_password": {
+      "type": "List",
+      "value": "{}"
+    },
+    "update_all_card": {
+      "type": "List",
+      "value": "{}"
+    },
+    "update_all_face": {
+      "type": "List",
+      "value": "{}"
+    },
+    "unlock_offline_pd": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "unlock_offline_clear": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "query_create_type": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "create_type_ack": {
+      "type": "Enum",
+      "value": "{\"range\":[\"type_finger\",\"type_card\",\"type_password\",\"type_ad_finger\",\"type_ad_card\",\"type_ad_psw\",\"type_face\",\"type_finger_vein\",\"type_hand\",\"type_eye\"]}"
+    },
+    "create_ok": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "lock_allow_delete": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "remote_delete_fp": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "remote_delete_ack": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "remote_delete_psw": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "cancle_remote_create": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "remote_delete_cd": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "remote_no_pd_setkey": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "remote_no_dp_key": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "remote_delete_face": {
+      "type": "Integer",
+      "value": "{\"min\":0,\"max\":999,\"scale\":0,\"step\":1}"
+    },
+    "lock_motor_state": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "door_input_ok_kit": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "video_request_realtime": {
+      "type": "Raw",
+      "value": "{}"
+    },
+    "initiative_message": {
+      "type": "Raw",
+      "value": "{}"
+    }
+  },
+  "status": {
+    "unlock_fingerprint": 3,
+    "unlock_password": 13,
+    "unlock_card": 10,
+    "unlock_face": 4,
+    "alarm_lock": "wrong_finger",
+    "unlock_request": 0,
+    "battery_state": "high",
+    "reverse_lock": false,
+    "unlock_app": 1,
+    "hijack": false,
+    "open_inside": true,
+    "doorbell": true,
+    "update_all_finger": [1, 2, 3, 7, 8],
+    "update_all_password": [],
+    "update_all_card": [],
+    "update_all_face": [4, 5],
+    "unlock_offline_pd": "",
+    "unlock_offline_clear": "",
+    "query_create_type": true,
+    "create_type_ack": "type_password",
+    "create_ok": true,
+    "lock_allow_delete": false,
+    "remote_delete_fp": 0,
+    "remote_delete_ack": false,
+    "remote_delete_psw": 0,
+    "cancle_remote_create": false,
+    "remote_delete_cd": 0,
+    "remote_no_pd_setkey": "AAAB",
+    "remote_no_dp_key": "AAAB",
+    "remote_delete_face": 0,
+    "lock_motor_state": false,
+    "door_input_ok_kit": "AAANAAA=",
+    "video_request_realtime": "",
+    "initiative_message": ""
+  },
+  "set_up": false,
+  "support_local": false
+}
