@@ -88,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Set up Google from a config entry."""
     # Validate google_calendars.yaml (if present) as soon as possible to return
     # helpful error messages.
@@ -140,8 +140,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
@@ -150,9 +148,9 @@ def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
     return access.scope in token_scopes
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:

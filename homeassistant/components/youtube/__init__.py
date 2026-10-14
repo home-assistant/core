@@ -18,7 +18,7 @@ from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> None:
     """Set up YouTube from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -32,12 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> b
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_listener(hass: HomeAssistant, entry: YouTubeConfigEntry) -> None:
@@ -53,7 +51,7 @@ async def async_update_listener(hass: HomeAssistant, entry: YouTubeConfigEntry) 
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entries to the subentry structure."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -126,4 +124,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_registry.async_remove_device(device_entry.id)
 
     hass.config_entries.async_update_entry(entry, version=2, options={})
-    return True

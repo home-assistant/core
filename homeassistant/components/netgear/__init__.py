@@ -24,7 +24,7 @@ from .router import NetgearRouter
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> None:
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)
     try:
@@ -82,33 +82,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        router = entry.runtime_data.router
 
-    router = entry.runtime_data.router
-
-    if not router.track_devices:
-        router_id = None
-        # Remove devices that are no longer tracked
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        for device_entry in devices:
-            if device_entry.via_device_id is None:
-                router_id = device_entry.id
-                continue  # do not remove the router itself
-            device_registry.async_remove_device(device_entry.id)
-        # Remove entities that are no longer tracked
-        entity_registry = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        for entity_entry in entries:
-            if entity_entry.device_id is not router_id:
-                entity_registry.async_remove(entity_entry.entity_id)
-
-    return unload_ok
+        if not router.track_devices:
+            router_id = None
+            # Remove devices that are no longer tracked
+            device_registry = dr.async_get(hass)
+            devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+            for device_entry in devices:
+                if device_entry.via_device_id is None:
+                    router_id = device_entry.id
+                    continue  # do not remove the router itself
+                device_registry.async_remove_device(device_entry.id)
+            # Remove entities that are no longer tracked
+            entity_registry = er.async_get(hass)
+            entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+            for entity_entry in entries:
+                if entity_entry.device_id is not router_id:
+                    entity_registry.async_remove(entity_entry.entity_id)
 
 
 async def async_remove_config_entry_device(

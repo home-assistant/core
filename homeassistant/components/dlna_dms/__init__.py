@@ -13,7 +13,7 @@ from .dms import get_domain_data
 from .util import generate_source_id
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up DLNA DMS device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
@@ -31,12 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="setup_failed",
             translation_placeholders={"name": entry.title},
         )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     LOGGER.debug("Unloading config entry: %s", entry.unique_id)
 
     # Forward unload to this domain's data manager
-    return await get_domain_data(hass).async_unload_entry(entry)
+    await get_domain_data(hass).async_unload_entry(entry)
