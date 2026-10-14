@@ -51,6 +51,22 @@ async def websocket_create(
         )
         return
 
+    if user.is_owner and not connection.user.is_owner:
+        raise Unauthorized(context=connection.context(msg))
+
+    # A second password would let an admin log in as the user without
+    # going through the owner-only admin_change_password command.
+    if any(
+        credential.auth_provider_type == provider.type
+        for credential in user.credentials
+    ):
+        connection.send_error(
+            msg["id"],
+            "credentials_exist",
+            "User already has credentials for this provider",
+        )
+        return
+
     await provider.async_add_auth(msg["username"], msg["password"])
 
     credentials = await provider.async_get_or_create_credentials(
