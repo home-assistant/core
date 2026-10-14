@@ -2,6 +2,7 @@
 
 import asyncio
 import copy
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -261,26 +262,20 @@ async def test_websocket_start_and_restart_are_logged(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
+    websocket: Mock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test initial websocket starts and restarts are logged distinctly."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     patch_simplisafe_api.stop()
-    manager = config_entry.runtime_data
 
-    with (
-        patch.object(manager, "_async_websocket_loop", return_value=Mock()),
-        patch.object(
-            manager.entry,
-            "async_create_background_task",
-            return_value=Mock(done=Mock(return_value=False)),
-        ),
-        patch("homeassistant.components.simplisafe.LOGGER.debug") as mock_debug,
-    ):
-        manager._async_start_websocket_if_needed()
-        manager._websocket_task = Mock(done=Mock(return_value=True))
-        manager._async_start_websocket_if_needed()
+    async def stop_listening() -> None:
+        raise asyncio.CancelledError
 
-    mock_debug.assert_any_call("Starting websocket loop task")
-    mock_debug.assert_any_call("Restarting websocket loop task")
+    websocket.async_listen.side_effect = stop_listening
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.simplisafe")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Starting websocket loop task" in caplog.messages
+    assert "Restarting websocket loop task" in caplog.messages
