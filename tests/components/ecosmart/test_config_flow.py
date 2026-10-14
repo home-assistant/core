@@ -59,6 +59,7 @@ async def test_user_flow_unlabelled_key(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ecosmart"
+    assert result["result"].unique_id == TEST_ACCOUNT_REF
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,7 @@ from aioecosmart import (
     EcosmartConnectionError,
     EcosmartRateLimitError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -24,9 +24,9 @@ from .const import DEFAULT_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         )
     }
