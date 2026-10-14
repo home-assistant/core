@@ -114,6 +114,23 @@ async def decrement(hass: HomeAssistant, entity_id: str) -> None:
         {"test_1": {"min": 50, "max": 50}},
         {"test_1": {"min": 0, "max": 10, "initial": 11}},
         {"test_1": {"min": 0, "max": 10, "device_class": "invalid"}},
+        {
+            "test_1": {
+                "min": 0,
+                "max": 10,
+                "device_class": "temperature",
+                "unit_of_measurement": "hPa",
+            }
+        },
+        {"test_1": {"min": 0, "max": 10, "device_class": "temperature"}},
+        {
+            "test_1": {
+                "min": 0,
+                "max": 10,
+                "device_class": "aqi",
+                "unit_of_measurement": "°C",
+            }
+        },
     ],
 )
 async def test_config(hass: HomeAssistant, invalid_config) -> None:
@@ -281,6 +298,7 @@ async def test_device_class(hass: HomeAssistant) -> None:
                     "device_class": "temperature",
                     "unit_of_measurement": "°C",
                 },
+                "unitless_device_class": {"min": 0, "max": 500, "device_class": "aqi"},
                 "without_device_class": {"min": 0, "max": 100},
             }
         },
@@ -289,6 +307,11 @@ async def test_device_class(hass: HomeAssistant) -> None:
     state = hass.states.get("input_number.with_device_class")
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+
+    state = hass.states.get("input_number.unitless_device_class")
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == "aqi"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
     state = hass.states.get("input_number.without_device_class")
     assert state
@@ -787,6 +810,22 @@ async def test_ws_update_device_class(
     resp = await client.receive_json()
     assert not resp["success"]
 
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **settings,
+            "device_class": "temperature",
+            "unit_of_measurement": "hPa",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert (
+        "Unit of measurement 'hPa' is not valid for device class 'temperature'; "
+        "expected one of ['K', '°C', '°F']"
+    ) in resp["error"]["message"]
+
 
 async def test_ws_create_unit_conversion(
     hass: HomeAssistant,
@@ -858,7 +897,7 @@ async def test_ws_create_unit_conversion(
             "hPa",
             id="change_device_class",
         ),
-        pytest.param({"device_class": "temperature"}, None, id="remove_unit"),
+        pytest.param({}, None, id="remove_device_class_and_unit"),
     ],
 )
 async def test_ws_update_drops_incompatible_display_unit(

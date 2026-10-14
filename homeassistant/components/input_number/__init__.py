@@ -7,7 +7,11 @@ from typing import Any, Self, override
 
 import probatio
 
-from homeassistant.components.number import DEVICE_CLASSES_SCHEMA, RestoreNumber
+from homeassistant.components.number import (
+    DEVICE_CLASS_UNITS,
+    DEVICE_CLASSES_SCHEMA,
+    RestoreNumber,
+)
 from homeassistant.const import (  # noqa: F401
     ATTR_MODE,
     CONF_DEVICE_CLASS,
@@ -64,6 +68,17 @@ def _cv_input_number(cfg):
     if state is not None and (state < minimum or state > maximum):
         raise probatio.Invalid(
             f"Initial value {state} not in range {minimum}-{maximum}"
+        )
+    # Remove when number entities enforce valid units for their device class
+    if (
+        (device_class := cfg.get(CONF_DEVICE_CLASS)) is not None
+        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (unit := cfg.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        valid_units = sorted(str(valid) if valid else "no unit" for valid in units)
+        raise probatio.Invalid(
+            f"Unit of measurement '{unit}' is not valid for device class "
+            f"'{device_class}'; expected one of {valid_units}"
         )
     return cfg
 
