@@ -745,14 +745,7 @@ async def test_reauth_adds_manual_key(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     result = await _choose_key_source(hass, result, "manual_key")
     result = await hass.config_entries.flow.async_configure(
@@ -777,13 +770,7 @@ async def test_reconfigure_replaces_key(
         bytes.fromhex("ffeeddccbbaa99887766554433221100")
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": encrypted_config_entry.entry_id,
-        },
-    )
+    result = await encrypted_config_entry.start_reconfigure_flow(hass)
 
     result = await _choose_key_source(hass, result, "manual_key")
     result = await hass.config_entries.flow.async_configure(
@@ -805,13 +792,7 @@ async def test_reconfigure_unencrypted_entry_not_supported(
     """Test reconfiguration is limited to encrypted entries."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_encrypted"
