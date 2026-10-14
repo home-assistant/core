@@ -106,7 +106,7 @@ async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_static_ip_unexpected_bind_error(hass: HomeAssistant) -> None:
+async def test_setup_static_ip_network_error(hass: HomeAssistant) -> None:
     """Test static IP entry retries on network errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
