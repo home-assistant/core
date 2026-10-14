@@ -250,7 +250,7 @@ class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):
         value = self.coordinator.get_value(self.entity_description.value_path)
         if value is None:
             return None
-        return value in (True, "1")
+        return bool(value)
 
 
 class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
@@ -275,4 +275,4 @@ class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
                 values.append(value)
         if not values:
             return None
-        return any(value in (True, "1") for value in values)
+        return any(values)
