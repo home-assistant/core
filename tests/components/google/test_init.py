@@ -17,8 +17,13 @@ import pytest
 from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.components.google.services import SERVICE_CREATE_EVENT
+from homeassistant.components.google.store import STORAGE_SAVE_DELAY_SECONDS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -38,7 +43,7 @@ from .conftest import (
     ComponentSetup,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
@@ -894,14 +899,42 @@ async def test_assign_unique_id_failure(
     assert config_entry.unique_id is None
 
 
+async def test_unload_flushes_calendar_cache(
+    hass: HomeAssistant,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Unloading persists the latest calendar data before dropping runtime data."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    storage_key = f"google.{entry.entry_id}"
+    data = await entry.runtime_data.store.async_load()
+    assert data
+    assert storage_key not in hass_storage
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert hass_storage[storage_key]["data"] == data
+    assert not hasattr(entry, "runtime_data")
+
+
+@pytest.mark.parametrize("elapsed", [0, STORAGE_SAVE_DELAY_SECONDS + 1])
 async def test_remove_entry(
     hass: HomeAssistant,
     mock_calendars_list: ApiResult,
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    elapsed: int,
 ) -> None:
-    """Test load and remove of a ConfigEntry."""
+    """Removing a loaded entry also cancels delayed cache writes."""
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
@@ -910,9 +943,22 @@ async def test_remove_entry(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    storage_key = f"google.{entry.entry_id}"
+    assert await entry.runtime_data.store.async_load()
+    assert storage_key not in hass_storage
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert storage_key not in hass_storage
+
+    freezer.tick(elapsed)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
 
 
 async def test_oauth_implementation_not_available(
