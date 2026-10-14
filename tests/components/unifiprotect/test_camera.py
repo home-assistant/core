@@ -22,11 +22,17 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
     async_get_image,
     async_get_stream_source,
+    get_camera_from_entity_id,
 )
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_VERIFY_SSL,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -93,6 +99,9 @@ async def test_basic_setup(
         await async_get_stream_source(hass, high_id)
         == camera_all.channels[0].rtsps_no_srtp_url
     )
+    assert get_camera_from_entity_id(hass, high_id).stream_options == {
+        CONF_VERIFY_SSL: False
+    }
 
     # medium starts disabled; once enabled it streams from the public API
     medium_id = _assert_entity(hass, camera_all, 1, enabled=False)

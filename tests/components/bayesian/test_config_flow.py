@@ -485,6 +485,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         assert config_entry.version == 1
         assert config_entry.options == {
@@ -882,6 +883,8 @@ async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert "errors" not in result
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     # Confirm the changes to the state config
     assert hass.config_entries.async_get_entry(config_entry.entry_id).options == {
@@ -1157,6 +1160,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         result = await hass.config_entries.subentries.async_init(
             (config_entry.entry_id, "observation"),
@@ -1189,6 +1193,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         # Try with a ObservationTypes.TEMPLATE observation
         result = await hass.config_entries.subentries.async_init(
             (config_entry.entry_id, "observation"),
@@ -1212,3 +1217,17 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result["step_id"] == current_step
         assert result["errors"] == {"base": "equal_probabilities"}
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_VALUE_TEMPLATE: (
+                    "{{ is_state('device_tracker.paulus', 'not_home') }}"
+                ),
+                CONF_P_GIVEN_T: 50,
+                CONF_P_GIVEN_F: 10,
+                CONF_NAME: "Paulus not home",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -27,6 +27,7 @@ FIXTURES = [
     "aqara_sensor_w100",
     "aqara_shutter_switch_h2",
     "aqara_thermostat_w500",
+    "aqara_thermostat_w500_presets",
     "aqara_u200",
     "atios_knx_bridge",
     "color_temperature_light",

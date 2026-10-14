@@ -33,8 +33,14 @@ from tests.common import MockConfigEntry
     ("exc", "error"),
     [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")],
 )
+@pytest.mark.usefixtures("setup_watttime")
 async def test_auth_errors(
-    hass: HomeAssistant, config_auth: dict[str, Any], exc: type[Exception], error: str
+    hass: HomeAssistant,
+    config_auth: dict[str, Any],
+    config_coordinates: dict[str, Any],
+    config_location_type: dict[str, Any],
+    exc: type[Exception],
+    error: str,
 ) -> None:
     """Test that issues with auth show the correct error."""
     result = await hass.config_entries.flow.async_init(
@@ -53,6 +59,19 @@ async def test_auth_errors(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_auth
+    )
+    assert result["step_id"] == "location"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_location_type
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_coordinates
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -74,6 +93,8 @@ async def test_coordinate_errors(
     config_auth: dict[str, Any],
     config_coordinates: dict[str, Any],
     config_location_type: dict[str, Any],
+    data_grid_region: dict[str, Any],
+    get_grid_region: AsyncMock,
     errors: dict[str, str],
 ) -> None:
     """Test that issues with coordinates show the correct error."""
@@ -103,6 +124,14 @@ async def test_coordinate_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
+
+    get_grid_region.side_effect = None
+    get_grid_region.return_value = data_grid_region
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_coordinates
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -257,6 +286,7 @@ async def test_step_user_coordinates(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"
 
 
 @pytest.mark.parametrize(
@@ -296,3 +326,4 @@ async def test_step_user_home(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"

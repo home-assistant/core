@@ -1,5 +1,6 @@
 """The tests for the image component."""
 
+import asyncio
 import errno
 from http import HTTPStatus
 import ssl
@@ -7,7 +8,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -292,8 +293,8 @@ async def test_fetch_image_url_success(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        httpx.RequestError("server offline", request=MagicMock()),
-        httpx.TimeoutException,
+        httpx2.RequestError("server offline", request=MagicMock()),
+        httpx2.TimeoutException,
         ssl.SSLError,
     ],
 )
@@ -458,8 +459,29 @@ async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) 
     image_data = await image.async_get_image(hass, "image.test")
     assert image_data == image.Image(content_type="image/jpeg", content=b"Test")
 
-    with pytest.raises(HomeAssistantError, match="not found"):
+    with pytest.raises(HomeAssistantError, match="not found") as exc_info:
         await image.async_get_image(hass, "image.unknown")
+    assert exc_info.value.translation_key == "entity_not_found"
+
+
+async def test_get_image_cancelled(
+    hass: HomeAssistant, mock_image_platform: None
+) -> None:
+    """Test cancelling fetching an image propagates the cancellation."""
+    started = asyncio.Event()
+
+    async def _async_image() -> bytes:
+        started.set()
+        await asyncio.Event().wait()
+        return b"Test"
+
+    with patch.object(MockImageEntity, "async_image", side_effect=_async_image):
+        task = hass.async_create_task(image.async_get_image(hass, "image.test"))
+        await started.wait()
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
 
 
 async def test_snapshot_service(hass: HomeAssistant) -> None:
@@ -554,23 +576,27 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     [
         (
             OSError(errno.EACCES, "Permission denied"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+            "Cannot write /test/snapshot.jpg: permission denied$",
         ),
         (
             OSError(errno.EPERM, "Operation not permitted"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+            "Cannot write /test/snapshot.jpg: permission denied$",
         ),
         (
             OSError(errno.ENOSPC, "No space left on device"),
-            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
+            "Cannot write /test/snapshot.jpg: no space left on the device$",
         ),
         (
             OSError(errno.EROFS, "Read-only file system"),
-            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
+            "Cannot write /test/snapshot.jpg: the file system is read-only$",
+        ),
+        (
+            FileNotFoundError(errno.ENOENT, "No such file or directory"),
+            "Cannot write /test/snapshot.jpg: the folder does not exist$",
         ),
         (
             OSError(errno.EIO, "Input/output error"),
-            "Cannot write image to /test/snapshot.jpg$",
+            "Cannot write /test/snapshot.jpg$",
         ),
     ],
 )

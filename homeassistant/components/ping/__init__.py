@@ -21,7 +21,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 DATA_PRIVILEGED_KEY: HassKey[bool | None] = HassKey(DOMAIN)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version == 1:
         _LOGGER.debug("Migrating to minor version 2")
@@ -40,8 +40,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bo
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ping integration."""
@@ -50,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
     """Set up Ping (ICMP) from a config entry."""
     privileged = hass.data[DATA_PRIVILEGED_KEY]
 
@@ -80,12 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _can_use_icmp_lib_with_privilege() -> bool | None:

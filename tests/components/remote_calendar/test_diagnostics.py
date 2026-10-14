@@ -2,7 +2,7 @@
 
 import datetime
 
-from httpx import Response
+from httpx2 import Response
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion

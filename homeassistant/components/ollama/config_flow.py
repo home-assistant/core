@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any, override
 
-import httpx
+import httpx2
 import ollama
 import probatio
 
@@ -278,7 +278,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except TimeoutError, httpx.HTTPError, ConnectionError:
+            except TimeoutError, httpx2.HTTPError, ConnectionError:
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 

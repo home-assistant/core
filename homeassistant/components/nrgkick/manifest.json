@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["nrgkick-api==1.7.1"],
+  "requirements": ["nrgkick-api==1.8.1"],
   "zeroconf": ["_nrgkick._tcp.local."]
 }

@@ -25,6 +25,7 @@ from . import (
     AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
     AIR_PURIFIER_US_SERVICE_INFO,
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
     CIRCULATOR_FAN_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
 )
@@ -89,7 +90,7 @@ async def test_circulator_fan_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -160,7 +161,7 @@ async def test_air_purifier_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -224,7 +225,7 @@ async def test_exception_handling_air_purifier_service(
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -233,6 +234,57 @@ async def test_exception_handling_air_purifier_service(
                 {**service_data, ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method", "expected_call"),
+    [
+        (
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: "hurricane"},
+            "set_preset_mode",
+            ("hurricane",),
+        ),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 27}, "set_percentage", (27,)),
+        (SERVICE_OSCILLATE, {ATTR_OSCILLATING: True}, "set_oscillation", (True,)),
+        (SERVICE_TURN_OFF, {}, "turn_off", ()),
+        (SERVICE_TURN_ON, {}, "turn_on", ()),
+    ],
+)
+async def test_circulator_fan_pro_controlling(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_call: tuple,
+) -> None:
+    """Test controlling the encrypted Circulator Fan Pro fan."""
+    inject_bluetooth_service_info(hass, CIRCULATOR_FAN_PRO_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="circulator_fan_pro")
+    entity_id = "fan.test_name"
+    entry.add_to_hass(hass)
+
+    mocked_instance = AsyncMock(return_value=True)
+    mocked_none_instance = AsyncMock(return_value=None)
+    with patch.multiple(
+        "homeassistant.components.switchbot.fan.switchbot.SwitchbotCirculatorFanPro",
+        get_basic_info=mocked_none_instance,
+        update=mocked_none_instance,
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_call)
 
 
 @pytest.mark.parametrize(
@@ -273,7 +325,7 @@ async def test_standing_fan_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -320,7 +372,7 @@ async def test_exception_handling_standing_fan_service(
         },
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             HomeAssistantError,
@@ -365,7 +417,7 @@ async def test_standing_fan_command_failure(
         **{mock_method: AsyncMock(return_value=False)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             HomeAssistantError, match="Failed to send the command to the fan"

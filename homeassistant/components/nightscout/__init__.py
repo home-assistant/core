@@ -19,7 +19,7 @@ _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 type NightscoutConfigEntry = ConfigEntry[NightscoutAPI]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> None:
     """Set up Nightscout from a config entry."""
     server_url = entry.data[CONF_URL]
     api_key = entry.data.get(CONF_API_KEY)
@@ -44,9 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
