@@ -203,9 +203,7 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
     ) -> None:
         """Set up Automower switch."""
         super().__init__(mower_id, coordinator, work_area_id)
-        key = "work_area"
-        self._attr_translation_key = key
-        self._attr_unique_id = f"{mower_id}_{work_area_id}_{key}"
+        self._attr_unique_id = f"{mower_id}_{work_area_id}_{'work area'}"
 
     @property
     @override
