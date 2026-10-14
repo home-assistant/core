@@ -24,11 +24,13 @@ def is_granted(
     permission: ProxmoxPermission = ProxmoxPermission.POWER,
 ) -> bool:
     """Validate user permissions for the given type and permission."""
-    paths = [f"/{p_type}/{p_id}", f"/{p_type}", "/"]
-    for path in paths:
-        value = permissions.get(path, {}).get(permission)
-        if value is not None:
-            return value == 1
+    if (privileges := permissions.get(f"/{p_type}/{p_id}")) is not None:
+        return permission in privileges
+
+    for path in (f"/{p_type}", "/"):
+        if (privileges := permissions.get(path)) is not None:
+            return privileges.get(permission) == 1
+
     return False
 
 
