@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from .coordinator import CometBlueConfigEntry
 
 TO_REDACT = {CONF_ADDRESS, CONF_PIN, "unique_id"}
-SERVICE_INFO_TO_REDACT = {"address", "device"}
 
 
 async def async_get_config_entry_diagnostics(

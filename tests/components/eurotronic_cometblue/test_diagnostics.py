@@ -12,7 +12,6 @@ from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-ENTITY_ID = "climate.comet_blue_aa_bb_cc_dd_ee_ff"
 
 
 async def test_diagnostics(
