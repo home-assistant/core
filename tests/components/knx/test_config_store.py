@@ -1382,6 +1382,13 @@ def test_binary_sensor_reset_after_rejects_negative(reset_after: Any) -> None:
         _validate_reset_after(reset_after)
 
 
+@pytest.mark.parametrize("reset_after", ["inf", 1e20, {"days": 1e10}])
+def test_binary_sensor_reset_after_rejects_out_of_range(reset_after: Any) -> None:
+    """An overflowing duration is a validation error, not an internal error."""
+    with pytest.raises(EntityStoreValidationException):
+        _validate_reset_after(reset_after)
+
+
 def test_binary_sensor_reset_after_schema_is_ha_duration_selector() -> None:
     """Expose a plain HA duration selector whose value is seconds."""
     schema = get_serialized_schema(Platform.BINARY_SENSOR)

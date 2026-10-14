@@ -210,7 +210,10 @@ class KnxDurationSelector(KNXSelectorBase):
     @override
     def __call__(self, data: Any) -> float:
         """Validate the passed data and return seconds."""
-        return cv.positive_time_period(data).total_seconds()
+        try:
+            return cv.positive_time_period(data).total_seconds()
+        except OverflowError as err:
+            raise probatio.Invalid(f"duration {data} is out of range") from err
 
     @override
     def serialize(self) -> dict[str, Any]:
