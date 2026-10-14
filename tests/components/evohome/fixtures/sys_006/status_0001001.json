@@ -1,0 +1,75 @@
+{
+  "locationId": "0001001",
+  "gateways": [
+    {
+      "gatewayId": "0001002",
+      "temperatureControlSystems": [
+        {
+          "systemId": "0001003",
+          "zones": [
+            {
+              "zoneId": "0001004",
+              "temperatureStatus": {
+                "temperature": 19.5,
+                "isAvailable": true
+              },
+              "activeFaults": [
+                {
+                  "faultType": "TempZoneActuatorLowBattery",
+                  "since": "2024-11-01T01:00:00"
+                },
+                {
+                  "faultType": "TempZoneSensorCommunicationLost",
+                  "since": "2024-05-01T01:00:00"
+                }
+              ],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Main Room"
+            }
+          ],
+          "dhw": {
+            "dhwId": "0001005",
+            "temperatureStatus": {
+              "temperature": 45.5,
+              "isAvailable": true
+            },
+            "stateStatus": {
+              "state": "On",
+              "mode": "FollowSchedule"
+            },
+            "activeFaults": [
+              {
+                "faultType": "DHWSensorFailure",
+                "since": "2024-09-15T01:00:00"
+              }
+            ]
+          },
+          "activeFaults": [
+            {
+              "faultType": "BoilerCommunicationLost",
+              "since": "2024-10-01T01:00:00"
+            },
+            {
+              "faultType": "ChValveCommunicationLost",
+              "since": "2024-09-01T01:00:00"
+            }
+          ],
+          "systemModeStatus": {
+            "mode": "AutoWithEco",
+            "timeUntil": "2024-07-11T00:00:00Z",
+            "isPermanent": false
+          }
+        }
+      ],
+      "activeFaults": [
+        {
+          "faultType": "GatewayCommunicationLost",
+          "since": "2024-06-01T01:00:00"
+        }
+      ]
+    }
+  ]
+}

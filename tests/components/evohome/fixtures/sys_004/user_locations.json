@@ -95,5 +95,480 @@
         ]
       }
     ]
+  },
+  {
+    "locationInfo": {
+      "locationId": "2664492",
+      "name": "Summer House",
+      "streetAddress": "32 Horn\u00ed",
+      "city": "Big Town",
+      "country": "CzechRepublic",
+      "postcode": "12345",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "CentralEuropeStandardTime",
+        "displayName": "(UTC+01:00) Praha, Bratislava, Budape\u0161\u0165, B\u011blehrad, Lubla\u0148",
+        "offsetMinutes": 60,
+        "currentOffsetMinutes": 120,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "2224990",
+        "username": "user_2224990@gmail.com",
+        "firstname": "Jan",
+        "lastname": "Smith"
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "2820628",
+          "mac": "00D02DF114FD",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "3935923",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "3935922",
+                "modelType": "RoundWireless",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 0,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Pokoj Honzicek",
+                "zoneType": "Thermostat"
+              },
+              {
+                "zoneId": "4368406",
+                "modelType": "RoundWireless",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 0,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Kuchyne",
+                "zoneType": "Thermostat"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "HeatingOff",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "locationInfo": {
+      "locationId": "2738909",
+      "name": "My Home",
+      "streetAddress": "45 Main Crescent",
+      "city": "London",
+      "country": "UnitedKingdom",
+      "postcode": "E1 2AA",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "GMTStandardTime",
+        "displayName": "(UTC+00:00) Dublin, Edinburgh, Lisbon, London",
+        "offsetMinutes": 0,
+        "currentOffsetMinutes": 60,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "2263181",
+        "username": "user_2263181@gmail.com",
+        "firstname": "David",
+        "lastname": "Smith"
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "2499896",
+          "mac": "00D02DEE4E56",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "3432522",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "3432521",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Dead Zone",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3432576",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Main Room",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3432577",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Front Room",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3432578",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Kitchen",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3432579",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Bathroom Dn",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3432580",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Main Bedroom",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3449703",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Kids Room",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3449740",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Bathroom Up",
+                "zoneType": "RadiatorZone"
+              },
+              {
+                "zoneId": "3450733",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Spare Room",
+                "zoneType": "RadiatorZone"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "AutoWithReset",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "DayOff",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "HeatingOff",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "Custom",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "locationInfo": {
+      "locationId": "5262737",
+      "name": "RFG100 (OBF5)",
+      "streetAddress": "1 Main Road",
+      "city": "London",
+      "country": "UnitedKingdom",
+      "postcode": "NW5 2UT",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "GMTStandardTime",
+        "displayName": "(UTC+00:00) Dublin, Edinburgh, Lisbon, London",
+        "offsetMinutes": 0,
+        "currentOffsetMinutes": 60,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "2512649",
+        "username": "user_2512649@gmail.com",
+        "firstname": "David",
+        "lastname": "Smith"
+      }
+    },
+    "gateways": []
   }
 ]
