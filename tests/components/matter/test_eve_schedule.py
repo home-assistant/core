@@ -20,7 +20,7 @@ def test_eve_thermo_schedule_flag(flag: int, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "payload", [b"", b"invalid", b"\\x00" * 274, b"\\x00" * 276, "not base64!", 42]
+    "payload", [b"", b"invalid", bytes(274), bytes(276), "not base64!", 42]
 )
 def test_eve_thermo_schedule_invalid(payload: bytes | str | int) -> None:
     """Unknown payload formats must not report a false off state."""
