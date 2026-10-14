@@ -847,11 +847,7 @@ async def test_reauth_flow(
     """Test reauth flow shows confirmation before auth."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"]["url"] == "http://localhost:8095"
@@ -875,11 +871,7 @@ async def test_reauth_with_manual_token(
     with patch(
         "homeassistant.components.music_assistant.config_flow._test_connection"
     ) as mock_test_connection:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(

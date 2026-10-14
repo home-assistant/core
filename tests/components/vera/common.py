@@ -140,10 +140,11 @@ class ComponentFactory:
 
         # Setup component through config flow.
         if controller_config.config_source == ConfigSource.CONFIG_FLOW:
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data=component_config,
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], component_config
             )
             await hass.async_block_till_done()
 

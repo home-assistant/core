@@ -14,7 +14,6 @@ from homeassistant.components.usb import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -24,7 +23,6 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import (
-    DEVICE_CONFLICT_ISSUE_FORMAT,
     ESPHomeManager,
     async_create_api_client,
     async_get_manufacturer_model,
@@ -130,9 +128,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
     """Remove an esphome config entry."""
     if bluetooth_mac_address := entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS):
         async_remove_scanner(hass, bluetooth_mac_address.upper())
-    async_delete_issue(
-        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
-    )
     await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()
 
     await _async_clear_dynamic_encryption_key(hass, entry)

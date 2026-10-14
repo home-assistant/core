@@ -2,13 +2,15 @@
 
 from collections.abc import Awaitable
 
-import aiohttp
 from nrgkick_api import (
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
     NRGkickCommandRejectedError,
     NRGkickConnectionError,
+    NRGkickHTTPError,
     NRGkickInvalidResponseError,
+    NRGkickTimeoutError,
+    NRGkickUnreachableError,
 )
 
 from homeassistant.exceptions import HomeAssistantError
@@ -47,15 +49,24 @@ async def async_api_call[_T](awaitable: Awaitable[_T]) -> _T:
             translation_domain=DOMAIN,
             translation_key="invalid_response",
         ) from err
+    except NRGkickTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+        ) from err
+    except NRGkickUnreachableError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unreachable",
+        ) from err
+    except NRGkickHTTPError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="http_error",
+            translation_placeholders={"status": str(err.status)},
+        ) from err
     except NRGkickConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
-    except (TimeoutError, aiohttp.ClientError, OSError) as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
         ) from err
