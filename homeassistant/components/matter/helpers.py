@@ -107,7 +107,7 @@ def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode
 
 @callback
 def get_node_from_device_entry(
-    hass: HomeAssistant, device: dr.DeviceEntry
+    hass: HomeAssistant, device: dr.AnyDeviceEntry
 ) -> MatterNode | None:
     """Return MatterNode from device entry."""
     matter = get_matter(hass)

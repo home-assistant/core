@@ -4,7 +4,7 @@ import logging
 import pathlib
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FILE_PATH
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_FILE_PATH): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_FILE_PATH): str})
 
 _LOGGER = logging.getLogger(__name__)
 

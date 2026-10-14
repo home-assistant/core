@@ -706,6 +706,90 @@ async def test_mount_failed_repair_flow(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
+async def test_mount_failed_remove_repair_flow(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test removing the mount from the mount_failed repair requires confirmation."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="backup_share",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type=SuggestionType.EXECUTE_RELOAD,
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+                Suggestion(
+                    type=SuggestionType.EXECUTE_REMOVE,
+                    context=ContextType.MOUNT,
+                    reference="backup_share",
+                    uuid=(sugg_uuid := uuid4()),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "menu"
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "mount_execute_remove"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "form"
+    assert data["step_id"] == "mount_execute_remove"
+    supervisor_client.resolution.apply_suggestion.assert_not_called()
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}", json={})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "create_entry"
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
+    supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_mount_failed_move_local_data_repair_flow(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
@@ -1495,6 +1579,7 @@ async def test_supervisor_issue_detached_addon_removed(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
+            "backup_url": "/config/backup",
         },
         "last_step": True,
         "preview": None,
@@ -1694,6 +1779,7 @@ async def test_supervisor_issue_deprecated_addon(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
+            "backup_url": "/config/backup",
             "addon_info": "homeassistant://hassio/addon/test/info",
             "addon_documentation": "homeassistant://hassio/addon/test/documentation",
         },
@@ -1785,6 +1871,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
+            "backup_url": "/config/backup",
         },
         "last_step": True,
         "preview": None,

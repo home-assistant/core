@@ -128,29 +128,51 @@ async def test_light_is_on_reflects_relay_state(
 
 
 @pytest.mark.parametrize(
-    "relay_data",
+    "light_enable",
     [
-        pytest.param({"relay_light_enable": TimerRelayMode.ENABLED}, id="auto"),
-        pytest.param({}, id="missing"),
-        pytest.param({"relay_light_enable": 0}, id="disabled"),
-        pytest.param({"relay_light_enable": 2}, id="unknown-state"),
+        pytest.param(TimerRelayMode.ENABLED, id="auto"),
+        pytest.param(None, id="missing"),
+        pytest.param(0, id="disabled"),
+        pytest.param(2, id="unknown-state"),
     ],
 )
 async def test_light_refuses_when_not_in_manual_mode(
     hass: HomeAssistant,
     mock_config_entry_light: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-    relay_data: dict[str, int],
+    light_enable: int | None,
 ) -> None:
     """Turn on/off is rejected while the relay is not in a manual mode."""
+
+    # The coordinator derives relay_light_enable from the timer block, so drive
+    # the guard through read_all_timers, not the async_read_all payload. Set the
+    # side_effect before setup so the very first poll reflects the case; a None
+    # case omits the block entirely, leaving relay_light_enable absent.
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        if light_enable is None:
+            return {}
+        return {
+            "relay_light": {
+                "enable": light_enable,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": 0,
+                "stop": None,
+            }
+        }
+
+    # Drop the autouse fixture's seeded manual enable so the timer read is the
+    # only source of relay_light_enable; the missing case must leave it absent.
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "Pool Light": False,
+    }
+    mock_neopool_client.read_all_timers.side_effect = _timers
     await setup_integration(hass, mock_config_entry_light)
     entity_id = _light_entity_id(hass, mock_config_entry_light)
-
-    mock_neopool_client.async_read_all.return_value = {**MOCK_POOL_DATA, **relay_data}
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     mock_neopool_client.async_set_relay_state.reset_mock()
     with pytest.raises(ServiceValidationError):

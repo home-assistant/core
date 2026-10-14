@@ -25,6 +25,14 @@
       }
     }
   },
+  "exceptions": {
+    "attachment_not_allowed": {
+      "message": "Attachment path {attachment} is not allowed."
+    },
+    "attachment_open_failed": {
+      "message": "Failed to open attachment {attachment}."
+    }
+  },
   "services": {
     "cancel": {
       "description": "Cancels one or more Pushover emergency notifications (priority 2) that were previously sent through the targeted Pushover account.",

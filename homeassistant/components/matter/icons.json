@@ -154,6 +154,9 @@
       }
     },
     "switch": {
+      "audible_alarm_enabled": {
+        "default": "mdi:bullhorn"
+      },
       "child_lock": {
         "default": "mdi:lock",
         "state": {
@@ -164,6 +167,9 @@
       "evse_charging_switch": {
         "default": "mdi:ev-station"
       },
+      "one_touch_locking": {
+        "default": "mdi:gesture-tap-button"
+      },
       "privacy_mode_button": {
         "default": "mdi:shield-lock"
       },
@@ -173,6 +179,9 @@
           "off": "mdi:volume-high",
           "on": "mdi:volume-mute"
         }
+      },
+      "visual_alarm_enabled": {
+        "default": "mdi:alarm-light"
       }
     }
   },

@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: Please authenticate with {username}."
     },
@@ -59,8 +58,8 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "user_not_found": {
+      "message": "The logged-in Twitch user could not be found"
     }
   }
 }

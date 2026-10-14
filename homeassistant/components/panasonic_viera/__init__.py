@@ -7,7 +7,7 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -32,23 +32,25 @@ type PanasonicVieraConfigEntry = ConfigEntry[Remote]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
+                        probatio.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
@@ -71,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
-) -> bool:
+) -> None:
     """Set up Panasonic Viera from a config entry."""
     config = config_entry.data
 
@@ -110,14 +112,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 class Remote:

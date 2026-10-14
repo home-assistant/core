@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
+from .const import (
     ATTR_DURATION,
     DOMAIN,
     SERVICE_CANCEL,

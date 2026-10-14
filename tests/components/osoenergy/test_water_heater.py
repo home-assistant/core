@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
-from homeassistant.components.osoenergy.water_heater import (
+from homeassistant.components.osoenergy.services import (
     ATTR_DURATION_DAYS,
     ATTR_UNTIL_TEMP_LIMIT,
     ATTR_V40MIN,

@@ -104,9 +104,6 @@ async def test_remove_device_valid(
         list_commands_return_value=[],
     )
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert device_registry is not None
-
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_serial_number), config_entry.entry_id
     )
@@ -136,9 +133,6 @@ async def test_remove_device_stale(
         list_ups={"ups1": "UPS 1"},
         list_commands_return_value=[],
     )
-
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert device_registry is not None
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

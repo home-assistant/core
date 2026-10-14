@@ -1,11 +1,13 @@
 """Tests for the Lyngdorf media player platform."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from datetime import UTC, datetime
+from operator import attrgetter
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from lyngdorf.const import LyngdorfModel
+from lyngdorf import LyngdorfInvalidValueError, LyngdorfModel, LyngdorfUnsupportedError
 from lyngdorf.states import Control, PlaybackState, Repeat
 from lyngdorf.streaming import NowPlaying
 import pytest
@@ -50,6 +52,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_position_jump, notify_receiver_update
@@ -79,7 +82,7 @@ def media_proxy_token() -> Generator[None]:
 def playing_receiver(mock_receiver: MagicMock) -> MagicMock:
     """Return a receiver that is streaming a track."""
     mock_receiver.power_on = True
-    mock_receiver.now_playing = NowPlaying(
+    mock_receiver.player.now_playing = NowPlaying(
         state=PlaybackState.PLAYING,
         title="The Killing Moon",
         artist="Echo & the Bunnymen",
@@ -97,13 +100,12 @@ def playing_receiver(mock_receiver: MagicMock) -> MagicMock:
         ),
         play_modes=frozenset(),
     )
-    mock_receiver.has_position = True
-    mock_receiver.position_ms = 318544
-    mock_receiver.position_updated_at = POSITION_UPDATED_AT
-    mock_receiver.shuffle = False
-    mock_receiver.repeat = Repeat.OFF
-    mock_receiver.can_shuffle = True
-    mock_receiver.available_repeat_modes = frozenset({Repeat.OFF, Repeat.ALL})
+    mock_receiver.player.position_ms = 318544
+    mock_receiver.player.position_updated_at = POSITION_UPDATED_AT
+    mock_receiver.player.shuffle = False
+    mock_receiver.player.repeat = Repeat.OFF
+    mock_receiver.player.can_shuffle = True
+    mock_receiver.player.repeat_modes = frozenset({Repeat.OFF, Repeat.ALL})
     return mock_receiver
 
 
@@ -117,17 +119,18 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-@pytest.mark.usefixtures("mock_receiver")
 async def test_no_zone_b_entity_for_model_without_zone_b(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no Zone B media player entity is created for a model without Zone B."""
     mock_config_entry.add_to_hass(hass)
+    mock_receiver.zone_b = None
 
     with patch(
-        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        "homeassistant.components.lyngdorf.lookup_model",
         return_value=LyngdorfModel.TDAI_3400,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -141,10 +144,10 @@ async def test_no_zone_b_entity_for_model_without_zone_b(
 @pytest.mark.parametrize(
     ("entity_id", "service", "attr", "expected"),
     [
-        (MAIN_ZONE, SERVICE_TURN_ON, "power_on", True),
-        (MAIN_ZONE, SERVICE_TURN_OFF, "power_on", False),
-        (ZONE_B, SERVICE_TURN_ON, "zone_b_power_on", True),
-        (ZONE_B, SERVICE_TURN_OFF, "zone_b_power_on", False),
+        (MAIN_ZONE, SERVICE_TURN_ON, "set_power", True),
+        (MAIN_ZONE, SERVICE_TURN_OFF, "set_power", False),
+        (ZONE_B, SERVICE_TURN_ON, "zone_b.set_power", True),
+        (ZONE_B, SERVICE_TURN_OFF, "zone_b.set_power", False),
     ],
 )
 async def test_power(
@@ -163,16 +166,16 @@ async def test_power(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert getattr(mock_receiver, attr) is expected
+    attrgetter(attr)(mock_receiver).assert_awaited_once_with(expected)
 
 
 @pytest.mark.parametrize(
     ("entity_id", "service", "method"),
     [
-        (MAIN_ZONE, SERVICE_VOLUME_UP, "volume_up"),
-        (MAIN_ZONE, SERVICE_VOLUME_DOWN, "volume_down"),
-        (ZONE_B, SERVICE_VOLUME_UP, "zone_b_volume_up"),
-        (ZONE_B, SERVICE_VOLUME_DOWN, "zone_b_volume_down"),
+        (MAIN_ZONE, SERVICE_VOLUME_UP, "volume.up"),
+        (MAIN_ZONE, SERVICE_VOLUME_DOWN, "volume.down"),
+        (ZONE_B, SERVICE_VOLUME_UP, "zone_b.volume.up"),
+        (ZONE_B, SERVICE_VOLUME_DOWN, "zone_b.volume.down"),
     ],
 )
 async def test_volume_step(
@@ -190,15 +193,15 @@ async def test_volume_step(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    getattr(mock_receiver, method).assert_called_once()
+    attrgetter(method)(mock_receiver).assert_awaited_once()
 
 
 @pytest.mark.parametrize(
     ("entity_id", "level", "method", "expected_db"),
     [
-        (MAIN_ZONE, 0.5, "set_volume", -37.95),
-        (MAIN_ZONE, 1.0, "set_volume", 24.0),
-        (ZONE_B, 0.3, "set_zone_b_volume", -62.73),
+        (MAIN_ZONE, 0.5, "volume.set", -37.95),
+        (MAIN_ZONE, 1.0, "volume.set", 24.0),
+        (ZONE_B, 0.3, "zone_b.volume.set", -62.73),
     ],
 )
 async def test_volume_set(
@@ -217,14 +220,16 @@ async def test_volume_set(
         {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: level},
         blocking=True,
     )
-    getattr(mock_receiver, method).assert_called_once_with(pytest.approx(expected_db))
+    attrgetter(method)(mock_receiver).assert_awaited_once_with(
+        pytest.approx(expected_db)
+    )
 
 
 @pytest.mark.parametrize(
     ("entity_id", "attr"),
     [
-        (MAIN_ZONE, "mute_enabled"),
-        (ZONE_B, "zone_b_mute_enabled"),
+        (MAIN_ZONE, "set_muted"),
+        (ZONE_B, "zone_b.set_muted"),
     ],
 )
 async def test_mute(
@@ -241,14 +246,14 @@ async def test_mute(
         {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True},
         blocking=True,
     )
-    assert getattr(mock_receiver, attr) is True
+    attrgetter(attr)(mock_receiver).assert_awaited_once_with(True)
 
 
 @pytest.mark.parametrize(
     ("entity_id", "attr"),
     [
-        (MAIN_ZONE, "source"),
-        (ZONE_B, "zone_b_source"),
+        (MAIN_ZONE, "set_source"),
+        (ZONE_B, "zone_b.set_source"),
     ],
 )
 async def test_select_source(
@@ -265,7 +270,59 @@ async def test_select_source(
         {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "HDMI"},
         blocking=True,
     )
-    assert getattr(mock_receiver, attr) == "HDMI"
+    attrgetter(attr)(mock_receiver).assert_awaited_once_with("HDMI")
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "payload", "method"),
+    [
+        pytest.param(
+            MAIN_ZONE,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_INPUT_SOURCE: "Bogus"},
+            "set_source",
+            id="main_source",
+        ),
+        pytest.param(
+            ZONE_B,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_INPUT_SOURCE: "Bogus"},
+            "zone_b.set_source",
+            id="zone_b_source",
+        ),
+        pytest.param(
+            MAIN_ZONE,
+            SERVICE_SELECT_SOUND_MODE,
+            {ATTR_SOUND_MODE: "Bogus"},
+            "set_sound_mode",
+            id="sound_mode",
+        ),
+    ],
+)
+async def test_select_invalid_option(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+    entity_id: str,
+    service: str,
+    payload: dict[str, Any],
+    method: str,
+) -> None:
+    """Test a source or sound mode the device does not offer is reported."""
+    attrgetter(method)(mock_receiver).side_effect = LyngdorfInvalidValueError(
+        "Bogus is not valid"
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id} | payload,
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "invalid_option"
+    assert err.value.translation_placeholders["option"] == "Bogus"
 
 
 async def test_select_sound_mode(
@@ -280,7 +337,7 @@ async def test_select_sound_mode(
         {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_SOUND_MODE: "Movie"},
         blocking=True,
     )
-    assert mock_receiver.sound_mode == "Movie"
+    mock_receiver.set_sound_mode.assert_awaited_once_with("Movie")
 
 
 async def test_availability(
@@ -311,12 +368,12 @@ async def test_main_zone_state_properties(
 ) -> None:
     """Test main zone state properties are reported correctly."""
     mock_receiver.power_on = True
-    mock_receiver.volume = -40.0
-    mock_receiver.mute_enabled = False
+    mock_receiver.volume.value = -40.0
+    mock_receiver.muted = False
     mock_receiver.source = "HDMI"
     mock_receiver.sound_mode = "Movie"
-    mock_receiver.available_sources = ["HDMI", "Optical"]
-    mock_receiver.available_sound_modes = ["Movie", "Stereo"]
+    mock_receiver.sources = ["HDMI", "Optical"]
+    mock_receiver.sound_modes = ["Movie", "Stereo"]
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
@@ -329,7 +386,7 @@ async def test_main_zone_state_properties(
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
     assert state.attributes[ATTR_SOUND_MODE_LIST] == ["Movie", "Stereo"]
 
-    mock_receiver.volume = None
+    mock_receiver.volume.value = None
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
     state = hass.states.get(MAIN_ZONE)
@@ -348,11 +405,11 @@ async def test_zone_b_state_properties(
     mock_receiver: MagicMock,
 ) -> None:
     """Test zone B state properties are reported correctly."""
-    mock_receiver.zone_b_power_on = True
-    mock_receiver.zone_b_volume = -30.0
-    mock_receiver.zone_b_mute_enabled = True
-    mock_receiver.zone_b_source = "Optical"
-    mock_receiver.zone_b_available_sources = ["HDMI", "Optical"]
+    mock_receiver.zone_b.power_on = True
+    mock_receiver.zone_b.volume.value = -30.0
+    mock_receiver.zone_b.muted = True
+    mock_receiver.zone_b.source = "Optical"
+    mock_receiver.zone_b.sources = ["HDMI", "Optical"]
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
@@ -362,6 +419,12 @@ async def test_zone_b_state_properties(
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
     assert state.attributes[ATTR_INPUT_SOURCE] == "Optical"
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
+
+    mock_receiver.zone_b.volume.value = None
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+    state = hass.states.get(ZONE_B)
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is None
 
 
 async def test_now_playing(
@@ -392,9 +455,11 @@ async def test_transport_features_absent_when_idle(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        pytest.param(SERVICE_MEDIA_PAUSE, "async_pause", id="pause"),
-        pytest.param(SERVICE_MEDIA_NEXT_TRACK, "async_next", id="next"),
-        pytest.param(SERVICE_MEDIA_PREVIOUS_TRACK, "async_previous", id="previous"),
+        pytest.param(SERVICE_MEDIA_PAUSE, "player.pause", id="pause"),
+        pytest.param(SERVICE_MEDIA_NEXT_TRACK, "player.next_track", id="next"),
+        pytest.param(
+            SERVICE_MEDIA_PREVIOUS_TRACK, "player.previous_track", id="previous"
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -411,7 +476,7 @@ async def test_transport_actions(
         {ATTR_ENTITY_ID: MAIN_ZONE},
         blocking=True,
     )
-    getattr(playing_receiver, method).assert_awaited_once()
+    attrgetter(method)(playing_receiver).assert_awaited_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -426,7 +491,7 @@ async def test_seek_converts_to_milliseconds(
         {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_SEEK_POSITION: 42.5},
         blocking=True,
     )
-    playing_receiver.async_seek.assert_awaited_once_with(42500)
+    playing_receiver.player.seek.assert_awaited_once_with(42500)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -436,14 +501,14 @@ async def test_seek_converts_to_milliseconds(
         pytest.param(
             SERVICE_SHUFFLE_SET,
             {ATTR_MEDIA_SHUFFLE: True},
-            "async_set_shuffle",
+            "player.set_shuffle",
             True,
             id="shuffle",
         ),
         pytest.param(
             SERVICE_REPEAT_SET,
             {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
-            "async_set_repeat",
+            "player.set_repeat",
             Repeat.ALL,
             id="repeat",
         ),
@@ -465,7 +530,89 @@ async def test_set_play_mode(
         {ATTR_ENTITY_ID: MAIN_ZONE} | payload,
         blocking=True,
     )
-    getattr(playing_receiver, method).assert_awaited_once_with(expected)
+    attrgetter(method)(playing_receiver).assert_awaited_once_with(expected)
+
+
+@pytest.mark.parametrize(
+    ("service", "payload", "method"),
+    [
+        pytest.param(SERVICE_MEDIA_PAUSE, {}, "player.pause", id="pause"),
+        pytest.param(SERVICE_MEDIA_NEXT_TRACK, {}, "player.next_track", id="next"),
+        pytest.param(
+            SERVICE_MEDIA_PREVIOUS_TRACK, {}, "player.previous_track", id="previous"
+        ),
+        pytest.param(
+            SERVICE_MEDIA_SEEK, {ATTR_MEDIA_SEEK_POSITION: 42}, "player.seek", id="seek"
+        ),
+        pytest.param(
+            SERVICE_SHUFFLE_SET,
+            {ATTR_MEDIA_SHUFFLE: True},
+            "player.set_shuffle",
+            id="shuffle",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            "player.set_repeat",
+            id="repeat",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("result", "exception", "translation_key"),
+    [
+        pytest.param(False, HomeAssistantError, "command_failed", id="not_sent"),
+        pytest.param(
+            LyngdorfUnsupportedError("not offered"),
+            ServiceValidationError,
+            "unsupported_command",
+            id="unsupported",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_transport_failure(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+    service: str,
+    payload: dict[str, Any],
+    method: str,
+    result: bool | Exception,
+    exception: type[HomeAssistantError],
+    translation_key: str,
+) -> None:
+    """Test a transport command the device does not take raises."""
+    attrgetter(method)(playing_receiver).side_effect = [result]
+
+    with pytest.raises(exception) as err:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: MAIN_ZONE} | payload,
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_transport_features_follow_the_source(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test only the controls the current source offers are advertised."""
+    now_playing = playing_receiver.player.now_playing
+    playing_receiver.player.now_playing = replace(
+        now_playing, controls=frozenset({Control.PAUSE})
+    )
+    notify_receiver_update(playing_receiver)
+    await hass.async_block_till_done()
+
+    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
+    assert features & MediaPlayerEntityFeature.PAUSE
+    assert not features & MediaPlayerEntityFeature.SEEK
+    assert not features & MediaPlayerEntityFeature.NEXT_TRACK
+    assert not features & MediaPlayerEntityFeature.PREVIOUS_TRACK
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -474,7 +621,7 @@ async def test_no_streaming_features_on_model_without_streamer(
     playing_receiver: MagicMock,
 ) -> None:
     """Test a model with no streaming module offers no transport."""
-    playing_receiver.model = LyngdorfModel.TDAI_2170
+    playing_receiver.player = None
     notify_receiver_update(playing_receiver)
     await hass.async_block_till_done()
 
@@ -486,12 +633,28 @@ async def test_no_streaming_features_on_model_without_streamer(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_no_position_before_the_streamer_reports_one(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test an attached player that has not yet reported a position."""
+    playing_receiver.player.position_ms = None
+    notify_receiver_update(playing_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+    # The timestamp advances on every poll, so it must not be published alone.
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) is None
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_position_jump_updates_state(
     hass: HomeAssistant,
     playing_receiver: MagicMock,
 ) -> None:
     """Test a position discontinuity refreshes the reported position."""
-    playing_receiver.position_ms = 1000
+    playing_receiver.player.position_ms = 1000
     notify_position_jump(playing_receiver, 1000)
     await hass.async_block_till_done()
 

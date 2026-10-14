@@ -209,15 +209,9 @@ class ExceptionTranslationsChecker(BaseChecker):
         if translation_key is None:
             return
 
-        # Resolve the domain value
-        translation_domain = _extract_const_string(domain_node)
+        translation_domain = self._resolve_domain(domain_node)
         if translation_domain is None:
-            # Try resolving DOMAIN constant
-            if isinstance(domain_node, nodes.Name) and domain_node.name == "DOMAIN":
-                translation_domain = self._domain
-
-        if translation_domain is None:
-            # Non-literal domain (variable, attribute), can't check further
+            # Domain can't be resolved statically, can't check further
             return
 
         # Load translations for the target domain (may differ from current module)
@@ -267,6 +261,24 @@ class ExceptionTranslationsChecker(BaseChecker):
                     ", ".join(sorted(expected)) or "(none)",
                 ),
             )
+
+    def _resolve_domain(self, domain_node: nodes.NodeNG | None) -> str | None:
+        """Resolve the translation_domain to a string, if statically known."""
+        if (domain := _extract_const_string(domain_node)) is not None:
+            return domain
+        if not isinstance(domain_node, nodes.Name):
+            return None
+        if domain_node.name == "DOMAIN":
+            return self._domain
+        # Constants assigned locally or imported from another integration,
+        # e.g. `from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN`
+        try:
+            inferred = domain_node.inferred()
+        except astroid.exceptions.InferenceError:
+            return None
+        if len(inferred) != 1:
+            return None
+        return _extract_const_string(inferred[0])
 
 
 def register(linter: PyLinter) -> None:
