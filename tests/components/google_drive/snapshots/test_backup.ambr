@@ -38,7 +38,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(size)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
@@ -50,7 +50,7 @@
       dict({
         'params': dict({
           'fields': 'files(id)',
-          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and properties has { key='backup_id' and value='test-backup' }",
+          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false and properties has { key='backup_id' and value='test-backup' }",
         }),
       }),
     ),
@@ -103,7 +103,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(size)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
@@ -114,7 +114,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(id,description)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
@@ -126,7 +126,7 @@
       dict({
         'params': dict({
           'fields': 'files(id)',
-          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and properties has { key='backup_id' and value='test-backup' }",
+          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false and properties has { key='backup_id' and value='test-backup' }",
         }),
       }),
     ),
@@ -186,7 +186,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(size)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
@@ -197,7 +197,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(id,description)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
@@ -243,7 +243,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(size)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
@@ -329,7 +329,7 @@
       ),
       dict({
         'params': dict({
-          'fields': 'files(description)',
+          'fields': 'files(size)',
           'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),

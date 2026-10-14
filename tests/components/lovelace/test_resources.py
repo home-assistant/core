@@ -1,6 +1,7 @@
 """Test Lovelace resources."""
 
 import copy
+from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, patch
 import uuid
@@ -10,6 +11,7 @@ import pytest
 from homeassistant.components.lovelace import dashboard, resources
 from homeassistant.components.lovelace.const import DOMAIN, LOVELACE_DATA
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -56,6 +58,76 @@ async def test_yaml_resources_backwards(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == RESOURCE_EXAMPLES
+
+
+async def test_yaml_resources_missing_local_file_warning(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a warning is logged for /local resources without a backing file."""
+    hass.config.config_dir = str(tmp_path)
+
+    def _create_www_file() -> None:
+        (tmp_path / "www").mkdir()
+        (tmp_path / "www" / "exists.js").write_text("")
+
+    await hass.async_add_executor_job(_create_www_file)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "lovelace": {
+                "resource_mode": "yaml",
+                "resources": [
+                    {"type": "module", "url": "/local/exists.js?v=1.2"},
+                    {"type": "module", "url": "/local/missing.js"},
+                    # remote URLs are not backed by a file in www, even when
+                    # their path looks like one
+                    {"type": "module", "url": "https://example.com/local/remote.js"},
+                    {"type": "module", "url": "//example.com/local/scheme.js"},
+                    {"type": "module", "url": "/hacsfiles/plugin/plugin.js"},
+                    # normalizing this leaves www, so it is not a local file
+                    {"type": "module", "url": "/local/../configuration.yaml"},
+                    # any string is accepted as URL, this one cannot be parsed
+                    {"type": "module", "url": "//["},
+                    # url is optional in the resource schema
+                    {"type": "module"},
+                ],
+            }
+        },
+    )
+
+    assert "/local/missing.js" in caplog.text
+    assert str(tmp_path / "www" / "missing.js") in caplog.text
+    assert "exists.js" not in caplog.text
+    assert "remote.js" not in caplog.text
+    assert "scheme.js" not in caplog.text
+    assert "plugin.js" not in caplog.text
+    assert "configuration.yaml" not in caplog.text
+
+
+async def test_yaml_resources_without_local_files_never_warns(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test resources that cannot be resolved to a file are not checked."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "lovelace": {
+                "resource_mode": "yaml",
+                "resources": [
+                    {"type": "module", "url": "https://example.com/local/remote.js"},
+                    {"type": "module", "url": "/hacsfiles/plugin/plugin.js"},
+                ],
+            }
+        },
+    )
+
+    assert "was not found" not in caplog.text
 
 
 @pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
@@ -337,3 +409,31 @@ async def test_storage_resources_safe_mode(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
+
+
+async def test_reload_resources(hass: HomeAssistant) -> None:
+    """Test reloading YAML resources."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {"lovelace": {"resource_mode": "yaml", "resources": RESOURCE_EXAMPLES}},
+    )
+    new_resources = [{"type": "module", "url": "/local/new.js"}]
+
+    with patch(
+        "homeassistant.components.lovelace.services.async_hass_config_yaml",
+        return_value={
+            "lovelace": {"resource_mode": "yaml", "resources": new_resources}
+        },
+    ):
+        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)
+
+    assert hass.data[LOVELACE_DATA].resources.async_items() == new_resources
+
+
+async def test_reload_resources_storage_mode(hass: HomeAssistant) -> None:
+    """Test reloading resources is rejected in storage mode."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)

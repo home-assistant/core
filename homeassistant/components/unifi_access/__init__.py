@@ -29,11 +29,11 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Access integration."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) -> None:
     """Set up UniFi Access from a config entry."""
     session = async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL])
 
@@ -71,11 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: UnifiAccessConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

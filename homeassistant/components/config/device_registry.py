@@ -1,16 +1,17 @@
 """HTTP views to interact with the device registry."""
 
+from itertools import chain
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list_composite_splits",
+        probatio.Required("type"): "config/device_registry/list_composite_splits",
     }
 )
 def websocket_list_composite_splits(
@@ -65,7 +66,7 @@ def websocket_list_composite_splits(
                     None,
                 ),
             }
-            for composite_id, devices in registry.devices.get_composite_splits().items()
+            for composite_id, devices in registry._devices.get_composite_splits().items()  # noqa: SLF001
         },
     )
 
@@ -73,7 +74,7 @@ def websocket_list_composite_splits(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list",
+        probatio.Required("type"): "config/device_registry/list",
     }
 )
 def websocket_list_devices(
@@ -92,8 +93,7 @@ def websocket_list_devices(
     inner = b",".join(
         [
             entry.json_repr
-            for container in (registry.devices, registry.child_devices)
-            for entry in container.values()
+            for entry in chain(registry.devices, registry.child_devices)
             if entry.json_repr is not None
         ]
     )
@@ -104,8 +104,8 @@ def websocket_list_devices(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list_linked_devices",
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "config/device_registry/list_linked_devices",
+        probatio.Required("device_id"): str,
     }
 )
 def websocket_list_linked_devices(
@@ -150,14 +150,16 @@ def websocket_list_linked_devices(
 @require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/update",
-        vol.Optional("area_id"): vol.Any(str, None),
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "config/device_registry/update",
+        probatio.Optional("area_id"): probatio.Any(str, None),
+        probatio.Required("device_id"): str,
         # We only allow setting disabled_by user via API.
-        # No Enum support like this in voluptuous, use .value
-        vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
-        vol.Optional("labels"): [str],
-        vol.Optional("name_by_user"): vol.Any(str, None),
+        # No Enum support like this in probatio, use .value
+        probatio.Optional("disabled_by"): probatio.Any(
+            DeviceEntryDisabler.USER.value, None
+        ),
+        probatio.Optional("labels"): [str],
+        probatio.Optional("name_by_user"): probatio.Any(str, None),
     }
 )
 @callback
@@ -176,11 +178,30 @@ def websocket_update_device(
         msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
 
     if "labels" in msg:
-        # Convert labels to a set
-        msg["labels"] = set(msg["labels"])
+        labels = set(msg["labels"])
+        msg["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
+
+    device_id = msg["device_id"]
+
+    # A composite device id has no single underlying device to update; reject it.
+    if (
+        registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
+    ):
+        connection.send_error(
+            msg_id, websocket_api.ERR_NOT_ALLOWED, "Cannot update a composite device"
+        )
+        return
+    if (
+        device := registry.async_get(device_id, include_composite_devices=False)
+    ) is None:
+        connection.send_error(msg_id, websocket_api.ERR_NOT_FOUND, "Device not found")
+        return
 
     entry: dr.AnyDeviceEntry | None
-    if msg["device_id"] in registry.child_devices:
+    if isinstance(device, dr.ChildDeviceEntry):
         entry = registry.async_update_child_device(**msg)
     else:
         entry = registry.async_update_device(**msg)
@@ -207,10 +228,16 @@ async def _async_remove_device(
     device_id = msg["device_id"]
 
     # A composite device id has no single underlying device to remove; reject it.
-    if registry.async_is_composite_device_id(device_id):
+    if (
+        registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
+    ):
         raise HomeAssistantError("Cannot remove a composite device")
-
-    if (device_entry := registry.async_get(device_id)) is None:
+    if (
+        device_entry := registry.async_get(device_id, include_composite_devices=False)
+    ) is None:
         raise HomeAssistantError("Unknown device")
 
     if (

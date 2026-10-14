@@ -1,5 +1,6 @@
 """The tests for the  Template light platform."""
 
+from enum import StrEnum
 from itertools import chain
 from typing import Any
 
@@ -42,7 +43,10 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -2241,6 +2245,78 @@ async def test_saving_state(
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        (
+            "set_effect",
+            {
+                "effect_list": "{{ ['Disco', 'Police'] }}",
+                "effect": "{{ None }}",
+                **ON_OFF_ACTIONS,
+            },
+        ),
+        ("set_hs", ON_OFF_ACTIONS),
+        ("set_level", ON_OFF_ACTIONS),
+        ("set_rgb", ON_OFF_ACTIONS),
+        ("set_rgbw", ON_OFF_ACTIONS),
+        ("set_rgbww", ON_OFF_ACTIONS),
+        ("set_temperature", ON_OFF_ACTIONS),
+        ("set_xy", ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_LIGHT, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        (
+            "set_effect",
+            {
+                "effect_list": "{{ ['Disco', 'Police'] }}",
+                "effect": "{{ None }}",
+                **ON_OFF_ACTIONS,
+            },
+        ),
+        ("set_hs", ON_OFF_ACTIONS),
+        ("set_level", ON_OFF_ACTIONS),
+        ("set_rgb", ON_OFF_ACTIONS),
+        ("set_rgbw", ON_OFF_ACTIONS),
+        ("set_rgbww", ON_OFF_ACTIONS),
+        ("set_temperature", ON_OFF_ACTIONS),
+        ("set_xy", ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_LIGHT, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_extra_template_attributes(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
@@ -2278,3 +2354,101 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_LIGHT,
+        style,
+        {"state": "{{ 'on' }}", **ON_OFF_ACTIONS},
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(LightEntityCapabilityAttribute, LightEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        {
+            "state": "{{ 'on' }}",
+            **ON_OFF_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_LIGHT.entity_id}: {attribute}"
+    assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "effect_list": "{{ ['off', 'disco', 'rainbow'] }}",
+                **SET_EFFECT_ACTION,
+                **ON_OFF_ACTIONS,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("off", "off"),
+        ("disco", "disco"),
+        ("rainbow", "rainbow"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_optimistic_effect(
+    hass: HomeAssistant,
+    mode: str,
+    expected: Any,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic effect."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await _call_and_assert_action(
+        hass, calls, SERVICE_TURN_ON, {"effect": mode}, {"effect": mode}, "set_effect"
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.attributes.get("effect") == expected

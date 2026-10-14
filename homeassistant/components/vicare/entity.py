@@ -21,8 +21,10 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
+from .coordinator import ViCareCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +33,7 @@ class ViCareEntity(Entity):
     """Base class for ViCare entities."""
 
     _attr_has_entity_name = True
+    _logged_api_error: tuple[str, tuple[str, ...]] | None = None
 
     @contextmanager
     def vicare_api_handler(self) -> Generator[None]:
@@ -38,17 +41,32 @@ class ViCareEntity(Entity):
         try:
             yield
         except RequestConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
+            self._log_once(logging.ERROR, "Unable to retrieve data from ViCare server")
         except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
+            self._log_once(logging.ERROR, "Unable to decode data from ViCare server")
         except PyViCareRateLimitError as err:
-            _LOGGER.error("ViCare API rate limit exceeded: %s", err)
+            self._log_once(logging.ERROR, "ViCare API rate limit exceeded: %s", err)
         except PyViCareInvalidDataError as err:
-            _LOGGER.error("Invalid data from ViCare server: %s", err)
+            self._log_once(logging.ERROR, "Invalid data from ViCare server: %s", err)
         except PyViCareDeviceCommunicationError as err:
-            _LOGGER.warning("Device communication error: %s", err)
+            self._log_once(logging.WARNING, "Device communication error: %s", err)
         except PyViCareInternalServerError as err:
-            _LOGGER.warning("ViCare server error: %s", err)
+            self._log_once(logging.WARNING, "ViCare server error: %s", err)
+        else:
+            self._logged_api_error = None
+
+    def _log_once(self, level: int, message: str, *args: object) -> None:
+        """Log an API error when it appears, then at debug while it lasts.
+
+        Every entity of a device runs this on every poll, so an outage logged
+        per read writes a line per entity per poll.
+        """
+        error = (message, tuple(str(arg) for arg in args))
+        if error == self._logged_api_error:
+            _LOGGER.debug(message, *args)
+            return
+        self._logged_api_error = error
+        _LOGGER.log(level, message, *args)
 
     def __init__(
         self,
@@ -118,3 +136,39 @@ class ViCareEntity(Entity):
             device_info["serial_number"] = device_serial
 
         return device_info
+
+
+class ViCareCoordinatorEntity(CoordinatorEntity[ViCareCoordinator], ViCareEntity):
+    """Base class for ViCare entities backed by the update coordinator.
+
+    Values are read in ``_read_value``, which the coordinator calls from its
+    executor job. Properties must only return what was read there: a PyViCare
+    getter takes the library cache lock and does blocking I/O when that cache
+    is cold.
+    """
+
+    def __init__(
+        self,
+        coordinator: ViCareCoordinator,
+        unique_id_suffix: str,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        CoordinatorEntity.__init__(self, coordinator)
+        ViCareEntity.__init__(
+            self, unique_id_suffix, device_serial, device_config, device, component
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register the value reader and prime the first value."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self.coordinator.async_add_value_reader(self._read_value))
+        # The coordinator's first refresh ran before this entity existed.
+        await self.hass.async_add_executor_job(self._read_value)
+
+    def _read_value(self) -> None:
+        """Read this entity's value from the API. Runs in the executor."""

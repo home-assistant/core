@@ -17,10 +17,12 @@
         'device_id': 12345678,
         'ip_address': '1.1.1.1',
         'key': '**REDACTED**',
+        'mac': '**REDACTED**',
         'model': 'MSAGBU-09HRFN8',
-        'name': 'Bedroom AC',
+        'name': 'Air Conditioner',
         'port': 6444,
         'protocol': 3,
+        'sn': '**REDACTED**',
         'subtype': 0,
         'token': '**REDACTED**',
         'type': 172,
@@ -29,7 +31,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'midea',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

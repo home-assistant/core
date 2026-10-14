@@ -38,6 +38,7 @@ async def test_full_user_flow(hass: HomeAssistant, tmp_path: Path) -> None:
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == TEST_FILE_NAME
     assert result2.get("data") == {CONF_FILE_PATH: test_file}
+    assert result2["result"].unique_id == test_file
 
 
 async def test_unique_path(
@@ -50,7 +51,11 @@ async def test_unique_path(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_FILE_PATH: test_file}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_FILE_PATH: test_file},
     )
 
     assert result.get("type") is FlowResultType.ABORT

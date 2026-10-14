@@ -64,6 +64,7 @@ async def test_config_entry_diagnostics_error_getting_system(
 
 async def test_device_diagnostics(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
@@ -71,7 +72,6 @@ async def test_device_diagnostics(
     """Test generating diagnostics for a config entry."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "1"), config_entry.entry_id
     )

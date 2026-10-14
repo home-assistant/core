@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -91,9 +90,6 @@
       "battery_discharge_energy": {
         "name": "Discharge energy today"
       },
-      "battery_power": {
-        "name": "Power"
-      },
       "battery_state_of_charge": {
         "name": "State of charge"
       },
@@ -177,6 +173,17 @@
       "storage_power": {
         "name": "Storage power"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_retrieve_details": {
+      "message": "Could not retrieve details from SolarEdge API"
+    },
+    "missing_details": {
+      "message": "Missing details data in SolarEdge response"
+    },
+    "site_not_active": {
+      "message": "The SolarEdge site is not active"
     }
   }
 }

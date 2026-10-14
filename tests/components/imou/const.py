@@ -2,6 +2,8 @@
 
 from pyimouapi.const import (
     PARAM_BATTERY,
+    PARAM_COLLECTION_POINT,
+    PARAM_COLLECTION_POINT_PROMPT,
     PARAM_CURRENT_OPTION,
     PARAM_DEVICE_VOLUME,
     PARAM_MOTION_DETECT,
@@ -22,9 +24,17 @@ from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    PARAM_DOOR_CONTACT_STATUS,
+    PARAM_FRAME_REVERSE,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
+    PARAM_LINKAGE_SIREN,
+    PARAM_LINKAGE_WHITE_LIGHT,
+    PARAM_PET_DETECT,
+    PARAM_PLAY_SOUND,
     PARAM_PLUG_SWITCH,
+    PARAM_SMART_TRACK,
+    PARAM_WIDE_DYNAMIC,
 )
 
 TEST_APP_ID = "test_app_id"
@@ -47,6 +57,11 @@ UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
 UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
 UNKNOWN_SENSOR_KEY = "legacy_unknown_sensor"
 UNKNOWN_SELECT_KEY = "legacy_unknown_select"
+UNKNOWN_BINARY_SENSOR_KEY = "legacy_unknown_binary_sensor"
+
+DEFAULT_BINARY_SENSORS = {
+    PARAM_DOOR_CONTACT_STATUS: {PARAM_STATE: True},
+}
 
 DEFAULT_SELECTS = {
     PARAM_NIGHT_VISION_MODE: {
@@ -57,13 +72,28 @@ DEFAULT_SELECTS = {
         PARAM_CURRENT_OPTION: "medium",
         PARAM_OPTIONS: ["mute", "low", "medium", "high"],
     },
+    PARAM_COLLECTION_POINT: {
+        PARAM_CURRENT_OPTION: PARAM_COLLECTION_POINT_PROMPT,
+        PARAM_OPTIONS: [
+            PARAM_COLLECTION_POINT_PROMPT,
+            "Front door",
+            "Back yard",
+        ],
+    },
 }
 
 DEFAULT_SWITCHES = {
     PARAM_MOTION_DETECT: {PARAM_STATE: False},
     PARAM_HEADER_DETECT: {PARAM_STATE: True},
     PARAM_LIGHT: {PARAM_STATE: False},
+    PARAM_FRAME_REVERSE: {PARAM_STATE: False},
+    PARAM_LINKAGE_SIREN: {PARAM_STATE: False},
+    PARAM_LINKAGE_WHITE_LIGHT: {PARAM_STATE: False},
+    PARAM_PET_DETECT: {PARAM_STATE: False},
+    PARAM_PLAY_SOUND: {PARAM_STATE: True},
     PARAM_PLUG_SWITCH: {PARAM_STATE: True},
+    PARAM_SMART_TRACK: {PARAM_STATE: False},
+    PARAM_WIDE_DYNAMIC: {PARAM_STATE: True},
 }
 
 DEFAULT_SENSORS = {
@@ -93,6 +123,7 @@ def create_online_device(
     switches: dict[str, dict] | None = None,
     sensors: dict[str, dict] | None = None,
     selects: dict[str, dict] | None = None,
+    binary_sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
     return create_device(
@@ -104,6 +135,7 @@ def create_online_device(
         switches=switches,
         sensors=sensors,
         selects=selects,
+        binary_sensors=binary_sensors,
     )
 
 
@@ -136,6 +168,7 @@ def create_device(
     switches: dict[str, dict] | None = None,
     sensors: dict[str, dict] | None = None,
     selects: dict[str, dict] | None = None,
+    binary_sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
@@ -153,6 +186,10 @@ def create_device(
         device._sensors.update({key: dict(value) for key, value in sensors.items()})
     if selects:
         device._selects.update({key: dict(value) for key, value in selects.items()})
+    if binary_sensors:
+        device._binary_sensors.update(
+            {key: dict(value) for key, value in binary_sensors.items()}
+        )
     return device
 
 
@@ -187,5 +224,17 @@ def select_mock_devices() -> list[ImouHaDevice]:
             "Device 1",
             button_keys=(),
             selects=DEFAULT_SELECTS,
+        ),
+    ]
+
+
+def binary_sensor_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh binary-sensor-focused device list for tests."""
+    return [
+        create_online_device(
+            "d1",
+            "Device 1",
+            button_keys=(),
+            binary_sensors=DEFAULT_BINARY_SENSORS,
         ),
     ]
