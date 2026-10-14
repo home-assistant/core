@@ -32,6 +32,8 @@ _REGISTRATION_FUNCTIONS = {
     "async_register_batched_platform_entity_service",
     "async_register_entity_service",
     "async_register_platform_entity_service",
+    "async_setup_reload_service",
+    "setup_reload_service",
 }
 
 
