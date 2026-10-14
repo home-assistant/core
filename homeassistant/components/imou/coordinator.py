@@ -16,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
+from .countdown import CountdownTracker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._devices_initialized = False
         self.new_device_callbacks: list[Callable[[list[ImouHaDevice]], None]] = []
         self.open_api_quota_exceeded = False
+        self.countdown = CountdownTracker()
 
     @property
     def devices(self) -> list[ImouHaDevice]:
@@ -127,6 +129,8 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise self._update_failed(err, "update_devices_failed") from err
 
         self.open_api_quota_exceeded = False
+
+        self.countdown.sync_all(self.hass, self)
 
     def _update_failed(
         self, error: ImouException, translation_key: str

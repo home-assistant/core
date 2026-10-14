@@ -45,6 +45,15 @@ PARAM_WIDE_DYNAMIC = "wide_dynamic"
 # Binary sensor keys not yet exported by pyimouapi (keep integration-local).
 PARAM_DOOR_CONTACT_STATUS = "door_contact_status"
 
+# Plug text fields (countdown timer and overcharge limit).
+PARAM_COUNT_DOWN_SWITCH = "count_down_switch"
+COUNT_DOWN_MAX_MINUTES = 1440
+PARAM_OVERCHARGE_SWITCH = "overcharge_switch"
+OVERCHARGE_MIN_WATTS = 5
+OVERCHARGE_MAX_WATTS_DEFAULT = 2500
+OVERCHARGE_MAX_WATTS_HIGH = 3680
+OVERCHARGE_HIGH_REF = "128900"
+
 # How long each PTZ button press moves the camera, in milliseconds (Imou cloud API).
 PTZ_MOVE_DURATION_MS = 500
 
@@ -56,6 +65,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
