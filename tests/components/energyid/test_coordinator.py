@@ -257,6 +257,7 @@ async def test_startup_failure_does_not_block_setup(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed first fetch leaves the entry loaded and recovers later."""
     resource, schedule = _directive_fixture()
@@ -267,6 +268,7 @@ async def test_startup_failure_does_not_block_setup(
 
     coordinator = await _setup_with_directives(hass, mock_config_entry)
     assert not coordinator.last_update_success
+    assert "Unable to retrieve EnergyID directives" in caplog.text
 
     mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
     mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
@@ -276,6 +278,32 @@ async def test_startup_failure_does_not_block_setup(
 
     assert coordinator.last_update_success
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_rejected_credentials_at_startup_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    status: int,
+) -> None:
+    """Test rejected credentials on the first fetch fail setup and start reauth."""
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(
+        side_effect=ClientResponseError(
+            request_info=MagicMock(), history=(), status=status
+        )
+    )
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
 
 
 async def test_access_granted_after_setup(
