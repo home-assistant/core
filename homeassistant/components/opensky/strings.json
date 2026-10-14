@@ -12,6 +12,14 @@
       }
     }
   },
+  "exceptions": {
+    "authentication_error": {
+      "message": "An error occurred while authenticating with OpenSky: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while fetching data from OpenSky: {error}"
+    }
+  },
   "options": {
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
