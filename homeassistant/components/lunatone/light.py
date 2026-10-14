@@ -4,7 +4,6 @@ from typing import Any, override
 
 import aiohttp
 from lunatone_rest_api_client import DALIBroadcast
-from lunatone_rest_api_client.models import LineStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -116,13 +115,15 @@ class LunatoneLight(
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._device is not None
+        return super().available and self._device_id in self.coordinator.data.get(
+            self._line_id, {}
+        )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self._device is not None and self._device.is_on
+        return self._device.is_on
 
     @property
     @override
@@ -294,8 +295,7 @@ class LunatoneLineBroadcastLight(
             super().available
             and self._coordinator_info.last_update_success
             and line_id is not None
-            and str(line_id) in info_data.lines
-            and info_data.lines[str(line_id)].line_status == LineStatus.OK
+            and info_data.is_line_status_ok(line_id)
         )
 
     @property

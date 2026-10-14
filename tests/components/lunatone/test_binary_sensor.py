@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import ScanLineState, ScanState
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lunatone.coordinator import DEFAULT_SCAN_UPDATE_INTERVAL
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -92,6 +93,21 @@ async def test_sensor_value_update(
     assert coordinator.update_interval == timedelta(seconds=10)
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "expected_states"),
+    [
+        ("binary_sensor.test_scan_status", [STATE_ON, STATE_OFF]),
+        (
+            "binary_sensor.dali_line_0_scan_status",
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
+        ),
+        (
+            "binary_sensor.dali_line_1_scan_status",
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
+        ),
+    ],
+    ids=["scan_status_all_lines", "scan_status_line_0", "scan_status_line_1"],
+)
 async def test_line_scan_status_off_when_line_data_is_missing(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
@@ -99,6 +115,9 @@ async def test_line_scan_status_off_when_line_data_is_missing(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    expected_states: list[str],
 ) -> None:
     """Test the Lunatone DALI scan status value update."""
     mock_lunatone_scan.data.lines = []
@@ -106,12 +125,21 @@ async def test_line_scan_status_off_when_line_data_is_missing(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_ids = (
-        ("binary_sensor.test_scan_status", STATE_ON),
-        ("binary_sensor.dali_line_0_scan_status", STATE_OFF),
-        ("binary_sensor.dali_line_1_scan_status", STATE_OFF),
-    )
+    async def fake_update():
+        scan_data = deepcopy(mock_lunatone_scan.data)
+        scan_data.status = ScanState.DONE
+        mock_lunatone_scan.data = scan_data
 
-    for entity_id, expected_state in entity_ids:
-        entity = hass.states.get(entity_id)
-        assert entity and entity.state == expected_state
+    mock_lunatone_scan.async_update.side_effect = fake_update
+
+    expected_state = expected_states.pop(0)
+    entity = hass.states.get(entity_id)
+    assert entity and entity.state == expected_state
+
+    freezer.tick(DEFAULT_SCAN_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    expected_state = expected_states.pop(0)
+    entity = hass.states.get(entity_id)
+    assert entity and entity.state == expected_state
