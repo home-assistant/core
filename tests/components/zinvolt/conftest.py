@@ -48,6 +48,7 @@ def mock_zinvolt_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.login.return_value = TOKEN
+        client.get_user_id.return_value = "a0226b8f-98fe-4524-b369-272b466b8797"
         client.get_batteries.return_value = BatteryListResponse.from_json(
             load_fixture("batteries.json", DOMAIN)
         ).batteries

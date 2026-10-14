@@ -672,6 +672,12 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "switch_pf": RpcSensorDescription(
+        key="switch",
+        sub_key="pf",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "pf_em1": RpcSensorDescription(
         key="em1",
         sub_key="pf",

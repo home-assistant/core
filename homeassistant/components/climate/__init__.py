@@ -1,9 +1,11 @@
 """Provides functionality to interact with climate devices."""
 
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Final, Literal, final, override
+import math
+from typing import Any, Final, Literal, Self, final, override
 
 from propcache.api import cached_property
 
@@ -20,7 +22,7 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_TURN_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
@@ -31,9 +33,13 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.frame import ReportBehavior
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from .const import (  # noqa: F401
     ATTR_CURRENT_HUMIDITY,
@@ -765,3 +771,140 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def target_humidity_step(self) -> int | None:
         """Return the supported step of humidity."""
         return self._attr_target_humidity_step
+
+
+@dataclass(kw_only=True)
+class ClimateExtraStoredData(ExtraStoredData):
+    """Native temperatures of a climate entity, stored for restoring."""
+
+    native_current_temperature: float | None
+    native_target_temperature: float | None
+    native_target_temperature_high: float | None
+    native_target_temperature_low: float | None
+    native_temperature_unit: str
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the climate data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize stored climate data from a dict."""
+        try:
+            return cls(
+                native_current_temperature=restored["native_current_temperature"],
+                native_target_temperature=restored["native_target_temperature"],
+                native_target_temperature_high=restored[
+                    "native_target_temperature_high"
+                ],
+                native_target_temperature_low=restored["native_target_temperature_low"],
+                native_temperature_unit=restored["native_temperature_unit"],
+            )
+        except KeyError:
+            return None
+
+    @classmethod
+    def from_state(cls, state: State, default_unit: str) -> Self:
+        """Initialize stored climate data from the attributes of a state.
+
+        The attributes are in the unit of the system; states written before the
+        temperature_unit attribute was added are assumed to be in default_unit.
+        """
+        attributes = state.attributes
+        return cls(
+            native_current_temperature=attributes.get(
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+            ),
+            native_target_temperature=attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            ),
+            native_target_temperature_high=attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMP_HIGH
+            ),
+            native_target_temperature_low=attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMP_LOW
+            ),
+            native_temperature_unit=attributes.get(
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT, default_unit
+            ),
+        )
+
+
+class RestoreClimate(ClimateEntity, RestoreEntity):
+    """Mixin class for restoring previous climate temperatures."""
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> ClimateExtraStoredData:
+        """Return climate specific state data to be restored."""
+        high = low = None
+        # High/low have no default and are only implemented with this feature
+        if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features:
+            high = self.native_target_temperature_high
+            low = self.native_target_temperature_low
+        return ClimateExtraStoredData(
+            native_current_temperature=self.native_current_temperature,
+            native_target_temperature=self.native_target_temperature,
+            native_target_temperature_high=high,
+            native_target_temperature_low=low,
+            native_temperature_unit=self.native_temperature_unit,
+        )
+
+    async def async_get_last_climate_data(
+        self, *, validate_range: bool = False
+    ) -> ClimateExtraStoredData | None:
+        """Return the last stored temperatures, in the current native unit.
+
+        Falls back to the attributes of the last state when it was saved without
+        extra data. Temperatures which are not valid numbers are returned as None.
+
+        With validate_range, target temperatures outside min_temp and max_temp are
+        returned as None. Use it when the restored targets are sent to the device,
+        e.g. by entities which can't read their state back from it. Targets up to
+        half a degree (in the stored unit) outside the range are clamped instead,
+        as the attributes of the last state may be rounded for display.
+        """
+        if (extra_data := await self.async_get_last_extra_data()) is None or (
+            stored := ClimateExtraStoredData.from_dict(extra_data.as_dict())
+        ) is None:
+            if (state := await self.async_get_last_state()) is None:
+                return None
+            stored = ClimateExtraStoredData.from_state(
+                state, self.hass.config.units.temperature_unit
+            )
+
+        if (unit := stored.native_temperature_unit) not in (
+            TemperatureConverter.VALID_UNITS
+        ):
+            return None
+        native_unit = self.native_temperature_unit
+
+        def _convert(value: Any) -> float | None:
+            try:
+                value = TemperatureConverter.convert(float(value), unit, native_unit)
+            except TypeError, ValueError, OverflowError:
+                return None
+            return value if math.isfinite(value) else None
+
+        def _convert_target(value: Any) -> float | None:
+            if (temperature := _convert(value)) is None or not validate_range:
+                return temperature
+            min_temp = self.min_temp
+            max_temp = self.max_temp
+            tolerance = TemperatureDeltaConverter.convert(0.5, unit, native_unit)
+            if not min_temp - tolerance <= temperature <= max_temp + tolerance:
+                return None
+            return min(max(temperature, min_temp), max_temp)
+
+        return ClimateExtraStoredData(
+            native_current_temperature=_convert(stored.native_current_temperature),
+            native_target_temperature=_convert_target(stored.native_target_temperature),
+            native_target_temperature_high=_convert_target(
+                stored.native_target_temperature_high
+            ),
+            native_target_temperature_low=_convert_target(
+                stored.native_target_temperature_low
+            ),
+            native_temperature_unit=native_unit,
+        )

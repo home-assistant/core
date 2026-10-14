@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 type RussoundConfigEntry = ConfigEntry[RussoundRIOClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> None:
     """Set up a config entry."""
     handler: RussoundConnectionHandler
     if entry.data[CONF_TYPE] == TYPE_TCP:
@@ -101,20 +101,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.disconnect()
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: RussoundConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if config_entry.version == 1:
@@ -132,5 +128,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to configuration version %s successful", config_entry.version
     )
-
-    return True

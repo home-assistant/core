@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from pyicloud.exceptions import (
     PyiCloudAPIResponseException,
+    PyiCloudConnectionException,
     PyiCloudFailedLoginException,
 )
 import pytest
@@ -15,9 +16,11 @@ from homeassistant.components.icloud.config_flow import (
 )
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
+    CONF_INCLUDE_COMPLETED,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
+    DEFAULT_INCLUDE_COMPLETED,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
     DOMAIN,
@@ -241,6 +244,7 @@ async def test_user_with_cookie(hass: HomeAssistant) -> None:
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_WITH_FAMILY: WITH_FAMILY,
+            CONF_INCLUDE_COMPLETED: True,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -251,6 +255,43 @@ async def test_user_with_cookie(hass: HomeAssistant) -> None:
     assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
+    assert result["data"][CONF_INCLUDE_COMPLETED] is True
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test that the include_completed option can be toggled."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch("homeassistant.components.icloud.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_INCLUDE_COMPLETED: True}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_INCLUDE_COMPLETED] is True
+    assert config_entry.options[CONF_INCLUDE_COMPLETED] is True
+
+
+@pytest.mark.usefixtures("service_authenticated")
+async def test_user_defaults(hass: HomeAssistant) -> None:
+    """Test that the defaults are stored when the user does not override them."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    assert result["data"][CONF_INCLUDE_COMPLETED] == DEFAULT_INCLUDE_COMPLETED
 
 
 @pytest.mark.usefixtures("service_authenticated")
@@ -280,6 +321,53 @@ async def test_login_failed(hass: HomeAssistant) -> None:
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("service_authenticated")
+async def test_connection_error(hass: HomeAssistant) -> None:
+    """Test when iCloud is unreachable during login."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=PyiCloudConnectionException(reason="Connection error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_disables_pyicloud_monitor(
+    hass: HomeAssistant, service_authenticated: MagicMock
+) -> None:
+    """Test the config flow disables pyicloud's own Find My monitor."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    assert service_authenticated.call_args.kwargs["refresh_interval"] is None
 
 
 @pytest.mark.usefixtures("service_authenticated_no_device")

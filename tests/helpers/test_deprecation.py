@@ -426,6 +426,71 @@ def test_check_if_deprecated_constant(
 
 
 @pytest.mark.parametrize(
+    ("module_name", "expected_msg"),
+    [
+        pytest.param(
+            "homeassistant.components.hue.light",
+            "The deprecated constant TEST_CONSTANT was used from hue."
+            " It will be removed in HA Core 2099.1.",
+            id="builtin_integration",
+        ),
+        pytest.param(
+            "config.custom_components.hue.light",
+            "The deprecated constant TEST_CONSTANT was used from hue."
+            " It will be removed in HA Core 2099.1. Please report it to the author"
+            " of the 'hue' custom integration",
+            id="custom_integration",
+        ),
+    ],
+)
+def test_check_if_deprecated_constant_without_replacement(
+    caplog: pytest.LogCaptureFixture,
+    module_name: str,
+    expected_msg: str,
+) -> None:
+    """Test check_if_deprecated_constant without a replacement."""
+    module_globals = {
+        "__name__": module_name,
+        "_DEPRECATED_TEST_CONSTANT": DeprecatedConstant(1, None, "2099.1"),
+    }
+    filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
+
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with (
+        patch.dict(sys.modules, {module_name: Mock(__file__=filename)}),
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename=filename,
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
+        ),
+    ):
+        assert check_if_deprecated_constant("TEST_CONSTANT", module_globals) == 1
+
+    assert (module_name, logging.WARNING, expected_msg) in caplog.record_tuples
+
+
+@pytest.mark.parametrize(
     ("deprecated_constant", "extra_msg", "description"),
     [
         (
