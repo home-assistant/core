@@ -14,10 +14,10 @@
   },
   "exceptions": {
     "authentication_error": {
-      "message": "An error occurred while authenticating with OpenSky: {error}"
+      "message": "An error occurred while authenticating with OpenSky"
     },
     "update_error": {
-      "message": "An error occurred while fetching data from OpenSky: {error}"
+      "message": "An error occurred while fetching data from OpenSky"
     }
   },
   "options": {

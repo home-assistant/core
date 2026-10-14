@@ -68,7 +68,6 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(exc)},
             ) from exc
         currently_tracked = set()
         flight_metadata: dict[str, StateVector] = {}

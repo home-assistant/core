@@ -30,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> N
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
-                translation_placeholders={"error": str(exc)},
             ) from exc
 
     coordinator = OpenSkyDataUpdateCoordinator(hass, entry, client)
