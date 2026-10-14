@@ -297,6 +297,13 @@ async def async_setup_entry(
             entities.append(HomematicipShutterContact(hap, device, True))
         if isinstance(device, Device):
             entities.extend(_create_simple_binary_sensors(hap, device))
+        entities.extend(
+            HomematicipHeatingOutputSensor(hap, device, channel.index)
+            for channel in device.functionalChannels
+            if channel.functionalChannelType
+            == FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
+            and channel.internalSwitchOutputEnabled
+        )
 
         if _is_full_flush_lock_controller(device):
             entities.append(HomematicipFullFlushLockControllerLocked(hap, device))
@@ -628,6 +635,31 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
             state_attr[ATTR_TODAY_SUNSHINE_DURATION] = today_sunshine_duration
 
         return state_attr
+
+
+class HomematicipHeatingOutputSensor(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of the heating output of a HomematicIP wall thermostat."""
+
+    _attr_translation_key = "heating"
+
+    def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
+        """Initialize the heating output sensor."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            channel_real_index=channel,
+            feature_id="heating",
+            use_description_name=True,
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if the output is switched on."""
+        if (valve_position := self.get_channel_or_raise().valvePosition) is None:
+            return None
+        return valve_position > 0
 
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorEntity):

@@ -24,6 +24,7 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_WINDOW_STATE,
     SIMPLE_BINARY_SENSOR_DESCRIPTIONS,
 )
+from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_EVENT_DELAY,
     ATTR_GROUP_MEMBER_UNREACHABLE,
@@ -36,6 +37,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
+
+from tests.common import async_load_json_object_fixture
 
 
 async def test_hmip_full_flush_lock_controller_binary_sensors(
@@ -534,6 +537,53 @@ async def test_hmip_storm_sensor(
     await async_manipulate_test_data(hass, hmip_device, "storm", True)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hmip_heating_output_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipHeatingOutputSensor."""
+    entity_id = "binary_sensor.bwth_1_heating"
+    entity_name = "BWTH 1 Heating"
+    device_model = "HmIP-BWTH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["BWTH 1"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_ON
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", 0.0, channel_real_index=2
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", None, channel_real_index=2
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
+
+
+async def test_hmip_heating_output_sensor_output_disabled(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test that a wall thermostat with its output disabled has no heating sensor."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    device = next(
+        device for device in fixture["devices"].values() if device["label"] == "BWTH 1"
+    )
+    device["functionalChannels"]["2"]["internalSwitchOutputEnabled"] = False
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["BWTH 1"], extra_devices=[device]
+    )
+
+    assert hass.states.get("binary_sensor.bwth_1_heating") is None
 
 
 async def test_hmip_rain_sensor(
