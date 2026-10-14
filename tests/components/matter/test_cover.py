@@ -384,6 +384,72 @@ async def test_cover_stale_moving_operational_status(
 
 
 @pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_full", "cover.mock_full_window_covering"),
+    ],
+)
+async def test_cover_stale_moving_operational_status_since_interview(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a stale moving operational status is ignored across position reports.
+
+    Replays the Matter Server debug log of a Rademacher SmartHome Box bridged
+    venetian blind (home-assistant/core#186168): OperationalStatus 0b010101 as
+    read at the interview is never reported again, neither on
+    GoToLiftPercentage(10000) nor on GoToLiftPercentage(0). The bridge reports
+    target and current lift as the same value on command receipt and during
+    travel, except for one correction to the physical position 1.3 s after
+    the open command.
+    """
+
+    set_node_attribute(matter_node, 1, 258, 10, 0b010101)
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 12, 0)
+    set_node_attribute(matter_node, 1, 258, 15, 0)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes["current_position"] == 0
+
+    for updates, expected_state, expected_position in (
+        # open command: target and current both reported as 0
+        (((11, 0), (14, 0)), CoverState.OPEN, 100),
+        # correction to the physical position: the status is trusted again
+        (((14, 10000),), CoverState.OPENING, 0),
+        # mid-travel report with target = current
+        (((11, 7400), (14, 7400), (12, 1500), (15, 1500)), CoverState.OPEN, 26),
+        # end of travel
+        (((11, 0), (14, 0)), CoverState.OPEN, 100),
+    ):
+        for attribute_id, value in updates:
+            await set_node_attribute_and_notify(
+                hass,
+                matter_client,
+                matter_node,
+                endpoint=1,
+                cluster_id=258,
+                attribute_id=attribute_id,
+                value=value,
+            )
+        freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+        assert state.attributes["current_position"] == expected_position
+
+
+@pytest.mark.parametrize(
     ("target_position", "current_position"),
     [
         pytest.param(None, 10000, id="unknown_target"),
