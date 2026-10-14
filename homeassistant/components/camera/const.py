@@ -43,6 +43,7 @@ class CameraEntityStateAttribute(StrEnum):
     MODEL_NAME = "model_name"
     BRAND = "brand"
     MOTION_DETECTION = "motion_detection"
+    RECORDING_MEDIA_SOURCE = "recording_media_source"
 
 
 class CameraState(StrEnum):

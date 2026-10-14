@@ -14,6 +14,7 @@ from homeassistant.components.camera.const import (
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
+    CameraEntityStateAttribute,
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
@@ -34,6 +35,31 @@ from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_
 
 from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+@pytest.mark.usefixtures("image_mock_url")
+async def test_recording_media_source_state(hass: HomeAssistant) -> None:
+    """Publish an opt-in recording without changing ordinary camera attributes."""
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert CameraEntityStateAttribute.RECORDING_MEDIA_SOURCE not in (
+        hass.states.get(camera_obj.entity_id).attributes
+    )
+
+    media_id = "media-source://test_recordings/camera.demo_camera"
+    camera_obj._attr_recording_media_source = media_id
+    camera_obj.async_write_ha_state()
+    assert (
+        hass.states.get(camera_obj.entity_id).attributes[
+            CameraEntityStateAttribute.RECORDING_MEDIA_SOURCE
+        ]
+        == media_id
+    )
+
+    camera_obj._attr_recording_media_source = None
+    camera_obj.async_write_ha_state()
+    assert CameraEntityStateAttribute.RECORDING_MEDIA_SOURCE not in (
+        hass.states.get(camera_obj.entity_id).attributes
+    )
 
 
 @pytest.fixture(name="image_mock_url")

@@ -365,6 +365,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "is_streaming",
     "model",
     "motion_detection_enabled",
+    "recording_media_source",
     "supported_features",
 }
 
@@ -385,6 +386,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_is_streaming: bool = False
     _attr_model: str | None = None
     _attr_motion_detection_enabled: bool = False
+    _attr_recording_media_source: str | None = None
     _attr_should_poll: bool = False  # No need to poll cameras
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
@@ -440,6 +442,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def brand(self) -> str | None:
         """Return the camera brand."""
         return self._attr_brand
+
+    @cached_property
+    def recording_media_source(self) -> str | None:
+        """Return the media-source ID for playback on a recording-only camera."""
+        return self._attr_recording_media_source
 
     @cached_property
     def motion_detection_enabled(self) -> bool:
@@ -618,6 +625,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if brand := self.brand:
             attrs[CameraEntityStateAttribute.BRAND] = brand
+
+        if recording_media_source := self.recording_media_source:
+            attrs[CameraEntityStateAttribute.RECORDING_MEDIA_SOURCE] = (
+                recording_media_source
+            )
 
         if motion_detection_enabled := self.motion_detection_enabled:
             attrs[CameraEntityStateAttribute.MOTION_DETECTION] = (
