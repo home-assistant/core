@@ -686,13 +686,15 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def async_remove(self) -> None:
         """Remove all data."""
-        self._io.async_invalidate_cache()
+        self._data = None
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        if sandbox := current_sandbox.get():
-            # A sandbox runtime unlinks on main, not on local disk.
-            await sandbox.async_store_remove(self.key)
-            return
+        async with self._write_lock:
+            self._io.async_invalidate_cache()
+            if sandbox := current_sandbox.get():
+                # A sandbox runtime unlinks on main, not on local disk.
+                await sandbox.async_store_remove(self.key)
+                return
 
-        await self._io.async_remove()
+            await self._io.async_remove()
