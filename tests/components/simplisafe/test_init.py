@@ -233,7 +233,7 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
     patch_simplisafe_api,
     websocket: Mock,
 ) -> None:
-    """Test websocket retries restart at the initial delay after a success."""
+    """Test websocket retries restart at the initial delay after a connection."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -242,6 +242,7 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
         None,
         WebsocketError("second failure"),
     ]
+    websocket.async_listen.side_effect = WebsocketError("listener failure")
 
     with (
         patch(

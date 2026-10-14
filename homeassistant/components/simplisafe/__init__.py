@@ -325,8 +325,8 @@ class SimpliSafe:
         while True:
             try:
                 await self._api.websocket.async_connect()
-                await self._api.websocket.async_listen()
                 retries = 0
+                await self._api.websocket.async_listen()
             except asyncio.CancelledError:
                 await self._api.websocket.async_disconnect()
                 raise
