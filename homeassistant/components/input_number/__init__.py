@@ -275,8 +275,8 @@ class InputNumber(collection.CollectionEntity, RestoreNumber):
         value: float | None = None
         if (number_data := await self.async_get_last_number_data()) is not None:
             value = number_data.native_value
+        # Fallback for states stored without number extra data, remove in 2027.5
         elif state := await self.async_get_last_state():
-            # Without extra data, the state was stored without unit conversion
             with suppress(ValueError):
                 value = float(state.state)
 
