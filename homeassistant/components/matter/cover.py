@@ -154,23 +154,35 @@ class MatterCover(MatterEntity, CoverEntity):
         """Return whether all supported positions match their target position.
 
         Returns None if the positions cannot be compared, e.g. the device is
-        not position aware or a position is (still) unknown.
+        not position aware or a position is (still) unknown. The axes to
+        compare are taken from the FeatureMap: a position aware axis without
+        its position attributes is not comparable, while position attributes
+        of an unsupported axis (reported as null by e.g. the Shelly 2PM Gen4)
+        are ignored.
         """
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
+        features = clusters.WindowCovering.Bitmaps.Feature
         at_target: bool | None = None
-        for current_attribute, target_attribute in (
+        for feature, current_attribute, target_attribute in (
             (
+                features.kLift,
                 clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
                 clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
             ),
             (
+                features.kTilt,
                 clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
                 clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
             ),
         ):
+            if not feature_map & feature:
+                continue
             if not self._entity_info.endpoint.has_attribute(
                 None, current_attribute
             ) or not self._entity_info.endpoint.has_attribute(None, target_attribute):
-                continue
+                return None
             current_position = self.get_matter_attribute_value(current_attribute)
             target_position = self.get_matter_attribute_value(target_attribute)
             if current_position is None or target_position is None:
@@ -211,8 +223,8 @@ class MatterCover(MatterEntity, CoverEntity):
         # Some devices report a moving operational status together with
         # current = target and never report the operational status clearing,
         # leaving the cover stuck in a moving state. Observed with the
-        # Rademacher SmartHome Box Matter bridge, which mirrors the target into
-        # the current position on command receipt. Treat a position aware
+        # Rademacher SmartHome Box Matter bridge, which reports the target and
+        # the current position as the same value. Treat a position aware
         # covering at its target as not moving. This only ever clears the
         # moving state; at movement start the debounce hides a status report
         # arriving before the target update.

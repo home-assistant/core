@@ -767,28 +767,54 @@ async def test_cover_full_features(
 
 
 @pytest.mark.parametrize(
-    ("node_fixture", "entity_id"),
+    ("node_fixture", "entity_id", "feature_map", "expected_state"),
     [
-        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+        # a covering that tilts without being position aware on tilt: the lift
+        # sitting at its target says nothing about whether the tilt is moving
+        pytest.param(
+            "mock_window_covering_pa_lift",
+            "cover.longan_link_wncv_da01",
+            0b00111,
+            CoverState.CLOSING,
+            id="tilt_not_position_aware",
+        ),
+        # a covering claiming to be position aware on tilt without exposing
+        # the tilt position attributes
+        pytest.param(
+            "mock_window_covering_pa_lift",
+            "cover.longan_link_wncv_da01",
+            0b10111,
+            CoverState.CLOSING,
+            id="tilt_positions_missing",
+        ),
+        # the Shelly 2PM Gen4 exposes null tilt positions without supporting
+        # tilt, which must not keep the lift from being checked
+        pytest.param(
+            "mock_window_covering_pa_lift_null_tilt",
+            "cover.shelly_2pm_gen4",
+            0b00101,
+            CoverState.CLOSED,
+            id="tilt_unsupported_null_positions",
+        ),
     ],
 )
-async def test_cover_moving_status_with_unobservable_axis(
+async def test_cover_moving_status_axis_selection(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    feature_map: int,
+    expected_state: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test operational status is trusted when a supported axis has no position."""
+    """Test the axes compared against their target follow the FeatureMap."""
 
-    # a covering that tilts without being position aware on tilt: the lift
-    # sitting at its target says nothing about whether the tilt is moving
-    set_node_attribute(matter_node, 1, 258, 65532, 0b111)
+    set_node_attribute(matter_node, 1, 258, 65532, feature_map)
     set_node_attribute(matter_node, 1, 258, 11, 10000)
     set_node_attribute(matter_node, 1, 258, 14, 10000)
-    set_node_attribute(matter_node, 1, 258, 10, 0b100010)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == CoverState.CLOSING
+    assert state.state == expected_state
