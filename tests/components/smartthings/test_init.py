@@ -212,6 +212,7 @@ async def test_create_subscription_error(
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "create_subscription_error"
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
@@ -240,6 +241,7 @@ async def test_initial_fetch_connection_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
