@@ -14,10 +14,6 @@ from chip.clusters.ClusterObjects import (
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.client.models import device_types
-from matter_server.common.custom_clusters import (
-    CustomClusterAttributeMixin,
-    EveCluster,
-)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -73,25 +69,28 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
 # Eve Thermo reports its local schedule state inside a proprietary binary blob.
 # This descriptor is not included in the Python custom cluster definitions yet.
 @dataclass
-class EveThermoScheduleConfig(ClusterAttributeDescriptor, CustomClusterAttributeMixin):
+class EveThermoScheduleConfig(ClusterAttributeDescriptor):  # type: ignore[misc]
     """Proprietary Eve Thermo configuration attribute."""
 
-    @ChipUtility.classproperty
-    def cluster_id(cls) -> int:
-        return EveCluster.id
+    @ChipUtility.classproperty  # type: ignore[untyped-decorator]
+    def cluster_id(cls) -> int:  # noqa: N805
+        """Return the Eve vendor cluster ID."""
+        return 0x130AFC01
 
-    @ChipUtility.classproperty
-    def attribute_id(cls) -> int:
+    @ChipUtility.classproperty  # type: ignore[untyped-decorator]
+    def attribute_id(cls) -> int:  # noqa: N805
+        """Return the Eve configuration attribute ID."""
         return 0x130A0000
 
-    @ChipUtility.classproperty
-    def attribute_type(cls) -> ClusterObjectFieldDescriptor:
+    @ChipUtility.classproperty  # type: ignore[untyped-decorator]
+    def attribute_type(cls) -> ClusterObjectFieldDescriptor:  # noqa: N805
+        """Describe the configuration as a byte string."""
         return ClusterObjectFieldDescriptor(Type=bytes)
 
     value: bytes = b""
 
 
-def _eve_thermo_schedule_enabled(value: bytes | str) -> bool | None:
+def _eve_thermo_schedule_enabled(value: object) -> bool | None:
     """Decode the observed Eve Thermo 20EBP1701 schedule bit.
 
     Only firmware 3.5.2's 275-byte payload has been verified so far.
@@ -127,8 +126,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(EveThermoScheduleConfig,),
         vendor_id=(4874,),
-        product_id=(79,),
-        product_name=("Eve Thermo 20EBP1701",),
+        device_type=(device_types.Thermostat,),
     ),
     # device specific: translate Hue motion to sensor to HA Motion sensor
     # instead of generic occupancy sensor
