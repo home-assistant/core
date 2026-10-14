@@ -13,7 +13,7 @@ import aiohttp
 import aiohttp.client_exceptions
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util.network import is_local
+from homeassistant.util.network import is_loopback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +27,14 @@ async def verify_redirect_uri(
     redirect_uri: str,
     *,
     allow_loopback_port_change: bool = False,
+    request_scheme: str,
+    request_netloc: str,
 ) -> bool:
     """Verify the redirect URI, allowing loopback port changes only with PKCE."""
     try:
-        client_id_parts = _parse_client_id(client_id)
+        client_id_parts = _parse_client_id(
+            client_id, request_scheme=request_scheme, request_netloc=request_netloc
+        )
     except ValueError:
         return False
 
@@ -317,10 +321,17 @@ def _parse_metadata_document_redirect_uris(
     return redirect_uris
 
 
-def verify_client_id(client_id: str) -> bool:
+def verify_client_id(
+    client_id: str,
+    *,
+    request_scheme: str,
+    request_netloc: str,
+) -> bool:
     """Verify that the client id is valid."""
     try:
-        _parse_client_id(client_id)
+        _parse_client_id(
+            client_id, request_scheme=request_scheme, request_netloc=request_netloc
+        )
     except ValueError:
         return False
     return True
@@ -343,8 +354,17 @@ def _parse_url(url: str) -> ParseResult:
     return parts
 
 
-def _parse_client_id(client_id: str) -> ParseResult:
+def _parse_client_id(
+    client_id: str,
+    *,
+    request_scheme: str,
+    request_netloc: str,
+) -> ParseResult:
     """Test if client id is a valid URL according to IndieAuth section 3.2.
+
+    An IP address that is not loopback is allowed when the client_id has the
+    same scheme and netloc (host including port) as the request, which is how
+    the frontend builds its client_id.
 
     https://indieauth.spec.indieweb.org/#client-identifier
     """
@@ -387,8 +407,8 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # MUST NOT be IPv4 or IPv6 addresses except for IPv4 127.0.0.1
     # or IPv6 [::1]
 
-    # We are not goint to follow the spec here. We are going to allow
-    # any internal network IP to be used inside a client id.
+    # We additionally allow the netloc the request was made to, since the
+    # frontend uses its own origin as client_id.
 
     # hostname excludes the port and the [, ] around ipv6 addresses
     if parts.hostname is None:
@@ -398,7 +418,12 @@ def _parse_client_id(client_id: str) -> ParseResult:
     with suppress(ValueError):
         address = ip_address(parts.hostname)
 
-    if address is None or is_local(address):
+    if address is None or is_loopback(address):
         return parts
 
-    raise ValueError("Hostname should be a domain name or local IP address")
+    if parts.scheme == request_scheme and parts.netloc == request_netloc.lower():
+        return parts
+
+    raise ValueError(
+        "Hostname should be a domain name, a loopback IP address or the request netloc"
+    )
