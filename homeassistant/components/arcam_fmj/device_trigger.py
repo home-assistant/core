@@ -12,7 +12,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    async_noop,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -79,4 +86,4 @@ async def async_attach_trigger(
 
         return hass.bus.async_listen(EVENT_TURN_ON, _handle_event)
 
-    return lambda: None
+    return async_noop

@@ -116,25 +116,25 @@ def media_item_dict_from_mass_item(
 SEARCH_RESULT_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_ARTISTS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_ALBUMS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_TRACKS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_PLAYLISTS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_RADIO): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_AUDIOBOOKS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_PODCASTS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
     },
 )
@@ -142,7 +142,7 @@ SEARCH_RESULT_SCHEMA = probatio.Schema(
 LIBRARY_RESULTS_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_ITEMS): probatio.All(
-            cv.ensure_list, [probatio.Schema(MEDIA_ITEM_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         probatio.Required(ATTR_LIMIT): int,
         probatio.Required(ATTR_OFFSET): int,

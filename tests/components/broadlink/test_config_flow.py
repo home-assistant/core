@@ -9,11 +9,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import get_device
+from . import BroadlinkDevice, get_device
 
 DEVICE_HELLO = "homeassistant.components.broadlink.config_flow.blk.hello"
 DEVICE_FACTORY = "homeassistant.components.broadlink.config_flow.blk.gendevice"
@@ -31,12 +32,36 @@ def broadlink_setup_fixture():
         yield
 
 
-async def test_flow_user_works(hass: HomeAssistant) -> None:
+async def _async_configure_device(
+    hass: HomeAssistant, flow_id: str, device: BroadlinkDevice
+) -> ConfigFlowResult:
+    """Configure a working device and finish the flow."""
+    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {"host": device.host, "timeout": device.timeout}
+        )
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"name": device.name}
+    )
+
+
+async def _async_unlock_and_finish(
+    hass: HomeAssistant, flow_id: str, device: BroadlinkDevice
+) -> ConfigFlowResult:
+    """Unlock the device and finish the flow."""
+    result = await hass.config_entries.flow.async_configure(flow_id, {"unlock": True})
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"name": device.name}
+    )
+
+
+@pytest.mark.parametrize("device_name", ["Living Room", "Study"])
+async def test_flow_user_works(hass: HomeAssistant, device_name: str) -> None:
     """Test a config flow initiated by the user.
 
     Best case scenario with no errors or locks.
     """
-    device = get_device("Living Room")
+    device = get_device(device_name)
     mock_api = device.get_mock_api()
 
     result = await hass.config_entries.flow.async_init(
@@ -65,6 +90,7 @@ async def test_flow_user_works(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_hello.call_count == 1
     assert mock_api.auth.call_count == 1
@@ -144,6 +170,11 @@ async def test_flow_user_invalid_ip_address(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
+    result = await _async_configure_device(
+        hass, result["flow_id"], get_device("Living Room")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_invalid_hostname(hass: HomeAssistant) -> None:
     """Test we handle an invalid hostname in the user step."""
@@ -160,6 +191,11 @@ async def test_flow_user_invalid_hostname(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
+
+    result = await _async_configure_device(
+        hass, result["flow_id"], get_device("Living Room")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_user_device_not_found(hass: HomeAssistant) -> None:
@@ -179,6 +215,9 @@ async def test_flow_user_device_not_found(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await _async_configure_device(hass, result["flow_id"], device)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_user_device_not_supported(hass: HomeAssistant) -> None:
@@ -216,6 +255,11 @@ async def test_flow_user_network_unreachable(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await _async_configure_device(
+        hass, result["flow_id"], get_device("Living Room")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_os_error(hass: HomeAssistant) -> None:
     """Test we handle an OS error in the user step."""
@@ -232,6 +276,11 @@ async def test_flow_user_os_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
+
+    result = await _async_configure_device(
+        hass, result["flow_id"], get_device("Living Room")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_auth_authentication_error(hass: HomeAssistant) -> None:
@@ -254,6 +303,15 @@ async def test_flow_auth_authentication_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reset"
     assert result["errors"] == {"base": "invalid_auth"}
 
+    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "finish"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"name": device.name}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_auth_network_timeout(hass: HomeAssistant) -> None:
     """Test we handle a network timeout in the auth step."""
@@ -273,6 +331,7 @@ async def test_flow_auth_network_timeout(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -294,6 +353,7 @@ async def test_flow_auth_firmware_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -315,6 +375,7 @@ async def test_flow_auth_network_unreachable(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -336,6 +397,7 @@ async def test_flow_auth_os_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -355,11 +417,16 @@ async def test_flow_reset_works(hass: HomeAssistant) -> None:
             {"host": device.host, "timeout": device.timeout},
         )
 
-    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+    unlocked_api = device.get_mock_api()
+    with patch(DEVICE_HELLO, return_value=unlocked_api):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": device.host, "timeout": device.timeout},
         )
+
+    # The first probe opened its endpoint in auth(); replacing it closes it.
+    assert mock_api.aclose.await_count == 1
+    assert unlocked_api.aclose.await_count == 0
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -369,6 +436,8 @@ async def test_flow_reset_works(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    await hass.async_block_till_done()
+    assert unlocked_api.aclose.await_count == 1
 
 
 async def test_flow_unlock_works(hass: HomeAssistant) -> None:
@@ -404,6 +473,7 @@ async def test_flow_unlock_works(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.set_lock.call_args == call(False)
     assert mock_api.set_lock.call_count == 1
@@ -435,6 +505,11 @@ async def test_flow_unlock_network_timeout(hass: HomeAssistant) -> None:
     assert result["step_id"] == "unlock"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_api.set_lock.side_effect = None
+    result = await _async_unlock_and_finish(hass, result["flow_id"], device)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_api.set_lock.call_count == 2
+
 
 async def test_flow_unlock_firmware_error(hass: HomeAssistant) -> None:
     """Test we handle a firmware error in the unlock step."""
@@ -461,6 +536,11 @@ async def test_flow_unlock_firmware_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "unlock"
     assert result["errors"] == {"base": "unknown"}
+
+    mock_api.set_lock.side_effect = None
+    result = await _async_unlock_and_finish(hass, result["flow_id"], device)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_api.set_lock.call_count == 2
 
 
 async def test_flow_unlock_network_unreachable(hass: HomeAssistant) -> None:
@@ -489,6 +569,11 @@ async def test_flow_unlock_network_unreachable(hass: HomeAssistant) -> None:
     assert result["step_id"] == "unlock"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_api.set_lock.side_effect = None
+    result = await _async_unlock_and_finish(hass, result["flow_id"], device)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_api.set_lock.call_count == 2
+
 
 async def test_flow_unlock_os_error(hass: HomeAssistant) -> None:
     """Test we handle an OS error in the unlock step."""
@@ -515,6 +600,11 @@ async def test_flow_unlock_os_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "unlock"
     assert result["errors"] == {"base": "unknown"}
+
+    mock_api.set_lock.side_effect = None
+    result = await _async_unlock_and_finish(hass, result["flow_id"], device)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_api.set_lock.call_count == 2
 
 
 async def test_flow_do_not_unlock(hass: HomeAssistant) -> None:
@@ -546,6 +636,7 @@ async def test_flow_do_not_unlock(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.set_lock.call_count == 0
 
@@ -576,6 +667,7 @@ async def test_flow_import_works(hass: HomeAssistant) -> None:
     assert result["data"]["host"] == device.host
     assert result["data"]["mac"] == device.mac
     assert result["data"]["type"] == device.devtype
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.auth.call_count == 1
     assert mock_hello.call_count == 1
@@ -780,6 +872,7 @@ async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
     assert mock_hello.call_count == 1
@@ -853,6 +946,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
         "timeout": 10,
         "type": 24374,
     }
+    assert result2["result"].unique_id == "34ea34b43b5a"
 
 
 async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:

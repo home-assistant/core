@@ -61,6 +61,7 @@ async def test_resolve_area_id(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     assert resolve_area_id(hass, device_entry.id) is None
     assert resolve_area_id(hass, entity_entry.entity_id) is None

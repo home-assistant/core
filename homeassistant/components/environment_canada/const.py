@@ -6,6 +6,7 @@ CONF_STATION = "station"
 CONF_TITLE = "title"
 DOMAIN = "environment_canada"
 SERVICE_ENVIRONMENT_CANADA_FORECASTS = "get_forecasts"
+SERVICE_SET_RADAR_TYPE = "set_radar_type"
 
 CONF_RADAR_LAYER = "radar_layer"
 CONF_RADAR_LEGEND = "radar_legend"

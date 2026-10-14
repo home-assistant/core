@@ -23,6 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, WARNINGS_URL
+from .warnings import sort_warnings
 
 # Warnings are event driven and updated by GeoSphere Austria as needed.
 # The cheap HEAD precheck keeps the cost of a poll low, so a relatively
@@ -38,6 +39,7 @@ class GeoSphereData:
 
     location_warnings: LocationWarnings
     active_warnings: list[WeatherWarning]
+    advance_warnings: list[WeatherWarning]
 
 
 class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
@@ -106,9 +108,12 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
         now = dt_util.utcnow()
         return GeoSphereData(
             location_warnings=location_warnings,
-            active_warnings=[
+            active_warnings=sort_warnings(
                 warning
                 for warning in location_warnings.warnings
                 if warning.is_active(now)
-            ],
+            ),
+            advance_warnings=sort_warnings(
+                warning for warning in location_warnings.warnings if now < warning.start
+            ),
         )

@@ -1,7 +1,7 @@
 """Tests for ZHA integration init."""
 
-import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 import logging
 import typing
 from unittest.mock import AsyncMock, patch
@@ -42,12 +42,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .test_light import LIGHT_ON_OFF
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 DATA_RADIO_TYPE = "ezsp"
 DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"
@@ -292,16 +292,12 @@ async def test_zha_retry_unique_ids(
         "startup",
         side_effect=[TransientConnectionError(), None],
     ) as mock_connect:
-        with patch(
-            "homeassistant.config_entries.async_call_later",
-            lambda hass, delay, action: async_call_later(hass, 0.01, action),
-        ):
-            await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-            # Wait for the config entry setup to retry
-            await asyncio.sleep(0.1)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        # Wait for the config entry setup to retry
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(mock_connect.mock_calls) == 2
 

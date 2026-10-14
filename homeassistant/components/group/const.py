@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -22,6 +23,24 @@ ATTR_ADD_ENTITIES = "add_entities"
 ATTR_REMOVE_ENTITIES = "remove_entities"
 ATTR_AUTO = "auto"
 ATTR_ENTITIES = "entities"
+
+SERVICE_SET = "set"
+SERVICE_REMOVE = "remove"
+
+CONF_ALL = "all"
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 ATTR_OBJECT_ID = "object_id"
 ATTR_ORDER = "order"
 ATTR_ALL = "all"

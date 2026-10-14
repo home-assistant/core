@@ -1,5 +1,6 @@
 """Test Music Assistant media player entities."""
 
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
@@ -49,6 +50,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO_MODE,
     ATTR_SOURCE_PLAYER,
+    ATTR_START_ITEM,
     ATTR_TTS_ENTITY_ID,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
@@ -971,6 +973,112 @@ async def test_media_player_play_media_user_not_found_without_username(
             blocking=True,
         )
     assert not isinstance(err.value, ServiceValidationError)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_media", "expected_start_item"),
+    [
+        pytest.param(
+            {
+                ATTR_MEDIA_ID: "spotify://podcast/1234",
+                ATTR_MEDIA_TYPE: "podcast",
+                ATTR_START_ITEM: "latest",
+            },
+            ["spotify://podcast/1234"],
+            "latest",
+            id="podcast_latest_episode",
+        ),
+        pytest.param(
+            {
+                ATTR_MEDIA_ID: "2",
+                ATTR_MEDIA_TYPE: "podcast",
+                ATTR_START_ITEM: "newest",
+            },
+            ["library://podcast/2"],
+            "newest",
+            id="library_podcast_newest_episode",
+        ),
+        pytest.param(
+            {
+                ATTR_MEDIA_ID: "spotify://playlist/1234",
+                ATTR_START_ITEM: "spotify://track/5678",
+            },
+            ["spotify://playlist/1234"],
+            "spotify://track/5678",
+            id="playlist_from_track_uri",
+        ),
+        pytest.param(
+            {
+                ATTR_MEDIA_ID: "spotify://album/1234",
+                ATTR_START_ITEM: "Wheat Kings",
+            },
+            ["spotify://album/1234"],
+            "Wheat Kings",
+            id="album_from_track_name",
+        ),
+        pytest.param(
+            {
+                ATTR_MEDIA_ID: "library://playlist/1",
+                ATTR_START_ITEM: 42,
+            },
+            ["library://playlist/1"],
+            "42",
+            id="numeric_item_id_coerced_to_string",
+        ),
+    ],
+)
+async def test_media_player_play_media_start_item(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    service_data: dict[str, Any],
+    expected_media: list[str],
+    expected_start_item: str,
+) -> None:
+    """Test that the start item is forwarded to the server's play_media command."""
+    music_assistant_client.server_info.schema_version = 33
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {ATTR_ENTITY_ID: entity_id, **service_data},
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=expected_media,
+        option=None,
+        radio_mode=False,
+        start_item=expected_start_item,
+        username=None,
+        sort_by=None,
+    )
+
+
+async def test_media_player_play_media_start_item_invalid(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that a start item that is not a single value is rejected."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                ATTR_MEDIA_ID: "spotify://podcast/1234",
+                ATTR_START_ITEM: ["latest", "newest"],
+            },
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
 
 
 async def test_media_player_standard_play_media_default_user(

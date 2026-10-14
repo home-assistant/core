@@ -86,6 +86,7 @@ async def test_step_import(hass: HomeAssistant, config, setup_airvisual_pro) -> 
         CONF_IP_ADDRESS: "192.168.1.101",
         CONF_PASSWORD: "password123",
     }
+    assert result["result"].unique_id == "XXXXXXX"
 
 
 @pytest.mark.parametrize(

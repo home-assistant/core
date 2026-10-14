@@ -74,7 +74,7 @@ _TRIGGER_SCHEMA = probatio.All(
             probatio.Optional(CONF_ATTRIBUTE): cv.match_all,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
     validate_above_below,
 )
 

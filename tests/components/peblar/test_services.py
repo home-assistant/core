@@ -59,6 +59,8 @@ async def test_list_rfid_tokens(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test list_rfid_tokens returns token list."""
+    # Setting up reads the list too, and this is about what the action does.
+    mock_peblar.rfid_tokens.reset_mock()
     mock_peblar.rfid_tokens.return_value = [
         PeblarRfidToken(
             rfid_token_uid="AA:BB:CC:DD",
