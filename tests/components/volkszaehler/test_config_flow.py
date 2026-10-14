@@ -360,6 +360,15 @@ async def test_reconfigure_validation_error(
     )
     assert get_schema_suggested_value(result["data_schema"].schema, CONF_PORT) == 8080
 
+    mock_api.get_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "new-host", CONF_PORT: 8080},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_duplicate_host_port(
     hass: HomeAssistant,
