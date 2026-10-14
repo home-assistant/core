@@ -122,8 +122,9 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self._video_url = self._camera_module.stream_rtsp_url(
             self._camera_credentials, stream_resolution=StreamResolution.SD
         )
-        # Latest still and its capture time for each stream resolution
-        self._images: dict[StreamResolution, tuple[bytes, float]] = {}
+        self._images: dict[
+            tuple[StreamResolution, int | None, int | None], tuple[bytes, float]
+        ] = {}
         self._image_lock = asyncio.Lock()
         self._can_stream = True
         self._http_mpeg_stream_running = False
@@ -180,9 +181,10 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
             or (height and height > SD_STREAM_HEIGHT)
             else StreamResolution.SD
         )
+        cache_key = (resolution, width, height)
         now = time.monotonic()
 
-        cached = self._images.get(resolution)
+        cached = self._images.get(cache_key)
         if cached and now - cached[1] < self.IMAGE_INTERVAL:
             return cached[0]
 
@@ -200,7 +202,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         if self._can_stream and video_url:
             # Sometimes the front end makes multiple image requests
             async with self._image_lock:
-                cached = self._images.get(resolution)
+                cached = self._images.get(cache_key)
                 if cached and (now - cached[1]) < self.IMAGE_INTERVAL:
                     return cached[0]
 
@@ -212,7 +214,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                     height=height,
                 )
                 if image:
-                    self._images[resolution] = (image, now)
+                    self._images[cache_key] = (image, now)
                     _LOGGER.debug("Updated camera image for %s", self._device.host)
                 # This coroutine is called by camera with an asyncio.timeout
                 # so image could be None whereas an auth issue returns b''
@@ -228,7 +230,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                         "None camera image returned for %s", self._device.host
                     )
 
-        cached = self._images.get(resolution)
+        cached = self._images.get(cache_key)
         return cached[0] if cached else None
 
     @override

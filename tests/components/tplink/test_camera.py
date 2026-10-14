@@ -302,8 +302,6 @@ async def test_camera_image_cache_per_resolution(
         # Both are now served from their own cache
         image = await async_get_image(hass, entity_id, width=320, height=180)
         assert image.content == sd_image
-        image = await async_get_image(hass, entity_id)
-        assert image.content == sd_image
         image = await async_get_image(hass, entity_id, width=1920, height=1080)
         assert image.content == hd_image
         assert mock_get_image.call_count == 2
@@ -316,6 +314,46 @@ async def test_camera_image_cache_per_resolution(
         await async_get_image(hass, entity_id, width=320, height=180)
         await async_get_image(hass, entity_id, width=1920, height=1080)
         assert mock_get_image.call_count == 4
+
+
+async def test_camera_image_cache_per_requested_size(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+) -> None:
+    """Test a still scaled for a small request is not served to a larger one."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    mock_device.modules[Module.Camera].stream_rtsp_url.side_effect = _rtsp_url
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    small_image = SMALLEST_VALID_JPEG_BYTES
+    large_image = SMALLEST_VALID_JPEG_BYTES + b"\x00"
+
+    async def _get_image(_hass, _video_url, *, width, **__):
+        return small_image if width == 800 else large_image
+
+    entity_id = "camera.my_camera_live_view"
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image", side_effect=_get_image
+    ) as mock_get_image:
+        image = await async_get_image(hass, entity_id, width=800, height=450)
+        assert image.content == small_image
+        assert mock_get_image.call_count == 1
+
+        image = await async_get_image(hass, entity_id, width=1920, height=1080)
+        assert image.content == large_image
+        assert mock_get_image.call_count == 2
+
+        image = await async_get_image(hass, entity_id, width=800, height=450)
+        assert image.content == small_image
+        assert mock_get_image.call_count == 2
 
 
 async def test_no_camera_image_when_streaming(
