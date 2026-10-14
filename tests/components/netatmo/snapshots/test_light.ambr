@@ -104,6 +104,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -115,7 +116,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'off',
   })
 # ---
 # name: test_entity[light.unknown_00_11_22_33_00_11_45_fe-entry]

@@ -220,6 +220,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             "vpn_url": self.device.vpn_url,
             "local_url": self.device.local_url,
             "light_state": self._light_state,
+            "reachable": self.device.reachable,
+            "wifi_strength": getattr(self.device, "wifi_strength", None),
+            "firmware": getattr(self.device, "firmware_name", None),
         }
 
     @override
@@ -255,6 +258,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._monitoring = self.device.monitoring
             self._attr_is_streaming = self.device.monitoring
             self._attr_motion_detection_enabled = self.device.monitoring
+
+        # Sync light_state from polled value as fallback for post-restart state.
+        if hasattr(self.device, "floodlight") and self.device.floodlight is not None:
+            self._light_state = self.device.floodlight
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
