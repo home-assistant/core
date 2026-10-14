@@ -46,8 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None
 
 async def async_unload_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
     """Handle removal of an entry."""
-    async_delete_quota_issue(hass, entry)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    async_delete_quota_issue(hass, entry)
 
 
 async def async_remove_config_entry_device(

@@ -40,9 +40,11 @@ async def test_setup_quota_error_creates_repair_issue(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, _quota_issue_id(mock_config_entry.entry_id)
     )
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -68,6 +70,60 @@ async def test_successful_coordinator_refresh_clears_quota_repair(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_empty_device_refresh_clears_quota_repair(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A successful poll with no devices still clears the quota repair issue."""
+    issue_id = _quota_issue_id(mock_config_entry.entry_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=ISSUE_OPEN_API_QUOTA,
+    )
+    mock_imou_ha_device_manager.async_get_devices.return_value = []
+    mock_imou_ha_device_manager.async_update_devices_status.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    mock_imou_ha_device_manager.async_update_devices_status.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
+async def test_removing_setup_retry_entry_clears_linked_quota_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Removing an entry that never finished setup still deletes the linked issue."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = ImouException(
+        "OP1013 monthly quota exceeded"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = _quota_issue_id(mock_config_entry.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 

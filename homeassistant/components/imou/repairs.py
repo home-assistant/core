@@ -40,6 +40,7 @@ def async_create_quota_exceeded_issue(hass: HomeAssistant, entry: ConfigEntry) -
         hass,
         DOMAIN,
         _issue_id(ISSUE_OPEN_API_QUOTA, entry.entry_id),
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_OPEN_API_QUOTA,
