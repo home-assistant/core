@@ -19,34 +19,21 @@ import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    service,
-)
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import (
-    DOMAIN,
-    REFRESH_BREAKS_IN_HA_VERSION,
-    RESET_BREAKS_IN_HA_VERSION,
-    SERVICE_BREAKS_IN_HA_VERSION,
-    EvoService,
-)
-from .coordinator import EvoDataUpdateCoordinator
+from .const import DOMAIN, EVOHOME_DATA, REFRESH_BREAKS_IN_HA_VERSION, EvoService
 from .helpers import async_create_deprecation_issue_once
 
 
-def _as_snake_case(mode: str) -> str:
+def as_snake_case(mode: str) -> str:
     """Convert a CamelCase string to the snake_case used by the library."""
     return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
 
 
-# System service schemas (registered as domain services)
+# Controller service schemas (registered as entity services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
     probatio.Required(SZ_MODE): cv.string,  # ... so, don't use SystemMode enum here
@@ -58,7 +45,6 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
         cv.time_period,
         probatio.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
-    probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
 }
 
 # Zone service schemas (registered as entity services)
@@ -82,17 +68,22 @@ SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
 }
 
 
-def _register_zone_entity_services(hass: HomeAssistant) -> None:
-    """Register entity-level services for zones."""
+def _register_ctl_entity_services(hass: HomeAssistant) -> None:
+    """Register entity-level services for controllers."""
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        EvoService.CLEAR_ZONE_OVERRIDE,
+        EvoService.SET_SYSTEM_MODE,
         entity_domain=CLIMATE_DOMAIN,
-        schema=None,
-        func="async_clear_zone_override",
+        schema=SET_SYSTEM_MODE_SCHEMA,
+        func="async_set_system_mode",
     )
+
+
+def _register_zone_entity_services(hass: HomeAssistant) -> None:
+    """Register entity-level services for zones."""
+
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -101,50 +92,6 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         schema=SET_ZONE_OVERRIDE_SCHEMA,
         func="async_set_zone_override",
     )
-
-
-def _resolve_ctl_unique_id(
-    hass: HomeAssistant,
-    call: ServiceCall,
-    tcs_id: str,
-) -> str:
-    """Resolve the target controller unique_id from an optional entity_id.
-
-    During the deprecation window, advise users to switch to targeting the controller.
-    """
-
-    if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
-        async_create_deprecation_issue_once(
-            hass,
-            f"deprecated_{call.service}_service",
-            SERVICE_BREAKS_IN_HA_VERSION,
-            translation_key="deprecated_controller_service",
-            translation_placeholders={"service": call.service},
-        )
-        return tcs_id
-
-    entry = er.async_get(hass).async_get(entity_id)
-
-    if entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entity_not_found",
-            translation_placeholders={ATTR_ENTITY_ID: entity_id},
-        )
-
-    # currently, evohome supports only 1 controller
-    if (
-        entry.domain != CLIMATE_DOMAIN
-        or entry.platform != DOMAIN
-        or entry.unique_id != tcs_id
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="controller_only_service",
-            translation_placeholders={"service": call.service},
-        )
-
-    return tcs_id
 
 
 def _register_dhw_entity_services(hass: HomeAssistant) -> None:
@@ -160,7 +107,7 @@ def _register_dhw_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
+def validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
     """Validate that a set_system_mode service call is properly formed."""
 
     mode = data[SZ_MODE]
@@ -170,7 +117,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
     # different schema (until instead of duration/period) for the method invoked
     # via this service call
 
-    if (mode_info := tcs_modes.get(_as_snake_case(mode))) is None:
+    if (mode_info := tcs_modes.get(as_snake_case(mode))) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",
@@ -206,9 +153,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
 
 @callback
-def async_setup_services(
-    hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Evohome services."""
 
     @verify_domain_control(DOMAIN)
@@ -219,54 +164,10 @@ def async_setup_services(
             "deprecated_refresh_system_service",
             REFRESH_BREAKS_IN_HA_VERSION,
         )
-        await coordinator.async_refresh()
-
-    @verify_domain_control(DOMAIN)
-    async def set_system_mode(call: ServiceCall) -> None:
-        """Set the Evohome system mode or reset the system."""
-
-        # We can rely upon coordinator.tcs being non-None here, since:
-        # - services are registered only if coordinator.async_first_refresh() succeeds
-        # - without config flow, the controller entity will never be de-registered
-
-        assert coordinator.tcs is not None  # mypy
-
-        # No additional validation for RESET_SYSTEM here, as the library method invoked
-        # via that service call may be able to emulate the reset even if the system
-        # doesn't support AutoWithReset natively
-
-        if call.service == EvoService.RESET_SYSTEM:
-            async_create_deprecation_issue_once(
-                hass,
-                "deprecated_reset_system_service",
-                RESET_BREAKS_IN_HA_VERSION,
-            )
-
-        if call.service == EvoService.SET_SYSTEM_MODE:
-            _validate_set_system_mode_params(coordinator.tcs, call.data)
-            unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
-        else:
-            # this service call to be deprecated, so no need to _resolve_ctl_unique_id
-            unique_id = coordinator.tcs.id
-
-        payload = {
-            "unique_id": unique_id,
-            "service": call.service,
-            "data": {**call.data, SZ_MODE: _as_snake_case(call.data[SZ_MODE])}
-            if SZ_MODE in call.data
-            else call.data,
-        }
-        async_dispatcher_send(hass, DOMAIN, payload)
+        await hass.data[EVOHOME_DATA].coordinator.async_refresh()
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
-    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
-    hass.services.async_register(
-        DOMAIN,
-        EvoService.SET_SYSTEM_MODE,
-        set_system_mode,
-        schema=probatio.Schema(SET_SYSTEM_MODE_SCHEMA),
-    )
-
+    _register_ctl_entity_services(hass)
     _register_zone_entity_services(hass)
     _register_dhw_entity_services(hass)

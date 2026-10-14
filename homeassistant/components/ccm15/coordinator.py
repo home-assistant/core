@@ -59,7 +59,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Fetch data from Rain Bird device."""
         try:
             return await self._fetch_data()
-        except httpx2.RequestError as err:  # pragma: no cover
+        except httpx2.RequestError as err:
             raise UpdateFailed("Error communicating with Device") from err
 
     async def _fetch_data(self) -> CCM15DeviceState:

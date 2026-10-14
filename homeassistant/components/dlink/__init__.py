@@ -15,7 +15,7 @@ type DLinkConfigEntry = ConfigEntry[SmartPlugData]
 PLATFORMS = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> None:
     """Set up D-Link Power Plug from a config entry."""
     smartplug = await hass.async_add_executor_job(
         SmartPlug,
@@ -30,9 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> boo
     entry.runtime_data = SmartPlugData(smartplug)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

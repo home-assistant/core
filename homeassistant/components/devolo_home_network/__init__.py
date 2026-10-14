@@ -47,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
-) -> bool:
+) -> None:
     """Set up devolo Home Network from a config entry."""
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     async_client = get_async_client(hass)
@@ -149,21 +149,14 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     device = entry.runtime_data.device
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, platforms(device)
-    )
-    if unload_ok:
-        await device.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms(device))
+    await device.async_disconnect()
 
 
 @callback

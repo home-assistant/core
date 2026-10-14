@@ -31,7 +31,7 @@ from uiprotect.data import (
     Viewer,
     WSSubscriptionMessage,
 )
-from uiprotect.data.public_devices import PublicNVR
+from uiprotect.data.public_devices import PublicDoorbellSettings, PublicNVR
 from uiprotect.exceptions import BadRequest, PublicOnlyModeError
 from uiprotect.websocket import WebsocketState
 
@@ -203,6 +203,9 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
     client.public_bootstrap.nvr.type = None
+    client.public_bootstrap.nvr.doorbell_settings = PublicDoorbellSettings(
+        default_message_text="Welcome", custom_messages=["Test"]
+    )
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any

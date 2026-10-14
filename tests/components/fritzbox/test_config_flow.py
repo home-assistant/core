@@ -159,6 +159,11 @@ async def test_user_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a flow by user but no connection found."""
@@ -256,6 +261,17 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "invalid_auth"
+
+    fritz().login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "other_fake_user",
+            CONF_PASSWORD: "other_fake_password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
@@ -446,6 +462,13 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"]["base"] == "invalid_auth"
+
+    fritz().login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
