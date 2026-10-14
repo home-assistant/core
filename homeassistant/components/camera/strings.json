@@ -42,7 +42,7 @@
       "message": "Camera {entity_id} is off."
     },
     "image_unavailable": {
-      "message": "Unable to get image from camera {entity_id}."
+      "message": "Unable to get image."
     },
     "path_not_allowed": {
       "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
