@@ -210,7 +210,11 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
                 clusters.MediaPlayback.Attributes.SampledPosition
             )
         )
-        if sampled is None or sampled.position in (None, NullValue):
+        if (
+            sampled is None
+            or sampled.updatedAt == 0
+            or sampled.position in (None, NullValue)
+        ):
             self._attr_media_position = None
             self._attr_media_position_updated_at = None
             return
