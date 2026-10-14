@@ -1,6 +1,7 @@
 """Update coordinator for HomeWizard."""
 
 from typing import override
+import asyncio
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
@@ -79,8 +80,13 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
         try:
-            data = await self.api.combined()
+            async with asyncio.timeout(10):
+                data = await self.api.combined()
 
+        except TimeoutError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="communication_error"
+            ) from ex        
         except RequestError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="communication_error"
