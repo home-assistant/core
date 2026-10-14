@@ -225,6 +225,9 @@ class LunatoneDALILineStatusSensor(
     @override
     def native_value(self) -> str:
         """Return the value of the sensor."""
-        return DALI_LINE_STATUS_SENSOR_MAPPING[
-            self.coordinator.data.lines[self._line_id].line_status
-        ]
+        line_data = self.coordinator.data.lines.get(self._line_id)
+        return (
+            DALI_LINE_STATUS_SENSOR_MAPPING[line_data.line_status]
+            if line_data is not None
+            else "not_reachable"
+        )
