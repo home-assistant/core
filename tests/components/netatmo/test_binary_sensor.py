@@ -193,7 +193,7 @@ async def test_doortag_opening_status_change(
     # Check connectivity initial state
     assert hass.states.get(_doortag_entity_connectivity).state == "off"
 
-    # Change mocked status to test status change
+    # Change the mocked doortag status and mark it reachable
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
     mock_state["module_id"] = "12:34:56:00:86:99"
     mock_state["attributes"] = {
