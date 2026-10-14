@@ -62,7 +62,7 @@ class VistapoolLight(VistapoolEntity, LightEntity):
         value = self.coordinator.get_value(_VALUE_PATH)
         if value is None:
             return None
-        return value in (True, "1")
+        return bool(value)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

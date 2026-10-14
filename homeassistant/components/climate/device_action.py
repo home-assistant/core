@@ -40,7 +40,9 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-_ACTION_SCHEMA = probatio.Any(SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE, [SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA]
+)
 
 
 async def async_validate_action_config(

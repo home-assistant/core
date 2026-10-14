@@ -6,9 +6,11 @@ from typing import cast, override
 
 from midealocal.const import DeviceType
 from midealocal.device import MideaDevice
+from midealocal.devices.ac import MideaACDevice
 from midealocal.devices.e1 import MideaE1Device
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,8 +26,14 @@ class MideaButtonEntityDescription(ButtonEntityDescription):
     """Description for a Midea button entity."""
 
     models: list[DeviceType]
-    supported_models: list[str]
     press_fn: Callable[[MideaDevice], None]
+    supported_models: list[str] | None = None
+    supported_property_name: str | None = None
+
+
+def _ac_reset_filter_press(device: MideaDevice) -> None:
+    """Reset filter counters."""
+    cast(MideaACDevice, device).reset_filter()
 
 
 def _e1_button_press(device: MideaDevice) -> None:
@@ -46,6 +54,14 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         supported_models=["7600024L"],
         press_fn=_e1_button_press,
     ),
+    MideaButtonEntityDescription(
+        key="reset_filter",
+        translation_key="reset_filter",
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.AC],
+        supported_property_name="is_filter_reset_supported",
+        press_fn=_ac_reset_filter_press,
+    ),
 ]
 
 
@@ -61,7 +77,14 @@ async def async_setup_entry(
         MideaButton(device, description)
         for description in BUTTONS
         if device.device_type in description.models
-        and device.model in description.supported_models
+        and (
+            description.supported_models is None
+            or device.model in description.supported_models
+        )
+        and (
+            description.supported_property_name is None
+            or getattr(device, description.supported_property_name, False)
+        )
     )
 
 

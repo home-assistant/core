@@ -5,7 +5,7 @@ from unittest.mock import call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from samsung_exlink import CommandRejected, InputSource, SamsungTVError, TVState
+from samsung_exlink import MODELS, CommandRejected, InputSource, SamsungTVError, TVState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -21,6 +21,7 @@ from homeassistant.components.samsung_exlink.const import DOMAIN
 from homeassistant.components.samsung_exlink.media_player import (
     INPUT_SOURCE_SAMSUNG_TO_HA,
     SCAN_INTERVAL,
+    SOURCE_ART_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -280,6 +281,44 @@ async def test_source_state_and_controls(
     assert mock_samsung_tv.select_input_source.await_args == call(InputSource.HDMI3)
 
 
+async def test_art_mode_source(
+    hass: HomeAssistant, mock_samsung_tv: MockSamsungTV
+) -> None:
+    """Test Art Mode is exposed as a source on a Frame TV."""
+    assert "art_mode" in hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+
+    # The TV keeps reporting the last input source while in Art Mode.
+    state = _default_state()
+    state.art_mode = True
+    mock_samsung_tv.mock_state(state)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "art_mode"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "art_mode"},
+        blocking=True,
+    )
+    assert mock_samsung_tv.set_art_mode.await_args == call(True)
+    mock_samsung_tv.select_input_source.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "tv_model",
+    [
+        pytest.param(MODELS["h_series_2016"], id="h_series_2016"),
+        pytest.param(None, id="no_model"),
+    ],
+)
+async def test_no_art_mode_source_without_art_mode_model(hass: HomeAssistant) -> None:
+    """Test Art Mode is not offered as a source on TVs without Art Mode."""
+    assert (
+        "art_mode" not in hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+    )
+
+
 @pytest.mark.parametrize(
     "exception",
     [
@@ -306,6 +345,6 @@ def test_input_source_translation_keys_cover_all_enum_members() -> None:
     assert set(INPUT_SOURCE_SAMSUNG_TO_HA) == set(InputSource)
 
     strings = load_json(Path("homeassistant/components/samsung_exlink/strings.json"))
-    assert set(INPUT_SOURCE_SAMSUNG_TO_HA.values()) == set(
+    assert {*INPUT_SOURCE_SAMSUNG_TO_HA.values(), SOURCE_ART_MODE} == set(
         strings["entity"]["media_player"]["tv"]["state_attributes"]["source"]["state"]
     )

@@ -690,6 +690,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.MODE,
             RoborockB01Props.CLEAN_PATH_PREFERENCE,
             RoborockB01Props.QUANTITY,
+            RoborockB01Props.REPEAT_STATE,
         ]
 
     @override
