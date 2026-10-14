@@ -1,7 +1,7 @@
 """The tests for the TTS component."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from http import HTTPStatus
 import io
 from pathlib import Path
@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.tts import DOMAIN
+from homeassistant.components.tts.const import DEFAULT_TIME_MEMORY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -48,6 +49,7 @@ from .common import (
 
 from tests.common import (
     MockModule,
+    async_fire_time_changed,
     async_mock_service,
     load_fixture_bytes,
     mock_integration,
@@ -2095,6 +2097,66 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert result_data == data
 
 
+async def _message_stream() -> AsyncGenerator[str]:
+    """Stream a message."""
+    yield "beer"
+
+
+@pytest.mark.parametrize(
+    "set_message",
+    [
+        pytest.param(lambda stream: stream.async_set_message("beer"), id="message"),
+        pytest.param(
+            lambda stream: stream.async_set_message_stream(_message_stream()),
+            id="message_stream",
+        ),
+    ],
+)
+async def test_stream_set_message_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    set_message: Callable[[tts.ResultStream], None],
+) -> None:
+    """Test a stream created long before its message is set can still be fetched.
+
+    A pipeline creates its stream when the run starts, for example before
+    waiting for the wake word, which can be long before the message is known.
+    """
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    set_message(stream)
+
+    assert tts.async_get_stream(hass, stream.token) is stream
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data
+
+
+async def test_stream_override_result_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    tmp_path: Path,
+) -> None:
+    """Test a stream overridden long after it was created can still be fetched."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The Assist pipeline overrides the result for its local acknowledgment
+    stream.async_override_result(tmp_path / "acknowledge.mp3")
+
+    assert tts.async_get_stream(hass, stream.token) is stream
+
+
 async def test_result_stream_message_set_idempotent(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
@@ -2389,6 +2451,29 @@ def test_write_tags_adds_tag_to_untagged_audio() -> None:
     assert tags["TIT2"].text == ["There is someone at the door."]
 
 
+def test_write_tags_fills_empty_id3_tag() -> None:
+    """Test audio arriving with an ID3 tag holding no frames gets the frames."""
+    data = b"ID3\x04\x00\x00\x00\x00\x00\x00" + load_fixture_bytes(
+        "untagged.mp3", DOMAIN
+    )
+    assert not mutagen.File(io.BytesIO(data)).tags
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.count(b"ID3") == 1
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["en"]
+    assert tags["TALB"].text == ["Test"]
+    assert tags["TIT2"].text == ["There is someone at the door."]
+
+
 def test_write_tags_overwrites_id3v1_metadata() -> None:
     """Test audio arriving with only an ID3v1 trailer gets the frames rewritten."""
     data = load_fixture_bytes("id3v1.mp3", DOMAIN)
@@ -2452,3 +2537,27 @@ def test_write_tags_uses_voice_as_artist() -> None:
 
     tags = mutagen.File(io.BytesIO(tagged)).tags
     assert tags["TPE1"].text == ["JennyNeural"]
+
+
+@pytest.mark.parametrize("setup", ["mock_config_entry_setup"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_cache_message_unknown_provider(hass: HomeAssistant) -> None:
+    """Test caching a message for an unknown provider raises a translated error."""
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+
+    async def message_gen() -> AsyncGenerator[str]:
+        yield "hello"
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        manager.async_cache_message_in_memory("non-existing", "hello", False, "en", {})
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "provider_not_found"
+    assert exc_info.value.translation_placeholders == {"engine": "non-existing"}
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        manager.async_cache_message_stream_in_memory(
+            "non-existing", message_gen(), "en", {}
+        )
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "provider_not_found"
+    assert exc_info.value.translation_placeholders == {"engine": "non-existing"}

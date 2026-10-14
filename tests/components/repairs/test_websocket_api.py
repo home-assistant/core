@@ -13,7 +13,11 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import FlowType, RepairsFlow, RepairsFlowResult
 from homeassistant.components.repairs.const import DOMAIN
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlow,
+)
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -23,6 +27,7 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockUser,
+    async_capture_events,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -765,6 +770,109 @@ async def test_list_issues(
             for issue in issues
         ]
     }
+
+
+async def _async_list_issue_ids(client: MockHAClientWebSocket) -> dict[str, bool]:
+    """Return listed issue ids mapped to their ignored flag."""
+    await client.send_json_auto_id({"type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    return {issue["issue_id"]: issue["ignored"] for issue in msg["result"]["issues"]}
+
+
+@pytest.fixture
+def mock_test_config_flow() -> Iterator[None]:
+    """Mock a config flow for the test domain."""
+    with mock_config_flow("test", ConfigFlow):
+        yield
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.usefixtures("mock_test_config_flow")
+async def test_list_issues_hides_disabled_config_entry_issues(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test issues of a disabled config entry are hidden until it's re-enabled."""
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+    hass.config.components.add("test")
+    entry = MockConfigEntry(domain="test", state=ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    for issue_id, config_entry_id in (
+        ("entry_issue", entry.entry_id),
+        ("other_entry_issue", other_entry.entry_id),
+        ("no_entry_issue", None),
+    ):
+        ir.async_create_issue(
+            hass,
+            "test",
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="abc_123",
+        )
+    ir.async_ignore_issue(hass, "test", "entry_issue", True)
+
+    client = await hass_ws_client(hass)
+    assert await _async_list_issue_ids(client) == {
+        "entry_issue": True,
+        "other_entry_issue": False,
+        "no_entry_issue": False,
+    }
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    assert await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    # Let the frontend refresh the issue list
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "test", "issue_id": "entry_issue"}
+    ]
+
+    assert await _async_list_issue_ids(client) == {
+        "other_entry_issue": False,
+        "no_entry_issue": False,
+    }
+    # Hidden issues are kept in the registry and can still be accessed directly
+    assert issue_registry.async_get_issue("test", "entry_issue").dismissed_version == (
+        ha_version
+    )
+    await client.send_json_auto_id(
+        {"type": "repairs/get_issue_data", "domain": "test", "issue_id": "entry_issue"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    events.clear()
+    assert await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "test", "issue_id": "entry_issue"}
+    ]
+
+    assert await _async_list_issue_ids(client) == {
+        "entry_issue": True,
+        "other_entry_issue": False,
+        "no_entry_issue": False,
+    }
+    assert issue_registry.async_get_issue("test", "entry_issue").dismissed_version == (
+        ha_version
+    )
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])

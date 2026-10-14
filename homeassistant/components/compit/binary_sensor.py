@@ -21,7 +21,7 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 NO_SENSOR = "no_sensor"
-ON_STATES = ["on", "yes", "charging", "alert", "exceeded", "open"]
+ON_STATES = ["on", "yes", "charging", "alert", "exceeded", "open", "dirty"]
 
 DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
     CompitParameter.AIRING: BinarySensorEntityDescription(
@@ -77,6 +77,12 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    CompitParameter.VENTILATION_FILTER: BinarySensorEntityDescription(
+        key=CompitParameter.VENTILATION_FILTER.value,
+        translation_key="ventilation_filter_dirty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
@@ -103,6 +109,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             CompitParameter.AIRING: DESCRIPTIONS[CompitParameter.AIRING],
             CompitParameter.CO2_LEVEL: DESCRIPTIONS[CompitParameter.CO2_LEVEL],
             CompitParameter.GWC: DESCRIPTIONS[CompitParameter.GWC],
+            CompitParameter.VENTILATION_FILTER: DESCRIPTIONS[
+                CompitParameter.VENTILATION_FILTER
+            ],
         },
     ),
     78: CompitDeviceDescription(
@@ -121,6 +130,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             CompitParameter.AIRING: DESCRIPTIONS[CompitParameter.AIRING],
             CompitParameter.CO2_LEVEL: DESCRIPTIONS[CompitParameter.CO2_LEVEL],
             CompitParameter.GWC: DESCRIPTIONS[CompitParameter.GWC],
+            CompitParameter.VENTILATION_FILTER: DESCRIPTIONS[
+                CompitParameter.VENTILATION_FILTER
+            ],
         },
     ),
     225: CompitDeviceDescription(

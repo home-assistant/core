@@ -256,6 +256,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "sensibo",
     },
+    "Slide": {
+        "always_discover": True,
+        "domain": "slide_local",
+    },
     "Smart Bridge": {
         "always_discover": False,
         "domain": "lutron_caseta",
@@ -712,6 +716,16 @@ ZEROCONF = {
             "name": "velux_klf_lan_*",
         },
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds_*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc_*",
+        },
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue",
@@ -1106,6 +1120,15 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_workstation._tcp.local.": [
+        {
+            "domain": "hr_energy_qube",
+            "properties": {
+                "ProjectName": "deqsihpb*",
+                "Vendor": "000a5c",
+            },
         },
     ],
     "_ws._tcp.local.": [

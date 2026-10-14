@@ -30,7 +30,11 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -65,7 +69,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> None:
     """Set up La Marzocco as config entry."""
 
     assert entry.unique_id
@@ -221,26 +225,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: LaMarzoccoConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
 
     if entry.version in (1, 2):
-        _LOGGER.error(
-            "Migration from version 1 or 2 is no longer"
-            " supported, please remove and re-add"
-            " the integration"
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migration_unsupported_version",
+            translation_placeholders={"version": str(entry.version)},
         )
-        return False
 
     if entry.version == 3:
         installation_key = generate_installation_key(str(uuid.uuid4()).lower())
@@ -252,9 +253,14 @@ async def async_migrate_entry(
         )
         try:
             await cloud_client.async_register_client()
-        except (AuthFail, RequestNotSuccessful) as exc:
-            _LOGGER.error("Migration failed with error %s", exc)
-            return False
+        except AuthFail as exc:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from exc
+        except RequestNotSuccessful as exc:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from exc
 
         hass.config_entries.async_update_entry(
             entry,
@@ -265,8 +271,6 @@ async def async_migrate_entry(
             version=4,
         )
         _LOGGER.debug("Migrated La Marzocco config entry to version 4")
-
-    return True
 
 
 def create_client_session(hass: HomeAssistant) -> ClientSession:

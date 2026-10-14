@@ -50,9 +50,17 @@
       }
     },
     "sensor": {
+      "program_next_run": {
+        "name": "{program} next run"
+      },
       "raindelay": {
         "name": "Raindelay"
       }
+    }
+  },
+  "exceptions": {
+    "duplicate_entry": {
+      "message": "Another entry already exists for this Rain Bird controller, this entry will be removed"
     }
   },
   "options": {

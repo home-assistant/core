@@ -266,9 +266,14 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             and vehicle_metadata.get(vehicle.vin, {}).get("proxy") is not False
         }
         if not choices:
-            if entry.runtime_data.vehicles:
-                return self.async_abort(reason="all_vehicles_added")
-            return self.async_abort(reason="no_vehicles")
+            if not entry.runtime_data.vehicles:
+                return self.async_abort(reason="no_vehicles")
+            if any(
+                vehicle.vin not in already_added
+                for vehicle in entry.runtime_data.vehicles
+            ):
+                return self.async_abort(reason="no_supported_vehicles")
+            return self.async_abort(reason="all_vehicles_added")
 
         if user_input is not None:
             self._vin = user_input[CONF_VIN]
@@ -413,6 +418,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="scan",
                 # The key is already on the vehicle; say so rather than prompt a re-pair.

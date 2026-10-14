@@ -458,7 +458,7 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
         pytest.param(
             mcp.types.ClientRequest(
                 mcp.types.GetPromptRequest(
-                    params=mcp.types.GetPromptRequestParams(name="Assist")
+                    params=mcp.types.GetPromptRequestParams(name="Device control")
                 )
             ),
             mcp.types.GetPromptResult,
@@ -722,7 +722,7 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "assist__homeassistant__GetLiveContext" in tool_names
+    assert "device-control__homeassistant__GetLiveContext" in tool_names
     assert "test-api__test_tool" in tool_names
 
 
@@ -846,6 +846,34 @@ async def test_mcp_tool_call(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the read-only option only exposes tools that do not change anything."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+        tool_names = {tool.name for tool in result.tools}
+        assert "homeassistant__GetLiveContext" in tool_names
+        assert "intent__HassTurnOn" not in tool_names
+        assert all(tool.annotations.readOnlyHint for tool in result.tools)
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.isError
+    assert "not found" in result.content[0].text
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
 async def test_mcp_tool_call_failed(
     hass: HomeAssistant,
     setup_integration: None,
@@ -882,8 +910,8 @@ async def test_prompt_list(
 
     assert len(result.prompts) == 1
     prompt = result.prompts[0]
-    assert prompt.name == "Assist"
-    assert prompt.description == "Default prompt for Home Assistant Assist API"
+    assert prompt.name == "Device control"
+    assert prompt.description == "Default prompt for Home Assistant Device control API"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
@@ -897,9 +925,9 @@ async def test_prompt_get(
     """Test the get prompt endpoint."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.get_prompt(name="Assist")
+        result = await session.get_prompt(name="Device control")
 
-    assert result.description == "Default prompt for Home Assistant Assist API"
+    assert result.description == "Default prompt for Home Assistant Device control API"
     assert len(result.messages) == 1
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
@@ -1118,6 +1146,34 @@ async def test_streamable_api_id_exposes_registered_api(
 
     assert len(result.prompts) == 1
     assert result.prompts[0].name == "Test API"
+
+
+@pytest.mark.parametrize("read_only", [True])
+async def test_streamable_api_id_ignores_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the keyed endpoint keeps write controls when the read-only option is on."""
+    client = await hass_client()
+    mcp_url = str(client.make_url(f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}"))
+
+    async with mcp_streamable_session(
+        hass, mcp_url, hass_supervisor_access_token
+    ) as session:
+        result = await session.list_tools()
+        assert "intent__HassTurnOn" in {tool.name for tool in result.tools}
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert not result.isError
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
 
 
 async def test_streamable_api_id_requires_admin(

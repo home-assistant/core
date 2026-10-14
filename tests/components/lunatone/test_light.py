@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -30,7 +31,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -338,8 +339,9 @@ async def test_line_broadcast_available_status(
     assert state
     assert state.state != "unavailable"
 
-    await mock_config_entry.runtime_data.coordinator_info.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state

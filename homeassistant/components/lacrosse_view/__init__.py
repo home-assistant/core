@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
     """Set up LaCrosse View from a config entry."""
 
     api = LaCrosse(async_get_clientsession(hass))
@@ -36,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> 
     _LOGGER.debug("Setting up platforms")
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

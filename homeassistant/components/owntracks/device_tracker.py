@@ -1,5 +1,4 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any, override
 
@@ -10,7 +9,6 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityStateAttribute,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -19,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
+from . import OwnTracksConfigEntry
 from .const import (
     ATTR_ADDRESS,
     ATTR_BATTERY_STATUS,
@@ -41,7 +40,7 @@ _RESTORED_OWNTRACKS_ATTRIBUTES: tuple[str, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OwnTracksConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OwnTracks based off an entry."""
@@ -53,24 +52,25 @@ async def async_setup_entry(
         for identifier in device.identifiers
     }
 
+    devices: dict[str, OwnTracksEntity] = {}
     entities = []
     for dev_id in dev_ids:
-        entity = hass.data[DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
+        entity = devices[dev_id] = OwnTracksEntity(dev_id)
         entities.append(entity)
 
     @callback
     def _receive_data(dev_id, **data):
         """Receive set location."""
-        entity = hass.data[DOMAIN]["devices"].get(dev_id)
+        entity = devices.get(dev_id)
 
         if entity is not None:
             entity.update_data(data)
             return
 
-        entity = hass.data[DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id, data)
+        entity = devices[dev_id] = OwnTracksEntity(dev_id, data)
         async_add_entities([entity])
 
-    hass.data[DOMAIN]["context"].set_async_see(_receive_data)
+    entry.runtime_data.set_async_see(_receive_data)
 
     async_add_entities(entities)
 
