@@ -43,8 +43,7 @@ class GoodweNumberEntityDescription(NumberEntityDescription):
     setter: Callable[[Inverter, float], Awaitable[None]]
     filter: Callable[[Inverter], bool]
     # Converts the requested value to the value written to the inverter.
-    # Most settings are whole numbers, settings with a finer resolution
-    # (e.g. currents with 0.1 A steps) provide their own conversion.
+    # Whole-number settings use int; decimal settings preserve the float.
     converter: Callable[[float], float] = int
 
 
@@ -116,8 +115,7 @@ NUMBERS = (
         getter=lambda inv: inv.read_setting("battery_charge_current"),
         setter=lambda inv, val: inv.write_setting("battery_charge_current", val),
         filter=lambda inv: _has_setting(inv, "battery_charge_current"),
-        # The register has a resolution of 0.1 A
-        converter=lambda val: round(val, 1),
+        converter=float,
     ),
 )
 

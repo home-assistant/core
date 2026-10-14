@@ -167,8 +167,8 @@ async def test_battery_charge_current_limit_read_error(
         (7, 7.0, "7.0"),
         (0, 0.0, "0.0"),
         (100, 100.0, "100.0"),
-        # Values are rounded to the 0.1 A resolution of the setting
-        (20.34, 20.3, "20.3"),
+        # The library handles the register's resolution.
+        (20.36, 20.36, "20.36"),
     ],
 )
 async def test_set_battery_charge_current_limit(
