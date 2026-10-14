@@ -165,6 +165,50 @@ async def test_service_after_failed_reload_raises(
     assert err.value.translation_key == "not_loaded"
 
 
+@pytest.mark.usefixtures("mock_pymodbus")
+@pytest.mark.parametrize(
+    "start_config",
+    [
+        pytest.param({}, id="no_hubs"),
+        pytest.param(HUB_CONFIG, id="yaml_hub"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("yaml_file", "expected_hubs", "expected_entities"),
+    [
+        pytest.param("configuration_empty.yaml", set(), [], id="empty_yaml"),
+        pytest.param("configuration_no_modbus.yaml", set(), [], id="no_modbus_yaml"),
+        pytest.param(
+            "configuration.yaml", {"testModbus"}, ["sensor.dummy"], id="yaml_added"
+        ),
+    ],
+)
+async def test_reload_yaml(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    start_config: dict,
+    yaml_file: str,
+    expected_hubs: set[str],
+    expected_entities: list[str],
+) -> None:
+    """Test the reload result depends only on the YAML, with or without hubs."""
+    assert await async_setup_component(hass, DOMAIN, start_config)
+    await hass.async_block_till_done()
+
+    yaml_path = get_fixture_path(yaml_file, DOMAIN)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert "ERROR" not in caplog.text
+    assert set(hass.data.get(DATA_MODBUS_HUBS, {})) == expected_hubs
+    assert [
+        entity.entity_id
+        for platform in async_get_platforms(hass, DOMAIN)
+        for entity in platform.entities.values()
+    ] == expected_entities
+
+
 TEST_HUB_A = "hub_a"
 TEST_HUB_B = "hub_b"
 
