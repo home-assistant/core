@@ -35,7 +35,7 @@ from .const import (
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .helpers import create_modbus_params
-from .sensor import SENSOR_DESCRIPTIONS
+from .sensor import SENSOR_DESCRIPTIONS, SofarTotalSensorDescription
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ def _async_seed_high_water_marks(
     registry = er.async_get(hass)
     restore_state_data = restore_state.async_get(hass)
     for description in SENSOR_DESCRIPTIONS:
-        if (total_fn := description.total_fn) is None:
+        if not isinstance(description, SofarTotalSensorDescription):
             continue
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
@@ -105,7 +105,7 @@ def _async_seed_high_water_marks(
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        total_fn(device).seed(float(extra.native_value))
+        description.total_fn(device).seed(float(extra.native_value))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
