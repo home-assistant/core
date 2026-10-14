@@ -10,7 +10,7 @@ from haveniaq import (
 )
 import pytest
 
-from homeassistant.components.haven.const import DOMAIN
+from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant

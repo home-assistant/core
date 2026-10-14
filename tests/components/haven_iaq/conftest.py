@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from haveniaq import DeviceInfo, SensorData
 import pytest
 
-from homeassistant.components.haven.const import DOMAIN
+from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from . import TEST_CAM_SERIAL, TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_SERIAL
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config flow tests from setting up the integration."""
     with patch(
-        "homeassistant.components.haven.async_setup_entry", return_value=True
+        "homeassistant.components.haven_iaq.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 
@@ -28,11 +28,11 @@ def mock_haven_client() -> Generator[AsyncMock]:
     """Mock the HAVEN client used by setup and config flows."""
     with (
         patch(
-            "homeassistant.components.haven.coordinator.HavenClient",
+            "homeassistant.components.haven_iaq.coordinator.HavenClient",
             autospec=True,
         ) as mock_client_class,
         patch(
-            "homeassistant.components.haven.config_flow.HavenClient",
+            "homeassistant.components.haven_iaq.config_flow.HavenClient",
             new=mock_client_class,
         ),
     ):

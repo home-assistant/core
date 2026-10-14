@@ -1,9 +1,9 @@
 {
-  "domain": "haven",
+  "domain": "haven_iaq",
   "name": "HAVEN IAQ",
   "codeowners": ["@krhtzoa"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/haven",
+  "documentation": "https://www.home-assistant.io/integrations/haven_iaq",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",

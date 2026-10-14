@@ -1287,7 +1287,7 @@ hass-splunk==0.1.4
 # homeassistant.components.conversation
 hassil==3.12.1
 
-# homeassistant.components.haven
+# homeassistant.components.haven_iaq
 haveniaq==0.1.0
 
 # homeassistant.components.jewish_calendar

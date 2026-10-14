@@ -2,7 +2,7 @@
 
 import logging
 
-DOMAIN = "haven"
+DOMAIN = "haven_iaq"
 MANUFACTURER = "HAVEN IAQ"
 DEFAULT_MODEL = "HAVEN device"
 

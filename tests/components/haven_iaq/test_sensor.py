@@ -7,8 +7,8 @@ from haveniaq import DeviceInfo, HavenApiError, SensorData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.haven.const import DOMAIN
-from homeassistant.components.haven.coordinator import UPDATE_INTERVAL
+from homeassistant.components.haven_iaq.const import DOMAIN
+from homeassistant.components.haven_iaq.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

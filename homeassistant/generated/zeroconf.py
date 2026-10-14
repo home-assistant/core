@@ -567,7 +567,7 @@ ZEROCONF = {
     ],
     "_haven._tcp.local.": [
         {
-            "domain": "haven",
+            "domain": "haven_iaq",
         },
     ],
     "_heos-audio._tcp.local.": [

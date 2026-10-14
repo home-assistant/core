@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 
-from homeassistant.components.haven.const import DOMAIN
+from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
