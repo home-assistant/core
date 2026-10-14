@@ -52,7 +52,9 @@ rules:
   test-coverage: done
   devices: done
   discovery: done
-  discovery-update-info: done
+  discovery-update-info:
+    status: exempt
+    comment: LoRaWAN discovery carries no connection data to update.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
