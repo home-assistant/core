@@ -34,15 +34,10 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     trackables = config_entry.runtime_data.trackables
 
-    trackable_list = [
-        async_redact_data(item.pet_details, TO_REDACT) for item in trackables
-    ]
-    config_entry_dict = async_redact_data(config_entry.as_dict(), TO_REDACT)
-
     return async_redact_data(
         {
-            "config_entry": config_entry_dict,
-            "trackables": trackable_list,
+            "config_entry": config_entry.as_dict(),
+            "trackables": [item.pet_details for item in trackables],
         },
         TO_REDACT,
     )
