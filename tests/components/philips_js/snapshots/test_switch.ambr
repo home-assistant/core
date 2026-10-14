@@ -1,0 +1,153 @@
+# serializer version: 1
+# name: test_menu_entities[switch.philips_tv_ambilight_hue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.philips_tv_ambilight_hue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambilight + Hue',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ambilight + Hue',
+    'platform': 'philips_js',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambilight_hue',
+    'unique_id': '123456_ambi_hue',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_menu_entities[switch.philips_tv_ambilight_hue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Philips TV Ambilight + Hue',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.philips_tv_ambilight_hue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_menu_entities[switch.philips_tv_screen_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.philips_tv_screen_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Screen state',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Screen state',
+    'platform': 'philips_js',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'screen_state',
+    'unique_id': '123456_screenstate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_menu_entities[switch.philips_tv_screen_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Philips TV Screen state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.philips_tv_screen_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_menu_entities[switch.philips_tv_toggle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.philips_tv_toggle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle',
+    'platform': 'philips_js',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456_menu_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_menu_entities[switch.philips_tv_toggle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'controllable': True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Philips TV Toggle',
+      'node_id': 2,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.philips_tv_toggle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
