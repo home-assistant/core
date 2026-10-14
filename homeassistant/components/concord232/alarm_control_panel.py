@@ -15,15 +15,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_PORT,
-    Platform,
-)
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -32,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import async_import_yaml, build_url
+from . import Concord232ConfigEntry, async_import_yaml
 from .const import DEFAULT_MODE, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,28 +52,21 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML platform configuration and create a config entry."""
-    await async_import_yaml(hass, config, Platform.ALARM_CONTROL_PANEL)
+    await async_import_yaml(hass, config)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: Concord232ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Concord232 alarm control panel from a config entry."""
-    url = build_url(entry.data[CONF_HOST], entry.data[CONF_PORT])
     # "" is the options flow's explicit cleared-code marker
     code: str | None = entry.options.get(CONF_CODE) or None
     mode: str = entry.options.get(CONF_MODE, DEFAULT_MODE)
-    try:
-        # The constructor does blocking I/O against the server
-        alarm = await hass.async_add_executor_job(
-            Concord232Alarm, url, entry.title, code, mode
-        )
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-        return
-    async_add_entities([alarm], True)
+    async_add_entities(
+        [Concord232Alarm(entry.runtime_data, entry.title, code, mode)], True
+    )
 
 
 class Concord232Alarm(AlarmControlPanelEntity):
@@ -93,7 +78,13 @@ class Concord232Alarm(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, url: str, name: str, code: str | None, mode: str) -> None:
+    def __init__(
+        self,
+        client: concord232_client.Client,
+        name: str,
+        code: str | None,
+        mode: str,
+    ) -> None:
         """Initialize the Concord232 alarm panel."""
 
         self._attr_name = name
@@ -103,19 +94,14 @@ class Concord232Alarm(AlarmControlPanelEntity):
         # user configured a code to gate arming locally.
         self._attr_code_arm_required = code is not None
         self._mode = mode
-        self._url = url
-        self._alarm = concord232_client.Client(self._url)
-        self._alarm.partitions = self._alarm.list_partitions()
+        self._alarm = client
 
     def update(self) -> None:
         """Update values from API."""
         try:
             part = self._alarm.list_partitions()[0]
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error(
-                "Unable to connect to %(host)s: %(reason)s",
-                {"host": self._url, "reason": ex},
-            )
+            _LOGGER.error("Unable to connect to Concord232 for %s: %s", self.name, ex)
             return
         except IndexError:
             _LOGGER.error("Concord232 reports no partitions")

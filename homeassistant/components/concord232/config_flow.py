@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from concord232 import client as concord232_client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -27,8 +27,6 @@ from homeassistant.helpers.selector import (
 from . import build_url
 from .const import (
     CONF_EXCLUDE_ZONES,
-    CONF_IMPORT_PLATFORM,
-    CONF_IMPORTED_PLATFORMS,
     CONF_ZONE_TYPES,
     DEFAULT_MODE,
     DEFAULT_PORT,
@@ -39,17 +37,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CODE): str,
-        vol.Required(CONF_MODE, default=DEFAULT_MODE): SelectSelector(
+        probatio.Optional(CONF_CODE): str,
+        probatio.Required(CONF_MODE, default=DEFAULT_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=[MODE_AUDIBLE, MODE_SILENT],
                 mode=SelectSelectorMode.DROPDOWN,
@@ -165,9 +163,6 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: import_data[CONF_HOST],
             CONF_PORT: import_data[CONF_PORT],
         }
-        # Restrict the entry to the platform(s) the YAML actually configured
-        if platform := import_data.get(CONF_IMPORT_PLATFORM):
-            data[CONF_IMPORTED_PLATFORMS] = [platform]
         options: dict[str, Any] = {}
         if CONF_CODE in import_data:
             options[CONF_CODE] = import_data[CONF_CODE]
@@ -183,10 +178,11 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
         # Both platforms import the same YAML server. When the other platform's
-        # import created the entry first, merge the alarm-only fields (code,
-        # mode, name) into it instead of dropping them. YAML only fills gaps:
-        # it must never overwrite a user-created entry, options changed later
-        # in the UI, or a customized title.
+        # import created the entry first, merge in the fields it does not carry
+        # (code, mode and name from the alarm platform; exclude_zones and
+        # zone_types from the binary sensor platform). YAML only fills gaps: it
+        # must never overwrite a user-created entry, options changed later in
+        # the UI, or a customized title.
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.data.get(CONF_HOST) != data[CONF_HOST]
@@ -198,15 +194,8 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = entry.title
                 if CONF_NAME in import_data and title == entry.data[CONF_HOST]:
                     title = import_data[CONF_NAME]
-                # The companion platform's import extends the platform set;
-                # updating data reloads the entry so the platform loads now.
-                # Never narrow an unrestricted entry, only extend a restriction.
-                entry_data = dict(entry.data)
-                imported = entry_data.get(CONF_IMPORTED_PLATFORMS, [])
-                if platform and imported and platform not in imported:
-                    entry_data[CONF_IMPORTED_PLATFORMS] = [*imported, platform]
                 self.hass.config_entries.async_update_entry(
-                    entry, data=entry_data, options=merged_options, title=title
+                    entry, options=merged_options, title=title
                 )
             return self.async_abort(reason="already_configured")
 

@@ -15,14 +15,7 @@ from homeassistant.components.concord232.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_PORT,
-    Platform,
-)
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import issue_registry as ir
@@ -167,17 +160,14 @@ async def test_yaml_platform_creates_entry_and_issue(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == {
-        **USER_INPUT,
-        "imported_platforms": [Platform.ALARM_CONTROL_PANEL],
-    }
+    assert entries[0].data == USER_INPUT
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
-    # An alarm-only YAML setup must not sprout zone sensors on import;
-    # the YAML schema's default name titles the entry
+    # The YAML schema's default name titles the entry, and the imported entry
+    # exposes every platform just like one created in the UI
     assert hass.states.get("alarm_control_panel.concord232") is not None
-    assert hass.states.get("binary_sensor.front_door") is None
+    assert hass.states.get("binary_sensor.front_door") is not None
 
 
 async def test_yaml_platform_import_cannot_connect_issue(
@@ -548,13 +538,8 @@ async def test_concurrent_platform_imports_create_one_entry(
                 CONF_CODE: "1234",
                 CONF_MODE: "silent",
             },
-            Platform.ALARM_CONTROL_PANEL,
         ),
-        async_import_yaml(
-            hass,
-            {CONF_HOST: "localhost", CONF_PORT: 5007},
-            Platform.BINARY_SENSOR,
-        ),
+        async_import_yaml(hass, {CONF_HOST: "localhost", CONF_PORT: 5007}),
     )
     await hass.async_block_till_done()
 
@@ -562,7 +547,3 @@ async def test_concurrent_platform_imports_create_one_entry(
     assert len(entries) == 1
     assert entries[0].title == "Test Alarm"
     assert entries[0].options == {CONF_CODE: "1234", CONF_MODE: "silent"}
-    assert sorted(entries[0].data["imported_platforms"]) == [
-        Platform.ALARM_CONTROL_PANEL,
-        Platform.BINARY_SENSOR,
-    ]

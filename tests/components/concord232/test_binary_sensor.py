@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.concord232.binary_sensor import SCAN_INTERVAL
@@ -122,22 +121,6 @@ async def test_imported_zone_options_honored(
     assert front_door is not None
     assert front_door.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
     assert hass.states.get("binary_sensor.hall_motion") is None
-
-
-async def test_setup_connection_error_creates_no_sensors(
-    hass: HomeAssistant,
-    mock_concord232_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a connection error during setup leaves no zone sensors."""
-    mock_concord232_client.list_zones.side_effect = requests.exceptions.ConnectionError(
-        "boom"
-    )
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get("binary_sensor.front_door") is None
-    assert "Unable to connect to Concord232" in caplog.text
 
 
 @pytest.mark.parametrize(
