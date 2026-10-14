@@ -191,7 +191,9 @@ class TwinguardAlarmTracker:
         self._generation = 0
         self._applied_generation = 0
         self.trigger_ids: set[str] = set()
-        self.available = True
+        self.available = (
+            smoke_detection_system.alarm is SurveillanceAlarmService.State.ALARM_OFF
+        )
         self._services = [
             service
             for service in smoke_detection_system.device_services
