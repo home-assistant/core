@@ -539,7 +539,7 @@ SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
 ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_TYPE): probatio.Any(TCP, UDP, RTUOVERTCP),
     }
 )
@@ -549,7 +549,15 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.All(
             probatio.EnsureList(),
             [
-                probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
+                probatio.TaggedUnion(
+                    CONF_TYPE,
+                    {
+                        SERIAL: SERIAL_SCHEMA,
+                        TCP: ETHERNET_SCHEMA,
+                        UDP: ETHERNET_SCHEMA,
+                        RTUOVERTCP: ETHERNET_SCHEMA,
+                    },
+                ),
             ],
         ),
     },

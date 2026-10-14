@@ -16,11 +16,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
@@ -39,7 +39,7 @@ async def _setup(
     connection = MockModbusConnection()
     seed(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=serial, data=MOCK_USER_INPUT, title=model
+        domain=DOMAIN, unique_id=serial, data=MOCK_ENTRY_DATA, title=model
     )
     entry.add_to_hass(hass)
     with (
@@ -109,22 +109,31 @@ async def test_button_press(
     assert connection.for_unit(1).holding[register] == 1
 
 
+@pytest.mark.parametrize(
+    ("serial", "model", "seed"),
+    [
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, id="pv"),
+        pytest.param(
+            MOCK_HYBRID_SERIAL, MOCK_HYBRID_MODEL, seed_hybrid_inverter, id="hybrid"
+        ),
+    ],
+)
 async def test_rtc_sync_reported_to_hass(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    serial: str,
+    model: str,
+    seed: Callable[[MockModbusUnit], None],
 ) -> None:
     """Test the RTC sync result reaches its sensor after the refresh."""
     await _setup(
-        hass,
-        MOCK_HYBRID_SERIAL,
-        MOCK_HYBRID_MODEL,
-        seed_hybrid_inverter,
-        platforms=(Platform.BUTTON, Platform.SENSOR),
+        hass, serial, model, seed, platforms=(Platform.BUTTON, Platform.SENSOR)
     )
     button_id = entity_registry.async_get_entity_id(
-        BUTTON_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_rtc_sync"
+        BUTTON_DOMAIN, DOMAIN, f"{serial}_rtc_sync"
     )
     result_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_sync_rtc_result"
+        SENSOR_DOMAIN, DOMAIN, f"{serial}_sync_rtc_result"
     )
     assert button_id is not None
     assert result_id is not None

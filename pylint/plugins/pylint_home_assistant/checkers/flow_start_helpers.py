@@ -5,7 +5,7 @@ Tests should start these flows with the ``MockConfigEntry`` helpers
 ``hass.config_entries.flow.async_init`` with a hand-built context. The helpers
 build the same context Home Assistant uses at runtime.
 
-``W7438`` (``home-assistant-test-flow-start-helper``)
+``W7445`` (``home-assistant-test-flow-start-helper``)
 """
 
 from astroid import nodes
@@ -51,7 +51,7 @@ class FlowStartHelpersChecker(BaseChecker):
     name = "home_assistant_flow_start_helpers"
     priority = -1
     msgs = {
-        "W7438": (
+        "W7445": (
             "Use `entry.%s(hass)` instead of starting the flow manually "
             "with `async_init`",
             "home-assistant-test-flow-start-helper",

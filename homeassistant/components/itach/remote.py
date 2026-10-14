@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_MAC): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_DEVICES): probatio.All(
             probatio.EnsureList(),
             [

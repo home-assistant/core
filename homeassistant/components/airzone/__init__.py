@@ -80,7 +80,7 @@ async def _async_migrate_unique_ids(
         await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -152,15 +152,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Migrate an old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         # Add missing CONF_ID
@@ -178,5 +176,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) ->
         entry.version,
         entry.minor_version,
     )
-
-    return True

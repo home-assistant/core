@@ -59,7 +59,6 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
         except TTNAuthError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            _LOGGER.error("TTNAuthError")
             raise ConfigEntryAuthFailed from err
         else:
             # Return measurements

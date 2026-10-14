@@ -33,7 +33,7 @@ SUPLA_COORDINATORS = "supla_coordinators"
 SERVER_CONFIG = probatio.Schema(
     {
         probatio.Required(CONF_SERVER): cv.string,
-        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
     }
 )
 

@@ -44,7 +44,7 @@ IH_DEVICE_ANYWAIR = "anywair"
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): probatio.In(
             [IH_DEVICE_AIRCONWITHME, IH_DEVICE_ANYWAIR, IH_DEVICE_INTESISHOME]
         ),
@@ -150,7 +150,7 @@ class IntesisAC(ClimateEntity):
 
     _attr_preset_modes = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
     _attr_target_temperature_step = 1
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
@@ -252,7 +252,7 @@ class IntesisAC(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
             await self._controller.set_temperature(self._device_id, temperature)
-            self._attr_target_temperature = temperature
+            self._attr_native_target_temperature = temperature
 
         # Write updated temperature to HA state to avoid
         # flapping (API confirmation is slow)
@@ -278,9 +278,9 @@ class IntesisAC(ClimateEntity):
         await self._controller.set_mode(self._device_id, MAP_HVAC_MODE_TO_IH[hvac_mode])
 
         # Send the temperature again in case changing modes has changed it
-        if self._attr_target_temperature is not None:
+        if self._attr_native_target_temperature is not None:
             await self._controller.set_temperature(
-                self._device_id, self._attr_target_temperature
+                self._device_id, self._attr_native_target_temperature
             )
 
         # Updates can take longer than 2 seconds, so update locally
@@ -316,7 +316,7 @@ class IntesisAC(ClimateEntity):
     async def async_update(self) -> None:
         """Copy values from controller dictionary to climate device."""
         # Update values from controller's device dictionary
-        self._attr_current_temperature = self._controller.get_temperature(
+        self._attr_native_current_temperature = self._controller.get_temperature(
             self._device_id
         )
         self._attr_fan_mode = self._controller.get_fan_speed(self._device_id)
@@ -325,7 +325,9 @@ class IntesisAC(ClimateEntity):
         self._attr_max_temp = self._controller.get_max_setpoint(self._device_id)
         self._rssi = self._controller.get_rssi(self._device_id)
         self._run_hours = self._controller.get_run_hours(self._device_id)
-        self._attr_target_temperature = self._controller.get_setpoint(self._device_id)
+        self._attr_native_target_temperature = self._controller.get_setpoint(
+            self._device_id
+        )
         self._outdoor_temp = self._controller.get_outdoor_temperature(self._device_id)
 
         # Operation mode

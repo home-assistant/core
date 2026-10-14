@@ -78,8 +78,9 @@ rules:
     comment: |
       The Bluetooth address is the unique ID, and a changed PIN is handled by the reauthentication flow.
   repair-issues:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      A rejected PIN is handled by the reauthentication flow, and Bluetooth outages are retried automatically.
   stale-devices:
     status: exempt
     comment: |

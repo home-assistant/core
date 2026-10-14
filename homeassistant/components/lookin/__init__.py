@@ -93,7 +93,7 @@ class LookinUDPManager:
 UDP_MANAGER: HassKey[LookinUDPManager] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> None:
     """Set up lookin from a config entry."""
     host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
@@ -192,17 +192,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        manager = hass.data[UDP_MANAGER]
-        await manager.async_stop()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            manager = hass.data[UDP_MANAGER]
+            await manager.async_stop()
 
 
 async def async_remove_config_entry_device(

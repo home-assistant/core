@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerError,
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import DockerContainer, EndpointStatus
@@ -250,18 +251,46 @@ async def test_migration_v4_to_v5(
 
 
 @pytest.mark.parametrize(
-    ("exception"),
+    ("exception", "state", "reason"),
     [
-        (PortainerAuthenticationError),
-        (PortainerConnectionError),
-        (PortainerTimeoutError),
-        (Exception("Some other error")),
+        pytest.param(
+            PortainerAuthenticationError,
+            ConfigEntryState.MIGRATION_ERROR,
+            "An error occurred while trying to authenticate",
+            id="authentication_error",
+        ),
+        pytest.param(
+            PortainerConnectionError,
+            ConfigEntryState.SETUP_RETRY,
+            "An error occurred while trying to connect to the Portainer instance",
+            id="connection_error",
+        ),
+        pytest.param(
+            PortainerTimeoutError,
+            ConfigEntryState.SETUP_RETRY,
+            "A timeout occurred while trying to connect to the Portainer instance",
+            id="timeout_error",
+        ),
+        pytest.param(
+            PortainerError,
+            ConfigEntryState.MIGRATION_ERROR,
+            "Failed to fetch the Portainer instance ID",
+            id="portainer_error",
+        ),
+        pytest.param(
+            Exception("Some other error"),
+            ConfigEntryState.MIGRATION_ERROR,
+            None,
+            id="unexpected_error",
+        ),
     ],
 )
 async def test_migration_v4_to_v5_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     exception: type[Exception],
+    state: ConfigEntryState,
+    reason: str | None,
 ) -> None:
     """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
@@ -279,7 +308,9 @@ async def test_migration_v4_to_v5_exceptions(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
+    assert entry.reason == reason
+    assert entry.version == 4
 
 
 async def test_device_registry(
@@ -379,7 +410,10 @@ async def test_new_endpoint_callback(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 0
+    # Only the Portainer update exists without endpoints
+    assert [entity.unique_id for entity in entities] == [
+        f"{mock_config_entry.entry_id}_server_update"
+    ]
 
     mock_portainer_client.get_endpoints.return_value = [
         Endpoint.from_dict(endpoint)

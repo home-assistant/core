@@ -3,10 +3,17 @@
 from datetime import timedelta
 from typing import override
 
-from aiowaqi import WAQIAirQuality, WAQIClient, WAQIError, WAQIUnknownStationError
+from aiowaqi import (
+    WAQIAirQuality,
+    WAQIAuthenticationError,
+    WAQIClient,
+    WAQIError,
+    WAQIUnknownStationError,
+)
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -45,6 +52,11 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
             air_quality = await self._client.get_by_station_number(
                 self.subentry.data[CONF_STATION_NUMBER]
             )
+        except WAQIAuthenticationError as exc:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from exc
         except WAQIUnknownStationError as exc:
             ir.async_create_issue(
                 self.hass,
@@ -60,8 +72,16 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
                     "name": self.subentry.title,
                 },
             )
-            raise UpdateFailed(str(exc)) from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="station_not_found",
+                translation_placeholders={"name": self.subentry.title},
+            ) from exc
         except WAQIError as exc:
-            raise UpdateFailed(str(exc)) from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
         ir.async_delete_issue(self.hass, DOMAIN, issue_id)
         return air_quality

@@ -29,8 +29,8 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_URL): cv.url,
-                probatio.Required(CONF_API_KEY): cv.string,
-                probatio.Required(CONF_API_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_SECRET)): cv.string,
                 probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
                 probatio.Optional(CONF_TRACKER_INTERFACES, default=[]): probatio.All(
                     probatio.EnsureList(), [cv.string]
@@ -65,7 +65,7 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: OPNsenseConfigEntry
-) -> bool:
+) -> None:
     """Set up the OPNsense component from a config entry."""
     url = config_entry.data[CONF_URL]
     session = async_get_clientsession(
@@ -154,11 +154,10 @@ async def async_setup_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: OPNsenseConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

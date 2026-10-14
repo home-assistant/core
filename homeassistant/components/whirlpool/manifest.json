@@ -3,10 +3,15 @@
   "name": "Whirlpool Appliances",
   "codeowners": ["@abmantis", "@mkmer"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "88E712*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/whirlpool",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["whirlpool"],
   "quality_scale": "silver",
-  "requirements": ["whirlpool-sixth-sense==2.0.3"]
+  "requirements": ["whirlpool-sixth-sense==2.1.0"]
 }

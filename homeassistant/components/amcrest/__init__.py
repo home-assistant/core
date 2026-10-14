@@ -11,7 +11,7 @@ from typing import Any, override
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.const import (
@@ -83,9 +83,9 @@ AMCREST_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(
             CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
         ): probatio.All(probatio.In(AUTHENTICATION_LIST)),
@@ -193,7 +193,7 @@ class AmcrestChecker(ApiWrapper):
         return ret
 
     @override
-    async def async_command(self, *args: Any, **kwargs: Any) -> httpx.Response:
+    async def async_command(self, *args: Any, **kwargs: Any) -> httpx2.Response:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with self._async_command_wrapper():
             return await super().async_command(*args, **kwargs)
@@ -202,7 +202,7 @@ class AmcrestChecker(ApiWrapper):
     @override
     async def async_stream_command(
         self, *args: Any, **kwargs: Any
-    ) -> AsyncGenerator[httpx.Response]:
+    ) -> AsyncGenerator[httpx2.Response]:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with (
             self._async_command_wrapper(),

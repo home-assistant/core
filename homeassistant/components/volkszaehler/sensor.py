@@ -76,7 +76,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_UUID): cv.string,
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): probatio.All(
             probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),

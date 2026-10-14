@@ -11,6 +11,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -37,7 +38,7 @@ CONFIG_SCHEMA = probatio.Schema(
             probatio.Schema(
                 {
                     probatio.Required(CONF_CLIENT_ID): cv.string,
-                    probatio.Required(CONF_CLIENT_SECRET): cv.string,
+                    probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
                     probatio.Optional(
                         CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                     ): cv.positive_time_period,
@@ -65,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle migration of a previous version config entry."""
     if entry.version == 1:
         # There is no usable data in version 1 anymore.
@@ -79,7 +80,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data={CONF_MIGRATE: entry.entry_id},
             )
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_required",
+        )
 
     if entry.version == 2:
         # 2 -> 2.2: Unique ID from integer to string
@@ -89,10 +93,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry, unique_id=str(entry.unique_id), minor_version=minor_version
             )
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> None:
     """Set up Toon from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -160,14 +162,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool
             EVENT_HOMEASSISTANT_STARTED, coordinator.register_webhook
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> None:
     """Unload Toon config entry."""
 
     # Remove webhooks registration
     await entry.runtime_data.unregister_webhook()
 
     # Unload entities for this entry/device.
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

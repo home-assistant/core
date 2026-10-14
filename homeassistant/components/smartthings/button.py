@@ -205,5 +205,9 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
             != self.entity_description.requires_dishwasher_machine_state
         ):
             raise ServiceValidationError(
-                f"Can only be updated when dishwasher machine state is {self.entity_description.requires_dishwasher_machine_state}"
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_machine_state",
+                translation_placeholders={
+                    "machine_state": self.entity_description.requires_dishwasher_machine_state
+                },
             )

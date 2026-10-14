@@ -42,7 +42,7 @@ LINE_STOP_SCHEMA = probatio.Schema(
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_APP_ID): cv.string,
-        probatio.Required(CONF_APP_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_APP_KEY)): cv.string,
         probatio.Required(CONF_BUS_STOPS): probatio.All(
             probatio.EnsureList(), [LINE_STOP_SCHEMA]
         ),

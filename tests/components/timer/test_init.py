@@ -50,7 +50,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
@@ -426,7 +426,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
         ATTR_LAST_TRANSITION: "cancelled",
     }
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CHANGE,
@@ -453,8 +453,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond duration",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 beyond its duration",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -464,8 +464,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
         )
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 to negative time remaining",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 to a negative remaining time",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -522,8 +522,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Timer timer.test1 is not running, only active timers can be changed",
+        ServiceValidationError,
+        match="Timer timer.test1 is not running. Only active timers can be changed",
     ):
         await hass.services.async_call(
             DOMAIN,

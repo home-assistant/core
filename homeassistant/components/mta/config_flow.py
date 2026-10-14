@@ -95,7 +95,7 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Optional(CONF_API_KEY): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

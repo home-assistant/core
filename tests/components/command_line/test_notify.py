@@ -14,6 +14,7 @@ from homeassistant.components.command_line.notify import CommandLineNotification
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
 
 @pytest.mark.parametrize(
@@ -392,7 +393,7 @@ async def test_cancelled_kills_process(
     mock_proc.communicate.side_effect = asyncio.CancelledError
     mock_proc.kill = MagicMock(side_effect=kill_side_effect)
 
-    service = CommandLineNotificationService("exit 0", 15)
+    service = CommandLineNotificationService("exit 0", 15, "Test6")
     service.hass = hass
 
     with (
@@ -406,3 +407,85 @@ async def test_cancelled_kills_process(
 
     mock_proc.kill.assert_called_once()
     mock_proc.wait.assert_not_awaited()
+
+
+async def test_command_template_without_shell_features_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Notify template without shell metacharacters sends via exec, no repair issue."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        filename = os.path.join(tempdirname, "message.txt")
+        message = "hello from exec"
+        hass.states.async_set("sensor.test_cmd", filename)
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "notify": {
+                            "command": "tee {{ states.sensor.test_cmd.state }}",
+                            "name": "Test7",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test7", {"message": message}, blocking=True
+        )
+        assert message == await hass.async_add_executor_job(Path(filename).read_text)
+
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_command_template_with_shell_features_creates_repair_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Notify template with shell metacharacters creates a repair issue."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        filename = os.path.join(tempdirname, "message.txt")
+        message = "one, two, testing, testing"
+        hass.states.async_set("sensor.test_state", filename)
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "notify": {
+                            "command": "cat > {{ states.sensor.test_state.state }}",
+                            "name": "Test8",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test8", {"message": message}, blocking=True
+        )
+        assert message == await hass.async_add_executor_job(Path(filename).read_text)
+
+    await hass.async_block_till_done()
+    issues = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.translation_key == "shell_command_template_deprecation"
+    ]
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.4.0"
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].translation_placeholders == {
+        "program": "cat",
+        "platform": "notify",
+        "name": "Test8",
+    }

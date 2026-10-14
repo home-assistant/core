@@ -5,7 +5,7 @@ from functools import wraps
 import logging
 from typing import Any, Concatenate, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.catalog.models import Image
 from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
