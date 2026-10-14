@@ -46,7 +46,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
         self.device = device
         self._poll = poll
-        self._consecutive_failures: dict[str, int] = {}
+        self._failing: set[str] = set()
 
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
@@ -74,7 +74,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
             ) from err
-        self._log_component_changes(report)
         if self.device.unrecognized:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -87,23 +86,23 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             ) from ExceptionGroup(
                 "all components failed to refresh", list(report.failed.values())
             )
+        self._log_component_changes(report)
         return report
 
     def _log_component_changes(self, report: UpdateReport) -> None:
         """Log a component's first failure and its recovery, once each."""
         for name, cause in report.failed.items():
-            prev = self._consecutive_failures.get(name, 0)
-            self._consecutive_failures[name] = prev + 1
-            if prev == 0:
+            if name not in self._failing:
+                self._failing.add(name)
                 _LOGGER.warning(
-                    "%s: %s failed to refresh and is keeping its previous values: %s",
+                    "%s: %s failed to refresh, its entities are unavailable: %s",
                     self.name,
                     name,
                     cause,
                 )
-        for name in report.updated:
-            if self._consecutive_failures.pop(name, None) is not None:
-                _LOGGER.info("%s: %s is available again", self.name, name)
+        for name in report.updated & self._failing:
+            self._failing.discard(name)
+            _LOGGER.info("%s: %s is available again", self.name, name)
 
 
 @dataclass

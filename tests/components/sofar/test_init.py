@@ -695,9 +695,9 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    # Availability alone cannot tell a failed poll from one that reported
-    # every component as failed; only the logged error separates them.
+    # One coordinator error, not a warning per failed component.
     assert "No component answered" in caplog.text
+    assert "its entities are unavailable" not in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
@@ -705,6 +705,33 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "2.5"
+    assert "is available again" not in caplog.text
+
+
+async def test_component_failure_is_logged_once_until_it_recovers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a failing component warns once, then logs its recovery once."""
+    unit = mock_connection.for_unit(1)
+    unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
+    for _ in range(2):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("grid failed to refresh") == 1
+
+    unit.fail_read(0x0484, None)
+    for _ in range(2):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("grid is available again") == 1
 
 
 async def test_pv_strings_become_their_own_devices(
