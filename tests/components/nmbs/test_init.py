@@ -60,6 +60,21 @@ async def test_setup_entry_api_unavailable(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_entry_api_timeout(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry is retried when fetching the station list times out."""
+    mock_nmbs_client.get_stations.side_effect = TimeoutError
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_entry_connections_api_unavailable(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,

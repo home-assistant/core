@@ -26,7 +26,7 @@
   },
   "exceptions": {
     "station_list_unavailable": {
-      "message": "Unable to fetch the NMBS station list; the iRail API is unavailable"
+      "message": "Unable to fetch the NMBS station list because the iRail API is unavailable"
     },
     "station_not_found": {
       "message": "A configured station no longer exists"

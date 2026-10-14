@@ -114,7 +114,7 @@ async def test_abort_if_exists(
 async def test_dont_abort_if_exists_when_vias_differs(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test aborting the flow if the entry already exists."""
+    """Test creating an entry when the exclude-vias option differs."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -141,6 +141,20 @@ async def test_unavailable_api(
 ) -> None:
     """Test starting a flow by user and api is unavailable."""
     mock_nmbs_client.get_stations.return_value = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_unavailable"
+
+
+async def test_unavailable_api_timeout(
+    hass: HomeAssistant, mock_nmbs_client: AsyncMock
+) -> None:
+    """Test starting a flow by user and the api times out."""
+    mock_nmbs_client.get_stations.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
