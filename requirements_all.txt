@@ -3267,7 +3267,7 @@ teslemetry-stream==1.2.0
 tessie-api==0.1.3
 
 # homeassistant.components.theben_conexa
-theben-conexa-smgw==0.4.2
+theben-conexa-smgw==0.4.3
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.10.0
