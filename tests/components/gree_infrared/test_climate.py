@@ -38,6 +38,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_MODEL,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     Platform,
     UnitOfTemperature,
@@ -1532,6 +1534,8 @@ async def test_supported_features_always_include_target_temperature(
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.SWING_HORIZONTAL_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
 
 
@@ -1861,3 +1865,57 @@ async def test_set_temperature_with_unsupported_hvac_mode(
         )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
+
+
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [
+        pytest.param(
+            {
+                CONF_MODEL: "generic",
+                CONF_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.DRY],
+            },
+            id="generic",
+        ),
+        pytest.param(
+            {
+                CONF_MODEL: MODEL_YAP1F,
+                CONF_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.DRY],
+            },
+            id="yap1f",
+        ),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_power_services_preserve_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Power on resumes cooling even when heating is configured first."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.OFF
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.COOL
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 3
+    off_command = mock_infrared_emitter_entity.send_command_calls[1]
+    on_command = mock_infrared_emitter_entity.send_command_calls[2]
+    assert off_command.power is False
+    assert on_command.power is True
+    assert on_command.mode == GreeAcMode.COOL
