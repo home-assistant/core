@@ -153,7 +153,7 @@ async def test_same_targets(hass: HomeAssistant) -> None:
 async def test_legacy_action_descriptions(hass: HomeAssistant) -> None:
     """Test legacy notification action descriptions."""
     test = NotificationService(hass)
-    await test.async_setup(hass, "notify", "test")
+    await test.async_setup(hass, "test_service", "test")
     await test.async_register_services()
 
     descriptions = await async_get_all_descriptions(hass)
@@ -163,7 +163,7 @@ async def test_legacy_action_descriptions(hass: HomeAssistant) -> None:
         "options are available, update that integration or group."
     )
 
-    assert descriptions[DOMAIN]["test"]["description"] == expected_description
+    assert descriptions[DOMAIN]["test_service"]["description"] == expected_description
     assert descriptions[DOMAIN]["test_a"]["description"] == expected_description
     assert descriptions[DOMAIN]["test_b"]["description"] == expected_description
 
