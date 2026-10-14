@@ -3,12 +3,29 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 
 from .coordinator import TractiveConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_EMAIL, "title", "_id"}
+TO_REDACT = {
+    ATTR_DEVICE_ID,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+    "_id",
+    "birthday",
+    "chip_id",
+    "home_location",
+    "instagram_username",
+    "name",
+    "title",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,10 +34,15 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     trackables = config_entry.runtime_data.trackables
 
+    trackable_list = [
+        async_redact_data(item.pet_details, TO_REDACT) for item in trackables
+    ]
+    config_entry_dict = async_redact_data(config_entry.as_dict(), TO_REDACT)
+
     return async_redact_data(
         {
-            "config_entry": config_entry.as_dict(),
-            "trackables": [item.pet_details for item in trackables],
+            "config_entry": config_entry_dict,
+            "trackables": trackable_list,
         },
         TO_REDACT,
     )
