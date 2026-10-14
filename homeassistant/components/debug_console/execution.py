@@ -10,12 +10,15 @@ import traceback
 from types import CodeType
 from typing import TYPE_CHECKING, Any
 
-from .inspection import describe
+from .inspection import MAX_STRING_LENGTH, describe
 
 if TYPE_CHECKING:
     from .session import ConsoleSession
 
 CONSOLE_FILENAME = "<console>"
+
+# Lines of print() output kept per execution, so a runaway loop stays bounded.
+MAX_LOG_LINES = 1000
 
 
 @dataclass(slots=True)
@@ -26,6 +29,7 @@ class _OutputCapture:
     """
 
     logs: list[list[dict[str, Any]]] = field(default_factory=list)
+    truncated: bool = False
     closed: bool = False
 
 
@@ -57,20 +61,32 @@ async def async_execute(session: ConsoleSession, code: str) -> dict[str, Any]:
     execution = asyncio.current_task()
     assert execution is not None
     session.executions.add(execution)
+    output: dict[str, Any] = {}
     try:
         result = await _async_execute(code, session.namespace)
-    except Exception as err:  # noqa: BLE001
-        return {"logs": capture.logs, "error": _format_exception(err)}
+    # Also the exceptions that stop Python, like exit() raises; they must not
+    # reach the event loop, which would stop Home Assistant.
+    except (Exception, SystemExit, KeyboardInterrupt) as err:  # noqa: BLE001
+        result = None
+        output["error"] = _format_exception(err)
     finally:
         session.executions.discard(execution)
         capture.closed = True
         _OUTPUT_CAPTURE.reset(capture_token)
+        output["logs"] = capture.logs
+        if capture.truncated:
+            output["logs_truncated"] = True
+        # Tasks started by the code keep the capture; not the output in it.
+        capture.logs = []
+
+    if "error" in output:
+        return output
 
     if result is None:
-        return {"logs": capture.logs, "result": None}
+        return {**output, "result": None}
 
     session.namespace["_"] = result
-    return {"logs": capture.logs, "result": describe(session, result)}
+    return {**output, "result": describe(session, result)}
 
 
 def console_print(
@@ -82,9 +98,17 @@ def console_print(
         print(*values, file=file, **kwargs)
         return
 
+    if len(capture.logs) >= MAX_LOG_LINES:
+        capture.truncated = True
+        return
+
     capture.logs.append(
         [
-            {"type": "text", "value": value}
+            {
+                "type": "text",
+                "value": value[:MAX_STRING_LENGTH],
+                "truncated": len(value) > MAX_STRING_LENGTH,
+            }
             if isinstance(value, str)
             else describe(session, value)
             for value in values
@@ -128,7 +152,7 @@ async def _async_run(code_object: CodeType, namespace: dict[str, Any]) -> Any:
     return result
 
 
-def _format_exception(err: Exception) -> str:
+def _format_exception(err: BaseException) -> str:
     """Format an exception, hiding the frames of the console machinery itself."""
     tb = err.__traceback__
     while tb is not None and tb.tb_frame.f_code.co_filename != CONSOLE_FILENAME:

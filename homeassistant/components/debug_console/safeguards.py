@@ -6,6 +6,7 @@ before using the console, and everything that runs is logged.
 """
 
 import logging
+from typing import Any
 
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.auth.models import User
@@ -80,6 +81,20 @@ def async_log_execution(user: User, code: str) -> None:
         return
 
     _LOGGER.warning("%s ran code in the debug console:\n%s", user.name, code)
+
+
+@callback
+def async_log_property_evaluation(user: User, value: Any, attribute: str) -> None:
+    """Log a property the user evaluated, as properties can change things too."""
+    if IS_DEVELOPMENT_VERSION:
+        return
+
+    _LOGGER.warning(
+        "%s evaluated %s.%s in the debug console",
+        user.name,
+        type(value).__qualname__,
+        attribute,
+    )
 
 
 def _warning_accepted(entry: ConfigEntry, user_id: str) -> bool:

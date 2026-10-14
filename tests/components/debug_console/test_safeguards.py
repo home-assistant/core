@@ -168,3 +168,36 @@ async def test_logging_executions(
         f"{hass_admin_user.name} ran code in the debug console:\nanswer = 42"
         in caplog.text
     ) is logged
+
+
+@pytest.mark.usefixtures("release_version")
+async def test_logging_property_evaluation(
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test release versions log properties that are evaluated, with who did."""
+    await _async_send(websocket_client, {"type": "debug_console/warning/accept"})
+    msg = await _async_send(
+        websocket_client,
+        {
+            **EXECUTE,
+            "code": "class Thing:\n    @property\n    def state(self):\n        return 1\n\nThing()",
+        },
+    )
+
+    with caplog.at_level(logging.WARNING):
+        msg = await _async_send(
+            websocket_client,
+            {
+                "type": "debug_console/get_attribute",
+                "session_id": SESSION_ID,
+                "object_id": msg["result"]["result"]["object_id"],
+                "attribute": "state",
+            },
+        )
+
+    assert msg["success"]
+    assert f"{hass_admin_user.name} evaluated Thing.state in the debug console" in (
+        caplog.text
+    )

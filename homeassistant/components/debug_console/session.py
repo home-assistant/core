@@ -21,6 +21,9 @@ from .execution import console_print
 # of the connection subscriptions.
 CONSOLE_SUBSCRIPTION_KEY = DOMAIN
 
+# Objects kept alive for the frontend to inspect, oldest are let go first.
+MAX_TRACKED_OBJECTS = 10000
+
 
 @dataclass(slots=True)
 class ConsoleSession:
@@ -32,6 +35,9 @@ class ConsoleSession:
     # before a restart, never finds an object of this one.
     instance_id: str = field(default_factory=lambda: secrets.token_hex(4))
     objects: dict[str, Any] = field(default_factory=dict)
+    # The ID of each tracked object by its identity, to track it only once.
+    # Identities stay valid, as tracking keeps the objects alive.
+    object_ids_by_identity: dict[int, str] = field(default_factory=dict)
     object_ids: Iterator[int] = field(default_factory=partial(count, 1))
     connections: set[ActiveConnection] = field(default_factory=set)
     executions: set[asyncio.Task[Any]] = field(default_factory=set)
@@ -39,9 +45,23 @@ class ConsoleSession:
 
     def track(self, value: Any) -> str:
         """Keep a reference to an object, so the frontend can inspect it later."""
+        if (object_id := self.object_ids_by_identity.get(id(value))) is not None:
+            return object_id
+
         object_id = f"{self.instance_id}-{next(self.object_ids)}"
         self.objects[object_id] = value
+        self.object_ids_by_identity[id(value)] = object_id
+
+        if len(self.objects) > MAX_TRACKED_OBJECTS:
+            oldest_id = next(iter(self.objects))
+            oldest = self.objects.pop(oldest_id)
+            del self.object_ids_by_identity[id(oldest)]
         return object_id
+
+    def release_objects(self) -> None:
+        """Let go of all objects kept alive for inspection."""
+        self.objects.clear()
+        self.object_ids_by_identity.clear()
 
     @property
     def subscription_key(self) -> tuple[str, str]:
@@ -54,13 +74,26 @@ class ConsoleSession:
         if self.cancel_expiry is not None:
             self.cancel_expiry()
             self.cancel_expiry = None
-        for execution in self.executions:
-            execution.cancel()
         for connection in self.connections:
             connection.subscriptions.pop(self.subscription_key, None)
         self.connections.clear()
-        self.objects.clear()
-        self.namespace.clear()
+        self.release_objects()
+
+        if not self.executions:
+            self.namespace.clear()
+            return
+
+        # Cancelled code still runs its cleanup, which may need its names.
+        stopping = set(self.executions)
+
+        def _release_namespace(execution: asyncio.Task[Any]) -> None:
+            stopping.discard(execution)
+            if not stopping:
+                self.namespace.clear()
+
+        for execution in stopping:
+            execution.add_done_callback(_release_namespace)
+            execution.cancel()
 
 
 @callback

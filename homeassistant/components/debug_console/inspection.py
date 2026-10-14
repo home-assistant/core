@@ -1,11 +1,13 @@
 """Describe values for the Debug console, and inspect them on request."""
 
+import builtins
 from collections.abc import Iterator, Mapping, Sequence, Set as AbstractSet, Sized
 from contextlib import suppress
 import inspect
 from itertools import islice
 import reprlib
 import traceback
+from types import GetSetDescriptorType, MemberDescriptorType
 from typing import TYPE_CHECKING, Any, override
 
 if TYPE_CHECKING:
@@ -48,6 +50,19 @@ class _PreviewRepr(reprlib.Repr):
         if not x:
             return "frozenset()"
         return f"frozenset({{{self._repr_items(x, level, self.maxfrozenset)}}})"
+
+    def repr_bytes(self, x: bytes, level: int) -> str:
+        """Represent only the start, instead of all of it before cutting it."""
+        return self._repr_start(x, builtins.repr(x[: self.maxstring]))
+
+    def repr_bytearray(self, x: bytearray, level: int) -> str:
+        """Represent only the start, instead of all of it before cutting it."""
+        return self._repr_start(x, builtins.repr(x[: self.maxstring]))
+
+    def _repr_start(self, x: bytes | bytearray, start: str) -> str:
+        if len(x) <= self.maxstring:
+            return start
+        return f"{start[:-1]}{self.fillvalue}{start[-1]}"
 
     def _repr_items(self, x: AbstractSet[Any], level: int, maximum: int) -> str:
         if level <= 0:
@@ -128,10 +143,29 @@ def get_attribute(session: ConsoleSession, value: Any, name: str) -> dict[str, A
     """Evaluate an attribute, such as a property the user asked for."""
     try:
         attribute = getattr(value, name)
-    except Exception as err:  # noqa: BLE001
+    # Also the exceptions that stop Python; they must not stop Home Assistant.
+    except (Exception, SystemExit, KeyboardInterrupt) as err:  # noqa: BLE001
         return {"error": "".join(traceback.format_exception_only(err))}
 
     return {"value": describe(session, attribute)}
+
+
+def instance_dict(value: Any) -> dict[str, Any] | None:
+    """Return the __dict__ of an instance, without running code to get it.
+
+    A class can replace __dict__ with a property, which is then left alone.
+    """
+    # Only the class of the instance counts, not the class of that class.
+    for cls in type(value).__mro__:
+        if "__dict__" in (attributes := vars(cls)):
+            descriptor = attributes["__dict__"]
+            break
+    else:
+        return None
+
+    if not isinstance(descriptor, GetSetDescriptorType | MemberDescriptorType):
+        return None
+    return descriptor.__get__(value, type(value))  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
 
 
 def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:
@@ -152,17 +186,17 @@ def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:
             yield str(index), item
         return
 
-    attributes: dict[str, Any] = {}
-    with suppress(TypeError):
-        attributes.update(vars(value))
+    attributes: dict[str, Any] = dict(instance_dict(value) or {})
 
     for cls in type(value).__mro__:
-        slots = getattr(cls, "__slots__", ())
+        slots = vars(cls).get("__slots__", ())
         for name in (slots,) if isinstance(slots, str) else slots:
-            try:
-                attributes[name] = getattr(value, name)
-            except AttributeError:
-                continue
+            # A subclass can replace a slot with a property, which only runs
+            # on request; the loop below marks it.
+            static = inspect.getattr_static(type(value), name, None)
+            if isinstance(static, MemberDescriptorType):
+                with suppress(AttributeError):
+                    attributes[name] = static.__get__(value, type(value))  # pylint: disable=unnecessary-dunder-call
 
     for name in dir(type(value)):
         if name in attributes:

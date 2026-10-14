@@ -1,5 +1,9 @@
 """Tests for the Debug console websocket API."""
 
+import asyncio
+from collections.abc import Generator
+from pathlib import Path
+import sys
 from typing import Any
 from unittest.mock import ANY, patch
 
@@ -136,7 +140,10 @@ async def test_print(websocket_client: MockHAClientWebSocket) -> None:
     )
 
     assert result["logs"] == [
-        [{"type": "text", "value": "hello"}, {"type": "number", "value": "42"}],
+        [
+            {"type": "text", "value": "hello", "truncated": False},
+            {"type": "number", "value": "42"},
+        ],
         [
             {
                 "type": "object",
@@ -303,7 +310,7 @@ async def test_error(websocket_client: MockHAClientWebSocket) -> None:
         websocket_client, "print('before')\ndef fail():\n    1 / 0\nfail()"
     )
 
-    assert result["logs"] == [[{"type": "text", "value": "before"}]]
+    assert result["logs"] == [[{"type": "text", "value": "before", "truncated": False}]]
     assert result["error"].startswith("Traceback (most recent call last):\n")
     assert 'File "<console>", line 4, in <module>' in result["error"]
     assert "ZeroDivisionError: division by zero" in result["error"]
@@ -750,8 +757,10 @@ async def test_concurrent_executions_keep_their_output(
     )
     first = await websocket_client.receive_json()
 
-    assert second["logs"] == [[{"type": "text", "value": "second"}]]
-    assert first["result"]["logs"] == [[{"type": "text", "value": "first"}]]
+    assert second["logs"] == [[{"type": "text", "value": "second", "truncated": False}]]
+    assert first["result"]["logs"] == [
+        [{"type": "text", "value": "first", "truncated": False}]
+    ]
 
 
 async def test_executions_cancelled_when_disabled(
@@ -823,12 +832,15 @@ async def test_stale_connection_keeps_new_session(
         {"type": "debug_console/complete", "code": "trap.dynamic.x"},
         {"type": "debug_console/signature", "code": "trap.descriptor.x("},
         {"type": "debug_console/signature", "code": "trap.dynamic("},
+        {"type": "debug_console/complete", "code": "trap.de"},
+        {"type": "debug_console/signature", "code": "callable_trap("},
+        {"type": "debug_console/complete", "code": "callable_trap(a"},
     ],
 )
 async def test_typing_runs_no_attribute_code(
     websocket_client: MockHAClientWebSocket, command: dict[str, Any]
 ) -> None:
-    """Test completion and signatures never run descriptors or __getattr__."""
+    """Test completion and signatures never run user code of the objects."""
     await _async_execute(
         websocket_client,
         """
@@ -844,7 +856,20 @@ class Trap:
     def __getattr__(self, name):
         ran.append("getattr")
 
+    def __dir__(self):
+        ran.append("dir")
+        return []
+
+class CallableTrap:
+    @property
+    def __signature__(self):
+        ran.append("signature")
+
+    def __call__(self, argument):
+        pass
+
 trap = Trap()
+callable_trap = CallableTrap()
 """,
     )
 
@@ -897,4 +922,182 @@ async def test_disabling_releases_sessions(
     assert session.subscription_key not in connection.subscriptions
     assert not session.connections
     assert not session.objects
+    assert not session.namespace
+
+
+@pytest.mark.parametrize(
+    ("code", "error"),
+    [
+        pytest.param("exit()", "SystemExit", id="exit"),
+        pytest.param("raise SystemExit(3)", "SystemExit: 3", id="system_exit"),
+        pytest.param("raise KeyboardInterrupt", "KeyboardInterrupt", id="interrupt"),
+    ],
+)
+async def test_exit_does_not_stop_home_assistant(
+    websocket_client: MockHAClientWebSocket, code: str, error: str
+) -> None:
+    """Test exceptions that stop Python are reported, not passed on."""
+    result = await _async_execute(websocket_client, code)
+    assert error in result["error"]
+
+    result = await _async_execute(websocket_client, "1 + 1")
+    assert result["result"] == {"type": "number", "value": "2"}
+
+
+async def test_property_raising_system_exit(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test a property that exits is reported, not passed on."""
+    result = await _async_execute(
+        websocket_client,
+        "class Thing:\n    @property\n    def leave(self):\n        exit()\n\nThing()",
+    )
+
+    assert await _async_send(
+        websocket_client,
+        {
+            "type": "debug_console/get_attribute",
+            "object_id": result["result"]["object_id"],
+            "attribute": "leave",
+        },
+    ) == {"error": ANY}
+
+
+@pytest.fixture
+def probe_package(tmp_path: Path) -> Generator[str]:
+    """Provide a package on the module path, that must not get imported."""
+    package = tmp_path / "debug_console_probe"
+    (package / "submodule").mkdir(parents=True)
+    (package / "__init__.py").write_text("raise AssertionError('imported')\n")
+    (package / "submodule" / "__init__.py").write_text("")
+    with patch.object(sys, "path", [str(tmp_path), *sys.path]):
+        yield "debug_console_probe"
+    assert "debug_console_probe" not in sys.modules
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [
+        pytest.param(
+            "import debug_console_probe.sub",
+            ["debug_console_probe.submodule"],
+            id="import",
+        ),
+        pytest.param(
+            "from debug_console_probe import sub", ["submodule"], id="from_import"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("probe_package")
+async def test_import_completion_does_not_import(
+    websocket_client: MockHAClientWebSocket, code: str, expected: list[str]
+) -> None:
+    """Test completing imports lists modules without running their code."""
+    result = await _async_send(
+        websocket_client, {"type": "debug_console/complete", "code": code}
+    )
+
+    assert result["matches"] == expected
+
+
+async def test_inspect_slot_replaced_by_property(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test a property replacing an inherited slot only runs on request."""
+    result = await _async_execute(
+        websocket_client,
+        """
+class Base:
+    __slots__ = ("state",)
+
+class Thing(Base):
+    @property
+    def state(self):
+        raise AssertionError("Properties must not be evaluated")
+
+Thing()
+""",
+    )
+
+    assert await _async_inspect(websocket_client, result["result"]["object_id"]) == {
+        "children": [{"key": "state", "getter": True}],
+        "truncated": False,
+    }
+
+
+async def test_preview_of_large_bytes(websocket_client: MockHAClientWebSocket) -> None:
+    """Test previews of large bytes only represent the start."""
+    result = await _async_execute(websocket_client, "b'x' * 1_000_000")
+
+    assert result["result"]["preview"] == f"b'{'x' * 80}...'"
+
+
+async def test_tracked_objects(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test objects are tracked once, and the oldest are let go."""
+    first = await _async_execute(websocket_client, "data = [1]\ndata")
+    again = await _async_execute(websocket_client, "data")
+    assert first["result"]["object_id"] == again["result"]["object_id"]
+
+    with patch("homeassistant.components.debug_console.session.MAX_TRACKED_OBJECTS", 2):
+        await _async_execute(websocket_client, "[2]")
+        await _async_execute(websocket_client, "[3]")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "debug_console/inspect",
+            "session_id": SESSION_ID,
+            "object_id": first["result"]["object_id"],
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_print_output_bounded(websocket_client: MockHAClientWebSocket) -> None:
+    """Test printed text is truncated, and the number of lines is limited."""
+    with (
+        patch("homeassistant.components.debug_console.execution.MAX_STRING_LENGTH", 3),
+        patch("homeassistant.components.debug_console.execution.MAX_LOG_LINES", 2),
+    ):
+        result = await _async_execute(
+            websocket_client, "for line in ['abcdef', 'b', 'c']:\n    print(line)\n"
+        )
+
+    assert result["logs"] == [
+        [{"type": "text", "value": "abc", "truncated": True}],
+        [{"type": "text", "value": "b", "truncated": False}],
+    ]
+    assert result["logs_truncated"] is True
+
+
+async def test_cancelled_code_cleans_up_when_disabled(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test cancelled code can still use its names while cleaning up."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    client = await hass_ws_client(hass)
+    await _async_execute(client, "import asyncio\ncleaned_up = asyncio.Event()")
+
+    await client.send_json_auto_id(
+        {
+            "type": "debug_console/execute",
+            "session_id": SESSION_ID,
+            "code": "try:\n    await asyncio.Event().wait()\nfinally:\n    cleaned_up.set()\n",
+        }
+    )
+    # Once a later command is done, the waiting execution is running.
+    await _async_execute(client, "1")
+    (session,) = hass.data[DATA_CONSOLE_SESSIONS].values()
+    (execution,) = session.executions
+    cleaned_up = session.namespace["cleaned_up"]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    # Executions run as background tasks, which block_till_done does not await.
+    await asyncio.wait([execution])
+
+    assert cleaned_up.is_set()
     assert not session.namespace

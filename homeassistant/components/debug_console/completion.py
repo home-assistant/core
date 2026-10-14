@@ -1,7 +1,7 @@
 """Completion and signature hints for code typed in the Debug console.
 
-All of this runs while typing, so it never reads attributes in a way that runs
-user code, such as properties, descriptors, or __getattr__.
+All of this runs while typing, so it never runs user code: no properties,
+descriptors, __getattr__, or __dir__, and no importing modules.
 """
 
 from annotationlib import Format
@@ -9,7 +9,7 @@ import builtins
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cache
-import importlib
+from importlib.machinery import PathFinder
 import inspect
 from itertools import pairwise
 import pkgutil
@@ -21,7 +21,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from .inspection import preview
+from .inspection import instance_dict, preview
 
 MAX_COMPLETIONS = 200
 
@@ -39,6 +39,18 @@ _CALLEE = re.compile(r"(?P<callee>[A-Za-z_][\w.]*)\s*$")
 _KEYWORD_ARGUMENT = re.compile(r"\s*(?P<name>\w+)\s*=(?!=)")
 
 _MISSING = object()
+
+# Callables whose signature inspect can read without running user code.
+_SIGNATURE_TYPES = (
+    type,
+    types.FunctionType,
+    types.BuiltinFunctionType,
+    types.MethodType,
+    types.MethodDescriptorType,
+    types.WrapperDescriptorType,
+    types.MethodWrapperType,
+    types.ClassMethodDescriptorType,
+)
 
 # Descriptors that only bind functions, so binding them runs no user code.
 _SAFE_DESCRIPTORS = (
@@ -187,8 +199,14 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
 
 
 def _signature(namespace: dict[str, Any], callee: str) -> inspect.Signature | None:
-    """Return the signature of a callable, or None if it has none."""
-    if (target := _resolve(namespace, callee)) is _MISSING or not callable(target):
+    """Return the signature of a callable, or None if it has none.
+
+    Only for functions, methods, and classes: for other callable objects,
+    inspect reads attributes like __signature__, which can be properties.
+    """
+    if (target := _resolve(namespace, callee)) is _MISSING or not isinstance(
+        target, _SIGNATURE_TYPES
+    ):
         return None
     try:
         # As strings, as evaluating annotations can fail or import things.
@@ -281,12 +299,23 @@ def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
         return []
 
     matches: list[str] = []
-    for name in sorted(dir(value)):
-        if _is_completion(name, prefix):
-            static = inspect.getattr_static(value, name, None)
-            call = "(" if callable(static) or isinstance(static, classmethod) else ""
-            matches.append(f"{expression}.{name}{call}")
+    for name in sorted(_static_names(value)):
+        if not _is_completion(name, prefix):
+            continue
+        static = inspect.getattr_static(value, name, None)
+        call = "(" if callable(static) or isinstance(static, classmethod) else ""
+        matches.append(f"{expression}.{name}{call}")
+        if len(matches) >= MAX_COMPLETIONS:
+            break
     return matches
+
+
+def _static_names(value: Any) -> set[str]:
+    """Return the attribute names of a value, like dir() without __dir__."""
+    names = set(instance_dict(value) or {})
+    for cls in inspect.getmro(value if isinstance(value, type) else type(value)):
+        names.update(vars(cls))
+    return names
 
 
 @cache
@@ -305,10 +334,10 @@ def _complete_module(path: str) -> list[str]:
     parent, _, prefix = path.rpartition(".")
     if not parent:
         names: Iterable[str] = _top_level_modules()
-    elif (package_path := _package_path(parent)) is None:
+    elif (locations := _package_locations(parent)) is None:
         return []
     else:
-        names = [module.name for module in pkgutil.iter_modules(package_path)]
+        names = [module.name for module in pkgutil.iter_modules(locations)]
 
     return sorted(
         f"{parent}.{name}" if parent else name
@@ -318,26 +347,41 @@ def _complete_module(path: str) -> list[str]:
 
 
 def _complete_module_attribute(module_name: str, prefix: str) -> list[str]:
-    """Return completions for names to import from a module."""
-    try:
-        module = importlib.import_module(module_name)
-    except Exception:  # noqa: BLE001
-        return []
+    """Return completions for names to import from a module.
 
-    names = set(dir(module))
-    if (package_path := getattr(module, "__path__", None)) is not None:
-        names.update(submodule.name for submodule in pkgutil.iter_modules(package_path))
+    Names in a module are only known once it is imported; this lists those of
+    imported modules, and submodules of any package.
+    """
+    names: set[str] = set()
+    if (module := sys.modules.get(module_name)) is not None:
+        names.update(instance_dict(module) or {})
+    if (locations := _package_locations(module_name)) is not None:
+        names.update(submodule.name for submodule in pkgutil.iter_modules(locations))
 
     return sorted(name for name in names if _is_completion(name, prefix))
 
 
-def _package_path(name: str) -> list[str] | None:
-    """Import a package and return its search path, or None if not a package."""
-    try:
-        package = importlib.import_module(name)
-    except Exception:  # noqa: BLE001
+def _package_locations(name: str) -> list[str] | None:
+    """Return where the submodules of a package are, without importing it.
+
+    Importing runs the code of a module, which completion must not do.
+    """
+    if (module := sys.modules.get(name)) is not None:
+        locations = (instance_dict(module) or {}).get("__path__")
+        return None if locations is None else list(locations)
+
+    parent = name.rpartition(".")[0]
+    search_path = None
+    if parent and (search_path := _package_locations(parent)) is None:
         return None
-    return getattr(package, "__path__", None)
+
+    try:
+        spec = PathFinder.find_spec(name, search_path)
+    except ImportError, ValueError:
+        return None
+    if spec is None or spec.submodule_search_locations is None:
+        return None
+    return list(spec.submodule_search_locations)
 
 
 def _is_completion(name: str, prefix: str) -> bool:

@@ -19,6 +19,7 @@ from .inspection import get_attribute, inspect_children
 from .safeguards import (
     async_accept_warning,
     async_log_execution,
+    async_log_property_evaluation,
     async_warning_required,
 )
 from .session import async_get_session
@@ -193,6 +194,7 @@ def handle_get_attribute(
         )
         return
 
+    async_log_property_evaluation(connection.user, value, msg["attribute"])
     connection.send_result(msg["id"], get_attribute(session, value, msg["attribute"]))
 
 
@@ -252,5 +254,5 @@ def handle_clear(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Release the objects kept alive for inspection, keeping the namespace."""
-    async_get_session(hass, connection, msg["session_id"]).objects.clear()
+    async_get_session(hass, connection, msg["session_id"]).release_objects()
     connection.send_result(msg["id"])
