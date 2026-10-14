@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import httpx
+from openai import AuthenticationError, OpenAIError
 import pytest
 from python_open_router import (
     OpenRouterAuthenticationError,
@@ -18,6 +20,8 @@ from homeassistant.components.open_router.const import (
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -370,3 +374,43 @@ async def test_migrate_entry_from_future_version_fails(
     assert entry.version == 100
     assert entry.minor_version == 99
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            AuthenticationError(
+                "Unauthorized",
+                response=httpx.Response(
+                    401, request=httpx.Request("GET", "https://openrouter.ai")
+                ),
+                body=None,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+            "Invalid API key",
+            id="authentication_error",
+        ),
+        pytest.param(
+            OpenAIError("boom"),
+            ConfigEntryState.SETUP_RETRY,
+            "Error communicating with the OpenRouter API: boom",
+            id="api_error",
+        ),
+    ],
+)
+async def test_setup_entry_errors(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    state: ConfigEntryState,
+    reason: str,
+) -> None:
+    """Test setup errors when the API cannot be reached."""
+    mock_openai_client.with_options.return_value.models.list.side_effect = side_effect
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is state
+    assert mock_config_entry.reason == reason

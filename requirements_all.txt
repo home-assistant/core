@@ -86,7 +86,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
-PySwitchbot==2.9.0
+PySwitchbot==3.0.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -203,7 +203,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.13.0
+aioaquarite==0.13.1
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -343,7 +343,7 @@ aiolichess==1.3.0
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.1.2
+aiolyric==2.2.1
 
 # homeassistant.components.mealie
 aiomealie==2.1.2
@@ -358,7 +358,7 @@ aiomodernforms==0.3.1
 aiomusiccast==0.15.0
 
 # homeassistant.components.nanoleaf
-aionanoleaf2==1.0.5
+aionanoleaf2==1.2.0
 
 # homeassistant.components.notion
 aionotion==2024.03.0
@@ -514,7 +514,7 @@ airos==0.6.12
 airpatrol==0.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==1.2.0
+airthings-ble==1.3.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -650,7 +650,7 @@ azure-kusto-data[aio]==4.5.1
 azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==7.10.0
+azure-servicebus==7.15.0
 
 # homeassistant.components.azure_storage
 azure-storage-blob==12.24.0
@@ -728,7 +728,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.15
+boschshcpy==0.6.20
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -736,6 +736,9 @@ boto3==1.42.97
 
 # homeassistant.components.bring
 bring-api==1.1.2
+
+# homeassistant.components.broadlink
+broadlink-async==1.1.0
 
 # homeassistant.components.brother
 brother==6.2.0
@@ -1424,7 +1427,7 @@ inkbird-ble==1.7.1
 insteon-frontend-home-assistant==0.7.0
 
 # homeassistant.components.intellifire
-intellifire4py==4.5.0
+intellifire4py==4.5.6
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -1565,6 +1568,9 @@ london-tube-status==0.7
 # homeassistant.components.loqed
 loqedAPI==2.1.16
 
+# homeassistant.components.lorawan
+lorawan-connection==0.14.0
+
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
 
@@ -1582,6 +1588,9 @@ lxml==6.1.2
 
 # homeassistant.components.lyngdorf
 lyngdorf==2.2.1
+
+# homeassistant.components.marantz_rs232
+marantz-rs232==2.1.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -1765,7 +1774,7 @@ notifications-android-tv==0.1.5
 notify-events==1.0.4
 
 # homeassistant.components.nrgkick
-nrgkick-api==1.7.1
+nrgkick-api==1.8.1
 
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==3.1.3
@@ -2045,7 +2054,7 @@ pyElectra==1.2.5
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.7
+pyHik==0.4.8
 
 # homeassistant.components.homee
 pyHomee==1.4.4
@@ -2289,6 +2298,9 @@ pygtfs==0.1.11
 # homeassistant.components.hvv_departures
 pygti==1.1.1
 
+# homeassistant.components.hase_iq
+pyhaseiq==0.2.1
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 
@@ -2311,7 +2323,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.7.0
+pyicloud==2026.10.0
 
 # homeassistant.components.imou
 pyimouapi==1.4.0
@@ -2705,11 +2717,8 @@ python-awair==0.2.5
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
 
-# homeassistant.components.broadlink
-python-broadlink==1.0.6
-
 # homeassistant.components.bsblan
-python-bsblan==6.1.9
+python-bsblan==6.1.10
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2969,7 +2978,7 @@ raspyrfm-client==1.2.9
 redgtech-api==0.1.38
 
 # homeassistant.components.refoss
-refoss-ha==1.2.5
+refoss-ha==1.2.6
 
 # homeassistant.components.rainmachine
 regenmaschine==2024.03.0
@@ -3443,7 +3452,7 @@ waterfurnace==1.9.7
 watergate-local-api==2026.2.2
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.5.8
+weatherflow4py==1.5.12
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.6
@@ -3467,7 +3476,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.2.1
+wiim==0.3.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -3566,7 +3575,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.1
+zinvolt==1.1.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4

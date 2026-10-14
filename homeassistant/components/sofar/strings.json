@@ -6,9 +6,17 @@
     },
     "error": {
       "cannot_connect": "Failed to connect: {error}",
+      "inverter_silent": "The adapter is reachable, but the inverter behind it did not answer. A PV inverter switches off without sunlight, so try again in daylight. Otherwise, check the unit ID and the adapter's serial settings.",
       "unrecognized_inverter": "The device answered, but neither its serial number nor its register masks identify a known Sofar model."
     },
     "step": {
+      "reconfigure": {
+        "description": "Update where this inverter is reached, for example after it moved to another address or its RS485 bus was rewired. Moving it between a network and a serial connection keeps this entry and its history.\n\nIt has to stay the same inverter: the serial number that answers is checked against the one this entry was set up with.",
+        "menu_options": {
+          "reconfigure_serial": "[%key:component::sofar::config::step::user::menu_options::serial%]",
+          "reconfigure_tcp": "[%key:component::sofar::config::step::user::menu_options::tcp%]"
+        }
+      },
       "reconfigure_serial": {
         "data": {
           "baudrate": "[%key:component::sofar::config::step::serial::data::baudrate%]",

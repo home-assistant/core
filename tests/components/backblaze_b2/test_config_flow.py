@@ -10,12 +10,7 @@ from homeassistant.components.backblaze_b2.const import (
     CONF_KEY_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -300,13 +295,9 @@ async def test_advanced_flows(
     mock_config_entry.add_to_hass(hass)
 
     if flow_type == "reauth":
-        source = SOURCE_REAUTH
         step_name = "reauth_confirm"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source, "entry_id": mock_config_entry.entry_id},
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == step_name
 
@@ -340,13 +331,9 @@ async def test_advanced_flows(
             assert result.get("reason") == "reauth_successful"
 
     elif flow_type == "reconfigure":
-        source = SOURCE_RECONFIGURE
         step_name = "reconfigure"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source, "entry_id": mock_config_entry.entry_id},
-        )
+        result = await mock_config_entry.start_reconfigure_flow(hass)
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == step_name
 

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from miio import Device as MiioDevice, DeviceException
 
-from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
+from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -58,7 +58,7 @@ class XiaomiMiioEntity(Entity):
         )
 
         if self._mac is not None:
-            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info.connections = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 
@@ -100,7 +100,7 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         )
 
         if self._mac is not None:
-            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info.connections = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 

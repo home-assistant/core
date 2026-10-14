@@ -20,7 +20,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a Broadlink device from a config entry."""
     data = hass.data[BROADLINK_DATA]
 
@@ -34,10 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if data.heartbeat is None:
         data.heartbeat = BroadlinkHeartbeat(hass)
         hass.async_create_task(data.heartbeat.async_setup())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     data = hass.data[BROADLINK_DATA]
 
@@ -48,4 +47,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await data.heartbeat.async_unload()
         data.heartbeat = None
 
-    return result
+    if not result:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unload_failed",
+        )

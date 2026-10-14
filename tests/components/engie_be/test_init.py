@@ -10,16 +10,17 @@ from aioengiebelgium import (
     EngieBeCommunicationError,
     PricesResponse,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.engie_be.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.engie_be.const import DOMAIN, PRICES_SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import BAN, BAN_2, OFFTAKE_ONLY_EAN, build_prices, build_relations
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_engie_client")
@@ -40,22 +41,14 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
-        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
-    ],
-)
 async def test_setup_relations_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
-    side_effect: Exception,
 ) -> None:
     """Test setup handles a failure of the customer-account-relations fetch."""
     mock_engie_client.return_value.async_get_customer_account_relations.side_effect = (
-        side_effect
+        EngieBeCommunicationError("boom")
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -66,23 +59,86 @@ async def test_setup_relations_error(
     assert not hass.config_entries.flow.async_progress()
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
-        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
-    ],
-)
+async def test_setup_relations_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+) -> None:
+    """Test an auth error on the relations fetch during setup starts reauth."""
+    mock_engie_client.return_value.async_get_customer_account_relations.side_effect = (
+        EngieBeAuthenticationError("boom")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("method", ["async_get_prices", "async_get_service_point"])
+async def test_setup_prices_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    method: str,
+) -> None:
+    """Test an auth error on the initial prices refresh starts reauth."""
+    getattr(
+        mock_engie_client.return_value, method
+    ).side_effect = EngieBeAuthenticationError("boom")
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_prices_refresh_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth error during a scheduled prices refresh starts reauth."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress()
+
+    mock_engie_client.return_value.async_get_prices.side_effect = (
+        EngieBeAuthenticationError("boom")
+    )
+    freezer.tick(PRICES_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
 async def test_setup_prices_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    side_effect: Exception,
 ) -> None:
     """Test setup succeeds with a device but no entities when the initial prices fetch fails."""
-    mock_engie_client.return_value.async_get_prices.side_effect = side_effect
+    mock_engie_client.return_value.async_get_prices.side_effect = (
+        EngieBeCommunicationError("boom")
+    )
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

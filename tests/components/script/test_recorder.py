@@ -5,16 +5,14 @@ import pytest
 from homeassistant.components import script
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.script import (
-    ATTR_CUR,
+from homeassistant.components.script.const import (
     ATTR_LAST_ACTION,
     ATTR_LAST_TRIGGERED,
-    ATTR_MAX,
-    ATTR_MODE,
     DOMAIN,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_MODE
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.helpers.script import ATTR_CUR, ATTR_MAX
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
