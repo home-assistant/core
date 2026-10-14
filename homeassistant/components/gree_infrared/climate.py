@@ -1,5 +1,6 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
+from asyncio import CancelledError
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -327,6 +328,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     async def async_added_to_hass(self) -> None:
         """Restore the assumed state, as infrared cannot read it back from the AC."""
         await super().async_added_to_hass()
+        self._state.climate = self
 
         @callback
         def _handle_climate_state_change(
@@ -639,7 +641,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                         int(self._attr_target_temperature or MIN_TEMP),
                         self._attr_fan_mode or FAN_AUTO,
                     )
-            except Exception:
+            except Exception, CancelledError:
                 setattr(self._state, option, previous)
                 raise
             self._state.async_notify_switches()
@@ -661,7 +663,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                         int(self._attr_target_temperature or MIN_TEMP),
                         self._attr_fan_mode or FAN_AUTO,
                     )
-            except Exception:
+            except Exception, CancelledError:
                 self._state.fresh_air = previous
                 raise
             self._state.async_notify_switches()
@@ -691,7 +693,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                         int(self._attr_target_temperature or MIN_TEMP),
                         self._attr_fan_mode or FAN_AUTO,
                     )
-            except Exception:
+            except Exception, CancelledError:
                 self._state.timer_hours = previous
                 self._timer_deadline = previous_deadline
                 self._schedule_timer_expiry()
@@ -734,7 +736,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                         self._attr_fan_mode or FAN_AUTO,
                     )
                 self.async_write_ha_state()
-            except Exception:
+            except Exception, CancelledError:
                 self._state.swing_v_position = previous_position
                 self._state.swing_v = previous_swing_v
                 self._attr_swing_mode = SWING_ON if previous_swing_v else SWING_OFF
@@ -772,7 +774,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 int(self._attr_native_target_temperature or MIN_TEMP),
                 self._attr_fan_mode or FAN_AUTO,
             )
-        except Exception:
+        except Exception, CancelledError:
             for option, value in cleared.items():
                 setattr(self._state, option, value)
             raise
@@ -808,7 +810,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                         temp,
                         self._attr_fan_mode or FAN_AUTO,
                     )
-                except Exception:
+                except Exception, CancelledError:
                     self._received_fahrenheit_temperature = (
                         previous_received_fahrenheit_temperature
                     )
@@ -858,7 +860,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                     )
                 self._attr_swing_mode = swing_mode
                 self.async_write_ha_state()
-            except Exception:
+            except Exception, CancelledError:
                 self._state.swing_v = previous
                 self._state.swing_v_position = previous_position
                 raise
@@ -885,7 +887,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                     )
                 self._attr_swing_horizontal_mode = swing_horizontal_mode
                 self.async_write_ha_state()
-            except Exception:
+            except Exception, CancelledError:
                 self._state.swing_h = previous
                 self._state.swing_h_position = previous_position
                 raise
@@ -913,7 +915,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                     )
                 self._attr_swing_horizontal_mode = SWING_ON if position else SWING_OFF
                 self.async_write_ha_state()
-            except Exception:
+            except Exception, CancelledError:
                 self._state.swing_h_position = previous_position
                 self._state.swing_h = previous_swing
                 raise
@@ -954,7 +956,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                         int(self._attr_target_temperature or MIN_TEMP),
                         self._attr_fan_mode or FAN_AUTO,
                     )
-            except Exception:
+            except Exception, CancelledError:
                 setattr(self._state, key, previous)
                 self._received_fahrenheit_temperature = (
                     previous_received_fahrenheit_temperature
