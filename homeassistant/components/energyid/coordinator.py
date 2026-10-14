@@ -75,6 +75,7 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         )
         self.client = client
         self.directives_enabled = async_directives_enabled(config_entry)
+        self._unavailable_directives: set[str] = set()
 
     @override
     async def _async_update_data(self) -> EnergyIDDirectivesData:
@@ -129,18 +130,28 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
     ) -> DirectiveData | None:
         """Return the schedule of one directive, or None when it is unavailable."""
         try:
-            return await self.client.get_directive_data(resource.id)
+            schedule = await self.client.get_directive_data(resource.id)
         except ClientResponseError as err:
             if err.status in (401, 403):
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_credentials",
                 ) from err
-            _LOGGER.debug("EnergyID directive %s is unavailable: %s", resource.id, err)
+            self._log_unavailable(resource, err)
             return None
         except (PermissionError, ClientError, OSError, TimeoutError, ValueError) as err:
-            _LOGGER.debug("EnergyID directive %s is unavailable: %s", resource.id, err)
+            self._log_unavailable(resource, err)
             return None
+        if resource.id in self._unavailable_directives:
+            self._unavailable_directives.discard(resource.id)
+            _LOGGER.info("EnergyID directive %s is available again", resource.id)
+        return schedule
+
+    def _log_unavailable(self, resource: DirectiveResource, err: Exception) -> None:
+        """Log once that a directive's schedule became unavailable."""
+        if resource.id not in self._unavailable_directives:
+            self._unavailable_directives.add(resource.id)
+            _LOGGER.info("EnergyID directive %s is unavailable: %s", resource.id, err)
 
     def _raise_if_unclaimed(self) -> None:
         """Start reauthentication when EnergyID no longer knows the device as claimed."""
