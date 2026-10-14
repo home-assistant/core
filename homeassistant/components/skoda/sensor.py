@@ -166,10 +166,7 @@ def _remaining_ac_time_value(entity: SkodaEntity) -> datetime | None:
     if target_timestamp is None:
         return None
 
-    if isinstance(target_timestamp, datetime):
-        return dt_util.as_utc(target_timestamp)
-
-    parsed_dt = dt_util.parse_datetime(str(target_timestamp))
+    parsed_dt = dt_util.parse_datetime(target_timestamp)
     return dt_util.as_utc(parsed_dt) if parsed_dt else None
 
 
@@ -200,10 +197,7 @@ def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> datetime | None
     if target_timestamp is None:
         return None
 
-    if isinstance(target_timestamp, datetime):
-        return dt_util.as_utc(target_timestamp)
-
-    parsed_dt = dt_util.parse_datetime(str(target_timestamp))
+    parsed_dt = dt_util.parse_datetime(target_timestamp)
     return dt_util.as_utc(parsed_dt) if parsed_dt else None
 
 
@@ -239,16 +233,11 @@ def _aux_heating_duration_value(entity: SkodaEntity) -> datetime | None:
     if aux_heat.duration_in_seconds is None or not aux_heat.car_captured_timestamp:
         return None
 
-    captured_timestamp = aux_heat.car_captured_timestamp
-    if isinstance(captured_timestamp, datetime):
-        captured = dt_util.as_utc(captured_timestamp)
-    else:
-        parsed_dt = dt_util.parse_datetime(str(captured_timestamp))
-        if parsed_dt is None:
-            return None
-        captured = dt_util.as_utc(parsed_dt)
+    parsed_dt = dt_util.parse_datetime(aux_heat.car_captured_timestamp)
+    if parsed_dt is None:
+        return None
 
-    return captured + timedelta(seconds=aux_heat.duration_in_seconds)
+    return dt_util.as_utc(parsed_dt) + timedelta(seconds=aux_heat.duration_in_seconds)
 
 
 def _preset_temperature_value(entity: SkodaEntity) -> float | None:
