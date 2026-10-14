@@ -1,6 +1,8 @@
 """Test the Open Thread Border Router integration."""
 
 import asyncio
+from datetime import timedelta
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -15,6 +17,7 @@ from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
     BASE_URL,
@@ -267,6 +270,110 @@ async def test_config_entry_not_ready(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
+@pytest.mark.parametrize("error", [TimeoutError, aiohttp.ClientError])
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "multiprotocol_addon_manager_mock",
+)
+async def test_ephemeral_key_probe_connection_error(
+    hass: HomeAssistant, error: type[Exception]
+) -> None:
+    """Test a connection error while probing ephemeral key support is not fatal."""
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    with patch("python_otbr_api.OTBR.get_ephemeral_key_enabled", side_effect=error):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    # Support stays unknown, to be probed again later
+    assert config_entry.runtime_data.ephemeral_key_supported is None
+
+
+@pytest.mark.parametrize(
+    ("delete_status", "expired", "delete_sent", "forgotten"),
+    [
+        pytest.param(HTTPStatus.OK, False, True, True, id="deleted"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR, False, True, False, id="delete_fails"
+        ),
+        # The router already dropped it, and another controller may own a new one
+        pytest.param(HTTPStatus.OK, True, False, True, id="expired"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "multiprotocol_addon_manager_mock",
+)
+async def test_unload_entry_revokes_ephemeral_key(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    delete_status: HTTPStatus,
+    expired: bool,
+    delete_sent: bool,
+    forgotten: bool,
+) -> None:
+    """Test an active ephemeral key is revoked when the entry unloads."""
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key", status=delete_status)
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    otbrdata = config_entry.runtime_data
+    otbrdata.active_ephemeral_key = "700855744"
+    otbrdata.active_ephemeral_key_expires = dt_util.utcnow() + timedelta(
+        minutes=-1 if expired else 1
+    )
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert (aioclient_mock.mock_calls[-1][0] == "DELETE") is delete_sent
+    assert (otbrdata.active_ephemeral_key is None) is forgotten
+
+
+@pytest.mark.parametrize(
+    ("ephemeral_key_probe_status", "ephemeral_key_supported"),
+    [
+        pytest.param(HTTPStatus.OK, True, id="supported"),
+        pytest.param(HTTPStatus.NOT_FOUND, False, id="not_supported"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, None, id="probe_error"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "multiprotocol_addon_manager_mock",
+)
+async def test_ephemeral_key_support_probe(
+    hass: HomeAssistant, ephemeral_key_supported: bool | None
+) -> None:
+    """Test the ephemeral key support probe handles router response statuses."""
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.runtime_data.ephemeral_key_supported is ephemeral_key_supported
+
+
 async def test_border_agent_id_not_supported(
     hass: HomeAssistant, get_border_agent_id: AsyncMock
 ) -> None:
@@ -303,6 +410,7 @@ async def test_config_entry_update(hass: HomeAssistant) -> None:
         return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS
     )
     mock_api.get_coprocessor_version = AsyncMock(return_value=TEST_COPROCESSOR_VERSION)
+    mock_api.get_ephemeral_key_enabled = AsyncMock(return_value=False)
     with patch("python_otbr_api.OTBR", return_value=mock_api) as mock_otrb_api:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
