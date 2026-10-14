@@ -94,7 +94,9 @@ def get_device_capabilities(
         return
     entry = cast(ESPHomeConfigEntry, candidate)
 
-    if isinstance(device, dr.ChildDeviceEntry):
+    # The connections check is only needed for legacy sub devices, which remain
+    # full devices without connections until converted to child devices
+    if isinstance(device, dr.ChildDeviceEntry) or not device.connections:
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_FOUND,

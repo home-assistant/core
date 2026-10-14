@@ -204,6 +204,35 @@ async def test_get_device_capabilities_child_device(
     assert response["error"]["message"] == "Device is not the main ESPHome device"
 
 
+async def test_get_device_capabilities_legacy_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test capabilities are not exposed on a not yet converted legacy sub-device."""
+    device = await mock_esphome_device(mock_client=mock_client)
+    legacy_sub_device = device_registry.async_get_or_create(
+        config_entry_id=device.entry.entry_id,
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")},
+        name="Motion Sensor",
+    )
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_capabilities",
+            DEVICE_ID: legacy_sub_device.id,
+        }
+    )
+
+    response = await websocket_client.receive_json()
+    assert response["success"] is False
+    assert response["error"]["code"] == "not_found"
+    assert response["error"]["message"] == "Device is not the main ESPHome device"
+
+
 async def test_get_device_capabilities_unavailable(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
