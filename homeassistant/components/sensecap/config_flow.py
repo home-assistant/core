@@ -2,10 +2,14 @@
 
 from typing import Any, override
 
-from lorawan_connection import ConnectionUnavailable
 from sensecap_lorawan import SenseCapDeviceCollection
 
-from homeassistant.components.lorawan import DATA_REGISTRY, LoRaWANDiscoveryInfo
+from homeassistant.components.lorawan import (
+    LoRaWANDiscoveryInfo,
+    NoConnectionsError,
+    NoSupportedDevicesError,
+    async_validate_devices,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
@@ -37,31 +41,18 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm all supported devices in the selected server applications."""
-        if reason := await self._async_check_devices():
-            return self.async_abort(reason=reason)
+        device_types = tuple({description.device_type for description in DESCRIPTIONS})
+        try:
+            await async_validate_devices(
+                self.hass,
+                create_collection=SenseCapDeviceCollection,
+                is_supported=lambda device: isinstance(device, device_types),
+            )
+        except NoConnectionsError:
+            return self.async_abort(reason="no_lorawan_connections")
+        except NoSupportedDevicesError:
+            return self.async_abort(reason="no_supported_devices")
         if user_input is not None:
             return self.async_create_entry(title="SenseCAP", data={})
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
-
-    async def _async_check_devices(self) -> str | None:
-        """Require a connection with a model supported by the sensor platform."""
-        connections = tuple(self.hass.data[DATA_REGISTRY].connections.values())
-        if not connections:
-            return "no_lorawan_connections"
-        device_types = tuple({description.device_type for description in DESCRIPTIONS})
-        reason = "no_supported_devices"
-        for registered in connections:
-            collection = SenseCapDeviceCollection(registered.connection)
-            try:
-                await collection.async_setup()
-                if any(
-                    isinstance(device, device_types)
-                    for device in collection.devices.values()
-                ):
-                    return None
-            except ConnectionUnavailable:
-                reason = "cannot_connect"
-            finally:
-                collection.close()
-        return reason

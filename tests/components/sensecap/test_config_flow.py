@@ -221,7 +221,7 @@ async def test_connection_unavailable(
             "sensecap", context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "no_lorawan_connections"
 
 
 @pytest.mark.parametrize("error", [None, ConnectionUnavailable])

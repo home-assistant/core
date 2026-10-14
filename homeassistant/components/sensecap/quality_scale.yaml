@@ -26,9 +26,7 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: exempt
-    comment: Consumes registered connections; the connection integration validates access.
+  test-before-configure: done
   test-before-setup:
     status: exempt
     comment: No connection is opened here; connection integrations validate their connections.
