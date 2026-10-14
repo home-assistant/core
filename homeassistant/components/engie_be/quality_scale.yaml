@@ -37,7 +37,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration provides no options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
