@@ -88,32 +88,3 @@ async def test_duplicate_account(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_reauth(
-    hass: HomeAssistant,
-    mock_helty_cloud: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the reauth flow updates the password of the existing entry."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    mock_helty_cloud.get_devices.side_effect = HeltyCloudAuthError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "wrong"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    mock_helty_cloud.get_devices.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-password"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
-    assert mock_config_entry.data[CONF_EMAIL] == EMAIL

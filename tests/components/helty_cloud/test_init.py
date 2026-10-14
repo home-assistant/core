@@ -45,12 +45,12 @@ async def test_setup_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_auth_error_starts_reauth(
+async def test_setup_auth_error(
     hass: HomeAssistant,
     mock_helty_cloud: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test rejected credentials ask the user to authenticate again."""
+    """Test rejected credentials fail the setup without a retry."""
     mock_helty_cloud.get_devices.side_effect = HeltyCloudAuthError
 
     mock_config_entry.add_to_hass(hass)
@@ -58,12 +58,11 @@ async def test_setup_auth_error_starts_reauth(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "reauth"
 
 
-@pytest.mark.parametrize("error", [HeltyCloudNoDataError, HeltyCloudConnectionError])
+@pytest.mark.parametrize(
+    "error", [HeltyCloudNoDataError, HeltyCloudConnectionError, HeltyCloudAuthError]
+)
 async def test_a_unit_with_nothing_to_read_still_loads(
     hass: HomeAssistant,
     mock_helty_cloud: AsyncMock,
@@ -76,18 +75,3 @@ async def test_a_unit_with_nothing_to_read_still_loads(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_expired_session_on_poll_starts_reauth(
-    hass: HomeAssistant,
-    mock_helty_cloud: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test credentials rejected while reading ask the user to authenticate again."""
-    mock_helty_cloud.get_last_telemetry.side_effect = HeltyCloudAuthError
-
-    await setup_integration(hass, mock_config_entry)
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "reauth"

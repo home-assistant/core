@@ -57,6 +57,7 @@ class HeltyCloudFan(HeltyCloudEntity, FanEntity):
     _attr_name = None
     _attr_translation_key = "ventilation"
     _attr_speed_count = len(ORDERED_SPEEDS)
+    _attr_preset_modes = list(PRESET_TO_MODE)
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.PRESET_MODE
@@ -68,7 +69,6 @@ class HeltyCloudFan(HeltyCloudEntity, FanEntity):
         """Initialize the fan."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.serial_number
-        self._attr_preset_modes = list(PRESET_TO_MODE)
 
     @property
     def _mode(self) -> VmcMode:
