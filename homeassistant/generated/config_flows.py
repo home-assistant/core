@@ -153,6 +153,7 @@ FLOWS = {
         "data_grand_lyon",
         "datadog",
         "deako",
+        "debug_console",
         "deconz",
         "decora_wifi",
         "deluge",

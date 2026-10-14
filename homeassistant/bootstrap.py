@@ -68,6 +68,7 @@ from .const import (
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    __version__,
 )
 from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
@@ -750,6 +751,10 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     if not hass.config.recovery_mode:
         domains.update(DEFAULT_INTEGRATIONS)
         domains.update(hass.config_entries.async_domains())
+        # Development and nightly versions enable the debug console once, by
+        # default; other versions leave enabling it to the user.
+        if ".dev" in __version__:
+            domains.add("debug_console")
     else:
         domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 

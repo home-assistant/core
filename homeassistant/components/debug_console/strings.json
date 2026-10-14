@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "risks_not_accepted": "Confirm that you understand the risks to enable the debug console."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "accept_risks": "I understand the risks"
+        },
+        "data_description": {
+          "accept_risks": "The debug console can change and break anything in Home Assistant, and expose your data."
+        },
+        "description": "The debug console lets administrators run Python code inside Home Assistant itself, with full access to its live internals. It is meant for development and debugging, and not needed for everyday use.\n\nBefore you enable it, be aware that:\n\n- People who ask you to run or paste code in the console may be trying to take over your Home Assistant or steal your data.\n- Code runs with the same access as Home Assistant itself. It can read and change everything, including your configuration, passwords, and tokens.\n- There are no safety checks. Code can change or delete data, and blocking code freezes Home Assistant until it finishes.\n- Everything that runs in the console is written to the Home Assistant log.\n\nThe debug console appears under **Settings** > **Tools** for administrators. Remove this integration to disable it again.",
+        "title": "Enable the debug console"
+      }
+    }
+  }
+}

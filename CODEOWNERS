@@ -370,6 +370,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
+/homeassistant/components/debug_console/ @frenck
+/tests/components/debug_console/ @frenck
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610

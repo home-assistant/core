@@ -265,6 +265,23 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
         assert "hassio" in bootstrap._get_domains(hass, {})
 
 
+@pytest.mark.parametrize(
+    ("version", "loaded"),
+    [
+        ("2026.11.0.dev0", True),
+        ("2026.11.0.dev202610120300", True),
+        ("2026.11.0b0", False),
+        ("2026.11.0", False),
+    ],
+)
+async def test_load_debug_console(
+    hass: HomeAssistant, version: str, loaded: bool
+) -> None:
+    """Test development and nightly versions load the debug console."""
+    with patch.object(bootstrap, "__version__", version):
+        assert ("debug_console" in bootstrap._get_domains(hass, {})) is loaded
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_empty_setup(hass: HomeAssistant) -> None:
     """Test an empty set up loads the core."""
