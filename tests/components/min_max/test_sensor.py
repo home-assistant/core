@@ -20,6 +20,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -416,6 +417,39 @@ async def test_device_class(hass: HomeAssistant) -> None:
 
     assert state.state == str(float(MAX_VALUE))
     assert state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE
+
+
+async def test_energy_device_class_not_inherited(hass: HomeAssistant) -> None:
+    """Test the energy device class is not inherited, as it does not allow measurement."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_energy",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2"],
+        }
+    }
+
+    for entity_id, value in (("sensor.test_1", 2.5), ("sensor.test_2", 4.0)):
+        hass.states.async_set(
+            entity_id,
+            value,
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_energy")
+
+    assert state.state == "6.5"
+    assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
