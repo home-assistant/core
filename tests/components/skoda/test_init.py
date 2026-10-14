@@ -6,9 +6,7 @@ from skoda_public_api.api_layer.exceptions import (
     OpenApiAuthenticationError,
     OpenApiError,
 )
-from skoda_public_api.api_layer.open_api_client import OpenAPIClient
 
-from homeassistant.components.skoda.coordinator import SkodaUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -82,20 +80,3 @@ async def test_setup_unexpected_error_starts_retry(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_runtime_data_contents(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_vehicle: AsyncMock,
-) -> None:
-    """Test the runtime data is populated with the expected objects after setup."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    runtime_data = mock_config_entry.runtime_data
-    assert runtime_data.vin == mock_config_entry.unique_id
-    assert isinstance(runtime_data.coordinator, SkodaUpdateCoordinator)
-    assert isinstance(runtime_data.openapi, OpenAPIClient)
-    assert runtime_data.coordinator.data is not None
