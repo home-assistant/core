@@ -26,6 +26,15 @@
         },
         "title": "Marstek Energy Storage"
       },
+      "discovery_done": {
+        "data": {
+          "device": "Select Device"
+        },
+        "data_description": {
+          "device": "The Marstek device discovered on your local network."
+        },
+        "title": "Marstek Energy Storage"
+      },
       "manual": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

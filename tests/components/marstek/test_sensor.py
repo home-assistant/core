@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import MagicMock
 
 from aiomarstek import MarstekDeviceStatus
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE_STATUS
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 BATTERY_LEVEL_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_level"
 BATTERY_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_power"
@@ -58,6 +59,7 @@ async def test_polling_failure_recovers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_udp_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test polling failures make the sensor unavailable and then recover."""
     mock_config_entry.add_to_hass(hass)
@@ -70,12 +72,14 @@ async def test_polling_failure_recovers(
         MOCK_DEVICE_STATUS,
     ]
 
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(mock_config_entry.runtime_data.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(mock_config_entry.runtime_data.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == "85"

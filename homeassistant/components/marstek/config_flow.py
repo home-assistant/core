@@ -59,9 +59,6 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
         """Handle broadcast device discovery."""
-        if user_input and CONF_DEVICE in user_input:
-            return await self._async_step_discover_selected_device(user_input)
-
         if self.discovery_task is None:
             self.discovery_task = self.hass.async_create_task(self._async_discover())
 
@@ -79,7 +76,17 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_done(
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
-        """Show the discovery results."""
+        """Show the discovery results and handle device selection."""
+        if user_input and CONF_DEVICE in user_input:
+            return await self._async_step_discover_selected_device(user_input)
+
+        # Submitting an empty form on an errored discovery result retries it.
+        if user_input == {} and self.discovery_error is not None:
+            self.discovery_task = None
+            self.discovered_devices = []
+            self.discovery_error = None
+            return await self.async_step_discover()
+
         data_schema = (
             self._async_build_discovery_schema(self.discovered_devices)
             if self.discovered_devices
@@ -88,7 +95,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {"base": self.discovery_error} if self.discovery_error else {}
 
         return self.async_show_form(
-            step_id="discover", data_schema=data_schema, errors=errors
+            step_id="discovery_done", data_schema=data_schema, errors=errors
         )
 
     async def _async_step_discover_selected_device(
@@ -108,8 +115,8 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_device(device)
 
         return self.async_show_form(
-            step_id="discover",
-            data_schema=Schema({}),
+            step_id="discovery_done",
+            data_schema=self._async_build_discovery_schema(self.discovered_devices),
             errors=errors,
         )
 

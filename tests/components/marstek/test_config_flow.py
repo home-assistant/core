@@ -120,7 +120,7 @@ async def test_discovery_flow_shows_progress(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
 
 
 async def test_discovery_flow_creates_entry(
@@ -136,7 +136,7 @@ async def test_discovery_flow_creates_entry(
     result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_DEVICE: "0"}
@@ -164,7 +164,7 @@ async def test_discovery_flow_reuses_shared_udp_client(
     result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     mock_udp_client.async_cleanup.assert_not_awaited()
 
 
@@ -186,6 +186,7 @@ async def test_discovery_flow_selects_device_with_shared_udp_client(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
     mock_udp_client.get_device_info.assert_awaited_once_with(TEST_HOST)
     mock_udp_client.async_cleanup.assert_not_awaited()
     mock_setup_entry.assert_called_once()
@@ -234,11 +235,15 @@ async def test_discovery_flow_filters_unsupported_devices(
     ]
 
 
-async def test_discovery_flow_errors_if_only_unsupported_devices_found(
-    hass: HomeAssistant, mock_udp_client: MagicMock
+async def test_discovery_flow_recovers_when_only_unsupported_devices_found(
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test discovery shows an error when only unsupported devices are found."""
-    mock_udp_client.discover_devices.return_value = [UNSUPPORTED_DISCOVERED_DEVICE]
+    """Test discovery recovers after initially finding only unsupported devices."""
+    mock_udp_client.discover_devices.side_effect = [
+        [UNSUPPORTED_DISCOVERED_DEVICE],
+        [DISCOVERED_DEVICE],
+    ]
+    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -246,8 +251,18 @@ async def test_discovery_flow_errors_if_only_unsupported_devices_found(
     result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     assert result["errors"] == {"base": "unsupported_device"}
+
+    result = await _async_run_discovery(hass, result, {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
 
 
 async def test_discovery_flow_aborts_if_selected_device_is_unsupported(
@@ -304,12 +319,16 @@ async def test_discovery_flow_aborts_without_stable_unique_id(
 async def test_discovery_flow_select_device_errors(
     hass: HomeAssistant,
     mock_udp_client: MagicMock,
+    mock_setup_entry: AsyncMock,
     error: Exception,
     expected_reason: str,
 ) -> None:
-    """Test errors when selecting a discovered device."""
+    """Test errors when selecting a discovered device can be retried."""
     mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
-    mock_udp_client.get_device_info.side_effect = error
+    mock_udp_client.get_device_info.side_effect = [
+        error,
+        MOCK_DISCOVERY_RESPONSE["result"],
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -320,8 +339,17 @@ async def test_discovery_flow_select_device_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     assert result["errors"] == {"base": expected_reason}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
 
 
 async def test_manual_flow_creates_entry(
@@ -380,9 +408,13 @@ async def test_manual_flow_aborts_if_host_configured(hass: HomeAssistant) -> Non
 async def test_manual_flow_errors_if_device_type_is_unsupported(
     hass: HomeAssistant,
     mock_udp_client: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test manual setup errors when the device type is unsupported."""
-    mock_udp_client.get_device_info.return_value = UNSUPPORTED_DEVICE_INFO
+    """Test manual setup recovers when the device type is unsupported."""
+    mock_udp_client.get_device_info.side_effect = [
+        UNSUPPORTED_DEVICE_INFO,
+        MOCK_DISCOVERY_RESPONSE["result"],
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -397,6 +429,15 @@ async def test_manual_flow_errors_if_device_type_is_unsupported(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert result["errors"] == {"base": "unsupported_device"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -445,10 +486,14 @@ async def test_manual_flow_errors_are_recoverable(
 
 
 async def test_discover_no_devices(
-    hass: HomeAssistant, mock_udp_client: MagicMock
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test discovery shows an error when no devices are found."""
-    mock_udp_client.discover_devices.return_value = []
+    """Test discovery recovers when no devices are initially found."""
+    mock_udp_client.discover_devices.side_effect = [
+        [],
+        [DISCOVERED_DEVICE],
+    ]
+    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -456,15 +501,26 @@ async def test_discover_no_devices(
     result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     assert result["errors"] == {"base": "no_devices_found"}
+
+    result = await _async_run_discovery(hass, result, {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
 
 
 async def test_discovery_empty_error_form_rediscovers(
-    hass: HomeAssistant, mock_udp_client: MagicMock
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test submitting an empty discovery error form retries discovery."""
     mock_udp_client.discover_devices.side_effect = [[], [DISCOVERED_DEVICE]]
+    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -472,16 +528,26 @@ async def test_discovery_empty_error_form_rediscovers(
     result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_done"
     assert result["errors"] == {"base": "no_devices_found"}
 
     result = await _async_run_discovery(hass, result, {})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     selector = next(iter(_data_schema(result).schema.values()))
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
     ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -495,11 +561,13 @@ async def test_discovery_empty_error_form_rediscovers(
 async def test_discovery_flow_errors_are_recoverable(
     hass: HomeAssistant,
     mock_udp_client: MagicMock,
+    mock_setup_entry: AsyncMock,
     error: Exception,
     expected_reason: str,
 ) -> None:
     """Test discovery errors can be retried successfully."""
     mock_udp_client.discover_devices.side_effect = [error, [DISCOVERED_DEVICE]]
+    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -507,23 +575,32 @@ async def test_discovery_flow_errors_are_recoverable(
     result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     assert result["errors"] == {"base": expected_reason}
 
     result = await _async_run_discovery(hass, result, {})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     selector = next(iter(_data_schema(result).schema.values()))
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
     ]
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
+
 
 async def test_discover_failed_when_client_setup_fails(
-    hass: HomeAssistant, mock_udp_client: MagicMock
+    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test discovery shows an error when the UDP client cannot be created."""
+    """Test discovery recovers when the UDP client cannot be created."""
     with (
         patch(
             "homeassistant.components.marstek.config_flow.async_create_udp_client",
@@ -538,14 +615,23 @@ async def test_discover_failed_when_client_setup_fails(
         result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "discover"
+        assert result["step_id"] == "discovery_done"
         assert result["errors"] == {"base": "discovery_failed"}
 
         result = await _async_run_discovery(hass, result, {})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "discovery_done"
     selector = next(iter(_data_schema(result).schema.values()))
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
     ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+    mock_setup_entry.assert_called_once()
