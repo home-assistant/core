@@ -377,8 +377,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
 
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     try:
         # Unload subentries if present (guarded for test and reload scenarios)
