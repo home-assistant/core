@@ -60,6 +60,12 @@ def platforms() -> list[Platform]:
             RoborockCommand.SET_DUST_COLLECTION_MODE,
             {"mode": 1},
         ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "smart",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": RoborockDockDustCollectionModeCode.as_dict()["smart"]},
+        ),
     ],
 )
 async def test_update_success(
