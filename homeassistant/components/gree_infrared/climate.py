@@ -118,10 +118,13 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     _attr_max_temp = float(MAX_TEMP)
     _attr_should_poll = False
     _attr_assumed_state = True
-    # Every mode's frame carries a temperature and a fan field, so both features are
-    # always supported regardless of which modes are configured.
+    # Every mode's frame carries a temperature and a fan field, so target temperature
+    # and fan mode are always supported regardless of which modes are configured.
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
@@ -211,6 +214,11 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the entity on in the mode it was last active in."""
+        await self.async_set_hvac_mode(self._last_active_hvac_mode)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
