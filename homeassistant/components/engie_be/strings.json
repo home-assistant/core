@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "The provided credentials belong to a different ENGIE Belgium account. Please sign in with the account that was originally set up."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -18,6 +19,16 @@
           "code": "The verification code ENGIE Belgium just sent you."
         },
         "description": "Enter the 6-digit verification code that was sent to you."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::engie_be::config::step::user::data_description::password%]"
+        },
+        "description": "The session for {email} has expired. Enter your ENGIE Belgium password to sign in again. A new verification code will be sent to you.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
@@ -336,6 +347,11 @@
       "gas_price_offtake_with_ean": {
         "name": "Gas offtake price ({ean_suffix})"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
     }
   },
   "selector": {

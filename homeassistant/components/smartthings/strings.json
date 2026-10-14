@@ -1162,6 +1162,27 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with SmartThings failed"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while communicating with SmartThings: {error}"
+    },
+    "create_subscription_error": {
+      "message": "Could not create a new SmartThings subscription: {error}"
+    },
+    "delete_subscription_error": {
+      "message": "Could not delete the old SmartThings subscription: {error}"
+    },
+    "dishwasher_machine_state": {
+      "message": "Can only be changed when the dishwasher machine state is {machine_state}"
+    },
+    "missing_token": {
+      "message": "The configuration entry is missing a token, please reauthenticate"
+    },
+    "option_not_supported": {
+      "message": "Option is not supported by the selected cycle"
+    },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
     }

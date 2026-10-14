@@ -19,7 +19,7 @@ from homeassistant.components.ai_task.const import (
     DOMAIN,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -397,7 +397,7 @@ async def test_generate_image_service_no_entity(
 ) -> None:
     """Test the generate image service with no entity specified."""
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match="No entity_id provided and no preferred entity set",
     ):
         await hass.services.async_call(

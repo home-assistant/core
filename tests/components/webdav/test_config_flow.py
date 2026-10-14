@@ -171,3 +171,88 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, webdav_client: AsyncMock
+) -> None:
+    """Test reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "newpassword"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "https://webdav.demo",
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "newpassword",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("exception", "return_value", "expected_error"),
+    [
+        pytest.param(
+            UnauthorizedError("https://webdav.demo"),
+            True,
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            AccessDeniedError("https://webdav.demo"),
+            True,
+            "access_denied",
+            id="access_denied",
+        ),
+        pytest.param(
+            MethodNotSupportedError("check", "https://webdav.demo"),
+            True,
+            "invalid_method",
+            id="invalid_method",
+        ),
+        pytest.param(Exception("Unexpected error"), True, "unknown", id="unknown"),
+        pytest.param(None, False, "cannot_connect", id="cannot_connect"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    webdav_client: AsyncMock,
+    exception: Exception | None,
+    return_value: bool,
+    expected_error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    webdav_client.check.side_effect = exception
+    webdav_client.check.return_value = return_value
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "newpassword"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    webdav_client.check.side_effect = None
+    webdav_client.check.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "newpassword"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "newpassword"

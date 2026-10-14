@@ -92,26 +92,7 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
-_ENTITY_COMPONENTS: set[str] = set(ENTITY_COMPONENTS).union(
-    {
-        "alert",
-        "automation",
-        "counter",
-        "input_boolean",
-        "input_button",
-        "input_datetime",
-        "input_number",
-        "input_select",
-        "input_text",
-        "person",
-        "plant",
-        "remember_the_milk",
-        "schedule",
-        "script",
-        "tag",
-        "timer",
-    }
-)
+_ENTITY_COMPONENTS: set[str] = set(ENTITY_COMPONENTS)
 
 
 _MODULE_CLASSES = {
