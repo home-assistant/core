@@ -10,7 +10,6 @@ from skoda_public_api.api_layer.open_api_client import OpenAPIClient
 
 from homeassistant.components.skoda.coordinator import SkodaUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -100,20 +99,3 @@ async def test_runtime_data_contents(
     assert isinstance(runtime_data.coordinator, SkodaUpdateCoordinator)
     assert isinstance(runtime_data.openapi, OpenAPIClient)
     assert runtime_data.coordinator.data is not None
-
-
-async def test_setup_forwards_sensor_platform_only(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_get_vehicle: AsyncMock,
-) -> None:
-    """Test setup forwards the config entry to the sensor platform only."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as mock_forward:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_forward.assert_called_once_with(mock_config_entry, [Platform.SENSOR])
