@@ -1,6 +1,5 @@
 """Support for Netatmo binary sensors."""
 
-from datetime import timedelta
 from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -18,6 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
+    POLLING_INTERVAL,
     advance_time,
     fake_post_request,
     payload_modifier,
@@ -128,10 +128,7 @@ async def test_doortag_opening_status_change(
 ) -> None:
     """Test doortag opening status changes."""
     fake_post_hits = 0
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
+
     # Mock data for payload_modifier to simulate doortag status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
@@ -205,7 +202,7 @@ async def test_doortag_opening_status_change(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
+    await advance_time(hass, freezer, POLLING_INTERVAL)
 
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
