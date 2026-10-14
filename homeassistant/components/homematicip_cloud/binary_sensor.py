@@ -195,21 +195,6 @@ MAINS_FAILURE_SENSOR_DESCRIPTIONS: tuple[
 )
 
 
-def _heating_output_enabled(device: Device) -> bool:
-    return any(
-        channel.internalSwitchOutputEnabled
-        for channel in get_channels_from_device(
-            device, FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
-        )
-    )
-
-
-def _heating_output_on(channel: FunctionalChannel) -> bool | None:
-    if channel.valvePosition is None:
-        return None
-    return channel.valvePosition > 0
-
-
 WALL_THERMOSTAT_DESCRIPTIONS: tuple[
     HmipBinarySensorDescription[WallMountedThermostatPro],
     ...,
@@ -217,8 +202,15 @@ WALL_THERMOSTAT_DESCRIPTIONS: tuple[
     HmipBinarySensorDescription(
         key="heating",
         translation_key="heating",
-        channel_value_fn=_heating_output_on,
-        exists_fn=_heating_output_enabled,
+        channel_value_fn=lambda channel: (
+            None if channel.valvePosition is None else channel.valvePosition > 0
+        ),
+        exists_fn=lambda device: any(
+            channel.internalSwitchOutputEnabled
+            for channel in get_channels_from_device(
+                device, FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
+            )
+        ),
         channel=1,
         channel_type=FunctionalChannelType.INTERNAL_SWITCH_CHANNEL,
     ),
