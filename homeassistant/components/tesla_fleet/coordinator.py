@@ -191,6 +191,7 @@ class TeslaFleetVehicleDataCoordinator(TeslaFleetCoordinator):
 
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
+            self._rate_limit_cleared()
             return self.data
         except RateLimited as e:
             return self._handle_rate_limited(e)
