@@ -4,9 +4,7 @@ import base64
 
 import pytest
 
-from homeassistant.components.matter.binary_sensor import (
-    _eve_thermo_schedule_enabled,
-)
+from homeassistant.components.matter.binary_sensor import _eve_thermo_schedule_enabled
 
 
 @pytest.mark.parametrize(
