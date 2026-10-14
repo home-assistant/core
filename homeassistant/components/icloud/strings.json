@@ -56,10 +56,10 @@
         "name": "Locating"
       },
       "location_is_inaccurate": {
-        "name": "Location is inaccurate"
+        "name": "Inaccurate location"
       },
       "location_is_old": {
-        "name": "Location is old"
+        "name": "Old location"
       },
       "location_services": {
         "name": "Location services"

@@ -57,6 +57,9 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         key="locating",
         translation_key="locating",
         entity_category=EntityCategory.DIAGNOSTIC,
+        # Apple reports a device as locating while a locate is in flight, which
+        # is most of the time for an integration that locates on every poll.
+        entity_registry_enabled_default=False,
         value_fn=lambda device: device.is_locating,
     ),
     IcloudBinarySensorEntityDescription(

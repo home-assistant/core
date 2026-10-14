@@ -1,6 +1,7 @@
 """Tests for the iCloud binary sensor platform."""
 
 from collections.abc import Awaitable, Callable
+from unittest.mock import patch
 
 import pytest
 
@@ -15,6 +16,22 @@ from tests.common import MockConfigEntry
 from tests.typing import MagicMock
 
 LOCATION_UNIQUE_IDS = ["device1_location_is_old", "device1_location_is_inaccurate"]
+LOCATING_UNIQUE_ID = "device1_locating"
+
+
+async def _async_enable_entity(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    unique_id: str,
+) -> None:
+    """Enable a disabled by default binary sensor and reload the entry."""
+    entity_id = entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    with patch("homeassistant.components.icloud.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -36,7 +53,6 @@ LOCATION_UNIQUE_IDS = ["device1_location_is_old", "device1_location_is_inaccurat
             "on",
             id="activation_lock",
         ),
-        pytest.param({"isLocating": True}, "device1_locating", "on", id="locating"),
         pytest.param(
             {"locationEnabled": False},
             "device1_location_services",
@@ -106,6 +122,47 @@ async def test_binary_sensor_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected
+
+
+async def test_locating_disabled_by_default(
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """The locating binary sensor is disabled by default."""
+    icloud_service.devices.add(DEVICE)
+
+    await setup_entry(Platform.BINARY_SENSOR)
+
+    entry = entity_registry.async_get(
+        entity_registry.async_get_entity_id("binary_sensor", DOMAIN, LOCATING_UNIQUE_ID)
+    )
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_locating_state(
+    hass: HomeAssistant,
+    devices_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """The locating binary sensor reports the flag once enabled."""
+    icloud_service.devices.add({**DEVICE, "isLocating": True})
+
+    await setup_entry(Platform.BINARY_SENSOR)
+    await _async_enable_entity(
+        hass, devices_config_entry, entity_registry, LOCATING_UNIQUE_ID
+    )
+
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, LOCATING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
 
 
 @pytest.mark.parametrize(
