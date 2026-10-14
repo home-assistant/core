@@ -18,6 +18,8 @@ from homeassistant.const import CONF_SHOW_ON_MAP, STATE_UNAVAILABLE, STATE_UNKNO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import STATION_FROM, STATION_TO
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -25,9 +27,6 @@ from tests.common import (
 )
 
 FROZEN_TIME = "2025-10-09T12:00:00+00:00"
-
-STATION_FROM = "BE.NMBS.008812005"
-STATION_TO = "BE.NMBS.008814001"
 
 CONNECTION_UNIQUE_ID = f"nmbs_connection_{STATION_FROM}_{STATION_TO}"
 LIVEBOARD_FROM_UNIQUE_ID = f"nmbs_live_{STATION_FROM}_{STATION_FROM}_{STATION_TO}"

@@ -10,6 +10,8 @@ from homeassistant.components.nmbs.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from .conftest import STATION_TO
+
 from tests.common import MockConfigEntry
 
 
@@ -100,9 +102,9 @@ async def test_setup_entry_unknown_station(
         title="Train from nowhere to Brussel-Zuid/Bruxelles-Midi",
         data={
             CONF_STATION_FROM: "BE.NMBS.999999999",
-            CONF_STATION_TO: "BE.NMBS.008814001",
+            CONF_STATION_TO: STATION_TO,
         },
-        unique_id="BE.NMBS.999999999_BE.NMBS.008814001",
+        unique_id=f"BE.NMBS.999999999_{STATION_TO}",
     )
     entry.add_to_hass(hass)
 

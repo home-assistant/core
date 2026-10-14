@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
+    CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_TO,
     DOMAIN,
