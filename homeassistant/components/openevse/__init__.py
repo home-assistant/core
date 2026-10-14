@@ -21,7 +21,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> None:
     """Set up OpenEVSE from a config entry."""
     charger = OpenEVSE(
         entry.data[CONF_HOST],
@@ -57,9 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     entry.async_on_unload(coordinator.async_stop_websocket)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

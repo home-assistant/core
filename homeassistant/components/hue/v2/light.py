@@ -155,7 +155,8 @@ class HueLight(HueBaseEntity, LightEntity):
     def color_temp_active(self) -> bool:
         """Return if the light is in Color Temperature mode."""
         color_temp = self.resource.color_temperature
-        if color_temp is None or color_temp.mirek is None:
+        # a zero mirek is not a valid color temperature either
+        if color_temp is None or not color_temp.mirek:
             return False
         # Official Hue lights return `mirek_valid` to indicate CT is active
         # while non-official lights do not.

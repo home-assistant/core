@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
     """Set up Snooz device from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     token: str = entry.data[CONF_TOKEN]
@@ -61,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    return True
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
@@ -70,10 +69,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: SnoozConfigEntry) -
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # also called by fan entities, but do it here too for good measure
-        await entry.runtime_data.device.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # also called by fan entities, but do it here too for good measure
+    await entry.runtime_data.device.async_disconnect()
