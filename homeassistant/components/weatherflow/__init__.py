@@ -22,7 +22,7 @@ PLATFORMS = [
 type WeatherFlowConfigEntry = ConfigEntry[WeatherFlowListener]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) -> None:
     """Set up WeatherFlow from a config entry."""
 
     client = WeatherFlowListener()
@@ -67,17 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_handle_ha_shutdown)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WeatherFlowConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.stop_listening()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.stop_listening()
 
 
 async def async_remove_config_entry_device(

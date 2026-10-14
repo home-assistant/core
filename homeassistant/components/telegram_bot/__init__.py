@@ -9,7 +9,11 @@ from telegram.error import InvalidToken, TelegramError
 
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -76,7 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TelegramBotConfigEntry
-) -> bool:
+) -> None:
     """Migrate Telegram Bot config entry."""
 
     version = config_entry.version
@@ -141,8 +145,6 @@ async def async_migrate_entry(
             )
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
-    return True
-
 
 def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.DeviceInfo:
     """Return device info for the shared bot device."""
@@ -156,7 +158,7 @@ def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.Dev
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Create the Telegram bot from config entry."""
     # Registered before the bot is built: the library logs the token as soon as
     # it constructs the API URLs.
@@ -184,10 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     module = cast(BotPlatformModule, MODULES[p_type])
     try:
         receiver_service = await module.async_setup_bot_platform(hass, bot, entry)
-    except Exception:
-        _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+    except Exception as err:
         await bot.shutdown()
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="platform_setup_failed",
+        ) from err
 
     notify_service = TelegramNotificationService(
         hass, receiver_service, bot, entry, entry.options[ATTR_PARSER]
@@ -203,8 +207,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    return True
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
@@ -222,7 +224,7 @@ async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) ->
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TelegramBotConfigEntry
-) -> bool:
+) -> None:
     """Unload Telegram app."""
     async_unredact_token(entry.data[CONF_API_KEY])
 
@@ -230,4 +232,4 @@ async def async_unload_entry(
     if entry.runtime_data.app:
         await entry.runtime_data.app.shutdown()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

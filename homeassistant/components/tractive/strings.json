@@ -84,6 +84,12 @@
     }
   },
   "exceptions": {
+    "authentication_error": {
+      "message": "Authentication failed while communicating with the Tractive API."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Tractive API: {error}"
+    },
     "failed_to_turn_off": {
       "message": "An error occurred while trying to turn off {entity}"
     },

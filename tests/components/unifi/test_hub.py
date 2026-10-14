@@ -435,6 +435,7 @@ async def test_reset_fails(
     ):
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
         assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
+        assert config_entry_setup.reason == "Failed to unload UniFi Network"
 
 
 @pytest.mark.usefixtures("mock_device_registry")
