@@ -34,6 +34,12 @@ TRIGGER_CONFIG = {
     "subtype": "button_1",
 }
 TAG_TOPIC = "homeassistant/tag/tag1/config"
+DISCOVERY_SWITCH = {
+    "p": "switch",
+    "name": "Switch",
+    "cmd_t": "sw/set",
+    "uniq_id": "sw1",
+}
 
 
 def _entry_id(hass: HomeAssistant) -> str:
@@ -166,40 +172,102 @@ async def test_single_component_discovery_with_child_device(
     assert entity_entry.device_id == child_device.id
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(
+            {
+                "device": {"identifiers": ["parent"], "name": "Parent"},
+                "origin": {"name": "Foo2Mqtt"},
+                "child_devices": [
+                    {
+                        "identifiers": ["sub1"],
+                        "name": "Sub 1",
+                        "components": {
+                            "switch1": {
+                                "platform": "switch",
+                                "name": "Switch",
+                                "command_topic": "switch1/set",
+                                "unique_id": "switch1",
+                            }
+                        },
+                    },
+                    {
+                        "identifiers": ["sub2"],
+                        "name": "Sub 2",
+                        "components": {
+                            "switch2": {
+                                "platform": "switch",
+                                "name": "Switch",
+                                "command_topic": "switch2/set",
+                                "unique_id": "switch2",
+                            }
+                        },
+                    },
+                ],
+                "components": {
+                    "rssi": {
+                        "platform": "sensor",
+                        "name": "RSSI",
+                        "state_topic": "rssi",
+                        "unique_id": "rssi",
+                    },
+                },
+            },
+            id="full",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"], "name": "Parent"},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [
+                    {
+                        "ids": ["sub1"],
+                        "name": "Sub 1",
+                        "cmps": {
+                            "switch1": {
+                                "p": "switch",
+                                "name": "Switch",
+                                "cmd_t": "switch1/set",
+                                "uniq_id": "switch1",
+                            }
+                        },
+                    },
+                    {
+                        "ids": ["sub2"],
+                        "name": "Sub 2",
+                        "cmps": {
+                            "switch2": {
+                                "p": "switch",
+                                "name": "Switch",
+                                "cmd_t": "switch2/set",
+                                "uniq_id": "switch2",
+                            }
+                        },
+                    },
+                ],
+                "cmps": {
+                    "rssi": {
+                        "p": "sensor",
+                        "name": "RSSI",
+                        "stat_t": "rssi",
+                        "uniq_id": "rssi",
+                    },
+                },
+            },
+            id="abbreviated",
+        ),
+    ],
+)
 async def test_device_discovery_with_child_device(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    payload: dict[str, Any],
 ) -> None:
-    """Test the child device is set per component in device based discovery."""
+    """Test the child devices and their components in device based discovery."""
     await mqtt_mock_entry()
-    payload = {
-        "dev": {"ids": ["parent"], "name": "Parent"},
-        "o": {"name": "Foo2Mqtt"},
-        "cmps": {
-            "switch1": {
-                "p": "switch",
-                "name": "Switch",
-                "cmd_t": "switch1/set",
-                "uniq_id": "switch1",
-                "cdev": {"ids": ["sub1"], "name": "Sub 1"},
-            },
-            "switch2": {
-                "p": "switch",
-                "name": "Switch",
-                "cmd_t": "switch2/set",
-                "uniq_id": "switch2",
-                "child_device": {"identifiers": ["sub2"], "name": "Sub 2"},
-            },
-            "rssi": {
-                "p": "sensor",
-                "name": "RSSI",
-                "stat_t": "rssi",
-                "uniq_id": "rssi",
-            },
-        },
-    }
     async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
     await hass.async_block_till_done()
 
@@ -220,8 +288,224 @@ async def test_device_discovery_with_child_device(
     assert rssi is not None
     assert switch_1.device_id == child_device_1.id
     assert switch_2.device_id == child_device_2.id
-    # The shared device config is not altered by the child device of a component
+    # The shared device config is not altered by the child devices
     assert rssi.device_id == parent.id
+
+
+async def test_device_discovery_with_child_devices_only(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device based discovery without components of the device itself."""
+    await mqtt_mock_entry()
+    payload = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": DISCOVERY_SWITCH}}],
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert child_device is not None
+    assert _get_device(hass, device_registry, "parent") is not None
+    entity_entry = entity_registry.async_get(SWITCH_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+
+@pytest.mark.parametrize(
+    ("payload", "error"),
+    [
+        pytest.param(
+            {"dev": {"ids": ["parent"]}, "o": {"name": "Foo2Mqtt"}},
+            "At least one of 'components' or 'child_devices' is required",
+            id="no_components",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [{"ids": ["sub"], "cmps": {"sw": DISCOVERY_SWITCH}}],
+                "cmps": {"sw": DISCOVERY_SWITCH},
+            },
+            "Duplicate component IDs: sw",
+            id="duplicate_component_id_device_and_child",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [
+                    {"ids": ["sub1"], "cmps": {"sw": DISCOVERY_SWITCH}},
+                    {"ids": ["sub2"], "cmps": {"sw": DISCOVERY_SWITCH}},
+                ],
+            },
+            "Duplicate component IDs: sw",
+            id="duplicate_component_id_children",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [
+                    {"ids": ["sub"], "cmps": {"sw1": DISCOVERY_SWITCH}},
+                    {"ids": ["sub"], "cmps": {"sw2": DISCOVERY_SWITCH}},
+                ],
+            },
+            "Duplicate child device identifiers: sub",
+            id="duplicate_child_identifiers",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [{"ids": ["parent"], "cmps": {"sw": DISCOVERY_SWITCH}}],
+            },
+            "Child device identifiers must differ from the device identifiers: parent",
+            id="child_identifiers_of_device",
+        ),
+        pytest.param(
+            {"dev": {"ids": ["parent"]}, "o": {"name": "Foo2Mqtt"}, "cdevs": ["sub"]},
+            "at 'child_devices[0]'",
+            id="child_not_a_mapping",
+        ),
+        pytest.param(
+            {"dev": {"ids": ["parent"]}, "o": {"name": "Foo2Mqtt"}, "cdevs": 1},
+            "at 'child_devices'",
+            id="child_devices_not_a_list",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [{"cmps": {"sw": DISCOVERY_SWITCH}}],
+            },
+            "required key not provided",
+            id="child_without_identifiers",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [{"ids": ["sub"]}],
+            },
+            "required key not provided",
+            id="child_without_components",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [
+                    {
+                        "ids": ["sub"],
+                        "mf": "Acme",
+                        "cmps": {"sw": DISCOVERY_SWITCH},
+                    }
+                ],
+            },
+            "not a valid option",
+            id="child_with_device_option",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [
+                    {
+                        "ids": ["sub"],
+                        "cmps": {
+                            "trigger1": {"p": "device_automation", **TRIGGER_CONFIG}
+                        },
+                    }
+                ],
+            },
+            "value must be one of",
+            id="child_device_trigger",
+        ),
+        pytest.param(
+            {
+                "dev": {"ids": ["parent"]},
+                "o": {"name": "Foo2Mqtt"},
+                "cdevs": [
+                    {"ids": ["sub"], "cmps": {"tag1": {"p": "tag", "topic": "tag1"}}}
+                ],
+            },
+            "value must be one of",
+            id="child_tag",
+        ),
+    ],
+)
+async def test_invalid_device_discovery_child_devices(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    payload: dict[str, Any],
+    error: str,
+) -> None:
+    """Test invalid child devices in device based discovery are rejected."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+
+    assert "Invalid MQTT device discovery payload for parent" in caplog.text
+    assert error in caplog.text
+    assert not device_registry.devices
+
+
+async def test_device_discovery_update_child_devices(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test moving and removing components of child devices with device discovery."""
+    await mqtt_mock_entry()
+    device = {"ids": ["parent"], "name": "Parent"}
+    origin = {"name": "Foo2Mqtt"}
+    payload: dict[str, Any] = {
+        "dev": device,
+        "o": origin,
+        "cmps": {"sw": DISCOVERY_SWITCH},
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    parent = _get_device(hass, device_registry, "parent")
+    assert parent is not None
+    entity_id = "switch.parent_switch"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == parent.id
+
+    # Move the component from the device to a child device
+    payload = {
+        "dev": device,
+        "o": origin,
+        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": DISCOVERY_SWITCH}}],
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert child_device is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+    # Remove the component, the child device and its parent are cleaned up
+    payload = {
+        "dev": device,
+        "o": origin,
+        "cdevs": [{"ids": ["sub"], "cmps": {"sw": {"p": "switch"}}}],
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is None
+    assert _get_child_device(hass, device_registry, "sub") is None
+    assert _get_device(hass, device_registry, "parent") is None
 
 
 @pytest.mark.parametrize(
@@ -443,35 +727,6 @@ async def test_child_device_not_allowed_in_device_discovery_device(
                 "dev": {"ids": ["parent"], "cdev": {"ids": ["sub"]}},
             },
             id="tag",
-        ),
-        pytest.param(
-            DEVICE_TOPIC,
-            {
-                "dev": {"ids": ["parent"]},
-                "o": {"name": "Foo2Mqtt"},
-                "cmps": {
-                    "trigger1": {
-                        "p": "device_automation",
-                        "automation_type": "trigger",
-                        "topic": "button1",
-                        "type": "button_short_press",
-                        "subtype": "button_1",
-                        "cdev": {"ids": ["sub"]},
-                    },
-                },
-            },
-            id="device_discovery_device_trigger",
-        ),
-        pytest.param(
-            DEVICE_TOPIC,
-            {
-                "dev": {"ids": ["parent"]},
-                "o": {"name": "Foo2Mqtt"},
-                "cmps": {
-                    "tag1": {"p": "tag", "topic": "tag1", "cdev": {"ids": ["sub"]}},
-                },
-            },
-            id="device_discovery_tag",
         ),
     ],
 )

@@ -38,6 +38,7 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_CHILD_DEVICE,
+    CONF_CHILD_DEVICES,
     CONF_COMPONENTS,
     CONF_DISCOVERY_QOS,
     CONF_ORIGIN,
@@ -48,11 +49,18 @@ from .const import (
 from .models import (
     DATA_MQTT,
     DiscoveredDisabledEntity,
+    MqttChildDeviceConfig,
     MqttComponentConfig,
+    MqttDiscoveryChildDevice,
     MqttOriginInfo,
     ReceiveMessage,
 )
-from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
+from .schemas import (
+    DEVICE_DISCOVERY_SCHEMA,
+    MQTT_ORIGIN_INFO_SCHEMA,
+    SHARED_OPTIONS,
+    validate_device_discovery_components,
+)
 from .util import (
     async_cleanup_device_registry,
     async_forward_entry_setup_and_setup_discovery,
@@ -94,6 +102,15 @@ class MQTTDiscoveryPayload(dict[str, Any]):
     device_discovery: bool = False
     migrate_discovery: bool = False
     discovery_data: DiscoveryInfoType
+
+
+@dataclass(frozen=True, slots=True)
+class _DeviceDiscoveryComponent:
+    """A component of a device discovery payload."""
+
+    component_id: str
+    config: dict[str, Any]
+    child_device: MqttChildDeviceConfig | None = None
 
 
 @dataclass(frozen=True)
@@ -201,14 +218,6 @@ def _replace_all_abbreviations(
         ):
             _replace_abbreviations(availability_conf, ABBREVIATIONS, ABBREVIATIONS_SET)
 
-    # Set per component in device based discovery
-    if CONF_CHILD_DEVICE in discovery_payload:
-        _replace_abbreviations(
-            discovery_payload[CONF_CHILD_DEVICE],
-            DEVICE_ABBREVIATIONS,
-            DEVICE_ABBREVIATIONS_SET,
-        )
-
     if component_only:
         return
 
@@ -229,11 +238,27 @@ def _replace_all_abbreviations(
                 DEVICE_ABBREVIATIONS_SET,
             )
 
-    if CONF_COMPONENTS in discovery_payload:
-        if not isinstance(discovery_payload[CONF_COMPONENTS], dict):
-            return
-        for comp_conf in discovery_payload[CONF_COMPONENTS].values():
-            _replace_all_abbreviations(comp_conf, component_only=True)
+    for child_device in probatio.EnsureList()(
+        discovery_payload.get(CONF_CHILD_DEVICES)
+    ):
+        if not isinstance(child_device, dict):
+            continue
+        _replace_abbreviations(
+            child_device, DEVICE_ABBREVIATIONS, DEVICE_ABBREVIATIONS_SET
+        )
+        _replace_abbreviations(child_device, ABBREVIATIONS, ABBREVIATIONS_SET)
+        _replace_component_abbreviations(child_device)
+
+    _replace_component_abbreviations(discovery_payload)
+
+
+@callback
+def _replace_component_abbreviations(payload: dict[str, Any]) -> None:
+    """Replace the abbreviations in the components of a device discovery payload."""
+    if not isinstance(components := payload.get(CONF_COMPONENTS), dict):
+        return
+    for comp_conf in components.values():
+        _replace_all_abbreviations(comp_conf, component_only=True)
 
 
 @callback
@@ -330,7 +355,7 @@ def _parse_device_payload(
         return _generate_device_config(hass, object_id, node_id, migrate_discovery=True)
     _replace_all_abbreviations(device_payload)
     try:
-        DEVICE_DISCOVERY_SCHEMA(device_payload)
+        validate_device_discovery_components(DEVICE_DISCOVERY_SCHEMA(device_payload))
     except probatio.Invalid as exc:
         _LOGGER.warning(
             "Invalid MQTT device discovery payload for %s, %s: '%s'",
@@ -596,13 +621,30 @@ async def async_start(  # noqa: C901
             )
             if not device_discovery_payload:
                 return
-            device_config: dict[str, Any]
-            origin_config: dict[str, Any] | None
-            component_configs: dict[str, dict[str, Any]]
-            device_config = device_discovery_payload[CONF_DEVICE]
-            origin_config = device_discovery_payload.get(CONF_ORIGIN)
-            component_configs = device_discovery_payload[CONF_COMPONENTS]
-            for component_id, config in component_configs.items():
+            device_config: dict[str, Any] = device_discovery_payload[CONF_DEVICE]
+            origin_config: dict[str, Any] | None = device_discovery_payload.get(
+                CONF_ORIGIN
+            )
+            device_components: list[_DeviceDiscoveryComponent] = [
+                _DeviceDiscoveryComponent(component_id, config)
+                for component_id, config in device_discovery_payload.get(
+                    CONF_COMPONENTS, {}
+                ).items()
+            ]
+            child_device: MqttDiscoveryChildDevice
+            for child_device in device_discovery_payload.get(CONF_CHILD_DEVICES, []):
+                child_device_config = MqttChildDeviceConfig(
+                    identifiers=child_device["identifiers"]
+                )
+                if "name" in child_device:
+                    child_device_config["name"] = child_device["name"]
+                device_components.extend(
+                    _DeviceDiscoveryComponent(component_id, config, child_device_config)
+                    for component_id, config in child_device["components"].items()
+                )
+            for device_component in device_components:
+                component_id = device_component.component_id
+                config = device_component.config
                 component = config.pop(CONF_PLATFORM)
                 # The object_id in the device discovery topic is the unique identifier.
                 # It is used as node_id for the components it contains.
@@ -618,14 +660,15 @@ async def async_start(  # noqa: C901
                 # assumed to remove the existing config and we do not want to add
                 # device or orig or shared availability attributes.
                 if discovery_payload := MQTTDiscoveryPayload(config):
-                    if CONF_CHILD_DEVICE in discovery_payload:
+                    discovery_payload[CONF_DEVICE] = (
+                        device_config
+                        if device_component.child_device is None
                         # Copy, as the device config is shared by all components
-                        discovery_payload[CONF_DEVICE] = {
+                        else {
                             **device_config,
-                            CONF_CHILD_DEVICE: discovery_payload.pop(CONF_CHILD_DEVICE),
+                            CONF_CHILD_DEVICE: device_component.child_device,
                         }
-                    else:
-                        discovery_payload[CONF_DEVICE] = device_config
+                    )
                     discovery_payload[CONF_ORIGIN] = origin_config
                     # Only assign shared config options
                     # when they are not set at entity level

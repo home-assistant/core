@@ -4342,6 +4342,7 @@ async def test_shared_options_in_sync_with_device_schema() -> None:
         "device",
         "origin",
         "components",
+        "child_devices",
     }:
         assert option in SHARED_OPTIONS
 

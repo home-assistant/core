@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, override
+from typing import TYPE_CHECKING, Any, Required, TypedDict, override
 
 from paho.mqtt.client import MQTTMessage
 
@@ -196,6 +196,19 @@ class DiscoveredDisabledEntity:
     # Entity registry index (entity_platform, "mqtt", unique_id)
     registry_key: tuple[str, str, str]
     discovery_data: DiscoveryInfoType
+
+
+class MqttChildDeviceConfig(TypedDict, total=False):
+    """Child device config of an MQTT entity."""
+
+    identifiers: Required[str | list[str]]
+    name: str
+
+
+class MqttDiscoveryChildDevice(MqttChildDeviceConfig):
+    """Child device with its components in a device discovery payload."""
+
+    components: Required[dict[str, dict[str, Any]]]
 
 
 class MqttOriginInfo(TypedDict, total=False):
