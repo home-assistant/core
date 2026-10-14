@@ -1344,97 +1344,52 @@ def test_typed_config_storage_roundtrip(
     assert to_storage_dict(reloaded) == stored
 
 
-def test_binary_sensor_reset_after_accepts_long_duration() -> None:
-    """A heartbeat interval over one day survives validation and storage."""
+def _validate_reset_after(reset_after: Any) -> Any:
+    """Validate a binary sensor with the given reset_after and return the stored value."""
     validated = validate_entity_data(
         {
             CONF_PLATFORM: Platform.BINARY_SENSOR,
             CONF_DATA: {
                 "entity": {"name": "In operation"},
-                "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": 90000},
+                "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": reset_after},
             },
         }
     )[CONF_DATA]
-    stored = to_storage_dict(validated)["knx"]["reset_after"]
-    assert stored == 90000
+    return to_storage_dict(validated)["knx"]["reset_after"]
 
 
-def test_binary_sensor_reset_after_rejects_negative_duration() -> None:
+@pytest.mark.parametrize(
+    ("reset_after", "stored"),
+    [
+        (90000, 90000),  # over one day, numeric seconds
+        (1.5, 1.5),  # fractional seconds
+        ({"days": 1, "hours": 1, "seconds": 1, "milliseconds": 500}, 90001.5),
+        ("00:10:00", 600),  # cv.time_period string form
+        (0, 0),
+    ],
+)
+def test_binary_sensor_reset_after_stores_seconds(
+    reset_after: Any, stored: float
+) -> None:
+    """Every cv.time_period input form is stored as seconds."""
+    assert _validate_reset_after(reset_after) == stored
+
+
+@pytest.mark.parametrize("reset_after", [-1, {"seconds": -1}, "-00:00:01"])
+def test_binary_sensor_reset_after_rejects_negative(reset_after: Any) -> None:
     """Reset after is never a negative duration."""
     with pytest.raises(EntityStoreValidationException):
-        validate_entity_data(
-            {
-                CONF_PLATFORM: Platform.BINARY_SENSOR,
-                CONF_DATA: {
-                    "entity": {"name": "In operation"},
-                    "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": -1},
-                },
-            }
-        )
+        _validate_reset_after(reset_after)
 
 
-def test_binary_sensor_reset_after_accepts_milliseconds() -> None:
-    """A fractional interval survives write validation and storage."""
-    validated = validate_entity_data(
-        {
-            CONF_PLATFORM: Platform.BINARY_SENSOR,
-            CONF_DATA: {
-                "entity": {"name": "In operation"},
-                "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": 1.5},
-            },
-        }
-    )[CONF_DATA]
-    assert to_storage_dict(validated)["knx"]["reset_after"] == 1.5
-
-
-def test_binary_sensor_reset_after_accepts_duration_input() -> None:
-    """Duration form data is normalized to seconds before storage."""
-    validated = validate_entity_data(
-        {
-            CONF_PLATFORM: Platform.BINARY_SENSOR,
-            CONF_DATA: {
-                "entity": {"name": "In operation"},
-                "knx": {
-                    "ga_sensor": {"state": "1/2/3"},
-                    "reset_after": {
-                        "days": 1,
-                        "hours": 1,
-                        "seconds": 1,
-                        "milliseconds": 500,
-                    },
-                },
-            },
-        }
-    )[CONF_DATA]
-    assert to_storage_dict(validated)["knx"]["reset_after"] == 90001.5
-
-
-def test_binary_sensor_reset_after_rejects_negative_duration_input() -> None:
-    """Reject a negative Duration selector value."""
-    with pytest.raises(EntityStoreValidationException):
-        validate_entity_data(
-            {
-                CONF_PLATFORM: Platform.BINARY_SENSOR,
-                CONF_DATA: {
-                    "entity": {"name": "In operation"},
-                    "knx": {
-                        "ga_sensor": {"state": "1/2/3"},
-                        "reset_after": {"seconds": -1},
-                    },
-                },
-            }
-        )
-
-
-def test_binary_sensor_reset_after_schema_uses_duration_selector() -> None:
-    """Expose a duration UI while continuing to validate seconds."""
+def test_binary_sensor_reset_after_schema_is_ha_duration_selector() -> None:
+    """Expose a plain HA duration selector whose value is seconds."""
     schema = get_serialized_schema(Platform.BINARY_SENSOR)
     assert schema is not None
     reset_after = next(field for field in schema if field["name"] == "reset_after")
-    assert reset_after["type"] == "knx_duration"
+    assert reset_after["type"] == "ha_selector"
     assert reset_after["selector"] == {
         "duration": {
-            "allow_negative": False,
             "enable_day": True,
             "enable_millisecond": True,
             "enable_second": True,

@@ -2,9 +2,8 @@
 
 from collections.abc import Hashable
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import StrEnum, unique
-from typing import Annotated, Any, override
+from typing import Annotated, Any
 
 import probatio
 from probatio import Key
@@ -50,11 +49,11 @@ from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
+    KnxDurationSelector,
     KnxPayload,
     KnxPayloadSelector,
     KNXSectionFlat,
     KnxSelectOptionsSelector,
-    KNXSelectorBase,
     PayloadValue,
     RawPayload,
     SelectOption,
@@ -116,31 +115,6 @@ def _to_entity_data(data: dict[str, Any]) -> KnxEntityData[Any]:
     return KnxEntityData(entity=data[CONF_ENTITY], knx=data[DOMAIN])
 
 
-_RESET_AFTER_SECONDS = selector.NumberSelector(selector.NumberSelectorConfig(min=0))
-
-
-class _ResetAfterDurationSelector(KNXSelectorBase):
-    """Show a duration while validating and storing its value as seconds."""
-
-    selector_type = "knx_duration"
-
-    def __init__(self, config: selector.DurationSelectorConfig) -> None:
-        """Initialize the duration UI schema."""
-        self.duration_selector = selector.DurationSelector(config)
-
-    @override
-    def serialize(self) -> dict[str, Any]:
-        """Mark the duration as using a seconds-based KNX value."""
-        return self.duration_selector.serialize() | {"type": self.selector_type}
-
-    @override
-    def __call__(self, data: Any) -> float:
-        """Accept stored seconds and Duration selector input."""
-        if isinstance(data, dict):
-            return timedelta(**self.duration_selector(data)).total_seconds()
-        return _RESET_AFTER_SECONDS(data)
-
-
 @dataclass(kw_only=True, slots=True)
 class BinarySensorKnxConfig:
     """UI configuration of a KNX binary sensor."""
@@ -166,9 +140,9 @@ class BinarySensorKnxConfig:
     reset_after: Annotated[
         float | None,
         probatio.Maybe(
-            _ResetAfterDurationSelector(
+            KnxDurationSelector(
                 selector.DurationSelectorConfig(
-                    allow_negative=False, enable_day=True, enable_millisecond=True
+                    enable_day=True, enable_millisecond=True
                 )
             )
         ),

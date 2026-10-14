@@ -112,13 +112,12 @@
         'required': False,
         'selector': dict({
           'duration': dict({
-            'allow_negative': False,
             'enable_day': True,
             'enable_millisecond': True,
             'enable_second': True,
           }),
         }),
-        'type': 'knx_duration',
+        'type': 'ha_selector',
       }),
       dict({
         'allow_false': True,
