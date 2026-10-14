@@ -14,7 +14,10 @@ from chip.clusters.ClusterObjects import (
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.client.models import device_types
-from matter_server.common.custom_clusters import EveCluster
+from matter_server.common.custom_clusters import (
+    CustomClusterAttributeMixin,
+    EveCluster,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -70,7 +73,7 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
 # Eve Thermo reports its local schedule state inside a proprietary binary blob.
 # This descriptor is not included in the Python custom cluster definitions yet.
 @dataclass
-class EveThermoScheduleConfig(ClusterAttributeDescriptor):
+class EveThermoScheduleConfig(ClusterAttributeDescriptor, CustomClusterAttributeMixin):
     """Proprietary Eve Thermo configuration attribute."""
 
     @ChipUtility.classproperty
@@ -84,6 +87,8 @@ class EveThermoScheduleConfig(ClusterAttributeDescriptor):
     @ChipUtility.classproperty
     def attribute_type(cls) -> ClusterObjectFieldDescriptor:
         return ClusterObjectFieldDescriptor(Type=bytes)
+
+    value: bytes = b""
 
 
 def _eve_thermo_schedule_enabled(value: bytes | str) -> bool | None:
