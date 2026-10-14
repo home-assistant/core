@@ -9643,9 +9643,7 @@
           "valveWaterError": null
         },
         "1": {
-          "canbusSensorUsages": [
-            "WATER_FLOW"
-          ],
+          "canbusSensorUsages": ["WATER_FLOW"],
           "channelRole": "WATER_SUPPLY",
           "deviceId": "3014F7110000000000000WSS",
           "externalSensorMode": "INACTIVE",
