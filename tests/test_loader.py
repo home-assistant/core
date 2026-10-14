@@ -2345,6 +2345,101 @@ async def test_async_get_integrations_multiple_non_existent(
     assert integrations["does_not_exist"] is integration
 
 
+@pytest.mark.parametrize("error", [OSError, asyncio.CancelledError])
+@pytest.mark.parametrize("waiter_count", [0, 1])
+@pytest.mark.parametrize(
+    "load_stage",
+    ["async_get_custom_components", "async_add_executor_job"],
+)
+async def test_get_integrations_failed_load(
+    hass: HomeAssistant,
+    error: type[BaseException],
+    waiter_count: int,
+    load_stage: str,
+) -> None:
+    """Failed discovery or resolution releases waiters and permits retries."""
+    await loader.async_get_custom_components(hass)
+    started = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def failed_load(*args: Any) -> None:
+        started.set()
+        await finish.wait()
+        raise error("Load failed")
+
+    target = {
+        "async_get_custom_components": loader,
+        "async_add_executor_job": hass,
+    }[load_stage]
+    with patch.object(target, load_stage, side_effect=failed_load):
+        owner = asyncio.create_task(
+            loader.async_get_integration(hass, "lookup_failure")
+        )
+        await started.wait()
+        waiters = [
+            asyncio.create_task(loader.async_get_integration(hass, "lookup_failure"))
+            for _ in range(waiter_count)
+        ]
+        await asyncio.sleep(0)
+        finish.set()
+        results = await asyncio.wait_for(
+            asyncio.gather(owner, *waiters, return_exceptions=True), timeout=1
+        )
+
+    assert all(isinstance(result, error) for result in results)
+    assert "lookup_failure" not in hass.data[loader.DATA_INTEGRATIONS]
+
+    integration = _get_test_integration(hass, "lookup_failure", False)
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"lookup_failure": integration},
+    ):
+        assert await loader.async_get_integration(hass, "lookup_failure") is integration
+
+
+async def test_get_integrations_cancelled_while_waiting(hass: HomeAssistant) -> None:
+    """Cancelling a mixed batch releases its own lookups, not another caller's."""
+    cached = await loader.async_get_integration(hass, "sensor")
+    started = asyncio.Event()
+    finish = asyncio.Event()
+    integration = _get_test_integration(hass, "test_1", False)
+
+    async def load_custom(_hass: HomeAssistant) -> dict[str, loader.Integration]:
+        started.set()
+        await finish.wait()
+        return {"test_1": integration}
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components", side_effect=load_custom
+    ):
+        owner = asyncio.create_task(loader.async_get_integration(hass, "test_1"))
+        await started.wait()
+        mixed = asyncio.create_task(
+            loader.async_get_integrations(hass, ["sensor", "test_1", "test_2"])
+        )
+        await asyncio.sleep(0)
+        waiter = asyncio.create_task(loader.async_get_integration(hass, "test_2"))
+        await asyncio.sleep(0)
+        mixed.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await mixed
+        finish.set()
+        assert await owner is integration
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(waiter, timeout=1)
+
+    assert loader.async_get_loaded_integration(hass, "sensor") is cached
+    assert loader.async_get_loaded_integration(hass, "test_1") is integration
+    assert "test_2" not in hass.data[loader.DATA_INTEGRATIONS]
+
+    retry = _get_test_integration(hass, "test_2", False)
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"test_2": retry},
+    ):
+        assert await loader.async_get_integration(hass, "test_2") is retry
+
+
 @pytest.mark.parametrize(
     "vendors",
     [
