@@ -15,9 +15,15 @@ from homeassistant.components.icloud.const import (
     CONF_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.storage import Store
 
 from .const import (
@@ -411,6 +417,60 @@ async def test_a_device_losing_its_battery_stops_reporting_a_level(
     assert ATTR_LOW_POWER_MODE not in device.extra_state_attributes
 
 
+@pytest.mark.parametrize(
+    "location",
+    [
+        pytest.param(None, id="no-location"),
+        pytest.param({"latitude": 60.2, "longitude": None}, id="half-a-location"),
+    ],
+)
+async def test_a_device_that_stops_sharing_its_location_reads_unknown(
+    hass: HomeAssistant,
+    mock_store: Mock,
+    location: dict[str, Any] | None,
+) -> None:
+    """Test that a location iCloud stops reporting is not kept.
+
+    The tracker would otherwise keep showing the last fix for as long as the
+    device lasts.
+    """
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(
+            USER_INFO, [MockAppleDevice(DEVICE_WITHOUT_BATTERY)]
+        )
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        account = config_entry.runtime_data
+        [tracker] = hass.states.async_entity_ids("device_tracker")
+        assert hass.states.get(tracker).state != STATE_UNKNOWN
+        assert (
+            hass.states.get(tracker).attributes[ATTR_LATITUDE] == LOCATION["latitude"]
+        )
+
+        device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
+        await hass.async_add_executor_job(
+            device.update, DEVICE_WITHOUT_BATTERY | {"location": location}
+        )
+        dispatcher_send(hass, account.signal_device_update)
+        await hass.async_block_till_done()
+
+    assert device.location is None
+    state = hass.states.get(tracker)
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_LATITUDE not in state.attributes
+
+
 async def test_a_tracked_device_is_updated_even_when_it_reports_nothing(
     hass: HomeAssistant,
     mock_store: Mock,
@@ -446,4 +506,5 @@ async def test_a_tracked_device_is_updated_even_when_it_reports_nothing(
             await hass.async_add_executor_job(account.update_devices)
 
     assert device.battery_level is None
+    assert device.location is None
     assert ATTR_BATTERY not in device.extra_state_attributes

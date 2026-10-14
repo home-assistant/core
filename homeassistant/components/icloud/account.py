@@ -494,6 +494,8 @@ class IcloudDevice:
             self._location = location
             if announce:
                 dispatcher_send(self._account.hass, self._account.signal_device_new)
+        else:
+            self._location = None
 
     def play_sound(self) -> None:
         """Play sound on the device."""
