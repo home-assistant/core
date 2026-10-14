@@ -40,6 +40,15 @@ PARALLEL_UPDATES = 0
 
 DEFAULT_QUALITY = "high"
 
+CAMERA_ERRORS = (
+    aiohttp.ClientPayloadError,
+    aiohttp.ContentTypeError,
+    aiohttp.ServerDisconnectedError,
+    aiohttp.ClientConnectorError,
+    NetatmoApiError,
+    TimeoutError,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -200,13 +209,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
-        except (
-            aiohttp.ClientPayloadError,
-            aiohttp.ContentTypeError,
-            aiohttp.ServerDisconnectedError,
-            aiohttp.ClientConnectorError,
-            NetatmoApiError,
-        ) as err:
+        except CAMERA_ERRORS as err:
             _LOGGER.debug("Could not fetch live camera image (%s)", err)
         return None
 
@@ -270,14 +273,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             await self.device.async_monitoring_off()
             self._override_on = False
             self.async_write_ha_state()
-        except (
-            aiohttp.ClientPayloadError,
-            aiohttp.ContentTypeError,
-            aiohttp.ServerDisconnectedError,
-            aiohttp.ClientConnectorError,
-            NetatmoApiError,
-            TimeoutError,
-        ) as err:
+        except CAMERA_ERRORS as err:
             raise HomeAssistantError(f"Could not turn off camera: {err}") from err
 
     @override
@@ -289,14 +285,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             await self.device.async_monitoring_on()
             self._override_on = True
             self.async_write_ha_state()
-        except (
-            aiohttp.ClientPayloadError,
-            aiohttp.ContentTypeError,
-            aiohttp.ServerDisconnectedError,
-            aiohttp.ClientConnectorError,
-            NetatmoApiError,
-            TimeoutError,
-        ) as err:
+        except CAMERA_ERRORS as err:
             raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
     @override
