@@ -126,6 +126,9 @@
       },
       "water_leak": {
         "name": "Water leak"
+      },
+      "eve_thermo_heating_schedule": {
+        "name": "Heating schedule"
       }
     },
     "button": {
