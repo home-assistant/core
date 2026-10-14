@@ -113,6 +113,17 @@ def is_2fa_status(err: PyiCloudAPIResponseException) -> bool:
     return err.code == AppleAuthError.TWO_FACTOR_REQUIRED
 
 
+def code_can_be_delivered(api: PyiCloudService | None) -> bool:
+    """Return whether iCloud has a route to send a verification code.
+
+    The options fetch that sets a route up can be refused on its own, which
+    leaves a challenge nothing can act on: no code is sent, and the reauth
+    flow would strand the user on a form they cannot complete. pyicloud
+    reports "unknown" for exactly that state.
+    """
+    return api is not None and api.two_factor_delivery_method != "unknown"
+
+
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
@@ -251,7 +262,7 @@ class IcloudAccount:
             # the devices rather than while logging in, and does not set
             # requires_2fa for it, so ask for a code explicitly. The session is
             # kept so the reauth flow can send the code through it.
-            if not self._code_can_be_delivered():
+            if not code_can_be_delivered(self.api):
                 # Nothing for the user to act on, so retry rather than ask for
                 # a code that cannot be sent.
                 raise ConfigEntryNotReady from err
@@ -290,7 +301,7 @@ class IcloudAccount:
             # rejections do not: the session has just failed to refresh, so a
             # reauth flow sending a code through it would fail as well.
             challenge = is_2fa_status(err)
-            if challenge and not self._code_can_be_delivered():
+            if challenge and not code_can_be_delivered(self.api):
                 # Nothing for the user to act on, so retry rather than ask for
                 # a code that cannot be sent.
                 raise ConfigEntryNotReady from err
@@ -323,16 +334,6 @@ class IcloudAccount:
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )
-
-    def _code_can_be_delivered(self) -> bool:
-        """Return whether iCloud has a route to send a verification code.
-
-        The options fetch that sets a route up can be refused on its own,
-        which leaves a challenge nothing can act on: no code is sent, and the
-        reauth flow would strand the user on a form they cannot complete.
-        pyicloud reports "unknown" for exactly that state.
-        """
-        return self.api is not None and self.api.two_factor_delivery_method != "unknown"
 
     def _handle_auth_required(
         self, *, two_factor: bool, keep_session: bool, start_reauth: bool = True

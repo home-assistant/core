@@ -31,7 +31,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
-from .account import is_2fa_status, is_auth_error
+from .account import code_can_be_delivered, is_2fa_status, is_auth_error
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_INCLUDE_COMPLETED,
@@ -203,10 +203,6 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return api, True
         return api, False
 
-    def _code_can_be_delivered(self) -> bool:
-        """Return whether iCloud has a route to send a verification code."""
-        return self.api is not None and self.api.two_factor_delivery_method != "unknown"
-
     async def _report_undeliverable_code(self, user_input, step_id):
         """Send the flow back to the password when no code can be sent.
 
@@ -336,7 +332,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                     return result
 
         if self._requires_2fa:
-            if not self._code_can_be_delivered():
+            if not code_can_be_delivered(self.api):
                 return await self._report_undeliverable_code(user_input, step_id)
             return await self.async_step_verification_code()
 
@@ -373,7 +369,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             if isinstance(error, PyiCloud2FARequiredException) or (
                 isinstance(error, PyiCloudAPIResponseException) and is_2fa_status(error)
             ):
-                if not self._code_can_be_delivered():
+                if not code_can_be_delivered(self.api):
                     return await self._report_undeliverable_code(user_input, step_id)
                 # The session that was challenged is the one the code has to
                 # go through, so it is kept.
