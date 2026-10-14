@@ -746,10 +746,14 @@ async def test_ipv6_repair_resolves_on_reload(
 
 
 @pytest.mark.parametrize(
-    ("stop_addon_side_effect", "entry_state"),
+    ("stop_addon_side_effect", "entry_state", "entry_reason"),
     [
-        (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
+        (None, ConfigEntryState.NOT_LOADED, None),
+        (
+            SupervisorError("Boom"),
+            ConfigEntryState.FAILED_UNLOAD,
+            "Failed to stop the Matter Server app",
+        ),
     ],
 )
 async def test_stop_addon(
@@ -761,6 +765,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
+    entry_reason: str | None,
 ) -> None:
     """Test stop the Matter add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -787,6 +792,7 @@ async def test_stop_addon(
     await hass.async_block_till_done()
 
     assert entry.state is entry_state
+    assert entry.reason == entry_reason
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
 

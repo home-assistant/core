@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import struct
 from time import monotonic
 from typing import Any, Final, Protocol
 
@@ -112,6 +113,18 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_CHANNELS,
     ATTR_PREFERRED_SAMPLE_BYTES,
     ATTR_PREFERRED_BITRATE,
+}
+
+# Streaming WAV sources write a header before the sample rate and length of the
+# audio are known, so the data chunk size is left as a placeholder.
+_WAV_STREAMING_DATA_SIZES: Final[set[int]] = {0, 0xFFFFFFFF}
+_WAV_FORMAT_PCM: Final = 1
+_WAV_HEADER_MAX_BYTES: Final = 4096
+_WAV_PCM_FFMPEG_FORMATS: Final[dict[int, str]] = {
+    8: "u8",  # 8-bit WAV samples are unsigned
+    16: "s16le",
+    24: "s24le",
+    32: "s32le",
 }
 
 CONF_LANG = "language"
@@ -368,6 +381,110 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     return languages
 
 
+class _IncompleteWavHeader(Exception):
+    """Error to indicate more data is needed to parse a WAV header."""
+
+
+@dataclass(frozen=True)
+class _StreamingPcmInfo:
+    """Sample format of a streaming WAV source."""
+
+    ffmpeg_format: str
+    sample_rate: int
+    sample_channels: int
+
+    # Audio that was read past the end of the WAV header.
+    leftover: bytes
+
+
+def _parse_streaming_wav_header(header: bytes) -> _StreamingPcmInfo | None:
+    """Parse the header of a streaming WAV source.
+
+    Returns None if the audio cannot be fed to ffmpeg as raw samples, and raises
+    _IncompleteWavHeader if more data is needed to decide.
+    """
+    if len(header) < 12:
+        raise _IncompleteWavHeader
+    if header[0:4] != b"RIFF" or header[8:12] != b"WAVE":
+        return None
+
+    bits_per_sample: int | None = None
+    sample_rate = 0
+    sample_channels = 0
+    pos = 12
+
+    while True:
+        if len(header) < pos + 8:
+            raise _IncompleteWavHeader
+
+        chunk_id = header[pos : pos + 4]
+        (chunk_size,) = struct.unpack_from("<I", header, pos + 4)
+        chunk_start = pos + 8
+
+        if chunk_id == b"data":
+            # A known size means chunks may follow the audio, which would be fed
+            # to ffmpeg as if they were samples.
+            if bits_per_sample is None or chunk_size not in _WAV_STREAMING_DATA_SIZES:
+                return None
+            if (
+                ffmpeg_format := _WAV_PCM_FFMPEG_FORMATS.get(bits_per_sample)
+            ) is None or not (sample_rate and sample_channels):
+                return None
+            return _StreamingPcmInfo(
+                ffmpeg_format=ffmpeg_format,
+                sample_rate=sample_rate,
+                sample_channels=sample_channels,
+                leftover=header[chunk_start:],
+            )
+
+        if len(header) < chunk_start + chunk_size:
+            raise _IncompleteWavHeader
+
+        if chunk_id == b"fmt ":
+            if chunk_size < 16:
+                return None
+            format_tag, sample_channels, sample_rate, _byte_rate, _align, bits = (
+                struct.unpack_from("<HHIIHH", header, chunk_start)
+            )
+            if format_tag != _WAV_FORMAT_PCM:
+                return None
+            bits_per_sample = bits
+
+        # Chunks are word aligned.
+        pos = chunk_start + chunk_size + (chunk_size % 2)
+
+
+async def _async_read_streaming_wav_header(
+    audio_input: AsyncGenerator[bytes],
+) -> tuple[_StreamingPcmInfo | None, bytes]:
+    """Read a streaming WAV header from a generator.
+
+    Returns the sample format, if usable, and everything read from the generator.
+    """
+    buffer = b""
+    async for chunk in audio_input:
+        buffer += chunk
+        try:
+            if (pcm_info := _parse_streaming_wav_header(buffer)) is not None:
+                return pcm_info, buffer
+        except _IncompleteWavHeader:
+            if len(buffer) <= _WAV_HEADER_MAX_BYTES:
+                continue
+        return None, buffer
+
+    return None, buffer
+
+
+async def _async_prepend_audio(
+    prefix: bytes, audio_input: AsyncGenerator[bytes]
+) -> AsyncGenerator[bytes]:
+    """Yield already read audio before the rest of a generator."""
+    if prefix:
+        yield prefix
+    async for chunk in audio_input:
+        yield chunk
+
+
 async def _async_convert_audio(  # noqa: C901
     hass: HomeAssistant,
     from_extension: str | None,
@@ -382,12 +499,65 @@ async def _async_convert_audio(  # noqa: C901
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
     is_input_gen = not isinstance(audio_input, (str, Path))
 
+    is_streaming_wav = is_input_gen and from_extension == "wav"
+    original_audio_input = audio_input
+
+    async def close_input() -> None:
+        """Close the owned wrapper and original source without losing an error."""
+        assert isinstance(audio_input, AsyncGenerator)
+        assert isinstance(original_audio_input, AsyncGenerator)
+        sources = (
+            (audio_input, original_audio_input)
+            if audio_input is not original_audio_input
+            else (audio_input,)
+        )
+        error: Exception | None = None
+        for source in sources:
+            try:
+                await source.aclose()
+            except Exception as err:
+                if error is None:
+                    error = err
+                else:
+                    _LOGGER.warning("TTS source close failed", exc_info=True)
+        if error is not None:
+            raise error
+
+    pcm_info: _StreamingPcmInfo | None = None
+    if is_streaming_wav:
+        # Unwrapping the container lets ffmpeg start streaming immediately
+        # instead of buffering ahead to inspect the WAV file.
+        assert isinstance(audio_input, AsyncGenerator)
+        try:
+            pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
+        except BaseException:
+            close_task = hass.async_create_background_task(
+                close_input(), "tts_ffmpeg_source_close"
+            )
+            await _async_ffmpeg_join(close_task)
+            raise
+        audio_input = _async_prepend_audio(
+            pcm_info.leftover if pcm_info else consumed, audio_input
+        )
+
     command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
-    if from_extension:
+    if pcm_info is not None:
+        command.extend(
+            [
+                "-f",
+                pcm_info.ffmpeg_format,
+                "-ar",
+                str(pcm_info.sample_rate),
+                "-ac",
+                str(pcm_info.sample_channels),
+            ]
+        )
+    elif from_extension:
         command.extend(["-f", from_extension])
 
-    if is_input_gen and from_extension == "wav":
-        # The container is known, so minimize probing latency for live TTS audio.
+    if is_streaming_wav:
+        # The stream parameters are known, so minimize probing latency for live
+        # TTS audio.
         command.extend(["-probesize", "32"])
 
     if is_input_gen:
@@ -420,12 +590,20 @@ async def _async_convert_audio(  # noqa: C901
     command.extend(["-fflags", "+bitexact"])
     command.append("pipe:1")  # Send output to stdout.
 
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdin=asyncio.subprocess.PIPE if is_input_gen else None,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.PIPE if is_input_gen else None,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except BaseException:
+        if is_input_gen:
+            close_task = hass.async_create_background_task(
+                close_input(), "tts_ffmpeg_source_close"
+            )
+            await _async_ffmpeg_join(close_task)
+        raise
 
     writer_task: asyncio.Task | None = None
     input_exhausted = False
@@ -467,7 +645,7 @@ async def _async_convert_audio(  # noqa: C901
             finally:
                 process.stdin.close()
                 try:
-                    await audio_input.aclose()
+                    await close_input()
                 except Exception:
                     if primary is None:
                         raise
@@ -1185,7 +1363,11 @@ class SpeechManager:
     ) -> ResultStream:
         """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
@@ -1227,7 +1409,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
@@ -1264,7 +1450,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
@@ -1434,7 +1624,12 @@ class SpeechManager:
 
             if data is None or extension is None:
                 raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
+                    translation_domain=DOMAIN,
+                    translation_key="no_tts_audio",
+                    translation_placeholders={
+                        "engine": str(engine_instance.name),
+                        "message": message,
+                    },
                 )
 
             async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:

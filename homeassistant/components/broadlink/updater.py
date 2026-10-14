@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
-import broadlink as blk
-from broadlink.exceptions import AuthorizationError, BroadlinkException
+import broadlink_async as blk
+from broadlink_async.exceptions import AuthorizationError, BroadlinkException
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util

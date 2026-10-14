@@ -171,10 +171,16 @@ async def test_normal_eof_reaps_and_decodes(
     )
 
 
+@pytest.mark.parametrize("streaming_header", [False, True])
 async def test_owner_close_stops_held_source_and_reaps(
-    ffmpeg_ready: HomeAssistant, wav_audio: bytes, caplog: pytest.LogCaptureFixture
+    ffmpeg_ready: HomeAssistant,
+    wav_audio: bytes,
+    caplog: pytest.LogCaptureFixture,
+    streaming_header: bool,
 ) -> None:
     """A close paused at output must not wait for held later source input."""
+    if streaming_header:
+        wav_audio = wav_audio[:40] + bytes(4) + wav_audio[44:]
     waiting = asyncio.Event()
     held = asyncio.Event()
     closed = asyncio.Event()
@@ -284,7 +290,7 @@ async def test_source_error_surfaces_without_waiting_for_stdout(
         pass
 
     async def source() -> AsyncGenerator[bytes]:
-        yield wav_audio[:20]
+        yield wav_audio
         raise SourceFailed("producer failed")
 
     original = asyncio.create_subprocess_exec
@@ -313,6 +319,130 @@ async def test_source_error_surfaces_without_waiting_for_stdout(
         if task is not None:
             with contextlib.suppress(SourceFailed):
                 await asyncio.wait_for(task, 5)
+
+
+@pytest.mark.parametrize("outcome", ["error", "cancelled"])
+async def test_wav_header_interruption_closes_original_source(
+    ffmpeg_ready: HomeAssistant, outcome: str
+) -> None:
+    """Header parsing owns the source even before a child has been created."""
+    failure = RuntimeError("source failed during WAV header parsing")
+    pulling = asyncio.Event()
+    closed = asyncio.Event()
+
+    class Source(AsyncGenerator[bytes]):
+        async def __anext__(self) -> bytes:
+            pulling.set()
+            if outcome == "error":
+                raise failure
+            await asyncio.Event().wait()
+            return b""
+
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
+            return await anext(self)
+
+        async def athrow(self, *args) -> bytes:
+            raise StopAsyncIteration
+
+        async def aclose(self) -> None:
+            closed.set()
+            raise RuntimeError("secondary source close failure")
+
+    source = Source()
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav")
+    owner = asyncio.create_task(anext(gen))
+    try:
+        await asyncio.wait_for(pulling.wait(), 3)
+        if outcome == "cancelled":
+            owner.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await _observe(owner)
+        else:
+            with pytest.raises(RuntimeError) as caught:
+                await _observe(owner)
+            assert caught.value is failure
+        assert closed.is_set()
+    finally:
+        if not owner.done():
+            owner.cancel()
+        await asyncio.gather(owner, return_exceptions=True)
+        await gen.aclose()
+
+
+async def test_spawn_failure_closes_prepared_wav_source(
+    ffmpeg_ready: HomeAssistant, wav_audio: bytes
+) -> None:
+    """A failed child acquisition cannot abandon a pre-read source."""
+    closed = asyncio.Event()
+    failure = OSError("child spawn failed")
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield wav_audio
+            await asyncio.Event().wait()
+        finally:
+            closed.set()
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    with patch(
+        "homeassistant.components.tts.asyncio.create_subprocess_exec",
+        side_effect=failure,
+    ):
+        with pytest.raises(OSError) as caught:
+            await anext(gen)
+        assert caught.value is failure
+        assert closed.is_set()
+    await gen.aclose()
+
+
+async def test_wav_header_failure_supervises_slow_source_close(
+    ffmpeg_ready: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Pre-spawn cleanup returns finitely and keeps a slow close HA-owned."""
+    failure = RuntimeError("header source failed")
+    closing = asyncio.Event()
+    release = asyncio.Event()
+    close_owner = None
+
+    class Source(AsyncGenerator[bytes]):
+        async def __anext__(self) -> bytes:
+            raise failure
+
+        async def asend(self, value) -> bytes:  # codespell:ignore asend
+            return await anext(self)
+
+        async def athrow(self, *args) -> bytes:
+            raise StopAsyncIteration
+
+        async def aclose(self) -> None:
+            nonlocal close_owner
+            close_owner = asyncio.current_task()
+            closing.set()
+            await release.wait()
+            raise RuntimeError("late pre-spawn close failed")
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", Source(), "wav")
+    owner = asyncio.create_task(anext(gen))
+    try:
+        with pytest.raises(RuntimeError) as caught:
+            await _observe(owner, 1.5)
+        assert caught.value is failure
+        assert closing.is_set()
+        assert close_owner is not None and not close_owner.done()
+        assert close_owner in ffmpeg_ready._background_tasks
+        assert not release.is_set()
+        release.set()  # Only after finite return and ownership assertions.
+        await asyncio.gather(close_owner, return_exceptions=True)
+        await asyncio.sleep(0)
+        assert "late pre-spawn close failed" in caplog.text
+    finally:
+        release.set()
+        if not owner.done():
+            owner.cancel()
+        await asyncio.gather(owner, return_exceptions=True)
+        if close_owner is not None:
+            await asyncio.gather(close_owner, return_exceptions=True)
+        await gen.aclose()
 
 
 async def _collect(gen: AsyncGenerator[bytes]) -> bytes:
@@ -606,7 +736,7 @@ async def test_observed_source_error_survives_failing_close(
         async def asend(self, value) -> bytes:  # codespell:ignore asend
             if not self.read:
                 self.read = True
-                return wav_audio[:20]
+                return wav_audio
             raise ReadFailed("observed read failure")
 
         async def __anext__(self) -> bytes:
@@ -1001,7 +1131,7 @@ async def test_source_pull_failure_wakes_blocked_owner_before_close(
 
         async def asend(self, value) -> bytes:  # codespell:ignore asend
             self.pulls += 1
-            if self.pulls == 1 and mode != "eager":
+            if self.pulls == 1:
                 return b"R" * 32  # Child is an OS substitute, not a WAV decoder.
             self.pulling.set()
             if mode != "eager":
@@ -2239,8 +2369,9 @@ async def test_completed_writer_source_error_interrupts_held_child(
 
     async def source() -> AsyncGenerator[bytes]:
         try:
+            # Complete the pre-spawn probe before exercising writer failure.
+            yield b"R" * 100
             if paused:
-                yield b"R" * 100
                 await allow_failure.wait()
             raise failure
         finally:
@@ -2290,9 +2421,8 @@ async def test_provider_transport_class_error_remains_primary(
         return process
 
     async def source() -> AsyncGenerator[bytes]:
-        if failure is not None:
-            raise failure
-        yield b""
+        yield b"R" * 100
+        raise failure
 
     owner = None
     try:
@@ -2996,7 +3126,8 @@ async def test_pending_stdout_read_keeps_exclusive_ownership_across_wake(
         if mode != "exhausted-writer":
             await asyncio.Event().wait()
 
-    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    # This OS-child ownership test does not exercise WAV header parsing.
+    gen = tts._async_convert_audio(ffmpeg_ready, None, source(), "wav")
     owner = None
     try:
         with (

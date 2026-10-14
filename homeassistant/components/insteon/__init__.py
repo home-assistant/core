@@ -82,7 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up an Insteon entry."""
 
     api.async_load_api(hass)
@@ -145,8 +145,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"
     )
-
-    return True
 
 
 def create_insteon_device(hass, device, config_entry_id):

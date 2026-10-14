@@ -177,6 +177,9 @@
       }
     },
     "button": {
+      "reset_filter": {
+        "name": "Reset filter counters"
+      },
       "start": {
         "name": "Start"
       }
@@ -497,8 +500,8 @@
       "dry_temperature": {
         "name": "Dry temperature"
       },
-      "energy_consumption": {
-        "name": "Energy consumption"
+      "energy_consumption_24h": {
+        "name": "24h window energy consumption"
       },
       "evaporator_temperature": {
         "name": "Evaporator temperature"
@@ -966,6 +969,12 @@
       },
       "disinfect": {
         "name": "Disinfect"
+      },
+      "megawater": {
+        "name": "Mega Water"
+      },
+      "memo_u": {
+        "name": "Memo-U"
       },
       "night_light": {
         "name": "Night light"

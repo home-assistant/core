@@ -79,7 +79,9 @@ async def test_extracting_playlist_no_entries(
 
     await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="The playlist does not contain any media"
+    ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EXTRACT_MEDIA_URL,
@@ -87,6 +89,7 @@ async def test_extracting_playlist_no_entries(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "playlist_empty"
 
 
 @pytest.mark.parametrize(

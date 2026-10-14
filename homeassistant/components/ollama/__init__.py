@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
     api_key = settings.get(CONF_API_KEY)
@@ -101,14 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload Ollama."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
@@ -221,7 +217,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
@@ -289,8 +285,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True
 
 
 def _add_ai_task_subentry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:

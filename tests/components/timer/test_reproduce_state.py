@@ -8,6 +8,8 @@ from homeassistant.components.timer import (
     SERVICE_CANCEL,
     SERVICE_PAUSE,
     SERVICE_START,
+)
+from homeassistant.components.timer.const import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,

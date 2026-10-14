@@ -41,6 +41,7 @@ async def test_load_entry_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "update_error"
 
 
 async def test_load_entry_authentication_failure(
@@ -57,3 +58,7 @@ async def test_load_entry_authentication_failure(
     await hass.async_block_till_done()
 
     assert config_entry_authenticated.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        config_entry_authenticated.error_reason_translation_key
+        == "authentication_error"
+    )
