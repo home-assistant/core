@@ -2537,3 +2537,27 @@ def test_write_tags_uses_voice_as_artist() -> None:
 
     tags = mutagen.File(io.BytesIO(tagged)).tags
     assert tags["TPE1"].text == ["JennyNeural"]
+
+
+@pytest.mark.parametrize("setup", ["mock_config_entry_setup"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_cache_message_unknown_provider(hass: HomeAssistant) -> None:
+    """Test caching a message for an unknown provider raises a translated error."""
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+
+    async def message_gen() -> AsyncGenerator[str]:
+        yield "hello"
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        manager.async_cache_message_in_memory("non-existing", "hello", False, "en", {})
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "provider_not_found"
+    assert exc_info.value.translation_placeholders == {"engine": "non-existing"}
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        manager.async_cache_message_stream_in_memory(
+            "non-existing", message_gen(), "en", {}
+        )
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "provider_not_found"
+    assert exc_info.value.translation_placeholders == {"engine": "non-existing"}
