@@ -3641,7 +3641,7 @@ async def test_rollback_disabled_device_component(
     disabled_entry = entity_registry.async_get("sensor.bla_disabled")
     assert disabled_entry is not None
 
-    # Release the components from the device discovery topic
+    # Start the migration, so the components can be discovered on another topic
     async_fire_mqtt_message(
         hass, "homeassistant/device/bla/config", json.dumps({"migrate_discovery": True})
     )
