@@ -17,16 +17,10 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 
 
-def test_platform_schema_defaults_device() -> None:
-    """Test YAML configuration can omit the receiver device."""
-    assert PLATFORM_SCHEMA({"platform": DOMAIN, "sensors": {}})["device"] == (
-        "/dev/ttyUSB0"
-    )
-
-
 async def test_setup_platform_imports_yaml_configuration(hass: HomeAssistant) -> None:
     """Test YAML configuration is imported through a config flow."""
-    config = {"sensors": {}, "device": "/dev/ttyUSB0"}
+    config = PLATFORM_SCHEMA({"platform": DOMAIN, "sensors": {}})
+    assert "device" not in config
 
     with patch.object(
         hass.config_entries.flow, "async_init", new_callable=AsyncMock
