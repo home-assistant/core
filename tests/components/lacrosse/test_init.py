@@ -43,7 +43,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "type": "temperature",
             "expire_after": 300,
             "friendly_name": "Outdoor",
-            "unique_id": "outdoor_temperature_unique",
         }
     }
     hass.config_entries.async_add_subentry(
@@ -89,7 +88,7 @@ async def test_setup_and_unload(
 
         entity_entry = entity_registry.async_get("sensor.outdoor_temperature")
         assert entity_entry is not None
-        assert entity_entry.unique_id == "outdoor_temperature_unique"
+        assert entity_entry.unique_id == "outdoor_temperature"
 
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, "/dev/ttyUSB0_1"), entry.entry_id

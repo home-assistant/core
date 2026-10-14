@@ -2,7 +2,6 @@
 
 from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
-from uuid import UUID
 
 import probatio
 import pytest
@@ -42,15 +41,13 @@ SENSORS = {
         "type": "temperature",
         "expire_after": 300,
         "friendly_name": "Outdoor",
-        "unique_id": "temperature_unique",
     },
     "1_humidity": {
         "id": 1,
         "type": "humidity",
         "friendly_name": "Outdoor",
-        "unique_id": "humidity_unique",
     },
-    "2_temperature": {"id": 2, "type": "temperature", "unique_id": "bedroom_unique"},
+    "2_temperature": {"id": 2, "type": "temperature"},
 }
 
 pytestmark = pytest.mark.usefixtures("mock_lacrosse", "mock_setup_entry")
@@ -403,11 +400,10 @@ async def test_update_sensor(
         identifiers={(DOMAIN, f"/dev/ttyUSB0_{sensor_id}")},
     )
     device_registry.async_update_device(device.id, name_by_user="My sensor")
-    temperature = subentry.data["sensors"][f"{sensor_id}_temperature"]
     entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        temperature["unique_id"],
+        f"{sensor_id}_temperature",
         config_entry=config_entry,
         config_subentry_id=subentry.subentry_id,
         device_id=device.id,
@@ -433,11 +429,9 @@ async def test_update_sensor(
     )
     assert result["reason"] == "reconfigure_successful"
     assert subentry.unique_id == "7"
-    assert (
-        subentry.data["sensors"]["7_temperature"]["unique_id"]
-        == temperature["unique_id"]
+    assert all(
+        "unique_id" not in sensor for sensor in subentry.data["sensors"].values()
     )
-    assert UUID(subentry.data["sensors"]["7_battery"]["unique_id"])
     assert "friendly_name" not in subentry.data["sensors"]["7_temperature"]
     updated_device = device_registry.async_get(device.id)
     assert updated_device.identifiers == {(DOMAIN, "/dev/ttyUSB0_7")}
@@ -501,7 +495,7 @@ async def test_update_sensor_remove_type(
     humidity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        "humidity_unique",
+        "1_humidity",
         config_entry=config_entry,
         config_subentry_id="sensor_1",
     )
@@ -544,8 +538,8 @@ async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) ->
         "outdoor_humidity",
         "outdoor_battery",
     }
-    assert (
-        len({sensor["unique_id"] for sensor in subentry.data["sensors"].values()}) == 3
+    assert all(
+        "unique_id" not in sensor for sensor in subentry.data["sensors"].values()
     )
     assert {key: config_entry.subentries[key] for key in original} == original
 

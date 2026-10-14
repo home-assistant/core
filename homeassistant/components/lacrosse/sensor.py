@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
-    CONF_UNIQUE_ID,
     PERCENTAGE,
     UnitOfTemperature,
 )
@@ -228,7 +227,7 @@ class LaCrosseSensor(SensorEntity):
         self._lacrosse = lacrosse
         self._sensor_data: pylacrosse.LaCrosseSensor | None = None
         self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._attr_unique_id = config.get(CONF_UNIQUE_ID, device_id)
+        self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{receiver_device}_{config[CONF_ID]}")},
             manufacturer="LaCrosse",

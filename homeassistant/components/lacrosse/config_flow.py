@@ -3,7 +3,6 @@
 from collections.abc import Iterable, Mapping
 import logging
 from typing import Any, Final, override
-from uuid import uuid4
 
 import probatio
 import pylacrosse
@@ -26,7 +25,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
-    CONF_UNIQUE_ID,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -251,7 +249,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         for slug, sensor_config in import_config.get(CONF_SENSORS, {}).items():
             sensor_input = dict(sensor_config)
             sensor_input[CONF_FRIENDLY_NAME] = sensor_input.pop(CONF_NAME, slug)
-            sensor_input[CONF_UNIQUE_ID] = uuid4().hex
             sensors[slug] = sensor_input
 
         async_create_issue(
@@ -414,7 +411,6 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     sensors[key] = {
                         **details,
                         CONF_TYPE: sensor_type.key,
-                        CONF_UNIQUE_ID: uuid4().hex,
                     }
                 return self.async_create_entry(
                     title=user_input.get(CONF_FRIENDLY_NAME)
@@ -453,7 +449,6 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
             ):
                 errors["base"] = error
             else:
-                by_type = {sensor[CONF_TYPE]: sensor for sensor in sensors.values()}
                 details = _sensor_details(user_input)
                 existing_keys = {
                     configured_key
@@ -476,14 +471,11 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     updated[key] = {
                         **details,
                         CONF_TYPE: sensor_type.key,
-                        CONF_UNIQUE_ID: by_type[sensor_type.key][CONF_UNIQUE_ID]
-                        if sensor_type.key in by_type
-                        else uuid4().hex,
                     }
                 entity_registry = er.async_get(self.hass)
                 removed_ids = {
-                    sensor[CONF_UNIQUE_ID]
-                    for sensor in sensors.values()
+                    key
+                    for key, sensor in sensors.items()
                     if sensor[CONF_TYPE]
                     not in {sensor_type.key for sensor_type in selected}
                 }
