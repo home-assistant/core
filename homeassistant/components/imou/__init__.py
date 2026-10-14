@@ -16,6 +16,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
+from .repairs import async_delete_quota_issue
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
@@ -45,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None
 
 async def async_unload_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
     """Handle removal of an entry."""
+    async_delete_quota_issue(hass, entry)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 

@@ -16,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
+from .repairs import async_delete_quota_issue, async_notify_imou_api_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +94,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
+            async_notify_imou_api_error(self.hass, self.config_entry, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="fetch_devices_failed",
@@ -104,6 +106,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._async_add_remove_devices(fresh_by_key)
         devices = list(self.devices_by_key.values())
         if not devices:
+            async_delete_quota_issue(self.hass, self.config_entry)
             return
 
         try:
@@ -120,10 +123,13 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
+            async_notify_imou_api_error(self.hass, self.config_entry, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_devices_failed",
             ) from err
+
+        async_delete_quota_issue(self.hass, self.config_entry)
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account.

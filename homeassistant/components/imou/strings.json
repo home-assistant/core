@@ -212,6 +212,12 @@
       "message": "Timed out while contacting Imou"
     }
   },
+  "issues": {
+    "open_api_quota_exceeded": {
+      "description": "This App ID has no Open Platform calls left this month. Device list, live view, and controls cannot reach the cloud until you add quota or the month resets. Open **My Resources** in the Open Platform console, then reload the integration.",
+      "title": "Imou Open Platform monthly calls used up"
+    }
+  },
   "selector": {
     "api_url": {
       "options": {

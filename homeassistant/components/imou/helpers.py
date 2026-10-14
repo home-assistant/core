@@ -10,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .entity import ImouEntity
+from .repairs import async_notify_imou_api_error
 
 
 def async_wrap_imou_command[_T: ImouEntity, **_P, _R](
@@ -34,6 +35,9 @@ def async_wrap_imou_command[_T: ImouEntity, **_P, _R](
                     translation_key="invalid_auth",
                 ) from err
             except ImouException as err:
+                async_notify_imou_api_error(
+                    self.hass, self.coordinator.config_entry, err
+                )
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key=error_key,

@@ -67,7 +67,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: done
+    comment: Open Platform monthly quota exhaustion (OP1013) surfaces as a repair issue per config entry.
   stale-devices: todo
 
   # Platinum
