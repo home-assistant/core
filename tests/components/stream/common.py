@@ -62,7 +62,7 @@ def frame_image_data(frame_i, total_frames):
     return np.full((480, 320, 3), color, dtype=np.uint8)
 
 
-def generate_video(encoder, container_format, duration):
+def generate_video(encoder, container_format, duration, size=(480, 320), options=None):
     """Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
@@ -76,10 +76,9 @@ def generate_video(encoder, container_format, duration):
     container = av.open(output, mode="w", format=container_format)
 
     stream = container.add_stream(encoder, rate=fps)
-    stream.width = 480
-    stream.height = 320
+    stream.width, stream.height = size
     stream.pix_fmt = "yuv420p"
-    stream.options.update({"g": str(fps), "keyint_min": str(fps)})
+    stream.options.update({"g": str(fps), "keyint_min": str(fps), **(options or {})})
 
     for frame_i in range(total_frames):
         img = frame_image_data(frame_i, total_frames)
@@ -106,6 +105,52 @@ def generate_h264_video(container_format="mp4", duration=5):
 def generate_h265_video(container_format="mp4", duration=5):
     """Generate a test video with libx265."""
     return generate_video("libx265", container_format, duration)
+
+
+def strip_hevc_vps(data):
+    """Return an Annex B access unit without its VPS NAL units."""
+    nal_units = data.split(b"\x00\x00\x01")
+    return b"\x00\x00\x01".join(
+        nal_unit
+        for i, nal_unit in enumerate(nal_units)
+        if i == 0 or (nal_unit[0] >> 1) & 0x3F != 32
+    )
+
+
+def generate_video_with_size_change(encoder, sizes, duration, keyframe_vps=True):
+    """Generate an MPEG-TS video whose picture size changes at a keyframe.
+
+    Each size is encoded separately for `duration` seconds and carries its own
+    in-band parameter sets, repeated at every keyframe. With `keyframe_vps`
+    False, only the first keyframe carries a VPS.
+    """
+    options = {"x265-params": "repeat-headers=1"} if encoder == "libx265" else {}
+    output = io.BytesIO()
+    container = av.open(output, mode="w", format="mpegts")
+    stream = None
+    offset = 0
+    for size in sizes:
+        part = av.open(generate_video(encoder, "mpegts", duration, size, options))
+        if stream is None:
+            stream = container.add_stream_from_template(part.streams.video[0])
+        packets = [packet for packet in part.demux(video=0) if packet.dts is not None]
+        shift = offset - packets[0].dts
+        for packet in packets:
+            if not keyframe_vps and (offset or packet is not packets[0]):
+                stripped = av.Packet(strip_hevc_vps(bytes(packet)))
+                stripped.pts, stripped.dts = packet.pts, packet.dts
+                stripped.time_base = packet.time_base
+                stripped.is_keyframe = packet.is_keyframe
+                packet = stripped
+            packet.pts += shift
+            packet.dts += shift
+            packet.stream = stream
+            container.mux(packet)
+        offset = packets[-1].dts + shift + packets[-1].duration
+        part.close()
+    container.close()
+    output.seek(0)
+    return output
 
 
 def remux_with_audio(source, container_format, audio_codec):

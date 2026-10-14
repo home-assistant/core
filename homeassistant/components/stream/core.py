@@ -86,11 +86,13 @@ class Segment:
     sequence: int
     # the init of the mp4 the segment is based on
     init: bytes
-    # For detecting discontinuities across stream restarts
+    # For detecting discontinuities across stream restarts and init changes
     stream_id: int
     start_time: datetime.datetime
     _stream_outputs: Iterable[StreamOutput]
     duration: float = 0
+    # Set on the first segment of a new init whose timestamps continue the stream
+    new_init: bool = False
     parts: list[Part] = field(default_factory=list)
     # Store text of this segment's hls playlist for reuse
     # Use list[str] for easy appends
@@ -140,6 +142,15 @@ class Segment:
         """Return reconstructed data for all parts as bytes, without init."""
         return b"".join([part.data for part in self.parts])
 
+    def render_hls_map(self) -> str:
+        """Render the EXT-X-MAP tag of the init this segment needs."""
+        # Each discontinuity sequence has its own init
+        return f'#EXT-X-MAP:URI="./init/{self.stream_id}.mp4"'
+
+    def _render_hls_discontinuity(self) -> list[str]:
+        """Render the tags that start a discontinuity at this segment."""
+        return ["#EXT-X-DISCONTINUITY", self.render_hls_map()]
+
     def _render_hls_template(self, last_stream_id: int, render_parts: bool) -> str:
         """Render the HLS playlist section for the Segment.
 
@@ -154,7 +165,7 @@ class Segment:
             # Logically EXT-X-DISCONTINUITY makes sense above the parts, but Apple's
             # media stream validator seems to only want it before the segment
             if last_stream_id != self.stream_id:
-                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
+                self.hls_playlist_template.extend(self._render_hls_discontinuity())
             # This is a placeholder where the rendered parts will be inserted
             self.hls_playlist_template.append("{}")
         if render_parts:
@@ -173,7 +184,9 @@ class Segment:
             # when we do render parts
             self.hls_playlist_parts.append("")
             self.hls_playlist_template = (
-                [] if last_stream_id == self.stream_id else ["#EXT-X-DISCONTINUITY"]
+                []
+                if last_stream_id == self.stream_id
+                else self._render_hls_discontinuity()
             )
             # Add the remaining segment metadata
             # The placeholder goes on the same line as the next element

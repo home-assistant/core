@@ -2,6 +2,9 @@
 
 from datetime import timedelta
 from http import HTTPStatus
+import io
+import itertools
+import threading
 from unittest.mock import patch
 from urllib.parse import urlparse
 
@@ -18,6 +21,8 @@ from homeassistant.components.stream.const import (
     NUM_PLAYLIST_SEGMENTS,
 )
 from homeassistant.components.stream.core import Orientation, Part
+from homeassistant.components.stream.fmp4utils import find_box
+from homeassistant.components.stream.worker import StreamState, hevc_picture_size
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -27,6 +32,7 @@ from .common import (
     DefaultSegment as Segment,
     assert_mp4_has_transform_matrix,
     dynamic_stream_settings,
+    generate_video_with_size_change,
 )
 
 from tests.common import async_fire_time_changed
@@ -81,9 +87,16 @@ def hls_stream(hass: HomeAssistant, hass_client: ClientSessionGenerator):
     return create_client_for_stream
 
 
-def make_segment(segment, discontinuity=False):
+def make_segment(segment, discontinuity_sequence=None):
     """Create a playlist response for a segment."""
-    response = ["#EXT-X-DISCONTINUITY"] if discontinuity else []
+    response = (
+        []
+        if discontinuity_sequence is None
+        else [
+            "#EXT-X-DISCONTINUITY",
+            f'#EXT-X-MAP:URI="./init/{discontinuity_sequence}.mp4"',
+        ]
+    )
     response.extend(
         [
             "#EXT-X-PROGRAM-DATE-TIME:"
@@ -111,7 +124,7 @@ def make_playlist(
         "#EXTM3U",
         "#EXT-X-VERSION:6",
         "#EXT-X-INDEPENDENT-SEGMENTS",
-        '#EXT-X-MAP:URI="init.mp4"',
+        f'#EXT-X-MAP:URI="./init/{discontinuity_sequence}.mp4"',
         f"#EXT-X-TARGETDURATION:{segment_duration}",
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
         f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
@@ -196,6 +209,115 @@ async def test_hls_stream(
         "video_codec": "h264",
         "worker_error": 1,
     }
+
+
+BOTH_SIZES = [(480, 320), (640, 480)]
+
+
+@pytest.mark.parametrize(
+    ("encoder", "keyframe_vps", "size_parses", "init_sizes", "decoded"),
+    [
+        # hvc1 keeps parameter sets in the init only
+        pytest.param("libx265", True, True, BOTH_SIZES, BOTH_SIZES, id="h265"),
+        # Keyframes that repeat SPS and PPS only keep the stream's VPS
+        pytest.param(
+            "libx265", False, True, BOTH_SIZES, BOTH_SIZES, id="h265-no-keyframe-vps"
+        ),
+        # Parameter sets that do not parse keep the current init
+        pytest.param(
+            "libx265", True, False, [(480, 320)], [(480, 320)], id="h265-unparsed"
+        ),
+        # avc1 samples keep their in-band parameter sets
+        pytest.param("libx264", True, True, [(480, 320)], BOTH_SIZES, id="h264"),
+    ],
+)
+async def test_hls_stream_picture_size_change(
+    hass: HomeAssistant,
+    setup_component: None,
+    hls_stream,
+    encoder: str,
+    keyframe_vps: bool,
+    size_parses: bool,
+    init_sizes: list[tuple[int, int]],
+    decoded: list[tuple[int, int]],
+) -> None:
+    """Test that every playlist segment decodes with its init after a size change."""
+    source = generate_video_with_size_change(
+        encoder, BOTH_SIZES, duration=3, keyframe_vps=keyframe_vps
+    )
+    picture_size_error = (
+        None if size_parses else av.FFmpegError(1094995529, "Invalid data")
+    )
+
+    # Hold the worker at the end of the stream so the segments stay available
+    worker_ended = threading.Event()
+    release_worker = threading.Event()
+    discontinuity = StreamState.discontinuity
+
+    def hold_worker(stream_state: StreamState) -> None:
+        worker_ended.set()
+        release_worker.wait()
+        discontinuity(stream_state)
+
+    with (
+        patch.object(
+            StreamState, "discontinuity", autospec=True, side_effect=hold_worker
+        ),
+        patch(
+            "homeassistant.components.stream.worker.hevc_picture_size",
+            side_effect=picture_size_error,
+            wraps=hevc_picture_size,
+        ),
+    ):
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
+        stream.add_provider(HLS_PROVIDER)
+        await stream.start()
+        assert await hass.async_add_executor_job(worker_ended.wait, TEST_TIMEOUT)
+        await hass.async_block_till_done()
+
+        hls_client = await hls_stream(stream)
+        playlist_response = await hls_client.get("/playlist.m3u8")
+        assert playlist_response.status == HTTPStatus.OK
+        playlist = (await playlist_response.text()).splitlines()
+
+        inits: dict[str, bytes] = {}
+        init_uri = ""
+        decoded_sizes = []
+        for line in playlist:
+            if line.startswith("#EXT-X-MAP:URI="):
+                init_uri = line.removeprefix("#EXT-X-MAP:URI=").strip('"')
+                init_response = await hls_client.get("/" + init_uri.removeprefix("./"))
+                assert init_response.status == HTTPStatus.OK
+                inits[init_uri] = await init_response.read()
+            elif line and not line.startswith("#"):
+                segment_response = await hls_client.get("/" + line.removeprefix("./"))
+                assert segment_response.status == HTTPStatus.OK
+                data = inits[init_uri] + await segment_response.read()
+                with av.open(io.BytesIO(data)) as container:
+                    decoded_sizes.extend(
+                        (frame.width, frame.height)
+                        for frame in container.decode(video=0)
+                    )
+
+        release_worker.set()
+        await stream.stop()
+
+    # Every frame decodes at its source size, in source order
+    assert [size for size, _ in itertools.groupby(decoded_sizes)] == decoded
+    assert [init_size(init) for init in inits.values()] == init_sizes
+    assert playlist.count("#EXT-X-DISCONTINUITY") == len(init_sizes) - 1
+
+
+def init_size(init: bytes) -> tuple[int, int]:
+    """Return the track size (tkhd width and height) an init declares."""
+    moov = next(find_box(init, b"moov"))
+    tkhd = next(find_box(init, b"tkhd", next(find_box(init, b"trak", moov))))
+    tkhd_end = tkhd + int.from_bytes(init[tkhd : tkhd + 4], byteorder="big")
+    # width and height are the last two 16.16 fixed point fields
+    return (
+        int.from_bytes(init[tkhd_end - 8 : tkhd_end - 6], byteorder="big"),
+        int.from_bytes(init[tkhd_end - 4 : tkhd_end - 2], byteorder="big"),
+    )
 
 
 async def test_stream_timeout(
@@ -458,13 +580,18 @@ async def test_hls_playlist_view_discontinuity(
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
-    segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)
+    segment = Segment(
+        sequence=0, stream_id=0, init=b"init-0", duration=SEGMENT_DURATION
+    )
     hls.put(segment)
-    segment = Segment(sequence=1, stream_id=0, duration=SEGMENT_DURATION)
+    segment = Segment(
+        sequence=1, stream_id=0, init=b"init-0", duration=SEGMENT_DURATION
+    )
     hls.put(segment)
     segment = Segment(
         sequence=2,
         stream_id=1,
+        init=b"init-1",
         duration=SEGMENT_DURATION,
     )
     hls.put(segment)
@@ -479,9 +606,21 @@ async def test_hls_playlist_view_discontinuity(
         segments=[
             make_segment(0),
             make_segment(1),
-            make_segment(2, discontinuity=True),
+            make_segment(2, discontinuity_sequence=1),
         ],
     )
+
+    # Each discontinuity sequence number serves its own init
+    for path, init in (
+        ("/init/0.mp4", b"init-0"),
+        ("/init/1.mp4", b"init-1"),
+        ("/init.mp4", b"init-0"),
+    ):
+        resp = await hls_client.get(path)
+        assert resp.status == HTTPStatus.OK
+        assert await resp.read() == init
+    resp = await hls_client.get("/init/2.mp4")
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     stream_worker_sync.resume()
     await stream.stop()

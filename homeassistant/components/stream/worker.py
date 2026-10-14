@@ -57,6 +57,40 @@ def redact_av_error_string(err: av.FFmpegError) -> str:
     return ", ".join(parts)
 
 
+def is_annexb(data: bytes) -> bool:
+    """Return True if data starts with an Annex B start code."""
+    return data[:3] == b"\x00\x00\x01" or data[:4] == b"\x00\x00\x00\x01"
+
+
+def hevc_parameter_sets(data: bytes) -> dict[int, tuple[bytes, ...]]:
+    """Return the VPS, SPS and PPS NAL units ahead of the first slice, by NAL type.
+
+    The data is Annex B: an access unit or extradata.
+    """
+    parameter_sets: dict[int, tuple[bytes, ...]] = {}
+    start = data.find(b"\x00\x00\x01")
+    while 0 <= start < len(data) - 3:
+        start += 3
+        # Parameter sets precede the first slice (VCL NAL unit types 0-31)
+        if (nal_type := (data[start] >> 1) & 0x3F) < 32:
+            break
+        end = data.find(b"\x00\x00\x01", start)
+        if nal_type in (32, 33, 34):
+            # A NAL unit never ends in a zero byte; those belong to a start code
+            nal_unit = data[start : end if end >= 0 else None].rstrip(b"\x00")
+            parameter_sets[nal_type] = (*parameter_sets.get(nal_type, ()), nal_unit)
+        start = end
+    return parameter_sets
+
+
+def hevc_picture_size(extradata: bytes) -> tuple[int, int]:
+    """Return the picture size the parameter sets in extradata declare."""
+    decoder = av.CodecContext.create("hevc", "r")
+    decoder.extradata = extradata
+    decoder.open()
+    return decoder.width, decoder.height
+
+
 class StreamState:
     """Responsible for trakcing output and playback state for a stream.
 
@@ -91,6 +125,10 @@ class StreamState:
         """Increment the sequence number."""
         self._sequence += 1
         return self._sequence
+
+    def next_stream_id(self) -> None:
+        """Start a discontinuity for segments that need a new init."""
+        self._stream_id += 1
 
     @property
     def stream_id(self) -> int:
@@ -150,6 +188,20 @@ class StreamMuxer:
         self._stream_settings = stream_settings
         self._stream_state = stream_state
         self._start_time = dt_util.utcnow()
+        # The mov muxer drops in-band parameter sets from hvc1 samples when the
+        # extradata is Annex B, so a keyframe that changes them needs a new init.
+        extradata = video_stream.codec_context.extradata or b""
+        self._follow_parameter_sets = video_stream.name == "hevc" and is_annexb(
+            extradata
+        )
+        # The parameter sets of the current init; a keyframe may repeat only some types
+        self._parameter_sets = (
+            hevc_parameter_sets(extradata) if self._follow_parameter_sets else {}
+        )
+        self._first_keyframe = True
+        self._video_extradata: bytes | None = None
+        self._video_size = (0, 0)
+        self._new_init = False
 
     @staticmethod
     def _add_stream_from_template(
@@ -282,21 +334,63 @@ class StreamMuxer:
             input_astream=self._input_audio_stream,
         )
         if self._input_video_stream.name == "hevc":
-            self._output_video_stream.codec_context.codec_tag = "hvc1"
+            codec_context = self._output_video_stream.codec_context
+            codec_context.codec_tag = "hvc1"
+            if self._video_extradata:
+                codec_context.extradata = self._video_extradata
+                codec_context.width, codec_context.height = self._video_size
+
+    def _parameter_sets_changed(self, packet: av.Packet) -> bool:
+        """Return True if a keyframe carries parameter sets the init lacks."""
+        if not self._follow_parameter_sets or not (
+            found := hevc_parameter_sets(bytes(packet))
+        ):
+            return False
+        parameter_sets = self._parameter_sets | found
+        first_keyframe, self._first_keyframe = self._first_keyframe, False
+        if parameter_sets == self._parameter_sets:
+            return False
+        self._parameter_sets = parameter_sets
+        if first_keyframe:
+            # Its output was already created from the stream's extradata
+            return False
+        extradata = b"".join(
+            b"\x00\x00\x00\x01" + nal_unit
+            for nal_type in sorted(parameter_sets)
+            for nal_unit in parameter_sets[nal_type]
+        )
+        try:
+            self._video_size = hevc_picture_size(extradata)
+        except av.FFmpegError as err:
+            _LOGGER.debug(
+                "Ignoring video parameter sets that do not parse: %s",
+                redact_av_error_string(err),
+            )
+            return False
+        self._video_extradata = extradata
+        _LOGGER.debug("Video parameter sets changed, size %sx%s", *self._video_size)
+        return True
 
     def mux_packet(self, packet: av.Packet) -> None:
         """Mux a packet to the appropriate output stream."""
 
         # Check for end of segment
         if packet.stream == self._input_video_stream:
+            new_init = packet.is_keyframe and self._parameter_sets_changed(packet)
             if (
                 packet.is_keyframe
                 and packet.dts
-                and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= self._stream_settings.min_segment_duration
+                and (
+                    new_init
+                    or (packet.dts - self._segment_start_dts) * packet.time_base
+                    >= self._stream_settings.min_segment_duration
+                )
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)
+                if new_init:
+                    self._stream_state.next_stream_id()
+                    self._new_init = True
 
             # Mux the packet
             packet.stream = self._output_video_stream
@@ -324,7 +418,9 @@ class StreamMuxer:
             # worker started.
             _stream_outputs=self._stream_state.outputs,
             start_time=self._start_time,
+            new_init=self._new_init,
         )
+        self._new_init = False
         self._memory_file_pos = self._memory_file.tell()
         self._memory_file.seek(0, SEEK_END)
 

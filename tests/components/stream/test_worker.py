@@ -49,6 +49,7 @@ from homeassistant.components.stream.worker import (
     StreamMuxer,
     StreamState,
     StreamWorkerError,
+    hevc_parameter_sets,
     stream_worker,
 )
 from homeassistant.core import HomeAssistant
@@ -1217,3 +1218,31 @@ def test_add_stream_from_template_decoder_only_fallback() -> None:
         ((template,), {}),
         ((template,), {"opaque": True}),
     ]
+
+
+def test_hevc_parameter_sets() -> None:
+    """Test the parameter sets ahead of the first slice, by NAL unit type."""
+    aud = bytes([35 << 1, 1, 0x50])
+    vps = bytes([32 << 1, 1, 0x0C])
+    sps = bytes([33 << 1, 1, 0x01])
+    pps_0 = bytes([34 << 1, 1, 0xC1])
+    pps_1 = bytes([34 << 1, 1, 0xC2])
+    idr = bytes([19 << 1, 1, 0xAF])
+    # A NAL unit after a slice is not a parameter set of this access unit
+    late_sps = bytes([33 << 1, 1, 0x02])
+
+    access_unit = b"".join(
+        b"\x00\x00\x00\x01" + nal_unit
+        for nal_unit in (aud, vps, sps, pps_0, pps_1, idr, late_sps)
+    )
+    assert hevc_parameter_sets(access_unit) == {
+        32: (vps,),
+        33: (sps,),
+        34: (pps_0, pps_1),
+    }
+    # Extradata has no slice; 3-byte start codes
+    assert hevc_parameter_sets(b"\x00\x00\x01" + sps + b"\x00\x00\x01" + pps_0) == {
+        33: (sps,),
+        34: (pps_0,),
+    }
+    assert hevc_parameter_sets(b"\x00\x00\x01" + idr) == {}
