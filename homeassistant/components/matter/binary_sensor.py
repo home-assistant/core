@@ -1,12 +1,18 @@
 """Matter binary sensors."""
 
+import base64
+import binascii
 from dataclasses import dataclass
+
+from chip import ChipUtility
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterObjectFieldDescriptor
 from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.client.models import device_types
+from matter_server.common.custom_clusters import EveCluster
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -59,11 +65,64 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
         self._attr_is_on = value
 
 
+# Eve Thermo reports its local schedule state inside a proprietary binary blob.
+# This descriptor is not included in the Python custom cluster definitions yet.
+@dataclass
+class EveThermoScheduleConfig(ClusterAttributeDescriptor):
+    """Proprietary Eve Thermo configuration attribute."""
+
+    @ChipUtility.classproperty
+    def cluster_id(cls) -> int:
+        return EveCluster.id
+
+    @ChipUtility.classproperty
+    def attribute_id(cls) -> int:
+        return 0x130A0000
+
+    @ChipUtility.classproperty
+    def attribute_type(cls) -> ClusterObjectFieldDescriptor:
+        return ClusterObjectFieldDescriptor(Type=bytes)
+
+
+def _eve_thermo_schedule_enabled(value: bytes | str) -> bool | None:
+    """Decode the observed Eve Thermo 20EBP1701 schedule bit.
+
+    Only firmware 3.5.2's 275-byte payload has been verified so far.
+    Unknown payloads are treated as unavailable, not as schedule disabled.
+    """
+    if isinstance(value, str):
+        try:
+            data = base64.b64decode(value, validate=True)
+        except (ValueError, binascii.Error):
+            return None
+    elif isinstance(value, bytes):
+        data = value
+    else:
+        return None
+
+    if len(data) != 275:
+        return None
+    return bool(data[211] & 0x01)
+
+
 _PUMP_STATUS = clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap
 _VALVE_FAULT = clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="EveThermoHeatingSchedule",
+            translation_key="eve_thermo_heating_schedule",
+            device_to_ha=_eve_thermo_schedule_enabled,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(EveThermoScheduleConfig,),
+        vendor_id=(4874,),
+        product_id=(79,),
+        product_name=("Eve Thermo 20EBP1701",),
+    ),
     # device specific: translate Hue motion to sensor to HA Motion sensor
     # instead of generic occupancy sensor
     MatterDiscoverySchema(
