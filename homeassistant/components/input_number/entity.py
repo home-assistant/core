@@ -5,7 +5,7 @@ from typing import Any, Self, override
 
 import probatio
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import RestoreNumber
 from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.helpers import collection
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -28,7 +27,7 @@ from .const import (
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
-class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
+class InputNumber(collection.CollectionEntity, RestoreNumber):
     """Representation of a slider."""
 
     _unrecorded_attributes = frozenset({InputNumberEntityStateAttribute.EDITABLE})
@@ -87,7 +86,10 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
             return
 
         value: float | None = None
-        if state := await self.async_get_last_state():
+        if (number_data := await self.async_get_last_number_data()) is not None:
+            value = number_data.native_value
+        # Fallback for states stored without number extra data, remove in 2027.5
+        elif state := await self.async_get_last_state():
             with suppress(ValueError):
                 value = float(state.state)
 
