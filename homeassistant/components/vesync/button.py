@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_purifier
-from .const import VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -27,7 +27,9 @@ def _reset_filter(device: VeSyncBaseDevice) -> Awaitable[bool]:
     """Reset the filter life of a purifier."""
     if is_purifier(device):
         return device.reset_filter()
-    raise HomeAssistantError("Device does not support resetting the filter.")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN, translation_key="reset_filter_not_supported"
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -114,8 +116,16 @@ class VeSyncButtonEntity(ButtonEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
         """Press the button."""
         if not await self.entity_description.press_fn(self.device):
             if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Unknown error pressing button, no response.")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="button_press_failed",
+                    translation_placeholders={
+                        "error": self.device.last_response.message
+                    },
+                )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_response_error"
+            )
 
         # The filter life sensor reads the new value from the next poll.
         await self.coordinator.async_request_refresh()

@@ -96,9 +96,9 @@ async def test_reset_filter(
     [
         (
             ResponseInfo(name="api_error", error_type="api_error", message="API error"),
-            "API error",
+            "Pressing the button failed: API error",
         ),
-        (None, "Unknown error pressing button, no response."),
+        (None, "Invalid response from the VeSync API"),
     ],
 )
 async def test_reset_filter_raises_error(
