@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
@@ -13,6 +12,7 @@ from webrtc_models import RTCIceCandidate, RTCIceCandidateInit
 
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
+from homeassistant.components.alexa.handlers import RTC_MAX_SESSION_DURATION
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -5949,7 +5949,6 @@ WEBRTC_CANDIDATE_AUDIO = "candidate:3 1 udp 1694498815 10.0.0.1 6000 typ srflx"
 WEBRTC_CANDIDATE_MDNS = "candidate:4 1 udp 2130706431 abcd.local 5000 typ host"
 WEBRTC_CANDIDATE_RELAY = "candidate:5 1 udp 16777215 203.0.113.5 7000 typ relay"
 RTC_SESSION_ID = "e2c4f6a8-0b1d-4e3f-9a5b-7c8d9e0f1a2b"
-RTC_MAX_SESSION_DURATION = timedelta(hours=1)
 DEMO_CAMERA_ENDPOINT = "camera#demo_camera"
 
 
@@ -6614,12 +6613,12 @@ async def test_rtc_session_expires(
     ) as mock_close:
         await _async_negotiate_rtc_session(hass)
 
-        freezer.tick(RTC_MAX_SESSION_DURATION - timedelta(seconds=1))
+        freezer.tick(RTC_MAX_SESSION_DURATION - 1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_close.assert_not_called()
 
-        freezer.tick(timedelta(seconds=1))
+        freezer.tick(1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
