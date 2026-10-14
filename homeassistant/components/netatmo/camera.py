@@ -229,7 +229,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         if self.device_type in NETATMO_DOORBELLS:
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         if self._override_on is not None:
-            return self._override_on
+            return (
+                self._override_on
+                and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+            )
         return (
             bool(self.device.monitoring)
             and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
