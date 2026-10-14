@@ -547,6 +547,30 @@ def test_time_sma(values: list[State]) -> None:
     assert filtered.state == 21.5
 
 
+def test_time_sma_window() -> None:
+    """Test the time SMA as samples leave the window one by one, then all at once."""
+    filt = TimeSMAFilter(
+        window_size=timedelta(minutes=2), precision=2, entity=None, type="last"
+    )
+    start = dt_util.utcnow()
+    samples = [(0, 10), (60, 20), (120, 30), (180, 40), (240, 50), (600, 60), (630, 70)]
+
+    filtered = [
+        filt.filter_state(
+            State(
+                "sensor.test_monitored",
+                str(value),
+                last_updated=start + timedelta(seconds=offset),
+            )
+        ).state
+        for offset, value in samples
+    ]
+
+    # a value counts from its own timestamp until the next sample, and the value
+    # that left the window last covers the stretch before the oldest sample in it
+    assert filtered == [10, 10, 15, 25, 35, 50, 52.5]
+
+
 async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Verify we can reload filter sensors."""
     hass.states.async_set("sensor.test_monitored", 12345)

@@ -2,8 +2,8 @@
 
 from typing import cast
 
+import probatio
 from python_picnic_api2 import PicnicAPI
-import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -36,12 +36,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
         async_add_product_service,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-                vol.Exclusive(ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS): cv.string,
-                vol.Exclusive(ATTR_PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS): cv.string,
-                vol.Optional(ATTR_AMOUNT): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+                probatio.Exclusive(
+                    ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
+                ): cv.string,
+                probatio.Exclusive(
+                    ATTR_PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS
+                ): cv.string,
+                probatio.Optional(ATTR_AMOUNT): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1)
+                ),
             }
         ),
     )

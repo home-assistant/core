@@ -17,14 +17,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
-PLATFORM_LOOKUP = {
-    Platform.BINARY_SENSOR: "binary_sensor",
-    Platform.CLIMATE: "climate",
-    Platform.LIGHT: "light",
-    Platform.SENSOR: "sensor",
-    Platform.SWITCH: "switch",
-    Platform.WATER_HEATER: "water_heater",
-}
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING_ON = "boost_heating_on"
 SERVICE_BOOST_HEATING_OFF = "boost_heating_off"

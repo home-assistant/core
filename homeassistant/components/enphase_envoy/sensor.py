@@ -56,7 +56,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DAILY_ENERGY_UPPER_LIMIT, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyACBAggregateEntity, EnvoyACBBatteryEntity, EnvoyBaseEntity
 
@@ -208,6 +208,7 @@ class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[EnvoySystemProduction], int]
     on_phase: str | None = None
+    upper_limit: int | None = None
 
 
 PRODUCTION_SENSORS = (
@@ -230,6 +231,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
+        upper_limit=DAILY_ENERGY_UPPER_LIMIT,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -275,6 +277,7 @@ class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[EnvoySystemConsumption], int]
     on_phase: str | None = None
+    upper_limit: int | None = None
 
 
 CONSUMPTION_SENSORS = (
@@ -297,6 +300,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
+        upper_limit=DAILY_ENERGY_UPPER_LIMIT,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -800,7 +804,6 @@ ENCHARGE_AGGREGATE_SENSORS = (
         translation_key="reserve_soc",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("reserve_state_of_charge"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(
@@ -1193,6 +1196,18 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
             serial_number=self.envoy_serial_num,
         )
 
+    def _apply_upper_limit(self, value: int, upper_limit: int | None) -> int | None:
+        """Return None for values above the upper limit."""
+        if upper_limit is not None and value > upper_limit:
+            _LOGGER.debug(
+                "Value discarded as it exceeds the upper limit %s: %s > %s",
+                self.entity_id,
+                value,
+                upper_limit,
+            )
+            return None
+        return value
+
 
 class EnvoyProductionEntity(EnvoySystemSensorEntity):
     """Envoy production entity."""
@@ -1205,7 +1220,10 @@ class EnvoyProductionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_production := self.data.system_production) is None:
             return None
-        return self.entity_description.value_fn(system_production)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_production),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
@@ -1219,7 +1237,10 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_consumption := self.data.system_consumption) is None:
             return None
-        return self.entity_description.value_fn(system_consumption)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_consumption),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyNetConsumptionEntity(EnvoySystemSensorEntity):
@@ -1258,7 +1279,10 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_production)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_production),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
@@ -1283,7 +1307,10 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_consumption)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_consumption),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):

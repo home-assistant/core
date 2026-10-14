@@ -2,7 +2,7 @@
 
 import logging
 
-from aio_ownet.exceptions import OWServerConnectionError, OWServerReturnError
+from aio_ownet.exceptions import OWServerError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -22,15 +22,12 @@ _PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> None:
     """Set up a 1-Wire proxy for a config entry."""
     onewire_hub = OneWireHub(hass, entry)
     try:
         await onewire_hub.initialize()
-    except (
-        OWServerConnectionError,  # Failed to connect to the server
-        OWServerReturnError,  # Connected to server, but failed to list the devices
-    ) as exc:
+    except OWServerError as exc:
         raise ConfigEntryNotReady from exc
 
     entry.runtime_data = onewire_hub
@@ -38,8 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     onewire_hub.schedule_scan_for_new_devices()
-
-    return True
 
 
 async def async_remove_config_entry_device(
@@ -56,6 +51,6 @@ async def async_remove_config_entry_device(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: OneWireConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, _PLATFORMS)

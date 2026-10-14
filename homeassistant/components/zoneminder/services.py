@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -13,8 +13,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_RUN_STATE = "set_run_state"
-SET_RUN_STATE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ID): cv.string, vol.Required(ATTR_NAME): cv.string}
+SET_RUN_STATE_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_ID): cv.string, probatio.Required(ATTR_NAME): cv.string}
 )
 
 

@@ -164,4 +164,4 @@ async def test_remove_stale_devices(
         (DOMAIN, mock_gateway.gw_sn), mock_config_entry.entry_id
     )
     assert gateway_device is not None
-    assert mock_config_entry.entry_id in gateway_device.config_entries
+    assert gateway_device.config_entry_id == mock_config_entry.entry_id

@@ -1091,3 +1091,28 @@ async def test_light_with_zero_mirek(
     assert test_light.attributes["min_color_temp_kelvin"] == 2000
     # A zeroed mirek is not a usable color temperature, so it is not reported
     assert test_light.attributes["color_temp_kelvin"] is None
+
+
+async def test_light_with_null_mirek(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a color temperature only light doesn't crash without a mirek value."""
+    for resource in v2_resources_test_data:
+        if resource["id"] == "3a6710fa-4474-4eba-b533-5e6e72968feb":
+            resource["on"]["on"] = True
+            resource["color_temperature"]["mirek"] = None
+            resource["color_temperature"]["mirek_valid"] = False
+            break
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    test_light = hass.states.get(
+        "light.test_room_hue_light_with_color_temperature_only"
+    )
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    # Falls back instead of converting the missing mirek value
+    assert test_light.attributes["color_temp_kelvin"] == 5800

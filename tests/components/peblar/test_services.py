@@ -10,8 +10,8 @@ from peblar import (
     PeblarRfidToken,
     PeblarVehicleToken,
 )
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.components.peblar.services import (
@@ -59,6 +59,8 @@ async def test_list_rfid_tokens(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test list_rfid_tokens returns token list."""
+    # Setting up reads the list too, and this is about what the action does.
+    mock_peblar.rfid_tokens.reset_mock()
     mock_peblar.rfid_tokens.return_value = [
         PeblarRfidToken(
             rfid_token_uid="AA:BB:CC:DD",
@@ -456,7 +458,7 @@ async def test_authorize_charge_session_needs_exactly_one_token(
     service_data: dict[str, Any],
 ) -> None:
     """Test the charger is told which token to present, and only one."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_AUTHORIZE_CHARGE_SESSION,

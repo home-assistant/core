@@ -37,7 +37,9 @@ async def test_switch(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SWITCH]):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_switch_event(mock_config_entry)
+        mock_tractive_client.set_tracker_status(
+            buzzer=True, led=False, live_tracking=True
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -52,7 +54,7 @@ async def test_switch_on(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(buzzer=True, led=False, live_tracking=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -65,11 +67,6 @@ async def test_switch_on(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_tractive_client.send_switch_event(
-        mock_config_entry,
-        {"tracker_id": "device_id_123", "led_control": {"active": True}},
-    )
-    await hass.async_block_till_done()
 
     assert mock_tractive_client.tracker.return_value.set_led_active.call_count == 1
     assert (
@@ -91,7 +88,7 @@ async def test_switch_off(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(buzzer=True, led=False, live_tracking=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -104,11 +101,6 @@ async def test_switch_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_tractive_client.send_switch_event(
-        mock_config_entry,
-        {"tracker_id": "device_id_123", "buzzer_control": {"active": False}},
-    )
-    await hass.async_block_till_done()
 
     assert mock_tractive_client.tracker.return_value.set_buzzer_active.call_count == 1
     assert (
@@ -131,7 +123,7 @@ async def test_live_tracking_switch(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(buzzer=True, led=False, live_tracking=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -144,11 +136,6 @@ async def test_live_tracking_switch(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_tractive_client.send_switch_event(
-        mock_config_entry,
-        {"tracker_id": "device_id_123", "live_tracking": {"active": False}},
-    )
-    await hass.async_block_till_done()
 
     assert (
         mock_tractive_client.tracker.return_value.set_live_tracking_active.call_count
@@ -176,7 +163,7 @@ async def test_switch_on_with_exception(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(buzzer=True, led=False, live_tracking=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -212,7 +199,7 @@ async def test_switch_off_with_exception(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(buzzer=True, led=False, live_tracking=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -250,32 +237,41 @@ async def test_switch_unavailable(
 
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(buzzer=True, led=False, live_tracking=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
 
-    event = {
-        "tracker_id": "device_id_123",
-        "hardware": {"power_saving_zone_id": "zone_id_123"},
-    }
-    mock_tractive_client.send_switch_event(mock_config_entry, event)
+    mock_tractive_client.set_tracker_status(power_saving_zone=True)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    event["hardware"]["power_saving_zone_id"] = None
-
-    mock_tractive_client.send_switch_event(mock_config_entry, event)
+    mock_tractive_client.set_tracker_status(power_saving_zone=False)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
+
+
+async def test_switch_unavailable_at_startup(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the switch is unavailable when the REST status reports a power saving zone."""
+    mock_tractive_client.status.trackers["device_id_123"].power_saving_zone = True
+
+    await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("switch.tracker_device_id_123_buzzer")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_switch_device_assignment(

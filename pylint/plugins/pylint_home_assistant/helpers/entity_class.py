@@ -1,15 +1,47 @@
 """Helpers for scanning Home Assistant entity class hierarchies."""
 
+import astroid
 from astroid import nodes
 
 from .ast_utils import extended_ancestors
 
 ENTITY_QNAME = "homeassistant.helpers.entity.Entity"
+ENTITY_DESCRIPTION_QNAME = "homeassistant.helpers.entity.EntityDescription"
+LIGHT_ENTITY_QNAME = "homeassistant.components.light.LightEntity"
 
 
 def inherits_from_entity(class_node: nodes.ClassDef) -> bool:
     """Return True if class inherits from ``homeassistant.helpers.entity.Entity``."""
     return any(a.qname() == ENTITY_QNAME for a in extended_ancestors(class_node))
+
+
+def inherits_from_light_entity(class_node: nodes.ClassDef) -> bool:
+    """Return True if class inherits from ``LightEntity``."""
+    return any(a.qname() == LIGHT_ENTITY_QNAME for a in extended_ancestors(class_node))
+
+
+def is_entity_description(class_node: nodes.ClassDef) -> bool:
+    """Return True if class is or inherits from ``EntityDescription``."""
+    if class_node.qname() == ENTITY_DESCRIPTION_QNAME:
+        return True
+    try:
+        return any(
+            ancestor.qname() == ENTITY_DESCRIPTION_QNAME
+            for ancestor in class_node.ancestors()
+        )
+    except astroid.exceptions.InferenceError:
+        return False
+
+
+def resolve_entity_description_class(call: nodes.Call) -> nodes.ClassDef | None:
+    """Return the ``EntityDescription`` subclass a constructor call creates."""
+    try:
+        for inferred in call.func.infer():
+            if isinstance(inferred, nodes.ClassDef) and is_entity_description(inferred):
+                return inferred
+    except astroid.exceptions.InferenceError:
+        pass
+    return None
 
 
 def collect_same_module_ancestor_qnames(module: nodes.Module) -> set[str]:

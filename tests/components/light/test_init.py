@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import light
@@ -391,14 +391,14 @@ async def test_services(
         {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: -1},
         blocking=True,
     )
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ent2.entity_id, light.ATTR_XY_COLOR: ["bla-di-bla", 5]},
             blocking=True,
         )
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
@@ -416,7 +416,7 @@ async def test_services(
     assert data == {}
 
     # faulty attributes will not trigger a service call
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
@@ -427,7 +427,7 @@ async def test_services(
             },
             blocking=True,
         )
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
             SERVICE_TURN_ON,
@@ -1731,7 +1731,7 @@ async def test_light_turn_on_rgb_color_is_plain_tuple(
 
     Covers two input paths that both resolve to the same RGB value (128, 0, 0):
     - color_name: goes through color_name_to_rgb (returns RGBColor NamedTuple),
-      bypassing the service schema vol.Coerce(tuple) coercion.
+      bypassing the service schema probatio.Coerce(tuple) coercion.
     - rgb_color: RGBColor NamedTuple passed directly, converted by the schema.
     """
     entities = [
@@ -2288,16 +2288,16 @@ def test_valid_supported_color_modes() -> None:
 
     # Supported color modes must not be empty
     supported = set()
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     # ColorMode.WHITE must be combined with a color mode supporting color
     supported = {light.ColorMode.WHITE}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     supported = {light.ColorMode.WHITE, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     supported = {light.ColorMode.WHITE, light.ColorMode.HS}
@@ -2308,7 +2308,7 @@ def test_valid_supported_color_modes() -> None:
     assert light.valid_supported_color_modes(supported) == supported
 
     supported = {light.ColorMode.ONOFF, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
     # ColorMode.BRIGHTNESS must be the only supported mode
@@ -2316,7 +2316,7 @@ def test_valid_supported_color_modes() -> None:
     assert light.valid_supported_color_modes(supported) == supported
 
     supported = {light.ColorMode.BRIGHTNESS, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(vol.Error):
+    with pytest.raises(probatio.Error):
         light.valid_supported_color_modes(supported)
 
 

@@ -84,7 +84,7 @@ class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
 
     @staticmethod
@@ -151,7 +151,7 @@ class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zha_state.current_temperature
 
@@ -169,19 +169,19 @@ class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._zha_state.target_temperature
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         return self._zha_state.target_temperature_high
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
         return self._zha_state.target_temperature_low
 

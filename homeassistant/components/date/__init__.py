@@ -5,22 +5,20 @@ import logging
 from typing import final, override
 
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import ATTR_DATE  # noqa: F401
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, SERVICE_SET_VALUE
+from .const import DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE  # noqa: F401
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[DateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -30,11 +28,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 __all__ = ["DOMAIN", "DateEntity", "DateEntityDescription"]
 
 
-async def _async_set_value(entity: DateEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to set a new date."""
-    return await entity.async_set_value(service_call.data[ATTR_DATE])
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Date entities."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[DateEntity](
@@ -42,9 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE, {vol.Required(ATTR_DATE): cv.date}, _async_set_value
-    )
+    async_setup_services(hass)
 
     return True
 
