@@ -314,14 +314,20 @@ class _TranslationCache:
         }
 
         # English is always the fallback language so we load them first
-        self._build_category_cache(
-            language, components, translation_by_language_strings[LOCALE_EN]
+        invalid_english = self._build_category_cache(
+            language,
+            components,
+            translation_by_language_strings[LOCALE_EN],
+            resource_language=LOCALE_EN,
         )
 
         if language != LOCALE_EN:
             # Now overlay the requested language on top of the English
             self._build_category_cache(
-                language, components, translation_by_language_strings[language]
+                language,
+                components,
+                translation_by_language_strings[language],
+                excluded_resources=invalid_english,
             )
 
             loaded_english_components = loaded.setdefault(LOCALE_EN, set())
@@ -342,26 +348,11 @@ class _TranslationCache:
         language: str,
         updated_resources: dict[str, str],
         cached_resources: dict[str, str] | None = None,
-    ) -> dict[str, str]:
-        """Validate if updated resources have same placeholders as cached resources."""
-        if cached_resources is None:
-            return updated_resources
-
+    ) -> set[str]:
+        """Remove malformed or mismatched resources and return their keys."""
         mismatches: set[str] = set()
 
         for key, value in updated_resources.items():
-            if key not in cached_resources:
-                continue
-            try:
-                tuples = list(string.Formatter().parse(cached_resources[key]))
-            except ValueError:
-                _LOGGER.error("Error while parsing English string %s", key)
-                # Neither string is safe to use without a valid fallback.
-                del cached_resources[key]
-                mismatches.add(key)
-                continue
-            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
-
             try:
                 tuples = list(string.Formatter().parse(value))
             except ValueError:
@@ -370,8 +361,12 @@ class _TranslationCache:
                 )
                 mismatches.add(key)
                 continue
+            if cached_resources is None or key not in cached_resources:
+                continue
             updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
 
+            tuples = list(string.Formatter().parse(cached_resources[key]))
+            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
             if updated_placeholders != cached_placeholders:
                 _LOGGER.error(
                     (
@@ -389,7 +384,7 @@ class _TranslationCache:
         for mismatch in mismatches:
             del updated_resources[mismatch]
 
-        return updated_resources
+        return mismatches
 
     @callback
     def _build_category_cache(
@@ -397,8 +392,12 @@ class _TranslationCache:
         language: str,
         components: set[str],
         translation_strings: dict[str, dict[str, Any]],
-    ) -> None:
-        """Extract resources into the cache."""
+        *,
+        resource_language: str | None = None,
+        excluded_resources: set[str] | None = None,
+    ) -> set[str]:
+        """Extract valid resources into the cache and return invalid keys."""
+        invalid_resources: set[str] = set()
         resource: dict[str, Any] | str
         cached = self.cache_data.cache.setdefault(language, {})
         categories = {
@@ -420,8 +419,17 @@ class _TranslationCache:
 
                 prefix = f"component.{component}.{category}."
                 flat = recursive_flatten(prefix, resource)
-                flat = self._validate_placeholders(language, flat, component_cache)
+                if excluded_resources:
+                    for key in excluded_resources.intersection(flat):
+                        del flat[key]
+                invalid_resources.update(
+                    self._validate_placeholders(
+                        resource_language or language, flat, component_cache
+                    )
+                )
                 component_cache.update(flat)
+
+        return invalid_resources
 
 
 async def async_get_translations(
