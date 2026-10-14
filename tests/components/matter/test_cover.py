@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import CoverEntityFeature, CoverState
 from homeassistant.components.matter.cover import STATE_WRITE_DEBOUNCE_COOLDOWN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -418,9 +418,31 @@ async def test_cover_moving_status_with_unknown_target(
 
 
 @pytest.mark.parametrize(
-    ("node_fixture", "entity_id"),
+    (
+        "node_fixture",
+        "entity_id",
+        "current_attribute_id",
+        "target_attribute_id",
+        "resting_state",
+    ),
     [
-        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+        pytest.param(
+            "mock_window_covering_pa_lift",
+            "cover.longan_link_wncv_da01",
+            14,
+            11,
+            CoverState.OPEN,
+            id="lift",
+        ),
+        # a tilt only cover has no lift position to derive open/closed from
+        pytest.param(
+            "mock_window_covering_pa_tilt",
+            "cover.mock_pa_tilt_window_covering",
+            15,
+            12,
+            STATE_UNKNOWN,
+            id="tilt",
+        ),
     ],
 )
 async def test_cover_target_position_subscription(
@@ -428,12 +450,15 @@ async def test_cover_target_position_subscription(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    current_attribute_id: int,
+    target_attribute_id: int,
+    resting_state: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a target position only report reaches the entity."""
 
-    set_node_attribute(matter_node, 1, 258, 14, 4900)
-    set_node_attribute(matter_node, 1, 258, 11, 0)
+    set_node_attribute(matter_node, 1, 258, current_attribute_id, 4900)
+    set_node_attribute(matter_node, 1, 258, target_attribute_id, 0)
     set_node_attribute(matter_node, 1, 258, 10, 0b001010)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
@@ -449,7 +474,7 @@ async def test_cover_target_position_subscription(
         matter_node,
         endpoint=1,
         cluster_id=258,
-        attribute_id=11,
+        attribute_id=target_attribute_id,
         value=4900,
     )
     freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
@@ -458,7 +483,7 @@ async def test_cover_target_position_subscription(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == CoverState.OPEN
+    assert state.state == resting_state
 
 
 @pytest.mark.parametrize(
