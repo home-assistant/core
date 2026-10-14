@@ -88,11 +88,32 @@
     }
   },
   "exceptions": {
+    "command_not_found": {
+      "message": "Command not found: {commands}"
+    },
+    "commands_not_found": {
+      "message": "Commands not found: {commands}"
+    },
     "connect_failed": {
       "message": "Failed to connect to the device at {host}: {error}"
     },
+    "device_not_found": {
+      "message": "Device not found: {device}"
+    },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
+    },
+    "invalid_command": {
+      "message": "Invalid command: {error}"
+    },
+    "learn_command_failed": {
+      "message": "Failed to learn command {command}: {error}"
+    },
+    "remote_send_failed": {
+      "message": "Failed to send command: {error}"
+    },
+    "rf_not_supported": {
+      "message": "{entity_id} doesn't support RF commands"
     },
     "send_command_failed": {
       "message": "Failed to send IR command: {error}"
