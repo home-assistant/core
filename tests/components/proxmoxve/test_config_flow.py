@@ -3,11 +3,9 @@
 from typing import Any
 from unittest.mock import MagicMock
 
-from proxmoxer import AuthenticationError
-from proxmoxer.core import ResourceException
+import aiohttp
+from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
 import pytest
-import requests
-from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve import CONF_AUTH_METHOD, CONF_REALM
 from homeassistant.components.proxmoxve.const import (
@@ -150,23 +148,27 @@ async def test_form(
     ("exception", "reason"),
     [
         (
-            AuthenticationError("Invalid credentials"),
+            ProxmoxAuthError("Invalid credentials"),
             "invalid_auth",
         ),
         (
-            SSLError("SSL handshake failed"),
+            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
             "ssl_error",
         ),
         (
-            ConnectTimeout("Connection timed out"),
+            TimeoutError("Connection timed out"),
             "connect_timeout",
         ),
         (
-            ResourceException("500", "status_message", "content"),
+            ProxmoxAPIError(401, "status_message", "cluster/resources"),
+            "invalid_auth",
+        ),
+        (
+            ProxmoxAPIError(500, "status_message", "cluster/resources"),
             "api_error_no_details",
         ),
         (
-            requests.exceptions.ConnectionError("Connection error"),
+            aiohttp.ClientConnectionError("Connection error"),
             "cannot_connect",
         ),
     ],
@@ -178,7 +180,7 @@ async def test_form_exceptions(
     reason: str,
 ) -> None:
     """Test we handle all exceptions."""
-    mock_proxmox_client._mock_api_cf.side_effect = exception
+    mock_proxmox_client.connect.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -202,7 +204,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    mock_proxmox_client._mock_api_cf.side_effect = None
+    mock_proxmox_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
@@ -215,77 +217,16 @@ async def test_form_exceptions(
     ("exception", "reason"),
     [
         (
-            AuthenticationError("Invalid credentials"),
-            "invalid_auth",
-        ),
-        (
-            SSLError("SSL handshake failed"),
-            "ssl_error",
-        ),
-        (
-            ConnectTimeout("Connection timed out"),
-            "connect_timeout",
-        ),
-        (
-            ResourceException("400", "status_message", "content"),
-            "no_nodes_found",
-        ),
-        (
-            requests.exceptions.ConnectionError("Connection error"),
-            "cannot_connect",
-        ),
-    ],
-)
-async def test_form_node_exceptions(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    exception: Exception,
-    reason: str,
-) -> None:
-    """Test we handle all exceptions."""
-    mock_proxmox_client.nodes.get.side_effect = exception
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_STEP,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user_auth"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_AUTH_STEP_PASSWORD,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": reason}
-
-    mock_proxmox_client.nodes.get.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-@pytest.mark.parametrize(
-    ("exception", "reason"),
-    [
-        (
-            ResourceException("404", "status_message", "content"),
+            ProxmoxAPIError(404, "status_message", "nodes/pve1/qemu"),
             "no_vmlxc_found",
         ),
         (
-            requests.exceptions.ConnectionError("Connection error"),
+            aiohttp.ClientConnectionError("Connection error"),
             "cannot_connect",
+        ),
+        (
+            TimeoutError("Connection timed out"),
+            "connect_timeout",
         ),
     ],
 )
@@ -296,9 +237,8 @@ async def test_form_exceptions_qemu(
     reason: str,
 ) -> None:
     """Test we handle all exceptions."""
-    mock_proxmox_client.nodes.get.return_value = [{"node": "pve1", "status": "online"}]
     node_resource = mock_proxmox_client.nodes.return_value
-    node_resource.qemu.get.side_effect = exception
+    node_resource.qemu_all.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -322,44 +262,7 @@ async def test_form_exceptions_qemu(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    node_resource.qemu.get.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_form_no_nodes_exception(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-) -> None:
-    """Test we handle no nodes found exception."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    mock_proxmox_client.nodes.get.side_effect = ResourceException(
-        "404", "status_message", "content"
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_STEP
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user_auth"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "no_nodes_found"}
-
-    mock_proxmox_client.nodes.get.side_effect = None
+    node_resource.qemu_all.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
@@ -380,8 +283,8 @@ async def test_form_no_nodes_empty_list(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    nodes = mock_proxmox_client.nodes.get.return_value
-    mock_proxmox_client.nodes.get.return_value = []
+    nodes = mock_proxmox_client.cluster_resources.resources
+    mock_proxmox_client.cluster_resources.resources = []
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_STEP
@@ -396,7 +299,7 @@ async def test_form_no_nodes_empty_list(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_nodes_found"}
 
-    mock_proxmox_client.nodes.get.return_value = nodes
+    mock_proxmox_client.cluster_resources.resources = nodes
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
@@ -540,23 +443,23 @@ async def test_full_flow_reconfigure_match_entries(
     ("exception", "reason"),
     [
         (
-            AuthenticationError("Invalid credentials"),
+            ProxmoxAuthError("Invalid credentials"),
             "invalid_auth",
         ),
         (
-            SSLError("SSL handshake failed"),
+            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
             "ssl_error",
         ),
         (
-            ConnectTimeout("Connection timed out"),
+            TimeoutError("Connection timed out"),
             "connect_timeout",
         ),
         (
-            ResourceException("404", "status_message", "content"),
-            "no_nodes_found",
+            ProxmoxAPIError(404, "status_message", "cluster/resources"),
+            "api_error_no_details",
         ),
         (
-            requests.exceptions.ConnectionError("Connection error"),
+            aiohttp.ClientConnectionError("Connection error"),
             "cannot_connect",
         ),
     ],
@@ -575,7 +478,7 @@ async def test_full_flow_reconfigure_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    mock_proxmox_client.nodes.get.side_effect = exception
+    mock_proxmox_client.connect.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_USER_STEP,
@@ -589,7 +492,7 @@ async def test_full_flow_reconfigure_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    mock_proxmox_client.nodes.get.side_effect = None
+    mock_proxmox_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -676,23 +579,23 @@ async def test_full_flow_reauth_token_other(
     ("exception", "reason"),
     [
         (
-            AuthenticationError("Invalid credentials"),
+            ProxmoxAuthError("Invalid credentials"),
             "invalid_auth",
         ),
         (
-            SSLError("SSL handshake failed"),
+            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
             "ssl_error",
         ),
         (
-            ConnectTimeout("Connection timed out"),
+            TimeoutError("Connection timed out"),
             "connect_timeout",
         ),
         (
-            ResourceException("404", "status_message", "content"),
-            "no_nodes_found",
+            ProxmoxAPIError(404, "status_message", "cluster/resources"),
+            "api_error_no_details",
         ),
         (
-            requests.exceptions.ConnectionError("Connection error"),
+            aiohttp.ClientConnectionError("Connection error"),
             "cannot_connect",
         ),
     ],
@@ -708,7 +611,7 @@ async def test_full_flow_reauth_exceptions(
     """Test we handle all exceptions in the reauth flow."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_proxmox_client.nodes.get.side_effect = exception
+    mock_proxmox_client.connect.side_effect = exception
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -721,7 +624,7 @@ async def test_full_flow_reauth_exceptions(
     assert result["errors"] == {"base": reason}
 
     # Now test that we can recover from the error
-    mock_proxmox_client.nodes.get.side_effect = None
+    mock_proxmox_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -740,7 +643,9 @@ async def test_form_offline_node_skipped(
     mock_proxmox_client: MagicMock,
 ) -> None:
     """Test that offline nodes are skipped during config flow."""
-    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    mock_proxmox_client.cluster_resources.resources = (
+        mock_proxmox_client._all_cluster_resources.resources
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
