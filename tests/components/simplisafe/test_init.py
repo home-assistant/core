@@ -233,7 +233,7 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
     patch_simplisafe_api,
     websocket: Mock,
 ) -> None:
-    """Test websocket retries restart at the initial delay after a connection."""
+    """Test websocket retries restart at the initial delay after a successful listen."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -242,8 +242,6 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
         None,
         WebsocketError("second failure"),
     ]
-    websocket.async_listen.side_effect = WebsocketError("listener failure")
-
     with (
         patch(
             "homeassistant.components.simplisafe.asyncio.sleep",
@@ -256,6 +254,31 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
     assert mock_sleep.await_args_list == [
         ((WEBSOCKET_RETRY_DELAY,), {}),
         ((WEBSOCKET_RETRY_DELAY,), {}),
+    ]
+
+
+async def test_websocket_listener_failures_are_capped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
+) -> None:
+    """Test repeated websocket listener failures stop after three attempts."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    websocket.async_listen.side_effect = WebsocketError("listener failure")
+
+    with patch(
+        "homeassistant.components.simplisafe.asyncio.sleep",
+        new=AsyncMock(side_effect=[None, None, None]),
+    ) as mock_sleep:
+        await config_entry.runtime_data._async_websocket_loop()
+
+    assert mock_sleep.await_args_list == [
+        ((WEBSOCKET_RETRY_DELAY,), {}),
+        ((WEBSOCKET_RETRY_DELAY * 2,), {}),
+        ((WEBSOCKET_RETRY_DELAY * 4,), {}),
     ]
 
 
