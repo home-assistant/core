@@ -32,17 +32,21 @@ async def test_global_key(hass: HomeAssistant, mock_connection: Mock) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_scoped_key(hass: HomeAssistant, mock_connection: Mock) -> None:
+@pytest.mark.parametrize(
+    "status", [grpc.StatusCode.UNAUTHENTICATED, grpc.StatusCode.PERMISSION_DENIED]
+)
+async def test_scoped_key(
+    hass: HomeAssistant, mock_connection: Mock, status: grpc.StatusCode
+) -> None:
     """Scoped keys need a tenant UUID but do not require write access."""
-    mock_connection.tenants.side_effect = grpc.aio.AioRpcError(
-        grpc.StatusCode.UNAUTHENTICATED, (), (), ""
-    )
+    mock_connection.tenants.side_effect = grpc.aio.AioRpcError(status, (), (), "")
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
         data={"endpoint": "http://server:8080", "api_key": "readonly"},
     )
     assert result["step_id"] == "tenant"
+    mock_connection.close.assert_awaited_once()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"tenant_id": "tenant"}
     )
@@ -203,6 +207,7 @@ async def test_application_listing_failure(
     )
     assert result["step_id"] == "tenant"
     assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_connection.close.await_count == 2
 
     mock_connection.applications.side_effect = None
 
@@ -287,6 +292,7 @@ async def test_inventory_access_failure(
     assert result["step_id"] == "applications"
     assert result["errors"] == {"base": expected}
     mock_connection.inventory.assert_awaited_once()
+    assert mock_connection.close.await_count == 3
     assert not hass.config_entries.async_entries("chirpstack")
 
     mock_connection.inventory.side_effect = None
