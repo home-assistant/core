@@ -62,13 +62,26 @@ async def test_user_step(
     mock_setup_entry.assert_called_once()
 
 
-async def test_invalid_api_key(
+@pytest.mark.parametrize(
+    ("client_fixture", "error"),
+    [
+        pytest.param(
+            "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
+        ),
+        pytest.param(
+            "mock_async_client_connect_error", "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+async def test_user_step_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_async_client_api_error: AsyncMock,
     request: pytest.FixtureRequest,
+    client_fixture: str,
+    error: str,
 ) -> None:
-    """Test user step with invalid api key."""
+    """Test user step errors and recovery."""
+    request.getfixturevalue(client_fixture)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -83,7 +96,7 @@ async def test_invalid_api_key(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_api_key"}
+    assert result["errors"] == {"base": error}
 
     mock_setup_entry.assert_not_called()
 
