@@ -38,7 +38,7 @@ jobs:
     name: Boot check ${{ matrix.image_prefix }} image
     if: github.repository_owner == 'home-assistant'
     # amd64 images need an x86 runner; all others are aarch64
-    runs-on: ${{ contains(fromJson('["amd64", "generic-x86-64", "qemux86-64"]'), matrix.image_prefix) && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    runs-on: ${{ contains(fromJson('["amd64", "generic-x86-64", "qemux86-64"]'), matrix.image_prefix) && 'ubuntu-26.04' || 'ubuntu-26.04-arm' }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
