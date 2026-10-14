@@ -1143,11 +1143,14 @@ async def test_retry_login_unreachable_is_a_connection_error(
     retry_service.authenticate.side_effect = PyiCloudConnectionException(
         reason="Connection error"
     )
+    recovered_service = MagicMock(requires_2fa=False, requires_2sa=False)
+    recovered_service.devices = [MagicMock()]
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService",
         side_effect=[
             PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
             retry_service,
+            recovered_service,
         ],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1156,5 +1159,12 @@ async def test_retry_login_unreachable_is_a_connection_error(
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
