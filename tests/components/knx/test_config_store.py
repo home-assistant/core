@@ -1382,9 +1382,12 @@ def test_binary_sensor_reset_after_rejects_negative(reset_after: Any) -> None:
         _validate_reset_after(reset_after)
 
 
-@pytest.mark.parametrize("reset_after", ["inf", 1e20, {"days": 1e10}])
-def test_binary_sensor_reset_after_rejects_out_of_range(reset_after: Any) -> None:
-    """An overflowing duration is a validation error, not an internal error."""
+@pytest.mark.parametrize(
+    "reset_after",
+    ["inf", 1e20, {"days": 1e10}, {"seconds": "nan"}, {"hours": "inf"}, "abc"],
+)
+def test_binary_sensor_reset_after_rejects_malformed(reset_after: Any) -> None:
+    """Overflowing or malformed durations are validation errors, not internal errors."""
     with pytest.raises(EntityStoreValidationException):
         _validate_reset_after(reset_after)
 
