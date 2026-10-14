@@ -85,6 +85,15 @@
       "channel_2_temperature": {
         "name": "Channel 2 temperature"
       },
+      "client_role": {
+        "name": "Client role",
+        "state": {
+          "admin": "Administrator",
+          "restricted_user": "Restricted user",
+          "urm_deactivated_fallback": "User rights management off",
+          "user": "User"
+        }
+      },
       "delta_temperature": {
         "name": "Delta temperature"
       },
