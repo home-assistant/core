@@ -43,6 +43,7 @@ async def test_config_flow_success(
     }
     assert result["result"].unique_id == "123e4567-e89b-12d3-a456-426614174000"
     assert len(mock_setup_entry.mock_calls) == 1
+    bypass_api.disconnect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -136,6 +137,7 @@ async def test_reauth(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "new-password",
     }
+    bypass_api.disconnect.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

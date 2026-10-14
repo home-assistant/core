@@ -54,6 +54,8 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return None, {"base": "unknown"}
+        # Authorizing starts a token refresh task that only disconnect cancels
+        await hub.disconnect()
         user_uuid: str = jwt.decode(
             tokens.aws_access, options={"verify_signature": False}
         )["username"]
