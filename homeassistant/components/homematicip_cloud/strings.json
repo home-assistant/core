@@ -48,6 +48,9 @@
       },
       "raining": {
         "name": "Raining"
+      },
+      "water_alarm": {
+        "name": "Water alarm"
       }
     },
     "event": {
