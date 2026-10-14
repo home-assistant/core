@@ -28,7 +28,7 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  "aiohttp==3.14.4",
+  "aiohttp==3.14.5",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.2.0",
@@ -626,7 +626,11 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["homeassistant"]
+# Measure only imported files; pass --cov=homeassistant to also report
+# never-imported files as 0% (one CI bucket does that).
+include = ["homeassistant/*"]
+# --cov=<package> sets source, which overrides include on purpose
+disable_warnings = ["include-ignored"]
 
 [tool.coverage.report]
 exclude_lines = [

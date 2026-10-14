@@ -144,8 +144,13 @@ class EvoChild(EvoEntity):
         if not self._schedule:
             return self._setpoints
 
-        this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
-        next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
+        if (this_sp := self._evo_device.this_switchpoint) is None or (
+            next_sp := self._evo_device.next_switchpoint
+        ) is None:
+            return self._setpoints
+
+        this_sp_dtm, this_sp_val = this_sp
+        next_sp_dtm, next_sp_val = next_sp
 
         key = "temp" if isinstance(self._evo_device, evo.Zone) else "state"
 
@@ -164,7 +169,7 @@ class EvoChild(EvoEntity):
         async def get_schedule() -> None:
             try:
                 schedule = await self.coordinator.call_client_api(
-                    self._evo_device.get_schedule(),  # type: ignore[arg-type]
+                    self._evo_device.get_schedule(),
                     request_refresh=False,
                 )
             except evo.InvalidScheduleError as err:

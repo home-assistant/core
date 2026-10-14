@@ -36,7 +36,7 @@ def prevent_dnspython_blocking_operations() -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MinecraftServerConfigEntry
-) -> bool:
+) -> None:
     """Set up Minecraft Server from a config entry."""
     await hass.async_add_executor_job(prevent_dnspython_blocking_operations)
 
@@ -48,19 +48,17 @@ async def async_setup_entry(
     # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
-) -> bool:
+) -> None:
     """Unload Minecraft Server config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry to a new format."""
 
     # 1 --> 2: Use config entry ID as base for unique IDs.
@@ -131,8 +129,6 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
         _LOGGER.debug("Migration to version 3 successful")
-
-    return True
 
 
 async def _async_migrate_device_identifiers(

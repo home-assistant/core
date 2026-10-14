@@ -39,11 +39,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        async_unregister_webhook(hass, entry)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    async_unregister_webhook(hass, entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> None:
@@ -52,7 +51,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> N
         await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> None:
     """Set up the Rachio config entry."""
 
     config = entry.data
@@ -85,8 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
     try:
         await person.async_setup(hass)
     except ConfigEntryAuthFailed as error:
-        # Reauth is not yet implemented
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from error
@@ -120,5 +118,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
     async_register_webhook(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
