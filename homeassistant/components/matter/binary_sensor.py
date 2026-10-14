@@ -98,6 +98,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(EveCluster.Attributes.GetConfig,),
         vendor_id=(4874,),
+        product_id=(79,),
         device_type=(device_types.Thermostat,),
     ),
     # device specific: translate Hue motion to sensor to HA Motion sensor
