@@ -189,10 +189,12 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
-            _, error = await self._async_query_status(new_data)
-            if error:
-                errors["base"] = error
+            status, error = await self._async_query_status(new_data)
+            if status is None:
+                errors["base"] = error or "unknown"
             else:
+                await self.async_set_unique_id(status["uuid"])
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(entry, data=new_data)
 
         return self.async_show_form(

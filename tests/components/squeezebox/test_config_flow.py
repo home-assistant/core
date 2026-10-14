@@ -601,3 +601,22 @@ async def test_reauth_flow_invalid_auth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "right"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_server: AsyncMock
+) -> None:
+    """Test reauthentication aborts when the host now serves a different LMS."""
+    mock_config_entry.add_to_hass(hass)
+    mock_server.async_query.return_value = {"uuid": SERVER_UUIDS[1]}
+    mock_server.http_status = HTTPStatus.OK
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert CONF_PASSWORD not in mock_config_entry.data

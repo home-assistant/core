@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS found."
+      "no_server_found": "No LMS found.",
+      "unique_id_mismatch": "The server does not match the configured LMS. Please add it as a new entry instead."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
