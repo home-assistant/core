@@ -1,8 +1,11 @@
 """Tests for the button module."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pyvesync.devices.vesyncpurifier import VeSyncAirBypass
 from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,14 +14,16 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 
 from .common import ALL_DEVICE_NAMES, mock_devices_response
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTITY_RESET_FILTER = "button.air_purifier_200s_reset_filter"
 RESET_FILTER = "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.reset_filter"
+UPDATE_ALL_DEVICES = "pyvesync.vesync.VeSync.update_all_devices"
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
@@ -58,6 +63,7 @@ async def test_reset_filter(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test pressing the reset filter button resets the filter and refreshes."""
 
@@ -68,9 +74,7 @@ async def test_reset_filter(
 
     with (
         patch(RESET_FILTER, return_value=True) as method_mock,
-        patch(
-            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_request_refresh"
-        ) as refresh_mock,
+        patch(UPDATE_ALL_DEVICES) as update_mock,
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -79,8 +83,12 @@ async def test_reset_filter(
             blocking=True,
         )
 
+        freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
     method_mock.assert_called_once()
-    refresh_mock.assert_called_once()
+    update_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -97,6 +105,7 @@ async def test_reset_filter_raises_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     last_response: ResponseInfo | None,
     message: str,
 ) -> None:
@@ -107,22 +116,26 @@ async def test_reset_filter_raises_error(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for device in config_entry.runtime_data.manager.devices:
+    async def failed_reset(device: VeSyncAirBypass) -> bool:
+        """Fail the way pyvesync does, leaving the API response on the device."""
         device.last_response = last_response
+        return False
 
     with (
-        patch(RESET_FILTER, return_value=False) as method_mock,
-        patch(
-            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_request_refresh"
-        ) as refresh_mock,
-        pytest.raises(HomeAssistantError, match=message),
+        patch(RESET_FILTER, autospec=True, side_effect=failed_reset) as method_mock,
+        patch(UPDATE_ALL_DEVICES) as update_mock,
     ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ENTITY_RESET_FILTER},
-            blocking=True,
-        )
+        with pytest.raises(HomeAssistantError, match=message):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {ATTR_ENTITY_ID: ENTITY_RESET_FILTER},
+                blocking=True,
+            )
+
+        freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     method_mock.assert_called_once()
-    refresh_mock.assert_not_called()
+    update_mock.assert_not_called()
