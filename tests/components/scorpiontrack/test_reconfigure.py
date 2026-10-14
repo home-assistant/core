@@ -11,8 +11,8 @@ from pyscorpiontrack import (
 )
 import pytest
 
-from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN, DOMAIN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntryState
+from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -54,10 +54,7 @@ async def test_reconfigure_same_share(
         mock_share, token=token, title="New share title"
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -98,10 +95,9 @@ async def test_reconfigure_rejects_different_share(
     """Keep the original configuration when the link identifies another share."""
     mock_config_entry.add_to_hass(hass)
     mock_scorpiontrack_client.async_get_share.return_value = replace(mock_share, id=202)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data={CONF_SHARE_TOKEN: "another-token"},
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SHARE_TOKEN: "another-token"}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -133,10 +129,9 @@ async def test_reconfigure_validation_error(
     mock_config_entry.add_to_hass(hass)
     mock_scorpiontrack_client.async_get_share.side_effect = error
     share_input = "https://app.scorpiontrack.com/shared/location?token=updated-token"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data={CONF_SHARE_TOKEN: share_input},
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SHARE_TOKEN: share_input}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -169,10 +164,9 @@ async def test_reconfigure_malformed_link(
 ) -> None:
     """Recover from an empty token by submitting a valid token."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-        data={CONF_SHARE_TOKEN: " "},
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SHARE_TOKEN: " "}
     )
 
     assert result["type"] is FlowResultType.FORM
