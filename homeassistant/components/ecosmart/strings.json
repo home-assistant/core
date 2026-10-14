@@ -37,10 +37,7 @@
       "message": "The ecosmart API key was rejected. Creating a new key in the ecosmart app disables the previous one."
     },
     "rate_limited": {
-      "message": "The ecosmart API key is out of requests; the next attempt is in {retry_after} seconds"
-    },
-    "rate_limited_setup": {
-      "message": "The ecosmart API is temporarily out of requests. Home Assistant will retry automatically."
+      "message": "The ecosmart API key is out of requests; waiting at least {retry_after} seconds before trying again"
     }
   }
 }

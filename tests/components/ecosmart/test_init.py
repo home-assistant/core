@@ -15,7 +15,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.ecosmart.const import SPOT_SCAN_INTERVAL
-from homeassistant.components.ecosmart.coordinator import EcosmartCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -116,64 +115,53 @@ async def test_identity_failures(
     assert mock_config_entry.error_reason_translation_key == expected_translation_key
 
 
+@pytest.mark.parametrize("failing_call", ["me", "spot"])
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "expected_delay"),
     [
-        EcosmartRateLimitError("slow down", retry_after=30),
-        # No Retry-After header either — setup must not invent a delay claim.
-        EcosmartRateLimitError("slow down"),
+        (EcosmartRateLimitError("slow down", retry_after=30), 30),
+        # No Retry-After header: back off for our own poll interval instead.
+        (EcosmartRateLimitError("slow down"), 300),
     ],
 )
-async def test_identity_rate_limit_is_reported_as_such(
+async def test_setup_rate_limit_waits_for_the_server(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    failing_call: str,
     side_effect: Exception,
+    expected_delay: int,
 ) -> None:
-    """Test a spent budget is not reported as a connection failure.
+    """Test a rate limit during setup retries after the server's delay.
 
-    ConfigEntryNotReady has no retry_after support, so the setup path must
-    use a message that does not claim a delay Home Assistant will not honour.
+    Both setup calls are covered: the identity lookup and the first price
+    fetch. Without the delay Home Assistant would retry after about five
+    seconds, into a key that is still out of budget.
     """
-    mock_ecosmart_client.me.side_effect = side_effect
+    failing = getattr(mock_ecosmart_client, failing_call)
+    failing.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "rate_limited_setup"
-    placeholders = mock_config_entry.error_reason_translation_placeholders or {}
-    assert "retry_after" not in placeholders
-    # The rendered reason must not claim a number of seconds either.
-    reason = str(mock_config_entry.reason or "")
-    assert not any(ch.isdigit() for ch in reason)
+    assert mock_config_entry.error_reason_translation_key == "rate_limited"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "retry_after": str(expected_delay)
+    }
 
+    failing.side_effect = None
+    freezer.tick(timedelta(seconds=expected_delay - 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-async def test_first_refresh_rate_limit_omits_retry_after(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test an initial 429 does not claim a delay HA will ignore.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    async_config_entry_first_refresh ignores UpdateFailed.retry_after and
-    converts the failure to a normal config-entry retry (~5s), so the
-    setup-time path must not pass or advertise a server delay.
-    """
-    mock_config_entry.add_to_hass(hass)
-    coordinator = EcosmartCoordinator(
-        hass, mock_config_entry, mock_ecosmart_client, load_identity()
-    )
-    assert coordinator.data is None
-    mock_ecosmart_client.spot.side_effect = EcosmartRateLimitError(
-        "slow down", retry_after=30
-    )
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(UpdateFailed) as err:
-        await coordinator._async_update_data()
-
-    assert err.value.translation_key == "rate_limited_setup"
-    assert err.value.retry_after is None
-    assert not err.value.translation_placeholders
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(

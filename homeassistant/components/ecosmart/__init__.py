@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
-from .coordinator import EcosmartConfigEntry, EcosmartCoordinator
+from .coordinator import EcosmartConfigEntry, EcosmartCoordinator, retry_delay
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -29,11 +29,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> 
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except EcosmartRateLimitError as err:
-        # ConfigEntryNotReady has no retry_after support; HA retries in ~5s.
-        # Do not claim a delay the framework will not honour.
+        retry_after = retry_delay(err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="rate_limited_setup",
+            translation_key="rate_limited",
+            translation_placeholders={"retry_after": str(retry_after)},
+            retry_after=retry_after,
         ) from err
     except EcosmartError as err:
         raise ConfigEntryNotReady(

@@ -22,6 +22,17 @@ from .const import DOMAIN, LOGGER, SPOT_SCAN_INTERVAL
 type EcosmartConfigEntry = ConfigEntry[EcosmartCoordinator]
 
 
+def retry_delay(err: EcosmartRateLimitError) -> int:
+    """Return how many seconds to wait after the API rate limited a key.
+
+    The server's Retry-After when it sends one; otherwise our own poll
+    interval, rather than hammering a key that is already out of budget.
+    """
+    if err.retry_after is None:
+        return int(SPOT_SCAN_INTERVAL.total_seconds())
+    return err.retry_after
+
+
 class EcosmartCoordinator(DataUpdateCoordinator[dict[str, Spot]]):
     """Fetch the spot price for every grid exit point a key can reach.
 
@@ -65,18 +76,9 @@ class EcosmartCoordinator(DataUpdateCoordinator[dict[str, Spot]]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EcosmartRateLimitError as err:
-            # First refresh converts UpdateFailed to ConfigEntryNotReady and
-            # ignores retry_after (~5s HA retry). Do not claim a delay then.
-            if self.data is None:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="rate_limited_setup",
-                ) from err
-            retry_after = err.retry_after
-            if retry_after is None:
-                # No Retry-After header: fall back to our own cadence rather
-                # than hammering a key that is already out of budget.
-                retry_after = int(SPOT_SCAN_INTERVAL.total_seconds())
+            # During the first refresh Home Assistant passes this delay on to
+            # the config entry retry, so setup waits for it too.
+            retry_after = retry_delay(err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="rate_limited",
