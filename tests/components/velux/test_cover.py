@@ -299,6 +299,27 @@ async def test_window_current_position_while_moving(
     assert state.attributes.get("current_position") == 40
 
 
+async def test_window_unknown_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """An unknown reported position stays unknown while the cover moves."""
+
+    entity_id = "cover.test_window"
+
+    # pyvlx cannot estimate from an unknown position and raises
+    mock_window.position.known = False
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = PyVLXException(
+        "Position::percent_out_of_range"
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") is None
+
+
 # Dual roller shutter command tests
 async def test_dual_roller_shutter_open_close_services(
     hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
