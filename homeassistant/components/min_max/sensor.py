@@ -374,15 +374,14 @@ class MinMaxSensor(SensorEntity):
 
         # Only inherit device_class if all entities have the same non-None device_class
         # and it allows the measurement state class, e.g. not energy
+        first = device_classes[0] if device_classes else None
         if (
-            device_classes
-            and all(dc is not None and dc == device_classes[0] for dc in device_classes)
+            first is not None
+            and all(dc == first for dc in device_classes)
             and SensorStateClass.MEASUREMENT
-            in DEVICE_CLASS_STATE_CLASSES.get(
-                device_classes[0], {SensorStateClass.MEASUREMENT}
-            )
+            in DEVICE_CLASS_STATE_CLASSES.get(first, {SensorStateClass.MEASUREMENT})
         ):
-            self._attr_device_class = device_classes[0]
+            self._attr_device_class = first
 
     @callback
     def _calc_values(self) -> None:
