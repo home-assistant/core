@@ -1431,6 +1431,7 @@ def test_binary_sensor_reset_after_schema_uses_duration_selector() -> None:
     schema = get_serialized_schema(Platform.BINARY_SENSOR)
     assert schema is not None
     reset_after = next(field for field in schema if field["name"] == "reset_after")
+    assert reset_after["type"] == "knx_duration"
     assert reset_after["selector"] == {
         "duration": {
             "allow_negative": False,

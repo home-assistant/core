@@ -118,7 +118,7 @@
             'enable_second': True,
           }),
         }),
-        'type': 'ha_selector',
+        'type': 'knx_duration',
       }),
       dict({
         'allow_false': True,

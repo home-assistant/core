@@ -4,7 +4,7 @@ from collections.abc import Hashable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum, unique
-from typing import Annotated, Any
+from typing import Annotated, Any, override
 
 import probatio
 from probatio import Key
@@ -54,6 +54,7 @@ from .knx_selector import (
     KnxPayloadSelector,
     KNXSectionFlat,
     KnxSelectOptionsSelector,
+    KNXSelectorBase,
     PayloadValue,
     RawPayload,
     SelectOption,
@@ -118,18 +119,25 @@ def _to_entity_data(data: dict[str, Any]) -> KnxEntityData[Any]:
 _RESET_AFTER_SECONDS = selector.NumberSelector(selector.NumberSelectorConfig(min=0))
 
 
-class _ResetAfterDurationSelector(selector.Selector[selector.DurationSelectorConfig]):
+class _ResetAfterDurationSelector(KNXSelectorBase):
     """Show a duration while validating and storing its value as seconds."""
 
-    selector_type = "duration"
-    CONFIG_SCHEMA = selector.DurationSelector.CONFIG_SCHEMA
+    selector_type = "knx_duration"
 
+    def __init__(self, config: selector.DurationSelectorConfig) -> None:
+        """Initialize the duration UI schema."""
+        self.duration_selector = selector.DurationSelector(config)
+
+    @override
+    def serialize(self) -> dict[str, Any]:
+        """Mark the duration as using a seconds-based KNX value."""
+        return self.duration_selector.serialize() | {"type": self.selector_type}
+
+    @override
     def __call__(self, data: Any) -> float:
         """Accept stored seconds and Duration selector input."""
         if isinstance(data, dict):
-            return timedelta(
-                **selector.DurationSelector(self.config)(data)
-            ).total_seconds()
+            return timedelta(**self.duration_selector(data)).total_seconds()
         return _RESET_AFTER_SECONDS(data)
 
 
