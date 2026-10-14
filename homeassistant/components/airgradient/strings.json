@@ -108,6 +108,7 @@
         "name": "LED bar mode",
         "state": {
           "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+          "iaqs": "IAQS",
           "off": "[%key:common::state::off%]",
           "pm": "Particulate matter"
         }
@@ -178,6 +179,7 @@
         "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
         "state": {
           "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+          "iaqs": "[%key:component::airgradient::entity::select::led_bar_mode::state::iaqs%]",
           "off": "[%key:common::state::off%]",
           "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
         }
