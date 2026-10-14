@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> None:
     """Set up the config entry for Rain Bird."""
 
     clientsession = async_create_clientsession()
@@ -150,8 +150,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
-
-    return True
 
 
 async def _async_fix_unique_id(
@@ -289,9 +287,9 @@ def _async_fix_device_id(
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_listener(

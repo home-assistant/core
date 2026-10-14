@@ -22,9 +22,9 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     SWING_OFF,
-    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.components.infrared import (
     InfraredEmitterConsumerEntity,
@@ -40,7 +40,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -144,9 +143,7 @@ async def async_setup_entry(
         async_add_entities([LgAcClimateEntity(entry, emitter_entity_id)])
 
 
-class LgAcClimateEntity(
-    LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
-):
+class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, RestoreClimate):
     """LG AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
@@ -212,8 +209,12 @@ class LgAcClimateEntity(
             self._attr_hvac_mode = HVACMode(last_state.state)
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
-        if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_native_target_temperature = float(temperature)
+        if (
+            climate_data := await self.async_get_last_climate_data(validate_range=True)
+        ) is not None and (
+            temperature := climate_data.native_target_temperature
+        ) is not None:
+            self._attr_native_target_temperature = float(round(temperature))
         if (swing := last_state.attributes.get(ATTR_SWING_MODE)) in _HA_SWING_TO_LIB:
             self._attr_swing_mode = swing
         if (

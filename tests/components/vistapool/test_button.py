@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aioaquarite import AquariteError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,6 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 _BUTTON = "button.my_pool_led_next_color"
+_SYNC_TIME_BUTTON = "button.my_pool_sync_time"
 _LED_DATA = {"main": {"hasLED": 1, "version": 1}, "light": {"status": 0}}
 
 
@@ -60,6 +62,40 @@ async def test_button_not_created_without_led(
     await hass.async_block_till_done()
 
     assert hass.states.get(_BUTTON) is None
+    # The sync time button does not depend on any controller capability.
+    assert hass.states.get(_SYNC_TIME_BUTTON) is not None
+
+
+async def test_sync_time_button_writes_local_wall_clock(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    mock_pool_data: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sync time button writes the local wall-clock time read as UTC.
+
+    Tests run Home Assistant in US/Pacific: 12:00 UTC is 05:00 PDT, and the
+    controller expects that local time encoded as seconds since the epoch.
+    """
+    freezer.move_to("2026-10-04T12:00:00+00:00")
+    mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: _SYNC_TIME_BUTTON},
+        blocking=True,
+    )
+
+    # 2026-10-04T05:00:00 PDT as if it were UTC: 1791115200 - 7 * 3600.
+    mock_vistapool_client.set_value.assert_awaited_once_with(
+        "ABCDEF1234567890", "main.localTime", 1791090000
+    )
 
 
 async def test_button_press_when_light_off(
@@ -160,20 +196,22 @@ async def test_button_press_rapid_repeat_after_off(
 
 
 @pytest.mark.parametrize(
-    ("light_status", "failing_method"),
+    ("entity_id", "light_status", "failing_method"),
     [
-        pytest.param(0, "set_value", id="turn_on_fails"),
-        pytest.param(1, "pulse", id="pulse_fails"),
+        pytest.param(_BUTTON, 0, "set_value", id="turn_on_fails"),
+        pytest.param(_BUTTON, 1, "pulse", id="pulse_fails"),
+        pytest.param(_SYNC_TIME_BUTTON, 0, "set_value", id="sync_time_fails"),
     ],
 )
 async def test_button_press_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
+    entity_id: str,
     light_status: int,
     failing_method: str,
 ) -> None:
-    """Test the button re-raises HomeAssistantError when the library fails."""
+    """Test the buttons re-raise HomeAssistantError when the library fails."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"hasLED": 1, "version": 1},
         "light": {"status": light_status},
@@ -188,7 +226,7 @@ async def test_button_press_raises_on_api_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: _BUTTON},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"

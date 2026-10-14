@@ -1,7 +1,7 @@
 """Tests for Renault setup process."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
@@ -283,14 +283,16 @@ async def test_account_not_found_issue_deleted_on_removal(
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 @pytest.mark.parametrize("vehicle_type", ["missing_details"], indirect=True)
 async def test_setup_entry_missing_vehicle_details(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, mock_get_vehicle_details: AsyncMock
 ) -> None:
     """Test ConfigEntryNotReady when vehicleDetails is missing."""
     # In this case we are testing the condition where renault_hub fails to retrieve
-    # vehicle details (see #99127).
+    # vehicle details (see #99127), even when requested separately.
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Requested for each vehicle without details in the vehicle list.
+    assert mock_get_vehicle_details.await_count == 2
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 

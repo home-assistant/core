@@ -190,7 +190,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> None:
     """Set up NextDNS as config entry."""
     api_key = entry.data[CONF_API_KEY]
 
@@ -240,8 +240,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: NextDnsConfigEntry
@@ -250,6 +248,6 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -157,7 +157,7 @@ async def _async_migrate_unique_ids(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: LutronCasetaConfigEntry
-) -> bool:
+) -> None:
     """Set up a bridge from a config entry."""
     entry_id = entry.entry_id
     host = entry.data[CONF_HOST]
@@ -223,8 +223,6 @@ async def async_setup_entry(
     entry.runtime_data = LutronCasetaData(bridge, bridge_device, keypad_data, entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 @callback
@@ -507,11 +505,11 @@ def _async_subscribe_keypad_events(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: LutronCasetaConfigEntry
-) -> bool:
+) -> None:
     """Unload the bridge from a config entry."""
     data = entry.runtime_data
     await data.bridge.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def _id_to_identifier(lutron_id: str) -> tuple[str, str]:

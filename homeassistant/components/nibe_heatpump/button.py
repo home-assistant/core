@@ -58,9 +58,11 @@ class NibeAlarmResetButton(CoordinatorEntity[CoilCoordinator], ButtonEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if entity is available."""
+        if not super().available:
+            return False
+
         if coil := self.coordinator.data.get(self._alarm_coil.address):
             return coil.value != 0
 

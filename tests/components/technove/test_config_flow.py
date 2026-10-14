@@ -70,6 +70,7 @@ async def test_user_device_exists_abort(
         TechnoVEError,
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(
     hass: HomeAssistant, mock_technove: MagicMock, error: type[Exception]
 ) -> None:
@@ -89,8 +90,13 @@ async def test_connection_error(
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": "cannot_connect"}
+
+    mock_technove.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

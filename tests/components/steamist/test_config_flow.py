@@ -124,8 +124,26 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+        ),
+        patch(
+            "homeassistant.components.steamist.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
@@ -146,8 +164,26 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.steamist.config_flow.Steamist.async_get_status"
+        ),
+        patch(
+            "homeassistant.components.steamist.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "127.0.0.1",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery(hass: HomeAssistant) -> None:

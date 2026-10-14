@@ -34,16 +34,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_swisscom_client() -> Generator[MagicMock]:
-    """Mock the SwisscomClient used in the config flow."""
+    """Mock the SwisscomClient used in the config flow and coordinator."""
     box_info = MagicMock()
     box_info.base_mac = TEST_BASE_MAC
     box_info.model_name = TEST_MODEL_NAME
 
-    with patch(
-        "homeassistant.components.swisscom.config_flow.SwisscomClient",
-        autospec=True,
-    ) as mock_cls:
+    with (
+        patch(
+            "homeassistant.components.swisscom.config_flow.SwisscomClient",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.swisscom.coordinator.SwisscomClient",
+            new=mock_cls,
+        ),
+    ):
         client = mock_cls.return_value
         client.login = AsyncMock()
         client.get_box_info = AsyncMock(return_value=box_info)
+        client.get_devices = AsyncMock(return_value=[])
         yield client

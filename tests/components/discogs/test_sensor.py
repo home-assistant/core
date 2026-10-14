@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -66,3 +67,32 @@ async def test_sensors_empty_collection(
     state = hass.states.get("sensor.testuser_random_record")
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("record_format", "expected_format"),
+    [
+        ({"name": "CD", "descriptions": []}, "CD"),
+        ({"name": "CD"}, "CD"),
+        ({"name": "Vinyl", "descriptions": ["LP", "Album"]}, "Vinyl (LP)"),
+    ],
+)
+async def test_random_record_format_without_descriptions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discogs_client: MagicMock,
+    mock_discogs_data: dict,
+    record_format: dict,
+    expected_format: str,
+) -> None:
+    """Test the random record format when the release has no descriptions."""
+    mock_discogs_data["formats"] = [record_format]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.testuser_random_record")
+    assert state is not None
+    assert state.state == "Artist Name - Album Title"
+    assert state.attributes["format"] == expected_format

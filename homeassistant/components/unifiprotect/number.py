@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import operator
 from typing import cast, override
 
 from uiprotect import ChimeRingtoneNotSetError
@@ -91,6 +92,8 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         # The public setter refuses a camera whose only microphone is a
         # hot-plugged module, so the gate is the built-in flag in both modes.
         ufp_required_field="feature_flags.has_mic",
+        # Protect refuses the setter while the microphone is disabled.
+        ufp_public_enabled_fn=operator.attrgetter("is_mic_enabled"),
         ufp_public_value="mic_volume",
         ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,

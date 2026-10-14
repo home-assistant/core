@@ -46,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PushoverConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PushoverConfigEntry) -> None:
     """Set up pushover from a config entry."""
 
     # remove unique_id for beta users
@@ -79,5 +79,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushoverConfigEntry) -> 
             hass.data[DATA_HASS_CONFIG],
         )
     )
-
-    return True
