@@ -390,12 +390,13 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # We are not goint to follow the spec here. We are going to allow
     # any internal network IP to be used inside a client id.
 
-    address = None
-
     # hostname excludes the port and the [, ] around ipv6 addresses
-    if parts.hostname is not None:
-        with suppress(ValueError):
-            address = ip_address(parts.hostname)
+    if parts.hostname is None:
+        raise ValueError("Client ID must contain a hostname")
+
+    address = None
+    with suppress(ValueError):
+        address = ip_address(parts.hostname)
 
     if address is None or is_local(address):
         return parts
