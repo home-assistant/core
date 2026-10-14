@@ -1,5 +1,6 @@
 """Test the Airthings BLE integration init."""
 
+import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import patch
@@ -837,6 +838,7 @@ async def test_existing_connectivity_mode_issue_kept_when_setup_fails(
         hass,
         DOMAIN,
         issue_id,
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
@@ -871,6 +873,11 @@ async def test_connectivity_mode_issue_deleted_on_remove(
     assert _issues(issue_registry) == {
         f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}": "connectivity_smartlink"
     }
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
@@ -928,3 +935,40 @@ async def test_connectivity_mode_issues_are_per_entry(
     await hass.async_block_till_done()
 
     assert _issues(issue_registry) == {second_issue: "connectivity_not_configured"}
+
+
+async def test_connectivity_mode_issue_not_created_after_remove(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a read that finishes after the entry is removed creates no issue."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "Bluetooth"
+    )
+    read_started = asyncio.Event()
+    finish_read = asyncio.Event()
+
+    async def slow_read(*args: object) -> AirthingsDevice:
+        read_started.set()
+        await finish_read.wait()
+        return _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink")
+
+    with patch_airthings_ble(side_effect=slow_read):
+        update = hass.async_create_task(
+            hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: "sensor.airthings_corentium_home_2_123456_battery"},
+                blocking=True,
+            )
+        )
+        await read_started.wait()
+        await hass.config_entries.async_remove(entry.entry_id)
+        finish_read.set()
+        await update
+        await hass.async_block_till_done()
+
+    assert _issues(issue_registry) == {}
+    assert "Unexpected error" not in caplog.text
