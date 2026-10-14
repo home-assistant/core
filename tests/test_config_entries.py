@@ -71,6 +71,8 @@ from .common import (
     async_capture_events,
     async_fire_time_changed,
     flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -7910,6 +7912,31 @@ async def test_update_entry_and_reload(
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(config_entries)
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "value"),
+    [
+        ("CONN_CLASS_CLOUD_PUSH", "cloud_push"),
+        ("CONN_CLASS_CLOUD_POLL", "cloud_poll"),
+        ("CONN_CLASS_LOCAL_PUSH", "local_push"),
+        ("CONN_CLASS_LOCAL_POLL", "local_poll"),
+        ("CONN_CLASS_ASSUMED", "assumed"),
+        ("CONN_CLASS_UNKNOWN", "unknown"),
+    ],
+)
+def test_deprecated_connection_class_constants(
+    caplog: pytest.LogCaptureFixture, constant_name: str, value: str
+) -> None:
+    """Test deprecated connection class constants."""
+    import_and_test_deprecated_constant(
+        caplog, config_entries, constant_name, None, value, "2027.5.0"
+    )
 
 
 async def test_update_entry_and_reload_with_listener_logs(
