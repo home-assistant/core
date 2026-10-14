@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -50,10 +50,10 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if len(mac_addresses) > 0:
             self.mac_address = mac_addresses[0]
             self.unique_id = self.mac_address
-            self.device_info[ATTR_CONNECTIONS] = {
+            self.device_info.connections = {
                 (CONNECTION_NETWORK_MAC, mac_address) for mac_address in mac_addresses
             }
-            self.device_info[ATTR_IDENTIFIERS] = {
+            self.device_info.identifiers = {
                 (DOMAIN, format_mac(mac_address)) for mac_address in mac_addresses
             }
         else:

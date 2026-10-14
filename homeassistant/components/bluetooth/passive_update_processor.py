@@ -10,8 +10,6 @@ from habluetooth import BluetoothScanningMode
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
     CONF_ENTITY_CATEGORY,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
@@ -674,9 +672,9 @@ class PassiveBluetoothProcessorEntity[
         device_info = DeviceInfo(name=processor.coordinator.name)
         if device_id in devices:
             device_info.update(devices[device_id])
-        device_info[ATTR_IDENTIFIERS] = {(DOMAIN, identifier)}
+        device_info.identifiers = {(DOMAIN, identifier)}
         if device_id is None:
-            device_info[ATTR_CONNECTIONS] = {(CONNECTION_BLUETOOTH, address)}
+            device_info.connections = {(CONNECTION_BLUETOOTH, address)}
         self._attr_device_info = device_info
         if (name := processor.entity_names.get(entity_key)) is not None:
             self._attr_name = name
