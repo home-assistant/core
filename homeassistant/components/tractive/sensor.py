@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
+    UnitOfMass,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -28,6 +29,7 @@ from .const import (
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
     ATTR_TRACKER_STATE,
+    ATTR_WEIGHT,
 )
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
@@ -40,6 +42,7 @@ class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
+    pet_detail: bool = False
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -56,6 +59,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         """Initialize sensor entity."""
         super().__init__(coordinator, trackable, description.hardware_sensor)
 
+        self._trackable = trackable
         self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
         self.entity_description = description
 
@@ -63,12 +67,14 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        status = (
-            self._tracker_status
-            if self.entity_description.hardware_sensor
-            else self._pet_status
-        )
-        value: StateType = getattr(status, self.entity_description.key)
+        source: object
+        if self.entity_description.hardware_sensor:
+            source = self._tracker_status
+        elif self.entity_description.pet_detail:
+            source = self._trackable
+        else:
+            source = self._pet_status
+        value: StateType = getattr(source, self.entity_description.key)
         return value
 
     @property
@@ -133,6 +139,15 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        pet_detail=True,
     ),
 )
 

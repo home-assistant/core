@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tractive.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -78,7 +78,25 @@ async def test_sensor_device_assignment(
         "sensor.test_pet_daily_goal",
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
+        "sensor.test_pet_weight",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.device_id == pet_device.id
+
+
+async def test_sensor_weight_unavailable(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the weight sensor is unavailable when the pet has no weight."""
+    trackable = mock_tractive_client.async_fetch_trackables.return_value[0]
+    del trackable.pet_details["details"]["weight"]
+
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
