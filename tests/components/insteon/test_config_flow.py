@@ -125,6 +125,7 @@ async def test_form_select_plm(hass: HomeAssistant) -> None:
     result2, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == MOCK_USER_INPUT_PLM
 
@@ -159,6 +160,7 @@ async def test_form_select_plm_manual(hass: HomeAssistant) -> None:
         hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == MOCK_USER_INPUT_PLM
 
@@ -173,6 +175,7 @@ async def test_form_select_hub_v1(hass: HomeAssistant) -> None:
     result2, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V1
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         **MOCK_USER_INPUT_HUB_V1,
@@ -190,6 +193,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
     result2, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V2
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         **MOCK_USER_INPUT_HUB_V2,
@@ -232,6 +236,11 @@ async def test_failed_connection_plm(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    result3, _ = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
     """Test a failed connection with the PLM."""
@@ -247,6 +256,11 @@ async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
+    result4, _ = await _device_form(
+        hass, result3["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     """Test a failed connection with a Hub."""
@@ -258,6 +272,11 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    result3, _ = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V2
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_via_usb(hass: HomeAssistant) -> None:
@@ -283,6 +302,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {"device": "/dev/ttyINSTEON"}
 

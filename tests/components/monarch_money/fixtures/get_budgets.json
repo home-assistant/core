@@ -1,0 +1,70 @@
+{
+  "budgetData": {
+    "monthlyAmountsByCategory": [
+      {
+        "category": { "id": "category-food" },
+        "monthlyAmounts": [
+          {
+            "month": "2026-08-01",
+            "plannedCashFlowAmount": -500.0,
+            "actualAmount": -550.0,
+            "remainingAmount": -50.0
+          },
+          {
+            "month": "2026-09-01",
+            "plannedCashFlowAmount": -500.0,
+            "actualAmount": -150.0,
+            "remainingAmount": 625.0
+          }
+        ]
+      },
+      {
+        "category": { "id": "category-vacation" },
+        "monthlyAmounts": [
+          {
+            "month": "2026-09-01",
+            "plannedCashFlowAmount": null,
+            "actualAmount": null,
+            "remainingAmount": null
+          }
+        ]
+      },
+      {
+        "category": { "id": "category-housing" },
+        "monthlyAmounts": [
+          {
+            "month": "2026-08-01",
+            "plannedCashFlowAmount": -1200.0,
+            "actualAmount": -1200.0,
+            "remainingAmount": 0.0
+          }
+        ]
+      },
+      {
+        "category": { "id": "category-archived" },
+        "monthlyAmounts": [
+          {
+            "month": "2026-09-01",
+            "plannedCashFlowAmount": -100.0,
+            "actualAmount": -50.0,
+            "remainingAmount": -50.0
+          }
+        ]
+      }
+    ]
+  },
+  "categoryGroups": [
+    {
+      "name": "Food & Dining",
+      "categories": [{ "id": "category-food", "name": "Groceries" }]
+    },
+    {
+      "name": "Travel",
+      "categories": [{ "id": "category-vacation", "name": "Vacation" }]
+    },
+    {
+      "name": "Housing",
+      "categories": [{ "id": "category-housing", "name": "Rent" }]
+    }
+  ]
+}

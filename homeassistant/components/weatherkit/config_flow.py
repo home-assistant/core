@@ -9,7 +9,7 @@ from apple_weatherkit.client import (
     WeatherKitApiClientCommunicationError,
     WeatherKitApiClientError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -31,26 +31,26 @@ from .const import (
 )
 
 
-def _build_data_schema(*, key_pem_required: bool) -> vol.Schema:
+def _build_data_schema(*, key_pem_required: bool) -> probatio.Schema:
     """Build the config flow data schema.
 
     The private key is optional during reconfigure so the user can leave it
     blank to keep the currently configured key.
     """
     key_pem_marker = (
-        vol.Required(CONF_KEY_PEM)
+        probatio.Required(CONF_KEY_PEM)
         if key_pem_required
-        else vol.Optional(CONF_KEY_PEM, default="")
+        else probatio.Optional(CONF_KEY_PEM, default="")
     )
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_LOCATION): LocationSelector(
+            probatio.Required(CONF_LOCATION): LocationSelector(
                 LocationSelectorConfig(radius=False, icon="")
             ),
             # Auth
-            vol.Required(CONF_KEY_ID): TextSelector(),
-            vol.Required(CONF_SERVICE_ID): TextSelector(),
-            vol.Required(CONF_TEAM_ID): TextSelector(),
+            probatio.Required(CONF_KEY_ID): TextSelector(),
+            probatio.Required(CONF_SERVICE_ID): TextSelector(),
+            probatio.Required(CONF_TEAM_ID): TextSelector(),
             key_pem_marker: TextSelector(
                 TextSelectorConfig(
                     multiline=True,

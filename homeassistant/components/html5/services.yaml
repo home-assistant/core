@@ -1,13 +1,3 @@
-dismiss:
-  fields:
-    target:
-      example: ["my_phone", "my_tablet"]
-      selector:
-        object:
-    data:
-      example: '{ "tag": "tagname" }'
-      selector:
-        object:
 send_message:
   target:
     entity:

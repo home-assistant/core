@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from miio import Device as MiioDevice, DeviceException
 
-from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
+from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import GatewayDeviceCoordinator
@@ -57,7 +58,7 @@ class XiaomiMiioEntity(Entity):
         )
 
         if self._mac is not None:
-            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info.connections = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 
@@ -99,7 +100,7 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         )
 
         if self._mac is not None:
-            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info.connections = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 
@@ -141,11 +142,12 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     @staticmethod
     def _parse_datetime_time(initial_time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(  # pylint: disable=home-assistant-enforce-naive-now
+        now = dt_util.now()
+        time = now.replace(
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
-        if time < datetime.datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
+        if time < now:
             time += datetime.timedelta(days=1)
 
         return time.isoformat()

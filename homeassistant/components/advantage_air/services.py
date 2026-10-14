@@ -1,6 +1,6 @@
 """Services for Advantage Air integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -18,6 +18,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "set_time_to",
         entity_domain=SENSOR_DOMAIN,
-        schema={vol.Required("minutes"): cv.positive_int},
+        schema={probatio.Required("minutes"): cv.positive_int},
         func="set_time_to",
     )

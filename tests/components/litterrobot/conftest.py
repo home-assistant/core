@@ -51,6 +51,7 @@ def create_mock_robot(
         robot.change_filter = AsyncMock(side_effect=side_effect)
         robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
         robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_settings = AsyncMock(side_effect=side_effect)
         robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
     elif v4:
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
@@ -151,6 +152,23 @@ def mock_account_with_litterhopper() -> MagicMock:
     return create_mock_account(
         robot_data={"hopperStatus": HopperStatus.ENABLED, "isHopperRemoved": False},
         v4=True,
+    )
+
+
+@pytest.fixture
+def mock_account_with_litterhopper_5() -> MagicMock:
+    """Mock account with LitterHopper attached to Litter-Robot 5."""
+    return create_mock_account(
+        robot_data={
+            "state": {
+                **ROBOT_5_DATA["state"],
+                "hopperStatusIndicator": {
+                    "title": "Litter low",
+                    "value": HopperStatus.LITTER_LOW.value,
+                },
+            }
+        },
+        v5=True,
     )
 
 

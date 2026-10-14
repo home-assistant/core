@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LibrenmsConfigEntry, LibrenmsDataUpdateCoordinator
+from .coordinator import LibrenmsCentralDataUpdateCoordinator, LibrenmsConfigEntry
 from .entity import LibrenmsDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class LibrenmsDeviceBinarySensorEntity(LibrenmsDeviceEntity, BinarySensorEntity)
 
     def __init__(
         self,
-        coordinator: LibrenmsDataUpdateCoordinator,
+        coordinator: LibrenmsCentralDataUpdateCoordinator,
         description: LibrenmsDeviceBinarySensorEntityDescription,
         device_id: int,
     ) -> None:

@@ -8,8 +8,8 @@ from apple_weatherkit.client import (
     WeatherKitApiClientCommunicationError,
     WeatherKitApiClientError,
 )
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.weatherkit.config_flow import (
@@ -99,6 +99,17 @@ async def test_error_handling(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            EXAMPLE_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unsupported_location(hass: HomeAssistant) -> None:
@@ -282,7 +293,7 @@ async def test_reconfigure_flow_prefills_current_values(hass: HomeAssistant) -> 
     assert suggested_key_id == EXAMPLE_CONFIG_DATA[CONF_KEY_ID]
 
     key_pem_key = next(key for key in schema if key == CONF_KEY_PEM)
-    assert isinstance(key_pem_key, vol.Optional)
+    assert isinstance(key_pem_key, probatio.Optional)
     assert key_pem_key.description is None
 
 
@@ -318,3 +329,15 @@ async def test_reconfigure_flow_error_handling(
     assert result["errors"] == {"base": expected_error}
 
     assert entry.data == EXAMPLE_CONFIG_DATA
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            EXAMPLE_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
