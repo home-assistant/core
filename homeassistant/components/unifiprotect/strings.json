@@ -920,7 +920,7 @@
       "title": "Package binary sensor removed"
     },
     "private_only_entity_deprecated": {
-      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. It depends on a private API that the integration is phasing out. Use the UniFi Protect app instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. It depends on a private API that the integration is phasing out.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Entity deprecated"
     },
     "rtsp_disabled": {

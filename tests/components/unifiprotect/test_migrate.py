@@ -1,8 +1,8 @@
 """Test the UniFi Protect setup flow."""
 
-from collections.abc import Callable, Coroutine, Generator
+from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from uiprotect.data import Camera, Light, ModelType, Sensor
@@ -1063,7 +1063,7 @@ async def test_is_new_private_only_entity_registered(
     ("model", "key"),
     [
         pytest.param(ModelType.CAMERA, "status_light", id="key_not_deprecated"),
-        pytest.param(ModelType.CHIME, "ssh", id="model_without_deprecations"),
+        pytest.param(ModelType.LINK_STATION, "uptime", id="model_without_deprecations"),
         pytest.param(None, "ssh", id="no_model"),
     ],
 )
@@ -1074,27 +1074,6 @@ async def test_is_new_private_only_entity_not_deprecated(
     assert not async_is_new_private_only_entity(hass, model, CAMERA_MAC, key)
 
 
-@pytest.fixture
-def real_private_only_skip() -> Generator[None]:
-    """Use the real new-install check in entity creation."""
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.entity.async_is_new_private_only_entity",
-            async_is_new_private_only_entity,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
-            async_is_new_private_only_entity,
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
-            async_is_new_private_only_entity,
-        ),
-    ):
-        yield
-
-
-@pytest.mark.usefixtures("real_private_only_skip")
 async def test_private_only_entities_skipped_on_new_install(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1135,9 +1114,11 @@ async def test_private_only_entities_skipped_on_new_install(
     assert entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{nvr_mac}_storage_utilization"
     )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{doorbell.mac}_wifi_signal"
+    )
 
 
-@pytest.mark.usefixtures("real_private_only_skip")
 async def test_private_only_entities_kept_on_existing_install(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

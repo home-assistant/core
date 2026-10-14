@@ -453,10 +453,10 @@ def async_is_new_private_only_entity(
 def async_deprecate_private_only_entities(
     hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
 ) -> None:
-    """Deprecate the device setup and device data entities on the private API.
+    """Deprecate the entities that only the private API provides.
 
-    The official API cannot change them, and most of them it cannot read either.
-    They are not useful in automations; the UniFi Protect app manages them.
+    The official API does not provide them, and they are not requested from
+    Ubiquiti.
 
     Waits for startup to finish: before the automations are loaded, every entity
     looks unused and the repair would be dropped.
