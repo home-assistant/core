@@ -1,8 +1,9 @@
 """Tests for Tradfri setup."""
 
+import json
 from unittest.mock import MagicMock
 
-from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
+from pytradfri.const import ATTR_GATEWAY_ID
 from pytradfri.gateway import Gateway
 
 from homeassistant.components import tradfri
@@ -104,6 +105,7 @@ async def test_migrate_config_entry_and_identifiers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     command_store: CommandStore,
+    gateway_response: str,
 ) -> None:
     """Test migration of device registry identifiers to the unique format.
 
@@ -120,7 +122,7 @@ async def test_migrate_config_entry_and_identifiers(
         },
     )
 
-    gateway1 = mock_gateway_fixture(command_store, GATEWAY_ID1)
+    gateway1 = mock_gateway_fixture(command_store, GATEWAY_ID1, gateway_response)
     command_store.register_device(
         gateway1, await async_load_json_object_fixture(hass, "bulb_w.json", DOMAIN)
     )
@@ -176,15 +178,15 @@ async def test_migrate_config_entry_and_identifiers(
 
     # Bulb 1 kept the same device entry, its identifier migrated to the unique
     # format, and it is still owned only by gateway 1's config entry.
-    migrated_bulb1 = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65537")}
+    migrated_bulb1 = device_registry.async_get_device_by_identifier(
+        (tradfri.DOMAIN, f"{GATEWAY_ID1}-65537"), config_entry1.entry_id
     )
     assert migrated_bulb1.id == gateway1_bulb1.id
     assert migrated_bulb1.config_entry_id == config_entry1.entry_id
 
     # The gateway device is unchanged.
-    migrated_gateway1 = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, GATEWAY_ID1)}
+    migrated_gateway1 = device_registry.async_get_device_by_identifier(
+        (tradfri.DOMAIN, GATEWAY_ID1), config_entry1.entry_id
     )
     assert migrated_gateway1.id == gateway1_device.id
     assert migrated_gateway1.identifiers == gateway1_device.identifiers
@@ -192,8 +194,8 @@ async def test_migrate_config_entry_and_identifiers(
 
     # Bulb 2 is stale and has been removed, not moved to another config entry.
     assert (
-        device_registry.async_get_device(
-            identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65538")}
+        device_registry.async_get_device_by_identifier(
+            (tradfri.DOMAIN, f"{GATEWAY_ID1}-65538"), config_entry1.entry_id
         )
         is None
     )
@@ -205,8 +207,8 @@ async def test_migrate_config_entry_and_identifiers(
         device_registry, config_entry2.entry_id
     )
     assert len(device_entries) == 2
-    gateway2_bulb = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID2}-65537")}
+    gateway2_bulb = device_registry.async_get_device_by_identifier(
+        (tradfri.DOMAIN, f"{GATEWAY_ID2}-65537"), config_entry2.entry_id
     )
     assert gateway2_bulb.config_entry_id == config_entry2.entry_id
 
@@ -226,12 +228,16 @@ async def test_migrate_config_entry_and_identifiers(
     assert config_entry3.version == 1
 
 
-def mock_gateway_fixture(command_store: CommandStore, gateway_id: str) -> Gateway:
+def mock_gateway_fixture(
+    command_store: CommandStore, gateway_id: str, gateway_response: str
+) -> Gateway:
     """Mock a Tradfri gateway."""
     gateway = Gateway()
+    gateway_info_response = json.loads(gateway_response)
+    gateway_info_response[ATTR_GATEWAY_ID] = gateway_id
     command_store.register_response(
         gateway.get_gateway_info(),
-        {ATTR_GATEWAY_ID: gateway_id, ATTR_FIRMWARE_VERSION: "1.2.1234"},
+        gateway_info_response,
     )
     command_store.register_response(
         gateway.get_devices(),

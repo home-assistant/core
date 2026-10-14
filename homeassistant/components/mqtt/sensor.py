@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
@@ -18,12 +18,15 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
     CONF_FORCE_UPDATE,
     CONF_NAME,
     CONF_OPTIONS,
@@ -52,7 +55,7 @@ from .const import (
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
-from .util import check_state_too_long
+from .util import check_state_too_long, entity_category_without_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +63,8 @@ PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
-        sensor.ATTR_LAST_RESET,
-        sensor.ATTR_STATE_CLASS,
+        SensorEntityStateAttribute.LAST_RESET,
+        SensorEntityCapabilityAttribute.STATE_CLASS,
     }
 )
 
@@ -72,19 +75,21 @@ URL_DOCS_SUPPORTED_SENSOR_UOM = (
     "https://www.home-assistant.io/integrations/sensor/#device-class"
 )
 
-_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(MQTT_ENTITY_COMMON_SCHEMA.schema).extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIONS): cv.ensure_list,
-        vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
-        vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+        probatio.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        probatio.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIONS): probatio.EnsureList(),
+        probatio.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
+        probatio.Optional(CONF_STATE_CLASS): probatio.Any(STATE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),
+        # a sensor can not be added as a config entity
+        probatio.Optional(CONF_ENTITY_CATEGORY): entity_category_without_config,
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+)
 
 
 def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigType:
@@ -93,7 +98,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         CONF_LAST_RESET_VALUE_TEMPLATE in config
         and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
             f"together with state class `{state_class}`"
         )
@@ -108,15 +113,15 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
         if not options:
-            raise vol.Invalid("An empty options list is not allowed")
+            raise probatio.Invalid("An empty options list is not allowed")
         if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Specifying `{CONF_OPTIONS}` is not allowed together with "
                 f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
             )
 
         if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"The option `{CONF_OPTIONS}` must be used "
                 f"together with device class `{SensorDeviceClass.ENUM}`, "
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
@@ -128,7 +133,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT))
         not in STATE_CLASS_UNITS[state_class]
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"The unit of measurement '{unit_of_measurement}' is not valid "
             f"together with state class '{state_class}'"
         )
@@ -147,7 +152,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         device_class in DEVICE_CLASS_UNITS
         and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"The unit of measurement `{unit_of_measurement}` is not valid "
             f"together with device class `{device_class}`",
         )
@@ -155,13 +160,13 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     return config
 
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     validate_sensor_state_and_device_class_config,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     validate_sensor_state_and_device_class_config,
 )
 

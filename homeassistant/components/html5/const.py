@@ -2,7 +2,6 @@
 
 DOMAIN = "html5"
 DATA_HASS_CONFIG = "html5_hass_config"
-SERVICE_DISMISS = "dismiss"
 
 ATTR_VAPID_PUB_KEY = "vapid_pub_key"
 ATTR_VAPID_PRV_KEY = "vapid_prv_key"
@@ -25,3 +24,5 @@ ATTR_TIMESTAMP = "timestamp"
 ATTR_TTL = "ttl"
 ATTR_URGENCY = "urgency"
 ATTR_VIBRATE = "vibrate"
+ATTR_SUBSCRIPTION = "subscription"
+ATTR_ENDPOINT = "endpoint"

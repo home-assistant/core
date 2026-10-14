@@ -44,6 +44,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
+HEALTH_USER_ID = "mock-health-user-id"
 
 
 def _rollup_fixture(
@@ -65,7 +66,7 @@ def _list_fixture(filename: str, data_type: DataType) -> ListDataPointResult:
     return ListDataPointResult(_ListDataPointsModel(data_points=data_points))
 
 
-def _paired_devices_fixture(filename: str) -> ListPairedDevicesResult:
+def paired_devices_fixture(filename: str) -> ListPairedDevicesResult:
     """Build a list of paired devices result from a fixture."""
     raw_json = load_json_object_fixture(filename, DOMAIN)
     return ListPairedDevicesResult(_ListPairedDevicesModel.from_dict(raw_json))
@@ -101,7 +102,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Google Health",
-        unique_id="mock-health-user-id",
+        unique_id=HEALTH_USER_ID,
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         data={
             "auth_implementation": DOMAIN,
@@ -181,7 +182,7 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.body_fat = AsyncMock()
         client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
         client.paired_devices = AsyncMock()
-        client.paired_devices.list.return_value = _paired_devices_fixture(
+        client.paired_devices.list.return_value = paired_devices_fixture(
             "paired_devices.json"
         )
         client.paired_devices.required_read_scopes = [

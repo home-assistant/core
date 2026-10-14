@@ -5,8 +5,8 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
@@ -301,7 +301,7 @@ async def test_service_update_devices(
                     "While the code allows for an empty string"
                     " the schema doesn't allow it"
                 ),
-                raises=vol.MultipleInvalid,
+                raises=probatio.MultipleInvalid,
             ),
         ),
     ],
@@ -394,7 +394,7 @@ async def test_service_volume_release(
                     " pass an empty string, but the schema"
                     " does not allow this"
                 ),
-                raises=vol.MultipleInvalid,
+                raises=probatio.MultipleInvalid,
             ),
         ),
     ],
@@ -452,7 +452,7 @@ async def test_service_volume_mute(
                     "`att` only accepts a int or a HEX value,"
                     " it seems good to allow for raw data here."
                 ),
-                raises=vol.MultipleInvalid,
+                raises=probatio.MultipleInvalid,
             ),
         ),
         pytest.param(
@@ -480,7 +480,7 @@ async def test_service_volume_mute(
                     " passthrough a list, the call schema does"
                     " not allow it."
                 ),
-                raises=(vol.MultipleInvalid, TypeError),
+                raises=(probatio.MultipleInvalid, TypeError),
             ),
         ),
     ],

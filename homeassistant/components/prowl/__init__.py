@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a Prowl service."""
     try:
         if not await async_verify_key(hass, entry.data[CONF_API_KEY]):
@@ -30,12 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except prowlpy.APIError as ex:
         if str(ex).startswith("Not accepted: exceeded rate limit"):
             raise ConfigEntryNotReady("Prowl API rate limit exceeded") from ex
-        raise ConfigEntryError("Failed to validate Prowl API key ({ex})") from ex
+        raise ConfigEntryError(f"Failed to validate Prowl API key ({ex})") from ex
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

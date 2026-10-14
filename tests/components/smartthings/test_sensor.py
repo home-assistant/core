@@ -416,3 +416,37 @@ async def test_availability_at_start(
         hass.states.get("sensor.theater_ac_office_granit_temperature").state
         == STATE_UNAVAILABLE
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_vc_stick_01001"])
+@pytest.mark.parametrize(
+    ("reported_state", "expected_state"),
+    [
+        ("usingVacuum", "using_vacuum"),
+        ("emptyingDustbin", "emptying_dustbin"),
+        ("UVCleaning", "uv_cleaning"),
+        ("UVPaused", "uv_paused"),
+        ("ready", "ready"),
+    ],
+)
+async def test_stick_cleaner_operating_state_is_mapped(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    reported_state: str,
+    expected_state: str,
+) -> None:
+    """Test the stick cleaner states are mapped onto the entity options."""
+    await setup_integration(hass, mock_config_entry)
+
+    await trigger_update(
+        hass,
+        devices,
+        "e1f93c0c-6fe0-c65a-a314-c8f7b163c86b",
+        Capability.SAMSUNG_CE_STICK_CLEANER_STATUS,
+        Attribute.OPERATING_STATE,
+        reported_state,
+    )
+
+    assert (state := hass.states.get("sensor.stick_vacuum"))
+    assert state.state == expected_state

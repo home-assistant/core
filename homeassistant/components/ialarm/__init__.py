@@ -13,7 +13,7 @@ from .coordinator import IAlarmConfigEntry, IAlarmDataUpdateCoordinator
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IAlarmConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IAlarmConfigEntry) -> None:
     """Set up iAlarm config."""
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
@@ -32,9 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IAlarmConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IAlarmConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IAlarmConfigEntry) -> None:
     """Unload iAlarm config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

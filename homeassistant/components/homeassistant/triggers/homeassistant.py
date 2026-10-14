@@ -1,6 +1,6 @@
 """Offer Home Assistant core automation rules."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
@@ -15,8 +15,8 @@ EVENT_SHUTDOWN = "shutdown"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(CONF_EVENT): vol.Any(EVENT_START, EVENT_SHUTDOWN),
+        probatio.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(CONF_EVENT): probatio.Any(EVENT_START, EVENT_SHUTDOWN),
     }
 )
 

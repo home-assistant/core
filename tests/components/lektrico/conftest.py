@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from ipaddress import ip_address
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCKED_DEVICE_IP_ADDRESS = "192.168.100.10"
 MOCKED_DEVICE_SERIAL_NUMBER = "500006"
@@ -58,11 +57,11 @@ def mock_device() -> Generator[AsyncMock]:
     ):
         device = mock_device.return_value
 
-        device.device_config.return_value = json.loads(
-            load_fixture("get_config.json", DOMAIN)
+        device.device_config.return_value = load_json_object_fixture(
+            "get_config.json", DOMAIN
         )
-        device.device_info.return_value = json.loads(
-            load_fixture("get_info.json", DOMAIN)
+        device.device_info.return_value = load_json_object_fixture(
+            "get_info.json", DOMAIN
         )
 
         yield device

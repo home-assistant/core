@@ -110,22 +110,20 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
         try:
             await self._send_message(message)
         except NotAuthorizedError as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_forbidden",
                 translation_placeholders={
-                    **self.translation_placeholders,
+                    CONF_NAME: self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
         except NotFoundError as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_not_found",
                 translation_placeholders={
-                    **self.translation_placeholders,
+                    CONF_NAME: self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e

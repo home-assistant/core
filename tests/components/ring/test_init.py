@@ -52,8 +52,8 @@ async def test_device_registry(
 ) -> None:
     """Test the device registry entry, including the network MAC connection."""
     # device_id "aacdef987654" is the Front Door doorbell's MAC.
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "aacdef987654")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "aacdef987654"), mock_added_config_entry.entry_id
     )
     assert device_entry == snapshot
 

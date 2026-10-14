@@ -123,6 +123,25 @@ class NetatmoDeviceEntity(NetatmoBaseEntity):
         return self.device.home
 
 
+def room_device_info(room: Room, via_device_id: str) -> DeviceInfo:
+    """Return the device info describing a Netatmo room.
+
+    Entities living on a room device must all describe it the same way, or
+    whichever is added last renames the room after itself.
+    """
+    assert room.climate_type
+    manufacturer, model = DEVICE_DESCRIPTION_MAP[room.climate_type]
+    return DeviceInfo(
+        identifiers={(DOMAIN, room.entity_id)},
+        name=room.name,
+        manufacturer=manufacturer,
+        model=model,
+        configuration_url=CONF_URL_ENERGY,
+        suggested_area=room.name,
+        via_device_id=via_device_id,
+    )
+
+
 class NetatmoRoomEntity(NetatmoDeviceEntity):
     """Netatmo room entity base class."""
 
@@ -131,13 +150,9 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
     def __init__(self, room: NetatmoRoom) -> None:
         """Set up a Netatmo room entity."""
         super().__init__(room.data_handler, room.room)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, room.room.entity_id)},
-            name=room.room.name,
-            manufacturer=self.device_description[0],
-            model=self.device_description[1],
-            configuration_url=CONF_URL_ENERGY,
-            suggested_area=room.room.name,
+        self._attr_device_info = room_device_info(
+            room.room,
+            room.data_handler.parent_device_ids[room.room.home.entity_id],
         )
 
     @override
@@ -171,6 +186,11 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
             model=self.device_description[1],
             configuration_url=self._attr_configuration_url,
         )
+        parent_id = device.data_handler.module_parents.get(
+            device.device.entity_id, device.parent_id
+        )
+        if via_device_id := device.data_handler.parent_device_ids.get(parent_id):
+            self._attr_device_info["via_device_id"] = via_device_id
 
     @property
     @override

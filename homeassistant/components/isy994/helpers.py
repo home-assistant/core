@@ -22,7 +22,7 @@ from pyisy.constants import (
 from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
+from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
@@ -39,6 +39,7 @@ from .const import (
     LOGGER,
     NODE_AUX_FILTERS,
     NODE_FILTERS,
+    NODE_PARALLEL_PLATFORMS,
     NODE_PLATFORMS,
     PROGRAM_PLATFORMS,
     SUBNODE_CLIMATE_COOL,
@@ -291,15 +292,7 @@ def _add_backlight_if_supported(isy_data: IsyData, node: Node) -> None:
 def _generate_device_info(node: Node, via_device_id: str | None) -> DeviceInfo:
     """Generate the device info for a root node device."""
     isy = node.isy
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
-        manufacturer=node.protocol.title(),
-        name=node.name,
-        configuration_url=isy.conn.url,
-        suggested_area=node.folder,
-    )
-    if via_device_id is not None:
-        device_info["via_device_id"] = via_device_id
+    manufacturer = node.protocol.title()
 
     # ISYv5 Device Types can provide model and manufacturer
     model: str = str(node.address).rpartition(" ")[0] or node.address
@@ -316,14 +309,22 @@ def _generate_device_info(node: Node, via_device_id: str | None) -> DeviceInfo:
         and node.zwave_props
         and node.zwave_props.mfr_id != "0"
     ):
-        device_info[ATTR_MANUFACTURER] = (
-            f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
-        )
+        manufacturer = f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
         model += (
             f"Type:{int(node.zwave_props.prod_type_id):#0{6}x} "
             f"Product:{int(node.zwave_props.product_id):#0{6}x}"
         )
-    device_info[ATTR_MODEL] = model
+
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
+        manufacturer=manufacturer,
+        model=model,
+        name=node.name,
+        configuration_url=isy.conn.url,
+        suggested_area=node.folder,
+    )
+    if via_device_id is not None:
+        device_info["via_device_id"] = via_device_id
 
     return device_info
 
@@ -362,11 +363,22 @@ def _categorize_nodes(
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)
             continue
 
-        if node.protocol == PROTO_INSTEON:
+        if node.protocol in (PROTO_INSTEON, PROTO_ZWAVE):
             for control in node.aux_properties:
                 if control in SKIP_AUX_PROPS:
                     continue
                 isy_data.aux_properties[Platform.SENSOR].append((node, control))
+
+        # Must run before the sensor_identifier override below -- Platform.EVENT
+        # is additive, not exclusive with a name/path-forced Platform.SENSOR.
+        for parallel_platform in NODE_PARALLEL_PLATFORMS:
+            if _check_for_node_def(isy_data, node, single_platform=parallel_platform):
+                continue
+            if _check_for_insteon_type(
+                isy_data, node, single_platform=parallel_platform
+            ):
+                continue
+            _check_for_zwave_cat(isy_data, node, single_platform=parallel_platform)
 
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to

@@ -1,7 +1,6 @@
 """Fixtures for Roku integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,7 +10,7 @@ from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 def app_icon_url(*args, **kwargs):
@@ -48,7 +47,7 @@ async def mock_device(
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    return RokuDevice(json.loads(await async_load_fixture(hass, fixture)))
+    return RokuDevice(await async_load_json_object_fixture(hass, fixture))
 
 
 @pytest.fixture

@@ -33,6 +33,7 @@ def get_device_info(device: RoborockDevice) -> DeviceInfo:
         model=device.product.model,
         model_id=device.product.model,
         sw_version=device.device_info.fv,
+        serial_number=device.device_info.sn,
     )
 
 

@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.button import DEFAULT_NAME, SCRIPT_FIELDS
 from homeassistant.components.template.const import CONF_PICTURE
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -29,6 +30,10 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     async_trigger,
     make_test_action,
     setup_and_test_nested_unique_id,
@@ -339,7 +344,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("button.my_template")
+    template_entity = entity_registry.async_get("button.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -381,3 +386,91 @@ async def test_invalid_availability_template_keeps_component_available(
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get(TEST_BUTTON.entity_id).state != STATE_UNAVAILABLE
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_BUTTON, style, {}, action, caplog
+    )
+
+
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_BUTTON, {}, action, caplog
+    )
+
+
+async def test_extra_template_attributes(hass: HomeAssistant) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_BUTTON, ConfigurationStyle.MODERN, {"press": []}
+    )
+
+
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_BUTTON,
+        ConfigurationStyle.MODERN,
+        0,
+        {
+            "press": [],
+            "attributes": {"device_class": "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: device_class"
+        in caplog.text
+    )
+
+
+async def test_attributes_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass, TEST_BUTTON, ConfigurationStyle.MODERN, {"press": []}, caplog
+    )
+
+
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_BUTTON,
+        ConfigurationStyle.MODERN,
+        1,
+        {
+            "press": [],
+            "attributes": "{{ dict(device_class='does not matter') }}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_BUTTON.entity_id}: device_class"
+    assert error in caplog.text

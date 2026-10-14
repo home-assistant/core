@@ -375,6 +375,7 @@ async def test_clean_area_room_from_not_current_map(
 async def test_raise_segment_changed_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     controller: EcovacsController,
     entity_id: str,
     events: tuple[Event, ...],
@@ -390,7 +391,7 @@ async def test_raise_segment_changed_issue(
 
     entity_entry = entity_registry.async_get(entity_id)
     issue_id = f"{vacuum.ISSUE_SEGMENTS_CHANGED}_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(vacuum.DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(vacuum.DOMAIN, issue_id)
     assert issue is not None
 
 
