@@ -202,7 +202,7 @@ async def test_doortag_opening_status_change(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, POLLING_INTERVAL)
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
 
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
