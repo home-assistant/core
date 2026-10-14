@@ -40,6 +40,13 @@ async def test_invalid_path_setup(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == f"Folder {path} is not valid or allowed"
     assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, f"setup_not_allowed_path_{path}")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_valid_path_setup(

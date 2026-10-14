@@ -71,9 +71,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
         except ConsentRequiredError as err:
-            async_create_consent_required_issue(
-                self.hass, self.config_entry.data[CONF_ACCOUNT_NUMBER]
-            )
+            async_create_consent_required_issue(self.hass, self.config_entry)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="consent_required",

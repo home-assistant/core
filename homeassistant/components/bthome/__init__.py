@@ -43,16 +43,11 @@ def _async_create_encryption_downgrade_issue(
     hass: HomeAssistant, entry: BTHomeConfigEntry, issue_id: str
 ) -> None:
     """Create a repair issue for encryption downgrade."""
-    _LOGGER.warning(
-        "BTHome device %s was previously encrypted but is now sending "
-        "unencrypted data. This could be a spoofing attempt. "
-        "Data will be ignored until resolved",
-        entry.title,
-    )
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
@@ -95,7 +90,15 @@ def process_service_info(
         if not coordinator.encryption_downgrade_logged:
             coordinator.encryption_downgrade_logged = True
             if not issue_registry.async_get_issue(DOMAIN, issue_id):
-                _async_create_encryption_downgrade_issue(hass, entry, issue_id)
+                _LOGGER.warning(
+                    "BTHome device %s was previously encrypted but is now sending "
+                    "unencrypted data. This could be a spoofing attempt. "
+                    "Data will be ignored until resolved",
+                    entry.title,
+                )
+            # Always called to link an issue created without a config entry link
+            # to our config entry
+            _async_create_encryption_downgrade_issue(hass, entry, issue_id)
         return SensorUpdate(title=None, devices={})
 
     if data.bindkey_verified and (
@@ -212,8 +215,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> No
 async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
-    """Remove a config entry."""
-    ir.async_delete_issue(hass, DOMAIN, get_encryption_issue_id(entry.entry_id))

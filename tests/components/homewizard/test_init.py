@@ -149,8 +149,19 @@ async def test_load_creates_repair_issue(
     )
     assert issue is not None
 
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
     # Make sure title placeholder is set correctly
     assert issue.translation_placeholders["title"] == "Device"
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN, issue_id=f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 @pytest.mark.usefixtures("mock_homewizardenergy")
@@ -319,7 +330,9 @@ async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     combined_data.system.cloud_enabled = True
     await hass.config_entries.async_reload(mock_config_entry.entry_id)

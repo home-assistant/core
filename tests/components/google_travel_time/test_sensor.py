@@ -213,3 +213,11 @@ async def test_sensor_routes_api_disabled(
     assert "Routes API is disabled for this API key" in caplog.text
 
     assert len(issue_registry.issues) == 1
+    issue_id = f"routes_api_disabled_{mock_config.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config.entry_id
+
+    await hass.config_entries.async_remove(mock_config.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

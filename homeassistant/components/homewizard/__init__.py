@@ -124,6 +124,7 @@ async def async_check_v2_support_and_create_issue(
         hass,
         DOMAIN,
         f"migrate_to_v2_api_{entry.entry_id}",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         is_persistent=False,
         learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",

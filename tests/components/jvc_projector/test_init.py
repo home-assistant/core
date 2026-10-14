@@ -143,6 +143,7 @@ async def test_deprecated_sensor_issue_lifecycle(
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == "deprecated_sensor_scripts"
+    assert issue.config_entry_id == mock_integration.entry_id
     assert entity_registry.async_get(entity_id) is not None
 
     await hass.config_entries.async_reload(mock_integration.entry_id)

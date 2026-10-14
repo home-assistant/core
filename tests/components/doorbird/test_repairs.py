@@ -29,6 +29,7 @@ async def test_change_schedule_fails(
     issue = list(issue_registry.issues.values())[0]
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
+    assert issue.config_entry_id == doorbird_entry.entry.entry_id
 
     client = await hass_client()
 
