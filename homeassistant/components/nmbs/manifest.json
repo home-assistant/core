@@ -1,7 +1,7 @@
 {
   "domain": "nmbs",
   "name": "NMBS",
-  "codeowners": [],
+  "codeowners": ["@DaanVervacke"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nmbs",
   "integration_type": "service",
