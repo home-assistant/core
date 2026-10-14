@@ -17,6 +17,24 @@ from . import get_appliance_id, merge_dict_recursive, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+DISABLED_ENTITIES: list[str] = [
+    "sensor.dishwasher_end_at",
+    "sensor.dishwasher_start_at",
+    "sensor.dishwasher_time_left",
+    "sensor.dryer_end_at",
+    "sensor.dryer_start_at",
+    "sensor.dryer_time_left",
+    "sensor.washer_dryer_end_at",
+    "sensor.washer_dryer_start_at",
+    "sensor.washer_dryer_time_left",
+    "sensor.washing_machine_end_at",
+    "sensor.washing_machine_start_at",
+    "sensor.washing_machine_time_left",
+    "sensor.fenix_start_at",
+    "sensor.fenix_running_time",
+    "sensor.fenix_time_left",
+]
+
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
@@ -26,6 +44,7 @@ def override_platforms() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("appliances")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -172,8 +191,10 @@ async def test_sensor(
         ),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_timestamp_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     appliances: AsyncMock,
@@ -183,7 +204,7 @@ async def test_timestamp_sensors(
     appliance_state: dict[str, Any],
     expected_state: Any,
 ) -> None:
-    """Test states of the sensor."""
+    """Test states of the timestamp sensor."""
     freezer.move_to(iso_string_now)
 
     appliance_id = get_appliance_id(appliance_fixture)
@@ -246,8 +267,10 @@ async def test_timestamp_sensors(
         ),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_duration_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     appliances: AsyncMock,
     appliance_fixture: str,
@@ -256,7 +279,7 @@ async def test_duration_sensors(
     expected_state: Any,
     unit: str,
 ) -> None:
-    """Test states of the sensor."""
+    """Test states of the duration sensors."""
 
     appliance_id = get_appliance_id(appliance_fixture)
 

@@ -186,6 +186,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription[OVAppliance], ...] = 
     ElectroluxSensorDescription(
         key="start_at",
         translation_key="start_at",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance: appliance.is_feature_supported(START_TIME),
         value_fn=get_oven_start_at,
@@ -193,6 +194,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription[OVAppliance], ...] = 
     ElectroluxSensorDescription(
         key="running_time",
         translation_key="running_time",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -202,6 +204,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription[OVAppliance], ...] = 
     ElectroluxSensorDescription(
         key="time_left",
         translation_key="time_left",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -279,6 +282,7 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
     ElectroluxSubmoduleSensorDescription(
         key="start_at",
         translation_key="start_at",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
             cavity, START_TIME
@@ -288,6 +292,7 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
     ElectroluxSubmoduleSensorDescription(
         key="running_time",
         translation_key="running_time",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -299,6 +304,7 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
     ElectroluxSubmoduleSensorDescription(
         key="time_left",
         translation_key="time_left",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -356,6 +362,7 @@ CARE_ELECTROLUX_SENSORS: tuple[
     ElectroluxSensorDescription(
         key="start_at",
         translation_key="start_at",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance: appliance.is_feature_supported(
             [START_TIME, STOP_TIME]
@@ -365,6 +372,7 @@ CARE_ELECTROLUX_SENSORS: tuple[
     ElectroluxSensorDescription(
         key="end_at",
         translation_key="end_at",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance: appliance.is_feature_supported(
             [START_TIME, STOP_TIME]
@@ -374,6 +382,7 @@ CARE_ELECTROLUX_SENSORS: tuple[
     ElectroluxSensorDescription(
         key="time_left",
         translation_key="time_left",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
