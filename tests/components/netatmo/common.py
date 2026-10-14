@@ -37,7 +37,7 @@ FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
 
-POLLING_INTERVAL = (11, timedelta(seconds=30))  # 11 polling cycles of 30 seconds each
+POLLING_INTERVAL = {"polling_cycles": 11, "polling_delta": timedelta(seconds=30)}
 
 
 async def snapshot_platform_entities(
@@ -72,7 +72,7 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     endpoint = kwargs["endpoint"].split("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
-        return b"test stream image bytes"
+        return b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
 
     if endpoint in [
         "setpersonsaway",
@@ -112,7 +112,7 @@ async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str | None:
     endpoint = kwargs["endpoint"].split("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
-        return b"test stream image bytes"
+        return b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
     return None
 
 
@@ -162,7 +162,6 @@ def payload_modifier(
     timestamp: int | None = None,
 ) -> None:
     """Mutate the payload for fake post request."""
-    # Apply updates before pyatmo parses the mocked response.
 
     if timestamp is not None:
         payload["time_server"] = timestamp
