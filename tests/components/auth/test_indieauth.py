@@ -316,6 +316,10 @@ def test_client_id_request_origin_allowed(
         ),
         pytest.param("http://100.64.1.1/", "http", "100.64.1.1:abc", id="invalid-port"),
         pytest.param("http://100.64.1.1/", "http", "user@100.64.1.1", id="username"),
+        pytest.param(
+            "http://100.64.1.1:0/", "http", "100.64.1.1", id="client-id-port-0"
+        ),
+        pytest.param("http://100.64.1.1/", "http", "100.64.1.1:0", id="request-port-0"),
         pytest.param("http://100.64.1.1/", "http", "ha.example.com", id="domain"),
         pytest.param("http://192.168.1.10/", "http", "192.168.1.11", id="private-host"),
     ],

@@ -381,7 +381,7 @@ def _normalize_ip_netloc(
         scheme,
         username,
         address,
-        port or DEFAULT_PORTS.get(scheme),
+        DEFAULT_PORTS.get(scheme) if port is None else port,
     )
 
 
@@ -457,7 +457,7 @@ def _parse_client_id(
         parts.scheme,
         parts.username,
         address,
-        port or DEFAULT_PORTS.get(parts.scheme),
+        DEFAULT_PORTS.get(parts.scheme) if port is None else port,
     ):
         return parts
 
