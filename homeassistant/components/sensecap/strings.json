@@ -9,7 +9,7 @@
     },
     "step": {
       "confirm": {
-        "description": "Set up SenseCAP S2101 temperature and humidity sensors and S2102 light sensors from your LoRaWAN connections."
+        "description": "Set up SenseCAP devices from your LoRaWAN connections."
       }
     }
   }
