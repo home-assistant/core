@@ -120,14 +120,21 @@ async def test_diagnostics_redacts_sensitive_data(
 
 
 @pytest.mark.parametrize(
-    ("identifier", "entry_type"),
+    ("identifiers", "entry_type"),
     [
         pytest.param(
-            "test_account_id_account",
+            {(DOMAIN, "test_account_id_account")},
             dr.DeviceEntryType.SERVICE,
             id="account_device",
         ),
-        pytest.param("missing_device", None, id="device_no_longer_reported"),
+        pytest.param(
+            {(DOMAIN, "missing_device")}, None, id="device_no_longer_reported"
+        ),
+        pytest.param(
+            {("other_domain", "foreign_device")},
+            None,
+            id="device_without_icloud_identifier",
+        ),
     ],
 )
 async def test_device_diagnostics_without_device_data(
@@ -137,7 +144,7 @@ async def test_device_diagnostics_without_device_data(
     device_registry: dr.DeviceRegistry,
     setup_entry: Callable[[Platform], Awaitable[None]],
     hass_client: ClientSessionGenerator,
-    identifier: str,
+    identifiers: set[tuple[str, str]],
     entry_type: dr.DeviceEntryType | None,
 ) -> None:
     """Test diagnostics for devices that have no device data of their own."""
@@ -147,7 +154,7 @@ async def test_device_diagnostics_without_device_data(
 
     device = device_registry.async_get_or_create(
         config_entry_id=devices_config_entry.entry_id,
-        identifiers={(DOMAIN, identifier)},
+        identifiers=identifiers,
         name=devices_config_entry.title,
         entry_type=entry_type,
     )

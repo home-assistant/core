@@ -135,6 +135,26 @@ async def test_sensor_state(
     assert state.state == expected
 
 
+async def test_battery_status_sensor_without_a_status(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """The battery status sensor reports unknown when Apple sends none."""
+    icloud_service.devices.add({**DEVICE, "batteryStatus": None})
+
+    await setup_entry(Platform.SENSOR)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, BATTERY_STATUS_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 @pytest.mark.parametrize("unique_id", DISABLED_UNIQUE_IDS)
 async def test_sensors_disabled_by_default(
     entity_registry: er.EntityRegistry,
@@ -404,6 +424,29 @@ async def test_location_sensors_added_when_location_appears(
         )
 
 
+async def test_location_sensors_without_coordinates(
+    hass: HomeAssistant,
+    devices_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """Location sensors report unknown while the device has no coordinates."""
+    icloud_service.devices.add({**DEVICE, "location": {**LOCATION, "latitude": None}})
+
+    await setup_entry(Platform.SENSOR)
+    await _async_enable_entity(
+        hass, devices_config_entry, entity_registry, FLOOR_LEVEL_UNIQUE_ID
+    )
+
+    for unique_id in LOCATION_UNIQUE_IDS:
+        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
+
+
 async def test_last_location_sensor_without_timestamp(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -420,6 +463,38 @@ async def test_last_location_sensor_without_timestamp(
                 "horizontalAccuracy": 10,
             },
         }
+    )
+
+    await setup_entry(Platform.SENSOR)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, LOCATION_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        pytest.param(0, id="no_timestamp"),
+        pytest.param(10**18, id="out_of_range"),
+        pytest.param("not-a-timestamp", id="unparsable_string"),
+        pytest.param({"timeStamp": 1}, id="unexpected_type"),
+    ],
+)
+async def test_last_location_sensor_with_unusable_timestamp(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+    timestamp: float | str | dict[str, int],
+) -> None:
+    """A timestamp Apple did not report as a real moment reads as unknown."""
+    icloud_service.devices.add(
+        {**DEVICE, "location": {**LOCATION, "timeStamp": timestamp}}
     )
 
     await setup_entry(Platform.SENSOR)
