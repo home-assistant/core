@@ -1,17 +1,22 @@
 """Test for the Schedule integration."""
 
 from collections.abc import Callable, Coroutine
+from datetime import time
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.schedule import CONFIG_SCHEMA
 from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
+    CONF_BLOCKS,
     CONF_DATA,
+    CONF_DAYS,
     CONF_FRIDAY,
     CONF_FROM,
     CONF_MONDAY,
@@ -50,6 +55,114 @@ async def test_invalid_config(hass: HomeAssistant, invalid_config) -> None:
     """Test invalid configs."""
 
     assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
+
+
+def test_recurring_blocks_normalized_to_weekday_schedules() -> None:
+    """Test recurring blocks are expanded to weekday schedules."""
+    config = CONFIG_SCHEMA(
+        {
+            DOMAIN: {
+                "test": {
+                    CONF_NAME: "Test",
+                    CONF_BLOCKS: [
+                        {
+                            CONF_FROM: "06:00:00",
+                            CONF_TO: "08:00:00",
+                            CONF_DATA: {"brightness": 80},
+                        },
+                        {
+                            CONF_DAYS: [CONF_MONDAY, CONF_WEDNESDAY],
+                            CONF_FROM: "17:00:00",
+                            CONF_TO: "22:00:00",
+                            CONF_DATA: {"brightness": 50},
+                        },
+                    ],
+                }
+            }
+        }
+    )
+
+    schedule = config[DOMAIN]["test"]
+    all_days_block = {
+        CONF_FROM: time(6),
+        CONF_TO: time(8),
+        CONF_DATA: {"brightness": 80},
+    }
+    selected_days_block = {
+        CONF_FROM: time(17),
+        CONF_TO: time(22),
+        CONF_DATA: {"brightness": 50},
+    }
+
+    for day in CONF_ALL_DAYS:
+        expected = [all_days_block]
+        if day in (CONF_MONDAY, CONF_WEDNESDAY):
+            expected.append(selected_days_block)
+        assert schedule[day] == expected
+    assert CONF_BLOCKS not in schedule
+
+
+@pytest.mark.parametrize(
+    "schedule",
+    [
+        pytest.param(
+            {
+                CONF_BLOCKS: [{CONF_FROM: "06:00:00", CONF_TO: "08:00:00"}],
+                CONF_MONDAY: [{CONF_FROM: "09:00:00", CONF_TO: "10:00:00"}],
+            },
+            id="mixed-formats",
+        ),
+        pytest.param(
+            {
+                CONF_BLOCKS: [
+                    {
+                        CONF_DAYS: [],
+                        CONF_FROM: "06:00:00",
+                        CONF_TO: "08:00:00",
+                    }
+                ]
+            },
+            id="empty-days",
+        ),
+        pytest.param(
+            {
+                CONF_BLOCKS: [
+                    {
+                        CONF_DAYS: [CONF_MONDAY, CONF_MONDAY],
+                        CONF_FROM: "06:00:00",
+                        CONF_TO: "08:00:00",
+                    }
+                ]
+            },
+            id="duplicate-days",
+        ),
+        pytest.param(
+            {
+                CONF_BLOCKS: [
+                    {CONF_FROM: "06:00:00", CONF_TO: "08:00:00"},
+                    {
+                        CONF_DAYS: [CONF_MONDAY],
+                        CONF_FROM: "07:00:00",
+                        CONF_TO: "09:00:00",
+                    },
+                ]
+            },
+            id="overlapping-expanded-blocks",
+        ),
+        pytest.param(
+            {
+                CONF_BLOCKS: [
+                    {CONF_FROM: "22:00:00", CONF_TO: "06:00:00"},
+                ]
+            },
+            id="cross-midnight",
+        ),
+    ],
+)
+def test_invalid_recurring_blocks(schedule: dict[str, Any]) -> None:
+    """Test invalid recurring block configurations are rejected."""
+    with pytest.raises(probatio.Invalid):
+        CONFIG_SCHEMA({DOMAIN: {"test": {CONF_NAME: "Test"} | schedule}})
 
 
 @pytest.mark.parametrize(
