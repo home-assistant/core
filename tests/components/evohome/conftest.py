@@ -253,8 +253,7 @@ def dhw_id(
     """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs = _tcs_for_config(evo, config)
-    dhw: HotWater | None = tcs.hotwater
+    dhw: HotWater | None = _tcs_for_config(evo, config).hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 
