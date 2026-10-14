@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -30,6 +30,13 @@ class SenseCapSensorDescription(SensorEntityDescription):
 
     device_type: type[S2101 | S2102]
     value_fn: Callable[[SenseCapDevice], float | None]
+
+
+def _battery_level(device: SenseCapDevice) -> float | None:
+    """Use LoRaWAN status with SenseCAP uplink battery data as a fallback."""
+    if (battery_level := device.battery_level) is not None:
+        return battery_level
+    return device.battery_percentage
 
 
 DESCRIPTIONS = (
@@ -56,6 +63,18 @@ DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    *(
+        SenseCapSensorDescription(
+            key="battery",
+            device_type=device_type,
+            value_fn=_battery_level,
+            device_class=SensorDeviceClass.BATTERY,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+        for device_type in (S2101, S2102)
     ),
 )
 

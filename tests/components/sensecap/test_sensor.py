@@ -3,12 +3,19 @@
 from dataclasses import replace
 from unittest.mock import patch
 
-from lorawan_connection import AddedEvent, DeviceDescriptor, RemovedEvent, UplinkEvent
+from lorawan_connection import (
+    AddedEvent,
+    DeviceDescriptor,
+    RemovedEvent,
+    StatusEvent,
+    UplinkEvent,
+)
 from lorawan_connection.mock import MockConnection
 import pytest
 from sensecap_lorawan import S2101, S2102, S2103
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -91,7 +98,7 @@ async def test_new_devices(
     assert not hass.states.async_all("sensor")
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 2
+    assert len(hass.states.async_all("sensor")) == 3
     other = replace(
         descriptor,
         dev_eui="0201010101010102",
@@ -110,7 +117,7 @@ async def test_new_devices(
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.outside_illuminance").state == "unknown"
-    assert len(hass.states.async_all("sensor")) == 3
+    assert len(hass.states.async_all("sensor")) == 5
     assert len(config_entry.runtime_data.coordinators) == 3
     assert (
         device_registry.async_get_device_by_identifier(
@@ -128,6 +135,104 @@ async def test_new_devices(
         is None
     )
     assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+@pytest.mark.parametrize("stack", ["chirpstack", "tts"])
+@pytest.mark.parametrize("model", [S2101, S2102])
+async def test_battery_uplink(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    connection_entry: MockConfigEntry,
+    mock_connection: MockConnection,
+    descriptor: DeviceDescriptor,
+    stack: str,
+    model: type[S2101 | S2102],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Expose battery uplinks for both supported models and catalogs."""
+    descriptor = replace(descriptor, model_id=model.identifiers[stack][1])
+    mock_connection.emit(
+        AddedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
+    )
+    assert await hass.config_entries.async_setup(connection_entry.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    entity_id = "sensor.greenhouse_battery"
+    assert hass.states.get(entity_id).state == "unknown"
+    registered = entity_registry.async_get(entity_id)
+    assert registered.unique_id == f"network:{descriptor.dev_eui}:battery"
+    assert registered.entity_category is EntityCategory.DIAGNOSTIC
+    mock_connection.emit(
+        UplinkEvent(
+            descriptor=descriptor,
+            received_at=dt_util.utcnow(),
+            f_port=2,
+            data=bytes.fromhex("000700640005000000"),
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "100.0"
+    assert hass.states.get(entity_id) == snapshot
+    mock_connection.disconnect()
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "unavailable"
+
+
+@pytest.mark.parametrize("model", [S2101, S2102])
+async def test_battery_status(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    connection_entry: MockConfigEntry,
+    mock_connection: MockConnection,
+    descriptor: DeviceDescriptor,
+    model: type[S2101 | S2102],
+) -> None:
+    """Prefer status reports, including zero, and fall back when unavailable."""
+    descriptor = replace(descriptor, model_id=model.identifiers["chirpstack"][1])
+    mock_connection.emit(
+        AddedEvent(descriptor=descriptor, received_at=dt_util.utcnow())
+    )
+    assert await hass.config_entries.async_setup(connection_entry.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    entity_id = "sensor.greenhouse_battery"
+    assert hass.states.get(entity_id).state == "unknown"
+    mock_connection.emit(
+        StatusEvent(
+            descriptor=descriptor,
+            received_at=dt_util.utcnow(),
+            battery_level=75.0,
+            battery_level_unavailable=False,
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "75.0"
+    mock_connection.emit(
+        UplinkEvent(
+            descriptor=descriptor,
+            received_at=dt_util.utcnow(),
+            f_port=2,
+            data=bytes.fromhex("000700640005000000"),
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "75.0"
+    mock_connection.emit(
+        StatusEvent(
+            descriptor=descriptor,
+            received_at=dt_util.utcnow(),
+            battery_level=0.0,
+            battery_level_unavailable=False,
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "0.0"
+    mock_connection.emit(
+        StatusEvent(descriptor=descriptor, received_at=dt_util.utcnow())
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "100.0"
 
 
 async def test_unload_failure(
