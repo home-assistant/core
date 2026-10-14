@@ -99,7 +99,10 @@ def _allowed_functions(module: nodes.Module) -> set[str]:
         pending.extend(
             call.func.name
             for call in functions[name].nodes_of_class(nodes.Call)
-            if isinstance(call.func, nodes.Name) and call.func.name in functions
+            if isinstance(call.func, nodes.Name)
+            and call.func.name in functions
+            # Async helpers run later, e.g. when scheduled as a task
+            and not isinstance(functions[call.func.name], nodes.AsyncFunctionDef)
         )
     return allowed
 

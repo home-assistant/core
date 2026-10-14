@@ -1,11 +1,12 @@
 """Tests for the services module checker."""
 
 import astroid
-from pylint.testutils import UnittestLinter
+from astroid import nodes
+from pylint.testutils import MessageTest, UnittestLinter
 from pylint_home_assistant.checkers.actions.services_module import ServicesModuleChecker
 import pytest
 
-from tests.pylint import assert_no_messages, walk_checker
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 SERVICES_MODULE = "homeassistant.components.test_integration.services"
 
@@ -70,6 +71,18 @@ def _register_more(hass):
         ),
         pytest.param(
             """
+@core.callback
+def async_setup_services(hass):
+    def _register() -> None:
+        hass.services.async_register(DOMAIN, "my_action", _handler)
+
+    _register()
+""",
+            SERVICES_MODULE,
+            id="nested_function_in_async_setup_services",
+        ),
+        pytest.param(
+            """
 async def async_setup_entry(hass, entry):
     hass.services.async_register(DOMAIN, "my_action", handler)
 """,
@@ -92,7 +105,7 @@ def test_no_warning(
 
 
 @pytest.mark.parametrize(
-    ("code", "module_name"),
+    ("code", "module_name", "line"),
     [
         pytest.param(
             """
@@ -100,6 +113,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "my_action", handler)
 """,
             "homeassistant.components.test_integration",
+            3,
             id="in_init",
         ),
         pytest.param(
@@ -108,6 +122,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, "my_action", handler)
 """,
             "homeassistant.components.test_integration",
+            3,
             id="sync_register_in_init",
         ),
         pytest.param(
@@ -118,6 +133,7 @@ async def async_setup(hass, config):
     )
 """,
             "homeassistant.components.test_integration",
+            3,
             id="batched_platform_entity_service_in_init",
         ),
         pytest.param(
@@ -127,6 +143,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform.async_register_entity_service("my_action", {}, "async_method")
 """,
             "homeassistant.components.test_integration.light",
+            4,
             id="entity_service_in_platform",
         ),
         pytest.param(
@@ -136,6 +153,7 @@ def async_setup_services(hass):
     hass.services.async_register(DOMAIN, "my_action", handler)
 """,
             "homeassistant.components.test_integration.helpers",
+            4,
             id="async_setup_services_outside_services_module",
         ),
         pytest.param(
@@ -145,6 +163,7 @@ def register_actions(hass):
     hass.services.async_register(DOMAIN, "my_action", handler)
 """,
             SERVICES_MODULE,
+            4,
             id="other_function_in_services_module",
         ),
         pytest.param(
@@ -157,6 +176,7 @@ def _register_more(hass):
     hass.services.async_register(DOMAIN, "my_action", handler)
 """,
             SERVICES_MODULE,
+            7,
             id="helper_not_called_from_setup",
         ),
         pytest.param(
@@ -170,7 +190,21 @@ def async_setup_services(hass):
     Actions(hass).async_register()
 """,
             SERVICES_MODULE,
+            4,
             id="class_method",
+        ),
+        pytest.param(
+            """
+@callback
+def async_setup_services(hass):
+    hass.async_create_task(_async_register(hass))
+
+async def _async_register(hass):
+    hass.services.async_register(DOMAIN, "my_action", handler)
+""",
+            SERVICES_MODULE,
+            7,
+            id="async_helper_called_from_setup",
         ),
     ],
 )
@@ -179,16 +213,26 @@ def test_registration_outside_services_module(
     services_module_checker: ServicesModuleChecker,
     code: str,
     module_name: str,
+    line: int,
 ) -> None:
     """Test that registrations outside the setup functions are flagged."""
     root_node = astroid.parse(code, module_name)
-    walk_checker(linter, services_module_checker, root_node)
-
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert (
-        messages[0].msg_id == "home-assistant-action-registered-outside-services-module"
+    call = next(
+        node for node in root_node.nodes_of_class(nodes.Call) if node.lineno == line
     )
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="home-assistant-action-registered-outside-services-module",
+            node=call,
+            line=call.lineno,
+            col_offset=call.col_offset,
+            end_line=call.end_lineno,
+            end_col_offset=call.end_col_offset,
+        ),
+    ):
+        walk_checker(linter, services_module_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -247,9 +291,18 @@ def test_invalid_setup_services(
 ) -> None:
     """Test that setup functions with a wrong signature are flagged."""
     root_node = astroid.parse(code, SERVICES_MODULE)
-    walk_checker(linter, services_module_checker, root_node)
+    function = root_node.body[0]
 
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].msg_id == "home-assistant-invalid-setup-services"
-    assert messages[0].args == args
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="home-assistant-invalid-setup-services",
+            node=function,
+            args=args,
+            line=function.position.lineno,
+            col_offset=function.position.col_offset,
+            end_line=function.position.end_lineno,
+            end_col_offset=function.position.end_col_offset,
+        ),
+    ):
+        walk_checker(linter, services_module_checker, root_node)
