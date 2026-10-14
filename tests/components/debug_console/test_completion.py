@@ -342,6 +342,26 @@ async def test_signature(
             {"type": "debug_console/complete", "code": "watched.al"},
             id="complete_metaclass_getattribute",
         ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "masked.me"},
+            id="complete_class_property",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "masked.method("},
+            id="signature_class_property",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "odd_dict.x"},
+            id="complete_dict_class_property",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "holds_masked.it"},
+            id="complete_attribute_class_property",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "Documented("},
+            id="signature_doc_descriptor",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -418,6 +438,31 @@ class Watched(metaclass=WatchingMetaclass):
     alpha = 1
 
 watched = Watched()
+
+class Masked:
+    @property
+    def __class__(self):
+        ran.append("__class__")
+        return Masked
+
+    def method(self, argument):
+        pass
+
+class OddDict:
+    __dict__ = Masked()
+
+class HoldsMasked:
+    item = Masked()
+
+class Documented:
+    __doc__ = Descriptor()
+
+    def __init__(self, argument):
+        pass
+
+masked = Masked()
+odd_dict = OddDict()
+holds_masked = HoldsMasked()
 
 # Creating the classes above may run their hooks already.
 ran.clear()

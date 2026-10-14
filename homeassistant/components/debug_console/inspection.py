@@ -8,7 +8,7 @@ from itertools import islice
 import reprlib
 import traceback
 from types import GetSetDescriptorType, MemberDescriptorType
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, TypeGuard, override
 
 if TYPE_CHECKING:
     from .session import ConsoleSession
@@ -175,6 +175,14 @@ def get_attribute(session: ConsoleSession, value: Any, name: str) -> dict[str, A
         return {"error": "".join(traceback.format_exception_only(err))}
 
 
+def is_class(value: Any) -> TypeGuard[type]:
+    """Return if a value is a class, without running code.
+
+    Unlike isinstance(), which reads __class__, and that can be a property.
+    """
+    return issubclass(type(value), type)
+
+
 def class_mro(cls: type) -> tuple[type, ...]:
     """Return a class and the classes it inherits from, without running code."""
     return _CLASS_MRO.__get__(cls)  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
@@ -197,7 +205,7 @@ def static_attribute(value: Any, name: str, default: Any = None) -> Any:
     of the metaclass when looking at classes. Data descriptors of the class
     win over the instance, like they do for getattr.
     """
-    if isinstance(value, type):
+    if is_class(value):
         found = _class_attribute(value, name, _NOT_FOUND)
         from_metaclass = _class_attribute(type(value), name, _NOT_FOUND)
         if from_metaclass is not _NOT_FOUND and (
@@ -247,7 +255,7 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
     else:
         return None
 
-    if not isinstance(descriptor, GetSetDescriptorType | MemberDescriptorType):
+    if type(descriptor) not in (GetSetDescriptorType, MemberDescriptorType):
         return None
 
     return descriptor.__get__(value, type(value))  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call

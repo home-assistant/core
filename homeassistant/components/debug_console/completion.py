@@ -22,7 +22,14 @@ from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 
-from .inspection import class_dict, class_mro, instance_dict, preview, static_attribute
+from .inspection import (
+    class_dict,
+    class_mro,
+    instance_dict,
+    is_class,
+    preview,
+    static_attribute,
+)
 
 MAX_COMPLETIONS = 200
 
@@ -117,8 +124,11 @@ def signature_hint(namespace: dict[str, Any], code: str) -> dict[str, Any] | Non
     parameters = list(signature.parameters.values())
     active = _active_parameter(parameters, call.arguments)
     # Not inspect.getdoc, which also searches classes when the doc is missing.
-    doc = _resolve(namespace, call.callee).__doc__
-    doc = inspect.cleandoc(doc) if isinstance(doc, str) else ""
+    # Reading __doc__ of a class runs a descriptor stored there, so read it
+    # from the class itself.
+    value = _resolve(namespace, call.callee)
+    doc = class_dict(value).get("__doc__") if is_class(value) else value.__doc__
+    doc = inspect.cleandoc(doc) if type(doc) is str else ""
 
     return {
         "name": call.callee.rpartition(".")[2],
@@ -192,7 +202,7 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
         if static is _MISSING:
             return _MISSING
 
-        owner = value if isinstance(value, type) else type(value)
+        owner = value if is_class(value) else type(value)
         from_class = static is static_attribute(owner, attribute, _MISSING)
         if not from_class or not hasattr(type(static), "__get__"):
             # Plain values, including those in the __dict__ of an instance.
@@ -238,7 +248,7 @@ def _has_safe_signature(value: Any) -> bool:
     For other callable objects, and classes with a metaclass of their own,
     inspect reads attributes like __signature__, which can be properties.
     """
-    if isinstance(value, type):
+    if is_class(value):
         return type(value) in _STANDARD_METACLASSES
 
     return type(value) in _SIGNATURE_TYPES
@@ -361,7 +371,7 @@ def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
             continue
 
         static = static_attribute(value, name)
-        call = "(" if callable(static) or isinstance(static, classmethod) else ""
+        call = "(" if callable(static) or issubclass(type(static), classmethod) else ""
         matches.append(f"{expression}.{name}{call}")
         if len(matches) >= MAX_COMPLETIONS:
             break
@@ -394,7 +404,7 @@ def _complete_global(namespace: dict[str, Any], prefix: str) -> list[str]:
 def _static_names(value: Any) -> set[str]:
     """Return the attribute names of a value, like dir() without __dir__."""
     names = set(instance_dict(value) or {})
-    for cls in class_mro(value if isinstance(value, type) else type(value)):
+    for cls in class_mro(value if is_class(value) else type(value)):
         names.update(class_dict(cls))
 
     return names
