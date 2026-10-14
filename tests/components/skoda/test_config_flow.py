@@ -184,30 +184,14 @@ async def test_api_errors(
     mock_setup_entry: AsyncMock,
     request: pytest.FixtureRequest,
 ) -> None:
-    """Test API failures surface the correct error on the form."""
-    mock = _patch_get_vehicle(request, side_effect=exception)
+    """Test API failures show an error and the flow recovers on retry."""
+    mock = _patch_get_vehicle(request, side_effect=[exception, VEHICLE_WITH_NAME])
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
 
-    assert mock.await_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
-
-
-async def test_error_recovery(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, request: pytest.FixtureRequest
-) -> None:
-    """Test the flow recovers after a failed attempt and completes on retry."""
-    mock = _patch_get_vehicle(
-        request, side_effect=[OpenApiAuthenticationError(), VEHICLE_WITH_NAME]
-    )
-
-    result = await _init_flow(hass)
-    result = await _configure_flow(hass, result["flow_id"])
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
 
     result = await _configure_flow(hass, result["flow_id"])
 
