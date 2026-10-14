@@ -269,8 +269,6 @@ class TeslaFleetEnergySiteLiveCoordinator(TeslaFleetCoordinator):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        self._rate_limit_cleared()
-
         if not isinstance(data, dict):
             LOGGER.debug(
                 "%s got unexpected live status response type: %s",
@@ -278,6 +276,8 @@ class TeslaFleetEnergySiteLiveCoordinator(TeslaFleetCoordinator):
                 type(data).__name__,
             )
             return self.data
+
+        self._rate_limit_cleared()
 
         # Convert Wall Connectors from array to dict
         wall_connectors = data.get("wall_connectors")
@@ -345,7 +345,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(TeslaFleetCoordinator):
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-        self._rate_limit_cleared()
         self.updated_once = True
 
         if (
@@ -360,6 +359,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(TeslaFleetCoordinator):
                 translation_domain=DOMAIN,
                 translation_key="invalid_data",
             )
+
+        self._rate_limit_cleared()
 
         # Tesla omits a field instead of sending zero, so an omitted field is zero
         # only when the response has a reading; without one it stays unknown
