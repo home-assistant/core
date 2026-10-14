@@ -136,7 +136,7 @@ async def test_doortag_opening_status_change(
         "attributes": {"reachable": False, "status": "no_news"},
     }
 
-    async def fake_tag_post(*args, **kwargs):
+    async def fake_tag_post(*args: Any, **kwargs: Any):
         """Fake tag status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
@@ -193,7 +193,7 @@ async def test_doortag_opening_status_change(
     # Check connectivity initial state
     assert hass.states.get(_doortag_entity_connectivity).state == "off"
 
-    # Change mocked status to test early unavailability of image fetch
+    # Change mocked status to test status change
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
     mock_state["module_id"] = "12:34:56:00:86:99"
     mock_state["attributes"] = {
@@ -242,7 +242,7 @@ async def test_doortag_opening_category(
         },
     }
 
-    async def fake_tag_post(*args, **kwargs):
+    async def fake_tag_post(*args: Any, **kwargs: Any):
         """Fake tag status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
