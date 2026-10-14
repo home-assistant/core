@@ -7,7 +7,12 @@ from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_lorawan
 
-from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connection
+from .connection import (
+    DATA_REGISTRY,
+    ConnectionRegistry,
+    async_get_connections,
+    async_register_connection,
+)
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
 from .entity import LoRaWANEntity
@@ -16,6 +21,7 @@ __all__ = [
     "DeviceManager",
     "LoRaWANDiscoveryInfo",
     "LoRaWANEntity",
+    "async_get_connections",
     "async_register_connection",
     "device_identifier",
 ]
