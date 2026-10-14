@@ -149,6 +149,7 @@ async def test_reconfigure_flow_success(
     mock_config_entry.add_to_hass(hass)
 
     # Initiate reconfigure flow
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -195,6 +196,7 @@ async def test_reconfigure_flow_error(
     mock_config_entry.add_to_hass(hass)
 
     # Initiate reconfigure flow
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -242,6 +244,7 @@ async def test_reconfigure_flow_different_device(
     }
 
     # Initiate reconfigure flow
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},

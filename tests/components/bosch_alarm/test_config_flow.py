@@ -504,6 +504,7 @@ async def test_reconfig_flow(
     await setup_integration(hass, mock_config_entry)
 
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -550,6 +551,7 @@ async def test_reconfig_flow_incorrect_model(
     await setup_integration(hass, mock_config_entry)
 
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={

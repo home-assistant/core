@@ -434,6 +434,7 @@ async def test_reauth_flow(
     )
     config_entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -525,6 +526,7 @@ async def test_reconfigure_flow(
     )
     config_entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -609,6 +611,7 @@ async def test_reconfigure_flow_wrong_account(
     )
     config_entry.add_to_hass(hass)
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={

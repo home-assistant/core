@@ -226,6 +226,7 @@ async def test_reauth_flow_scenario(
         "homeassistant.components.airos.config_flow.async_get_firmware_data",
         side_effect=AirOSConnectionAuthenticationError,
     ):
+        # pylint: disable-next=home-assistant-test-flow-start-helper
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
@@ -300,6 +301,7 @@ async def test_reauth_flow_scenarios(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+        # pylint: disable-next=home-assistant-test-flow-start-helper
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
@@ -361,6 +363,7 @@ async def test_reauth_unique_id_mismatch(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+        # pylint: disable-next=home-assistant-test-flow-start-helper
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
@@ -401,6 +404,7 @@ async def test_successful_reconfigure(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -462,6 +466,7 @@ async def test_reconfigure_flow_failure(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -511,6 +516,7 @@ async def test_reconfigure_unique_id_mismatch(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
