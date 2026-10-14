@@ -1205,7 +1205,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_state_snapshot[e2][switch.electric_water_heater_megawater-entry]
+# name: test_switch_state_snapshot[e2][switch.electric_water_heater_mega_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1219,7 +1219,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.electric_water_heater_megawater',
+    'entity_id': 'switch.electric_water_heater_mega_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1227,12 +1227,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'MegaWater',
+    'object_id_base': 'Mega Water',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'MegaWater',
+    'original_name': 'Mega Water',
     'platform': 'midea',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1242,14 +1242,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[e2][switch.electric_water_heater_megawater-state]
+# name: test_switch_state_snapshot[e2][switch.electric_water_heater_mega_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Water Heater MegaWater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Water Heater Mega Water',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.electric_water_heater_megawater',
+    'entity_id': 'switch.electric_water_heater_mega_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1278,12 +1278,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Memo U',
+    'object_id_base': 'Memo-U',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Memo U',
+    'original_name': 'Memo-U',
     'platform': 'midea',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1297,7 +1297,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Water Heater Memo U',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electric Water Heater Memo-U',
     }),
     'context': <ANY>,
     'entity_id': 'switch.electric_water_heater_memo_u',
