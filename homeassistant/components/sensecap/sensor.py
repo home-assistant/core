@@ -79,7 +79,7 @@ async def async_setup_entry(
 
 
 class SenseCapSensor(LoRaWANEntity[SenseCapDevice], SensorEntity):
-    """Read typed state; decoding and event interpretation belong to the library."""
+    """Home Assistant entity representing a SenseCAP device datapoint."""
 
     coordinator: SenseCapCoordinator
     entity_description: SenseCapSensorDescription
