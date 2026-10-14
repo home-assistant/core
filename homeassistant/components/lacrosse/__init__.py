@@ -1,6 +1,7 @@
 """The LaCrosse integration."""
 
 import logging
+from typing import Any
 
 import pylacrosse
 from serial import SerialException
@@ -10,7 +11,6 @@ from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BAUD,
@@ -73,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) ->
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def _create_lacrosse(config: ConfigType) -> pylacrosse.LaCrosse:
+def _create_lacrosse(config: dict[str, Any]) -> pylacrosse.LaCrosse:
     """Open and configure a LaCrosse receiver."""
     usb_device: str = config[CONF_DEVICE]
     baud: int = config[CONF_BAUD]
