@@ -350,3 +350,96 @@ async def test_invalid_controller_group(
     assert msg["success"] is False
     assert msg["error"]["code"] == "invalid_format"
     save.assert_not_awaited()
+
+
+DEVICE_SCENE = {
+    "controllers": [{"address": "333333", "group": 3}],
+    "links": [{"address": "444444", "data1": 128, "data2": 28, "data3": 1}],
+    "issues": [],
+    "importable": True,
+}
+
+
+async def test_get_device_scenes(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """List hand-made device scenes that can be imported."""
+    ws_client = await hass_ws_client(hass)
+    async_load_api(hass)
+    find = AsyncMock(return_value=[DEVICE_SCENE])
+    with patch.object(scenes, "async_find_device_scenes", find):
+        await ws_client.send_json({ID: 1, TYPE: "insteon/scenes/device_scenes"})
+        msg = await ws_client.receive_json()
+    assert msg["result"] == [DEVICE_SCENE]
+    find.assert_awaited_once_with(work_dir=hass.config.config_dir)
+
+
+@pytest.mark.parametrize("status", [ResponseStatus.SUCCESS, ResponseStatus.FAILURE])
+async def test_import_scene(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, status: ResponseStatus
+) -> None:
+    """Import a device scene under a new modem group."""
+    ws_client = await hass_ws_client(hass)
+    async_load_api(hass)
+    import_scene = AsyncMock(return_value=(21, status))
+    with (
+        patch.object(scenes, "async_import_device_scene", import_scene),
+        patch.object(scenes.devices, "async_save") as save,
+    ):
+        await ws_client.send_json(
+            {
+                ID: 1,
+                TYPE: "insteon/scene/import",
+                "name": "Evening",
+                "controllers": DEVICE_SCENE["controllers"],
+            }
+        )
+        msg = await ws_client.receive_json()
+    assert msg["result"] == {
+        "scene_id": 21,
+        "result": status == ResponseStatus.SUCCESS,
+    }
+    import_scene.assert_awaited_once_with(
+        controllers=DEVICE_SCENE["controllers"],
+        name="Evening",
+        work_dir=hass.config.config_dir,
+    )
+    save.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("command", "function", "payload"),
+    [
+        pytest.param(
+            "scenes/device_scenes",
+            "async_find_device_scenes",
+            {},
+            id="list-corrupt-metadata",
+        ),
+        pytest.param(
+            "scene/import",
+            "async_import_device_scene",
+            {"name": "Evening", "controllers": DEVICE_SCENE["controllers"]},
+            id="import-blocked",
+        ),
+    ],
+)
+async def test_device_scene_errors(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
+    function: str,
+    payload: dict[str, object],
+) -> None:
+    """Return actionable errors when device scenes cannot be listed or imported."""
+    ws_client = await hass_ws_client(hass)
+    async_load_api(hass)
+    with patch.object(
+        scenes,
+        function,
+        AsyncMock(side_effect=SceneControllerError("Read the database")),
+    ):
+        await ws_client.send_json({ID: 1, TYPE: f"insteon/{command}", **payload})
+        msg = await ws_client.receive_json()
+    assert msg["success"] is False
+    assert msg["error"] == {"code": "scene_error", "message": "Read the database"}
