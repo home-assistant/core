@@ -71,6 +71,15 @@ result = await hass.config_entries.flow.async_init(
             TEST_MODULE,
             id="ambiguous_alias",
         ),
+        pytest.param(
+            """
+result = await hass.config_entries.flow.async_init(
+    DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+)
+""",
+            TEST_MODULE,
+            id="typed_context_other_source",
+        ),
     ],
 )
 def test_no_warning(
@@ -156,6 +165,35 @@ async def test_flows(flow_type):
             "start_reauth_flow",
             id="alias_in_branch",
         ),
+        pytest.param(
+            """
+context = {"source": SOURCE_REAUTH, "entry_id": entry.entry_id}
+result = await hass.config_entries.flow.async_init(DOMAIN, context=context)
+""",
+            "start_reauth_flow",
+            id="context_alias",
+        ),
+        pytest.param(
+            """
+result = await hass.config_entries.flow.async_init(
+    DOMAIN, context=ConfigFlowContext(source=SOURCE_REAUTH, entry_id=entry.entry_id)
+)
+""",
+            "start_reauth_flow",
+            id="typed_context",
+        ),
+        pytest.param(
+            """
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context=config_entries.ConfigFlowContext(
+        source=config_entries.SOURCE_RECONFIGURE, entry_id=entry.entry_id
+    ),
+)
+""",
+            "start_reconfigure_flow",
+            id="typed_context_attr",
+        ),
     ],
 )
 def test_warning_alias(
@@ -164,7 +202,7 @@ def test_warning_alias(
     code: str,
     helper: str,
 ) -> None:
-    """Test that a source assigned to a local name is resolved."""
+    """Test that aliased sources and contexts and typed contexts are resolved."""
     root_node = astroid.parse(code, TEST_MODULE)
     walk_checker(linter, flow_checker, root_node)
 

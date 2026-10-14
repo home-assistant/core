@@ -37,11 +37,20 @@ def _get_source_helper(call: nodes.Call) -> str | None:
     context = call.keywords and next(
         (kw.value for kw in call.keywords if kw.arg == "context"), None
     )
-    if not isinstance(context, nodes.Dict):
-        return None
-    for key, value in context.items:
-        if isinstance(key, nodes.Const) and key.value == "source":
-            return _get_helper(value)
+    if isinstance(context, nodes.Name):
+        context = utils.safe_infer(context)
+    match context:
+        case nodes.Dict():
+            for key, value in context.items:
+                if isinstance(key, nodes.Const) and key.value == "source":
+                    return _get_helper(value)
+        case nodes.Call(
+            func=nodes.Name(name="ConfigFlowContext")
+            | nodes.Attribute(attrname="ConfigFlowContext")
+        ):
+            for keyword in context.keywords:
+                if keyword.arg == "source":
+                    return _get_helper(keyword.value)
     return None
 
 
