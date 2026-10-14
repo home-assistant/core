@@ -128,7 +128,7 @@ def mock_make_request(install: str) -> Callable:
 
 
 @pytest.fixture
-def config() -> dict[str, str]:
+def config() -> ConfigType:
     "Return a default/minimal configuration."
     return {
         CONF_USERNAME: USERNAME,
@@ -196,7 +196,7 @@ async def setup_evohome(
 @pytest.fixture
 async def evohome(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: ConfigType,
     freezer: FrozenDateTimeFactory,
     install: str,
 ) -> AsyncGenerator[MagicMock]:
@@ -218,7 +218,7 @@ def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
 @pytest.fixture
 def ctl_id(
     evohome: MagicMock,
-    config: dict[str, str],
+    config: ConfigType,
     entity_id: Callable[[Platform, str], str],
 ) -> str:
     """Return the entity_id of evohome's controller (a Climate entity)."""
@@ -232,7 +232,7 @@ def ctl_id(
 @pytest.fixture
 def zone_id(
     evohome: MagicMock,
-    config: dict[str, str],
+    config: ConfigType,
     entity_id: Callable[[Platform, str], str],
 ) -> str:
     """Return the entity_id of evohome's first zone (a Climate entity)."""
@@ -248,7 +248,7 @@ def zone_id(
 @pytest.fixture
 def dhw_id(
     evohome: MagicMock,
-    config: dict[str, str],
+    config: ConfigType,
     entity_id: Callable[[Platform, str], str],
 ) -> str:
     """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
