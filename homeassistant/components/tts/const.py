@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from . import SpeechManager, TextToSpeechEntity
 
 ATTR_CACHE = "cache"
+ATTR_DAYS = "days"
 ATTR_LANGUAGE = "language"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_MESSAGE = "message"
