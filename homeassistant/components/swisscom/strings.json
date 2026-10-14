@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The Internet-Box at this address is not the one this entry was set up with."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::swisscom::config::step::user::data_description::password%]"
+        },
+        "description": "The password for user {username} on the Internet-Box at {host} is no longer valid. Enter the current password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

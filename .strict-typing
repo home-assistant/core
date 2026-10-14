@@ -379,6 +379,7 @@ homeassistant.components.logbook.*
 homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
+homeassistant.components.lorawan.*
 homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
@@ -387,6 +388,7 @@ homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
+homeassistant.components.marantz_rs232.*
 homeassistant.components.marketplace.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
