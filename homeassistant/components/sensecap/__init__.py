@@ -1,8 +1,6 @@
 """Support SenseCAP devices over LoRaWAN."""
 
-from functools import partial
-
-from sensecap_lorawan import S2101, S2102, SenseCapDevice, SenseCapDeviceCollection
+from sensecap_lorawan import SenseCapDevice, SenseCapDeviceCollection
 
 from homeassistant.components.lorawan import DeviceManager
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseCapConfigEntry) -> 
     manager = entry.runtime_data = DeviceManager(
         hass,
         entry,
-        create_collection=partial(SenseCapDeviceCollection, models=(S2101, S2102)),
+        create_collection=SenseCapDeviceCollection,
         create_coordinator=SenseCapCoordinator,
     )
     entry.async_on_unload(manager.close)

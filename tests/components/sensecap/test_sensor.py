@@ -111,7 +111,13 @@ async def test_new_devices(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.outside_illuminance").state == "unknown"
     assert len(hass.states.async_all("sensor")) == 3
-    assert len(config_entry.runtime_data.coordinators) == 2
+    assert len(config_entry.runtime_data.coordinators) == 3
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("sensecap", f"network:{unsupported.dev_eui}"), config_entry.entry_id
+        )
+        is None
+    )
     mock_connection.emit(RemovedEvent(descriptor=other, received_at=dt_util.utcnow()))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.outside_illuminance") is None
