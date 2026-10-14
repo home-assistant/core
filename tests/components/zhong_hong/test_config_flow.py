@@ -71,7 +71,10 @@ async def test_user_flow_cannot_connect(
     mock_gateway.discovery_error = OSError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -98,7 +101,10 @@ async def test_user_flow_no_devices_found(
     mock_gateway.discovery_result = []
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -123,7 +129,10 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -140,9 +149,10 @@ async def test_user_flow_second_gateway_on_another_port(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={**USER_INPUT, CONF_PORT: DEFAULT_PORT + 1},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_PORT: DEFAULT_PORT + 1}
     )
     await hass.async_block_till_done()
 
