@@ -1568,6 +1568,9 @@ loqedAPI==2.1.16
 # homeassistant.components.lorawan
 lorawan-connection==0.14.0
 
+# homeassistant.components.chirpstack
+lorawan-connection[chirpstack]==0.14.0
+
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
 
