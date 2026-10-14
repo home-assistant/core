@@ -1,9 +1,9 @@
 """Services for the Daikin integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_MODE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -23,14 +23,14 @@ DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
     ATTR_MODE_AUTO: 2,
 }
 
-SET_DEMAND_CONTROL_SCHEMA = vol.Schema(
+SET_DEMAND_CONTROL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_EN_DEMAND): bool,
-        vol.Optional(ATTR_MAX_POW, default=100): vol.All(
-            vol.Coerce(int), vol.Range(min=40, max=100)
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_EN_DEMAND): bool,
+        probatio.Optional(ATTR_MAX_POW, default=100): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=40, max=100)
         ),
-        vol.Optional(ATTR_MODE, default=ATTR_MODE_MANUAL): vol.In(
+        probatio.Optional(ATTR_MODE, default=ATTR_MODE_MANUAL): probatio.In(
             DAIKIN_DEMAND_CONTROL_MODES
         ),
     }
@@ -70,6 +70,7 @@ async def async_set_demand_control(call: ServiceCall) -> None:
     await entry.runtime_data.async_refresh()
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Daikin services."""
     hass.services.async_register(

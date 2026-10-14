@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.components.daikin.services import ATTR_EN_DEMAND, ATTR_MAX_POW
@@ -157,7 +157,7 @@ async def test_set_demand_control_invalid_max_pow(
 
     config_entry = await _async_setup_daikin(hass, zone_device)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_demand_control",
