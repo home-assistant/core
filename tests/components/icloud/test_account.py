@@ -852,6 +852,156 @@ async def test_auth_status_on_first_device_refresh_asks_the_user(
     assert config_entry.runtime_data.api is None
 
 
+async def test_rejected_session_on_first_device_refresh_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+) -> None:
+    """Test that a session rejected on the first fetch reaches the user.
+
+    The exceptions pyicloud raises for a rejection, as opposed to a status on a
+    plain response, end up in setup() as well, where an unhandled one would
+    leave a dead entry.
+    """
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudFailedLoginException("rejected")
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_other_api_error_on_first_device_refresh_is_not_a_rejection(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+) -> None:
+    """Test that an error that is not about authentication does not ask for a login.
+
+    Only a status that says the session has to be established again is a reason
+    to send the user to the password; anything else is iCloud failing, and the
+    user cannot fix that by logging in.
+    """
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException("Service unavailable", 503)
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is not ConfigEntryState.LOADED
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_auth_status_on_device_refresh_while_polling_asks_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a status from reading the devices while polling starts reauth.
+
+    A rejected session is usually turned down when the devices are read rather
+    than when logging in, and as a plain response carrying the status, so it
+    is the status that has to be inspected to tell it from an outage.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudAPIResponseException(
+            "Authentication required for Account.", AppleAuthError.LOGIN_TOKEN_EXPIRED
+        )
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert config_entry.runtime_data.api is None
+
+
+async def test_a_failed_setup_retry_keeps_the_account_polling(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a poll that cannot rebuild the session still arms the next one.
+
+    With no session and nobody being asked to log in, a poll builds the service
+    again. Whatever that raises must not escape into the event loop, which
+    would stop the account polling for good; it is logged and retried.
+
+    keep_alive() is called directly: advancing time would also run the
+    calendar and Reminders coordinators, which start a reauth flow of their own
+    for an account with no session, and a poll leaves the login to the user
+    once one is outstanding.
+    """
+    del polling_service  # only the patched service class is needed here
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    account.api = None
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=Exception("boom"),
+        ),
+        patch.object(account, "_schedule_next_fetch") as schedule,
+    ):
+        await hass.async_add_executor_job(account.keep_alive)
+
+    assert "Error setting up iCloud account, will retry" in caplog.text
+    assert account.api is None
+    schedule.assert_called_once()
+
+    # The next poll builds the session once iCloud lets it.
+    with patch.object(account, "_schedule_next_fetch"):
+        await hass.async_add_executor_job(account.keep_alive)
+
+    assert account.api is not None
+
+
 async def test_device_without_a_status_keeps_the_account_polling(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
