@@ -1,5 +1,6 @@
 """Matter media player platform."""
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import override
 
@@ -45,6 +46,17 @@ OPTIONAL_PLAYBACK_COMMANDS = {
     PlaybackCommands.Next.command_id: MediaPlayerEntityFeature.NEXT_TRACK,
     PlaybackCommands.Seek.command_id: MediaPlayerEntityFeature.SEEK,
 }
+
+
+def source_names(
+    inputs: list[clusters.MediaInput.Structs.InputInfoStruct],
+) -> dict[int, str]:
+    """Return the source name per input index, adding the index to duplicate names."""
+    name_counts = Counter(x.name for x in inputs)
+    return {
+        x.index: x.name if name_counts[x.name] == 1 else f"{x.name} ({x.index})"
+        for x in inputs
+    }
 
 
 async def async_setup_entry(
@@ -122,7 +134,10 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
         inputs: list[clusters.MediaInput.Structs.InputInfoStruct] = (
             self.get_matter_attribute_value(clusters.MediaInput.Attributes.InputList)
         )
-        index = next((x.index for x in inputs if x.name == source), None)
+        index = next(
+            (index for index, name in source_names(inputs).items() if name == source),
+            None,
+        )
         if index is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -230,12 +245,10 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
             self.get_matter_attribute_value(clusters.MediaInput.Attributes.InputList)
             or []
         )
-        self._attr_source_list = [x.name for x in inputs] or None
-        current_input = self.get_matter_attribute_value(
-            clusters.MediaInput.Attributes.CurrentInput
-        )
-        self._attr_source = next(
-            (x.name for x in inputs if x.index == current_input), None
+        names = source_names(inputs)
+        self._attr_source_list = list(names.values()) or None
+        self._attr_source = names.get(
+            self.get_matter_attribute_value(clusters.MediaInput.Attributes.CurrentInput)
         )
 
 
