@@ -43,6 +43,10 @@ SOURCES = {
     # http is in the core files, so it is left out
     "twilio": "import homeassistant.components.http",
 }
+TEST_SOURCES = {
+    # Integrations set up by the tests are coupled as well
+    "twilio_sms": 'await async_setup_component(hass, "plex", {})',
+}
 
 
 @pytest.fixture
@@ -60,6 +64,18 @@ def components_dir(tmp_path: Path) -> Generator[Path]:
         (integration_dir / "__init__.py").write_text(SOURCES.get(integration, ""))
     with patch.object(gen_integration_paths, "COMPONENTS_DIR", components_dir):
         yield components_dir
+
+
+@pytest.fixture
+def tests_dir(tmp_path: Path) -> Generator[Path]:
+    """Create the tests of the integrations."""
+    tests_dir = tmp_path / "tests" / "components"
+    for integration, source in TEST_SOURCES.items():
+        integration_dir = tests_dir / integration
+        integration_dir.mkdir(parents=True)
+        (integration_dir / "test_init.py").write_text(source)
+    with patch.object(gen_integration_paths, "TESTS_DIR", tests_dir):
+        yield tests_dir
 
 
 @pytest.fixture
@@ -114,7 +130,7 @@ def test_get_transitive_dependencies(
     assert get_transitive_dependencies(dependencies) == expected
 
 
-@pytest.mark.usefixtures("components_dir")
+@pytest.mark.usefixtures("components_dir", "tests_dir")
 def test_get_imported_integrations() -> None:
     """Test that imported integrations are detected."""
     assert get_imported_integrations(DEPENDENCIES) == {
@@ -124,7 +140,7 @@ def test_get_imported_integrations() -> None:
         "plex": {"lovelace"},
         "twilio": {"http"},
         "twilio_call": set(),
-        "twilio_sms": set(),
+        "twilio_sms": {"plex"},
     }
 
 
@@ -156,25 +172,43 @@ def test_get_imported_integrations() -> None:
         pytest.param(
             "from homeassistant.helpers import device_registry", set(), id="helper"
         ),
+        pytest.param(
+            'await async_setup_component(hass, "cast", {})',
+            {"cast"},
+            id="async-setup-component",
+        ),
+        pytest.param(
+            "assert setup_component(hass, 'cast', {})",
+            {"cast"},
+            id="setup-component",
+        ),
     ],
 )
+@pytest.mark.parametrize("directory", ["homeassistant", "tests"])
 @pytest.mark.usefixtures("core_files")
 def test_get_imported_integrations_patterns(
-    tmp_path: Path, source: str, expected: set[str]
+    tmp_path: Path, source: str, expected: set[str], directory: str
 ) -> None:
-    """Test the import patterns that are picked up."""
+    """Test the patterns that are picked up, both in the source and the tests."""
     components_dir = tmp_path / "homeassistant" / "components"
+    tests_dir = tmp_path / "tests" / "components"
     for integration in ("cast", "lovelace", "plex"):
         (components_dir / integration).mkdir(parents=True)
-    (components_dir / "lovelace" / "__init__.py").write_text(source)
+        (tests_dir / integration).mkdir(parents=True)
+    (tmp_path / directory / "components" / "lovelace" / "test_init.py").write_text(
+        source
+    )
 
-    with patch.object(gen_integration_paths, "COMPONENTS_DIR", components_dir):
+    with (
+        patch.object(gen_integration_paths, "COMPONENTS_DIR", components_dir),
+        patch.object(gen_integration_paths, "TESTS_DIR", tests_dir),
+    ):
         imported = get_imported_integrations(["cast", "lovelace", "plex"])
 
     assert imported["lovelace"] == expected
 
 
-@pytest.mark.usefixtures("components_dir", "core_files")
+@pytest.mark.usefixtures("components_dir", "tests_dir", "core_files")
 def test_generate() -> None:
     """Test that dependencies and imports are added, except core integrations."""
     assert generate() == (
@@ -188,11 +222,12 @@ def test_generate() -> None:
         "twilio_call: [homeassistant/components/twilio_call/**, "
         "tests/components/twilio_call/**, homeassistant/components/twilio/**]\n"
         "twilio_sms: [homeassistant/components/twilio_sms/**, "
-        "tests/components/twilio_sms/**, homeassistant/components/twilio/**]\n"
+        "tests/components/twilio_sms/**, homeassistant/components/plex/**, "
+        "homeassistant/components/twilio/**]\n"
     )
 
 
-@pytest.mark.usefixtures("components_dir", "core_files")
+@pytest.mark.usefixtures("components_dir", "tests_dir", "core_files")
 def test_main(tmp_path: Path) -> None:
     """Test that the config is written to the output file."""
     output_file = tmp_path / ".integration_paths.yaml"

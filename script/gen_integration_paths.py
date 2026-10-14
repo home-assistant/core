@@ -8,7 +8,9 @@ testing.
 
 Integrations imported directly from the source are added as well, since
 integration platforms, such as `lovelace/cast.py`, are coupled to another
-integration without declaring it in the manifest.
+integration without declaring it in the manifest. The same goes for integrations
+imported or set up by the tests, such as `input_boolean` in the
+`generic_thermostat` tests.
 
 Dependencies listed in .core_files.yaml are skipped, as any change to those
 already triggers the full test suite.
@@ -20,6 +22,7 @@ from pathlib import Path
 import re
 
 COMPONENTS_DIR = Path("homeassistant/components")
+TESTS_DIR = Path("tests/components")
 CORE_FILES = Path(".core_files.yaml")
 OUTPUT_FILE = Path(".integration_paths.yaml")
 
@@ -31,6 +34,10 @@ CORE_COMPONENT_PATTERN = re.compile(
 INTEGRATION_IMPORT_PATTERN = re.compile(
     r"(?:from|import)\s+homeassistant\.components\.([a-z0-9_]+)"
     r"|from\s+homeassistant\.components\s+import\s+\(?([a-z0-9_,\s]+)"
+)
+# `async_setup_component(hass, "x", ...)` and `setup_component(hass, "x", ...)`
+SETUP_COMPONENT_PATTERN = re.compile(
+    r"setup_component\(\s*hass,\s*[\"']([a-z0-9_]+)[\"']"
 )
 
 
@@ -52,12 +59,20 @@ def get_dependencies() -> dict[str, list[str]]:
 def get_imported_integrations(
     integrations: Collection[str],
 ) -> dict[str, set[str]]:
-    """Return the integrations imported in the source of every integration."""
+    """Return the integrations imported or set up by every integration.
+
+    Both the source and the tests of the integration are scanned.
+    """
     imported: dict[str, set[str]] = {}
     for integration in integrations:
         found: set[str] = set()
-        for path in sorted((COMPONENTS_DIR / integration).rglob("*.py")):
+        paths = [
+            *(COMPONENTS_DIR / integration).rglob("*.py"),
+            *(TESTS_DIR / integration).rglob("*.py"),
+        ]
+        for path in sorted(paths):
             source = path.read_text()
+            found.update(SETUP_COMPONENT_PATTERN.findall(source))
             if "homeassistant.components" not in source:
                 continue
             for match in INTEGRATION_IMPORT_PATTERN.finditer(source):
