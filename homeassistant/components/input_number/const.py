@@ -14,6 +14,11 @@ DATA_INPUT_NUMBER: HassKey[InputNumberData] = HassKey(DOMAIN)
 
 ATTR_VALUE: Final = "value"
 
+CONF_INITIAL = "initial"
+CONF_MIN = "min"
+CONF_MAX = "max"
+CONF_STEP = "step"
+
 SERVICE_SET_VALUE: Final = "set_value"
 SERVICE_INCREMENT: Final = "increment"
 SERVICE_DECREMENT: Final = "decrement"
