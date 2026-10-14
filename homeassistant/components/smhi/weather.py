@@ -157,47 +157,12 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
         if forecast_data is None or len(forecast_data) < 3:
             return None
 
-        data: list[Forecast] = []
-
-        # The library repeats the current conditions as the first entry of the
-        # daily and twice daily forecasts, so those start one entry in. It does
-        # not do that for the hourly forecast, where the first entry is the
-        # forecast for the current hour.
+        # Skip the first entry for daily and twice-daily forecasts.
         forecasts = forecast_data if forecast_type == "hourly" else forecast_data[1:]
 
-        for forecast in forecasts:
-            condition = CONDITION_MAP.get(forecast["symbol"])
-            if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
-                self.hass, forecast["valid_time"]
-            ):
-                condition = ATTR_CONDITION_CLEAR_NIGHT
-
-            new_forecast = Forecast(
-                {
-                    ATTR_FORECAST_TIME: forecast["valid_time"].isoformat(),
-                    ATTR_FORECAST_NATIVE_TEMP: forecast["temperature_max"],
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["temperature_min"],
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.get(
-                        "total_precipitation"
-                    )
-                    or forecast["mean_precipitation"],
-                    ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_PRESSURE: forecast["pressure"],
-                    ATTR_FORECAST_WIND_BEARING: forecast["wind_direction"],
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind_speed"],
-                    ATTR_FORECAST_HUMIDITY: forecast["humidity"],
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind_gust"],
-                    ATTR_FORECAST_CLOUD_COVERAGE: forecast["total_cloud"],
-                }
-            )
-            if forecast_type == "twice_daily":
-                new_forecast[ATTR_FORECAST_IS_DAYTIME] = False
-                if forecast["valid_time"].hour == 12:
-                    new_forecast[ATTR_FORECAST_IS_DAYTIME] = True
-
-            data.append(new_forecast)
-
-        return data
+        return [
+            self._create_forecast(forecast, forecast_type) for forecast in forecasts
+        ]
 
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
@@ -213,3 +178,38 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Service to retrieve the twice daily forecast."""
         return self._get_forecast_data(self.coordinator.data.twice_daily, "twice_daily")
+
+    def _get_forecast_condition(self, forecast: SMHIForecast) -> str | None:
+        """Get the weather condition for a forecast."""
+        condition = CONDITION_MAP.get(forecast["symbol"])
+
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+            self.hass, forecast["valid_time"]
+        ):
+            return ATTR_CONDITION_CLEAR_NIGHT
+
+        return condition
+
+    def _create_forecast(self, forecast: SMHIForecast, forecast_type: str) -> Forecast:
+        """Create a Home Assistant forecast from SMHI data."""
+        new_forecast = Forecast(
+            {
+                ATTR_FORECAST_TIME: forecast["valid_time"].isoformat(),
+                ATTR_FORECAST_NATIVE_TEMP: forecast["temperature_max"],
+                ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["temperature_min"],
+                ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.get("total_precipitation")
+                or forecast["mean_precipitation"],
+                ATTR_FORECAST_CONDITION: self._get_forecast_condition(forecast),
+                ATTR_FORECAST_NATIVE_PRESSURE: forecast["pressure"],
+                ATTR_FORECAST_WIND_BEARING: forecast["wind_direction"],
+                ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind_speed"],
+                ATTR_FORECAST_HUMIDITY: forecast["humidity"],
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind_gust"],
+                ATTR_FORECAST_CLOUD_COVERAGE: forecast["total_cloud"],
+            }
+        )
+
+        if forecast_type == "twice_daily":
+            new_forecast[ATTR_FORECAST_IS_DAYTIME] = forecast["valid_time"].hour == 12
+
+        return new_forecast
