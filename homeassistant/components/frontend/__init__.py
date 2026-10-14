@@ -18,23 +18,32 @@ from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ActiveConnection
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import (
-    CONF_MODE,
-    CONF_NAME,
-    EVENT_PANELS_UPDATED,
-    EVENT_THEMES_UPDATED,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
+from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_PANELS_UPDATED
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
-from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
+from .helpers import (
+    CONF_NAME_DARK,
+    CONF_THEMES,
+    DATA_DEFAULT_DARK_THEME,
+    DATA_DEFAULT_THEME,
+    DATA_THEMES,
+    DATA_THEMES_STORE,
+    DEFAULT_THEME,
+    MANIFEST_JSON,
+    THEMES_SAVE_DELAY,
+    VALUE_NO_THEME,
+    async_update_theme_and_fire_event,
+    validate_selected_theme,
+    validate_themes,
+)
 from .pr_download import download_pr_artifact
 from .storage import (
     async_setup_frontend_storage,
@@ -44,11 +53,6 @@ from .storage import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "frontend"
-CONF_NAME_DARK = "name_dark"
-CONF_THEMES = "themes"
-CONF_THEMES_MODES = "modes"
-CONF_THEMES_LIGHT = "light"
-CONF_THEMES_DARK = "dark"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -59,8 +63,6 @@ CONF_DEVELOPMENT_PR = "development_pr"
 CONF_GITHUB_TOKEN = "github_token"
 
 DEV_ARTIFACTS_DIR = "development_artifacts"
-
-DEFAULT_THEME_COLOR = "#2980b9"
 
 
 DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")
@@ -73,9 +75,6 @@ DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = 
 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
-THEMES_SAVE_DELAY = 60
-DATA_THEMES_STORE: HassKey[Store] = HassKey("frontend_themes_store")
-DATA_THEMES: HassKey[dict[str, Any]] = HassKey("frontend_themes")
 
 PANELS_STORAGE_KEY = f"{DOMAIN}_panels"
 PANELS_STORAGE_VERSION = 1
@@ -86,68 +85,6 @@ DATA_PANELS_STORE: HassKey[Store[dict[str, dict[str, Any]]]] = HassKey(
 DATA_PANELS_CONFIG: HassKey[dict[str, dict[str, Any]]] = HassKey(
     "frontend_panels_config"
 )
-DATA_DEFAULT_THEME = "frontend_default_theme"
-DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
-DEFAULT_THEME = "default"
-VALUE_NO_THEME = "none"
-
-PRIMARY_COLOR = "primary-color"
-
-
-LEGACY_THEME_SCHEMA = probatio.Any(
-    # Legacy theme scheme
-    {cv.string: cv.string},
-    # New extended schema with mode support
-    {
-        # Theme variables that apply to all modes
-        cv.string: cv.string,
-        # Mode specific theme variables
-        probatio.Optional(CONF_THEMES_MODES): probatio.Schema(
-            {
-                probatio.Optional(CONF_THEMES_LIGHT): probatio.Schema(
-                    {cv.string: cv.string}
-                ),
-                probatio.Optional(CONF_THEMES_DARK): probatio.Schema(
-                    {cv.string: cv.string}
-                ),
-            }
-        ),
-    },
-)
-
-THEME_SCHEMA = probatio.Schema(
-    {
-        # Theme variables that apply to all modes
-        cv.string: cv.string,
-        # Mode specific theme variables
-        probatio.Optional(CONF_THEMES_MODES): probatio.All(
-            {
-                probatio.Optional(CONF_THEMES_LIGHT): probatio.Schema(
-                    {cv.string: cv.string}
-                ),
-                probatio.Optional(CONF_THEMES_DARK): probatio.Schema(
-                    {cv.string: cv.string}
-                ),
-            },
-            probatio.AtLeastOne(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
-        ),
-    }
-)
-
-
-def _validate_themes(themes: dict) -> dict[str, Any]:
-    """Validate themes."""
-    validated_themes = {}
-    for theme_name, theme in themes.items():
-        theme_name = cv.string(theme_name)
-        LEGACY_THEME_SCHEMA(theme)
-
-        try:
-            validated_themes[theme_name] = THEME_SCHEMA(theme)
-        except probatio.Invalid as err:
-            _LOGGER.error("Theme %s is invalid: %s", theme_name, err)
-
-    return validated_themes
 
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -161,7 +98,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Inclusive(
                     probatio.Secret(CONF_GITHUB_TOKEN), "development_pr"
                 ): cv.string,
-                probatio.Optional(CONF_THEMES): probatio.All(dict, _validate_themes),
+                probatio.Optional(CONF_THEMES): probatio.All(dict, validate_themes),
                 probatio.Optional(CONF_EXTRA_MODULE_URL): probatio.All(
                     probatio.EnsureList(), [cv.string]
                 ),
@@ -180,79 +117,6 @@ CONFIG_SCHEMA = probatio.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-
-
-class Manifest:
-    """Manage the manifest.json contents."""
-
-    def __init__(self, data: dict) -> None:
-        """Init the manifest manager."""
-        self.manifest = data
-        self._serialize()
-
-    def __getitem__(self, key: str) -> Any:
-        """Return an item in the manifest."""
-        return self.manifest[key]
-
-    @property
-    def json(self) -> str:
-        """Return the serialized manifest."""
-        return self._serialized
-
-    def _serialize(self) -> None:
-        self._serialized = json_dumps_sorted(self.manifest)
-
-    def update_key(self, key: str, val: str) -> None:
-        """Add a keyval to the manifest.json."""
-        self.manifest[key] = val
-        self._serialize()
-
-
-MANIFEST_JSON = Manifest(
-    {
-        "background_color": "#FFFFFF",
-        "description": (
-            "Home automation platform that puts local control and privacy first."
-        ),
-        "dir": "ltr",
-        "display": "standalone",
-        "icons": [
-            {
-                "src": f"/static/icons/favicon-{size}x{size}.png",
-                "sizes": f"{size}x{size}",
-                "type": "image/png",
-                "purpose": "any",
-            }
-            for size in (192, 384, 512, 1024)
-        ]
-        + [
-            {
-                "src": f"/static/icons/maskable_icon-{size}x{size}.png",
-                "sizes": f"{size}x{size}",
-                "type": "image/png",
-                "purpose": "maskable",
-            }
-            for size in (48, 72, 96, 128, 192, 384, 512)
-        ],
-        "screenshots": [
-            {
-                "src": "/static/images/screenshots/screenshot-1.png",
-                "sizes": "413x792",
-                "type": "image/png",
-            }
-        ],
-        "lang": "en-US",
-        "name": "Home Assistant",
-        "short_name": "Home Assistant",
-        "start_url": "/?homescreen=1",
-        "id": "/?homescreen=1",
-        "theme_color": DEFAULT_THEME_COLOR,
-        "prefer_related_applications": True,
-        "related_applications": [
-            {"platform": "play", "id": "io.homeassistant.companion.android"}
-        ],
-    }
-)
 
 
 class UrlManager:
@@ -662,16 +526,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _validate_selected_theme(theme: str) -> str:
-    """Validate that a user selected theme is a valid theme."""
-    if theme in (DEFAULT_THEME, VALUE_NO_THEME):
-        return theme
-    hass = async_get_hass()
-    if theme not in hass.data[DATA_THEMES]:
-        raise probatio.Invalid(f"Theme {theme} not found")
-    return theme
-
-
 async def _async_setup_themes(
     hass: HomeAssistant, themes: dict[str, Any] | None
 ) -> None:
@@ -694,23 +548,6 @@ async def _async_setup_themes(
 
     if dark_theme_name == DEFAULT_THEME or dark_theme_name in hass.data[DATA_THEMES]:
         hass.data[DATA_DEFAULT_DARK_THEME] = dark_theme_name
-
-    @callback
-    def update_theme_and_fire_event() -> None:
-        """Update theme_color in manifest."""
-        name = hass.data[DATA_DEFAULT_THEME]
-        themes = hass.data[DATA_THEMES]
-        if name != DEFAULT_THEME:
-            MANIFEST_JSON.update_key(
-                "theme_color",
-                themes[name].get(
-                    "app-header-background-color",
-                    themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
-                ),
-            )
-        else:
-            MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
-        hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
     def set_theme(call: ServiceCall) -> None:
@@ -748,7 +585,7 @@ async def _async_setup_themes(
             },
             THEMES_SAVE_DELAY,
         )
-        update_theme_and_fire_event()
+        async_update_theme_and_fire_event(hass)
 
     async def reload_themes(_: ServiceCall) -> None:
         """Reload themes."""
@@ -756,7 +593,7 @@ async def _async_setup_themes(
         new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
 
         try:
-            new_themes = _validate_themes(new_themes)
+            new_themes = validate_themes(new_themes)
         except probatio.Invalid as err:
             raise HomeAssistantError(f"Failed to reload themes: {err}") from err
 
@@ -768,7 +605,7 @@ async def _async_setup_themes(
             and hass.data.get(DATA_DEFAULT_DARK_THEME) not in new_themes
         ):
             hass.data[DATA_DEFAULT_DARK_THEME] = None
-        update_theme_and_fire_event()
+        async_update_theme_and_fire_event(hass)
 
     service.async_register_admin_service(
         hass,
@@ -777,10 +614,10 @@ async def _async_setup_themes(
         set_theme,
         probatio.All(
             {
-                probatio.Optional(CONF_NAME): _validate_selected_theme,
+                probatio.Optional(CONF_NAME): validate_selected_theme,
                 probatio.Exclusive(
                     CONF_NAME_DARK, "dark_modes"
-                ): _validate_selected_theme,
+                ): validate_selected_theme,
                 probatio.Exclusive(CONF_MODE, "dark_modes"): probatio.Any(
                     "dark", "light"
                 ),
