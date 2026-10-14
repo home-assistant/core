@@ -951,6 +951,11 @@ Ensures `HomeAssistantError` and its subclasses use the translation system
 strings. Also verifies that referenced translation keys exist in the
 integration's `strings.json` and that placeholders match.
 
+`translation_domain` may be a string literal, the integration's own `DOMAIN`,
+or a constant that resolves to a string, such as
+`from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN`. Keys
+and placeholders are then checked against that domain's `strings.json`.
+
 ### `W7417`: `home-assistant-exception-not-translated`
 
 A `HomeAssistantError` subclass is raised with a hardcoded message; use

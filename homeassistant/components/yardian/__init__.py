@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> None:
     """Set up Yardian from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -55,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

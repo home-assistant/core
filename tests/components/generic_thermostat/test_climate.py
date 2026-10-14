@@ -1,6 +1,7 @@
 """The tests for the generic_thermostat."""
 
 import datetime
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -66,6 +67,7 @@ from tests.common import (
     async_mock_service,
     get_fixture_path,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
 from tests.components.climate import common
@@ -1623,49 +1625,78 @@ async def test_restore_state(hass: HomeAssistant, hvac_mode) -> None:
 
 
 @pytest.mark.parametrize(
-    ("restored_attributes", "unit_system", "expected_temperature"),
+    ("restored_attributes", "extra_data", "unit_system", "expected_temperature"),
     [
         pytest.param(
             {ATTR_TEMPERATURE: 20, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
             METRIC_SYSTEM,
             20,
             id="celsius_to_celsius",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 20, "temperature_unit": UnitOfTemperature.CELSIUS},
+            None,
             US_CUSTOMARY_SYSTEM,
             68,
             id="celsius_to_fahrenheit",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 68, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            None,
             METRIC_SYSTEM,
             20,
             id="fahrenheit_to_celsius",
         ),
         pytest.param(
             {ATTR_TEMPERATURE: 68, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            None,
             US_CUSTOMARY_SYSTEM,
             68,
             id="fahrenheit_to_fahrenheit",
         ),
-        pytest.param({ATTR_TEMPERATURE: 20}, METRIC_SYSTEM, 20, id="legacy_celsius"),
         pytest.param(
-            {ATTR_TEMPERATURE: 68}, US_CUSTOMARY_SYSTEM, 68, id="legacy_fahrenheit"
+            {ATTR_TEMPERATURE: 20}, None, METRIC_SYSTEM, 20, id="legacy_celsius"
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 68},
+            None,
+            US_CUSTOMARY_SYSTEM,
+            68,
+            id="legacy_fahrenheit",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 99, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            {
+                "native_current_temperature": None,
+                "native_target_temperature": 20,
+                "native_target_temperature_high": None,
+                "native_target_temperature_low": None,
+                "native_temperature_unit": UnitOfTemperature.CELSIUS,
+            },
+            US_CUSTOMARY_SYSTEM,
+            68,
+            id="extra_data_celsius_to_fahrenheit",
         ),
     ],
 )
 async def test_restore_temperature_unit(
     hass: HomeAssistant,
     restored_attributes: dict[str, int | str],
+    extra_data: dict[str, Any] | None,
     unit_system: UnitSystem,
     expected_temperature: int,
 ) -> None:
     """Test restoration uses the saved unit, falling back to the configured unit."""
     hass.config.units = unit_system
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        (State("climate.test_thermostat", HVACMode.OFF, restored_attributes),),
+        (
+            (
+                State("climate.test_thermostat", HVACMode.OFF, restored_attributes),
+                extra_data,
+            ),
+        ),
     )
 
     hass.set_state(CoreState.starting)

@@ -67,7 +67,7 @@ RETRY_EXCEPTIONS = (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> None:
     """Set up Tessie config."""
     api_key = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
@@ -224,9 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> None:
     """Unload Tessie Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

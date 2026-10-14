@@ -126,24 +126,16 @@ async def test_current_and_next_signal(
     assert snapshot.next_change == schedule.data[1]
 
 
-@pytest.mark.parametrize(
-    ("first_slot_offset", "expected_next"),
-    [
-        pytest.param(dt.timedelta(minutes=10), 0, id="future-only"),
-        pytest.param(dt.timedelta(hours=-3), None, id="expired"),
-    ],
-)
-async def test_schedule_without_current_signal(
+async def _setup_single_slot_schedule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
-    first_slot_offset: dt.timedelta,
-    expected_next: int | None,
-) -> None:
-    """Test a schedule that does not cover now has no current signal."""
+    slot_offset: dt.timedelta,
+) -> tuple[EnergyIDDirectiveCoordinator, DirectiveSignal]:
+    """Set up directives with a schedule holding one slot offset from now."""
     resource, schedule = _directive_fixture()
     point = DirectiveSignal(
-        timestamp=dt_util.utcnow() + first_slot_offset,
+        timestamp=dt_util.utcnow() + slot_offset,
         signal="++",
         color="#00750e",
         raw_value=0,
@@ -159,10 +151,37 @@ async def test_schedule_without_current_signal(
     mock_webhook_client.get_directive_data = AsyncMock(return_value=shifted)
 
     coordinator = await _setup_with_directives(hass, mock_config_entry)
+    return coordinator, point
+
+
+async def test_schedule_starting_later_has_next_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a schedule that starts later has no current signal but a next change."""
+    coordinator, point = await _setup_single_slot_schedule(
+        hass, mock_config_entry, mock_webhook_client, dt.timedelta(minutes=10)
+    )
 
     snapshot = coordinator.data.schedules[DIRECTIVE_ID]
     assert snapshot.current is None
-    assert snapshot.next_change == (None if expected_next is None else point)
+    assert snapshot.next_change == point
+
+
+async def test_expired_schedule_has_no_signals(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a schedule that already ended has no current signal or next change."""
+    coordinator, _ = await _setup_single_slot_schedule(
+        hass, mock_config_entry, mock_webhook_client, dt.timedelta(hours=-3)
+    )
+
+    snapshot = coordinator.data.schedules[DIRECTIVE_ID]
+    assert snapshot.current is None
+    assert snapshot.next_change is None
 
 
 async def test_failing_schedule_keeps_directive_granted(

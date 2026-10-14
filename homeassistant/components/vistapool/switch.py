@@ -139,12 +139,10 @@ class VistapoolSwitch(VistapoolEntity, SwitchEntity):
         value = self.coordinator.get_value(self.entity_description.value_path)
         if value is None:
             return None
-        on = value in (True, "1")
-        for extra_path in self.entity_description.extra_read_paths:
-            extra = self.coordinator.get_value(extra_path)
-            if extra is not None:
-                on = on or extra in (True, "1")
-        return on
+        return bool(value) or any(
+            self.coordinator.get_value(path)
+            for path in self.entity_description.extra_read_paths
+        )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

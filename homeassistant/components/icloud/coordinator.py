@@ -1,5 +1,6 @@
 """Coordinators for the iCloud integration."""
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, tzinfo
 import logging
@@ -17,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .account import IcloudConfigEntry
-from .const import DOMAIN
+from .const import CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,13 @@ CALENDAR_SCAN_INTERVAL = timedelta(minutes=15)
 # `async_get_events` queries iCloud directly for anything outside this window.
 LOOKBACK = timedelta(days=1)
 LOOKAHEAD = timedelta(days=30)
+
+# Bound how long the coordinator waits for a fetch so a slow or unresponsive
+# Apple request cannot stall the refresh indefinitely. This frees the
+# coordinator, not the executor thread running the request, which is released
+# only once that request itself returns. The refresh no longer runs on the
+# startup path, so the bound is a generous backstop.
+FETCH_TIMEOUT = 300  # seconds
 
 
 @dataclass(slots=True)
@@ -118,9 +126,12 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
     async def _async_update_data(self) -> dict[str, IcloudCalendarData]:
         """Fetch calendars and their upcoming events."""
         try:
-            return await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                return await self.hass.async_add_executor_job(self._fetch)
         except PyiCloudException as err:
             raise UpdateFailed(f"Error fetching calendars: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching calendars") from err
 
 
 def _parse_apple_date(value: datetime | list[int] | None) -> datetime | None:
@@ -265,6 +276,13 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self.account = entry.runtime_data
         self._warned_undecoded = False
         self._skipped_undecoded = False
+        # Fetching years of completed reminders means paging through tens of
+        # thousands of CloudKit records on every refresh, which is what made
+        # setup hang. The default excludes them; the option brings them back.
+        self._include_completed = entry.options.get(
+            CONF_INCLUDE_COMPLETED,
+            entry.data.get(CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED),
+        )
 
     @property
     def reminders(self) -> RemindersService:
@@ -282,7 +300,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         for list_id, name in _live_lists(service):
             batch = service.list_reminders(
                 list_id=list_id,
-                include_completed=True,
+                include_completed=self._include_completed,
                 results_limit=RESULTS_LIMIT,
             )
             reminders = []
@@ -304,9 +322,12 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
     async def _async_update_data(self) -> dict[str, IcloudReminderList]:
         """Fetch reminders from iCloud."""
         try:
-            data = await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                data = await self.hass.async_add_executor_job(self._fetch)
         except REMINDERS_ERRORS as err:
             raise UpdateFailed(f"Error fetching reminders: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching reminders") from err
 
         self._warn_if_undecoded()
         return data
