@@ -362,3 +362,85 @@ async def test_inspecting_does_not_exit(
 
     assert not msg["success"]
     assert msg["error"] == {"code": "unknown_error", "message": "SystemExit: None"}
+
+
+async def test_inspect_without_metaclass_code(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test expanding an object does not run a __getattribute__ of its metaclass."""
+    result = await async_execute(
+        websocket_client,
+        """
+ran = []
+
+class WatchingMetaclass(type):
+    def __getattribute__(cls, name):
+        ran.append(name)
+        return super().__getattribute__(name)
+
+class Watched(metaclass=WatchingMetaclass):
+    alpha = 1
+
+watched = Watched()
+watched.beta = 2
+watched
+""",
+    )
+    # Showing the result runs code of the object, like its representation.
+    await async_execute(websocket_client, "ran.clear()")
+
+    children = await async_inspect(websocket_client, result["result"]["object_id"])
+    ran = await async_execute(websocket_client, "ran")
+
+    assert children == {
+        "children": [{"key": "beta", "value": {"type": "number", "value": "2"}}],
+        "truncated": False,
+    }
+    assert ran["result"]["preview"] == "[]"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param(
+            {"type": "debug_console/get_attribute", "attribute": "cancelled"},
+            id="property",
+        ),
+        pytest.param({"type": "debug_console/inspect"}, id="inspect"),
+    ],
+)
+async def test_cancelled_error_from_user_code(
+    websocket_client: MockHAClientWebSocket, command: dict[str, Any]
+) -> None:
+    """Test code raising CancelledError gets an answer, and the connection stays."""
+    result = await async_execute(
+        websocket_client,
+        """
+import asyncio
+
+class Cancelled(list):
+    @property
+    def cancelled(self):
+        raise asyncio.CancelledError
+
+    def __iter__(self):
+        raise asyncio.CancelledError
+
+Cancelled([1])
+""",
+    )
+
+    await websocket_client.send_json_auto_id(
+        {
+            **command,
+            "session_id": SESSION_ID,
+            "object_id": result["result"]["object_id"],
+        }
+    )
+    msg = await websocket_client.receive_json()
+
+    assert "CancelledError" in str(msg.get("result") or msg.get("error"))
+
+    result = await async_execute(websocket_client, "1 + 1")
+
+    assert result["result"] == {"type": "number", "value": "2"}

@@ -20,6 +20,7 @@ from .const import (
     IS_DEVELOPMENT_VERSION,
     WARNING_VERSION,
 )
+from .inspection import class_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ def async_log_property_evaluation(user: User, value: Any, attribute: str) -> Non
     _LOGGER.warning(
         "%s evaluated %s.%s in the debug console",
         user.name,
-        type(value).__qualname__,
+        class_name(value),
         attribute,
     )
 

@@ -1,9 +1,9 @@
 """Describe values for the Debug console, and inspect them on request."""
 
+import asyncio
 import builtins
 from collections.abc import Iterator, Mapping, Sequence, Set as AbstractSet, Sized
 from contextlib import suppress
-import inspect
 from itertools import islice
 import reprlib
 import traceback
@@ -13,15 +13,24 @@ from typing import TYPE_CHECKING, Any, override
 if TYPE_CHECKING:
     from .session import ConsoleSession
 
-# What code of the user can raise. Not CancelledError, which asyncio needs to
-# stop tasks; SystemExit and KeyboardInterrupt would stop Home Assistant.
-USER_CODE_ERRORS = (Exception, SystemExit, KeyboardInterrupt)
+# What code of the user can raise, which must not stop Home Assistant or close
+# the connection. Code can raise CancelledError itself too, like a property
+# reading a cancelled future; executions tell a real cancellation apart.
+USER_CODE_ERRORS = (Exception, SystemExit, KeyboardInterrupt, asyncio.CancelledError)
+
+# How Python itself reads a class, past any __getattribute__ of its metaclass,
+# which is code of the user.
+_CLASS_MRO = vars(type)["__mro__"]
+_CLASS_DICT = vars(type)["__dict__"]
+_CLASS_QUALNAME = vars(type)["__qualname__"]
 
 MAX_CHILDREN = 1000
 MAX_STRING_LENGTH = 10000
 
 # Marks a property among children, which is only evaluated on request.
 _GETTER = object()
+
+_NOT_FOUND = object()
 
 
 class _PreviewRepr(reprlib.Repr):
@@ -121,7 +130,7 @@ def describe(session: ConsoleSession, value: Any) -> dict[str, Any]:
 
     description: dict[str, Any] = {
         "type": "object",
-        "class": type(value).__qualname__,
+        "class": class_name(value),
         "preview": preview(value),
         "object_id": session.track(value),
     }
@@ -137,7 +146,7 @@ def preview(value: Any) -> str:
     try:
         return _PREVIEW.repr(value)
     except USER_CODE_ERRORS:
-        return f"<{type(value).__qualname__} that failed to represent itself>"
+        return f"<{class_name(value)} that failed to represent itself>"
 
 
 def inspect_children(session: ConsoleSession, value: Any) -> dict[str, Any]:
@@ -166,14 +175,73 @@ def get_attribute(session: ConsoleSession, value: Any, name: str) -> dict[str, A
         return {"error": "".join(traceback.format_exception_only(err))}
 
 
+def class_mro(cls: type) -> tuple[type, ...]:
+    """Return a class and the classes it inherits from, without running code."""
+    return _CLASS_MRO.__get__(cls)  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
+
+
+def class_dict(cls: type) -> Mapping[str, Any]:
+    """Return the attributes a class defines itself, without running code."""
+    return _CLASS_DICT.__get__(cls)  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
+
+
+def class_name(value: Any) -> str:
+    """Return the name of the class of a value, without running code."""
+    return _CLASS_QUALNAME.__get__(type(value))  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
+
+
+def static_attribute(value: Any, name: str, default: Any = None) -> Any:
+    """Return an attribute as stored, without running any code to get it.
+
+    Like inspect.getattr_static, which still goes through a __getattribute__
+    of the metaclass when looking at classes. Data descriptors of the class
+    win over the instance, like they do for getattr.
+    """
+    if isinstance(value, type):
+        found = _class_attribute(value, name, _NOT_FOUND)
+        from_metaclass = _class_attribute(type(value), name, _NOT_FOUND)
+        if from_metaclass is not _NOT_FOUND and (
+            found is _NOT_FOUND or _is_data_descriptor(from_metaclass)
+        ):
+            return from_metaclass
+
+        return default if found is _NOT_FOUND else found
+
+    from_class = _class_attribute(type(value), name, _NOT_FOUND)
+    if from_class is not _NOT_FOUND and _is_data_descriptor(from_class):
+        return from_class
+
+    if (attributes := instance_dict(value)) is not None and name in attributes:
+        return attributes[name]
+
+    return default if from_class is _NOT_FOUND else from_class
+
+
+def _class_attribute(cls: type, name: str, default: Any) -> Any:
+    """Return an attribute a class defines or inherits, as stored."""
+    for base in class_mro(cls):
+        if name in (attributes := class_dict(base)):
+            return attributes[name]
+
+    return default
+
+
+def _is_data_descriptor(value: Any) -> bool:
+    """Return if a value is a descriptor that can be set, like a property."""
+    return any(
+        "__set__" in class_dict(base) or "__delete__" in class_dict(base)
+        for base in class_mro(type(value))
+    )
+
+
 def instance_dict(value: Any) -> dict[str, Any] | None:
     """Return the __dict__ of an instance, without running code to get it.
 
     A class can replace __dict__ with a property, which is then left alone.
     """
     # Only the class of the instance counts, not the class of that class.
-    for cls in type(value).__mro__:
-        if "__dict__" in (attributes := vars(cls)):
+    for cls in class_mro(type(value)):
+        if "__dict__" in (attributes := class_dict(cls)):
             descriptor = attributes["__dict__"]
             break
     else:
@@ -207,25 +275,23 @@ def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:
 
     attributes: dict[str, Any] = dict(instance_dict(value) or {})
 
-    for cls in type(value).__mro__:
-        slots = vars(cls).get("__slots__", ())
+    for cls in class_mro(type(value)):
+        slots = class_dict(cls).get("__slots__", ())
         for name in (slots,) if isinstance(slots, str) else slots:
             # A subclass can replace a slot with a property, which only runs
             # on request; the loop below marks it.
-            static = inspect.getattr_static(type(value), name, None)
+            static = static_attribute(type(value), name)
             if isinstance(static, MemberDescriptorType):
                 with suppress(AttributeError):
                     attributes[name] = static.__get__(value, type(value))  # pylint: disable=unnecessary-dunder-call
 
-    for name in dir(type(value)):
+    for name in {name for cls in class_mro(type(value)) for name in class_dict(cls)}:
         if name in attributes:
             continue
 
-        static = inspect.getattr_static(type(value), name, None)
+        static = static_attribute(type(value), name)
         # Matched by name, as both functools and propcache have their own.
-        if inspect.isdatadescriptor(static) or (
-            type(static).__name__ == "cached_property"
-        ):
+        if _is_data_descriptor(static) or class_name(static) == "cached_property":
             attributes[name] = _GETTER
 
     for name in sorted(attributes):

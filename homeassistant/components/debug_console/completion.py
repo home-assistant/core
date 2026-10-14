@@ -22,7 +22,7 @@ from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 
-from .inspection import instance_dict, preview
+from .inspection import class_dict, class_mro, instance_dict, preview, static_attribute
 
 MAX_COMPLETIONS = 200
 
@@ -188,12 +188,12 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
 
     # Without getattr(), as properties, descriptors, and __getattr__ run code.
     for attribute in attributes:
-        static = inspect.getattr_static(value, attribute, _MISSING)
+        static = static_attribute(value, attribute, _MISSING)
         if static is _MISSING:
             return _MISSING
 
         owner = value if isinstance(value, type) else type(value)
-        from_class = static is inspect.getattr_static(owner, attribute, _MISSING)
+        from_class = static is static_attribute(owner, attribute, _MISSING)
         if not from_class or not hasattr(type(static), "__get__"):
             # Plain values, including those in the __dict__ of an instance.
             value = static
@@ -360,7 +360,7 @@ def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
         if not _is_completion(name, prefix):
             continue
 
-        static = inspect.getattr_static(value, name, None)
+        static = static_attribute(value, name)
         call = "(" if callable(static) or isinstance(static, classmethod) else ""
         matches.append(f"{expression}.{name}{call}")
         if len(matches) >= MAX_COMPLETIONS:
@@ -394,8 +394,8 @@ def _complete_global(namespace: dict[str, Any], prefix: str) -> list[str]:
 def _static_names(value: Any) -> set[str]:
     """Return the attribute names of a value, like dir() without __dir__."""
     names = set(instance_dict(value) or {})
-    for cls in inspect.getmro(value if isinstance(value, type) else type(value)):
-        names.update(vars(cls))
+    for cls in class_mro(value if isinstance(value, type) else type(value)):
+        names.update(class_dict(cls))
 
     return names
 

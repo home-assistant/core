@@ -26,9 +26,24 @@ class Thing:
 class Holder:
     __slots__ = ("inner",)
 
+class Shadowed:
+    @property
+    def value(self):
+        raise AssertionError("Properties must not run while completing")
+
 thing = Thing()
 holder = Holder()
 holder.inner = thing
+
+class Box:
+    pass
+
+box = Box()
+box.content = thing
+
+# A property wins over an entry in the instance __dict__, like for getattr.
+shadowed = Shadowed()
+shadowed.__dict__["value"] = thing
 """
 
 
@@ -55,6 +70,15 @@ holder.inner = thing
             id="slot",
         ),
         pytest.param("thing.getter.up", "thing.getter.up", [], id="through_property"),
+        pytest.param(
+            "shadowed.value.al", "shadowed.value.al", [], id="property_over_instance"
+        ),
+        pytest.param(
+            "box.content.alp",
+            "box.content.alp",
+            ["box.content.alpha", "box.content.alps("],
+            id="instance_attribute",
+        ),
         pytest.param(
             "thing.alps(1, al", "al", ["also=", "all("], id="keyword_after_positional"
         ),
@@ -314,6 +338,10 @@ async def test_signature(
             {"type": "debug_console/signature", "code": "WithMetaclass("},
             id="signature_metaclass",
         ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "watched.al"},
+            id="complete_metaclass_getattribute",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -380,6 +408,19 @@ import functools
 @functools.wraps(callable_trap)
 def wraps_trap(*args, **kwargs):
     pass
+
+class WatchingMetaclass(type):
+    def __getattribute__(cls, name):
+        ran.append("metaclass getattribute")
+        return super().__getattribute__(name)
+
+class Watched(metaclass=WatchingMetaclass):
+    alpha = 1
+
+watched = Watched()
+
+# Creating the classes above may run their hooks already.
+ran.clear()
 """,
     )
 
