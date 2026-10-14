@@ -13,13 +13,13 @@
           "on": "mdi:crosshairs-gps"
         }
       },
-      "location_is_inaccurate": {
+      "location_accurate": {
         "default": "mdi:image-filter-center-focus",
         "state": {
           "on": "mdi:alert-outline"
         }
       },
-      "location_is_old": {
+      "location_current": {
         "default": "mdi:crosshairs",
         "state": {
           "on": "mdi:clock-alert-outline"

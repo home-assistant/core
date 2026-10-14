@@ -55,11 +55,11 @@
       "locating": {
         "name": "Locating"
       },
-      "location_is_inaccurate": {
-        "name": "Inaccurate location"
+      "location_accurate": {
+        "name": "Location accurate"
       },
-      "location_is_old": {
-        "name": "Old location"
+      "location_current": {
+        "name": "Location current"
       },
       "location_services": {
         "name": "Location services"

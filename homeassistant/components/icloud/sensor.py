@@ -142,6 +142,8 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         key="floor_level",
         translation_key="floor_level",
         entity_category=EntityCategory.DIAGNOSTIC,
+        # Apple only reports a floor for fixes inside mapped buildings.
+        entity_registry_enabled_default=False,
         value_fn=lambda device: device.location_floor_level,
         supported_fn=lambda device: device.location_available,
     ),

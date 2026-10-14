@@ -15,7 +15,7 @@ from .const import DEVICE, FEATURES, LOCATION
 from tests.common import MockConfigEntry
 from tests.typing import MagicMock
 
-LOCATION_UNIQUE_IDS = ["device1_location_is_old", "device1_location_is_inaccurate"]
+LOCATION_UNIQUE_IDS = ["device1_location_current", "device1_location_accurate"]
 LOCATING_UNIQUE_ID = "device1_locating"
 
 
@@ -61,15 +61,15 @@ async def _async_enable_entity(
         ),
         pytest.param(
             {"location": {**LOCATION, "isOld": True}},
-            "device1_location_is_old",
+            "device1_location_current",
             "on",
-            id="location_is_old",
+            id="location_current",
         ),
         pytest.param(
             {"location": {**LOCATION, "isInaccurate": True}},
-            "device1_location_is_inaccurate",
+            "device1_location_accurate",
             "on",
-            id="location_is_inaccurate",
+            id="location_accurate",
         ),
         pytest.param(
             {"wipeInProgress": True},
@@ -190,13 +190,13 @@ async def test_locating_state(
         ),
         pytest.param(
             {"features": {**FEATURES, "LOC": False}, "location": LOCATION},
-            "device1_location_is_old",
-            id="location_is_old_unsupported",
+            "device1_location_current",
+            id="location_current_unsupported",
         ),
         pytest.param(
             {"features": {**FEATURES, "LOC": False}, "location": LOCATION},
-            "device1_location_is_inaccurate",
-            id="location_is_inaccurate_unsupported",
+            "device1_location_accurate",
+            id="location_accurate_unsupported",
         ),
     ],
 )
@@ -283,7 +283,7 @@ async def test_location_flags_follow_the_reported_fix(
     await setup_entry(Platform.BINARY_SENSOR)
 
     entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, "device1_location_is_old"
+        "binary_sensor", DOMAIN, "device1_location_current"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)

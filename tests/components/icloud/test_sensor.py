@@ -37,12 +37,14 @@ LOCATION_UNIQUE_IDS = [
     FLOOR_LEVEL_UNIQUE_ID,
 ]
 
-# Timestamp sensors only report something after the matching event happened, so
-# an enabled by default sensor would sit at unknown for most devices.
+# These sensors only report something useful when the matching event happened or
+# the data exists, so an enabled by default sensor would sit idle for most
+# devices.
 DISABLED_UNIQUE_IDS = [
     LAST_LOCKED_UNIQUE_ID,
     LAST_LOST_UNIQUE_ID,
     LAST_WIPED_UNIQUE_ID,
+    FLOOR_LEVEL_UNIQUE_ID,
 ]
 
 LOCATION_TIMESTAMP = datetime.fromtimestamp(LOCATION_TIMESTAMP_MS / 1000, tz=UTC)
@@ -128,14 +130,14 @@ async def test_sensor_state(
 
 
 @pytest.mark.parametrize("unique_id", DISABLED_UNIQUE_IDS)
-async def test_timestamp_sensors_disabled_by_default(
+async def test_sensors_disabled_by_default(
     entity_registry: er.EntityRegistry,
     icloud_service: MagicMock,
     setup_entry: Callable[[Platform], Awaitable[None]],
     unique_id: str,
 ) -> None:
-    """Timestamp sensors are disabled by default."""
-    icloud_service.devices.add(DEVICE)
+    """Sensors that rarely report anything are disabled by default."""
+    icloud_service.devices.add({**DEVICE, "location": LOCATION})
 
     await setup_entry(Platform.SENSOR)
 
@@ -249,9 +251,6 @@ async def test_sensor_not_added_when_unsupported(
             id="location_accuracy",
         ),
         pytest.param({"location": LOCATION}, ALTITUDE_UNIQUE_ID, 5, id="altitude"),
-        pytest.param(
-            {"location": LOCATION}, FLOOR_LEVEL_UNIQUE_ID, 2, id="floor_level"
-        ),
     ],
 )
 async def test_numeric_sensor_state(
@@ -273,6 +272,30 @@ async def test_numeric_sensor_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == expected
+
+
+async def test_floor_level_sensor_state(
+    hass: HomeAssistant,
+    devices_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """The floor level sensor exposes the device value once enabled."""
+    icloud_service.devices.add({**DEVICE, "location": LOCATION})
+
+    await setup_entry(Platform.SENSOR)
+    await _async_enable_entity(
+        hass, devices_config_entry, entity_registry, FLOOR_LEVEL_UNIQUE_ID
+    )
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, FLOOR_LEVEL_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 2
 
 
 async def test_new_sensors_are_diagnostic(

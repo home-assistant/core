@@ -68,17 +68,19 @@ BINARY_SENSORS: tuple[IcloudBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_services_enabled,
     ),
+    # A problem binary sensor reads "Problem" when it is on, so these report the
+    # raw Apple flag while their name describes the healthy state.
     IcloudBinarySensorEntityDescription(
-        key="location_is_old",
-        translation_key="location_is_old",
+        key="location_current",
+        translation_key="location_current",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_is_old,
         supported_fn=lambda device: device.location_available,
     ),
     IcloudBinarySensorEntityDescription(
-        key="location_is_inaccurate",
-        translation_key="location_is_inaccurate",
+        key="location_accurate",
+        translation_key="location_accurate",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.location_is_inaccurate,
