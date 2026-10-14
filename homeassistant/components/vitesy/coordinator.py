@@ -93,6 +93,11 @@ class VitesyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, VitesyDevice]]
                 continue
             try:
                 mode_status[device_id] = await self.api.get_mode_status(device_id)
+            except CannotAuthenticate as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from err
             except VitesyError as err:
                 LOGGER.debug("Could not read mode of %s: %s", device.name, err)
         return mode_status

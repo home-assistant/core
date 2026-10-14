@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiovitesy.exceptions import CannotAuthenticate, CannotConnect, VitesyError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.vitesy.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -77,16 +78,18 @@ async def test_update_failure_marks_entities_unavailable(
     )
 
 
+@pytest.mark.parametrize("method", ["get_all_devices", "get_mode_status"])
 async def test_update_auth_failure(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    method: str,
 ) -> None:
     """Test rejected credentials during a refresh start a reauth flow."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_vitesy_client.get_all_devices.side_effect = CannotAuthenticate
+    getattr(mock_vitesy_client, method).side_effect = CannotAuthenticate
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
