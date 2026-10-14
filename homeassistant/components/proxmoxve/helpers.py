@@ -27,11 +27,9 @@ def is_granted(
     if (privileges := permissions.get(f"/{p_type}/{p_id}")) is not None:
         return permission in privileges
 
-    for path in (f"/{p_type}", "/"):
-        if (privileges := permissions.get(path)) is not None:
-            return privileges.get(permission) == 1
-
-    return False
+    # Proxmox omits /{p_type} only when nothing reaches it, so "/" never applies.
+    # Known limitation: an exact path denied via NoAccess is omitted as well.
+    return permissions.get(f"/{p_type}", {}).get(permission) == 1
 
 
 def is_proxmox_package(update: dict[str, Any]) -> bool:
