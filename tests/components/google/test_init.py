@@ -961,6 +961,49 @@ async def test_remove_entry(
     assert storage_key not in hass_storage
 
 
+@pytest.mark.parametrize("elapsed", [0, STORAGE_SAVE_DELAY_SECONDS + 1])
+async def test_remove_entry_after_failed_unload(
+    hass: HomeAssistant,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    elapsed: int,
+) -> None:
+    """Removal prevents pending and future writes after an unload failure."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    store = entry.runtime_data.store
+    data = await store.async_load()
+    assert data
+    storage_key = f"google.{entry.entry_id}"
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert await hass.config_entries.async_remove(entry.entry_id) == {
+            "require_restart": True
+        }
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert storage_key not in hass_storage
+
+    freezer.tick(elapsed)
+    async_fire_time_changed(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+    # A platform that failed to unload can still update its calendar store.
+    await store.async_save(data)
+    await store.async_flush()
+    assert storage_key not in hass_storage
+
+
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
