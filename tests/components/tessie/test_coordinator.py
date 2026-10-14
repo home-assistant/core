@@ -88,7 +88,7 @@ async def test_coordinator_auth(
 
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_get_state.assert_called_once()
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
     assert (
@@ -132,7 +132,7 @@ async def test_coordinator_fleet_error(
 
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_get_state.assert_called_once()
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
     assert "Error fetching Tessie data: Failed to connect" in caplog.text
@@ -181,7 +181,7 @@ async def test_coordinator_live_auth_failure(
     mock_live_status.side_effect = side_effect
     freezer.tick(TESSIE_FLEET_API_SYNC_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_live_status.assert_called_once()
     assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
     assert (
