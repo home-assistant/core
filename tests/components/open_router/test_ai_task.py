@@ -265,7 +265,9 @@ async def test_generate_data_empty_response(
         )
     )
 
-    with pytest.raises(HomeAssistantError, match="API returned empty response"):
+    with pytest.raises(
+        HomeAssistantError, match="OpenRouter returned an empty response"
+    ):
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
@@ -448,7 +450,7 @@ async def test_generate_image_no_image(
         return_value=_image_completion(None, content="I cannot generate that image")
     )
 
-    with pytest.raises(HomeAssistantError, match="No image returned"):
+    with pytest.raises(HomeAssistantError, match="OpenRouter did not return an image"):
         await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
@@ -484,7 +486,9 @@ async def test_generate_image_invalid_image(
         return_value=_image_completion(images)
     )
 
-    with pytest.raises(HomeAssistantError, match="Invalid image returned"):
+    with pytest.raises(
+        HomeAssistantError, match="OpenRouter returned an invalid image"
+    ):
         await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
