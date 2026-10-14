@@ -51,12 +51,19 @@ OPTIONAL_PLAYBACK_COMMANDS = {
 def source_names(
     inputs: list[clusters.MediaInput.Structs.InputInfoStruct],
 ) -> dict[int, str]:
-    """Return the source name per input index, adding the index to duplicate names."""
+    """Return a unique source name per input index.
+
+    Duplicate names get their input index. If that still collides with another
+    input's name, all names get their index, which is unique by itself.
+    """
     name_counts = Counter(x.name for x in inputs)
-    return {
+    names = {
         x.index: x.name if name_counts[x.name] == 1 else f"{x.name} ({x.index})"
         for x in inputs
     }
+    if len(set(names.values())) < len(names):
+        return {x.index: f"{x.name} ({x.index})" for x in inputs}
+    return names
 
 
 async def async_setup_entry(

@@ -353,43 +353,62 @@ async def test_sources(
 
 @pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
 @pytest.mark.parametrize(
-    "attributes",
+    ("attributes", "source_list", "selected", "index"),
     [
-        {
-            "1/1287/0": [
-                {"0": 1, "1": 4, "2": "Console", "3": ""},
-                {"0": 2, "1": 4, "2": "Console", "3": ""},
-                {"0": 4, "1": 10, "2": "USB", "3": ""},
-            ],
-            "1/1287/1": 2,
-        }
+        pytest.param(
+            {
+                "1/1287/0": [
+                    {"0": 1, "1": 4, "2": "Console", "3": ""},
+                    {"0": 2, "1": 4, "2": "Console", "3": ""},
+                    {"0": 4, "1": 10, "2": "USB", "3": ""},
+                ],
+                "1/1287/1": 2,
+            },
+            ["Console (1)", "Console (2)", "USB"],
+            "Console (1)",
+            1,
+            id="duplicate_names",
+        ),
+        pytest.param(
+            {
+                "1/1287/0": [
+                    {"0": 1, "1": 4, "2": "Console", "3": ""},
+                    {"0": 2, "1": 4, "2": "Console", "3": ""},
+                    {"0": 4, "1": 4, "2": "Console (1)", "3": ""},
+                ],
+                "1/1287/1": 2,
+            },
+            ["Console (1)", "Console (2)", "Console (1) (4)"],
+            "Console (1) (4)",
+            4,
+            id="name_like_generated_name",
+        ),
     ],
 )
 async def test_duplicate_source_names(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    source_list: list[str],
+    selected: str,
+    index: int,
 ) -> None:
     """Test inputs with the same name are told apart by their index."""
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
-        "Console (1)",
-        "Console (2)",
-        "USB",
-    ]
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
     assert state.attributes[ATTR_INPUT_SOURCE] == "Console (2)"
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Console (1)"},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: selected},
         blocking=True,
     )
     assert matter_client.send_device_command.call_args_list == [
         call(
             node_id=matter_node.node_id,
             endpoint_id=1,
-            command=clusters.MediaInput.Commands.SelectInput(index=1),
+            command=clusters.MediaInput.Commands.SelectInput(index=index),
         )
     ]
