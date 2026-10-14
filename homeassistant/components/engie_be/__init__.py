@@ -5,17 +5,17 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from aioengiebelgium import EngieBeClient, EngieBeError
+from aioengiebelgium import EngieBeAuthenticationError, EngieBeClient, EngieBeError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePricesCoordinator,
@@ -52,6 +52,10 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
     """Return whether one business agreement has a dynamic electricity tariff."""
     try:
         contracts = await client.async_get_energy_contracts(ban)
+    except EngieBeAuthenticationError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
     except EngieBeError as err:
         LOGGER.debug(
             "Fetching energy contracts for %s failed: %s",
@@ -159,9 +163,14 @@ def _async_start_tariff_retry(
         pending = [
             ban for ban, household in households.items() if household.is_dynamic is None
         ]
-        results = await asyncio.gather(
-            *(_async_is_dynamic(runtime_data.client, ban) for ban in pending)
-        )
+        try:
+            results = await asyncio.gather(
+                *(_async_is_dynamic(runtime_data.client, ban) for ban in pending)
+            )
+        except ConfigEntryAuthFailed:
+            cancel_retry()
+            entry.async_start_reauth(hass)
+            return
         if entry.state is not ConfigEntryState.LOADED:
             return
         for ban, is_dynamic in zip(pending, results, strict=True):

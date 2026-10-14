@@ -340,6 +340,10 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                     payload = await self.client.async_get_epex_prices(
                         *epex_window(day), granularity=granularity
                     )
+                except EngieBeAuthenticationError as err:
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN, translation_key="invalid_auth"
+                    ) from err
                 except EngieBeError as err:
                     if required:
                         raise UpdateFailed(

@@ -483,24 +483,18 @@ async def test_epex_entities_only_for_dynamic_households(
     assert (binary_entity_id is not None) is expected
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
-        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
-    ],
-)
-async def test_contracts_failure_loads_without_epex(
+async def test_contracts_communication_error_loads_without_epex(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
-    side_effect: Exception,
 ) -> None:
     """Test a contracts fetch failure loads the entry with price sensors but no EPEX entities."""
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.engie_be")
-    mock_engie_client.return_value.async_get_energy_contracts.side_effect = side_effect
+    mock_engie_client.return_value.async_get_energy_contracts.side_effect = (
+        EngieBeCommunicationError("boom")
+    )
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -522,6 +516,60 @@ async def test_contracts_failure_loads_without_epex(
         )
         is None
     )
+
+
+async def test_contracts_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+) -> None:
+    """Test an auth error on the contracts fetch during setup starts reauth."""
+    mock_engie_client.return_value.async_get_energy_contracts.side_effect = (
+        EngieBeAuthenticationError("boom")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_contracts_retry_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth error during a tariff retry starts reauth and cancels the timer."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert client.async_get_energy_contracts.call_count == 1
+
+    client.async_get_energy_contracts.side_effect = EngieBeAuthenticationError("boom")
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+    call_count = client.async_get_energy_contracts.call_count
+    for _ in range(3):
+        freezer.tick(CONTRACTS_RETRY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert client.async_get_energy_contracts.call_count == call_count
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -969,6 +1017,56 @@ async def test_epex_setup_failure_recovers_on_next_poll(
     await hass.async_block_till_done()
 
     assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.16)
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_epex_setup_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+) -> None:
+    """Test an auth error on the EPEX fetch during setup starts reauth."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.return_value = build_contracts(dynamic=True)
+    client.async_get_epex_prices.side_effect = EngieBeAuthenticationError("boom")
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_epex_refresh_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth error during a scheduled EPEX refresh starts reauth."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    assert not hass.config_entries.flow.async_progress()
+
+    epex_coordinator = mock_config_entry.runtime_data.epex
+    assert epex_coordinator is not None
+    epex_coordinator.data = None
+
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        EngieBeAuthenticationError("boom")
+    )
+    freezer.tick(EPEX_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
