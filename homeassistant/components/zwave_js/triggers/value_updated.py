@@ -42,6 +42,7 @@ from ..const import (
 from ..helpers import (
     async_bypass_dynamic_config_validation,
     async_get_config_entry_from_node,
+    async_get_node_from_device_id,
     async_get_nodes_from_targets,
     get_device_id,
 )
@@ -119,7 +120,7 @@ async def async_attach_trigger(
 
     @callback
     def async_on_value_updated(
-        value_id: str, device: dr.DeviceEntry, event: dict
+        value_id: str, device: dr.AnyDeviceEntry, event: dict
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
@@ -178,6 +179,17 @@ async def async_attach_trigger(
     def _create_zwave_listeners() -> None:
         """Create Z-Wave JS listeners."""
         async_remove()
+        # When the trigger explicitly targets an endpoint child device, report that
+        # child device in the payload. Node-, entity- and area-based targets keep
+        # reporting the node (parent) device, so automations that targeted a value
+        # before it moved to a child device are not broken.
+        child_device_by_node_id: dict[int, dr.AnyDeviceEntry] = {
+            async_get_node_from_device_id(hass, device_id).node_id: device_entry
+            for device_id in options.get(ATTR_DEVICE_ID, [])
+            if isinstance(
+                device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
+            )
+        }
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
@@ -185,11 +197,12 @@ async def async_attach_trigger(
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
-            entry = async_get_config_entry_from_node(hass, node)
-            device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device_by_identifier(
-                device_identifier, entry.entry_id
-            )
+            if (device := child_device_by_node_id.get(node.node_id)) is None:
+                entry = async_get_config_entry_from_node(hass, node)
+                device_identifier = get_device_id(driver, node)
+                device = dev_reg.async_get_device_by_identifier(
+                    device_identifier, entry.entry_id
+                )
             assert device
             value_id = get_value_id_str(
                 node, command_class, property_, endpoint, property_key

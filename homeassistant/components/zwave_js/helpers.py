@@ -304,6 +304,9 @@ def endpoint_devices(
     endpoints_by_signature: dict[tuple, set[int]] = defaultdict(set)
     for info in disc_infos:
         pv = info.primary_value
+        # Root (endpoint 0) values always stay on the main device, so they are excluded
+        # from the collision signatures: a non-root endpoint that merely duplicates a
+        # root value is not a collision we split onto a child device.
         if pv.endpoint:
             sig = (pv.command_class, pv.property_, pv.property_key)
             endpoints_by_signature[sig].add(pv.endpoint)
@@ -322,6 +325,39 @@ def endpoint_devices(
         ):
             result[info.primary_value.value_id] = endpoint
     return result
+
+
+def endpoint_device_for_late_value(
+    node: ZwaveNode,
+    existing_placements: dict[str, Endpoint | EndpointGroup],
+    primary_value: ZwaveValue,
+) -> Endpoint | EndpointGroup | None:
+    """Resolve the child device for a value discovered after node ready.
+
+    Endpoints cannot be added after the node is ready, so placement is derived from the
+    node's static endpoint structure and the placements already computed at node ready
+    (``existing_placements``). A value on an endpoint group, or on an endpoint that is
+    already a child endpoint, is placed on that child device. A value that would newly
+    make a previously non-colliding endpoint collide is not handled here and stays on
+    the main device.
+    """
+    endpoint_index = primary_value.endpoint
+    if not endpoint_index:
+        return None
+    if node.endpoint_groups:
+        group = node.get_endpoint_group(endpoint_index)
+        if group is not None and not group.is_main_device:
+            return group
+        return None
+    return next(
+        (
+            endpoint_device
+            for endpoint_device in existing_placements.values()
+            if isinstance(endpoint_device, Endpoint)
+            and endpoint_device.index == endpoint_index
+        ),
+        None,
+    )
 
 
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:

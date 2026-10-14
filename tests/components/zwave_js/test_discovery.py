@@ -230,9 +230,10 @@ async def test_merten_507801(
 async def test_shelly_001p10_suppressed_endpoint(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
-    shelly_qnsh_001P10_shutter,
-    integration,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that Shelly 001P10 endpoint 2 is suppressed (no entity created at all).
 
@@ -241,14 +242,28 @@ async def test_shelly_001p10_suppressed_endpoint(
     disabled entity, and endpoint 1 therefore has no collision partner, so the
     shutter cover stays on the main node device rather than on a child device.
     """
-    # Endpoint 2 must not exist in the entity registry at all — not even disabled.
-    assert entity_registry.async_get("cover.endpoint_2") is None
-    assert hass.states.get("cover.endpoint_2") is None
+    node = shelly_qnsh_001P10_shutter
 
-    # The shutter cover must be on the main node device, not on an endpoint child.
-    assert entity_registry.async_get("cover.endpoint_1") is None
-    state = hass.states.get("cover.wave_shutter")
-    assert state
+    # Endpoint 2 is suppressed, so the node exposes exactly one cover entity (endpoint 1)
+    # and no second, disabled or hidden, endpoint-2 cover.
+    cover_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, integration.entry_id
+        )
+        if entry.domain == Platform.COVER
+    ]
+    assert [entry.entity_id for entry in cover_entries] == ["cover.wave_shutter"]
+    assert hass.states.get("cover.wave_shutter")
+
+    # With no collision partner, the shutter cover stays on the main node device rather
+    # than on an endpoint child device.
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert cover_entries[0].device_id == node_device.id
 
 
 async def test_merten_507801_disabled_enitites(

@@ -125,6 +125,7 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    endpoint_device_for_late_value,
     endpoint_devices,
     format_home_id_for_display,
     get_device_id,
@@ -822,7 +823,7 @@ class NodeEvents:
         # run discovery on all node values and create/update entities
         driver = self.controller_events.driver_events.driver
         endpoint_device_ids: set[tuple[str, str]] = set()
-        rediscovered_on_parent: set[str] = set()
+        rediscovered_unique_ids: set[str] = set()
 
         # Pass 1: collect all disc_infos and compute endpoint-device placement based on
         # discovered (non-suppressed) entities. Suppressed disc_infos must not count
@@ -832,6 +833,11 @@ class NodeEvents:
                 node, device, self.controller_events.discovered_value_ids
             )
         )
+        # An entity registry entry created by an earlier release for a value that is now
+        # suppressed is intentionally not removed here; it is left to become unavailable
+        # so the user can decide whether to delete it. The exception is when it is the
+        # last entry on an endpoint child device that is pruned below, in which case it is
+        # removed together with that device.
         real_disc_infos = [i for i in all_disc_infos if not i.discovery_suppressed]
         endpoint_device_by_value_id = endpoint_devices(node, real_disc_infos)
         self.endpoint_devices_by_node[node.node_id] = endpoint_device_by_value_id
@@ -839,6 +845,7 @@ class NodeEvents:
         # Pass 2: set the resolved placement on each disc_info and dispatch.
         for disc_info in real_disc_infos:
             primary_value = disc_info.primary_value
+            rediscovered_unique_ids.add(get_unique_id(driver, primary_value.value_id))
             disc_info.endpoint_device = endpoint_device_by_value_id.get(
                 primary_value.value_id
             )
@@ -846,23 +853,22 @@ class NodeEvents:
                 endpoint_device_ids.add(
                     get_endpoint_device_id(driver, node, disc_info.endpoint_device)
                 )
-            else:
-                rediscovered_on_parent.add(
-                    get_unique_id(driver, primary_value.value_id)
-                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # Prune endpoint child devices that no longer have any entities, e.g. after a
         # re-interview removed an endpoint or its colliding values.
         for child_device in dr.async_entries_for_parent_device(self.dev_reg, device.id):
             if not child_device.identifiers & endpoint_device_ids:
-                # Before removing the child device, reassociate entity entries that will
-                # be rediscovered on the parent node device. This preserves user
-                # customizations when an endpoint stops colliding after re-interview.
+                # Before removing the child device, reassociate entity entries that are
+                # still being rediscovered to the parent node device. The pending
+                # rediscovery then moves each entity to its final device (the parent, or
+                # a different child), preserving user customizations when an endpoint
+                # stops colliding or its placement changes after re-interview. Entries
+                # that are no longer rediscovered are left for device removal to clean up.
                 for entity_entry in er.async_entries_for_device(
                     self.ent_reg, child_device.id
                 ):
-                    if entity_entry.unique_id in rediscovered_on_parent:
+                    if entity_entry.unique_id in rediscovered_unique_ids:
                         self.ent_reg.async_update_entity(
                             entity_entry.entity_id, device_id=device.id
                         )
@@ -1016,15 +1022,21 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-        cached_endpoint_devices = self.endpoint_devices_by_node.get(
+        cached_endpoint_devices = self.endpoint_devices_by_node.setdefault(
             value.node.node_id, {}
         )
         for disc_info in async_discover_single_value(
             value, device, self.controller_events.discovered_value_ids
         ):
-            disc_info.endpoint_device = cached_endpoint_devices.get(
-                disc_info.primary_value.value_id
+            # A newly added value is not in the node-ready cache, so resolve its
+            # placement from the node's endpoint structure and the cached placements.
+            disc_info.endpoint_device = endpoint_device_for_late_value(
+                value.node, cached_endpoint_devices, disc_info.primary_value
             )
+            if disc_info.endpoint_device is not None:
+                cached_endpoint_devices[disc_info.primary_value.value_id] = (
+                    disc_info.endpoint_device
+                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback

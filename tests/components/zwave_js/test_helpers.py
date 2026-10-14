@@ -15,6 +15,7 @@ from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     async_get_nodes_from_area_id,
     async_get_provisioning_entry_from_device_id,
+    endpoint_device_for_late_value,
     endpoint_devices,
     format_home_id_for_display,
     get_device_id,
@@ -281,6 +282,41 @@ async def test_endpoint_devices_labels(
         )
         == {}
     )
+
+
+async def test_endpoint_device_for_late_value(
+    client: MagicMock, climate_heatit_z_trm3: Node, aeotec_zwa046: Node
+) -> None:
+    """Test endpoint_device_for_late_value resolves placement for values added late."""
+    node = climate_heatit_z_trm3
+    air2 = _find_value(node, 49, 2, "Air temperature")
+    air3 = _find_value(node, 49, 3, "Air temperature")
+    air4 = _find_value(node, 49, 4, "Air temperature")
+    setpoint = _find_value(node, 67, 1, "setpoint", 1)
+    config = _find_value(node, 112, 0, 2)
+    placements = endpoint_devices(
+        node, [_make_disc_info(node, value) for value in (air2, air3, air4)]
+    )
+
+    # A value on an endpoint that already has a child device is placed on that child.
+    result = endpoint_device_for_late_value(node, placements, air3)
+    assert isinstance(result, Endpoint)
+    assert result.index == 3
+
+    # A value on a non-child endpoint, and a root (endpoint 0) value, stay on the node.
+    assert endpoint_device_for_late_value(node, placements, setpoint) is None
+    assert endpoint_device_for_late_value(node, placements, config) is None
+
+    # In the groups case placement is derived from the node's static group config, so a
+    # value on a non-main group endpoint is placed on that group even with no prior
+    # placements cached, while a main-device group endpoint stays on the node.
+    group_node = aeotec_zwa046
+    clamp1_value = _find_value(group_node, 50, 1, "value", 65537)
+    total_value = _find_value(group_node, 50, 7, "value", 66049)
+    clamp1 = endpoint_device_for_late_value(group_node, {}, clamp1_value)
+    assert isinstance(clamp1, EndpointGroup)
+    assert clamp1.label == "Clamp 1"
+    assert endpoint_device_for_late_value(group_node, {}, total_value) is None
 
 
 async def test_get_home_and_node_id_from_device_entry(
