@@ -220,7 +220,6 @@ async def test_reconfigure_flow_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == expected_error
 
     mock_peblar.login.side_effect = None
@@ -232,6 +231,7 @@ async def test_reconfigure_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.2",

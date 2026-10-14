@@ -1,6 +1,6 @@
 """Test the laundrify config flow."""
 
-from laundrify_aio import exceptions
+from laundrify_aio import LaundrifyAPI, exceptions
 
 from homeassistant.components.laundrify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -11,6 +11,18 @@ from homeassistant.data_entry_flow import FlowResultType
 from .const import VALID_ACCESS_TOKEN, VALID_AUTH_CODE, VALID_USER_INPUT
 
 from tests.common import MockConfigEntry
+
+
+async def _assert_recovers(
+    hass: HomeAssistant, laundrify_api_mock: LaundrifyAPI, flow_id: str
+) -> None:
+    """Clear the error and assert the flow creates an entry."""
+    laundrify_api_mock.exchange_auth_code.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input=VALID_USER_INPUT
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -35,7 +47,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1234"
 
 
-async def test_form_invalid_format(hass: HomeAssistant, laundrify_api_mock) -> None:
+async def test_form_invalid_format(
+    hass: HomeAssistant, laundrify_api_mock: LaundrifyAPI
+) -> None:
     """Test we handle invalid format."""
     laundrify_api_mock.exchange_auth_code.side_effect = exceptions.InvalidFormat
 
@@ -46,11 +60,14 @@ async def test_form_invalid_format(hass: HomeAssistant, laundrify_api_mock) -> N
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_CODE: "invalid_format"}
 
+    await _assert_recovers(hass, laundrify_api_mock, result["flow_id"])
 
-async def test_form_invalid_auth(hass: HomeAssistant, laundrify_api_mock) -> None:
+
+async def test_form_invalid_auth(
+    hass: HomeAssistant, laundrify_api_mock: LaundrifyAPI
+) -> None:
     """Test we handle invalid auth."""
     laundrify_api_mock.exchange_auth_code.side_effect = exceptions.UnknownAuthCode
     result = await hass.config_entries.flow.async_init(
@@ -60,11 +77,14 @@ async def test_form_invalid_auth(hass: HomeAssistant, laundrify_api_mock) -> Non
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_CODE: "invalid_auth"}
 
+    await _assert_recovers(hass, laundrify_api_mock, result["flow_id"])
 
-async def test_form_cannot_connect(hass: HomeAssistant, laundrify_api_mock) -> None:
+
+async def test_form_cannot_connect(
+    hass: HomeAssistant, laundrify_api_mock: LaundrifyAPI
+) -> None:
     """Test we handle cannot connect error."""
     laundrify_api_mock.exchange_auth_code.side_effect = (
         exceptions.ApiConnectionException
@@ -76,11 +96,14 @@ async def test_form_cannot_connect(hass: HomeAssistant, laundrify_api_mock) -> N
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
+    await _assert_recovers(hass, laundrify_api_mock, result["flow_id"])
 
-async def test_form_unkown_exception(hass: HomeAssistant, laundrify_api_mock) -> None:
+
+async def test_form_unkown_exception(
+    hass: HomeAssistant, laundrify_api_mock: LaundrifyAPI
+) -> None:
     """Test we handle all other errors."""
     laundrify_api_mock.exchange_auth_code.side_effect = Exception
     result = await hass.config_entries.flow.async_init(
@@ -90,8 +113,9 @@ async def test_form_unkown_exception(hass: HomeAssistant, laundrify_api_mock) ->
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    await _assert_recovers(hass, laundrify_api_mock, result["flow_id"])
 
 
 async def test_step_reauth(

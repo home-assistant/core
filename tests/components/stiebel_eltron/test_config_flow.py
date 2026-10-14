@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.stiebel_eltron.const import DOMAIN, UNIT_ID
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -93,8 +93,14 @@ async def test_form_conflicting_link_settings(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        RECONFIGURE_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(
@@ -133,10 +139,7 @@ async def test_reconfigure_flow(
 ) -> None:
     """Test reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -165,10 +168,7 @@ async def test_reconfigure_flow_errors(
 ) -> None:
     """Test error handling in reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     mock_get_controller_model.side_effect = side_effect
@@ -203,10 +203,7 @@ async def test_reconfigure_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
     other_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

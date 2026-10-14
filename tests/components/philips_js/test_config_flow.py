@@ -1,7 +1,7 @@
 """Test the Philips TV config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock
 
 from haphilipsjs import PairingFailure
 import pytest
@@ -94,7 +94,7 @@ async def test_reauth(
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, mock_tv: MagicMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,8 +106,14 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_tv.system = MOCK_SYSTEM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_USERINPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) -> None:

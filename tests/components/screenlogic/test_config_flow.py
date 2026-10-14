@@ -301,5 +301,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.screenlogic.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+            return_value="00-C0-33-01-01-01",
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_PORT: 80,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

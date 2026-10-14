@@ -14,7 +14,7 @@ from tesla_powerwall import (
 from homeassistant import config_entries
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.components.powerwall.helpers import is_api_404
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -32,6 +32,24 @@ from .mocks import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 VALID_CONFIG = {CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"}
+
+
+async def _async_configure_success(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlowResult:
+    """Configure the flow with a reachable Powerwall."""
+    mock_powerwall = await _mock_powerwall_site_name(hass, "MySite")
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        return await hass.config_entries.flow.async_configure(flow_id, VALID_CONFIG)
 
 
 async def test_form_source_user(hass: HomeAssistant) -> None:
@@ -87,8 +105,10 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    result2 = await _async_configure_success(hass, result["flow_id"])
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_invalid_auth(hass: HomeAssistant) -> None:
@@ -111,8 +131,10 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    result2 = await _async_configure_success(hass, result["flow_id"])
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_pw3_restricted(hass: HomeAssistant) -> None:
@@ -169,8 +191,10 @@ async def test_form_non_404_api_error_propagates(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    result2 = await _async_configure_success(hass, result["flow_id"])
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
@@ -190,8 +214,10 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    result2 = await _async_configure_success(hass, result["flow_id"])
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_wrong_version(hass: HomeAssistant) -> None:
@@ -214,8 +240,10 @@ async def test_form_wrong_version(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "wrong_version"}
+
+    result3 = await _async_configure_success(hass, result["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:

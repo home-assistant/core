@@ -78,6 +78,7 @@ async def test_already_configured_by_url(
     assert result["result"].unique_id == udn
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_syncthru_not_supported(
     hass: HomeAssistant, mock_syncthru: AsyncMock
 ) -> None:
@@ -96,8 +97,14 @@ async def test_syncthru_not_supported(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_URL: "syncthru_not_supported"}
+
+    mock_syncthru.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_unknown_state(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:

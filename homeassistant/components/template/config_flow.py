@@ -358,10 +358,12 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
             ),
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT, multiline=False
-                )
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": CONF_DEVICE_CLASS}
+                ),
             ),
             probatio.Required(CONF_SET_VALUE): selector.ActionSelector(),
         }

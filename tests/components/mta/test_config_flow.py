@@ -19,6 +19,8 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MOCK_BUS_STOPS
+
 from tests.common import MockConfigEntry
 
 
@@ -239,8 +241,15 @@ async def test_subway_subentry_connection_error(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_subway_feed.return_value.get_arrivals.side_effect = None
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "127N"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_subway_subentry_cannot_get_stops(
@@ -411,8 +420,22 @@ async def test_bus_subentry_invalid_route(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_route"}
+
+    mock_bus_feed.return_value.get_stops.return_value = MOCK_BUS_STOPS
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE: "M15"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stop"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "400561"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_bus_subentry_route_fetch_error(

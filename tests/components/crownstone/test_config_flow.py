@@ -215,32 +215,55 @@ async def test_abort_if_configured(
     assert crownstone_setup.call_count == 0
 
 
+@pytest.mark.parametrize(
+    ("exception_type", "error"),
+    [
+        pytest.param("LOGIN_FAILED", "invalid_auth", id="login_failed"),
+        pytest.param(
+            "LOGIN_FAILED_EMAIL_NOT_VERIFIED",
+            "account_not_verified",
+            id="email_not_verified",
+        ),
+    ],
+)
 async def test_authentication_errors(
-    crownstone_setup: MockFixture, hass: HomeAssistant
+    crownstone_setup: MockFixture,
+    hass: HomeAssistant,
+    exception_type: str,
+    error: str,
 ) -> None:
     """Test flow with wrong auth errors."""
     cloud = get_mocked_crownstone_cloud()
-    # side effect: auth error login failed
     cloud.async_initialize.side_effect = CrownstoneAuthenticationError(
-        exception_type="LOGIN_FAILED"
+        exception_type=exception_type
     )
 
     result = await start_config_flow(hass, cloud)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # side effect: auth error account not verified
-    cloud.async_initialize.side_effect = CrownstoneAuthenticationError(
-        exception_type="LOGIN_FAILED_EMAIL_NOT_VERIFIED"
-    )
-
-    result = await start_config_flow(hass, cloud)
-
-    assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": "account_not_verified"}
+    assert result["errors"] == {"base": error}
     assert crownstone_setup.call_count == 0
+
+    cloud.async_initialize.side_effect = None
+    with patch(
+        "homeassistant.components.crownstone.config_flow.CrownstoneCloud",
+        return_value=cloud,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_EMAIL: "example@homeassistant.com",
+                CONF_PASSWORD: "homeassistantisawesome",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_config"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_USB_PATH: DONT_USE_USB}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert crownstone_setup.call_count == 1
 
 
 async def test_unknown_error(
@@ -254,9 +277,29 @@ async def test_unknown_error(
     result = await start_config_flow(hass, cloud)
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     assert crownstone_setup.call_count == 0
+
+    cloud.async_initialize.side_effect = None
+    with patch(
+        "homeassistant.components.crownstone.config_flow.CrownstoneCloud",
+        return_value=cloud,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_EMAIL: "example@homeassistant.com",
+                CONF_PASSWORD: "homeassistantisawesome",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_config"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_USB_PATH: DONT_USE_USB}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert crownstone_setup.call_count == 1
 
 
 async def test_successful_login_no_usb(

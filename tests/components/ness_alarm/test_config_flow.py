@@ -219,8 +219,17 @@ async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_ZONE_NUMBER: "already_configured"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE_NUMBER: 2,
+            CONF_TYPE: BinarySensorDeviceClass.DOOR,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zone_subentry_reconfigure(hass: HomeAssistant) -> None:

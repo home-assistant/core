@@ -15,6 +15,7 @@ MOCK_SERIAL = "SS2ES104N5S445"
 MOCK_MODEL = "4.4 KTLX-G3"
 MOCK_HYBRID_SERIAL = "SP1XXES100XX"
 MOCK_HYBRID_MODEL = "HYDxxKTL-3P"
+MOCK_UNRECOGNIZED_SERIAL = "ZZ1XXES100XX"
 
 MOCK_HW_VERSION = "V100"
 MOCK_SW_VERSION = "V220"
@@ -76,6 +77,15 @@ def serve_meter_energy(unit: MockModbusUnit) -> None:
     unit.holding[0x0683] = 0xFFFF  # 0x0680-0x068F
     unit.holding[0x0682] = 0x000F  # 0x0690-0x0693
     unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
+
+
+def declare_pv_in_masks(unit: MockModbusUnit) -> None:
+    """Seed masks declaring a three-phase PV model with two strings."""
+    # Each mask's lowest word sits at base+3; bits 0-3 make it usable.
+    unit.holding[0x0482] = 0x0100  # 0x0498, the second phase, is served
+    unit.holding[0x0483] = 0x000F
+    unit.holding[0x0583] = 0x000F  # no string past the second
+    unit.holding[0x0603] = 0x000F  # 0x0604, the first battery, is denied
 
 
 def seed_hybrid_inverter(

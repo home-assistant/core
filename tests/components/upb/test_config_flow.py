@@ -109,16 +109,36 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result = await valid_flow(hass, sync_complete=False)
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        mocked_upb(),
+        patch("homeassistant.components.upb.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": "socket://1.2.3.4:2101", "file_path": "upb.upe"},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_missing_upb_file(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await valid_flow(hass, config_ok=False)
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_upb_file"}
+
+    with (
+        mocked_upb(),
+        patch("homeassistant.components.upb.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": "socket://1.2.3.4:2101", "file_path": "upb.upe"},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_user_with_already_configured(hass: HomeAssistant) -> None:

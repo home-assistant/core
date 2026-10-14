@@ -22,7 +22,7 @@ PLATFORMS: Final[list[Platform]] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> None:
     """Set up Canary from a config entry."""
     if not entry.options:
         options = {
@@ -47,12 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: CanaryConfigEntry) -> None:

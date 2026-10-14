@@ -1,5 +1,7 @@
 """Test the OVO Energy config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import aiohttp
@@ -20,6 +22,29 @@ FIXTURE_USER_INPUT = {
 }
 
 UNIQUE_ID = "example@example.com"
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the OVO Energy client to authenticate successfully."""
+    with (
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.bootstrap_accounts",
+        ),
+        patch(
+            "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
+            "some_name",
+        ),
+        patch(
+            "homeassistant.components.ovo_energy.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -57,8 +82,14 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT,
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
@@ -81,8 +112,14 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT,
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:
@@ -145,8 +182,16 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "reauth_confirm"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "authorization_error"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_REAUTH_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
@@ -173,8 +218,16 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "reauth_confirm"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "connection_error"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_REAUTH_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

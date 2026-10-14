@@ -80,8 +80,30 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
+        return_value=mock_value_step_user,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: "", CONF_PORT: 80},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "relay_modes"
+
+    with patch(
+        "homeassistant.components.progettihwsw.async_setup_entry",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"relay_1": "bistable"},
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_existing_entry_exception(hass: HomeAssistant) -> None:
@@ -129,5 +151,27 @@ async def test_form_user_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with patch(
+        "homeassistant.components.progettihwsw.config_flow.ProgettiHWSWAPI.check_board",
+        return_value=mock_value_step_user,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: "", CONF_PORT: 80},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "relay_modes"
+
+    with patch(
+        "homeassistant.components.progettihwsw.async_setup_entry",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"relay_1": "bistable"},
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY

@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'average_processing_speed',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_average_speed',
+    'unique_id': '01JADGUARDHOME0000000000000_average_speed',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
@@ -92,7 +92,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dns_queries',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_dns_queries',
+    'unique_id': '01JADGUARDHOME0000000000000_dns_queries',
     'unit_of_measurement': 'queries',
   })
 # ---
@@ -146,7 +146,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dns_queries_blocked',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_filtering',
+    'unique_id': '01JADGUARDHOME0000000000000_blocked_filtering',
     'unit_of_measurement': 'queries',
   })
 # ---
@@ -203,7 +203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dns_queries_blocked_ratio',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_percentage',
+    'unique_id': '01JADGUARDHOME0000000000000_blocked_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -257,7 +257,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'parental_control_blocked',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_parental',
+    'unique_id': '01JADGUARDHOME0000000000000_blocked_parental',
     'unit_of_measurement': 'requests',
   })
 # ---
@@ -311,7 +311,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rules_count',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_rules_count',
+    'unique_id': '01JADGUARDHOME0000000000000_rules_count',
     'unit_of_measurement': 'rules',
   })
 # ---
@@ -365,7 +365,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safe_browsing_blocked',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_blocked_safebrowsing',
+    'unique_id': '01JADGUARDHOME0000000000000_blocked_safebrowsing',
     'unit_of_measurement': 'requests',
   })
 # ---
@@ -419,7 +419,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safe_searches_enforced',
-    'unique_id': 'adguard_127.0.0.1_3000_sensor_enforced_safesearch',
+    'unique_id': '01JADGUARDHOME0000000000000_enforced_safesearch',
     'unit_of_measurement': 'requests',
   })
 # ---

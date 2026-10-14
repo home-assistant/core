@@ -81,8 +81,21 @@ async def test_user_flow_bad_dsn(hass: HomeAssistant) -> None:
         )
 
     assert result2.get("type") is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "bad_dsn"}
+
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
+        )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
@@ -101,8 +114,21 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2.get("type") is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "unknown"}
+
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
+        )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

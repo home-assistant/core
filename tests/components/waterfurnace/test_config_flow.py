@@ -138,8 +138,16 @@ async def test_user_flow_account_id_none(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    mock_waterfurnace_client.account_id = "test_account_id"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(
@@ -275,5 +283,14 @@ async def test_reauth_flow_no_account_id(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_waterfurnace_client.account_id = "test_account_id"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test_user", CONF_PASSWORD: "new_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

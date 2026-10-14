@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> None:
     """Set up Elexa Guardian from a config entry."""
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
@@ -131,12 +131,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> 
     # Set up all of the Guardian entity platforms:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class PairedSensorManager:

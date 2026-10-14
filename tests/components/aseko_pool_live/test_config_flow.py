@@ -1,5 +1,6 @@
 """Test the Aseko Pool Live config flow."""
 
+from dataclasses import replace
 from unittest.mock import patch
 
 from aioaseko import AsekoAPIError, AsekoInvalidCredentials, User
@@ -88,8 +89,28 @@ async def test_async_step_user_exception(
         )
 
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": reason}
+
+    with (
+        patch(
+            "homeassistant.components.aseko_pool_live.config_flow.Aseko.login",
+            return_value=user,
+        ),
+        patch(
+            "homeassistant.components.aseko_pool_live.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "aseko@example.com",
+                CONF_PASSWORD: "passw0rd",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -122,8 +143,28 @@ async def test_get_account_info_exceptions(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": reason}
+
+    with (
+        patch(
+            "homeassistant.components.aseko_pool_live.config_flow.Aseko.login",
+            return_value=user,
+        ),
+        patch(
+            "homeassistant.components.aseko_pool_live.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "aseko@example.com",
+                CONF_PASSWORD: "passw0rd",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_async_step_reauth_success(hass: HomeAssistant, user: User) -> None:
@@ -248,5 +289,26 @@ async def test_async_step_reauth_exception(
         )
 
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": reason}
+
+    with (
+        patch(
+            "homeassistant.components.aseko_pool_live.config_flow.Aseko.login",
+            return_value=replace(user, user_id="UID"),
+        ),
+        patch(
+            "homeassistant.components.aseko_pool_live.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "aseko@example.com",
+                CONF_PASSWORD: "passw0rd",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

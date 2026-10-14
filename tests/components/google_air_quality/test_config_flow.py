@@ -363,11 +363,22 @@ async def test_subentry_flow_location_already_configured(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "location_already_configured"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_subentry_flow_location_name_already_configured(
@@ -399,11 +410,22 @@ async def test_subentry_flow_location_name_already_configured(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "location_name_already_configured"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_subentry_flow_entry_not_loaded(

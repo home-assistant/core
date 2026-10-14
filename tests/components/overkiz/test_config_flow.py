@@ -1,5 +1,7 @@
 """Tests for Overkiz config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -16,6 +18,7 @@ from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
     NoSuchTokenError,
+    ServiceUnavailableError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -29,7 +32,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -91,6 +94,17 @@ FAKE_ZERO_CONF_INFO_LOCAL = ZeroconfServiceInfo(
 )
 
 
+@contextmanager
+def _patch_client_success() -> Generator[None]:
+    """Patch the Overkiz client to log in successfully."""
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        yield
+
+
 async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -133,6 +147,19 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_somfy_multi_account_hidden(hass: HomeAssistant) -> None:
+    """Test the experimental Somfy multi-account server cannot be selected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"hub": "somfy"},
+        )
 
 
 async def test_form_only_cloud_supported(
@@ -236,6 +263,7 @@ async def test_form_local_happy_flow(
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceError, "server_in_maintenance"),
+        (ServiceUnavailableError, "cannot_connect"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
         (ApplicationNotAllowedError, "application_not_allowed"),
@@ -280,8 +308,14 @@ async def test_form_invalid_auth_cloud(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -324,11 +358,17 @@ async def test_form_invalid_hardware_cloud(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_hardware"}
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
     }
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -375,11 +415,17 @@ async def test_form_invalid_hardware_cloud_local(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_hardware"}
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
     }
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -394,6 +440,7 @@ async def test_form_invalid_hardware_cloud_local(
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceError, "server_in_maintenance"),
+        (ServiceUnavailableError, "cannot_connect"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
         (NoSuchTokenError, "invalid_auth"),
@@ -442,8 +489,18 @@ async def test_form_invalid_auth_local(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": TEST_HOST,
+                "token": TEST_TOKEN,
+                "verify_ssl": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -482,9 +539,15 @@ async def test_form_invalid_cozytouch_auth(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "cloud"
+
+    with _patch_client_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_cloud_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
@@ -1398,8 +1461,7 @@ async def test_rexel_full_flow_single_gateway(
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
-    # Azure AD B2C needs the policy on the authorize URL; the helper rebuilds
-    # the query string, so it must survive via extra_authorize_data.
+    # Azure AD B2C needs the policy on the authorize URL.
     assert f"p={REXEL_OAUTH_POLICY}" in result["url"]
     # offline_access is required for B2C to return a refresh token.
     assert f"{REXEL_OAUTH_SCOPE}+offline_access" in result["url"]

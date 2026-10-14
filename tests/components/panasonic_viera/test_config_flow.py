@@ -87,8 +87,18 @@ async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=get_mock_remote(encrypted=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_BASIC_DATA},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_unknown_abort(hass: HomeAssistant) -> None:
@@ -244,8 +254,14 @@ async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PIN: "1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
@@ -453,8 +469,14 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PIN: "1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_imported_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
@@ -526,8 +548,18 @@ async def test_imported_flow_not_connected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=get_mock_remote(encrypted=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_BASIC_DATA},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_imported_flow_unknown_abort(hass: HomeAssistant) -> None:

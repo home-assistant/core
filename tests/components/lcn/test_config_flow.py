@@ -147,8 +147,18 @@ async def test_step_user_error(
         )
 
         assert result["type"] is data_entry_flow.FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == errors
+
+    with (
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -208,8 +218,20 @@ async def test_step_reconfigure_error(
         )
 
         assert result["type"] is data_entry_flow.FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == errors
+
+    with (
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_DATA.copy(),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_validate_connection() -> None:

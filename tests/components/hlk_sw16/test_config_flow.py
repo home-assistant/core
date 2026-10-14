@@ -182,8 +182,28 @@ async def test_form_invalid_data(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
+
+    with (
+        patch(
+            "homeassistant.components.hlk_sw16.config_flow.connect_client",
+            return_value=mock_hlk_sw16_connection,
+        ),
+        patch("homeassistant.components.hlk_sw16.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            conf,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -208,5 +228,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_hlk_sw16_connection = await create_mock_hlk_sw16_connection(False)
+
+    with (
+        patch(
+            "homeassistant.components.hlk_sw16.config_flow.connect_client",
+            return_value=mock_hlk_sw16_connection,
+        ),
+        patch("homeassistant.components.hlk_sw16.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            conf,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

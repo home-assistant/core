@@ -177,8 +177,18 @@ async def test_manual_errors(
 
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    client_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": "ws://localhost:5580/ws",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_already_configured(

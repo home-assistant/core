@@ -172,7 +172,11 @@ async def test_form_no_location_data(
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, side_effect: Exception, error_key: str, base_error: str
+    hass: HomeAssistant,
+    get_camera: CameraInfoModel,
+    side_effect: Exception,
+    error_key: str,
+    base_error: str,
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
@@ -194,8 +198,28 @@ async def test_flow_fails(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result4["errors"] == {error_key: base_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_LOCATION: "Test loc",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

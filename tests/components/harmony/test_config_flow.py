@@ -232,8 +232,31 @@ async def test_form_errors(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    harmonyapi.name = "friend"
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.2.3.4",
+                "activity": "Watch TV",
+                "delay_secs": 0.2,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_entry_not_loaded(hass: HomeAssistant) -> None:
