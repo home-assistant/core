@@ -6,17 +6,18 @@ import io
 import mimetypes
 from pathlib import Path
 import tempfile
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 
 from homeassistant.components import conversation, media_source
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import Context, HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
 from homeassistant.util import RE_SANITIZE_FILENAME, dt as dt_util, slugify
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     DATA_COMPONENT,
@@ -27,6 +28,22 @@ from .const import (
     IMAGE_EXPIRY_TIME,
     AITaskEntityFeature,
 )
+from .evaluation import (
+    QUESTIONS_SCHEMA,
+    EvaluationQuestion,
+    EvaluationTask,
+    EvaluationTaskResult,
+)
+from .permissions import async_check_permissions
+
+if TYPE_CHECKING:
+    from .entity import AITaskEntity
+
+_FEATURE_NOT_SUPPORTED_TRANSLATION_KEYS = {
+    AITaskEntityFeature.GENERATE_DATA: "generate_data_not_supported",
+    AITaskEntityFeature.GENERATE_IMAGE: "generate_image_not_supported",
+    AITaskEntityFeature.EVALUATE: "evaluate_not_supported",
+}
 
 
 def _save_media_image(image_data: media_source.MediaImage) -> Path:
@@ -48,6 +65,19 @@ async def _resolve_attachments(
     """Resolve attachments for a task."""
     resolved_attachments: list[conversation.Attachment] = []
     created_files: list[Path] = []
+
+    def cleanup_files() -> None:
+        """Cleanup temporary files."""
+        for file in created_files:
+            file.unlink(missing_ok=True)
+
+    @callback
+    def cleanup_files_callback() -> None:
+        """Cleanup temporary files."""
+        if created_files:
+            hass.async_add_executor_job(cleanup_files)
+
+    session.async_on_cleanup(cleanup_files_callback)
 
     for attachment in attachments or []:
         media_content_id = attachment["media_content_id"]
@@ -71,7 +101,10 @@ async def _resolve_attachments(
 
         media = await media_source.async_resolve_media(hass, media_content_id, None)
         if media.path is None:
-            raise HomeAssistantError("Only local attachments are currently supported")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="local_attachments_only",
+            )
         resolved_attachments.append(
             conversation.Attachment(
                 media_content_id=media_content_id,
@@ -80,22 +113,53 @@ async def _resolve_attachments(
             )
         )
 
-    if not created_files:
-        return resolved_attachments
-
-    def cleanup_files() -> None:
-        """Cleanup temporary files."""
-        for file in created_files:
-            file.unlink(missing_ok=True)
-
-    @callback
-    def cleanup_files_callback() -> None:
-        """Cleanup temporary files."""
-        hass.async_add_executor_job(cleanup_files)
-
-    session.async_on_cleanup(cleanup_files_callback)
-
     return resolved_attachments
+
+
+@callback
+def _async_get_entity(
+    hass: HomeAssistant,
+    entity_id: str | None,
+    preferred_entity_id: str | None,
+    feature: AITaskEntityFeature,
+    attachments: list[dict] | None,
+) -> AITaskEntity:
+    """Return the AI Task entity for a task and validate it supports it."""
+    if entity_id is None:
+        entity_id = preferred_entity_id
+
+    if entity_id is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_entity",
+        )
+
+    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
+    if entity is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entity_not_found",
+            translation_placeholders={"entity_id": entity_id},
+        )
+
+    if feature not in entity.supported_features:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=_FEATURE_NOT_SUPPORTED_TRANSLATION_KEYS[feature],
+            translation_placeholders={"entity_id": entity_id},
+        )
+
+    if (
+        attachments
+        and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="attachments_not_supported",
+            translation_placeholders={"entity_id": entity_id},
+        )
+
+    return entity
 
 
 async def async_generate_data(
@@ -110,28 +174,15 @@ async def async_generate_data(
     context: Context | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
-    if entity_id is None:
-        entity_id = hass.data[DATA_PREFERENCES].gen_data_entity_id
+    await async_check_permissions(hass, entity_id, attachments, context)
 
-    if entity_id is None:
-        raise HomeAssistantError("No entity_id provided and no preferred entity set")
-
-    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
-    if entity is None:
-        raise HomeAssistantError(f"AI Task entity {entity_id} not found")
-
-    if AITaskEntityFeature.GENERATE_DATA not in entity.supported_features:
-        raise HomeAssistantError(
-            f"AI Task entity {entity_id} does not support generating data"
-        )
-
-    if (
-        attachments
-        and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
-    ):
-        raise HomeAssistantError(
-            f"AI Task entity {entity_id} does not support attachments"
-        )
+    entity = _async_get_entity(
+        hass,
+        entity_id,
+        hass.data[DATA_PREFERENCES].gen_data_entity_id,
+        AITaskEntityFeature.GENERATE_DATA,
+        attachments,
+    )
 
     with async_get_chat_session(hass) as session:
         resolved_attachments = await _resolve_attachments(hass, session, attachments)
@@ -159,28 +210,15 @@ async def async_generate_image(
     context: Context | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
-    if entity_id is None:
-        entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
+    await async_check_permissions(hass, entity_id, attachments, context)
 
-    if entity_id is None:
-        raise HomeAssistantError("No entity_id provided and no preferred entity set")
-
-    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
-    if entity is None:
-        raise HomeAssistantError(f"AI Task entity {entity_id} not found")
-
-    if AITaskEntityFeature.GENERATE_IMAGE not in entity.supported_features:
-        raise HomeAssistantError(
-            f"AI Task entity {entity_id} does not support generating images"
-        )
-
-    if (
-        attachments
-        and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
-    ):
-        raise HomeAssistantError(
-            f"AI Task entity {entity_id} does not support attachments"
-        )
+    entity = _async_get_entity(
+        hass,
+        entity_id,
+        hass.data[DATA_PREFERENCES].gen_image_entity_id,
+        AITaskEntityFeature.GENERATE_IMAGE,
+        attachments,
+    )
 
     with async_get_chat_session(hass) as session:
         resolved_attachments = await _resolve_attachments(hass, session, attachments)
@@ -339,3 +377,41 @@ class ImageData:
     filename: str
     file: io.IOBase
     content_type: str
+
+
+async def async_evaluate(
+    hass: HomeAssistant,
+    *,
+    task_name: str,
+    questions: dict[str, EvaluationQuestion],
+    state: JsonValueType = None,
+    entity_id: str | None = None,
+    attachments: list[dict] | None = None,
+    context: Context | None = None,
+) -> EvaluationTaskResult:
+    """Evaluate questions using the selected AI task entity."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+    questions = QUESTIONS_SCHEMA(questions)
+    if state is None and not attachments:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="evaluate_missing_input",
+        )
+    entity = _async_get_entity(
+        hass,
+        entity_id,
+        hass.data[DATA_PREFERENCES].evaluate_entity_id,
+        AITaskEntityFeature.EVALUATE,
+        attachments,
+    )
+    with async_get_chat_session(hass) as session:
+        resolved_attachments = await _resolve_attachments(hass, session, attachments)
+        return await entity.internal_async_evaluate(
+            EvaluationTask(
+                name=task_name,
+                questions=questions,
+                state=state,
+                attachments=resolved_attachments or None,
+            ),
+            context,
+        )

@@ -6,6 +6,7 @@ from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_CAN_BE_TEMPORARY,
     SZ_DURATION,
     SZ_MODE,
     SZ_PERIOD,
@@ -13,6 +14,7 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
+    SZ_TIMING_MODE,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -30,7 +32,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -38,6 +39,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
+from .helpers import as_snake_case
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +122,19 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
+    ) -> None:
+        """Set the system mode; only supported by controllers."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": EvoService.SET_SYSTEM_MODE},
+        )
 
     async def async_set_zone_override(
         self, setpoint: float, duration: timedelta | None = None
@@ -329,9 +344,13 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowed_system_modes]
+        self._evo_modes = {
+            m[SZ_SYSTEM_MODE].value: m for m in evo_device.allowed_system_modes
+        }
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[mode]
+            for m in evo_device.allowed_system_modes
+            if (mode := m[SZ_SYSTEM_MODE]) in TCS_PRESET_TO_HA
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -340,41 +359,46 @@ class EvoController(EvoClimateEntity):
         )
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
+    ) -> None:
+        """Set the system mode, either indefinitely or for a duration/period."""
 
-        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
+        # check the requested mode; not all systems support all modes...
+        if (mode_info := self._evo_modes.get(as_snake_case(mode))) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mode_not_supported",
+                translation_placeholders={SZ_MODE: mode},
+            )
 
-    async def process_signal(self, payload: dict | None = None) -> None:
-        """Process any signals."""
+        timing_mode: str | None = None
+        until: datetime | None = None
 
-        if payload is None:
-            raise NotImplementedError
-        if payload["unique_id"] != self._attr_unique_id:
-            return
-        await self.async_tcs_svc_request(payload["service"], payload["data"])
+        # service schema makes duration & period mutually exclusive (can be neither)
+        if period is not None:
+            timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
+        elif duration is not None:
+            timing_mode, until = SZ_DURATION, dt_util.now() + duration
 
-    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (system mode) for a controller.
+        if timing_mode is not None:
+            if not mode_info[SZ_CAN_BE_TEMPORARY]:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_be_temporary",
+                    translation_placeholders={SZ_MODE: mode},
+                )
+            if mode_info.get(SZ_TIMING_MODE) != timing_mode:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key=f"mode_cant_have_{timing_mode}",
+                    translation_placeholders={SZ_MODE: mode},
+                )
 
-        Data validation must be performed upstream in the service handler, before the
-        dispatcher call, so a ServiceValidationError can be seen, if raised.
-        """
-
-        mode = data[SZ_MODE]  # service is EvoService.SET_SYSTEM_MODE
-
-        if SZ_PERIOD in data:
-            until = dt_util.start_of_local_day()
-            until += data[SZ_PERIOD]
-
-        elif SZ_DURATION in data:
-            until = dt_util.now() + data[SZ_DURATION]
-
-        else:
-            until = None
-
-        await self._set_tcs_mode(mode, until=until)
+        await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None
@@ -385,7 +409,7 @@ class EvoController(EvoClimateEntity):
             await self.coordinator.call_client_api(
                 self._evo_device.set_mode(mode, until=until)
             )
-        except evo.InvalidSystemModeError as err:
+        except evo.InvalidModeRequestError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_system_mode",

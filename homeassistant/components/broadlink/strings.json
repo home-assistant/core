@@ -102,6 +102,9 @@
     },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
+    },
+    "unload_failed": {
+      "message": "Failed to unload the device"
     }
   }
 }

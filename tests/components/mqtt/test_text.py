@@ -9,6 +9,7 @@ from homeassistant.components import text
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -419,15 +420,15 @@ async def test_set_text_validation(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     # text too long
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await async_set_value(hass, "text.test", "yes yes yes yes")
 
     # text too short
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await async_set_value(hass, "text.test", "y")
 
     # text not matching pattern
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await async_set_value(hass, "text.test", "other")
 
     await async_set_value(hass, "text.test", "no")

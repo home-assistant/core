@@ -1,9 +1,11 @@
 """The Netatmo integration."""
 
+import asyncio
 import logging
 import secrets
 from typing import Any
 
+import aiohttp
 from aiohttp.web import Request
 import pyatmo
 
@@ -19,10 +21,10 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_PERSONS,
     CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -33,9 +35,11 @@ from .const import (
     DEFAULT_PERSON,
     DOMAIN,
     EVENT_ID_MAP,
+    MAX_WEBHOOK_RETRY_DELAY,
     NETATMO_EVENT,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
+    WEBHOOK_RETRY_DELAY,
 )
 from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 
@@ -135,7 +139,9 @@ async def async_cloudhook_generate_url(
 ) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
-        webhook_url = await cloud.async_create_cloudhook(
+        # Get or create: the cloud can still hold a hook this entry lost track of,
+        # and creating a second one for the same id is refused outright
+        webhook_url = await cloud.async_get_or_create_cloudhook(
             hass, entry.data[CONF_WEBHOOK_ID]
         )
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
@@ -150,29 +156,48 @@ async def async_unregister_webhook(
     """Unregister the webhook from the Netatmo backend."""
     if CONF_WEBHOOK_ID not in entry.data:
         return
+
+    if not entry.runtime_data.webhook_registered:
+        return
+
+    entry.runtime_data.webhook_registered = False
+
     _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
     async_dispatcher_send(
         hass,
         f"signal-{DOMAIN}-webhook-None",
         {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
     )
+
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
     try:
         await entry.runtime_data.auth.async_dropwebhook()
-    except pyatmo.ApiError:
+    except pyatmo.ApiError, TimeoutError, aiohttp.ClientError:
         _LOGGER.debug("No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_register_webhook(
     hass: HomeAssistant, entry: NetatmoConfigEntry
-) -> None:
-    """Register the webhook with the Netatmo backend."""
+) -> bool:
+    """Register the webhook with the Netatmo backend.
+
+    Return whether the registration is settled, which a caller that retries needs
+    to know. A URL that cannot work is settled without having been registered:
+    trying again cannot help until the configuration changes. A URL that cannot be
+    built yet is the opposite - unsettled, so that the caller tries again.
+    """
     if CONF_WEBHOOK_ID not in entry.data:
         data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
         hass.config_entries.async_update_entry(entry, data=data)
 
     if cloud.async_active_subscription(hass):
-        webhook_url = await async_cloudhook_generate_url(hass, entry)
+        try:
+            webhook_url = await async_cloudhook_generate_url(hass, entry)
+        except cloud.CloudNotAvailable:
+            # The cloud can drop out between the caller's check and this call
+            _LOGGER.debug("No cloudhook to register yet")
+            return False
     else:
         webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -183,8 +208,9 @@ async def async_register_webhook(
             "Webhook not registered - "
             "https and port 443 is required to register the webhook"
         )
-        return
+        return True
 
+    webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     webhook_register(
         hass,
         DOMAIN,
@@ -192,17 +218,88 @@ async def async_register_webhook(
         entry.data[CONF_WEBHOOK_ID],
         async_handle_webhook,
     )
-
-    async def _handle_stop(_: Event) -> None:
-        await async_unregister_webhook(hass, entry)
+    entry.runtime_data.webhook_registered = True
 
     try:
         await entry.runtime_data.auth.async_addwebhook(webhook_url)
-        _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
-    except pyatmo.ApiError as err:
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    except (pyatmo.ApiError, TimeoutError, aiohttp.ClientError) as err:
         _LOGGER.error("Error during webhook registration - %s", err)
+        return False
     else:
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_stop)
+        _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
+        return True
+
+
+class NetatmoWebhookManager:
+    """Keep the Netatmo webhook registered for as long as the entry is loaded.
+
+    Registering, retrying and dropping all act on the one registration Netatmo
+    holds for the account, so they take a lock. A drop that overtakes the
+    registration it is meant to undo leaves Netatmo delivering to a webhook Home
+    Assistant no longer answers, and the failed deliveries suspend the URL.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
+        """Initialize the webhook manager."""
+        self.hass = hass
+        self.entry = entry
+        self._register_lock = asyncio.Lock()
+        self._registered = False
+        self._attempt_delay = WEBHOOK_RETRY_DELAY
+        self._cancel_attempt: CALLBACK_TYPE | None = None
+
+    @callback
+    def cancel_pending_attempt(self) -> None:
+        """Drop a scheduled registration attempt, if one is pending."""
+        if self._cancel_attempt is not None:
+            self._cancel_attempt()
+            self._cancel_attempt = None
+
+    @callback
+    def _schedule_attempt(self) -> None:
+        """Arm the next attempt, replacing any already pending."""
+        self.cancel_pending_attempt()
+        self._cancel_attempt = async_call_later(
+            self.hass, self._attempt_delay, self.async_ensure_registered
         )
+
+    async def async_ensure_registered(self, _: Any = None) -> None:
+        """Register the webhook, and keep trying until it sticks."""
+        async with self._register_lock:
+            self.cancel_pending_attempt()
+            if self._registered:
+                return
+
+            # Registering while the cloud is down points Netatmo at an endpoint
+            # that cannot answer, and the failed deliveries suspend the URL
+            settled = False
+            if not cloud.async_active_subscription(
+                self.hass
+            ) or cloud.async_is_connected(self.hass):
+                settled = await async_register_webhook(self.hass, self.entry)
+
+            if settled:
+                self._registered = True
+                self._attempt_delay = WEBHOOK_RETRY_DELAY
+                return
+
+            self._schedule_attempt()
+            self._attempt_delay = min(self._attempt_delay * 2, MAX_WEBHOOK_RETRY_DELAY)
+
+    async def async_unregister(self, _: Any = None) -> None:
+        """Drop the webhook, waiting out a registration still in flight."""
+        async with self._register_lock:
+            self.cancel_pending_attempt()
+            self._registered = False
+            await async_unregister_webhook(self.hass, self.entry)
+
+    async def async_handle_cloud_state(self, state: cloud.CloudConnectionState) -> None:
+        """Follow the cloud connection the webhook URL is delivered over."""
+        self._attempt_delay = WEBHOOK_RETRY_DELAY
+
+        if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
+            await self.async_ensure_registered()
+
+        if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
+            await self.async_unregister()
+            self._schedule_attempt()

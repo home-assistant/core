@@ -27,7 +27,7 @@ class SomfyMyLinkRuntimeData:
     shades: list[Shade]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SomfyMyLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SomfyMyLinkConfigEntry) -> None:
     """Set up Somfy MyLink from a config entry."""
     somfy_mylink = SomfyMyLink(
         entry.data[CONF_HOST],
@@ -49,11 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SomfyMyLinkConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SomfyMyLinkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

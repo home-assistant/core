@@ -31,6 +31,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.frame import ReportBehavior
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -248,10 +249,14 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_temperature_unit
 
     temperature_unit: Final = DeprecatedEntityProperty[str](
-        "native_temperature_unit", "2027.11"
+        "native_temperature_unit",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
     _attr_temperature_unit: Final = DeprecatedEntityAttr[str](
-        "_attr_native_temperature_unit", "2027.11"
+        "_attr_native_temperature_unit",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
 
     @cached_property
@@ -270,10 +275,14 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_current_temperature
 
     current_temperature: Final = DeprecatedEntityProperty[float | None](
-        "native_current_temperature", "2027.11"
+        "native_current_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
     _attr_current_temperature: Final = DeprecatedEntityAttr[float | None](
-        "_attr_native_current_temperature", "2027.11"
+        "_attr_native_current_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
 
     @cached_property
@@ -282,10 +291,14 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_target_temperature
 
     target_temperature: Final = DeprecatedEntityProperty[float | None](
-        "native_target_temperature", "2027.11"
+        "native_target_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
     _attr_target_temperature: Final = DeprecatedEntityAttr[float | None](
-        "_attr_native_target_temperature", "2027.11"
+        "_attr_native_target_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
 
     @cached_property
@@ -297,10 +310,14 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_target_temperature_high
 
     target_temperature_high: Final = DeprecatedEntityProperty[float | None](
-        "native_target_temperature_high", "2027.11"
+        "native_target_temperature_high",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
     _attr_target_temperature_high: Final = DeprecatedEntityAttr[float | None](
-        "_attr_native_target_temperature_high", "2027.11"
+        "_attr_native_target_temperature_high",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
 
     @cached_property
@@ -312,10 +329,14 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_target_temperature_low
 
     target_temperature_low: Final = DeprecatedEntityProperty[float | None](
-        "native_target_temperature_low", "2027.11"
+        "native_target_temperature_low",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
     _attr_target_temperature_low: Final = DeprecatedEntityAttr[float | None](
-        "_attr_native_target_temperature_low", "2027.11"
+        "_attr_native_target_temperature_low",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
     )
 
     @cached_property

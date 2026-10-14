@@ -171,7 +171,7 @@ def _async_normalize_config_entry(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> None:
     """Set up Yeelight from a config entry."""
     _async_normalize_config_entry(hass, entry)
 
@@ -200,12 +200,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_get_device(
