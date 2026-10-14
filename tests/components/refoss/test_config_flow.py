@@ -107,20 +107,34 @@ async def test_creating_entry_has_no_devices(
         "10.0.0.0/24,10.0.1.0/24,10.0.2.0/24,10.0.3.0/24,10.0.4.0/24",
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
 async def test_user_flow_rejects_invalid_networks(
     hass: HomeAssistant, networks: str
 ) -> None:
-    """Test that malformed, oversized, IPv6, and too many networks are rejected."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    """Test invalid networks are rejected, then a valid address creates an entry."""
+    discovery = FakeDiscovery()
+    with patch(
+        "homeassistant.components.refoss.util.Discovery",
+        return_value=discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NETWORKS: networks}
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NETWORKS: networks}
+        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_NETWORKS: "invalid_networks"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_NETWORKS: "invalid_networks"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NETWORKS: "10.1.2.17"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {CONF_NETWORKS: ["10.1.2.17"]}
 
 
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
@@ -172,10 +186,11 @@ async def test_options_flow_updates_networks(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_rejects_invalid_networks(
     hass: HomeAssistant,
 ) -> None:
-    """Test the options flow rejects a subnet larger than /24."""
+    """Test the options flow rejects a subnet larger than /24, then accepts a /24."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -187,6 +202,14 @@ async def test_options_flow_rejects_invalid_networks(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_NETWORKS: "invalid_networks"}
     assert CONF_NETWORKS not in entry.options
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_NETWORKS: "192.168.8.0/24"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert entry.options == {CONF_NETWORKS: ["192.168.8.0/24"]}
 
 
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
