@@ -85,8 +85,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: AerosmartConfigEntry) -
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AerosmartConfigEntry) -> bool:
     """Migrate entries that referenced the withdrawn shared-connection integration."""
-    if entry.version != 1 or LEGACY_CONF_CONNECTION not in entry.data:
+    if entry.version != 1:
         return True
+    if LEGACY_CONF_CONNECTION not in entry.data:
+        return False
 
     legacy_entry = hass.config_entries.async_get_entry(
         entry.data[LEGACY_CONF_CONNECTION]

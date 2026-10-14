@@ -197,3 +197,23 @@ async def test_migrates_legacy_shared_connection_entry(hass: HomeAssistant) -> N
         "unit_ventilation": 1,
         "unit_heat_pump": 2,
     }
+
+
+async def test_migration_fails_without_legacy_connection_reference(
+    hass: HomeAssistant,
+) -> None:
+    """A version 1 entry without its legacy reference cannot be migrated."""
+    entry = MockConfigEntry(
+        domain="aerosmart",
+        version=1,
+        data={
+            "unit_ventilation": 1,
+            "unit_heat_pump": 2,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
