@@ -509,7 +509,8 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
 
         if entity_info.device_id:
             # Entity belongs to a child of the main device
-            assert entry_data.main_device_id is not None
+            if TYPE_CHECKING:
+                assert entry_data.main_device_id is not None
             self._attr_device_info = ChildDeviceInfo(
                 identifiers={
                     (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
