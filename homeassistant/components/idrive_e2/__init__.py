@@ -39,7 +39,7 @@ async def _async_safe_client_close(client: S3Client | None) -> None:
         _LOGGER.debug("Failed to close aiobotocore client", exc_info=True)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> None:
     """Set up IDrive e2 from a config entry."""
 
     session = AioSession()
@@ -89,11 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
 
     entry.async_on_unload(entry.async_on_state_change(notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> None:
     """Unload a config entry."""
     client = entry.runtime_data
     await client.close()
-    return True

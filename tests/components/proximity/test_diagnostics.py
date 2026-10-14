@@ -12,6 +12,7 @@ from homeassistant.components.proximity.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -79,3 +80,38 @@ async def test_entry_diagnostics(
             "modified_at",
         )
     )
+
+
+async def test_entry_diagnostics_renamed_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entity mapping in diagnostics follows a renamed entity."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="home",
+        data={
+            CONF_ZONE: "zone.home",
+            CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+        unique_id=f"{DOMAIN}_home",
+    )
+    mock_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        "sensor.home_test1_distance", new_entity_id="sensor.renamed"
+    )
+    await hass.async_block_till_done()
+
+    diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
+    assert diagnostics["data"]["entity_mapping"] == {
+        "device_tracker.test1": [
+            "sensor.renamed",
+            "sensor.home_test1_direction_of_travel",
+        ]
+    }

@@ -10,6 +10,7 @@ from aiomelcloudhome import (
     UnitStateDelta,
     UserContext,
 )
+from aiomelcloudhome.exceptions import MelCloudHomeWebSocketError
 from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
 
@@ -49,6 +50,14 @@ def websocket_updates() -> asyncio.Queue[UnitStateDelta | Exception]:
 
 
 @pytest.fixture
+def websocket_unavailable(
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+) -> None:
+    """End the websocket stream on setup so background tasks can finish."""
+    websocket_updates.put_nowait(MelCloudHomeWebSocketError("unavailable"))
+
+
+@pytest.fixture
 def mock_websocket(
     websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
 ) -> AsyncMock:
@@ -79,6 +88,7 @@ def mock_melcloud_client(mock_websocket: AsyncMock) -> Generator[AsyncMock]:
         TelemetryValue.model_validate(value)
         for value in load_json_array_fixture("energy.json", DOMAIN)
     ]
+    client.get_outdoor_temperature.return_value = 19.5
 
     with (
         patch(
@@ -102,4 +112,5 @@ def mock_config_entry() -> MockConfigEntry:
         title=MOCK_USER_INPUT[CONF_EMAIL],
         data=MOCK_USER_INPUT,
         entry_id="config-entry-uuid-1",
+        minor_version=2,
     )

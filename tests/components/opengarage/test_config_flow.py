@@ -1,8 +1,10 @@
 """Test the OpenGarage config flow."""
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
-import aiohttp
+from aiohttp import ClientError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.opengarage.const import DOMAIN
@@ -12,34 +14,30 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_opengarage")
+async def test_form(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
-    with (
-        patch(
-            "opengarage.OpenGarage.update_state",
-            return_value={"name": "Name of the device", "mac": "unique"},
-        ),
-        patch(
-            "homeassistant.components.opengarage.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
+    )
+    await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcdef"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["data"] == {
         "host": "http://1.1.1.1",
         "device_key": "AfsasdnfkjDD",
         "port": 80,
@@ -48,63 +46,60 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("side_effect", "error_msg"),
+    [
+        ([None], "invalid_auth"),
+        (ClientError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: list[Any] | type[Exception],
+    error_msg: str,
+) -> None:
+    """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
-    with patch(
-        "opengarage.OpenGarage.update_state",
-        return_value=None,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
-        )
+    mock_opengarage.update_state.side_effect = side_effect
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
     )
 
-    with patch(
-        "opengarage.OpenGarage.update_state",
-        side_effect=aiohttp.ClientError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_msg}
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    mock_opengarage.update_state.side_effect = None
 
-
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
     )
+    await hass.async_block_till_done()
 
-    with patch(
-        "opengarage.OpenGarage.update_state",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
-        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcdef"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["data"] == {
+        "host": "http://1.1.1.1",
+        "device_key": "AfsasdnfkjDD",
+        "port": 80,
+        "verify_ssl": False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
 
-
+@pytest.mark.usefixtures("mock_opengarage")
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
@@ -113,24 +108,27 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
             "host": "http://1.1.1.1",
             "device_key": "AfsasdnfkjDD",
         },
-        unique_id="unique",
+        unique_id="aa:bb:cc:dd:ee:ff",
     )
     first_entry.add_to_hass(hass)
 
-    with patch(
-        "opengarage.OpenGarage.update_state",
-        return_value={"name": "Name of the device", "mac": "unique"},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                "host": "http://1.1.1.1",
-                "device_key": "AfsasdnfkjDD",
-                "port": 80,
-                "verify_ssl": False,
-            },
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "host": "http://1.1.1.1",
+            "device_key": "AfsasdnfkjDD",
+            "port": 80,
+            "verify_ssl": False,
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
