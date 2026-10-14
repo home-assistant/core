@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_ICON,
     CONF_NAME,
+    CONF_PERMISSION_CHECK,
     CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
@@ -98,6 +99,7 @@ SCRIPT_ENTITY_SCHEMA = make_script_schema(
                 probatio.Optional(CONF_SELECTOR): validate_selector,
             }
         },
+        probatio.Optional(CONF_PERMISSION_CHECK, default=True): cv.boolean,
     },
     SCRIPT_MODE_SINGLE,
 )

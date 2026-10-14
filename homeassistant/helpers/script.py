@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_IF,
     CONF_MODE,
     CONF_PARALLEL,
+    CONF_PERMISSION_CHECK,
     CONF_REPEAT,
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
@@ -452,6 +453,8 @@ class _ScriptRun:
     """Manage Script sequence run."""
 
     _action: dict[str, Any]
+    _context: Context | None
+    _orig_context: Context | None
 
     def __init__(
         self,
@@ -459,12 +462,17 @@ class _ScriptRun:
         script: Script,
         variables: ScriptRunVariables,
         context: Context | None,
+        orig_context: Context | None,
         log_exceptions: bool,
     ) -> None:
         self._hass = hass
         self._script = script
         self._variables = variables
-        self._context = context
+        self._orig_context = orig_context or context
+        if not script.permission_check and context and context.user_id is not None:
+            self._context = Context(parent_id=context.id)
+        else:
+            self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
         self._started = False
@@ -581,6 +589,20 @@ class _ScriptRun:
                         trace_set_result(enabled=False)
                         return
 
+                step_context: Context | None
+                action_permission_check = self._action.get(CONF_PERMISSION_CHECK)
+                if action_permission_check is False:
+                    if self._context and self._context.user_id is not None:
+                        step_context = Context(parent_id=self._context.id)
+                    else:
+                        step_context = self._context
+                elif action_permission_check is True:
+                    step_context = self._orig_context
+                else:
+                    step_context = self._context
+
+                saved_context = self._context
+                self._context = step_context
                 handler = f"_async_step_{action}"
                 try:
                     await getattr(self, handler)()
@@ -592,6 +614,7 @@ class _ScriptRun:
                         self._log_exceptions or log_exceptions,
                     )
                 finally:
+                    self._context = saved_context
                     trace_element.update_variables(self._variables.non_parallel_scope)
 
     def _finish(self) -> None:
@@ -698,7 +721,9 @@ class _ScriptRun:
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
                 script.async_run(
-                    self._variables.enter_scope(parallel=parallel), self._context
+                    self._variables.enter_scope(parallel=parallel),
+                    self._context,
+                    orig_context=self._orig_context,
                 ),
                 eager_start=True,
             )
@@ -1530,11 +1555,13 @@ class Script:
         top_level: bool = True,
         variables: ScriptVariables | None = None,
         enabled: bool = True,
+        permission_check: bool = True,
     ) -> None:
         """Initialize the script.
 
         enabled attribute is only used for non-top-level scripts.
         """
+        self.permission_check = permission_check
         if (all_scripts := hass.data.get(DATA_SCRIPTS)) is None:
             all_scripts = hass.data[DATA_SCRIPTS] = {}
             hass.bus.async_listen_once(
@@ -1903,6 +1930,8 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
+        *,
+        orig_context: Context | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
         if self._unloaded:
@@ -1986,7 +2015,9 @@ class Script:
             cls = _ScriptRun
         else:
             cls = _QueuedScriptRun
-        run = cls(self._hass, self, variables, context, self._log_exceptions)
+        run = cls(
+            self._hass, self, variables, context, orig_context, self._log_exceptions
+        )
         has_existing_runs = bool(self._runs)
         self._runs.append(run)
         if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:
