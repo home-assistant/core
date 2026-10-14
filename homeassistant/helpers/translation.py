@@ -353,16 +353,25 @@ class _TranslationCache:
             if key not in cached_resources:
                 continue
             try:
+                tuples = list(string.Formatter().parse(cached_resources[key]))
+            except ValueError:
+                _LOGGER.error("Error while parsing English string %s", key)
+                # Neither string is safe to use without a valid fallback.
+                del cached_resources[key]
+                mismatches.add(key)
+                continue
+            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+
+            try:
                 tuples = list(string.Formatter().parse(value))
             except ValueError:
                 _LOGGER.error(
                     ("Error while parsing localized (%s) string %s"), language, key
                 )
+                mismatches.add(key)
                 continue
             updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
 
-            tuples = list(string.Formatter().parse(cached_resources[key]))
-            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
             if updated_placeholders != cached_placeholders:
                 _LOGGER.error(
                     (

@@ -166,6 +166,61 @@ async def test_load_translations_files_invalid_localized_placeholders(
         )
 
 
+@pytest.mark.parametrize("localized", ["Hallo {name", "Hallo name}"])
+async def test_malformed_localized_placeholders(
+    hass: HomeAssistant, localized: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Malformed localized strings fall back to valid English strings."""
+    mock_integration(hass, MockModule("test"))
+    resources = {
+        "en": {"test": {"entity": {"sensor": {"example": {"name": "Hello {name}"}}}}},
+        "de": {"test": {"entity": {"sensor": {"example": {"name": localized}}}}},
+    }
+    with patch(
+        "homeassistant.helpers.translation._async_get_component_strings",
+        return_value=resources,
+    ):
+        result = await translation.async_get_translations(
+            hass, "de", "entity", ["test"]
+        )
+
+    assert result == {"component.test.entity.sensor.example.name": "Hello {name}"}
+    assert "Error while parsing localized (de) string" in caplog.text
+
+
+@pytest.mark.parametrize("english", ["Hello {name", "Hello name}"])
+@pytest.mark.parametrize("localized", ["Hallo {name}", "Hallo {name"])
+async def test_malformed_english_placeholders(
+    hass: HomeAssistant,
+    english: str,
+    localized: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A bad English counterpart only invalidates its localized key."""
+    mock_integration(hass, MockModule("test"))
+    mock_integration(hass, MockModule("other"))
+    resources = {
+        "en": {
+            "test": {"entity": {"sensor": {"example": {"name": english}}}},
+            "other": {"entity": {"sensor": {"example": {"name": "Other"}}}},
+        },
+        "de": {
+            "test": {"entity": {"sensor": {"example": {"name": localized}}}},
+            "other": {"entity": {"sensor": {"example": {"name": "Andere"}}}},
+        },
+    }
+    with patch(
+        "homeassistant.helpers.translation._async_get_component_strings",
+        return_value=resources,
+    ):
+        result = await translation.async_get_translations(
+            hass, "de", "entity", ["test", "other"]
+        )
+
+    assert result == {"component.other.entity.sensor.example.name": "Andere"}
+    assert "Error while parsing English string" in caplog.text
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_translations(hass: HomeAssistant, mock_config_flows) -> None:
     """Test the get translations helper."""
