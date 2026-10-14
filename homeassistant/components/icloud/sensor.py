@@ -70,6 +70,7 @@ class IcloudSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[IcloudDevice], Any]
     icon_fn: Callable[[IcloudDevice], str] | None = None
     supported_fn: Callable[[IcloudDevice], bool] | None = None
+    legacy_attributes: bool = False
 
 
 SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
@@ -77,6 +78,9 @@ SENSORS: tuple[IcloudSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        # The battery sensor carried the device attributes before the dedicated
+        # sensors exposed them, so it keeps them for backwards compatibility.
+        legacy_attributes=True,
         value_fn=lambda device: device.battery_level,
         icon_fn=_battery_icon,
         supported_fn=lambda device: device.battery_level is not None,
@@ -251,3 +255,11 @@ class IcloudDeviceSensor(IcloudDeviceEntity, SensorEntity):
         if (icon_fn := self.entity_description.icon_fn) is not None:
             return icon_fn(self._device)
         return super().icon
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the device attributes on the sensors that carried them."""
+        if not self.entity_description.legacy_attributes:
+            return None
+        return self._device.extra_state_attributes

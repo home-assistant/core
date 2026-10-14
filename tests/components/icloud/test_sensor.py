@@ -6,12 +6,18 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.icloud.const import DOMAIN
+from homeassistant.components.icloud.const import (
+    ATTR_ACCOUNT_FETCH_INTERVAL,
+    ATTR_BATTERY,
+    ATTR_BATTERY_STATUS,
+    ATTR_DEVICE_STATUS,
+    DOMAIN,
+)
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import DEVICE, FEATURES, LOCATION, LOCATION_TIMESTAMP_MS
+from .const import DEVICE, FEATURES, LOCATION, LOCATION_TIMESTAMP_MS, MAX_INTERVAL
 
 from tests.common import MockConfigEntry
 from tests.typing import MagicMock
@@ -272,6 +278,37 @@ async def test_numeric_sensor_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == expected
+
+
+async def test_legacy_device_attributes_only_on_the_battery_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """Only the battery sensor keeps the attributes the original sensor had."""
+    icloud_service.devices.add(DEVICE)
+
+    await setup_entry(Platform.SENSOR)
+
+    battery_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, BATTERY_UNIQUE_ID
+    )
+    assert battery_entity_id is not None
+    battery_state = hass.states.get(battery_entity_id)
+    assert battery_state is not None
+    assert battery_state.attributes[ATTR_ACCOUNT_FETCH_INTERVAL] == MAX_INTERVAL
+    assert battery_state.attributes[ATTR_BATTERY] == 80
+    assert battery_state.attributes[ATTR_BATTERY_STATUS] == "NotCharging"
+    assert battery_state.attributes[ATTR_DEVICE_STATUS] == "online"
+
+    battery_status_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, BATTERY_STATUS_UNIQUE_ID
+    )
+    assert battery_status_entity_id is not None
+    battery_status_state = hass.states.get(battery_status_entity_id)
+    assert battery_status_state is not None
+    assert ATTR_DEVICE_STATUS not in battery_status_state.attributes
 
 
 async def test_floor_level_sensor_state(

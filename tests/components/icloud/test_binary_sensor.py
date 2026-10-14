@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.icloud.const import DOMAIN
+from homeassistant.components.icloud.const import ATTR_DEVICE_STATUS, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -122,6 +122,26 @@ async def test_binary_sensor_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected
+
+
+async def test_binary_sensor_does_not_carry_device_attributes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """Binary sensors do not expose the attributes of the battery sensor."""
+    icloud_service.devices.add(DEVICE)
+
+    await setup_entry(Platform.BINARY_SENSOR)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "device1_online"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert ATTR_DEVICE_STATUS not in state.attributes
 
 
 async def test_locating_disabled_by_default(
