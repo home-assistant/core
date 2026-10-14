@@ -177,7 +177,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._override_connection = True
-                self._override_on = None
+                self._override_on = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
