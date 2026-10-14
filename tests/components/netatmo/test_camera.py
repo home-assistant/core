@@ -39,6 +39,8 @@ from .common import (
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
+IMAGE_BYTES_FROM_STREAM = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
+
 
 async def test_entity(
     hass: HomeAssistant,
@@ -132,7 +134,7 @@ async def test_monitoring_component(
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
-    # Change mocked status (sync optimistic off) to simulate camera status change after the service call
+    # Change mocked status (sync optimistic off) to simulate camera status change after the webhook
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
     mock_state["module_id"] = camera_id
     mock_state["attributes"] = {
@@ -140,7 +142,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, POLLING_INTERVAL)
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
 
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -158,7 +160,7 @@ async def test_monitoring_component(
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
-    # Change mocked status (sync optimistic on) to simulate camera status change after the service call
+    # Change mocked status (sync optimistic on) to simulate camera status change after the webhook
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
     mock_state["module_id"] = camera_id
     mock_state["attributes"] = {
@@ -166,7 +168,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, POLLING_INTERVAL)
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
 
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
@@ -198,7 +200,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, POLLING_INTERVAL)
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     # Test turn_off services while camera was off (early return, no call to pyatmo)
@@ -238,7 +240,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, POLLING_INTERVAL)
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Test turn_on services while camera was on (early return, no call to pyatmo)
@@ -335,7 +337,7 @@ async def test_monitoring_component_failure(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -350,9 +352,6 @@ async def test_monitoring_component_failure(
             )
 
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
-
-
-IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 
 async def test_camera_image_local(
@@ -378,9 +377,10 @@ async def test_camera_image_local(
     stream_source = await camera.async_get_stream_source(hass, camera_entity_indoor)
     assert stream_source == stream_uri
 
-    image = await camera.async_get_image(hass, camera_entity_indoor)
-
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    result = await camera.async_get_image(hass, camera_entity_indoor)
+    assert result is not None
+    assert result.content_type == "image/jpeg"
+    assert result.content == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_camera_image_vpn(
@@ -405,8 +405,10 @@ async def test_camera_image_vpn(
     stream_source = await camera.async_get_stream_source(hass, camera_entity_indoor)
     assert stream_source == stream_uri
 
-    image = await camera.async_get_image(hass, camera_entity_indoor)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    result = await camera.async_get_image(hass, camera_entity_indoor)
+    assert result is not None
+    assert result.content_type == "image/jpeg"
+    assert result.content == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_service_set_person_away(
@@ -756,7 +758,7 @@ async def test_camera_reconnect_webhook(
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
-        # Change mocked status (sync optimistic off) to simulate camera status change after the service call
+        # Change mocked status (sync optimistic off) to simulate camera status change after the webhook
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
@@ -764,7 +766,7 @@ async def test_camera_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -784,7 +786,7 @@ async def test_camera_reconnect_webhook(
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
-        # Change mocked status (sync optimistic disconnection) to simulate camera status change after the service call
+        # Change mocked status (sync optimistic disconnection) to simulate camera status change after the webhook
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
@@ -793,7 +795,7 @@ async def test_camera_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
@@ -813,7 +815,7 @@ async def test_camera_reconnect_webhook(
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
-        # Change mocked status (sync optimistic connection) to simulate camera status change after the service call
+        # Change mocked status (sync optimistic connection) to simulate camera status change after the webhook
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
@@ -822,7 +824,7 @@ async def test_camera_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -944,7 +946,7 @@ async def test_doorbell_reconnect_webhook(
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
-        # Change mocked status (sync optimistic disconnection) to simulate doorbell status change after the service call
+        # Change mocked status (sync optimistic disconnection) to simulate doorbell status change after the webhook
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
@@ -952,7 +954,7 @@ async def test_doorbell_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
@@ -1231,7 +1233,6 @@ async def test_camera_initial_setup_and_images(
     expected_motion_detection: bool | None,
 ) -> None:
     """Test camera initial state and snapshot retrieval."""
-    FAKE_IMG = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
 
     # Mock data for payload_modifier to simulate camera status change
     mock_state = {
@@ -1266,7 +1267,9 @@ async def test_camera_initial_setup_and_images(
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         mock_webhook.return_value = "https://example.com"
-        mock_auth.return_value.async_get_image = AsyncMock(return_value=FAKE_IMG)
+        mock_auth.return_value.async_get_image = AsyncMock(
+            return_value=IMAGE_BYTES_FROM_STREAM
+        )
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1283,10 +1286,10 @@ async def test_camera_initial_setup_and_images(
         result = await camera.async_get_image(hass, camera_entity)
         assert result is not None
         assert result.content_type == "image/jpeg"
-        assert result.content == FAKE_IMG
+        assert result.content == IMAGE_BYTES_FROM_STREAM
         assert mock_auth.return_value.async_get_image.call_count == 1
 
-        # Change mocked status to test early unavailability of image fetch
+        # Change mocked status to test image fetch failure
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
@@ -1294,7 +1297,7 @@ async def test_camera_initial_setup_and_images(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         # State checks after status change
         assert hass.states.get(camera_entity).state == "idle"
@@ -1372,7 +1375,7 @@ async def test_camera_unhealthy_status_scenarios(
         await hass.async_block_till_done()
 
         # Advance time to force coordinator poll cycle with mock_state payload
-        await advance_time(hass, freezer, POLLING_INTERVAL)
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
 
         # Assert entity reflects target availability state cleanly
         assert hass.states.get(camera_entity).state == "idle"
