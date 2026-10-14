@@ -15,6 +15,7 @@ from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -137,7 +138,7 @@ def config() -> dict[str, str]:
 
 async def setup_evohome(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: ConfigType,
     install: str = "default",
 ) -> AsyncGenerator[MagicMock]:
     """Set up the evohome integration and return its client.
@@ -146,7 +147,7 @@ async def setup_evohome(
     """
 
     # set the time zone as for the active evohome location
-    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get("location_idx", 0)
 
     try:
         locn = user_locations_config_fixture(install)[loc_idx]
@@ -207,10 +208,10 @@ async def evohome(
         yield mock_client
 
 
-def _tcs_for_config(evo: EvohomeClient, config: dict[str, str]) -> ControlSystem:
+def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
     """Return the configured location's TCS; evo.tcs only supports one location."""
 
-    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get("location_idx", 0)
     return evo.locations[loc_idx].gateways[0].systems[0]
 
 
