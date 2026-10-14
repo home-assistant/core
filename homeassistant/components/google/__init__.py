@@ -156,7 +156,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> N
 
 async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Handle removal of a local storage."""
-    store = LocalCalendarStore(hass, entry.entry_id)
+    if hasattr(entry, "runtime_data"):
+        store = entry.runtime_data.store
+    else:
+        store = LocalCalendarStore(hass, entry.entry_id)
     await store.async_remove()
 
 
