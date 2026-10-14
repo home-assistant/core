@@ -1,6 +1,7 @@
 """Tests for the iCloud device tracker."""
 
 from datetime import timedelta
+import math
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -186,8 +187,8 @@ async def test_recovered_location_is_stored_before_it_is_announced(
         pytest.param(None, id="null"),
         pytest.param("not-a-number", id="not_a_number"),
         pytest.param(True, id="bool"),
-        pytest.param(float("nan"), id="nan"),
-        pytest.param(float("inf"), id="infinity"),
+        pytest.param(math.nan, id="nan"),
+        pytest.param(math.inf, id="infinity"),
         pytest.param(1e30, id="out_of_range"),
     ],
 )
