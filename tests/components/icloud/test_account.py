@@ -877,7 +877,7 @@ async def test_rejected_session_on_first_device_refresh_asks_the_user(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
