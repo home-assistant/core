@@ -37,6 +37,8 @@ FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
 
+POLLING_INTERVAL = (11, timedelta(seconds=30))  # 11 polling cycles of 30 seconds each
+
 
 async def snapshot_platform_entities(
     hass: HomeAssistant,
