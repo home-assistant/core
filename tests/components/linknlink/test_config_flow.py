@@ -59,6 +59,7 @@ async def test_hostname_is_resolved_before_storage(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == HOST
+    assert result["result"].unique_id == MAC
     mock_linknlink_client.discover_host.assert_awaited_once_with(hostname)
 
 

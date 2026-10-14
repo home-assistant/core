@@ -2,12 +2,15 @@
 
 from dataclasses import replace
 from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolinknlink import UltraConnectionError
 import pytest
 
+from homeassistant.components.linknlink.const import ENVIRONMENT_UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -259,6 +262,7 @@ async def test_environment_failure_does_not_disable_position_entities(
     entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test independent availability for the environment API."""
     await setup_integration(hass, mock_config_entry)
@@ -271,7 +275,8 @@ async def test_environment_failure_does_not_disable_position_entities(
     mock_linknlink_client.get_environment_state.side_effect = UltraConnectionError(
         "offline"
     )
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(ENVIRONMENT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(temperature_id).state == STATE_UNAVAILABLE
@@ -284,6 +289,7 @@ async def test_missing_environment_values_are_unknown(
     entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test supported fields with omitted values remain available."""
     await setup_integration(hass, mock_config_entry)
@@ -297,7 +303,8 @@ async def test_missing_environment_values_are_unknown(
         },
     )
 
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(ENVIRONMENT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     for key in missing_keys:
@@ -340,6 +347,7 @@ async def test_entities_registered_when_initial_environment_read_fails(
     entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test stable entities and transition logging when the API is offline."""
@@ -356,10 +364,13 @@ async def test_entities_registered_when_initial_environment_read_fails(
         assert entity_id is not None
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(ENVIRONMENT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mock_linknlink_client.get_environment_state.side_effect = None
     mock_linknlink_client.get_environment_state.return_value = ENVIRONMENT_STATE
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(ENVIRONMENT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert caplog.text.count("Ultra environmental state is unavailable") == 1
