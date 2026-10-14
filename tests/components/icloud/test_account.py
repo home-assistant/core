@@ -22,6 +22,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import (
     DEVICE,
+    DEVICE_WITH_HALF_A_LOCATION,
     DEVICE_WITHOUT_BATTERY,
     DEVICE_WITHOUT_LOCATION,
     DEVICE_WITHOUT_LOCATION_OR_BATTERY,
@@ -276,6 +277,7 @@ async def _set_up_with(
         pytest.param(DEVICE_WITHOUT_BATTERY, True, id="location_but_no_battery"),
         pytest.param(DEVICE_WITHOUT_LOCATION, True, id="battery_but_no_location"),
         pytest.param(DEVICE_WITHOUT_LOCATION_OR_BATTERY, False, id="neither"),
+        pytest.param(DEVICE_WITH_HALF_A_LOCATION, False, id="half_a_location_only"),
     ],
 )
 async def test_a_device_is_kept_when_either_signal_is_usable(
@@ -311,6 +313,27 @@ async def test_a_device_without_battery_still_reports_its_location(
     device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
     assert device.location == LOCATION
     assert device.battery_level is None
+
+
+async def test_half_a_location_is_not_stored(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a fix with only one coordinate is never stored.
+
+    The tracker reads both when it reports a position, so keeping half a fix
+    would fail there rather than here. The device is still kept for its
+    battery.
+    """
+    account = await _set_up_with(
+        hass,
+        mock_store,
+        DEVICE | {"location": {"latitude": 60.2, "longitude": None}},
+    )
+
+    device = account.devices[DEVICE["id"]]
+    assert device.location is None
+    assert device.battery_level == 80
 
 
 async def test_a_device_gaining_a_battery_gets_its_battery_sensor(
@@ -377,7 +400,11 @@ async def test_a_device_losing_its_battery_stops_reporting_a_level(
     device = account.devices[DEVICE["id"]]
     assert device.battery_level == 80
 
-    device.update(DEVICE | {"batteryStatus": "Unknown", "batteryLevel": None})
+    # Off the loop, as the account does: update() announces through the
+    # thread-safe dispatcher_send.
+    await hass.async_add_executor_job(
+        device.update, DEVICE | {"batteryStatus": "Unknown", "batteryLevel": None}
+    )
 
     assert device.battery_level is None
     assert ATTR_BATTERY not in device.extra_state_attributes

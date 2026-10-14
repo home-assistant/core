@@ -230,6 +230,7 @@ class IcloudAccount:
             has_location = (
                 bool(device_location)
                 and device_location.get(DEVICE_LOCATION_LATITUDE) is not None
+                and device_location.get(DEVICE_LOCATION_LONGITUDE) is not None
             )
             has_battery = (
                 status[DEVICE_BATTERY_STATUS] != "Unknown"
@@ -483,6 +484,7 @@ class IcloudDevice:
         if (
             self._status[DEVICE_LOCATION]
             and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
+            and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LONGITUDE] is not None
         ):
             location = self._status[DEVICE_LOCATION]
             # Stored before it is announced: this runs off the event loop, so

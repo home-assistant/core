@@ -122,3 +122,18 @@ DEVICE_WITHOUT_LOCATION_OR_BATTERY = {
     "lowPowerMode": False,
     "location": None,
 }
+
+# A fix carrying only half of the coordinates is no location at all.
+DEVICE_WITH_HALF_A_LOCATION = {
+    "id": "device5",
+    "name": "iPad (half a fix)",
+    "deviceStatus": "200",
+    "batteryStatus": "Unknown",
+    "batteryLevel": None,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": {"latitude": 60.2, "longitude": None},
+}
