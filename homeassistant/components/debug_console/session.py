@@ -11,10 +11,11 @@ import secrets
 from typing import Any
 
 from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
-from .const import DATA_CONSOLE_SESSIONS, DOMAIN, SESSION_TIMEOUT
+from .const import DOMAIN, SESSION_TIMEOUT
 from .execution import console_print
 
 # Connections release their session on close, by riding along on the cleanup
@@ -23,6 +24,9 @@ CONSOLE_SUBSCRIPTION_KEY = DOMAIN
 
 # Objects kept alive for the frontend to inspect, oldest are let go first.
 MAX_TRACKED_OBJECTS = 10000
+
+# How long closing the sessions waits for cancelled code to clean up.
+CLOSE_TIMEOUT = 10
 
 
 @dataclass(slots=True)
@@ -53,9 +57,9 @@ class ConsoleSession:
         self.object_ids_by_identity[id(value)] = object_id
 
         if len(self.objects) > MAX_TRACKED_OBJECTS:
-            oldest_id = next(iter(self.objects))
-            oldest = self.objects.pop(oldest_id)
+            oldest = self.objects.pop(next(iter(self.objects)))
             del self.object_ids_by_identity[id(oldest)]
+
         return object_id
 
     def release_objects(self) -> None:
@@ -74,8 +78,10 @@ class ConsoleSession:
         if self.cancel_expiry is not None:
             self.cancel_expiry()
             self.cancel_expiry = None
+
         for connection in self.connections:
             connection.subscriptions.pop(self.subscription_key, None)
+
         self.connections.clear()
         self.release_objects()
 
@@ -96,13 +102,22 @@ class ConsoleSession:
             execution.cancel()
 
 
+type ConsoleSessions = dict[tuple[str, str], ConsoleSession]
+type DebugConsoleConfigEntry = ConfigEntry[ConsoleSessions]
+
+
 @callback
 def async_get_session(
     hass: HomeAssistant, connection: ActiveConnection, session_id: str
 ) -> ConsoleSession:
-    """Return a console session of the user, creating it when needed."""
-    sessions = hass.data.setdefault(DATA_CONSOLE_SESSIONS, {})
+    """Return a console session of the user, creating it when needed.
+
+    Only called while the console is enabled, so its config entry is loaded.
+    """
+    entry: DebugConsoleConfigEntry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
+    sessions = entry.runtime_data
     key = (connection.user.id, session_id)
+
     if (session := sessions.get(key)) is None:
         session = sessions[key] = ConsoleSession(
             session_id=session_id,
@@ -121,31 +136,40 @@ def async_get_session(
     if connection not in session.connections:
         session.connections.add(connection)
         connection.subscriptions[session.subscription_key] = partial(
-            _async_release_session, hass, key, session, connection
+            _async_release_session, hass, sessions, key, session, connection
         )
+
     return session
 
 
-@callback
-def async_drop_sessions(hass: HomeAssistant) -> None:
-    """Drop all sessions, releasing everything they keep alive."""
-    for session in hass.data.pop(DATA_CONSOLE_SESSIONS, {}).values():
+async def async_close_sessions(sessions: ConsoleSessions) -> None:
+    """Close all sessions, and give code they still run a moment to clean up."""
+    executions = [
+        execution for session in sessions.values() for execution in session.executions
+    ]
+
+    for session in sessions.values():
         session.async_close()
+
+    sessions.clear()
+
+    if executions:
+        await asyncio.wait(executions, timeout=CLOSE_TIMEOUT)
 
 
 @callback
 def _async_release_session(
     hass: HomeAssistant,
+    sessions: ConsoleSessions,
     key: tuple[str, str],
     session: ConsoleSession,
     connection: ActiveConnection,
 ) -> None:
-    """Release a session, expiring it a while after its last connection closed."""
-    sessions = hass.data.get(DATA_CONSOLE_SESSIONS, {})
-    if sessions.get(key) is not session:
-        # Dropped when the console got disabled, maybe replaced since.
-        return
+    """Release a session, expiring it a while after its last connection closed.
 
+    Closing a session removes this from its connections, so this only runs for
+    sessions that are still in use.
+    """
     session.connections.discard(connection)
     if session.connections:
         return
@@ -153,10 +177,7 @@ def _async_release_session(
     @callback
     def _async_expire(_now: datetime) -> None:
         session.cancel_expiry = None
-        if sessions.get(key) is session:
-            del sessions[key]
+        del sessions[key]
         session.async_close()
 
-    if session.cancel_expiry is not None:
-        session.cancel_expiry()
     session.cancel_expiry = async_call_later(hass, SESSION_TIMEOUT, _async_expire)

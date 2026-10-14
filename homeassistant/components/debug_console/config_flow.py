@@ -25,6 +25,7 @@ class DebugConsoleConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_ACCEPT_RISKS]:
                 return self.async_create_entry(title="Debug console", data={})
+
             errors[CONF_ACCEPT_RISKS] = "risks_not_accepted"
 
         return self.async_show_form(

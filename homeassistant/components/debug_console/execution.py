@@ -6,11 +6,14 @@ import codeop
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 import inspect
+import io
 import traceback
 from types import CodeType
 from typing import TYPE_CHECKING, Any
 
-from .inspection import MAX_STRING_LENGTH, describe
+from homeassistant.core import HomeAssistant
+
+from .inspection import MAX_STRING_LENGTH, USER_CODE_ERRORS, describe
 
 if TYPE_CHECKING:
     from .session import ConsoleSession
@@ -52,7 +55,9 @@ def is_incomplete(code: str) -> bool:
     return last_line[:1].isspace() and bool(last_line.strip())
 
 
-async def async_execute(session: ConsoleSession, code: str) -> dict[str, Any]:
+async def async_execute(
+    hass: HomeAssistant, session: ConsoleSession, code: str
+) -> dict[str, Any]:
     """Execute code in a session, returning what it printed and its result."""
     # Each execution runs in its own task, so this does not leak into others.
     capture = _OutputCapture()
@@ -61,59 +66,86 @@ async def async_execute(session: ConsoleSession, code: str) -> dict[str, Any]:
     execution = asyncio.current_task()
     assert execution is not None
     session.executions.add(execution)
-    output: dict[str, Any] = {}
+
+    error: BaseException | None = None
+    description: dict[str, Any] | None = None
     try:
         result = await _async_execute(code, session.namespace)
-    # Also the exceptions that stop Python, like exit() raises; they must not
-    # reach the event loop, which would stop Home Assistant.
-    except (Exception, SystemExit, KeyboardInterrupt) as err:  # noqa: BLE001
-        result = None
-        output["error"] = _format_exception(err)
+        if result is not None:
+            session.namespace["_"] = result
+            # Describing runs code of the result too, like its __repr__.
+            description = describe(session, result)
+    except asyncio.CancelledError as err:
+        # Raised by the code itself; when the execution got cancelled, it stops.
+        if execution.cancelling():
+            raise
+
+        error = err
+    except USER_CODE_ERRORS as err:
+        error = err
     finally:
         session.executions.discard(execution)
         capture.closed = True
         _OUTPUT_CAPTURE.reset(capture_token)
-        output["logs"] = capture.logs
-        if capture.truncated:
-            output["logs_truncated"] = True
-        # Tasks started by the code keep the capture; not the output in it.
+
+        # Tasks started by the code keep the capture, not the output in it.
+        logs = capture.logs
         capture.logs = []
 
-    if "error" in output:
+    output: dict[str, Any] = {"logs": logs}
+    if capture.truncated:
+        output["logs_truncated"] = True
+
+    if error is not None:
+        # Formatting reads the source of each frame from disk.
+        output["error"] = await hass.async_add_executor_job(_format_exception, error)
         return output
 
-    if result is None:
-        return {**output, "result": None}
-
-    session.namespace["_"] = result
-    return {**output, "result": describe(session, result)}
+    return {**output, "result": description}
 
 
 def console_print(
-    session: ConsoleSession, *values: Any, file: Any = None, **kwargs: Any
+    session: ConsoleSession,
+    *values: Any,
+    sep: str | None = " ",
+    end: str | None = "\n",
+    file: Any = None,
+    flush: bool = False,
 ) -> None:
-    """Log values to the console, keeping objects inspectable like console.log."""
+    """Log values to the console, keeping objects inspectable like console.log.
+
+    With another separator or line end, the line is text, formatted by print.
+    """
     capture = _OUTPUT_CAPTURE.get(None)
     if file is not None or capture is None or capture.closed:
-        print(*values, file=file, **kwargs)
+        print(*values, sep=sep, end=end, file=file, flush=flush)
         return
 
     if len(capture.logs) >= MAX_LOG_LINES:
         capture.truncated = True
         return
 
+    if sep not in (" ", None) or end not in ("\n", None):
+        text = io.StringIO()
+        print(*values, sep=sep, end=end, file=text)
+        capture.logs.append([_describe_text(text.getvalue().removesuffix("\n"))])
+        return
+
     capture.logs.append(
         [
-            {
-                "type": "text",
-                "value": value[:MAX_STRING_LENGTH],
-                "truncated": len(value) > MAX_STRING_LENGTH,
-            }
-            if isinstance(value, str)
-            else describe(session, value)
+            _describe_text(value) if type(value) is str else describe(session, value)
             for value in values
         ]
     )
+
+
+def _describe_text(text: str) -> dict[str, Any]:
+    """Describe printed text, which shows as is."""
+    return {
+        "type": "text",
+        "value": text[:MAX_STRING_LENGTH],
+        "truncated": len(text) > MAX_STRING_LENGTH,
+    }
 
 
 async def _async_execute(code: str, namespace: dict[str, Any]) -> Any:
@@ -149,6 +181,7 @@ async def _async_run(code_object: CodeType, namespace: dict[str, Any]) -> Any:
     result = eval(code_object, namespace)  # noqa: S307
     if code_object.co_flags & inspect.CO_COROUTINE:
         result = await result
+
     return result
 
 

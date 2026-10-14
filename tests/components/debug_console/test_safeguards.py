@@ -15,7 +15,9 @@ from homeassistant.components.debug_console.const import (
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, MockUser
+from . import CONSOLE_COMMANDS
+
+from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 SESSION_ID = "test-session"
@@ -137,6 +139,13 @@ async def test_acceptance_of_removed_users_forgotten(
 
     assert set(entry.data[CONF_WARNING_ACCEPTED]) == {hass_admin_user.id}
 
+    # Removing a user who never accepted the warning changes nothing.
+    never_accepted = await hass.auth.async_create_user("Never accepted")
+    await hass.auth.async_remove_user(never_accepted)
+    await hass.async_block_till_done()
+
+    assert set(entry.data[CONF_WARNING_ACCEPTED]) == {hass_admin_user.id}
+
 
 @pytest.mark.parametrize(
     ("development_version", "logged"),
@@ -201,3 +210,27 @@ async def test_logging_property_evaluation(
     assert f"{hass_admin_user.name} evaluated Thing.state in the debug console" in (
         caplog.text
     )
+
+
+@pytest.mark.usefixtures("release_version")
+@pytest.mark.parametrize("command", CONSOLE_COMMANDS)
+async def test_warning_required_per_user(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_ws_client: WebSocketGenerator,
+    command: dict[str, Any],
+) -> None:
+    """Test every console command needs each user to accept the warning."""
+    other_user = await hass.auth.async_create_user(
+        "Other admin", group_ids=["system-admin"]
+    )
+    refresh_token = await hass.auth.async_create_refresh_token(other_user, CLIENT_ID)
+    other_client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+    await _async_send(other_client, {"type": "debug_console/warning/accept"})
+
+    msg = await _async_send(websocket_client, command)
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "warning_not_accepted"

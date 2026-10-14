@@ -40,6 +40,9 @@ _KEYWORD_ARGUMENT = re.compile(r"\s*(?P<name>\w+)\s*=(?!=)")
 
 _MISSING = object()
 
+# Default values shown in signatures; others could bring their own __repr__.
+_SAFE_DEFAULT_TYPES = (type(None), bool, int, float, complex, str, bytes)
+
 # Callables whose signature inspect can read without running user code.
 _SIGNATURE_TYPES = (
     type,
@@ -82,7 +85,7 @@ async def async_complete(
     """
     line = code.rpartition("\n")[2]
 
-    # Finding modules scans the disk and may import packages, so not in the loop.
+    # Finding modules scans the disk, so not in the event loop.
     if match := _IMPORT_MODULE.match(line) or _FROM_MODULE.match(line):
         token = match["module"]
         matches = await hass.async_add_executor_job(_complete_module, token)
@@ -129,6 +132,7 @@ def _find_open_call(code: str) -> _OpenCall | None:
     brackets: list[tuple[int, list[int]]] = []
     quote: str | None = None
     index = 0
+
     while index < len(code):
         char = code[index]
         if quote is not None:
@@ -138,11 +142,8 @@ def _find_open_call(code: str) -> _OpenCall | None:
                 index += len(quote) - 1
                 quote = None
         elif char in "\"'":
-            quote = (
-                code[index : index + 3]
-                if code[index : index + 3] in ('"""', "'''")
-                else char
-            )
+            three = code[index : index + 3]
+            quote = three if three in ('"""', "'''") else char
             index += len(quote) - 1
         elif char == "#":
             if (index := code.find("\n", index)) == -1:
@@ -153,10 +154,12 @@ def _find_open_call(code: str) -> _OpenCall | None:
             brackets.pop()
         elif char == "," and brackets:
             brackets[-1][1].append(index)
+
         index += 1
 
     if not brackets or code[(start := brackets[-1][0])] != "(":
         return None
+
     if (callee := _CALLEE.search(code, 0, start)) is None:
         return None
 
@@ -170,6 +173,7 @@ def _find_open_call(code: str) -> _OpenCall | None:
 def _resolve(namespace: dict[str, Any], expression: str) -> Any:
     """Resolve a dotted name without running any code, or return _MISSING."""
     first, *attributes = expression.split(".")
+
     if first in namespace:
         value = namespace[first]
     elif hasattr(builtins, first):
@@ -195,6 +199,7 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
             value = static.__get__(value, owner)  # pylint: disable=unnecessary-dunder-call
         else:
             return _MISSING
+
     return value
 
 
@@ -208,6 +213,7 @@ def _signature(namespace: dict[str, Any], callee: str) -> inspect.Signature | No
         target, _SIGNATURE_TYPES
     ):
         return None
+
     try:
         # As strings, as evaluating annotations can fail or import things.
         return inspect.signature(target, annotation_format=Format.STRING)
@@ -225,12 +231,22 @@ def _format_parameter(parameter: inspect.Parameter) -> str:
 
     if parameter.annotation is not inspect.Parameter.empty:
         text = f"{text}: {parameter.annotation}"
+
     if parameter.default is not inspect.Parameter.empty:
         separator = (
             " = " if parameter.annotation is not inspect.Parameter.empty else "="
         )
-        text = f"{text}{separator}{preview(parameter.default)}"
+        text = f"{text}{separator}{_format_default(parameter.default)}"
+
     return text
+
+
+def _format_default(value: Any) -> str:
+    """Format a default value, without running a __repr__ of the user."""
+    if type(value) in _SAFE_DEFAULT_TYPES:
+        return preview(value)
+
+    return "…"
 
 
 def _active_parameter(
@@ -256,6 +272,7 @@ def _active_parameter(
     ]
     if (index := len(arguments) - 1) < len(positional):
         return positional[index]
+
     return next(
         (
             parameter
@@ -277,13 +294,30 @@ def _complete_keyword_arguments(
     ):
         return []
 
-    return [
-        f"{parameter.name}="
-        for parameter in signature.parameters.values()
-        if parameter.kind
-        in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
-        and parameter.name.startswith(token)
-    ]
+    # Leave out what the arguments before this one already fill.
+    given = call.arguments[:-1]
+    keywords = {
+        match["name"]
+        for argument in given
+        if (match := _KEYWORD_ARGUMENT.match(argument))
+    }
+    positional = len(given) - len(keywords)
+
+    names: list[str] = []
+    for index, parameter in enumerate(signature.parameters.values()):
+        if (
+            parameter.kind
+            in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+            and parameter.name.startswith(token)
+            and parameter.name not in keywords
+            and not (
+                parameter.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD
+                and index < positional
+            )
+        ):
+            names.append(f"{parameter.name}=")
+
+    return names
 
 
 def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
@@ -302,11 +336,13 @@ def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
     for name in sorted(_static_names(value)):
         if not _is_completion(name, prefix):
             continue
+
         static = inspect.getattr_static(value, name, None)
         call = "(" if callable(static) or isinstance(static, classmethod) else ""
         matches.append(f"{expression}.{name}{call}")
         if len(matches) >= MAX_COMPLETIONS:
             break
+
     return matches
 
 
@@ -315,6 +351,7 @@ def _static_names(value: Any) -> set[str]:
     names = set(instance_dict(value) or {})
     for cls in inspect.getmro(value if isinstance(value, type) else type(value)):
         names.update(vars(cls))
+
     return names
 
 
@@ -355,6 +392,7 @@ def _complete_module_attribute(module_name: str, prefix: str) -> list[str]:
     names: set[str] = set()
     if (module := sys.modules.get(module_name)) is not None:
         names.update(instance_dict(module) or {})
+
     if (locations := _package_locations(module_name)) is not None:
         names.update(submodule.name for submodule in pkgutil.iter_modules(locations))
 
@@ -375,12 +413,10 @@ def _package_locations(name: str) -> list[str] | None:
     if parent and (search_path := _package_locations(parent)) is None:
         return None
 
-    try:
-        spec = PathFinder.find_spec(name, search_path)
-    except ImportError, ValueError:
-        return None
+    spec = PathFinder.find_spec(name, search_path)
     if spec is None or spec.submodule_search_locations is None:
         return None
+
     return list(spec.submodule_search_locations)
 
 
