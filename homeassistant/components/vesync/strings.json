@@ -163,14 +163,8 @@
     "api_response_error": {
       "message": "Invalid response from the VeSync API"
     },
-    "button_press_failed": {
-      "message": "Pressing the button failed: {error}"
-    },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-    "reset_filter_not_supported": {
-      "message": "This device does not support resetting the filter"
     },
     "server_error": {
       "message": "Server error occurred while connecting to VeSync"

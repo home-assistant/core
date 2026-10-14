@@ -4,9 +4,10 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Final, override
 
-from pyvesync.base_devices import VeSyncBaseDevice
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.const import PurifierFeatures
 from pyvesync.device_container import DeviceContainer
+from pyvesync.utils.errors import VeSyncError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -23,21 +24,12 @@ from .entity import VeSyncBaseEntity
 PARALLEL_UPDATES = 1
 
 
-def _reset_filter(device: VeSyncBaseDevice) -> Awaitable[bool]:
-    """Reset the filter life of a purifier."""
-    if is_purifier(device):
-        return device.reset_filter()
-    raise HomeAssistantError(
-        translation_domain=DOMAIN, translation_key="reset_filter_not_supported"
-    )
-
-
 @dataclass(frozen=True, kw_only=True)
 class VeSyncButtonEntityDescription(ButtonEntityDescription):
     """A class that describes custom button entities."""
 
-    exists_fn: Callable[[VeSyncBaseDevice], bool]
-    press_fn: Callable[[VeSyncBaseDevice], Awaitable[bool]]
+    supported_fn: Callable[[VeSyncPurifier], bool]
+    press_fn: Callable[[VeSyncPurifier], Awaitable[bool]]
 
 
 BUTTON_DESCRIPTIONS: Final[tuple[VeSyncButtonEntityDescription, ...]] = (
@@ -45,12 +37,8 @@ BUTTON_DESCRIPTIONS: Final[tuple[VeSyncButtonEntityDescription, ...]] = (
         key="reset_filter",
         translation_key="reset_filter",
         entity_category=EntityCategory.CONFIG,
-        exists_fn=(
-            lambda device: (
-                is_purifier(device) and PurifierFeatures.RESET_FILTER in device.features
-            )
-        ),
-        press_fn=_reset_filter,
+        supported_fn=lambda device: PurifierFeatures.RESET_FILTER in device.features,
+        press_fn=lambda device: device.reset_filter(),
     ),
 )
 
@@ -66,43 +54,30 @@ async def async_setup_entry(
 
     @callback
     def discover(devices: DeviceContainer) -> None:
-        """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities, coordinator)
+        """Add a button entity for each supported device."""
+        async_add_entities(
+            VeSyncButtonEntity(dev, description, coordinator)
+            for dev in devices
+            if is_purifier(dev)
+            for description in BUTTON_DESCRIPTIONS
+            if description.supported_fn(dev)
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(
-        config_entry.runtime_data.manager.devices,
-        async_add_entities,
-        coordinator,
-    )
+    discover(coordinator.manager.devices)
 
 
-@callback
-def _setup_entities(
-    devices: DeviceContainer,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-    coordinator: VeSyncDataCoordinator,
-) -> None:
-    """Add a button entity for each supported device."""
-    async_add_entities(
-        VeSyncButtonEntity(dev, description, coordinator)
-        for dev in devices
-        for description in BUTTON_DESCRIPTIONS
-        if description.exists_fn(dev)
-    )
-
-
-class VeSyncButtonEntity(ButtonEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
+class VeSyncButtonEntity(ButtonEntity, VeSyncBaseEntity[VeSyncPurifier]):
     """VeSync button entity class."""
 
     entity_description: VeSyncButtonEntityDescription
 
     def __init__(
         self,
-        device: VeSyncBaseDevice,
+        device: VeSyncPurifier,
         description: VeSyncButtonEntityDescription,
         coordinator: VeSyncDataCoordinator,
     ) -> None:
@@ -114,18 +89,15 @@ class VeSyncButtonEntity(ButtonEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        if not await self.entity_description.press_fn(self.device):
-            if self.device.last_response:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="button_press_failed",
-                    translation_placeholders={
-                        "error": self.device.last_response.message
-                    },
-                )
+        try:
+            success = await self.entity_description.press_fn(self.device)
+        except VeSyncError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_response_error"
+            ) from err
+        if not success:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="api_response_error"
             )
-
         # The filter life sensor reads the new value from the next poll.
         await self.coordinator.async_request_refresh()

@@ -1,12 +1,12 @@
 """Tests for the button module."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pyvesync.devices.vesyncpurifier import VeSyncAirBypass
-from pyvesync.utils.errors import ResponseInfo
+from pyvesync.utils.errors import VeSyncAPIResponseError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -92,22 +92,19 @@ async def test_reset_filter(
 
 
 @pytest.mark.parametrize(
-    ("last_response", "message"),
+    "reset_filter",
     [
-        (
-            ResponseInfo(name="api_error", error_type="api_error", message="API error"),
-            "Pressing the button failed: API error",
-        ),
-        (None, "Invalid response from the VeSync API"),
+        {"return_value": False},
+        {"side_effect": VeSyncAPIResponseError("API error")},
     ],
+    ids=["returns_false", "raises"],
 )
 async def test_reset_filter_raises_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
-    last_response: ResponseInfo | None,
-    message: str,
+    reset_filter: dict[str, Any],
 ) -> None:
     """Test a failed filter reset raises HomeAssistantError and skips the refresh."""
 
@@ -116,16 +113,13 @@ async def test_reset_filter_raises_error(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async def failed_reset(device: VeSyncAirBypass) -> bool:
-        """Fail the way pyvesync does, leaving the API response on the device."""
-        device.last_response = last_response
-        return False
-
     with (
-        patch(RESET_FILTER, autospec=True, side_effect=failed_reset) as method_mock,
+        patch(RESET_FILTER, **reset_filter) as method_mock,
         patch(UPDATE_ALL_DEVICES) as update_mock,
     ):
-        with pytest.raises(HomeAssistantError, match=message):
+        with pytest.raises(
+            HomeAssistantError, match="Invalid response from the VeSync API"
+        ):
             await hass.services.async_call(
                 BUTTON_DOMAIN,
                 SERVICE_PRESS,
