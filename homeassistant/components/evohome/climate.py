@@ -30,7 +30,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -38,6 +37,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
+from .services import as_snake_case, validate_set_system_mode_params
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +120,19 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
+    ) -> None:
+        """Set the system mode; only supported by controllers."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": EvoService.SET_SYSTEM_MODE},
+        )
 
     async def async_set_zone_override(
         self, setpoint: float, duration: timedelta | None = None
@@ -340,41 +353,29 @@ class EvoController(EvoClimateEntity):
         )
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
+    ) -> None:
+        """Set the system mode, either indefinitely or for a duration/period."""
 
-        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
+        data: dict[str, Any] = {SZ_MODE: mode}
+        if duration is not None:
+            data[SZ_DURATION] = duration
+        if period is not None:
+            data[SZ_PERIOD] = period
+        validate_set_system_mode_params(self._evo_device, data)
 
-    async def process_signal(self, payload: dict | None = None) -> None:
-        """Process any signals."""
-
-        if payload is None:
-            raise NotImplementedError
-        if payload["unique_id"] != self._attr_unique_id:
-            return
-        await self.async_tcs_svc_request(payload["service"], payload["data"])
-
-    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (system mode) for a controller.
-
-        Data validation must be performed upstream in the service handler, before the
-        dispatcher call, so a ServiceValidationError can be seen, if raised.
-        """
-
-        mode = data[SZ_MODE]  # service is EvoService.SET_SYSTEM_MODE
-
-        if SZ_PERIOD in data:
-            until = dt_util.start_of_local_day()
-            until += data[SZ_PERIOD]
-
-        elif SZ_DURATION in data:
-            until = dt_util.now() + data[SZ_DURATION]
-
+        if period is not None:
+            until = dt_util.start_of_local_day() + period
+        elif duration is not None:
+            until = dt_util.now() + duration
         else:
             until = None
 
-        await self._set_tcs_mode(mode, until=until)
+        await self._set_tcs_mode(EvoSystemMode(as_snake_case(mode)), until=until)
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None

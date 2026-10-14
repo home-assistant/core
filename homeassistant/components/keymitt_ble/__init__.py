@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> None:
     """Set up this integration using UI."""
     token: str = entry.data[CONF_ACCESS_TOKEN]
     bdaddr: str = entry.data[CONF_ADDRESS]
@@ -45,9 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(coordinator.async_start())
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

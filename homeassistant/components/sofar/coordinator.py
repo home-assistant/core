@@ -72,7 +72,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._async_observed_poll()
-            if not report.failed and not report.updated:
+            if self.device.unrecognized:
                 raise ConfigEntryError(
                     translation_domain=DOMAIN,
                     translation_key="unrecognized_inverter_model",
@@ -85,8 +85,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                     "all components failed to refresh", list(report.failed.values())
                 )
         except ModbusError as err:
-            # ModbusConnectionError (dead link) and ModbusTimeoutError reach
-            # here; per-block failures once alive land in report.failed instead.
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
@@ -96,13 +94,12 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     async def _async_observed_poll(self) -> UpdateReport:
         """Poll once; a timeout either attempt hit must reach the tuner."""
-        attempted: dict[str, ModbusError] = {}
         try:
             report = await self._poll()
             attempted = dict(report.failed)
             report = await self._retry_failed(report)
         except ModbusError as err:
-            self._tuner.observe_failure(_timed_out(attempted) or err)
+            self._tuner.observe_failure(err)
             raise
         self._tuner.observe(
             UpdateReport(report.updated, _both_attempts(attempted, report.failed))
@@ -142,13 +139,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         return report
 
 
-def _timed_out(failures: Mapping[str, ModbusError]) -> ModbusTimeoutError | None:
-    """Whichever of these failures timed out, if any of them did."""
-    return next(
-        (err for err in failures.values() if isinstance(err, ModbusTimeoutError)), None
-    )
-
-
 def _both_attempts(
     attempted: Mapping[str, ModbusError], retried: Mapping[str, ModbusError]
 ) -> dict[str, ModbusError]:
@@ -174,17 +164,7 @@ class SofarRuntimeData:
     @property
     def served_components(self) -> frozenset[str]:
         """Component names this inverter polls, answered or not."""
-        device = self.readings.device
-        return frozenset(device.expected_readings_components) | frozenset(
-            device.expected_settings_components
-        )
-
-    def pack_is_wired(self, number: int) -> bool:
-        """Whether a pack has answered, so it physically exists."""
-        string = self.readings.device.battery_string(number)
-        if string.component_name not in self.served_components:
-            return False
-        return bool(string.voltage)
+        return self.readings.device.expected_components
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""

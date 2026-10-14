@@ -339,6 +339,7 @@ async def test_subentry_options_thinking_budget_more_than_max(
 @pytest.mark.parametrize(
     "model",
     [
+        pytest.param("claude-sonnet-5-5", id="sonnet_5_5"),
         pytest.param("claude-opus-5-5", id="opus_5_5"),
         pytest.param("claude-fable-5", id="fable_5"),
         pytest.param("claude-fable-5-1", id="fable_5_1"),
@@ -358,7 +359,7 @@ async def test_creating_subentry_with_required_thinking(
     model: str,
     subentry_type: str,
 ) -> None:
-    """Test always-adaptive models cannot be configured without thinking."""
+    """Test models that reject disabled thinking cannot be configured with none."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, subentry_type),
         context={"source": config_entries.SOURCE_USER},
@@ -390,6 +391,7 @@ async def test_creating_subentry_with_required_thinking(
 @pytest.mark.parametrize(
     "model",
     [
+        pytest.param("claude-haiku-5-5", id="haiku_5_5"),
         pytest.param("claude-opus-4-6", id="opus_4_6"),
         pytest.param("claude-opus-4-7", id="opus_4_7"),
         pytest.param("claude-opus-4-8", id="opus_4_8"),
@@ -398,14 +400,36 @@ async def test_creating_subentry_with_required_thinking(
         pytest.param("claude-sonnet-5", id="sonnet_5"),
     ],
 )
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
 @pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_with_optional_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     model: str,
+    subentry_type: str,
 ) -> None:
-    """Test thinking can still be disabled on supported adaptive models."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    """Test supported adaptive models preserve disabled thinking on reconfiguration."""
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "none",
+        },
+    )
+    await hass.async_block_till_done()
+
     result = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
@@ -419,6 +443,10 @@ async def test_subentry_with_optional_thinking(
     assert (
         "none" in (result["data_schema"].schema[CONF_THINKING_EFFORT].config["options"])
     )
+    effort_key = next(
+        key for key in result["data_schema"].schema if key == CONF_THINKING_EFFORT
+    )
+    assert effort_key.description["suggested_value"] == "none"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_THINKING_EFFORT: "none"}
@@ -434,6 +462,7 @@ async def test_subentry_with_optional_thinking(
         pytest.param("claude-opus-5-5", id="opus_5_5"),
         pytest.param("claude-fable-5", id="fable_5"),
         pytest.param("claude-fable-5-1", id="fable_5_1"),
+        pytest.param("claude-sonnet-5-5", id="sonnet_5_5"),
     ],
 )
 @pytest.mark.parametrize(
@@ -462,7 +491,7 @@ async def test_reconfigure_subentry_with_required_thinking(
     user_input: dict[str, str],
     expected_effort: str,
 ) -> None:
-    """Test migrating to an always-adaptive model clears disabled thinking."""
+    """Test migrating to a model that rejects disabled thinking clears none."""
     subentry = next(
         subentry
         for subentry in mock_config_entry.subentries.values()
