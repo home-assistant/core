@@ -37,6 +37,7 @@ class DummyDevice:
         device_type: DeviceType,
         *,
         attributes: dict | None = None,
+        capabilities: dict | None = None,
     ) -> None:
         """Initialize fake device."""
         self.device_type = device_type
@@ -46,8 +47,10 @@ class DummyDevice:
         self.subtype = TEST_SUBTYPE
         self.available = False
         self.attributes = attributes or {}
+        self.capabilities: dict[str, Any] = capabilities or {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
+        self.is_filter_reset_supported = False
         self.temperature_step = 1
         self.raw_hvac_modes = ["off", "auto", "cool", "dry", "heat", "fan_only"]
         self.raw_fan_modes = ["low", "medium", "high", "auto"]
@@ -104,6 +107,10 @@ class DummyDevice:
     def set_raw_hvac_mode(self, hvac_mode: str, zone: int | None = None) -> None:
         """Record set hvac mode call."""
         self.calls.append(("set_raw_hvac_mode", hvac_mode, zone))
+
+    def reset_filter(self) -> None:
+        """Record filter reset call."""
+        self.calls.append(("reset_filter",))
 
     def start_work(self) -> None:
         """Record start_work call."""

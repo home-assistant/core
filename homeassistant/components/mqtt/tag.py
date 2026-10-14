@@ -5,7 +5,7 @@ import functools
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
@@ -44,11 +44,11 @@ TAG = "tag"
 
 DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Required(CONF_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Required(CONF_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 
@@ -132,7 +132,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         # Update tag scanner
         try:
             config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             async_handle_schema_error(discovery_data, err)
             return
         self._config = config

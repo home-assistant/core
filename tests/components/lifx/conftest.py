@@ -1,13 +1,20 @@
 """Tests for the lifx integration."""
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from lifx import Conductor, Light
 import pytest
 
-from homeassistant.components.lifx import config_flow, coordinator, util
+from homeassistant.components.lifx import manager as lifx_manager
 
 from . import _patch_discovery
+from .helpers import create_mock_light
+
+
+@pytest.fixture
+def mock_light() -> Light:
+    """Return a deterministic lifx-async light."""
+    return create_mock_light()
 
 
 @pytest.fixture
@@ -18,38 +25,16 @@ def mock_discovery():
 
 
 @pytest.fixture
-def mock_effect_conductor():
+def mock_effect_conductor() -> MagicMock:
     """Mock the effect conductor."""
+    mock_conductor = MagicMock(spec=Conductor)
+    mock_conductor.start = AsyncMock()
+    mock_conductor.stop = AsyncMock()
+    # No software effect is running unless a test says otherwise
+    mock_conductor.effect = MagicMock(return_value=None)
 
-    class MockConductor:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            """Mock the conductor."""
-            self.start = AsyncMock()
-            self.stop = AsyncMock()
-
-        def effect(self, bulb):
-            """Mock effect."""
-            return MagicMock()
-
-    mock_conductor = MockConductor()
-
-    with patch(
-        "homeassistant.components.lifx.manager.aiolifx_effects.Conductor",
-        return_value=mock_conductor,
-    ):
+    with patch.object(lifx_manager, "Conductor", return_value=mock_conductor):
         yield mock_conductor
-
-
-@pytest.fixture(autouse=True)
-def lifx_no_wait_for_timeouts():
-    """Avoid waiting for timeouts in tests."""
-    with (
-        patch.object(util, "OVERALL_TIMEOUT", 0),
-        patch.object(config_flow, "OVERALL_TIMEOUT", 0),
-        patch.object(coordinator, "OVERALL_TIMEOUT", 0),
-        patch.object(coordinator, "MAX_UPDATE_TIME", 0),
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)

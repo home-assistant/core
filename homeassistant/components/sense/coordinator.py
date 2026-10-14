@@ -72,7 +72,6 @@ class SenseTrendCoordinator(SenseCoordinator):
         try:
             await self._gateway.update_trend_data()
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
-            _LOGGER.warning("Sense authentication expired")
             raise ConfigEntryAuthFailed(err) from err
         except SENSE_CONNECT_EXCEPTIONS as err:
             raise UpdateFailed(err) from err

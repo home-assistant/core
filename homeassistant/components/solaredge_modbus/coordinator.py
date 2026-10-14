@@ -1,8 +1,7 @@
 """DataUpdateCoordinators for the SolarEdge Modbus integration."""
 
-import asyncio
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final, override
 
@@ -169,16 +168,17 @@ class SolarEdgeModbusRuntimeData:
     settings: SolarEdgeModbusDataUpdateCoordinator
     device_info: DeviceInfo
     inverter_device_id: str
+
     # What was attached when this entry was built, to notice a swap: a meter
     # replaced by another one leaves the count alone.
     attachments: frozenset[str]
 
-    # The export mode and its flags share one register, which the library
-    # changes by taking its cached value, flipping bits and writing it back.
-    # Every platform has its own parallel-update semaphore, so a select and a
-    # switch can reach that read-modify-write at once and one loses the other's
-    # change; every write goes through this lock instead.
-    write_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # Blocks that answered nothing while setting up and nothing again on the
+    # first check after it. Asking costs a full timeout each, which on a shared
+    # link is time every other inverter spends waiting, so they are taken for
+    # absent until the entry loads again. Empty until that first check, so a
+    # block that was merely busy at setup still gets picked up.
+    settled_silent_blocks: frozenset[str] = frozenset()
 
     @property
     def solaredge(self) -> SolarEdge:

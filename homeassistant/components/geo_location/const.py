@@ -1,8 +1,11 @@
 """Constants for the geo_location component."""
 
 from enum import StrEnum
+from typing import Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+
+DOMAIN: Final = "geo_location"
 
 
 class GeolocationEntityStateAttribute(

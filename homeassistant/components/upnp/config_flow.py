@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, cast, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
@@ -157,9 +157,9 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._discoveries:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("unique_id"): vol.In(
+                probatio.Required("unique_id"): probatio.In(
                     {
                         discovery.ssdp_usn: _friendly_name_from_discovery(discovery)
                         for discovery in self._discoveries.values()
@@ -318,9 +318,9 @@ class UpnpOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONFIG_ENTRY_FORCE_POLL,
                     default=self.config_entry.options.get(
                         CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL

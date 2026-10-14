@@ -9,8 +9,8 @@ from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from onedrive_personal_sdk.exceptions import OneDriveException
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.onedrive.const import CONF_DELETE_PERMANENTLY, DOMAIN
 from homeassistant.components.onedrive.services import (
@@ -706,7 +706,7 @@ async def test_delete_empty_destination_path(
     """Test delete service raises when destination_path is an empty list."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,

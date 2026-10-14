@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_parameters_openapi
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'include_traceback': dict({
+        'default': False,
+        'description': 'Whether to include full Python exception stack traces in the returned entries (default: false).',
+        'type': 'boolean',
+      }),
+      'level': dict({
+        'description': "Filter by log level. Allowed values: 'error', 'warning', 'critical'.",
+        'enum': list([
+          'error',
+          'warning',
+          'critical',
+        ]),
+        'format': 'lower',
+        'type': 'string',
+      }),
+      'limit': dict({
+        'default': 25,
+        'description': 'Maximum number of log entries to return (default: 25, max: 50).',
+        'maximum': 50,
+        'minimum': 1,
+        'type': 'integer',
+      }),
+      'logger': dict({
+        'description': "Filter by integration domain or logger name (case-insensitive substring match, e.g. 'zwave_js', 'hue', 'automation').",
+        'type': 'string',
+      }),
+    }),
+    'type': 'object',
+  })
+# ---
