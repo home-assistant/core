@@ -134,7 +134,9 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
 
 
 SERVICE_START_ZONE_SCHEMA: VolDictType = {
-    vol.Optional(CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int
+    probatio.Optional(
+        CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
+    ): cv.positive_int
 }
 
 
