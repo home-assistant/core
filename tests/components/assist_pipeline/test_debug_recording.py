@@ -32,8 +32,18 @@ STT = Path("satellite", "Home Assistant", "1", "01_stt-stt.test.wav")
 OTHER_RUN_STT = Path("Home Assistant", "2", "01_stt-stt.test.wav")
 OTHER_FILE = Path("notes.txt")
 OTHER_WAV = Path("sounds", "01_doorbell.wav")
+# Numbered audio in a numeric directory, like a shared media directory has.
+NUMBERED_WAV = Path("music", "1999", "01_intro.wav")
 EMPTY_DIR = Path("empty")
-KEPT_FILES = [EMPTY_DIR, OTHER_FILE, OTHER_WAV.parent, OTHER_WAV]
+KEPT_FILES = [
+    EMPTY_DIR,
+    NUMBERED_WAV.parent.parent,
+    NUMBERED_WAV.parent,
+    NUMBERED_WAV,
+    OTHER_FILE,
+    OTHER_WAV.parent,
+    OTHER_WAV,
+]
 
 
 def _write_recordings(recording_dir: Path, days_old: int) -> None:
@@ -47,6 +57,8 @@ def _write_recordings(recording_dir: Path, days_old: int) -> None:
     (recording_dir / OTHER_FILE).write_text("keep")
     (recording_dir / OTHER_WAV).parent.mkdir()
     (recording_dir / OTHER_WAV).write_bytes(b"keep")
+    (recording_dir / NUMBERED_WAV).parent.mkdir(parents=True)
+    (recording_dir / NUMBERED_WAV).write_bytes(b"keep")
     (recording_dir / EMPTY_DIR).mkdir()
 
 

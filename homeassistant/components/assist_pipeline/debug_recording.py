@@ -24,6 +24,13 @@ ISSUE_STILL_ENABLED = "debug_recording_still_enabled"
 MAX_RECORDING_AGE = timedelta(days=7)
 CHECK_INTERVAL = timedelta(days=1)
 
+# Runs write to [<device_id>/]<pipeline_name>/<monotonic_ns>/ below the directory.
+RECORDING_GLOBS = [
+    f"{run_dir}/{name}"
+    for run_dir in ("*/*", "*/*/*")
+    for name in ("00_wake-*.wav", "01_stt-*.wav")
+]
+
 
 class DebugRecordingsData(TypedDict):
     """Stored debug recording directories."""
@@ -34,12 +41,12 @@ class DebugRecordingsData(TypedDict):
 def find_debug_recordings(recording_dir: Path) -> dict[Path, os.stat_result]:
     """Return the WAV files the debug recording thread wrote."""
     recordings: dict[Path, os.stat_result] = {}
-    # Each run writes NN_<stage>-*.wav to its own <monotonic_ns> directory.
-    for recording in recording_dir.rglob("[0-9][0-9]_*.wav"):
-        if not recording.parent.name.isdigit():
-            continue
-        with suppress(FileNotFoundError):
-            recordings[recording] = recording.stat()
+    for pattern in RECORDING_GLOBS:
+        for recording in recording_dir.glob(pattern):
+            if not recording.parent.name.isdigit():
+                continue
+            with suppress(FileNotFoundError):
+                recordings[recording] = recording.stat()
     return recordings
 
 
