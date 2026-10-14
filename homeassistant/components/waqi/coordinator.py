@@ -53,7 +53,10 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
                 self.subentry.data[CONF_STATION_NUMBER]
             )
         except WAQIAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from exc
         except WAQIUnknownStationError as exc:
             ir.async_create_issue(
                 self.hass,
@@ -69,8 +72,16 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
                     "name": self.subentry.title,
                 },
             )
-            raise UpdateFailed(str(exc)) from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="station_not_found",
+                translation_placeholders={"name": self.subentry.title},
+            ) from exc
         except WAQIError as exc:
-            raise UpdateFailed(str(exc)) from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
         ir.async_delete_issue(self.hass, DOMAIN, issue_id)
         return air_quality

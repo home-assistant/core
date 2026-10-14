@@ -101,6 +101,17 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_api_key": {
+      "message": "The API key for the World Air Quality Index is invalid"
+    },
+    "station_not_found": {
+      "message": "The measuring station \"{name}\" can no longer be found by the World Air Quality Index API"
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with the World Air Quality Index API: {error}"
+    }
+  },
   "issues": {
     "station_not_found": {
       "fix_flow": {
