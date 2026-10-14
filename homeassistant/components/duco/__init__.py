@@ -16,7 +16,7 @@ from .coordinator import DucoConfigEntry, DucoCoordinator
 _REMOVED_SENSOR_RE = re.compile(r"_\d+_(box_)?temperature$")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> None:
     """Set up Duco from a config entry."""
     # Clean up stale temperature registry entries so removed entities from the
     # python-duco-connectivity migration do not linger after upgrade.
@@ -52,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> None:
     """Unload a Duco config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

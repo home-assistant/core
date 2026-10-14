@@ -1,0 +1,120 @@
+{
+  "680978332": {
+    "manifest": { "name": "Availability Template" },
+    "description": "Custom Template for checking the availiability of an entity.",
+    "etag_releases": "W/\"783b75ac16ec219af5a6ed7bcf404eb5a6431f395548370e2e06507ee2b91679\"",
+    "etag_repository": "W/\"6bb57b61bd4c9f8c42b272aec9922d5b172d7dddb1194db2f338a7ab1140409a\"",
+    "full_name": "SirGoodenough/Availability-Template",
+    "last_commit": "019c303",
+    "last_updated": "2024-01-10T05:51:36Z",
+    "last_version": "2024.01.01",
+    "stargazers_count": 3,
+    "topics": ["availability", "custom-template", "jinja2-templates"],
+    "last_fetched": 1704874604.838378
+  },
+  "629510143": {
+    "manifest": { "name": "Cheapest Energy Hours" },
+    "description": "Jinja macro to find the cheapest energy prices",
+    "etag_releases": "W/\"4757f53596afe93fe92297c14fd83e3238c9b0151a6fd8c303059de1e75bfe79\"",
+    "etag_repository": "W/\"df3bd0f0f6d9d12df8b716b836d4583320846ad05b94c1c6f2598ef01c73f692\"",
+    "full_name": "TheFes/cheapest-energy-hours",
+    "last_commit": "e689dea",
+    "last_updated": "2024-04-02T09:24:03Z",
+    "last_version": "v5.5.0",
+    "open_issues": 1,
+    "stargazers_count": 32,
+    "topics": ["energy-data", "energy-prices", "jinja", "macro"],
+    "last_fetched": 1712182291.259169
+  },
+  "624674515": {
+    "manifest": { "name": "Easy Time" },
+    "description": "Easy Time calculations for Home Assistant templates",
+    "etag_releases": "W/\"cb5270c4f648e2958b5a46e2b201c340bd69c41076aced8dd815ca8c760930e9\"",
+    "etag_repository": "W/\"f62c55fc627398ee323e8494062f79b3e77a0af75fbdec8de4b69461a675b5c5\"",
+    "full_name": "Petro31/easy-time-jinja",
+    "last_commit": "e2f8844",
+    "last_updated": "2024-03-12T12:42:58Z",
+    "last_version": "v2.0.0.3",
+    "open_issues": 3,
+    "stargazers_count": 52,
+    "topics": [
+      "datetime",
+      "daylight-saving-time",
+      "jinja",
+      "jinja2",
+      "relative-time",
+      "time-calculate"
+    ],
+    "last_fetched": 1711542197.486854
+  },
+  "656746023": {
+    "manifest": { "name": "Auto Sun Blind" },
+    "description": "Automatically control your sun blinds via home assistant based on the position of the sun.",
+    "etag_releases": "W/\"7a02c7c6dc65c3833dd84119f8400cc6477859a7726ad34c28e5a79b3ea5433a\"",
+    "etag_repository": "W/\"bc9d6c11b6b40b4ed8a8b06565d3002e8e4f3c63df570f95d25410bf8f9b0c7b\"",
+    "full_name": "langestefan/auto-sun-blind",
+    "last_commit": "67983ae",
+    "last_updated": "2024-03-04T16:39:22Z",
+    "last_version": "v1.0.0",
+    "open_issues": 2,
+    "stargazers_count": 19,
+    "topics": [
+      "automation",
+      "blueprint",
+      "cover",
+      "energy-management",
+      "solar",
+      "sun",
+      "sunrise-sunset"
+    ],
+    "last_fetched": 1710778574.678547
+  },
+  "694582318": {
+    "manifest": { "name": "Logic Chekr" },
+    "description": "Check a list of entities to see their Boolean state. Jinja Custom Template.",
+    "etag_releases": "W/\"cbb3d2f202523869f70037b73f178801178a8ad7b261bf245102eae8a56fc283\"",
+    "etag_repository": "W/\"e3626cd350c05ea246eae8ef01dc70a3d16c6781f53e4688960b00541aea2a33\"",
+    "full_name": "SirGoodenough/Logic-Chekr",
+    "last_commit": "c7c86c2",
+    "last_updated": "2024-01-10T05:48:44Z",
+    "last_version": "2024.01.01",
+    "stargazers_count": 3,
+    "topics": ["bool", "boolean", "custom-template", "jinja2-templates"],
+    "last_fetched": 1707984919.296444
+  },
+  "624337782": {
+    "manifest": { "name": "Relative Time Plus" },
+    "description": "Relative Time Macro with additional options",
+    "etag_releases": "W/\"89d01f16fcce828a5183adc9eb5662c96ef43c7c5bacca6af553bc64edeb79c0\"",
+    "etag_repository": "W/\"5f869860659c70191399d1012a1d5d4d007cc5f7026fa8c5f4a3bd5772eb7999\"",
+    "full_name": "TheFes/relative-time-plus",
+    "last_commit": "db784b4",
+    "last_updated": "2024-04-04T08:13:53Z",
+    "last_version": "v2.1.0",
+    "stargazers_count": 19,
+    "topics": ["jinja2", "relative-time"],
+    "last_fetched": 1712225592.955387
+  },
+  "724754572": {
+    "manifest": { "name": "Color Multi Tool" },
+    "description": "Toolbox to work with and convert colors rgb, hs, xy, and Color Name. It will also provide random colors in any format, attempt to match your RGB value to an official color, and test if the color is valid (numbers or name).",
+    "etag_releases": "W/\"a33f016bb68fb8f334f7fab3fab4db237db1b0cf7460e3aea566a38b26cf3fec\"",
+    "etag_repository": "W/\"fbe02513690e1f8532742d864919f153cd884a740fe364478cdf60d03e613fb1\"",
+    "full_name": "SirGoodenough/Color-Multi-Tool",
+    "last_commit": "f6968cd",
+    "last_updated": "2024-01-13T00:33:11Z",
+    "last_version": "2024.10.11.01",
+    "stargazers_count": 5,
+    "topics": [
+      "color",
+      "color-name",
+      "converter",
+      "custom-template",
+      "hs",
+      "jinja2-templates",
+      "rgb",
+      "xy"
+    ],
+    "last_fetched": 1710612893.777206
+  }
+}

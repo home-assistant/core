@@ -6,7 +6,6 @@ from typing import cast, override
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
@@ -45,13 +44,7 @@ async def _create_token_manager(
 
     Returns None if the server does not require authentication.
     """
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     if not implementation:
         return None
 
@@ -66,7 +59,7 @@ async def _create_token_manager(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> bool:
+) -> None:
     """Set up Model Context Protocol from a config entry."""
     token_manager = await _create_token_manager(hass, entry)
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
@@ -86,14 +79,11 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True
 
 
 @dataclass(kw_only=True)

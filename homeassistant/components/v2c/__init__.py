@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> None:
     """Set up V2C from a config entry."""
 
     trydan = Trydan(entry.data[CONF_HOST], get_async_client(hass, verify_ssl=False))
@@ -33,9 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

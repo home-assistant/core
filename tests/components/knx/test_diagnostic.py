@@ -70,7 +70,7 @@ async def test_diagnostic_config_error(
     # change this with every library bump
     knx.xknx.version = "0.0.0"
     # the snapshot will contain 'configuration_error' key with
-    # the voluptuous error message
+    # the probatio error message
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot
