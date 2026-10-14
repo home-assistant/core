@@ -332,7 +332,7 @@ async def test_sensors_unavailable_when_api_fails(
     mock_nmbs_client.get_connections.return_value = None
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(connection_id)
     assert state is not None
@@ -358,7 +358,7 @@ async def test_departure_minutes_decrease_with_unchanged_data(
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(connection_id)
     assert state is not None
@@ -383,7 +383,7 @@ async def test_sensors_unavailable_when_api_times_out(
     mock_nmbs_client.get_connections.side_effect = TimeoutError
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(connection_id)
     assert state is not None

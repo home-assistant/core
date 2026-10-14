@@ -1,5 +1,6 @@
 """Data update coordinator for the NMBS integration."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -79,11 +80,11 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
     async def _async_update_data(self) -> NMBSData:
         """Fetch the next connection and liveboard departures."""
         try:
-            connections_response = await self.client.get_connections(
-                self.station_from.id, self.station_to.id
+            connections_response, liveboard_from, liveboard_to = await asyncio.gather(
+                self.client.get_connections(self.station_from.id, self.station_to.id),
+                self.client.get_liveboard(self.station_from.id),
+                self.client.get_liveboard(self.station_to.id),
             )
-            liveboard_from = await self.client.get_liveboard(self.station_from.id)
-            liveboard_to = await self.client.get_liveboard(self.station_to.id)
         except TimeoutError as err:
             raise UpdateFailed(
                 f"Timeout while fetching data from the iRail API: {err}"
