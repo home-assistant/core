@@ -28,6 +28,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    POLLING_INTERVAL,
     advance_time,
     fake_post_request,
     payload_modifier,
@@ -75,11 +76,6 @@ async def test_monitoring_component(
     camera_entity: str,
 ) -> None:
     """Test monitoring on/off component with webhook and action."""
-    fake_post_hits = 0
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
     # Mock data for payload_modifier to simulate camera status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
@@ -89,8 +85,6 @@ async def test_monitoring_component(
 
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
-        nonlocal fake_post_hits
-        fake_post_hits += 1
         callback = partial(
             payload_modifier,
             target_id=mock_state["module_id"],
@@ -146,7 +140,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
+    await advance_time(hass, freezer, POLLING_INTERVAL)
 
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -172,7 +166,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
+    await advance_time(hass, freezer, POLLING_INTERVAL)
 
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
@@ -204,7 +198,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
+    await advance_time(hass, freezer, POLLING_INTERVAL)
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     # Test turn_off services while camera was off (early return, no call to pyatmo)
@@ -244,7 +238,7 @@ async def test_monitoring_component(
     }
 
     # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
+    await advance_time(hass, freezer, POLLING_INTERVAL)
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Test turn_on services while camera was on (early return, no call to pyatmo)
@@ -276,11 +270,6 @@ async def test_monitoring_component_failure(
     camera_entity: str,
 ) -> None:
     """Test monitoring on/off component failure with action."""
-    fake_post_hits = 0
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
     # Mock data for payload_modifier to simulate camera status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
@@ -290,8 +279,6 @@ async def test_monitoring_component_failure(
 
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
-        nonlocal fake_post_hits
-        fake_post_hits += 1
         callback = partial(
             payload_modifier,
             target_id=mock_state["module_id"],
@@ -348,7 +335,7 @@ async def test_monitoring_component_failure(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -689,10 +676,6 @@ async def test_camera_reconnect_webhook(
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
 
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
     # Mock data for payload_modifier to simulate camera status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
@@ -781,7 +764,7 @@ async def test_camera_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -810,7 +793,7 @@ async def test_camera_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
@@ -839,7 +822,7 @@ async def test_camera_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
@@ -881,10 +864,6 @@ async def test_doorbell_reconnect_webhook(
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
 
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
     # Mock data for payload_modifier to simulate doorbell status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
@@ -973,7 +952,7 @@ async def test_doorbell_reconnect_webhook(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
@@ -1254,10 +1233,6 @@ async def test_camera_initial_setup_and_images(
     """Test camera initial state and snapshot retrieval."""
     FAKE_IMG = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
 
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
     # Mock data for payload_modifier to simulate camera status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
@@ -1265,12 +1240,8 @@ async def test_camera_initial_setup_and_images(
         "attributes": {"alim_status": 2},
     }
 
-    fake_post_hits = 0
-
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
-        nonlocal fake_post_hits
-        fake_post_hits += 1
         callback = partial(
             payload_modifier,
             target_id=mock_state["module_id"],
@@ -1323,7 +1294,7 @@ async def test_camera_initial_setup_and_images(
         }
 
         # Trigger some polling cycle to let status change be picked up
-        await advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         # State checks after status change
         assert hass.states.get(camera_entity).state == "idle"
@@ -1369,12 +1340,8 @@ async def test_camera_unhealthy_status_scenarios(
         "attributes": attributes_payload,
     }
 
-    fake_post_hits = 0
-
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
-        nonlocal fake_post_hits
-        fake_post_hits += 1
         callback = partial(
             payload_modifier,
             target_id=mock_state["module_id"],
@@ -1405,9 +1372,7 @@ async def test_camera_unhealthy_status_scenarios(
         await hass.async_block_till_done()
 
         # Advance time to force coordinator poll cycle with mock_state payload
-        await advance_time(
-            hass, freezer, polling_cycles=11, polling_delta=timedelta(seconds=30)
-        )
+        await advance_time(hass, freezer, POLLING_INTERVAL)
 
         # Assert entity reflects target availability state cleanly
         assert hass.states.get(camera_entity).state == "idle"
