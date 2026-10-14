@@ -253,7 +253,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             script_mode=cfg[CONF_MODE],
             max_runs=cfg[CONF_MAX],
             max_exceeded=cfg[CONF_MAX_EXCEEDED],
-            logger=logging.getLogger(f"{__name__}.{key}"),
+            logger=logging.getLogger(f"{__package__}.{key}"),
             variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
