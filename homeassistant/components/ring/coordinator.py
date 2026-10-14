@@ -3,6 +3,7 @@
 from asyncio import TaskGroup
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
@@ -19,15 +20,22 @@ from ring_doorbell.listen import RingEventListener
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     BaseDataUpdateCoordinatorProtocol,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+LISTENER_CHECK_INTERVAL = timedelta(minutes=1)
+LISTENER_MAX_RESTART_DELAY = timedelta(minutes=30)
+LISTENER_RESTART_ISSUE_THRESHOLD = 5
+LISTENER_ISSUE_ID = "event_listener_stopped"
 
 
 @dataclass
@@ -141,11 +149,16 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         self.hass = hass
         self.logger = _LOGGER
         self.ring_api: Ring = ring_api
+        self._listen_credentials_updater = listen_credentials_updater
         self.event_listener = RingEventListener(
             ring_api, listen_credentials, listen_credentials_updater
         )
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._listen_callback_id: int | None = None
+        self._unsub_listener_check: CALLBACK_TYPE | None = None
+        self._failed_restarts = 0
+        self._next_restart: datetime | None = None
+        self._restarting = False
 
         self.config_entry = config_entry
         self.start_timeout = 10
@@ -163,9 +176,13 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         """Cancel any scheduled call, and ignore new runs."""
         if self.event_listener.started:
             await self._async_stop_listen()
+        ir.async_delete_issue(self.hass, DOMAIN, LISTENER_ISSUE_ID)
 
     async def _async_stop_listen(self) -> None:
         self.logger.debug("Stopped ring listener")
+        if self._unsub_listener_check:
+            self._unsub_listener_check()
+            self._unsub_listener_check = None
         await self.event_listener.stop()
         self.logger.debug("Stopped ring listener")
 
@@ -188,6 +205,57 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         self.index_alerts()
         # Update the listeners so they switch from Unavailable to Unknown
         self._async_update_listeners()
+        if self._unsub_listener_check is None and self._listeners:
+            self._unsub_listener_check = async_track_time_interval(
+                self.hass,
+                self._async_check_listener,
+                LISTENER_CHECK_INTERVAL,
+                name="Ring event listener check",
+                cancel_on_shutdown=True,
+            )
+
+    async def _async_check_listener(self, now: datetime) -> None:
+        """Restart the event listener if it has stopped receiving events."""
+        if self.event_listener.started or self._restarting:
+            return
+        if self._next_restart and now < self._next_restart:
+            return
+
+        self.logger.info("Ring event listener is not running, restarting it")
+        # Make the event entities unavailable while restarting.
+        self._async_update_listeners()
+        self._restarting = True
+        try:
+            await self.event_listener.stop()
+            self.event_listener = RingEventListener(
+                self.ring_api,
+                self.config_entry.data.get(CONF_LISTEN_CREDENTIALS),
+                self._listen_credentials_updater,
+            )
+            await self._async_start_listen()
+        finally:
+            self._restarting = False
+
+        if self.event_listener.started:
+            self._failed_restarts = 0
+            self._next_restart = None
+            ir.async_delete_issue(self.hass, DOMAIN, LISTENER_ISSUE_ID)
+            return
+
+        self._failed_restarts += 1
+        self._next_restart = now + min(
+            LISTENER_CHECK_INTERVAL * 2**self._failed_restarts,
+            LISTENER_MAX_RESTART_DELAY,
+        )
+        if self._failed_restarts >= LISTENER_RESTART_ISSUE_THRESHOLD:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                LISTENER_ISSUE_ID,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=LISTENER_ISSUE_ID,
+            )
 
     def _on_event(self, event: RingEvent) -> None:
         self.logger.debug("Ring event received: %s", event)

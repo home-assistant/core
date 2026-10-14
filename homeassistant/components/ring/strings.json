@@ -173,6 +173,10 @@
     "deprecated_entity": {
       "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
       "title": "Detected deprecated {platform} entity usage"
+    },
+    "event_listener_stopped": {
+      "description": "Home Assistant has been unable to restart the connection that receives realtime Ring events, such as doorbell presses and motion. Event entities will be unavailable and automations triggered by them will not run until it reconnects.\n\nHome Assistant keeps retrying in the background. If this persists, check the network connection of your Home Assistant machine, then reload the Ring integration.",
+      "title": "Ring realtime events are not being received"
     }
   }
 }
