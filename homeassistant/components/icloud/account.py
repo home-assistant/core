@@ -582,17 +582,21 @@ class IcloudDevice:
 
     @property
     def location_is_old(self) -> bool:
-        """Return whether the last location fix is considered old."""
-        if self._location is None:
+        """Return whether Apple flagged the reported location fix as old."""
+        # The flag describes the payload Apple just sent, which can differ from
+        # the fix this integration stores.
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
             return False
-        return bool(self._location.get(DEVICE_LOCATION_IS_OLD, False))
+        return bool(location.get(DEVICE_LOCATION_IS_OLD, False))
 
     @property
     def location_is_inaccurate(self) -> bool:
-        """Return whether the last location fix is considered inaccurate."""
-        if self._location is None:
+        """Return whether Apple flagged the reported location fix as inaccurate."""
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
             return False
-        return bool(self._location.get(DEVICE_LOCATION_IS_INACCURATE, False))
+        return bool(location.get(DEVICE_LOCATION_IS_INACCURATE, False))
 
     @property
     def location_type(self) -> str | None:

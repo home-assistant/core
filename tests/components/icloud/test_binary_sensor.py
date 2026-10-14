@@ -268,6 +268,39 @@ async def test_location_binary_sensors_added_when_location_appears(
         )
 
 
+async def test_location_flags_follow_the_reported_fix(
+    hass: HomeAssistant,
+    devices_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    icloud_service: MagicMock,
+    setup_entry: Callable[[Platform], Awaitable[None]],
+) -> None:
+    """Location flags describe the reported fix, not the one kept in storage."""
+    apple_device = icloud_service.devices.add(
+        {**DEVICE, "location": {**LOCATION, "isOld": True}}
+    )
+
+    await setup_entry(Platform.BINARY_SENSOR)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "device1_location_is_old"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    # Apple stops reporting a fix, but the stored one lingers, so the flag it
+    # carried must go out of state rather than be reported indefinitely.
+    apple_device.status()["location"] = None
+    await hass.async_add_executor_job(devices_config_entry.runtime_data.update_devices)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+
 async def test_lost_mode_binary_sensor_tracks_state(
     hass: HomeAssistant,
     devices_config_entry: MockConfigEntry,
