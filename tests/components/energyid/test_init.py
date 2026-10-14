@@ -1037,6 +1037,8 @@ async def test_unload_entry_unexpected_exception(hass: HomeAssistant) -> None:
 
             # Should return False due to exception (line 384)
             assert not result
+            assert entry.state is ConfigEntryState.FAILED_UNLOAD
+            assert entry.reason == "Error while unloading the EnergyID entry"
 
 
 # ============================================================================

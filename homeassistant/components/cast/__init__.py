@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> None:
     """Set up Cast from a config entry."""
     refresh_token = await home_assistant_cast.async_setup_ha_cast(hass, entry)
     entry.runtime_data = CastRuntimeData(
@@ -70,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool
         refresh_token=refresh_token,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 class CastProtocol(Protocol):

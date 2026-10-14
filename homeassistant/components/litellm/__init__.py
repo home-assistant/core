@@ -8,7 +8,7 @@ from .coordinator import LiteLLMConfigEntry, LiteLLMDataUpdateCoordinator
 PLATFORMS = [Platform.CONVERSATION, Platform.STT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> None:
     """Set up LiteLLM from a config entry."""
     coordinator = LiteLLMDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -18,8 +18,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> b
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: LiteLLMConfigEntry
@@ -28,6 +26,6 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> None:
     """Unload LiteLLM."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

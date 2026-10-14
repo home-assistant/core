@@ -443,7 +443,12 @@ class _DefaultPipelineProcessor:
                     silence_seconds=self.host.audio_settings.silence_seconds
                 )
 
-            result = await self.stt_provider.async_process_audio_stream(
+            process_audio_stream = (
+                self.stt_provider.async_process_audio_stream
+                if isinstance(self.stt_provider, stt.Provider)
+                else self.stt_provider.internal_async_process_audio_stream
+            )
+            result = await process_audio_stream(
                 metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
