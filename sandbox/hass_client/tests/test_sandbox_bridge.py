@@ -205,7 +205,7 @@ async def test_restore_state_warm_load_without_workaround(
     await data.async_load()
 
     assert restore_state.STORAGE_KEY in bridge.load_keys
-    assert data.last_states == {}
+    assert data.last_states_by_entity_id == {}
 
 
 async def test_contextvar_inherits_across_create_task(

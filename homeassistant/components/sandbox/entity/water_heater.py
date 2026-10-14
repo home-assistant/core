@@ -27,7 +27,7 @@ class SandboxWaterHeaterEntity(SandboxProxyEntity, WaterHeaterEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit declared by the sandbox-side entity."""
         return str(
             self.description.capabilities.get(
@@ -53,28 +53,28 @@ class SandboxWaterHeaterEntity(SandboxProxyEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the cached current temperature."""
         value = self._state_cache.get(ATTR_CURRENT_TEMPERATURE)
         return None if value is None else float(value)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the cached target temperature."""
         value = self._state_cache.get(ATTR_TEMPERATURE)
         return None if value is None else float(value)
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the cached high target temperature."""
         value = self._state_cache.get(ATTR_TARGET_TEMP_HIGH)
         return None if value is None else float(value)
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the cached low target temperature."""
         value = self._state_cache.get(ATTR_TARGET_TEMP_LOW)
         return None if value is None else float(value)

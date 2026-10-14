@@ -147,7 +147,7 @@ async def test_shutdown_returns_restore_state_payload(
     # Seed an in-memory restore-state entry so the snapshot has data.
     hass = runtime._flow_runner.hass  # noqa: SLF001
     restore_data = restore_state.async_get(hass)
-    restore_data.last_states["sensor.demo"] = restore_state.StoredState(
+    restore_data.last_states_by_entity_id["sensor.demo"] = restore_state.StoredState(
         state=State("sensor.demo", "42"),
         extra_data=None,
         last_seen=dt_util.utcnow(),

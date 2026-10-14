@@ -257,6 +257,10 @@ async def async_setup_inprocess_sandbox(
 
     mgr_channel, rt_channel = make_inproc_channel_pair(group=group)
 
+    # Serve the worker's restore-state load before it can signal readiness.
+    data.bridges[group] = async_create_bridge(hass, group=group, channel=mgr_channel)
+    mgr_channel.start()
+
     runtime = SandboxRuntime(
         url="ws://inprocess.invalid/api/websocket",
         group=group,
@@ -293,11 +297,6 @@ async def async_setup_inprocess_sandbox(
     # Tests observe the bridge through main's block_till_done — teach it
     # to settle the whole sandbox round-trip first.
     _install_settling_block_till_done(hass, runtime, mgr_channel)
-
-    # Mirror what the integration's ``_on_channel_ready`` does when the
-    # real ``SandboxProcess`` opens its channel — register the bridge.
-    data.bridges[group] = async_create_bridge(hass, group=group, channel=mgr_channel)
-    mgr_channel.start()
 
     return InProcessSandbox(
         group=group, runtime=runtime, runtime_task=runtime_task, channel=mgr_channel

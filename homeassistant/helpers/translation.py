@@ -542,17 +542,6 @@ def async_register_sandbox_translation_provider(
 
 
 @callback
-def async_invalidate_translations(hass: HomeAssistant, components: set[str]) -> None:
-    """Evict cached translations for ``components`` across all languages.
-
-    Used by the sandbox when a sandboxed integration's strings may have
-    changed (re-fetch at a new ref / entry reload); the next load re-runs the
-    provider overlay for those components.
-    """
-    _async_get_translations_cache(hass).async_invalidate(components)
-
-
-@callback
 def async_translations_loaded(hass: HomeAssistant, components: set[str]) -> bool:
     """Return if the given components are loaded for the language."""
     return _async_get_translations_cache(hass).async_is_loaded(
