@@ -155,7 +155,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             config_entry_id=self.config_entry.entry_id,
             is_fixable=False,
             is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
+            severity=ir.IssueSeverity.ERROR,
             translation_key=f"connectivity_{mode}",
             translation_placeholders={
                 "device_name": (device and device.name_by_user) or data.friendly_name(),
