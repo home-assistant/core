@@ -46,15 +46,6 @@ class ConnectionRegistry:
 DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
 
 
-@callback
-def async_get_connections(hass: HomeAssistant) -> tuple[Connection, ...]:
-    """Return the currently registered LoRaWAN connections."""
-    return tuple(
-        registered.connection
-        for registered in hass.data[DATA_REGISTRY].connections.values()
-    )
-
-
 async def async_register_connection(
     hass: HomeAssistant, entry: ConfigEntry, *, connection: Connection
 ) -> Unsubscribe:

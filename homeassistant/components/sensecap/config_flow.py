@@ -5,7 +5,7 @@ from typing import Any, override
 from lorawan_connection import ConnectionUnavailable
 from sensecap_lorawan import SenseCapDeviceCollection
 
-from homeassistant.components.lorawan import LoRaWANDiscoveryInfo, async_get_connections
+from homeassistant.components.lorawan import DATA_REGISTRY, LoRaWANDiscoveryInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
@@ -46,12 +46,13 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_check_devices(self) -> str | None:
         """Require a connection with a model supported by the sensor platform."""
-        if not (connections := async_get_connections(self.hass)):
+        connections = tuple(self.hass.data[DATA_REGISTRY].connections.values())
+        if not connections:
             return "no_lorawan_connections"
         device_types = tuple({description.device_type for description in DESCRIPTIONS})
         reason = "no_supported_devices"
-        for connection in connections:
-            collection = SenseCapDeviceCollection(connection)
+        for registered in connections:
+            collection = SenseCapDeviceCollection(registered.connection)
             try:
                 await collection.async_setup()
                 if any(

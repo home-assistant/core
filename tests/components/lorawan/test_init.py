@@ -18,10 +18,7 @@ from lorawan_connection import (
 from lorawan_connection.mock import MockConnection
 import pytest
 
-from homeassistant.components.lorawan import (
-    async_get_connections,
-    async_register_connection,
-)
+from homeassistant.components.lorawan import async_register_connection
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -41,7 +38,6 @@ async def test_registration_and_reconnect(
 ) -> None:
     """The registry tracks active connections, withdrawals, and replacements."""
     first, unregister = await registered_backend("network", [DESCRIPTOR])
-    assert async_get_connections(hass) == (first,)
     assert hass.data[DATA_REGISTRY].connections["network"].connection is first
     events = Mock()
     stop_events = await first.async_subscribe(
@@ -59,11 +55,9 @@ async def test_registration_and_reconnect(
     )
     assert first.downlinks[queue_id].data == b"command"
     first.disconnect()
-    assert async_get_connections(hass) == ()
     assert not hass.data[DATA_REGISTRY].connections
     unregister()
     second, unregister_second = await registered_backend("network", [DESCRIPTOR])
-    assert async_get_connections(hass) == (second,)
     assert hass.data[DATA_REGISTRY].connections["network"].connection is second
     stop_events()
     unregister_second()
