@@ -47,7 +47,7 @@
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Artist',
       <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 100,
       <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 100,
-      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: datetime.datetime(1970, 1, 1, 1, 1, 40),
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: datetime.datetime(1970, 1, 1, 0, 1, 40, tzinfo=datetime.timezone.utc),
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'title',
       <MediaPlayerEntityStateAttribute.MEDIA_TRACK: 'media_track'>: 1,
       <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: True,
