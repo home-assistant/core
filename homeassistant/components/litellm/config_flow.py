@@ -159,9 +159,19 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry.data[CONF_URL], api_key
                 )
             ):
-                return self.async_update_reload_and_abort(
+                # A loaded entry is reloaded by its update listener when data changes
+                reload = (
+                    reauth_entry.data.get(CONF_API_KEY) == api_key
+                    or not reauth_entry.update_listeners
+                )
+                result = self.async_update_and_abort(
                     reauth_entry, data_updates={CONF_API_KEY: api_key}
                 )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
