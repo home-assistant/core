@@ -1,5 +1,6 @@
 """Update coordinator for HomeWizard."""
 
+import asyncio
 from typing import override
 
 from homewizard_energy import HomeWizardEnergy
@@ -19,6 +20,8 @@ from .const import (
     UPDATE_INTERVAL,
     battery_mode_cloud_issue_id,
 )
+
+CONNECTION_TIMEOUT = 3
 
 type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
 
@@ -79,21 +82,27 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
         try:
-            data = await self.api.combined()
-
+            data = await asyncio.wait_for(
+                self.api.combined(),
+                timeout=CONNECTION_TIMEOUT,
+            )
         except RequestError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="communication_error"
             ) from ex
-
+        except asyncio.TimeoutError as ex:
+            try:
+                await self.api.close()
+            except Exception:
+                LOGGER.debug("Error closing API connection after timeout", exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="communication_error"
+            ) from ex
         except DisabledError as ex:
             if not self.api_disabled:
                 self.api_disabled = True
 
-                # Do not reload when performing first refresh
                 if self.data is not None:
-                    # Reload config entry to let init flow handle
-                    # retrying and trigger repair flow
                     self.hass.config_entries.async_schedule_reload(
                         self.config_entry.entry_id
                     )

@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import asyncio
+
 from homewizard_energy import (
     HomeWizardEnergy,
     HomeWizardEnergyV1,
@@ -30,6 +32,8 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN, LOGGER
+
+CONNECTION_TIMEOUT = 3
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -103,7 +107,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         # Now we got a token, we can ask for some more info
 
         async with HomeWizardEnergyV2(self.ip_address, token=token) as api:
-            device_info = await api.device()
+            device_info = await asyncio.wait_for(
+                api.device(), timeout=CONNECTION_TIMEOUT
+            )
 
         data = {
             CONF_IP_ADDRESS: self.ip_address,
@@ -169,9 +175,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_IP_ADDRESS: discovery_info.ip}
         )
 
-        # This situation should never happen, as Home Assistant will only
-        # send updates for existing entries. In case it does, we'll just
-        # abort the flow with an unknown error.
         return self.async_abort(reason="unknown")
 
     async def async_step_discovery_confirm(
@@ -200,8 +203,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
 
-        # We won't be adding mac/serial to the title for devices
-        # that users generally don't have multiple of.
         name = self.product_name
         if self.product_type not in ["HWE-P1", "HWE-WTR"]:
             name = f"{name} ({self.serial})"
@@ -223,12 +224,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle re-auth if API was disabled."""
         self.ip_address = entry_data[CONF_IP_ADDRESS]
 
-        # If token exists, we assume we use the v2 API and that
-        # the token has been invalidated
         if entry_data.get(CONF_TOKEN):
             return await self.async_step_reauth_confirm_update_token()
 
-        # Else we assume we use the v1 API and that the API has been disabled
         return await self.async_step_reauth_enable_api()
 
     async def async_step_reauth_enable_api(
@@ -256,7 +254,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.ip_address
 
         errors: dict[str, str] | None = None
-
         token = await async_request_token(self.hass, self.ip_address)
 
         if user_input is not None:
@@ -318,64 +315,63 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 async def async_try_connect(ip_address: str, token: str | None = None) -> Device:
-    """Try to connect.
-
-    Make connection with device to test the connection
-    and to get info for unique_id.
-    """
-
+    """Try to connect to the device with a strict timeout."""
     energy_api: HomeWizardEnergy
 
-    # Determine if device is v1 or v2 capable
-    if await has_v2_api(ip_address):
+    try:
+        is_v2 = await asyncio.wait_for(has_v2_api(ip_address), timeout=CONNECTION_TIMEOUT)
+    except asyncio.TimeoutError as ex:
+        raise RecoverableError(
+            "Timeout while checking API version", "network_error"
+        ) from ex
+
+    if is_v2:
         energy_api = HomeWizardEnergyV2(ip_address, token=token)
     else:
         energy_api = HomeWizardEnergyV1(ip_address)
 
     try:
-        return await energy_api.device()
-
+        return await asyncio.wait_for(
+            energy_api.device(),
+            timeout=CONNECTION_TIMEOUT,
+        )
     except DisabledError as ex:
         raise RecoverableError(
             "API disabled, API must be enabled in the app", "api_not_enabled"
         ) from ex
-
     except UnsupportedError as ex:
-        LOGGER.error("API version unsuppored")
+        LOGGER.error("API version unsupported")
         raise AbortFlow("unsupported_api_version") from ex
-
     except RequestError as ex:
         raise RecoverableError(
             "Device unreachable or unexpected response", "network_error"
         ) from ex
-
     except UnauthorizedError as ex:
         raise UnauthorizedError("Unauthorized") from ex
-
+    except asyncio.TimeoutError as ex:
+        raise RecoverableError(
+            "Device timed out while responding", "network_error"
+        ) from ex
     except Exception as ex:
         LOGGER.exception("Unexpected exception")
         raise AbortFlow("unknown_error") from ex
-
     finally:
         await energy_api.close()
 
 
 async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | None:
-    """Try to request a token from the device.
-
-    This method is used to request a token from the device,
-    it will return None if the token request failed.
-    """
-
+    """Try to request a token from the device with a strict timeout."""
     api = HomeWizardEnergyV2(ip_address)
-
-    # Get a part of the unique id to make the token unique
-    # This is to prevent token conflicts when multiple HA instances are used
     uuid = await instance_id.async_get(hass)
 
     try:
-        return await api.get_token(f"home-assistant#{uuid[:6]}")
+        return await asyncio.wait_for(
+            api.get_token(f"home-assistant#{uuid[:6]}"),
+            timeout=CONNECTION_TIMEOUT,
+        )
     except DisabledError:
+        return None
+    except asyncio.TimeoutError:
         return None
     finally:
         await api.close()
