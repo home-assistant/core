@@ -1,5 +1,6 @@
 """Config flow for Rejseplanen integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
@@ -104,20 +105,8 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": "Rejseplanen"},
             )
 
-        errors: dict[str, str] = {}
         auth_key = user_input[CONF_API_KEY]
-        api = Rejseplanen(
-            auth_key=auth_key,
-            session=async_get_clientsession(self.hass),
-        )
-
-        try:
-            result = await api.validate_auth_key_async()
-        except RejseplanenConnectionError, RejseplanenAPIError, OSError:
-            errors["base"] = "cannot_connect"
-        else:
-            if not result:
-                errors["base"] = "invalid_auth"
+        errors = await self._async_validate_api_key(auth_key)
 
         if errors:
             return self.async_show_form(
@@ -132,6 +121,47 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
             title="Rejseplanen",
             data={CONF_API_KEY: auth_key},
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            auth_key = user_input[CONF_API_KEY]
+            errors = await self._async_validate_api_key(auth_key)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: auth_key},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def _async_validate_api_key(self, auth_key: str) -> dict[str, str]:
+        """Validate the API key and return any errors."""
+        api = Rejseplanen(
+            auth_key=auth_key,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            result = await api.validate_auth_key_async()
+        except RejseplanenConnectionError, RejseplanenAPIError, OSError:
+            return {"base": "cannot_connect"}
+        if not result:
+            return {"base": "invalid_auth"}
+        return {}
 
 
 class RejseplanenSubentryStopFlow(ConfigSubentryFlow):

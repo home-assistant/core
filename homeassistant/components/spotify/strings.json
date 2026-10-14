@@ -29,6 +29,29 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_account": {
+      "message": "Invalid Spotify account specified"
+    },
+    "invalid_url": {
+      "message": "Invalid Spotify URL specified"
+    },
+    "media_not_found": {
+      "message": "Spotify media not found: {media_content_type} / {media_content_id}"
+    },
+    "missing_scopes": {
+      "message": "The Spotify access token is missing required permissions. Please reauthenticate"
+    },
+    "token_refresh_failed": {
+      "message": "An error occurred while refreshing the Spotify access token: {error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while communicating with Spotify: {error}"
+    },
+    "user_not_premium": {
+      "message": "[%key:component::spotify::issues::user_not_premium::title%]"
+    }
+  },
   "issues": {
     "user_not_premium": {
       "description": "[%key:component::spotify::config::abort::user_not_premium%]",

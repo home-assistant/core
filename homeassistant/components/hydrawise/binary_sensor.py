@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HydrawiseConfigEntry
-from .entity import HydrawiseEntity
+from .entity import HydrawiseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -143,16 +143,19 @@ class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
 
     zone: Zone
 
+    @exception_handler
     async def start_watering(self, duration: int | None = None) -> None:
         """Start watering in the irrigation zone."""
         await self.coordinator.api.start_zone(
             self.zone, custom_run_duration=int((duration or 0) * 60)
         )
 
+    @exception_handler
     async def suspend(self, until: datetime) -> None:
         """Suspend automatic watering in the irrigation zone."""
         await self.coordinator.api.suspend_zone(self.zone, until=until)
 
+    @exception_handler
     async def resume(self) -> None:
         """Resume automatic watering in the irrigation zone."""
         await self.coordinator.api.resume_zone(self.zone)
