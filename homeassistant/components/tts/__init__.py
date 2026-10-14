@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 import secrets
 import struct
+import sys
 from time import monotonic
 from typing import Any, Final, Protocol
 
@@ -659,7 +660,7 @@ async def _async_convert_audio(  # noqa: C901
         """Cancel the writer and briefly supervise its source closure."""
         if writer_task is None:
             return
-        if not writer_task.done():
+        if not writer_task.done() and not writer_task.cancelling():
             writer_task.cancel()
         await _async_ffmpeg_join(writer_task)
         if is_input_gen and not writer_task.done():
@@ -699,8 +700,7 @@ async def _async_convert_audio(  # noqa: C901
         if (
             writer_task is not None
             and writer_task.done()
-            and not writer_task.cancelled()
-            and writer_task.exception() is not None
+            and (writer_task.cancelled() or writer_task.exception() is not None)
         ):
             # On some asyncio runtimes the original wait remains pending until
             # pipe disconnection even though the OS exit status is known.
@@ -862,39 +862,54 @@ async def _async_convert_audio(  # noqa: C901
         await stderr_task
         complete = True
     finally:
-        if source_failure_task is not None:
-            source_failure_task.cancel()
+        primary_error = sys.exception()
+
+        async def teardown() -> None:
+            """Own the entire teardown independently of further owner cancellation."""
+            if source_failure_task is not None:
+                source_failure_task.cancel()
+            if stdin_failure_task is not None:
+                stdin_failure_task.cancel()
+            if not complete:
+                if writer_task is not None and not writer_task.done():
+                    writer_task.cancel()
+                if read_task is not None and not read_task.done():
+                    read_task.cancel()
+                if process.returncode is None:
+                    with contextlib.suppress(ProcessLookupError):
+                        process.kill()
             await _async_ffmpeg_join(source_failure_task)
-        if stdin_failure_task is not None:
-            stdin_failure_task.cancel()
             await _async_ffmpeg_join(stdin_failure_task)
-        if not complete:
-            if writer_task is not None and not writer_task.done():
-                writer_task.cancel()
-            if read_task is not None and not read_task.done():
-                read_task.cancel()
-            if process.returncode is None:
-                with contextlib.suppress(ProcessLookupError):
-                    process.kill()
-            cleanup_task = hass.async_create_background_task(
-                stop_writer(), "tts_ffmpeg_cleanup"
-            )
+            if not complete:
+                assert process.stdout is not None
+                await stop_writer()
+                await _async_ffmpeg_join(read_task)
+                # A cancelled read must relinquish StreamReader ownership first.
+                # Otherwise a second reader would race it on the same stdout pipe.
+                if read_task is None or read_task.done():
+                    drain_task = hass.async_create_background_task(
+                        _async_ffmpeg_discard_stdout(process.stdout),
+                        "tts_ffmpeg_stdout_discard",
+                    )
+                    await _async_ffmpeg_join(drain_task)
+                else:
+                    _LOGGER.warning("TTS ffmpeg stdout reader is still closing")
+                await _async_ffmpeg_join(wait_task)
+                await _async_ffmpeg_join(stderr_task)
+                if process.returncode is None:
+                    await _async_ffmpeg_reap(hass, process, wait_task)
+
+        cleanup_task = hass.async_create_background_task(
+            teardown(), "tts_ffmpeg_cleanup"
+        )
+        try:
             await _async_ffmpeg_join(cleanup_task)
-            await _async_ffmpeg_join(read_task)
-            # A cancelled read must relinquish StreamReader ownership first.
-            # Otherwise a second reader would race it on the same stdout pipe.
-            if read_task is None or read_task.done():
-                drain_task = hass.async_create_background_task(
-                    _async_ffmpeg_discard_stdout(process.stdout),
-                    "tts_ffmpeg_stdout_discard",
-                )
-                await _async_ffmpeg_join(drain_task)
-            else:
-                _LOGGER.warning("TTS ffmpeg stdout reader is still closing")
-            await _async_ffmpeg_join(wait_task)
-            await _async_ffmpeg_join(stderr_task)
-            if process.returncode is None:
-                await _async_ffmpeg_reap(hass, process, wait_task)
+        except asyncio.CancelledError:
+            # Preserve the original outcome; teardown remains HA-owned even
+            # if the owner is cancelled while observing its finite join.
+            if primary_error is not None:
+                raise primary_error from None
+            raise
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
