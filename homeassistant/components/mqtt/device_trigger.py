@@ -253,12 +253,13 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
-        debug_info.update_trigger_discovery_data(
-            self.hass, discovery_hash, discovery_data
-        )
         config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
         # Update the device first, so a failing update does not change the trigger
         update_device(self.hass, self._config_entry, config)
+        # The debug info shares the discovery data that holds the current payload
+        debug_info.update_trigger_discovery_data(
+            self.hass, discovery_hash, discovery_data
+        )
         new_trigger_id = f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
         if new_trigger_id != self.trigger_id:
             mqtt_data = self.hass.data[DATA_MQTT]
