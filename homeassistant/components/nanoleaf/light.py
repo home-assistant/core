@@ -13,10 +13,12 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
-from .entity import NanoleafEntity
+from .entity import NanoleafEntity, async_handle_nanoleaf_errors
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
@@ -99,6 +101,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         return ColorMode.HS
 
     @override
+    @async_handle_nanoleaf_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -109,8 +112,10 @@ class NanoleafLight(NanoleafEntity, LightEntity):
 
         if effect:
             if effect not in self.effect_list:
-                raise ValueError(
-                    f"Attempting to apply effect not in the effect list: '{effect}'"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_effect",
+                    translation_placeholders={"effect": str(effect)},
                 )
             await self._nanoleaf.set_effect(effect)
         elif hs_color:
@@ -133,6 +138,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         await self.coordinator.async_refresh()
 
     @override
+    @async_handle_nanoleaf_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         transition: float | None = kwargs.get(ATTR_TRANSITION)
