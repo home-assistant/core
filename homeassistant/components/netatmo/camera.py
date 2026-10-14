@@ -68,8 +68,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
     _attr_name = None
-    _webhook_connection: bool | None = None
-    _webhook_on: bool | None = None
+    _override_connection: bool | None = None
+    _override_on: bool | None = None
 
     def __init__(
         self,
@@ -151,8 +151,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_connection = False
-                self._webhook_on = False
+                self._override_connection = False
+                self._override_on = False
                 self.device.mark_unreachable()
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
@@ -160,22 +160,22 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_on = False
+                self._override_on = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
                     "Camera %s has received %s event, marking as available",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_connection = True
-                self._webhook_on = None
+                self._override_connection = True
+                self._override_on = None
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_on = True
+                self._override_on = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -216,8 +216,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def available(self) -> bool:
         """Return whether the camera can currently operate."""
-        if self._webhook_connection is not None:
-            return super().available and self._webhook_connection
+        if self._override_connection is not None:
+            return super().available and self._override_connection
         return super().available and self.device.reachable is not False
 
     @property
@@ -225,8 +225,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def is_on(self) -> bool:
         if self.device_type in NETATMO_DOORBELLS:
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-        if self._webhook_on is not None:
-            return self._webhook_on
+        if self._override_on is not None:
+            return self._override_on
         return (
             bool(self.device.monitoring)
             and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
@@ -266,8 +266,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
+        if not self.is_on:
+            return
         try:
             await self.device.async_monitoring_off()
+            self._override_on = False
+            self.async_write_ha_state()
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -281,8 +285,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
+        if self.is_on:
+            return
         try:
             await self.device.async_monitoring_on()
+            self._override_on = True
+            self.async_write_ha_state()
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -315,17 +323,17 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_home_update_callback(self) -> None:
         """Update the entity's state from a full HOME poll (/homedata)."""
 
-        if self._webhook_connection is not None and (
-            self.device.reachable or self._webhook_connection == self.device.reachable
+        if self._override_connection is not None and (
+            self.device.reachable or self._override_connection == self.device.reachable
         ):
-            self._webhook_connection = None
+            self._override_connection = None
 
         if (
             self.device_type not in NETATMO_DOORBELLS
-            and self._webhook_on is not None
-            and (self.device.reachable or self._webhook_on == self.device.monitoring)
+            and self._override_on is not None
+            and (self.device.reachable or self._override_on == self.device.monitoring)
         ):
-            self._webhook_on = None
+            self._override_on = None
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
