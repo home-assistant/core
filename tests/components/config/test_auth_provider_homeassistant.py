@@ -113,6 +113,34 @@ async def test_create_auth_user_already_credentials(
         await auth_provider.async_validate_login("test-user3", "test-pass")
 
 
+async def test_create_auth_concurrent(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test concurrent creates for the same user attach only one credential."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": username,
+                "password": "test-pass",
+            }
+        )
+
+    results = {
+        result["id"]: result
+        for result in (await client.receive_json(), await client.receive_json())
+    }
+    assert results[5]["success"], results[5]
+    assert not results[6]["success"], results[6]
+    assert results[6]["error"]["code"] == "credentials_exist"
+    assert len(user.credentials) == 1
+
+
 async def test_create_auth_owner_not_owner(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
