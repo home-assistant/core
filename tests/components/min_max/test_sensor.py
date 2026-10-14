@@ -419,7 +419,9 @@ async def test_device_class(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE
 
 
-async def test_energy_device_class_not_inherited(hass: HomeAssistant) -> None:
+async def test_energy_device_class_not_inherited(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the energy device class is not inherited, as it does not allow measurement."""
     config = {
         "sensor": {
@@ -450,6 +452,8 @@ async def test_energy_device_class_not_inherited(hass: HomeAssistant) -> None:
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert ATTR_DEVICE_CLASS not in state.attributes
+    # This warning is what users see when the energy device class is inherited.
+    assert "which is impossible considering device class" not in caplog.text
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
