@@ -243,6 +243,7 @@ class TwinguardAlarmTracker:
         if self._stopped or generation < self._applied_generation:
             return
         self._applied_generation = generation
+        self._cancel_retry()
         if not available:
             self._retry = async_call_later(self._hass, RETRY_DELAY, self.async_refresh)
         if (trigger_ids, available) != (self.trigger_ids, self.available):
