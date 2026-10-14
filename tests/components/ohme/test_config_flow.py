@@ -194,9 +194,7 @@ async def test_reconfigure_form(hass: HomeAssistant, mock_client: MagicMock) -> 
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -233,9 +231,7 @@ async def test_reconfigure_fail(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM

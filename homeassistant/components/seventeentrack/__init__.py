@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SeventeenTrackConfigEntry
-) -> bool:
+) -> None:
     """Set up 17Track from a config entry."""
 
     session = async_create_clientsession(hass)
@@ -46,4 +46,3 @@ async def async_setup_entry(
 
     entry.runtime_data = seventeen_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True

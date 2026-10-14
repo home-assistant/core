@@ -5,14 +5,14 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from aioautomower.model import MowerActivities, MowerAttributes
+from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -24,17 +24,30 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+@callback
+def _get_charging_value(data: MowerAttributes) -> bool | None:
+    """Return the charging state of the mower.
+
+    The mower only returns the charging state during normal operation.
+    If the mower is in a restricted state, the charging state is set to unknown.
+    """
+
+    if data.mower.state == MowerStates.RESTRICTED:
+        return None
+    return data.mower.activity == MowerActivities.CHARGING
+
+
 @dataclass(frozen=True, kw_only=True)
 class AutomowerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Automower binary sensor entity."""
 
-    value_fn: Callable[[MowerAttributes], bool]
+    value_fn: Callable[[MowerAttributes], bool | None]
 
 
 MOWER_BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
     AutomowerBinarySensorEntityDescription(
         key="battery_charging",
-        value_fn=lambda data: data.mower.activity == MowerActivities.CHARGING,
+        value_fn=_get_charging_value,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
     AutomowerBinarySensorEntityDescription(
@@ -82,6 +95,6 @@ class AutomowerBinarySensorEntity(AutomowerBaseEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.mower_attributes)

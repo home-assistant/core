@@ -6,6 +6,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
       "validate_verification_code": "Failed to verify your verification code, try again"
@@ -28,6 +29,7 @@
       },
       "user": {
         "data": {
+          "include_completed": "Include completed reminders",
           "password": "Main password (MFA)",
           "username": "[%key:common::config_flow::data::email%]",
           "with_family": "With family"
@@ -55,6 +57,9 @@
     "album_type_not_specified": {
       "message": "Album type not specified"
     },
+    "cannot_connect": {
+      "message": "An error occurred while connecting to iCloud: {error}"
+    },
     "config_entry_not_found": {
       "message": "Config entry not found for account: {entry}"
     },
@@ -70,6 +75,9 @@
     "invalid_view_type": {
       "message": "Invalid album view type"
     },
+    "no_device_found": {
+      "message": "No iCloud device found"
+    },
     "photo_not_found": {
       "message": "Photo not found"
     },
@@ -78,6 +86,15 @@
     },
     "unsupported_media_type": {
       "message": "Unsupported media type"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "include_completed": "Include completed reminders"
+        }
+      }
     }
   },
   "services": {

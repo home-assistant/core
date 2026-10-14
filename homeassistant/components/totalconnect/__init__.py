@@ -6,16 +6,28 @@ from total_connect_client.exceptions import AuthenticationError
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import AUTO_BYPASS, CONF_USERCODES
+from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
 from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Total Connect integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: TotalConnectConfigEntry
-) -> bool:
+) -> None:
     """Set up upon config entry in user interface."""
     conf = entry.data
     username = conf[CONF_USERNAME]
@@ -46,14 +58,12 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TotalConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: TotalConnectConfigEntry) -> None:

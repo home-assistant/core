@@ -3,9 +3,9 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from egauge_async.exceptions import EgaugeAuthenticationError
+from egauge_async.exceptions import EgaugeParsingException
 from freezegun.api import FrozenDateTimeFactory
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -39,7 +39,7 @@ async def test_sensors(
 
 
 @pytest.mark.parametrize(
-    "exception", [EgaugeAuthenticationError, ConnectError("Connection failed")]
+    "exception", [EgaugeParsingException, ConnectError("Connection failed")]
 )
 @pytest.mark.freeze_time("2025-01-15T10:00:00+00:00")
 async def test_sensor_error(

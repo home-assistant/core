@@ -18,7 +18,6 @@ from homeassistant.core import Context, HomeAssistant, State
 from . import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
-    DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -29,7 +28,7 @@ from . import (
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
 )
-from .const import WaterHeaterStateAttribute
+from .const import DOMAIN, WaterHeaterStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 

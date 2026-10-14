@@ -4,12 +4,7 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -44,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> None:
     """Set up this integration using UI."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -61,12 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         api_api,
         await dt_util.async_get_time_zone(time_zone_str),
     )
-    try:
-        await api_api.async_get_access_token()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
+    await api_api.async_get_access_token()
 
     if "amc:api" not in entry.data["token"]["scope"]:
         # We raise ConfigEntryAuthFailed here because the websocket can't be used
@@ -84,9 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> None:
     """Handle unload of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
