@@ -76,16 +76,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_connection(
         self, user_input: dict[str, Any] | None, *, step_id: str
     ) -> ConfigFlowResult:
-        """Shared body for the initial and reconfigure steps.
-
-        The unique ID is derived from exactly the fields this form lets the
-        user change, so a reconfigure that doesn't touch any field recomputes
-        the *same* unique ID as the entry being reconfigured -- checking that
-        against ``_abort_if_unique_id_configured`` would always find itself
-        and incorrectly abort. Only run the duplicate check when the
-        recomputed unique ID actually differs from the reconfigured entry's
-        current one.
-        """
+        """Avoid treating an unchanged reconfigured entry as a duplicate."""
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input = self._normalize_input(user_input)
