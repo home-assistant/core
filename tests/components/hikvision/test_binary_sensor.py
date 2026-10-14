@@ -8,6 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.hikvision.binary_sensor import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    IGNORED_SENSOR_TYPES,
+)
 from homeassistant.components.hikvision.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -268,6 +272,36 @@ async def test_binary_sensor_videoloss_silently_skipped(
 
     states = hass.states.async_entity_ids("binary_sensor")
     assert len(states) == 0
+    assert "Unknown Hikvision sensor type" not in caplog.text
+
+
+def test_every_pyhik_sensor_type_is_handled() -> None:
+    """Test every event type pyhik can emit is described or ignored."""
+    unhandled = {
+        name
+        for name in SENSOR_MAP.values()
+        if name not in BINARY_SENSOR_DESCRIPTIONS and name not in IGNORED_SENSOR_TYPES
+    }
+    assert not unhandled
+
+
+async def test_binary_sensor_thermometry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a thermal camera's thermometry event becomes a heat sensor."""
+    mock_hikcamera.return_value.current_event_states = {
+        SENSOR_MAP["thermometry"]: [(False, 1)],
+    }
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.front_camera_temperature_alarm")
+    assert state is not None
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
     assert "Unknown Hikvision sensor type" not in caplog.text
 
 
