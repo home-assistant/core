@@ -85,9 +85,10 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
         self._attr_update_percentage = None
         self.async_write_ha_state()
 
+    @property
     @override
-    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
-        """Return True if latest_version is newer than installed_version."""
+    def has_update(self) -> bool:
+        """Return True if there is an update available."""
         return self.coordinator.device.firmware_update_available
 
     @callback
