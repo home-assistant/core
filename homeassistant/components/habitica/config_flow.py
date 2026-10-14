@@ -63,7 +63,7 @@ from .coordinator import HabiticaConfigEntry
 STEP_ADVANCED_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_API_USER): str,
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_URL, default=DEFAULT_URL): str,
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -77,7 +77,7 @@ STEP_LOGIN_DATA_SCHEMA = probatio.Schema(
                 autocomplete="email",
             )
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -97,7 +97,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                             autocomplete="email",
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -110,7 +110,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
         probatio.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
             probatio.Schema(
                 {
-                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
                 },
             ),
             {"collapsed": True},
@@ -120,7 +120,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
 
 STEP_RECONF_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
             probatio.Schema(
                 {

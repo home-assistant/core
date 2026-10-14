@@ -796,7 +796,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
+    'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_uptime',
     'unit_of_measurement': None,
   })

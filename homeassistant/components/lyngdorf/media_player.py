@@ -1,11 +1,14 @@
 """Media player platform for Lyngdorf integration."""
 
+from collections.abc import Awaitable
 from datetime import datetime
 from typing import TYPE_CHECKING, override
 
 from lyngdorf import (
     Control,
+    LyngdorfInvalidValueError,
     LyngdorfReceiver,
+    LyngdorfUnsupportedError,
     NowPlaying,
     NumericRange,
     PlaybackState,
@@ -23,9 +26,11 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
@@ -110,6 +115,32 @@ def _to_lyngdorf_volume(volume: float, volume_range: NumericRange) -> float:
     span = volume_range.max - volume_range.min
     volume_db = volume * span + volume_range.min
     return max(volume_range.min, min(volume_db, volume_range.max))
+
+
+def _invalid_option(option: str, options: list[str]) -> ServiceValidationError:
+    """Return the error for an option the device does not offer."""
+    return ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_option",
+        translation_placeholders={"option": option, "options": ", ".join(options)},
+    )
+
+
+async def _async_transport(command: Awaitable[bool]) -> None:
+    """Await a streaming command, raising if the device did not take it."""
+    try:
+        accepted = await command
+    except LyngdorfUnsupportedError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_command",
+        ) from err
+    # False covers both a rejected request and one that never arrived.
+    if not accepted:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_failed",
+        )
 
 
 class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
@@ -230,7 +261,10 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._zone_b.set_source(source)
+        try:
+            await self._zone_b.set_source(source)
+        except LyngdorfInvalidValueError as err:
+            raise _invalid_option(source, self._zone_b.sources) from err
 
 
 class LyngdorfMainDevice(LyngdorfDevice):
@@ -402,32 +436,32 @@ class LyngdorfMainDevice(LyngdorfDevice):
         # On a controller-driven source such as AirPlay the device ends the
         # session rather than pausing, and only the controlling app can
         # start it again.
-        await self._player.pause()
+        await _async_transport(self._player.pause())
 
     @override
     async def async_media_next_track(self) -> None:
         """Skip to the next track."""
-        await self._player.next_track()
+        await _async_transport(self._player.next_track())
 
     @override
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track."""
-        await self._player.previous_track()
+        await _async_transport(self._player.previous_track())
 
     @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position, given in seconds."""
-        await self._player.seek(round(position * 1000))
+        await _async_transport(self._player.seek(round(position * 1000)))
 
     @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle, leaving the repeat mode alone."""
-        await self._player.set_shuffle(shuffle)
+        await _async_transport(self._player.set_shuffle(shuffle))
 
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode, leaving shuffle alone."""
-        await self._player.set_repeat(LYNGDORF_REPEATS[repeat])
+        await _async_transport(self._player.set_repeat(LYNGDORF_REPEATS[repeat]))
 
     @override
     @property
@@ -502,9 +536,15 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        await self._receiver.set_sound_mode(sound_mode)
+        try:
+            await self._receiver.set_sound_mode(sound_mode)
+        except LyngdorfInvalidValueError as err:
+            raise _invalid_option(sound_mode, self._receiver.sound_modes) from err
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._receiver.set_source(source)
+        try:
+            await self._receiver.set_source(source)
+        except LyngdorfInvalidValueError as err:
+            raise _invalid_option(source, self._receiver.sources) from err

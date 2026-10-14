@@ -24,7 +24,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> None:
     """Set up integration from a config entry."""
     device = JvcProjector(
         host=entry.data[CONF_HOST],
@@ -59,14 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> None:
     """Unload config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.device.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.device.disconnect()
 
 
 async def async_migrate_entities(

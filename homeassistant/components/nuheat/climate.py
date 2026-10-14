@@ -79,9 +79,13 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         # coordinator refresh confirms the corrected Standby GET response.
         self._optimistic_standby = False
         self._attr_unique_id = serial_number
-        self._attr_temperature_unit = coordinator.hass.config.units.temperature_unit
+        self._attr_native_temperature_unit = (
+            coordinator.hass.config.units.temperature_unit
+        )
         self._attr_target_temperature_step = (
-            0.5 if self._attr_temperature_unit == UnitOfTemperature.CELSIUS else 1.0
+            0.5
+            if self._attr_native_temperature_unit == UnitOfTemperature.CELSIUS
+            else 1.0
         )
 
     @property
@@ -91,12 +95,12 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     def _from_celsius(self, value: float) -> float:
         return TemperatureConverter.convert(
-            value, UnitOfTemperature.CELSIUS, self.temperature_unit
+            value, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     def _to_celsius(self, value: float) -> float:
         return TemperatureConverter.convert(
-            value, self.temperature_unit, UnitOfTemperature.CELSIUS
+            value, self.native_temperature_unit, UnitOfTemperature.CELSIUS
         )
 
     @property
@@ -108,14 +112,14 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         if (temperature := self.thermostat.current_temperature) is None:
             return None
         return self._from_celsius(temperature)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         if self._optimistic_standby or self.thermostat.state is ThermostatState.STANDBY:
             return None
         if (temperature := self.thermostat.target_temperature) is None:

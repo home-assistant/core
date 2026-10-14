@@ -46,11 +46,16 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import create_client_session
-from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import (
+    BT_MODEL_PREFIXES,
+    CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +156,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -331,7 +336,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=probatio.Schema(
                     {
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
             )
@@ -356,7 +361,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                             ),
                         ),
                         probatio.Required(
-                            CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
+                            probatio.Secret(CONF_PASSWORD),
+                            default=reconfigure_entry.data[CONF_PASSWORD],
                         ): TextSelector(
                             TextSelectorConfig(
                                 type=TextSelectorType.PASSWORD,

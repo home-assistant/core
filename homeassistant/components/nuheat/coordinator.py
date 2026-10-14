@@ -1,7 +1,7 @@
 """Data coordinator for NuHeat."""
 
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from chemelex_nuheat import (
     NuHeatApiError,
@@ -11,12 +11,14 @@ from chemelex_nuheat import (
     Thermostat,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from . import NuHeatConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
     """Poll and retain all thermostats belonging to the linked account."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: NuHeatClient
+        self, hass: HomeAssistant, entry: NuHeatConfigEntry, api: NuHeatClient
     ) -> None:
         """Initialize the NuHeat coordinator."""
         super().__init__(

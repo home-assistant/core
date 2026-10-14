@@ -46,7 +46,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_PLATFORM): "event",
         probatio.Required(CONF_EVENT_TYPE): probatio.All(
-            cv.ensure_list, [cv.template], _validate_event_types
+            probatio.EnsureList(), [cv.template], _validate_event_types
         ),
         probatio.Optional(CONF_EVENT_DATA): probatio.All(dict, cv.template_complex),
         probatio.Optional(CONF_EVENT_CONTEXT): probatio.All(dict, cv.template_complex),

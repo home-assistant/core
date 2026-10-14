@@ -1,0 +1,145 @@
+{
+  "measurement_groups": [
+    {
+      "date": "2026-08-31T22:00:00.000000Z",
+      "group_type": "multi",
+      "labels": {
+        "d": "verbruik",
+        "p": "teruglevering"
+      },
+      "measurements": [
+        {
+          "date": "2026-09-16T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 0,
+            "result_tax_excluded": 0,
+            "result_tax_included": 0
+          },
+          "values": {
+            "d": 0,
+            "p": 0
+          }
+        },
+        {
+          "date": "2026-09-17T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 17041280,
+            "result_tax_included": 27017610
+          },
+          "values": {
+            "d": 12000,
+            "p": -3000
+          }
+        },
+        {
+          "date": "2026-09-18T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 24431198,
+            "result_tax_included": 39395694
+          },
+          "values": {
+            "d": 15000,
+            "p": -1500
+          }
+        },
+        {
+          "date": "2026-09-19T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 7564963,
+            "result_tax_included": 10890406
+          },
+          "values": {
+            "d": 9000,
+            "p": -6000
+          }
+        },
+        {
+          "date": "2026-09-20T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 5290110,
+            "result_tax_included": 6952833
+          },
+          "values": {
+            "d": 8500,
+            "p": -7000
+          }
+        },
+        {
+          "date": "2026-09-21T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 13317147,
+            "result_tax_included": 21076515
+          },
+          "values": {
+            "d": 9500,
+            "p": -2500
+          }
+        },
+        {
+          "date": "2026-09-22T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 4724750,
+            "result_tax_included": 6387471
+          },
+          "values": {
+            "d": 7000,
+            "p": -5500
+          }
+        },
+        {
+          "date": "2026-09-23T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": -1911353,
+            "result_tax_included": -5236797
+          },
+          "values": {
+            "d": 6000,
+            "p": -9000
+          }
+        },
+        {
+          "date": "2026-09-25T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1,
+            "result_tax_excluded": 0,
+            "result_tax_included": 0
+          },
+          "values": {
+            "d": 0,
+            "p": 0
+          }
+        }
+      ],
+      "meta": {
+        "delivery_costs_excl_tax": 118445267,
+        "delivery_costs_incl_tax": 192713500,
+        "delivery_price_per_unit_excl_tax": 1767839.8,
+        "delivery_price_per_unit_incl_tax": 2876320.9,
+        "energy_delivered_sum": 67000,
+        "energy_produced_sum": 34500,
+        "has_supply_contract": true,
+        "over_capacity_kwh": null,
+        "production_costs_excl_tax": 47987171,
+        "production_costs_incl_tax": 86229769,
+        "production_price_per_unit_excl_tax": 1390932.5,
+        "production_price_per_unit_incl_tax": 2499413.5999999996,
+        "result_tax_excluded": 70458096,
+        "result_tax_included": 106483731
+      },
+      "mutable": true,
+      "totals": {
+        "d": 67000,
+        "p": 34500
+      },
+      "type": "days"
+    }
+  ],
+  "powerplay": []
+}

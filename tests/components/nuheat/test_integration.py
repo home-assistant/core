@@ -15,6 +15,7 @@ from chemelex_nuheat import (
     Thermostat,
     ThermostatState,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.application_credentials import ClientCredential
@@ -44,6 +45,7 @@ from homeassistant.components.nuheat.const import (
     OAUTH_SCOPES,
     PRESET_RUN,
     PRESET_TEMPORARY_HOLD,
+    SCAN_INTERVAL,
     TOKEN_URL,
 )
 from homeassistant.components.nuheat.coordinator import NuHeatCoordinator
@@ -73,7 +75,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 ACCOUNT_SUBJECT = "synthetic-account-subject"
@@ -214,6 +216,9 @@ async def test_oauth_implementation_temporarily_unavailable(
 def test_oauth_translation_structure() -> None:
     """Test all OAuth aborts and the implementation picker are translated."""
     strings = load_json("homeassistant/components/nuheat/strings.json")["config"]
+    shared_aborts = load_json("homeassistant/components/homeassistant/strings.json")[
+        "config"
+    ]["abort"]
     expected_abort_references = {
         "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
         "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -230,7 +235,8 @@ def test_oauth_translation_structure() -> None:
         "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
     }
     assert {
-        key: strings["abort"][key] for key in expected_abort_references
+        key: (shared_aborts | strings["abort"])[key]
+        for key in expected_abort_references
     } == expected_abort_references
     assert strings["step"]["pick_implementation"] == {
         "data": {"implementation": "[%key:common::config_flow::data::implementation%]"},
@@ -641,6 +647,7 @@ async def test_coordinator_auth_failure_triggers_reauthentication(
 @pytest.mark.asyncio
 async def test_dynamic_discovery_retains_entities_without_duplicates(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator updates discover entities without duplicates."""
     coordinator, api, entry = await coordinator_with(
@@ -652,12 +659,16 @@ async def test_dynamic_discovery_retains_entities_without_duplicates(
     assert {entity.unique_id for entity in added} == {"ABC123", "XYZ789"}
 
     api.list_thermostats.return_value = [thermostat(), thermostat("NEW456")]
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert {entity.unique_id for entity in added} == {"ABC123", "XYZ789", "NEW456"}
     assert "XYZ789" in coordinator.data
     assert coordinator.is_thermostat_available("XYZ789") is False
 
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert len(added) == 3
     await coordinator.async_shutdown()
 
@@ -707,7 +718,7 @@ async def test_climate_state_and_writes_follow_ha_unit(
     entity = NuHeatClimateEntity(coordinator, "ABC123")
     state = await add_entity_state(hass, entity, "climate.nuheat_test")
 
-    assert entity.temperature_unit == unit
+    assert entity.native_temperature_unit == unit
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == pytest.approx(current)
     assert state.attributes[ATTR_TEMPERATURE] == pytest.approx(target)
     assert state.attributes["min_temp"] == pytest.approx(minimum)
@@ -793,14 +804,14 @@ async def test_standby_get_is_authoritative_across_restart(
     assert api.list_thermostats.await_count == 2
     assert entity.hvac_mode is HVACMode.OFF
     assert entity.hvac_action is HVACAction.OFF
-    assert entity.target_temperature is None
+    assert entity.native_target_temperature is None
     assert entity.assumed_state is False
 
     # A newly created entity derives the same state from GET after restart.
     restarted_entity = NuHeatClimateEntity(coordinator, "ABC123")
     assert restarted_entity.hvac_mode is HVACMode.OFF
     assert restarted_entity.hvac_action is HVACAction.OFF
-    assert restarted_entity.target_temperature is None
+    assert restarted_entity.native_target_temperature is None
     assert restarted_entity.assumed_state is False
 
 
@@ -837,7 +848,7 @@ async def test_turn_off_and_turn_on_use_standby_and_auto(
     api.set_schedule_mode.assert_awaited_once_with("ABC123", ScheduleMode.AUTO)
     assert entity.hvac_mode is HVACMode.AUTO
     assert entity.hvac_action is HVACAction.HEATING
-    assert entity.target_temperature == 23.0
+    assert entity.native_target_temperature == 23.0
     assert entity.assumed_state is False
     # The coordinator debounces the two immediate post-command refreshes.
     assert api.list_thermostats.await_count == 2
@@ -1120,7 +1131,7 @@ async def test_unknown_state_remains_available_but_unlabeled(
     entity = NuHeatClimateEntity(coordinator, "ABC123")
 
     assert entity.available is True
-    assert entity.target_temperature is None
+    assert entity.native_target_temperature is None
     assert entity.hvac_mode is None
     assert entity.preset_mode is None
     assert value.state is ThermostatState.UNKNOWN

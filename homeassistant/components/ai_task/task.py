@@ -10,13 +10,14 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components import camera, conversation, image, media_source
+from homeassistant.components import conversation, media_source
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import Context, HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
 from homeassistant.util import RE_SANITIZE_FILENAME, dt as dt_util, slugify
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     DATA_COMPONENT,
@@ -27,13 +28,20 @@ from .const import (
     IMAGE_EXPIRY_TIME,
     AITaskEntityFeature,
 )
+from .evaluation import (
+    QUESTIONS_SCHEMA,
+    EvaluationQuestion,
+    EvaluationTask,
+    EvaluationTaskResult,
+)
+from .permissions import async_check_permissions
 
 
-def _save_camera_snapshot(image_data: camera.Image | image.Image) -> Path:
-    """Save camera snapshot to temp file."""
+def _save_media_image(image_data: media_source.MediaImage) -> Path:
+    """Save media image to temp file."""
     with tempfile.NamedTemporaryFile(
         mode="wb",
-        suffix=mimetypes.guess_extension(image_data.content_type, False),
+        suffix=mimetypes.guess_extension(image_data.mime_type, False),
         delete=False,
     ) as temp_file:
         temp_file.write(image_data.content)
@@ -49,52 +57,6 @@ async def _resolve_attachments(
     resolved_attachments: list[conversation.Attachment] = []
     created_files: list[Path] = []
 
-    for attachment in attachments or []:
-        media_content_id = attachment["media_content_id"]
-
-        # Special case for certain media sources
-        for integration in camera, image:
-            media_source_prefix = f"media-source://{integration.DOMAIN}/"
-            if not media_content_id.startswith(media_source_prefix):
-                continue
-
-            # Extract entity_id from the media content ID
-            entity_id = media_content_id.removeprefix(media_source_prefix)
-
-            # Get snapshot from entity
-            image_data = await integration.async_get_image(hass, entity_id)
-
-            temp_filename = await hass.async_add_executor_job(
-                _save_camera_snapshot, image_data
-            )
-            created_files.append(temp_filename)
-
-            resolved_attachments.append(
-                conversation.Attachment(
-                    media_content_id=media_content_id,
-                    mime_type=image_data.content_type,
-                    path=temp_filename,
-                )
-            )
-            break
-        else:
-            # Handle regular media sources
-            media = await media_source.async_resolve_media(hass, media_content_id, None)
-            if media.path is None:
-                raise HomeAssistantError(
-                    "Only local attachments are currently supported"
-                )
-            resolved_attachments.append(
-                conversation.Attachment(
-                    media_content_id=media_content_id,
-                    mime_type=attachment.get("media_content_type") or media.mime_type,
-                    path=media.path,
-                )
-            )
-
-    if not created_files:
-        return resolved_attachments
-
     def cleanup_files() -> None:
         """Cleanup temporary files."""
         for file in created_files:
@@ -103,9 +65,41 @@ async def _resolve_attachments(
     @callback
     def cleanup_files_callback() -> None:
         """Cleanup temporary files."""
-        hass.async_add_executor_job(cleanup_files)
+        if created_files:
+            hass.async_add_executor_job(cleanup_files)
 
     session.async_on_cleanup(cleanup_files_callback)
+
+    for attachment in attachments or []:
+        media_content_id = attachment["media_content_id"]
+
+        if image_data := await media_source.async_get_media_image(
+            hass, media_content_id
+        ):
+            temp_filename = await hass.async_add_executor_job(
+                _save_media_image, image_data
+            )
+            created_files.append(temp_filename)
+
+            resolved_attachments.append(
+                conversation.Attachment(
+                    media_content_id=media_content_id,
+                    mime_type=image_data.mime_type,
+                    path=temp_filename,
+                )
+            )
+            continue
+
+        media = await media_source.async_resolve_media(hass, media_content_id, None)
+        if media.path is None:
+            raise HomeAssistantError("Only local attachments are currently supported")
+        resolved_attachments.append(
+            conversation.Attachment(
+                media_content_id=media_content_id,
+                mime_type=attachment.get("media_content_type") or media.mime_type,
+                path=media.path,
+            )
+        )
 
     return resolved_attachments
 
@@ -122,6 +116,8 @@ async def async_generate_data(
     context: Context | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+
     if entity_id is None:
         entity_id = hass.data[DATA_PREFERENCES].gen_data_entity_id
 
@@ -171,6 +167,8 @@ async def async_generate_image(
     context: Context | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+
     if entity_id is None:
         entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
 
@@ -351,3 +349,49 @@ class ImageData:
     filename: str
     file: io.IOBase
     content_type: str
+
+
+async def async_evaluate(
+    hass: HomeAssistant,
+    *,
+    task_name: str,
+    questions: dict[str, EvaluationQuestion],
+    state: JsonValueType = None,
+    entity_id: str | None = None,
+    attachments: list[dict] | None = None,
+    context: Context | None = None,
+) -> EvaluationTaskResult:
+    """Evaluate questions using the selected AI task entity."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+    questions = QUESTIONS_SCHEMA(questions)
+    if state is None and not attachments:
+        raise HomeAssistantError("Evaluation requires state or attachments")
+    if entity_id is None:
+        entity_id = hass.data[DATA_PREFERENCES].evaluate_entity_id
+    if entity_id is None:
+        raise HomeAssistantError("No entity_id provided and no preferred entity set")
+    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
+    if entity is None:
+        raise HomeAssistantError(f"AI Task entity {entity_id} not found")
+    if AITaskEntityFeature.EVALUATE not in entity.supported_features:
+        raise HomeAssistantError(
+            f"AI Task entity {entity_id} does not support evaluation"
+        )
+    if (
+        attachments
+        and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
+    ):
+        raise HomeAssistantError(
+            f"AI Task entity {entity_id} does not support attachments"
+        )
+    with async_get_chat_session(hass) as session:
+        resolved_attachments = await _resolve_attachments(hass, session, attachments)
+        return await entity.internal_async_evaluate(
+            EvaluationTask(
+                name=task_name,
+                questions=questions,
+                state=state,
+                attachments=resolved_attachments or None,
+            ),
+            context,
+        )

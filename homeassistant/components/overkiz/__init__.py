@@ -97,7 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> None:
     """Set up Overkiz from a config entry."""
     client: OverkizClient | None = None
     api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
@@ -226,26 +226,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OverkizDataConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: OverkizDataConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 2:
         await _async_migrate_strenum_unique_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True
 
 
 async def _async_migrate_strenum_unique_ids(

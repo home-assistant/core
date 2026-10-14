@@ -97,8 +97,8 @@ class CieloDeviceEntity(CieloBaseEntity):
         )
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of temperature for the device.
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of temperature for the device.
 
         The unit can change over time based on the device settings,
         so it is fetched dynamically from the client. This dynamic

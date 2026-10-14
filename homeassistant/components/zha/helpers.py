@@ -392,7 +392,7 @@ class ZHADeviceProxy(EventBase):
         device_info[ENTITIES] = [
             {
                 ATTR_ENTITY_ID: entity_ref.ha_entity_id,
-                ATTR_NAME: entity_ref.ha_device_info[ATTR_NAME],
+                ATTR_NAME: device_info[ATTR_NAME],
             }
             for entity_ref in self.gateway_proxy.ha_entity_refs[self.device.ieee]
         ]
@@ -571,7 +571,6 @@ class EntityReference(NamedTuple):
 
     ha_entity_id: str
     entity_data: EntityData
-    ha_device_info: dr.DeviceInfo
     remove_future: asyncio.Future[Any]
 
 
@@ -623,7 +622,6 @@ class ZHAGatewayProxy(EventBase):
         self,
         ha_entity_id: str,
         entity_data: EntityData,
-        ha_device_info: dr.DeviceInfo,
         remove_future: asyncio.Future[Any],
     ) -> None:
         """Record the creation of a hass entity associated with ieee."""
@@ -631,7 +629,6 @@ class ZHAGatewayProxy(EventBase):
             EntityReference(
                 ha_entity_id=ha_entity_id,
                 entity_data=entity_data,
-                ha_device_info=ha_device_info,
                 remove_future=remove_future,
             )
         )
@@ -894,6 +891,18 @@ class ZHAGatewayProxy(EventBase):
             if entity_id == entity_reference.ha_entity_id:
                 return entity_reference
         return None
+
+    def update_entity_reference(self, entity: ZHAEntity, old_entity_id: str) -> None:
+        """Update the entity_id of the entity reference for a renamed entity."""
+        ieee = entity.entity_data.device_proxy.device.ieee
+        if (entity_refs := self._ha_entity_refs.get(ieee)) is None:
+            return
+        self._ha_entity_refs[ieee] = [
+            e._replace(ha_entity_id=entity.entity_id)
+            if e.ha_entity_id == old_entity_id
+            else e
+            for e in entity_refs
+        ]
 
     def remove_entity_reference(self, entity: ZHAEntity) -> None:
         """Remove entity reference for given entity_id if found."""
@@ -1295,7 +1304,7 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
 @callback
 def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
-    entity_class: type[ZHAEntity],
+    entity_class: Callable[[EntityData], ZHAEntity],
     entities: list[EntityData],
     **kwargs,
 ) -> None:

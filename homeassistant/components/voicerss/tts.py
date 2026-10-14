@@ -153,7 +153,7 @@ DEFAULT_FORMAT = "8khz_8bit_mono"
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
             SUPPORT_LANGUAGES
         ),
