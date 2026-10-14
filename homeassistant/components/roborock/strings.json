@@ -135,6 +135,13 @@
       }
     },
     "select": {
+      "cleaning_cycles": {
+        "name": "Cleaning cycles",
+        "state": {
+          "one": "1x",
+          "two": "2x"
+        }
+      },
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
