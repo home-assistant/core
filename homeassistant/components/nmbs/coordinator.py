@@ -80,15 +80,25 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
     async def _async_update_data(self) -> NMBSData:
         """Fetch the next connection and liveboard departures."""
         try:
-            connections_response, liveboard_from, liveboard_to = await asyncio.gather(
-                self.client.get_connections(self.station_from.id, self.station_to.id),
-                self.client.get_liveboard(self.station_from.id),
-                self.client.get_liveboard(self.station_to.id),
-            )
-        except TimeoutError as err:
+            async with asyncio.TaskGroup() as task_group:
+                connections_task = task_group.create_task(
+                    self.client.get_connections(
+                        self.station_from.id, self.station_to.id
+                    )
+                )
+                liveboard_from_task = task_group.create_task(
+                    self.client.get_liveboard(self.station_from.id)
+                )
+                liveboard_to_task = task_group.create_task(
+                    self.client.get_liveboard(self.station_to.id)
+                )
+        except* TimeoutError as err:
             raise UpdateFailed(
-                f"Timeout while fetching data from the iRail API: {err}"
+                f"Timeout while fetching data from the iRail API: {err.exceptions[0]}"
             ) from err
+        connections_response = connections_task.result()
+        liveboard_from = liveboard_from_task.result()
+        liveboard_to = liveboard_to_task.result()
         if (
             connections_response is None
             or liveboard_from is None
