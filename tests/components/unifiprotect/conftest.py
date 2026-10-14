@@ -99,6 +99,10 @@ def mock_private_only_entities_registered():
             "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
             return_value=False,
         ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
+            return_value=False,
+        ),
     ):
         yield
 

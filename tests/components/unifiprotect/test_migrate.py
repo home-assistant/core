@@ -753,6 +753,7 @@ LIGHT_MAC = "AABBCCDDEE02"
 VIEWER_MAC = "AABBCCDDEE03"
 SENSOR_MAC = "AABBCCDDEE04"
 NVR_MAC = "AABBCCDDEE05"
+CHIME_MAC = "AABBCCDDEE06"
 
 
 def _private_only_bootstrap() -> Mock:
@@ -763,6 +764,7 @@ def _private_only_bootstrap() -> Mock:
         lights={"light": Mock(mac=LIGHT_MAC)},
         viewers={"viewer": Mock(mac=VIEWER_MAC)},
         sensors={"sensor": Mock(mac=SENSOR_MAC)},
+        chimes={"chime": Mock(mac=CHIME_MAC)},
     )
 
 
@@ -809,6 +811,37 @@ def _private_only_bootstrap() -> Mock:
         ),
         pytest.param(NVR_MAC, Platform.SWITCH, "analytics_enabled", id="nvr_analytics"),
         pytest.param(NVR_MAC, Platform.SWITCH, "insights_enabled", id="nvr_insights"),
+        *(
+            pytest.param(CAMERA_MAC, Platform.SENSOR, key, id=f"camera_{key}")
+            for key in (
+                "uptime",
+                "phy_rate",
+                "oldest_recording",
+                "storage_used",
+                "write_rate",
+                "stats_rx",
+                "stats_tx",
+            )
+        ),
+        *(
+            pytest.param(mac, Platform.SENSOR, key, id=f"{name}_{key}")
+            for mac, name in (
+                (LIGHT_MAC, "light"),
+                (VIEWER_MAC, "viewer"),
+                (SENSOR_MAC, "sensor"),
+                (CHIME_MAC, "chime"),
+            )
+            for key in ("uptime", "phy_rate")
+        ),
+        *(
+            pytest.param(NVR_MAC, Platform.SENSOR, key, id=f"nvr_{key}")
+            for key in (
+                "uptime",
+                "cpu_utilization",
+                "cpu_temperature",
+                "memory_utilization",
+            )
+        ),
     ],
 )
 async def test_deprecate_private_only_entity_in_use(
@@ -1053,6 +1086,10 @@ def real_private_only_skip() -> Generator[None]:
             "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
             async_is_new_private_only_entity,
         ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
+            async_is_new_private_only_entity,
+        ),
     ):
         yield
 
@@ -1080,8 +1117,23 @@ async def test_private_only_entities_skipped_on_new_install(
         )
         is None
     )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{nvr_mac}_cpu_temperature"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{doorbell.mac}_uptime"
+        )
+        is None
+    )
     assert entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, f"{doorbell.mac}_status_light"
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{nvr_mac}_storage_utilization"
     )
 
 
@@ -1102,6 +1154,7 @@ async def test_private_only_entities_kept_on_existing_install(
             (Platform.SENSOR, f"{doorbell.mac}_voltage"),
             (Platform.SWITCH, f"{doorbell.mac}_ssh"),
             (Platform.SWITCH, f"{nvr_mac}_insights_enabled"),
+            (Platform.SENSOR, f"{nvr_mac}_cpu_temperature"),
         )
     ]
 

@@ -369,6 +369,13 @@ PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
             (Platform.BINARY_SENSOR, "ssh"),
             (Platform.SENSOR, "lens_type"),
             (Platform.SENSOR, "voltage"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+            (Platform.SENSOR, "oldest_recording"),
+            (Platform.SENSOR, "storage_used"),
+            (Platform.SENSOR, "write_rate"),
+            (Platform.SENSOR, "stats_rx"),
+            (Platform.SENSOR, "stats_tx"),
         }
     ),
     ModelType.LIGHT: frozenset(
@@ -377,12 +384,16 @@ PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
             (Platform.BINARY_SENSOR, "ssh"),
             (Platform.SELECT, "paired_camera"),
             (Platform.SENSOR, "paired_camera"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
         }
     ),
     ModelType.VIEWPORT: frozenset(
         {
             (Platform.SWITCH, "ssh"),
             (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
         }
     ),
     ModelType.SENSOR: frozenset(
@@ -391,12 +402,24 @@ PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
             (Platform.SENSOR, "mount_type"),
             (Platform.SELECT, "paired_camera"),
             (Platform.SENSOR, "paired_camera"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.CHIME: frozenset(
+        {
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
         }
     ),
     ModelType.NVR: frozenset(
         {
             (Platform.SWITCH, "analytics_enabled"),
             (Platform.SWITCH, "insights_enabled"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "cpu_utilization"),
+            (Platform.SENSOR, "cpu_temperature"),
+            (Platform.SENSOR, "memory_utilization"),
         }
     ),
 }
@@ -449,6 +472,7 @@ def async_deprecate_private_only_entities(
             (bootstrap.lights, ModelType.LIGHT),
             (bootstrap.viewers, ModelType.VIEWPORT),
             (bootstrap.sensors, ModelType.SENSOR),
+            (bootstrap.chimes, ModelType.CHIME),
         ):
             models.update(
                 dict.fromkeys((d.mac for d in devices.values()), device_model)
