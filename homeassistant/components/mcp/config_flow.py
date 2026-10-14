@@ -14,7 +14,12 @@ from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    UnknownImplementationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
@@ -22,7 +27,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from . import async_get_config_entry_implementation
+from . import _create_token_manager, async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
@@ -393,6 +398,55 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry.
+
+        This allows updating the MCP server URL, which is needed when the
+        server requires an authentication token in the URL query string.
+        """
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                token_manager = await _create_token_manager(self.hass, entry)
+            except ConfigEntryNotReady:
+                return self.async_abort(reason="oauth2_implementation_unavailable")
+            try:
+                info = await validate_input(self.hass, user_input, token_manager)
+            except InvalidUrl:
+                errors[CONF_URL] = "invalid_url"
+            except TimeoutConnectError:
+                errors["base"] = "timeout_connect"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except OAuth2TokenRequestReauthError:
+                errors["base"] = "invalid_auth"
+            except MissingCapabilities:
+                return self.async_abort(reason="missing_capabilities")
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=info["title"],
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
         )
 
     async def async_step_reauth(
