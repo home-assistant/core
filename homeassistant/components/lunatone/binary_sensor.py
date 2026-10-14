@@ -76,6 +76,13 @@ class LunatoneDALIScanStatus(
 
     @property
     @override
+    def available(self) -> bool:
+        return super().available and (
+            self._line is None or self._line in self.coordinator.line_scan_status
+        )
+
+    @property
+    @override
     def is_on(self) -> bool:
         """Return true if the DALI scan is on."""
         if self._line is None:

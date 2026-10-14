@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     BusinessAgreement,
+    EngieBeAuthenticationError,
     EngieBeClient,
     EngieBeError,
     EpexGranularity,
@@ -20,6 +21,7 @@ from aioengiebelgium import (
 )
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -94,6 +96,10 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
         """Fetch the account's active business agreements."""
         try:
             relations = await self.client.async_get_customer_account_relations()
+        except EngieBeAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except EngieBeError as err:
             raise UpdateFailed(str(err)) from err
 
@@ -150,6 +156,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         """Fetch this household's prices and pre-process them into a slot lookup."""
         try:
             prices = await self.client.async_get_prices(self.ban)
+        except EngieBeAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except EngieBeError as err:
             raise UpdateFailed(str(err)) from err
 
@@ -166,6 +176,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 return_exceptions=True,
             )
             for ean, service_point_result in zip(new_eans, service_points, strict=True):
+                if isinstance(service_point_result, EngieBeAuthenticationError):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN, translation_key="invalid_auth"
+                    ) from service_point_result
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",

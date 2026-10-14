@@ -251,6 +251,33 @@ class IssueRegistry(BaseRegistry):
             self.async_delete(domain, issue_id)
 
     @callback
+    def async_config_entry_disabled_by_changed(self, config_entry_id: str) -> None:
+        """Fire update events for issues of a config entry which was (un)disabled.
+
+        Issues of disabled config entries are hidden from issue listings, so
+        listeners need to refresh them.
+        """
+        for issue in self.issues.values():
+            if issue.config_entry_id != config_entry_id:
+                continue
+            self.hass.bus.async_fire_internal(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                EventIssueRegistryUpdatedData(
+                    action="update",
+                    domain=issue.domain,
+                    issue_id=issue.issue_id,
+                ),
+            )
+
+    @callback
+    def async_is_hidden(self, issue: IssueEntry) -> bool:
+        """Return if an issue is hidden because its config entry is disabled."""
+        if issue.config_entry_id is None:
+            return False
+        entry = self.hass.config_entries.async_get_entry(issue.config_entry_id)
+        return entry is not None and entry.disabled_by is not None
+
+    @callback
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
         self.hass.verify_event_loop_thread("issue_registry.async_ignore")
