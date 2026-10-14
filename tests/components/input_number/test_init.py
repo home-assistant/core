@@ -861,6 +861,42 @@ async def test_ws_update_device_class(
     ) in resp["error"]["message"]
 
 
+async def test_number_does_not_enforce_device_class_units(
+    hass: HomeAssistant,
+    storage_setup: Callable[..., Awaitable[bool]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test number only warns about a unit that is not valid for the device class.
+
+    When this fails, number enforces valid units for the device class, and the
+    unit validation in input_number can be removed.
+    """
+    # Stored items are not validated against the schema when loaded
+    assert await storage_setup(
+        [
+            {
+                "id": "from_storage",
+                "name": "from storage",
+                "min": 0,
+                "max": 100,
+                "step": 1,
+                "mode": "slider",
+                "device_class": "temperature",
+                "unit_of_measurement": "hPa",
+            }
+        ]
+    )
+
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert state
+    assert float(state.state) == 0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "hPa"
+    assert (
+        "is using native unit of measurement 'hPa' which is not a valid unit "
+        "for the device class ('temperature') it is using"
+    ) in caplog.text
+
+
 async def test_ws_create_unit_conversion(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
