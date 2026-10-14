@@ -310,6 +310,14 @@ async def test_position(
         2026, 10, 13, 13, 6, 40, tzinfo=UTC
     )
 
+    # The Matter SDK example TV app always reports 0 for updatedAt
+    set_node_attribute(matter_node, 1, 1286, 3, {"0": 0, "1": 95250})
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert ATTR_MEDIA_POSITION not in state.attributes
+    assert ATTR_MEDIA_POSITION_UPDATED_AT not in state.attributes
+
     set_node_attribute(matter_node, 1, 1286, 3, {"0": 845212000000000, "1": None})
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(ENTITY_ID)
