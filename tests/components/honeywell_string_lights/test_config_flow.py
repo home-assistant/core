@@ -38,7 +38,7 @@ async def test_user_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Honeywell String Lights"
-    assert result["data"] == {CONF_TRANSMITTER: entity_entry.id}
+    assert result["data"] == {CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID}
     assert result["result"].unique_id == entity_entry.id
 
 

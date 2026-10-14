@@ -18,6 +18,7 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Honeywell String Lights."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @override
     async def async_step_user(
@@ -44,14 +45,15 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if user_input is not None:
+            transmitter_entity_id = user_input[CONF_TRANSMITTER]
             registry = er.async_get(self.hass)
-            entity_entry = registry.async_get(user_input[CONF_TRANSMITTER])
+            entity_entry = registry.async_get(transmitter_entity_id)
             assert entity_entry is not None
             await self.async_set_unique_id(entity_entry.id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title="Honeywell String Lights",
-                data={CONF_TRANSMITTER: entity_entry.id},
+                data={CONF_TRANSMITTER: transmitter_entity_id},
             )
 
         return self.async_show_form(
