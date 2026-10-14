@@ -210,6 +210,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             emails = await self.renault_hub.get_two_factor_auth_emails()
         except aiohttp.ClientError, GigyaException:
             return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
         self._two_factor_emails = {
             email.id: email.obfuscated or email.id for email in emails if email.id
         }
@@ -244,6 +247,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.renault_hub.request_two_factor_auth_code(email_id)
         except aiohttp.ClientError, GigyaException:
             return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
         self._two_factor_email = self._two_factor_emails[email_id]
         return await self.async_step_two_factor_code()
 

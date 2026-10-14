@@ -5,7 +5,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "kamereon_no_account": "Unable to find Kamereon account",
       "two_factor_no_email": "No email address is registered for two-factor authentication on your Renault account",
-      "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID"
+      "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

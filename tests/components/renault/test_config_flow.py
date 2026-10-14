@@ -766,6 +766,18 @@ async def test_config_flow_two_factor_code_error(
             "cannot_connect",
             id="request_code_http_error",
         ),
+        pytest.param(
+            "get_two_factor_auth_emails",
+            {"side_effect": Exception()},
+            "unknown",
+            id="get_emails_unexpected_error",
+        ),
+        pytest.param(
+            "request_two_factor_auth_code",
+            {"side_effect": Exception()},
+            "unknown",
+            id="request_code_unexpected_error",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_two_factor_auth")
