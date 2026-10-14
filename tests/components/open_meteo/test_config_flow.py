@@ -211,11 +211,10 @@ async def test_reconfigure_flow_cannot_connect(
     assert result3.get("reason") == "reconfigure_successful"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")
 async def test_reconfigure_flow_zone_not_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_open_meteo: MagicMock,
 ) -> None:
     """Test the reconfigure flow shows an error for a zone that does not exist."""
     mock_config_entry.add_to_hass(hass)
