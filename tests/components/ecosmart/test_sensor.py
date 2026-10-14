@@ -6,22 +6,19 @@ from unittest.mock import AsyncMock
 
 from aioecosmart import EcosmartConnectionError
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecosmart.const import DOMAIN, SPOT_SCAN_INTERVAL
-from homeassistant.components.ecosmart.sensor import EcosmartForecastPriceSensor
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_ICP, load_forecast, load_spot
+from .conftest import TEST_ICP, load_spot
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SPOT_UNIQUE_ID = f"{TEST_ICP}-spot_price"
-FORECAST_UNIQUE_ID = f"{TEST_ICP}-forecast_price"
 
 
 def _entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
@@ -38,7 +35,7 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test both sensors and their attributes against a snapshot."""
+    """Test the spot price sensor against a snapshot."""
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -98,42 +95,22 @@ async def test_null_spot_price_is_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_empty_forecast_is_unavailable(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test an unpublished forecast is a valid empty answer, not an error."""
-    mock_ecosmart_client.forecast.return_value = load_forecast("forecast_empty.json")
-
-    await setup_integration(hass, mock_config_entry)
-
-    forecast_state = hass.states.get(_entity_id(entity_registry, FORECAST_UNIQUE_ID))
-    assert forecast_state is not None
-    assert forecast_state.state == STATE_UNAVAILABLE
-
-    # The spot sensor is unaffected: the two planes fail independently.
-    spot_state = hass.states.get(_entity_id(entity_registry, SPOT_UNIQUE_ID))
-    assert spot_state is not None
-    assert spot_state.state == "0.23"
-
-
-async def test_negative_forecast_price_passes_through(
+async def test_negative_spot_price_passes_through(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a negative wholesale price is published as-is, not clamped."""
-    mock_ecosmart_client.forecast.return_value = load_forecast("forecast_negative.json")
+    mock_ecosmart_client.spot.return_value = replace(
+        load_spot(), price_cents_per_kwh_incl_gst=-7.636
+    )
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(_entity_id(entity_registry, FORECAST_UNIQUE_ID))
+    state = hass.states.get(_entity_id(entity_registry, SPOT_UNIQUE_ID))
     assert state is not None
     assert state.state == "-7.636"
-    assert state.attributes["points"][0]["price_dollars_per_mwh"] == -66.4
 
 
 async def test_coordinator_failure_makes_sensor_unavailable(
@@ -156,30 +133,9 @@ async def test_coordinator_failure_makes_sensor_unavailable(
 
     assert hass.states.get(spot_entity_id).state == STATE_UNAVAILABLE  # type: ignore[union-attr]
 
-    # The forecast sensor rides on its own coordinator and is untouched.
-    forecast_entity_id = _entity_id(entity_registry, FORECAST_UNIQUE_ID)
-    assert hass.states.get(forecast_entity_id).state == "7.636"  # type: ignore[union-attr]
-
     mock_ecosmart_client.spot.side_effect = None
     freezer.tick(SPOT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(spot_entity_id).state == "0.23"  # type: ignore[union-attr]
-
-
-@pytest.mark.usefixtures("mock_ecosmart_client")
-async def test_forecast_curve_is_not_recorded(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the 68-point curve is kept out of the recorder database."""
-    await setup_integration(hass, mock_config_entry)
-
-    entity_id = _entity_id(entity_registry, FORECAST_UNIQUE_ID)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert len(state.attributes["points"]) == 68
-    assert state.attributes["covered_hours"] == 34.0
-    assert EcosmartForecastPriceSensor._unrecorded_attributes == frozenset({"points"})

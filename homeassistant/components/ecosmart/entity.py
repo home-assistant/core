@@ -1,6 +1,6 @@
 """Base entity for the ecosmart integration."""
 
-from aioecosmart import IcpScope
+from aioecosmart import IcpScope, Spot
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -10,7 +10,7 @@ from .const import ATTRIBUTION, CONFIGURATION_URL, DOMAIN, MANUFACTURER
 from .coordinator import EcosmartCoordinator
 
 
-class EcosmartEntity[_DataT](CoordinatorEntity[EcosmartCoordinator[_DataT]]):
+class EcosmartEntity(CoordinatorEntity[EcosmartCoordinator]):
     """An entity describing prices at one connection point.
 
     Each ICP -- the fifteen-character Installation Control Point number that
@@ -23,7 +23,7 @@ class EcosmartEntity[_DataT](CoordinatorEntity[EcosmartCoordinator[_DataT]]):
 
     def __init__(
         self,
-        coordinator: EcosmartCoordinator[_DataT],
+        coordinator: EcosmartCoordinator,
         icp: IcpScope,
         description: EntityDescription,
     ) -> None:
@@ -42,11 +42,6 @@ class EcosmartEntity[_DataT](CoordinatorEntity[EcosmartCoordinator[_DataT]]):
         )
 
     @property
-    def _price_data(self) -> _DataT:
-        """This connection point's slice of the coordinator's last fetch.
-
-        Always present: the coordinator fetches every grid exit point named by
-        the same identity the entities were built from, and a failed refresh
-        keeps the previous reading rather than dropping it.
-        """
+    def spot(self) -> Spot:
+        """Return this connection point's price from the last successful fetch."""
         return self.coordinator.data[self.icp.poc]

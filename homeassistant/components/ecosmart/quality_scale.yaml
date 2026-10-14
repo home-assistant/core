@@ -72,7 +72,7 @@ rules:
       class does not fit a rate in cents per kilowatt hour.
   entity-disabled-by-default:
     status: exempt
-    comment: Both entities are the point of the integration; neither is noisy.
+    comment: The one entity is the point of the integration and is not noisy.
   entity-translations: done
   exception-translations: done
   icon-translations: done

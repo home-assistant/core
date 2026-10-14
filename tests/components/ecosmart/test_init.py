@@ -31,13 +31,12 @@ async def test_setup_and_unload(
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the entry loads, polls both planes, and unloads cleanly."""
+    """Test the entry loads, polls the spot price, and unloads cleanly."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_ecosmart_client.me.assert_awaited_once()
     mock_ecosmart_client.spot.assert_awaited_once_with(TEST_POC)
-    mock_ecosmart_client.forecast.assert_awaited_once_with(TEST_POC, hours=48)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -61,8 +60,8 @@ async def test_pocs_are_deduplicated(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_ecosmart_client.spot.assert_awaited_once_with(TEST_POC)
-    # Two ICPs, one grid exit point, four entities.
-    assert len(hass.states.async_entity_ids("sensor")) == 4
+    # Two ICPs, one grid exit point, two entities.
+    assert len(hass.states.async_entity_ids("sensor")) == 2
 
 
 async def test_two_pocs_are_both_fetched(
@@ -161,13 +160,8 @@ async def test_first_refresh_rate_limit_omits_retry_after(
     setup-time path must not pass or advertise a server delay.
     """
     mock_config_entry.add_to_hass(hass)
-    coordinator: EcosmartCoordinator = EcosmartCoordinator(
-        hass,
-        mock_config_entry,
-        [TEST_POC],
-        name="spot price",
-        update_interval=SPOT_SCAN_INTERVAL,
-        fetch=mock_ecosmart_client.spot,
+    coordinator = EcosmartCoordinator(
+        hass, mock_config_entry, mock_ecosmart_client, load_identity()
     )
     assert coordinator.data is None
     mock_ecosmart_client.spot.side_effect = EcosmartRateLimitError(
@@ -216,7 +210,7 @@ async def test_later_rate_limit_without_header_uses_scan_interval(
 ) -> None:
     """Test a later 429 with no Retry-After falls back to our poll cadence."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.spot_coordinator
+    coordinator = mock_config_entry.runtime_data
     assert coordinator.data is not None
 
     mock_ecosmart_client.spot.side_effect = EcosmartRateLimitError("slow down")

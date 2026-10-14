@@ -1,9 +1,6 @@
-"""Data update coordinators for the ecosmart integration."""
+"""Data update coordinator for the ecosmart integration."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from datetime import timedelta
 from typing import override
 
 from aioecosmart import (
@@ -11,7 +8,6 @@ from aioecosmart import (
     EcosmartClient,
     EcosmartError,
     EcosmartRateLimitError,
-    Forecast,
     Identity,
     Spot,
 )
@@ -21,13 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, SPOT_SCAN_INTERVAL
 
-type EcosmartConfigEntry = ConfigEntry[EcosmartRuntimeData]
+type EcosmartConfigEntry = ConfigEntry[EcosmartCoordinator]
 
 
-class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
-    """Fetch one kind of price for every grid exit point a key can reach.
+class EcosmartCoordinator(DataUpdateCoordinator[dict[str, Spot]]):
+    """Fetch the spot price for every grid exit point a key can reach.
 
     Prices are published per grid exit point -- the POC, the substation where
     the local network draws off the national grid -- and not per connection
@@ -41,30 +37,29 @@ class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
         self,
         hass: HomeAssistant,
         config_entry: EcosmartConfigEntry,
-        pocs: list[str],
-        *,
-        name: str,
-        update_interval: timedelta,
-        fetch: Callable[[str], Awaitable[_DataT]],
+        client: EcosmartClient,
+        identity: Identity,
     ) -> None:
         """Initialise the coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN} {name}",
-            update_interval=update_interval,
+            name=DOMAIN,
+            update_interval=SPOT_SCAN_INTERVAL,
             always_update=False,
         )
-        self.pocs = pocs
-        self._fetch = fetch
-        self._interval_seconds = int(update_interval.total_seconds())
+        self.client = client
+        self.identity = identity
+        self.pocs = sorted({scope.poc for scope in identity.allowed_icps})
 
     @override
-    async def _async_update_data(self) -> dict[str, _DataT]:
+    async def _async_update_data(self) -> dict[str, Spot]:
         """Fetch every grid exit point at once."""
         try:
-            results = await asyncio.gather(*(self._fetch(poc) for poc in self.pocs))
+            results = await asyncio.gather(
+                *(self.client.spot(poc) for poc in self.pocs)
+            )
         except EcosmartAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -81,7 +76,7 @@ class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
             if retry_after is None:
                 # No Retry-After header: fall back to our own cadence rather
                 # than hammering a key that is already out of budget.
-                retry_after = self._interval_seconds
+                retry_after = int(SPOT_SCAN_INTERVAL.total_seconds())
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="rate_limited",
@@ -93,13 +88,3 @@ class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         return dict(zip(self.pocs, results, strict=True))
-
-
-@dataclass(kw_only=True, frozen=True)
-class EcosmartRuntimeData:
-    """Everything a loaded ecosmart config entry owns."""
-
-    client: EcosmartClient
-    identity: Identity
-    spot_coordinator: EcosmartCoordinator[Spot]
-    forecast_coordinator: EcosmartCoordinator[Forecast]

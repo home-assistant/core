@@ -24,9 +24,6 @@
   },
   "entity": {
     "sensor": {
-      "forecast_price": {
-        "name": "Forecast price"
-      },
       "spot_price": {
         "name": "Spot price"
       }
