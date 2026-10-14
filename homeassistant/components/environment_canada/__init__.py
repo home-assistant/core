@@ -12,16 +12,22 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_RADAR_COLORS,
     CONF_RADAR_DURATION,
     CONF_RADAR_FPS,
+    CONF_RADAR_FUTURE_MINUTES,
+    CONF_RADAR_INTERPOLATION,
     CONF_RADAR_LAYER,
     CONF_RADAR_LEGEND,
     CONF_RADAR_OPACITY,
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
     CONF_STATION,
+    DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
     DEFAULT_RADAR_FPS,
+    DEFAULT_RADAR_FUTURE_MINUTES,
+    DEFAULT_RADAR_INTERPOLATION,
     DEFAULT_RADAR_LAYER,
     DEFAULT_RADAR_LEGEND,
     DEFAULT_RADAR_OPACITY,
@@ -48,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> None:
     """Set up EC as config entry."""
     lat = config_entry.data.get(CONF_LATITUDE)
     lon = config_entry.data.get(CONF_LONGITUDE)
@@ -81,6 +87,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
         radius=int(options.get(CONF_RADAR_RADIUS, DEFAULT_RADAR_RADIUS)),
         loop_minutes=int(options.get(CONF_RADAR_DURATION, DEFAULT_RADAR_DURATION)),
         fps=int(options.get(CONF_RADAR_FPS, DEFAULT_RADAR_FPS)),
+        colors=int(options.get(CONF_RADAR_COLORS, DEFAULT_RADAR_COLORS)),
+        interpolation=options.get(
+            CONF_RADAR_INTERPOLATION, DEFAULT_RADAR_INTERPOLATION
+        ),
+        future_minutes=int(
+            options.get(CONF_RADAR_FUTURE_MINUTES, DEFAULT_RADAR_FUTURE_MINUTES)
+        ),
     )
     radar_coordinator = ECDataUpdateCoordinator(
         hass, config_entry, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
@@ -111,9 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

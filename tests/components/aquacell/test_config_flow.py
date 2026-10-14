@@ -1,6 +1,6 @@
 """Test the Aquacell config flow."""
 
-from datetime import datetime
+import time
 from unittest.mock import AsyncMock
 
 from aioaquacell import ApiException, AuthenticationFailed
@@ -75,6 +75,7 @@ async def test_full_flow(
     assert result2["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
     assert result2["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
     assert result2["data"][CONF_BRAND] == TEST_CONFIG_ENTRY[CONF_BRAND]
+    assert result2["result"].unique_id == TEST_USER_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -151,10 +152,7 @@ async def test_reauth_flow(
 
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "refresh-token"
-    assert (
-        mock_config_entry.data[CONF_REFRESH_TOKEN_CREATION_TIME]
-        == datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
-    )
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN_CREATION_TIME] == time.time()
 
 
 @pytest.mark.parametrize(

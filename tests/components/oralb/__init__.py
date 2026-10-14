@@ -59,6 +59,17 @@ ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO = BluetoothServiceInfo(
+    name="Oral-B Toothbrush",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    # post-brushing summary screens (state 10) after a Smart Adapt (mode 11) session
+    manufacturer_data={220: b"\x0612\x0ar\x00\x05\x0b\x01\x00\x06"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
 ORALB_IO_SERIES_6_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Oral-B Toothbrush",
     address="B0:D2:78:20:1D:CF",

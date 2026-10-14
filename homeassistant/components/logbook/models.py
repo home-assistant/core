@@ -14,7 +14,7 @@ from homeassistant.components.recorder.models import (
     ulid_to_bytes_or_none,
     uuid_hex_to_bytes_or_none,
 )
-from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, EntityStateAttribute
 from homeassistant.core import Context, Event, State, callback
 from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
@@ -177,7 +177,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         state=new_state.state,
         entity_id=new_state.entity_id,
-        icon=new_state.attributes.get(ATTR_ICON),
+        icon=new_state.attributes.get(EntityStateAttribute.ICON),
         attributes=new_state.attributes,
         context_only=None,
         data=event.data,

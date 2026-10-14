@@ -24,6 +24,8 @@
           'slug': 'tu6y',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -47,6 +49,8 @@
           'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -72,6 +76,8 @@
           'slug': 'patates-douces-au-four-1',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -96,6 +102,8 @@
           'slug': 'sweet-potatoes',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -119,6 +127,8 @@
           'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -204,6 +214,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -288,6 +300,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -311,6 +325,8 @@
           'recipe_yield_quantity': None,
           'slug': 'veganes-marmor-bananenbrot-mit-erdnussbutter',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -336,6 +352,8 @@
           'slug': 'pasta-mit-tomaten-knoblauch-und-basilikum-einfach-und-genial-kuechenchaotin',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -359,6 +377,8 @@
           'recipe_yield_quantity': None,
           'slug': 'test123',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -384,6 +404,8 @@
           'slug': 'bureeto',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -408,6 +430,8 @@
           'slug': 'subway-double-cookies',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -431,6 +455,8 @@
           'recipe_yield_quantity': None,
           'slug': 'qwerty12345',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -466,6 +492,8 @@
               'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -490,6 +518,8 @@
           'slug': 'meatloaf',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -513,6 +543,8 @@
           'recipe_yield_quantity': None,
           'slug': 'richtig-rheinischer-sauerbraten',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 20 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -578,6 +610,8 @@
               'tag_id': 'ec303c13-a4f7-4de3-8a4f-d13b72ddd500',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -601,6 +635,8 @@
           'recipe_yield_quantity': None,
           'slug': 'test-20240121',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -626,6 +662,8 @@
           'slug': 'loempia-bowl',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -649,6 +687,8 @@
           'recipe_yield_quantity': None,
           'slug': '5-ingredient-chocolate-mousse',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -704,6 +744,8 @@
               'tag_id': 'fee5e626-792c-479d-a265-81a0029047f2',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -738,6 +780,13 @@
               'tag_id': '0f80c5d5-d1ee-41ac-a949-54a76b446459',
             }),
           ]),
+          'tools': list([
+            dict({
+              'name': 'Backofen',
+              'slug': 'backofen',
+              'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+            }),
+          ]),
           'total_time': '24h',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -762,6 +811,8 @@
           'slug': 'test-234234',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -785,6 +836,8 @@
           'recipe_yield_quantity': None,
           'slug': 'test-243',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -814,6 +867,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -850,6 +905,8 @@
           'slug': 'tarta-cytrynowa-z-beza',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -873,6 +930,8 @@
           'recipe_yield_quantity': None,
           'slug': 'martins-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -918,6 +977,8 @@
               'tag_id': 'c78edd8c-c96b-43fb-86c0-917ea5a08ac7',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -941,6 +1002,8 @@
           'recipe_yield_quantity': None,
           'slug': 'my-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -966,6 +1029,8 @@
           'slug': 'my-test-receipe',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -990,6 +1055,8 @@
           'slug': 'patates-douces-au-four',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1013,6 +1080,8 @@
           'recipe_yield_quantity': None,
           'slug': 'easy-homemade-pizza-dough',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '2 Hours 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1042,6 +1111,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1112,6 +1183,8 @@
               'tag_id': 'd77a2071-43ae-40b1-854d-ae995a766fba',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '2 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1135,6 +1208,8 @@
           'recipe_yield_quantity': None,
           'slug': 'schnelle-kasespatzle',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1160,6 +1235,8 @@
           'slug': 'taco',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1183,6 +1260,8 @@
           'recipe_yield_quantity': None,
           'slug': 'vodkapasta',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1208,6 +1287,8 @@
           'slug': 'vodkapasta2',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1231,6 +1312,8 @@
           'recipe_yield_quantity': None,
           'slug': 'rub',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1291,6 +1374,8 @@
               'tag_id': '2a7c5386-5d26-44fa-8a08-81747ee7f132',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1314,6 +1399,8 @@
           'recipe_yield_quantity': None,
           'slug': 'cauliflower-bisque-recipe-with-cheddar-cheese',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1339,6 +1426,8 @@
           'slug': 'prova',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1362,6 +1451,8 @@
           'recipe_yield_quantity': None,
           'slug': 'pate-au-beurre-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1387,6 +1478,8 @@
           'slug': 'pate-au-beurre',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1411,6 +1504,8 @@
           'slug': 'sous-vide-cheesecake-recipe',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '2 Hours 10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1434,6 +1529,8 @@
           'recipe_yield_quantity': None,
           'slug': 'the-bomb-mini-cheesecakes',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1514,6 +1611,8 @@
               'tag_id': '024b30ca-53cb-4243-ba6b-d830610f2f48',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1537,6 +1636,8 @@
           'recipe_yield_quantity': None,
           'slug': 'death-by-chocolate',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1582,6 +1683,8 @@
               'tag_id': '2b6283e2-b8e0-4b3d-90d9-66f322ca77aa',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1620,6 +1723,8 @@
               'slug': 'nudeln',
               'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1653,6 +1758,8 @@
           'slug': 'tu6y',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1676,6 +1783,8 @@
           'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1701,6 +1810,8 @@
           'slug': 'patates-douces-au-four-1',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1725,6 +1836,8 @@
           'slug': 'sweet-potatoes',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1748,6 +1861,8 @@
           'recipe_yield_quantity': None,
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1833,6 +1948,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1917,6 +2034,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1940,6 +2059,8 @@
           'recipe_yield_quantity': None,
           'slug': 'veganes-marmor-bananenbrot-mit-erdnussbutter',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -1965,6 +2086,8 @@
           'slug': 'pasta-mit-tomaten-knoblauch-und-basilikum-einfach-und-genial-kuechenchaotin',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1988,6 +2111,8 @@
           'recipe_yield_quantity': None,
           'slug': 'test123',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2013,6 +2138,8 @@
           'slug': 'bureeto',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2037,6 +2164,8 @@
           'slug': 'subway-double-cookies',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2060,6 +2189,8 @@
           'recipe_yield_quantity': None,
           'slug': 'qwerty12345',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2095,6 +2226,8 @@
               'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2119,6 +2252,8 @@
           'slug': 'meatloaf',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2142,6 +2277,8 @@
           'recipe_yield_quantity': None,
           'slug': 'richtig-rheinischer-sauerbraten',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 20 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2207,6 +2344,8 @@
               'tag_id': 'ec303c13-a4f7-4de3-8a4f-d13b72ddd500',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2230,6 +2369,8 @@
           'recipe_yield_quantity': None,
           'slug': 'test-20240121',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2255,6 +2396,8 @@
           'slug': 'loempia-bowl',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2278,6 +2421,8 @@
           'recipe_yield_quantity': None,
           'slug': '5-ingredient-chocolate-mousse',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2333,6 +2478,8 @@
               'tag_id': 'fee5e626-792c-479d-a265-81a0029047f2',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2367,6 +2514,13 @@
               'tag_id': '0f80c5d5-d1ee-41ac-a949-54a76b446459',
             }),
           ]),
+          'tools': list([
+            dict({
+              'name': 'Backofen',
+              'slug': 'backofen',
+              'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+            }),
+          ]),
           'total_time': '24h',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2391,6 +2545,8 @@
           'slug': 'test-234234',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2414,6 +2570,8 @@
           'recipe_yield_quantity': None,
           'slug': 'test-243',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2443,6 +2601,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2479,6 +2639,8 @@
           'slug': 'tarta-cytrynowa-z-beza',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2502,6 +2664,8 @@
           'recipe_yield_quantity': None,
           'slug': 'martins-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2547,6 +2711,8 @@
               'tag_id': 'c78edd8c-c96b-43fb-86c0-917ea5a08ac7',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2570,6 +2736,8 @@
           'recipe_yield_quantity': None,
           'slug': 'my-test-recipe',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2595,6 +2763,8 @@
           'slug': 'my-test-receipe',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2619,6 +2789,8 @@
           'slug': 'patates-douces-au-four',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2642,6 +2814,8 @@
           'recipe_yield_quantity': None,
           'slug': 'easy-homemade-pizza-dough',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '2 Hours 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2671,6 +2845,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2741,6 +2917,8 @@
               'tag_id': 'd77a2071-43ae-40b1-854d-ae995a766fba',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '2 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2764,6 +2942,8 @@
           'recipe_yield_quantity': None,
           'slug': 'schnelle-kasespatzle',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2789,6 +2969,8 @@
           'slug': 'taco',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2812,6 +2994,8 @@
           'recipe_yield_quantity': None,
           'slug': 'vodkapasta',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2837,6 +3021,8 @@
           'slug': 'vodkapasta2',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2860,6 +3046,8 @@
           'recipe_yield_quantity': None,
           'slug': 'rub',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2920,6 +3108,8 @@
               'tag_id': '2a7c5386-5d26-44fa-8a08-81747ee7f132',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2943,6 +3133,8 @@
           'recipe_yield_quantity': None,
           'slug': 'cauliflower-bisque-recipe-with-cheddar-cheese',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -2968,6 +3160,8 @@
           'slug': 'prova',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2991,6 +3185,8 @@
           'recipe_yield_quantity': None,
           'slug': 'pate-au-beurre-1',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3016,6 +3212,8 @@
           'slug': 'pate-au-beurre',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3040,6 +3238,8 @@
           'slug': 'sous-vide-cheesecake-recipe',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '2 Hours 10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3063,6 +3263,8 @@
           'recipe_yield_quantity': None,
           'slug': 'the-bomb-mini-cheesecakes',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3143,6 +3345,8 @@
               'tag_id': '024b30ca-53cb-4243-ba6b-d830610f2f48',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3166,6 +3370,8 @@
           'recipe_yield_quantity': None,
           'slug': 'death-by-chocolate',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3211,6 +3417,8 @@
               'tag_id': '2b6283e2-b8e0-4b3d-90d9-66f322ca77aa',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3249,6 +3457,8 @@
               'slug': 'nudeln',
               'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3318,6 +3528,8 @@
             'name': 'can',
             'plural_abbreviation': '',
             'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
             'unit_id': '7bf539d4-fc78-48bc-b48e-c35ccccec34a',
             'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464124),
             'use_abbreviation': False,
@@ -3399,6 +3611,8 @@
             'name': 'US cup',
             'plural_abbreviation': '',
             'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
             'unit_id': '89765d44-8412-4ab5-a6de-594aa8eac44c',
             'updated_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 477535, tzinfo=datetime.timezone.utc),
             'use_abbreviation': False,
@@ -3417,6 +3631,9 @@
       ]),
       'date_added': datetime.date(2024, 6, 29),
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
+      'extras': dict({
+        'Energy Consumption': '5',
+      }),
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
       'household_id': None,
       'image': 'SuPW',
@@ -3579,14 +3796,45 @@
           'reference_id': '82f534de-ecef-4470-9d7a-6e24ded4a53a',
           'referenced_recipe': None,
           'title': '',
-          'unit': "{'id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4', 'name': 'millilitre', 'pluralName': None, 'description': '', 'extras': {}, 'fraction': True, 'abbreviation': 'ml', 'pluralAbbreviation': '', 'useAbbreviation': False, 'aliases': [], 'createdAt': '2024-08-25T13:29:25.641593Z', 'updatedAt': '2024-08-25T13:29:25.641610Z'}",
+          'unit': dict({
+            'abbreviation': 'ml',
+            'aliases': list([
+            ]),
+            'created_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641593, tzinfo=datetime.timezone.utc),
+            'description': '',
+            'extras': dict({
+            }),
+            'fraction': True,
+            'name': 'millilitre',
+            'plural_abbreviation': '',
+            'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
+            'unit_id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4',
+            'updated_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641610, tzinfo=datetime.timezone.utc),
+            'use_abbreviation': False,
+          }),
         }),
       ]),
       'instructions': list([
         dict({
           'ingredient_references': list([
+            'a3adfe78-d157-44d8-98be-9c133e45bb4e',
+            'ef023f23-7816-4871-87f6-4d29f9a283f7',
           ]),
           'instruction_id': '2d558dbf-5361-4ef2-9d86-4161f5eb6146',
+          'recipe_notes': list([
+            dict({
+              'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+              'text': 'Use room-temperature ingredients for a smoother batter.',
+              'title': 'Baking tip',
+            }),
+            dict({
+              'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+              'text': 'Let the cake cool completely before adding the glaze.',
+              'title': 'Cooling',
+            }),
+          ]),
           'text': 'Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.',
           'title': None,
         }),
@@ -3594,6 +3842,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': 'dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a',
+          'recipe_notes': list([
+          ]),
           'text': 'Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.',
           'title': None,
         }),
@@ -3601,6 +3851,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '2265bd14-a691-40b1-9fe6-7b5dfeac8401',
+          'recipe_notes': list([
+          ]),
           'text': 'Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.',
           'title': None,
         }),
@@ -3608,6 +3860,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '0aade447-dfac-4aae-8e67-ac250ad13ae2',
+          'recipe_notes': list([
+          ]),
           'text': "Transfer the mixture to the springform, smooth the top, and bake in the oven (middle rack) for 10–15 minutes, leaving the oven door a finger's width ajar. Then close the oven and bake for approximately 50 minutes. (The cake is done when it yields slightly to the touch.)",
           'title': None,
         }),
@@ -3615,6 +3869,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '5fdcb703-7103-468d-a65d-a92460b92eb3',
+          'recipe_notes': list([
+          ]),
           'text': 'Remove the cake from the oven and loosen the sides of the springform. Carefully tip the cake onto a cake rack lined with baking paper and let cool for approximately 20 minutes. Then pull off the baking paper, turn the cake over, and leave on rack to cool completely.',
           'title': None,
         }),
@@ -3622,6 +3878,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '81474afc-b44e-49b3-bb67-5d7dab8f832a',
+          'recipe_notes': list([
+          ]),
           'text': 'Cut the cake in half horizontally. Warm the jam and stir until smooth. Brush the top of both cake halves with the jam and place one on top of the other. Brush the sides with the jam as well.',
           'title': None,
         }),
@@ -3629,6 +3887,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '8fac8aee-0d3c-4f78-9ff8-56d20472e5f1',
+          'recipe_notes': list([
+          ]),
           'text': 'To make the glaze, put the castor sugar into a saucepan with 125 ml water and boil over high heat for approximately 5 minutes. Take the sugar syrup off the stove and leave to cool a little. Coarsely chop the couverture, gradually adding it to the syrup, and stir until it forms a thick liquid (see tip below).',
           'title': None,
         }),
@@ -3636,12 +3896,44 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '7162e099-d651-4656-902a-a09a9b40c4e1',
+          'recipe_notes': list([
+          ]),
           'text': 'Pour all the lukewarm glaze liquid at once over the top of the cake and quickly spread using a palette knife. Leave the glaze to set for a few hours. Serve garnished with whipped cream.',
           'title': None,
         }),
       ]),
       'last_made': None,
       'name': 'Original Sacher-Torte (2)',
+      'notes': list([
+        dict({
+          'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+          'text': 'Use room-temperature ingredients for a smoother batter.',
+          'title': 'Baking tip',
+        }),
+        dict({
+          'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+          'text': 'Let the cake cool completely before adding the glaze.',
+          'title': 'Cooling',
+        }),
+        dict({
+          'reference_id': '9c4e2a71-6d38-4f05-b927-1a8e3c6d5024',
+          'text': 'Serve with unsweetened whipped cream.',
+          'title': 'Serving',
+        }),
+      ]),
+      'nutrition': dict({
+        'calories': '400',
+        'carbohydrate_content': None,
+        'cholesterol_content': None,
+        'fat_content': '17',
+        'fiber_content': None,
+        'protein_content': None,
+        'saturated_fat_content': None,
+        'sodium_content': None,
+        'sugar_content': None,
+        'trans_fat_content': None,
+        'unsaturated_fat_content': None,
+      }),
       'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
       'perform_time': '1 hour',
       'prep_time': '1 hour 30 minutes',
@@ -3688,6 +3980,23 @@
           'tag_id': 'd530b8e4-275a-4093-804b-6d0de154c206',
         }),
       ]),
+      'tools': list([
+        dict({
+          'name': 'Backofen',
+          'slug': 'backofen',
+          'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+        }),
+        dict({
+          'name': 'Magimix blender',
+          'slug': 'magimix-blender',
+          'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+        }),
+        dict({
+          'name': 'Alluminio',
+          'slug': 'alluminio',
+          'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+        }),
+      ]),
       'total_time': '2 hours 30 minutes',
       'user_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0',
     }),
@@ -3724,6 +4033,8 @@
           'slug': 'zoete-aardappel-curry-traybake',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3758,6 +4069,8 @@
           'slug': 'roast-chicken',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '1 Hour 35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3791,6 +4104,23 @@
           'recipe_yield_quantity': None,
           'slug': 'receta-de-pollo-al-curry-en-10-minutos-con-video-incluido',
           'tags': list([
+          ]),
+          'tools': list([
+            dict({
+              'name': 'Backofen',
+              'slug': 'backofen',
+              'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+            }),
+            dict({
+              'name': 'Magimix blender',
+              'slug': 'magimix-blender',
+              'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+            }),
+            dict({
+              'name': 'Alluminio',
+              'slug': 'alluminio',
+              'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+            }),
           ]),
           'total_time': '10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3886,6 +4216,8 @@
               'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3920,6 +4252,8 @@
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -3953,6 +4287,8 @@
           'recipe_yield_quantity': None,
           'slug': 'greek-turkey-meatballs-with-lemon-orzo-creamy-feta-yogurt-sauce',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -3992,6 +4328,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4037,6 +4375,8 @@
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '1 Hour 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -4081,6 +4421,8 @@
               'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -4119,6 +4461,8 @@
               'slug': '4-hours',
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
+          ]),
+          'tools': list([
           ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4159,6 +4503,8 @@
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -4198,6 +4544,8 @@
               'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
             }),
           ]),
+          'tools': list([
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -4231,6 +4579,8 @@
           'recipe_yield_quantity': None,
           'slug': 'miso-udon-noodles-with-spinach-and-tofu',
           'tags': list([
+          ]),
+          'tools': list([
           ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4266,6 +4616,8 @@
           'slug': 'mousse-de-saumon',
           'tags': list([
           ]),
+          'tools': list([
+          ]),
           'total_time': '17 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -4293,6 +4645,9 @@
       ]),
       'date_added': datetime.date(2024, 6, 29),
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
+      'extras': dict({
+        'Energy Consumption': '5',
+      }),
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
       'household_id': None,
       'image': 'SuPW',
@@ -4455,14 +4810,45 @@
           'reference_id': '82f534de-ecef-4470-9d7a-6e24ded4a53a',
           'referenced_recipe': None,
           'title': '',
-          'unit': "{'id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4', 'name': 'millilitre', 'pluralName': None, 'description': '', 'extras': {}, 'fraction': True, 'abbreviation': 'ml', 'pluralAbbreviation': '', 'useAbbreviation': False, 'aliases': [], 'createdAt': '2024-08-25T13:29:25.641593Z', 'updatedAt': '2024-08-25T13:29:25.641610Z'}",
+          'unit': dict({
+            'abbreviation': 'ml',
+            'aliases': list([
+            ]),
+            'created_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641593, tzinfo=datetime.timezone.utc),
+            'description': '',
+            'extras': dict({
+            }),
+            'fraction': True,
+            'name': 'millilitre',
+            'plural_abbreviation': '',
+            'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
+            'unit_id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4',
+            'updated_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641610, tzinfo=datetime.timezone.utc),
+            'use_abbreviation': False,
+          }),
         }),
       ]),
       'instructions': list([
         dict({
           'ingredient_references': list([
+            'a3adfe78-d157-44d8-98be-9c133e45bb4e',
+            'ef023f23-7816-4871-87f6-4d29f9a283f7',
           ]),
           'instruction_id': '2d558dbf-5361-4ef2-9d86-4161f5eb6146',
+          'recipe_notes': list([
+            dict({
+              'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+              'text': 'Use room-temperature ingredients for a smoother batter.',
+              'title': 'Baking tip',
+            }),
+            dict({
+              'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+              'text': 'Let the cake cool completely before adding the glaze.',
+              'title': 'Cooling',
+            }),
+          ]),
           'text': 'Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.',
           'title': None,
         }),
@@ -4470,6 +4856,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': 'dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a',
+          'recipe_notes': list([
+          ]),
           'text': 'Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.',
           'title': None,
         }),
@@ -4477,6 +4865,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '2265bd14-a691-40b1-9fe6-7b5dfeac8401',
+          'recipe_notes': list([
+          ]),
           'text': 'Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.',
           'title': None,
         }),
@@ -4484,6 +4874,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '0aade447-dfac-4aae-8e67-ac250ad13ae2',
+          'recipe_notes': list([
+          ]),
           'text': "Transfer the mixture to the springform, smooth the top, and bake in the oven (middle rack) for 10–15 minutes, leaving the oven door a finger's width ajar. Then close the oven and bake for approximately 50 minutes. (The cake is done when it yields slightly to the touch.)",
           'title': None,
         }),
@@ -4491,6 +4883,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '5fdcb703-7103-468d-a65d-a92460b92eb3',
+          'recipe_notes': list([
+          ]),
           'text': 'Remove the cake from the oven and loosen the sides of the springform. Carefully tip the cake onto a cake rack lined with baking paper and let cool for approximately 20 minutes. Then pull off the baking paper, turn the cake over, and leave on rack to cool completely.',
           'title': None,
         }),
@@ -4498,6 +4892,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '81474afc-b44e-49b3-bb67-5d7dab8f832a',
+          'recipe_notes': list([
+          ]),
           'text': 'Cut the cake in half horizontally. Warm the jam and stir until smooth. Brush the top of both cake halves with the jam and place one on top of the other. Brush the sides with the jam as well.',
           'title': None,
         }),
@@ -4505,6 +4901,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '8fac8aee-0d3c-4f78-9ff8-56d20472e5f1',
+          'recipe_notes': list([
+          ]),
           'text': 'To make the glaze, put the castor sugar into a saucepan with 125 ml water and boil over high heat for approximately 5 minutes. Take the sugar syrup off the stove and leave to cool a little. Coarsely chop the couverture, gradually adding it to the syrup, and stir until it forms a thick liquid (see tip below).',
           'title': None,
         }),
@@ -4512,12 +4910,44 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '7162e099-d651-4656-902a-a09a9b40c4e1',
+          'recipe_notes': list([
+          ]),
           'text': 'Pour all the lukewarm glaze liquid at once over the top of the cake and quickly spread using a palette knife. Leave the glaze to set for a few hours. Serve garnished with whipped cream.',
           'title': None,
         }),
       ]),
       'last_made': None,
       'name': 'Original Sacher-Torte (2)',
+      'notes': list([
+        dict({
+          'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+          'text': 'Use room-temperature ingredients for a smoother batter.',
+          'title': 'Baking tip',
+        }),
+        dict({
+          'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+          'text': 'Let the cake cool completely before adding the glaze.',
+          'title': 'Cooling',
+        }),
+        dict({
+          'reference_id': '9c4e2a71-6d38-4f05-b927-1a8e3c6d5024',
+          'text': 'Serve with unsweetened whipped cream.',
+          'title': 'Serving',
+        }),
+      ]),
+      'nutrition': dict({
+        'calories': '400',
+        'carbohydrate_content': None,
+        'cholesterol_content': None,
+        'fat_content': '17',
+        'fiber_content': None,
+        'protein_content': None,
+        'saturated_fat_content': None,
+        'sodium_content': None,
+        'sugar_content': None,
+        'trans_fat_content': None,
+        'unsaturated_fat_content': None,
+      }),
       'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
       'perform_time': '1 hour',
       'prep_time': '1 hour 30 minutes',
@@ -4564,6 +4994,23 @@
           'tag_id': 'd530b8e4-275a-4093-804b-6d0de154c206',
         }),
       ]),
+      'tools': list([
+        dict({
+          'name': 'Backofen',
+          'slug': 'backofen',
+          'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+        }),
+        dict({
+          'name': 'Magimix blender',
+          'slug': 'magimix-blender',
+          'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+        }),
+        dict({
+          'name': 'Alluminio',
+          'slug': 'alluminio',
+          'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+        }),
+      ]),
       'total_time': '2 hours 30 minutes',
       'user_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0',
     }),
@@ -4598,6 +5045,8 @@
         'recipe_yield_quantity': None,
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
+        ]),
+        'tools': list([
         ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -4637,6 +5086,8 @@
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
         ]),
+        'tools': list([
+        ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
@@ -4675,6 +5126,8 @@
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
         ]),
+        'tools': list([
+        ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
@@ -4712,6 +5165,128 @@
         'recipe_yield_quantity': None,
         'slug': 'zoete-aardappel-curry-traybake',
         'tags': list([
+        ]),
+        'tools': list([
+        ]),
+        'total_time': '40 Minutes',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
+# name: test_service_update_mealplan[payload0-kwargs0]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'last_made': None,
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'perform_time': None,
+        'prep_time': None,
+        'rating': None,
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
+        'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
+        'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
+        'tools': list([
+        ]),
+        'total_time': '40 Minutes',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
+# name: test_service_update_mealplan[payload1-kwargs1]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'last_made': None,
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'perform_time': None,
+        'prep_time': None,
+        'rating': None,
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
+        'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
+        'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
+        'tools': list([
+        ]),
+        'total_time': '40 Minutes',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
+# name: test_service_update_mealplan[payload2-kwargs2]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'last_made': None,
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'perform_time': None,
+        'prep_time': None,
+        'rating': None,
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_servings': None,
+        'recipe_yield': '2 servings',
+        'recipe_yield_quantity': None,
+        'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
+        'tools': list([
         ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',

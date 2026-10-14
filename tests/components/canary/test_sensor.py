@@ -47,7 +47,7 @@ async def test_sensors_pro(
     ]
 
     with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
-        await init_integration(hass)
+        entry = await init_integration(hass)
 
     sensors = {
         "dining_room_home_dining_room_temperature": (
@@ -85,7 +85,9 @@ async def test_sensors_pro(
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "20")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "20"), entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"
@@ -168,7 +170,7 @@ async def test_sensors_flex(
     ]
 
     with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
-        await init_integration(hass)
+        entry = await init_integration(hass)
 
     sensors = {
         "dining_room_home_dining_room_battery": (
@@ -199,7 +201,9 @@ async def test_sensors_flex(
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "20")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "20"), entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"

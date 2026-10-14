@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,12 +35,12 @@ STATE_KEY_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 DEFAULT_NAME = "ADS Light"
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
-        vol.Optional(CONF_ADS_VAR_COLOR_TEMP_KELVIN): cv.string,
-        vol.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
-        vol.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
+        probatio.Optional(CONF_ADS_VAR_COLOR_TEMP_KELVIN): cv.string,
+        probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
+        probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

@@ -83,6 +83,28 @@ def _stmt_and_join_attributes(
     return _select
 
 
+def _row_field_indices(
+    no_attributes: bool,
+    include_last_changed: bool,
+    include_last_reported: bool,
+) -> tuple[int | None, int | None, int | None]:
+    """Return the (last_changed_ts, last_reported_ts, attributes) row indices.
+
+    Must match the column order selected by _stmt_and_join_attributes.
+    """
+    next_idx = len(_FIELD_MAP)
+    last_changed_ts_idx = last_reported_ts_idx = attributes_idx = None
+    if include_last_changed:
+        last_changed_ts_idx = next_idx
+        next_idx += 1
+    if include_last_reported:
+        last_reported_ts_idx = next_idx
+        next_idx += 1
+    if not no_attributes:
+        attributes_idx = next_idx
+    return last_changed_ts_idx, last_reported_ts_idx, attributes_idx
+
+
 def _stmt_and_join_attributes_for_start_state(
     no_attributes: bool,
     include_last_changed: bool,
@@ -316,6 +338,9 @@ def get_significant_states_with_session(
         minimal_response,
         compressed_state_format,
         no_attributes=no_attributes,
+        field_indices=_row_field_indices(
+            no_attributes, not significant_changes_only, False
+        ),
     )
 
 
@@ -513,6 +538,7 @@ def state_changes_during_period(
                 entity_id_to_metadata_id,
                 descending=descending,
                 no_attributes=no_attributes,
+                field_indices=_row_field_indices(no_attributes, False, True),
             ),
         )
 
@@ -607,6 +633,7 @@ def get_last_state_changes(
                 entity_ids,
                 entity_id_to_metadata_id,
                 no_attributes=False,
+                field_indices=_row_field_indices(False, False, number_of_states > 1),
             ),
         )
 
@@ -796,6 +823,8 @@ def _sorted_states_to_dict(
     compressed_state_format: bool = False,
     descending: bool = False,
     no_attributes: bool = False,
+    *,
+    field_indices: tuple[int | None, int | None, int | None],
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -809,8 +838,19 @@ def _sorted_states_to_dict(
     axis correctly.
     """
     field_map = _FIELD_MAP
+    last_changed_ts_idx, last_reported_ts_idx, attributes_idx = field_indices
     state_class: Callable[
-        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None, bool],
+        [
+            dict[str, dict[str, Any]],
+            float | None,
+            str,
+            str,
+            float | None,
+            Any,
+            float | None,
+            float | None,
+            bool,
+        ],
         State | dict[str, Any],
     ]
     if compressed_state_format:
@@ -856,12 +896,18 @@ def _sorted_states_to_dict(
             ent_results.extend(
                 [
                     state_class(
-                        db_state,
                         attr_cache,
                         start_time_ts,
                         entity_id,
                         db_state[state_idx],
                         db_state[last_updated_ts_idx],
+                        None if attributes_idx is None else db_state[attributes_idx],
+                        None
+                        if last_changed_ts_idx is None
+                        else db_state[last_changed_ts_idx],
+                        None
+                        if last_reported_ts_idx is None
+                        else db_state[last_reported_ts_idx],
                         False,
                     )
                     for db_state in group
@@ -880,12 +926,18 @@ def _sorted_states_to_dict(
             prev_state = first_state[state_idx]
             ent_results.append(
                 state_class(
-                    first_state,
                     attr_cache,
                     start_time_ts,
                     entity_id,
                     prev_state,
                     first_state[last_updated_ts_idx],
+                    None if attributes_idx is None else first_state[attributes_idx],
+                    None
+                    if last_changed_ts_idx is None
+                    else first_state[last_changed_ts_idx],
+                    None
+                    if last_reported_ts_idx is None
+                    else first_state[last_reported_ts_idx],
                     no_attributes,
                 )
             )

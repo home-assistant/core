@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from infrared_protocols.codes.edifier.models import MODEL_TO_COMMAND_SET, EdifierModel
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
@@ -25,7 +25,7 @@ from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID, DOMAIN
 class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Edifier IR."""
 
-    VERSION = 2
+    VERSION = 3
     MINOR_VERSION = 1
 
     @override
@@ -60,14 +60,14 @@ class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                    probatio.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN, include_entities=emitter_entity_ids
                         )
                     ),
-                    vol.Required(CONF_MODEL): SelectSelector(
+                    probatio.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
                             options=[model.value for model in EdifierModel],
                             mode=SelectSelectorMode.DROPDOWN,

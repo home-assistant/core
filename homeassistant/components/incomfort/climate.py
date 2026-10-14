@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,7 +48,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -70,9 +71,12 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             name=f"Thermostat {room.room_no}",
         )
         if coordinator.unique_id:
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                coordinator.config_entry.entry_id,
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, coordinator.config_entry.entry_id),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                )
             )
 
     @property
@@ -83,7 +87,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
 
@@ -97,7 +101,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the (override)temperature we try to reach.
 
         As we set the override, we report back the override. The actual set point is

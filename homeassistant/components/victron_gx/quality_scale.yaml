@@ -69,10 +69,7 @@ rules:
     comment: |
       Not relevant.
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration has no user-actionable repair issues to raise.
+  repair-issues: done
   stale-devices: done
   # Platinum
   async-dependency: done

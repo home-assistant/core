@@ -36,6 +36,14 @@ DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
         key="enable_keyless_driving",
         func=lambda api: api.remote_start(),
     ),
+    TessieButtonEntityDescription(
+        key="enable_keep_accessory_power_mode",
+        func=lambda api: api.enable_keep_accessory_power_mode(),
+    ),
+    TessieButtonEntityDescription(
+        key="disable_keep_accessory_power_mode",
+        func=lambda api: api.disable_keep_accessory_power_mode(),
+    ),
     TessieButtonEntityDescription(key="boombox", func=lambda api: api.remote_boombox()),
 )
 

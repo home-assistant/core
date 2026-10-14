@@ -269,7 +269,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    power_off_state: str | None | UndefinedType = UNDEFINED
+    power_off_state: str | UndefinedType | None = UNDEFINED
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

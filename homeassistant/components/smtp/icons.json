@@ -5,5 +5,10 @@
         "default": "mdi:email-outline"
       }
     }
+  },
+  "services": {
+    "send_message": {
+      "service": "mdi:email-arrow-right-outline"
+    }
   }
 }

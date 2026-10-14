@@ -1,8 +1,21 @@
 {
   "entity": {
     "button": {
+      "backup": {
+        "default": "mdi:backup-restore"
+      },
       "shutdown": {
         "default": "mdi:power"
+      }
+    },
+    "select": {
+      "poe_out": {
+        "default": "mdi:power-plug",
+        "state": {
+          "auto_on": "mdi:power-plug",
+          "forced_on": "mdi:power-plug-outline",
+          "off": "mdi:power-plug-off"
+        }
       }
     },
     "sensor": {
@@ -14,6 +27,14 @@
       },
       "memory_usage": {
         "default": "mdi:memory"
+      }
+    },
+    "switch": {
+      "ether": {
+        "default": "mdi:lan"
+      },
+      "wlan": {
+        "default": "mdi:wifi"
       }
     }
   }

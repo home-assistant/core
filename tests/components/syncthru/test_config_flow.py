@@ -62,9 +62,14 @@ async def test_already_configured_by_url(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=FIXTURE_USER_INPUT,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -73,20 +78,33 @@ async def test_already_configured_by_url(
     assert result["result"].unique_id == udn
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_syncthru_not_supported(
     hass: HomeAssistant, mock_syncthru: AsyncMock
 ) -> None:
     """Test we show user form on unsupported device."""
     mock_syncthru.update.side_effect = SyncThruAPINotSupported
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=FIXTURE_USER_INPUT,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_URL: "syncthru_not_supported"}
+
+    mock_syncthru.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=FIXTURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_unknown_state(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:

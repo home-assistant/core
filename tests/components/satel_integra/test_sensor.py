@@ -71,8 +71,9 @@ async def test_sensors(
         mock_config_entry_with_temperature_zone.entry_id,
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_ENTRY_ID}_zones_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_ENTRY_ID}_zones_1"),
+        mock_config_entry_with_temperature_zone.entry_id,
     )
     assert device_entry == snapshot(name="device-zone")
 

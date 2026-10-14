@@ -25,7 +25,12 @@ async def test_binary_sensor(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.BINARY_SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_hardware_event(mock_config_entry)
+        mock_tractive_client.set_tracker_status(
+            battery_level=88,
+            tracker_state="operational",
+            power_saving=True,
+            battery_charging=True,
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -41,8 +46,8 @@ async def test_binary_sensor_device_assignment(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.BINARY_SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-    tracker_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "device_id_123")}
+    tracker_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device_id_123"), mock_config_entry.entry_id
     )
     assert tracker_device is not None
 

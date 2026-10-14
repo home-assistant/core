@@ -1,0 +1,54 @@
+{
+  "entity": {
+    "sensor": {
+      "charge_today": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "charge_total": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "discharge_today": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "discharge_total": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "grid_export_today": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_export_total": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_import_today": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_import_total": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "load_energy_today": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "load_energy_total": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "load_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "power": {
+        "default": "mdi:home-battery"
+      },
+      "solar_energy_today": {
+        "default": "mdi:solar-power-variant"
+      },
+      "solar_energy_total": {
+        "default": "mdi:solar-power-variant"
+      },
+      "solar_power": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}

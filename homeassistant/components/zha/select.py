@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -48,16 +47,16 @@ async def async_setup_entry(
 class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
     """Representation of a ZHA select entity."""
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA select entity."""
-        super().__init__(entity_data, **kwargs)
-        self._attr_options = self.entity_data.entity.info_object.options
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        self._attr_options = self._zha_state.options
 
     @property
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self.entity_data.entity.current_option
+        return self._zha_state.current_option
 
     @convert_zha_error_to_ha_error()
     @override
