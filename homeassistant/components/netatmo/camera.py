@@ -226,6 +226,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @property
     @override
     def is_on(self) -> bool:
+        """Return true if camera is on (monitoring)."""
         if self.device_type in NETATMO_DOORBELLS:
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         if self._override_on is not None:
@@ -294,9 +295,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
     @override
-    async def stream_source(self) -> str | None:
+    async def stream_source(self) -> str:
         """Return the stream source."""
-
         if self.device.is_local:
             await self.device.async_update_camera_urls()
 
@@ -308,7 +308,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state (fallback/default callback)."""
-        # If anything calls the default update callback, treat it like a home update
         self.async_home_update_callback()
 
     @callback
