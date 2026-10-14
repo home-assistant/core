@@ -8,9 +8,10 @@ from python_snoo.snoo import Snoo
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .coordinator import SnooConfigEntry, SnooCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> None
 
     try:
         await snoo.authorize()
-    except (SnooAuthException, InvalidSnooAuth) as ex:
+    except InvalidSnooAuth as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from ex
+    except SnooAuthException as ex:
         raise ConfigEntryNotReady from ex
     try:
         devices = await snoo.get_devices()
