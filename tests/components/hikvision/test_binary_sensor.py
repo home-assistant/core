@@ -7,15 +7,12 @@ from pyhik.constants import SENSOR_MAP
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.hikvision.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
     IGNORED_SENSOR_TYPES,
 )
 from homeassistant.components.hikvision.const import DOMAIN
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_LAST_TRIP_TIME,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -60,32 +57,18 @@ async def test_all_entities(
     mock_hikcamera: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test all binary sensor entities."""
-    await setup_integration(hass, mock_config_entry)
+    """Test an entity is created for every described sensor type."""
+    mock_hikcamera.return_value.current_event_states = {
+        name: [(False, 1)] for name in BINARY_SENSOR_DESCRIPTIONS
+    }
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_binary_sensors_created(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test binary sensors are created for each event type."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Check Motion sensor (camera type doesn't include channel in name)
-    state = hass.states.get("binary_sensor.front_camera_motion")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
-    assert ATTR_LAST_TRIP_TIME in state.attributes
-
-    # Check Line Crossing sensor
-    state = hass.states.get("binary_sensor.front_camera_line_crossing")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
+    assert "Unknown Hikvision sensor type" not in caplog.text
 
 
 async def test_binary_sensor_device_info(
@@ -283,26 +266,6 @@ def test_every_pyhik_sensor_type_is_handled() -> None:
         if name not in BINARY_SENSOR_DESCRIPTIONS and name not in IGNORED_SENSOR_TYPES
     }
     assert not unhandled
-
-
-async def test_binary_sensor_thermometry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hikcamera: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a thermal camera's thermometry event becomes a heat sensor."""
-    mock_hikcamera.return_value.current_event_states = {
-        SENSOR_MAP["thermometry"]: [(False, 1)],
-    }
-
-    with caplog.at_level(logging.WARNING):
-        await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("binary_sensor.front_camera_temperature_alarm")
-    assert state is not None
-    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
-    assert "Unknown Hikvision sensor type" not in caplog.text
 
 
 async def test_yaml_import_creates_deprecation_issue(
