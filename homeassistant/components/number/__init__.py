@@ -339,10 +339,10 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state(self) -> float | None:
         """Return the entity state."""
         if not self._invalid_unit_of_measurement_reported:
-            self._report_invalid_unit_of_measurement()
+            self._validate_unit_of_measurement()
         return self.value
 
-    def _report_invalid_unit_of_measurement(self) -> None:
+    def _validate_unit_of_measurement(self) -> None:
         """Warn once if the native unit is not valid for the device class."""
         if (
             (device_class := self.device_class) is None
