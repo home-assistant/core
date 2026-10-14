@@ -71,6 +71,8 @@ from .common import (
     async_capture_events,
     async_fire_time_changed,
     flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -1663,6 +1665,18 @@ async def test_reauth_issue_flow_aborted(
     assert len(issue_registry.issues) == 0
 
 
+async def test_reauth_issue_removed_with_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the reauth issue is deleted when its config entry is removed."""
+    issue = await _test_reauth_issue(hass, manager, issue_registry)
+
+    await manager.async_remove(issue.config_entry_id)
+    assert len(issue_registry.issues) == 0
+
+
 async def _test_reauth_issue(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -1690,6 +1704,7 @@ async def _test_reauth_issue(
     assert issue == ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
+        config_entry_id=entry.entry_id,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,
@@ -4052,6 +4067,76 @@ async def test_entry_disable_succeed(
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_entry_disable_hides_issues(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test disabling an entry hides its issues without removing them."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="comp")
+    other_entry.add_to_hass(hass)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    events_on_unload: list[int] = []
+
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        events_on_unload.append(len(events))
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    for issue_id, config_entry_id in (
+        ("entry_issue", entry.entry_id),
+        ("other_entry_issue", other_entry.entry_id),
+    ):
+        ir.async_create_issue(
+            hass,
+            "comp",
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="abc",
+        )
+    issue_registry.async_ignore("comp", "entry_issue", True)
+    issue = issue_registry.async_get_issue("comp", "entry_issue")
+    other_issue = issue_registry.async_get_issue("comp", "other_entry_issue")
+    assert not issue_registry.async_is_hidden(issue)
+    events.clear()
+
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "comp", "issue_id": "entry_issue"}
+    ]
+    # The frontend is told to refresh before the entry is unloaded
+    assert events_on_unload == [1]
+    assert issue_registry.async_get_issue("comp", "entry_issue") == issue
+    assert issue_registry.async_is_hidden(issue)
+    assert not issue_registry.async_is_hidden(other_issue)
+
+    events.clear()
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "comp", "issue_id": "entry_issue"}
+    ]
+    assert issue_registry.async_get_issue("comp", "entry_issue") == issue
+    assert not issue_registry.async_is_hidden(issue)
 
 
 async def test_entry_disable_entity_state(
@@ -7899,6 +7984,31 @@ async def test_update_entry_and_reload(
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
 
 
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(config_entries)
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "value"),
+    [
+        ("CONN_CLASS_CLOUD_PUSH", "cloud_push"),
+        ("CONN_CLASS_CLOUD_POLL", "cloud_poll"),
+        ("CONN_CLASS_LOCAL_PUSH", "local_push"),
+        ("CONN_CLASS_LOCAL_POLL", "local_poll"),
+        ("CONN_CLASS_ASSUMED", "assumed"),
+        ("CONN_CLASS_UNKNOWN", "unknown"),
+    ],
+)
+def test_deprecated_connection_class_constants(
+    caplog: pytest.LogCaptureFixture, constant_name: str, value: str
+) -> None:
+    """Test deprecated connection class constants."""
+    import_and_test_deprecated_constant(
+        caplog, config_entries, constant_name, None, value, "2027.5.0"
+    )
+
+
 async def test_update_entry_and_reload_with_listener_logs(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -11624,6 +11734,19 @@ async def test_orphaned_ignored_entries(
         "domain": "ghost_orphan_domain",
         "entry_id": entry.entry_id,
     }
+    assert issue.config_entry_id == entry.entry_id
+
+    # The issue is removed with the entry, also when it has been ignored
+    issue_registry.async_ignore(
+        HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}", True
+    )
+    await manager.async_remove(entry.entry_id)
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_orphaned_ignored_entries_existing_integration(

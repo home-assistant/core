@@ -3,9 +3,11 @@
 import asyncio
 
 from pytouchlinesl import TouchlineSL
+from pytouchlinesl.client import RothAPIError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -66,9 +68,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
         username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
     )
 
+    try:
+        modules = await account.modules()
+    except RothAPIError as error:
+        if error.status == 401:
+            raise ConfigEntryAuthFailed from error
+        raise ConfigEntryNotReady from error
+
     coordinators: list[TouchlineSLModuleCoordinator] = [
-        TouchlineSLModuleCoordinator(hass, entry, module)
-        for module in await account.modules()
+        TouchlineSLModuleCoordinator(hass, entry, module) for module in modules
     ]
 
     await asyncio.gather(

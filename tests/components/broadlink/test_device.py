@@ -346,6 +346,23 @@ async def test_device_unload_works(hass: HomeAssistant) -> None:
     assert forward_entries == domains
 
 
+async def test_device_unload_failed(hass: HomeAssistant) -> None:
+    """Test unloading fails when the device platforms cannot be unloaded."""
+    device = get_device("Office")
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups"):
+        mock_setup = await device.setup_entry(hass)
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=False
+    ):
+        await hass.config_entries.async_unload(mock_setup.entry.entry_id)
+
+    assert mock_setup.entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert mock_setup.entry.reason == "Failed to unload the device"
+    assert mock_setup.api.aclose.await_count == 0
+
+
 async def test_device_unload_authentication_error(hass: HomeAssistant) -> None:
     """Test we unload a device that failed the authentication step."""
     device = get_device("Living Room")

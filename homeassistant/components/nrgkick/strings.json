@@ -343,9 +343,6 @@
     }
   },
   "exceptions": {
-    "auth_failure": {
-      "message": "Authentication failed (HTTP {status_code}). Verify BasicAuth settings. Target: {url}"
-    },
     "authentication_error": {
       "message": "Authentication failed. Please check your credentials."
     },
@@ -355,26 +352,11 @@
     "communication_error": {
       "message": "Communication error with NRGkick device: {error}"
     },
-    "connection_failed": {
-      "message": "Network connection failed: {error_details}. Target: {url}"
-    },
-    "connection_timeout": {
-      "message": "Connection timeout after {attempts} attempts. Check power and network. Target: {url}"
-    },
-    "generic_error": {
-      "message": "Connection failed: {error_details}. Target: {url}"
-    },
-    "http_error": {
-      "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
-    },
     "invalid_response": {
       "message": "The device returned an invalid response."
     },
     "json_api_disabled": {
       "message": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants."
-    },
-    "unknown_error": {
-      "message": "An unknown error occurred."
     }
   }
 }

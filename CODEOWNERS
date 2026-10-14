@@ -1109,6 +1109,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
 /tests/components/loqed/ @mikewoudenberg
+/homeassistant/components/lorawan/ @balloob
+/tests/components/lorawan/ @balloob
 /homeassistant/components/lovelace/ @home-assistant/frontend
 /tests/components/lovelace/ @home-assistant/frontend
 /homeassistant/components/luci/ @mzdrale
@@ -1133,6 +1135,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/map_tiles/ @home-assistant/core
 /homeassistant/components/marantz_infrared/ @balloob
 /tests/components/marantz_infrared/ @balloob
+/homeassistant/components/marantz_rs232/ @balloob
+/tests/components/marantz_rs232/ @balloob
 /homeassistant/components/marketplace/ @home-assistant/core
 /tests/components/marketplace/ @home-assistant/core
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp

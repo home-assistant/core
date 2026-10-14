@@ -872,7 +872,11 @@ class SpeechManager:
     ) -> ResultStream:
         """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
@@ -914,7 +918,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
@@ -951,7 +959,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
@@ -1121,7 +1133,12 @@ class SpeechManager:
 
             if data is None or extension is None:
                 raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
+                    translation_domain=DOMAIN,
+                    translation_key="no_tts_audio",
+                    translation_placeholders={
+                        "engine": str(engine_instance.name),
+                        "message": message,
+                    },
                 )
 
             async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:

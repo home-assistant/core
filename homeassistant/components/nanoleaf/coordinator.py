@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type NanoleafConfigEntry = ConfigEntry[NanoleafCoordinator]
@@ -39,6 +41,10 @@ class NanoleafCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.nanoleaf.get_info()
         except Unavailable as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         except InvalidToken as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_token"
+            ) from err
