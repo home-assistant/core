@@ -214,6 +214,7 @@ async def test_external_usb(
 async def test_external_usb_new_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test Synology DSM USB adding new device."""
@@ -275,11 +276,9 @@ async def test_external_usb_new_device(
 
     # Mock the get_devices method to simulate a USB disk being added
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
-    # Coordinator refresh
-    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for sensor_id, (expected_state, expected_attrs) in chain(
         expected_sensors_disk_1.items(), expected_sensors_disk_2.items()
@@ -294,6 +293,7 @@ async def test_external_usb_new_device(
 async def test_external_usb_availability(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test Synology DSM USB availability."""
@@ -342,11 +342,9 @@ async def test_external_usb_availability(
 
     # Mock the get_devices method to simulate no USB devices being connected
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb0()
-    # Coordinator refresh
-    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for sensor_id, (
         expected_state,

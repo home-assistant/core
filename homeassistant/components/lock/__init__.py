@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_LOCK,
@@ -49,6 +49,25 @@ PROP_TO_ATTR = {
     "changed_by": LockEntityStateAttribute.CHANGED_BY,
     "code_format": LockEntityStateAttribute.CODE_FORMAT,
 }
+
+__all__ = [
+    "ATTR_CHANGED_BY",
+    "ATTR_CODE",
+    "ATTR_CODE_FORMAT",
+    "CONF_DEFAULT_CODE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_LOCK",
+    "SERVICE_OPEN",
+    "SERVICE_UNLOCK",
+    "LockEntity",
+    "LockEntityDescription",
+    "LockEntityFeature",
+    "LockEntityStateAttribute",
+    "LockState",
+]
 
 # mypy: disallow-any-generics
 

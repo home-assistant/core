@@ -380,7 +380,9 @@ async def test_unsupported_sensors(hass: HomeAssistant, mock_bridge_v1: Mock) ->
     assert len(hass.states.async_all()) == 7
 
 
-async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
+async def test_new_sensor_discovered(
+    hass: HomeAssistant, mock_bridge_v1: Mock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test if 2nd update has a new sensor."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -401,10 +403,9 @@ async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) 
 
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
-    # Force updates to run again
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 10
@@ -417,7 +418,9 @@ async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) 
     assert temperature.state == "17.75"
 
 
-async def test_sensor_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
+async def test_sensor_removed(
+    hass: HomeAssistant, mock_bridge_v1: Mock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test if 2nd update has removed sensor."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -431,12 +434,9 @@ async def test_sensor_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None
     keys = ("1", "2", "3")
     mock_bridge_v1.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
 
-    # Force updates to run again
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
-
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 3

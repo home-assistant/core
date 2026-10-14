@@ -110,7 +110,7 @@ async def handle_webhook(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> None:
     """Configure based on config entry."""
     entry.runtime_data = set()
     webhook.async_register(
@@ -118,13 +118,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

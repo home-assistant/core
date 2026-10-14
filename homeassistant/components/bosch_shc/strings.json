@@ -42,6 +42,11 @@
       }
     }
   },
+  "device": {
+    "intrusion_system": {
+      "name": "Alarm system"
+    }
+  },
   "entity": {
     "button": {
       "reset_tamper": {
@@ -71,6 +76,9 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "energy_saving_enter_duration": {
+        "name": "Energy-saving enter duration"
+      },
       "energy_saving_power_threshold": {
         "name": "Energy-saving power threshold"
       },
@@ -82,9 +90,9 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "middle": "Medium"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
         }
       },
       "siren_sound_level": {
@@ -92,17 +100,25 @@
         "state": {
           "high": "Loud",
           "low": "Reduced",
-          "medium": "Medium"
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
         }
       },
       "vibration_sensitivity": {
         "name": "Vibration sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
-          "very_high": "Very high",
-          "very_low": "Very low"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         }
       }
     },
@@ -217,6 +233,11 @@
       "valve": {
         "name": "Valve"
       }
+    }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "This room does not support the HVAC mode {hvac_mode}."
     }
   }
 }

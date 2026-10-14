@@ -48,6 +48,7 @@ async def test_single_metering_point(
         CONF_API_TOKEN: TEST_API_TOKEN,
         CONF_METERING_POINT_ID: "1234",
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -97,6 +98,7 @@ async def test_multiple_metering_points(
         CONF_API_TOKEN: TEST_API_TOKEN,
         CONF_METERING_POINT_ID: "5678",
     }
+    assert result["result"].unique_id == "5678"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -228,6 +230,7 @@ async def test_form_exceptions(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
     # Simulate that the user gives up and closes the window...

@@ -89,6 +89,7 @@ from .const import (
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
     CONF_MESSAGE_EXPIRY_INTERVAL,
+    CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -116,6 +117,7 @@ from .discovery import (
 )
 from .models import (
     DATA_MQTT,
+    DiscoveredDisabledEntity,
     MessageCallbackType,
     MqttSubentryData,
     MqttValueTemplate,
@@ -790,15 +792,56 @@ async def async_remove_discovery_payload(
     await async_publish(hass, discovery_topic, None, retain=True)
 
 
+async def async_remove_entity_discovery_payload(
+    hass: HomeAssistant,
+    entity_id: str,
+    discovery_data: DiscoveryInfoType,
+    registry_entry: er.RegistryEntry | None,
+) -> None:
+    """Clear the retained discovery payload of an entity removed from the registry.
+
+    A device discovery topic is only cleared when the device is removed as well,
+    as clearing it removes all components of the device.
+    """
+    discovery_payload: MQTTDiscoveryPayload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
+    if (
+        discovery_payload.device_discovery
+        and registry_entry is not None
+        and registry_entry.device_id is not None
+        and dr.async_get(hass).async_get(registry_entry.device_id) is not None
+    ):
+        application: str = discovery_payload[CONF_ORIGIN][CONF_NAME]
+        _LOGGER.warning(
+            "Although entity %s was removed from Home Assistant, it will be added "
+            "again when a new MQTT discovery config is received from %s on topic "
+            "%s. To prevent this, disable the entity instead, or configure %s to "
+            "no longer send this entity",
+            entity_id,
+            application,
+            discovery_data[ATTR_DISCOVERY_TOPIC],
+            application,
+        )
+        # Remove the device if no components are left, as an empty device
+        # discovery payload can no longer clean it up
+        await async_cleanup_device_registry(
+            hass, registry_entry.device_id, registry_entry.config_entry_id
+        )
+        return
+    await async_remove_discovery_payload(hass, discovery_data)
+
+
 async def async_clear_discovery_topic_if_entity_removed(
     hass: HomeAssistant,
     discovery_data: DiscoveryInfoType,
+    registry_entry: er.RegistryEntry,
     event: Event[er.EventEntityRegistryUpdatedData],
 ) -> None:
     """Clear the discovery topic if the entity is removed."""
     if event.data["action"] == "remove":
         # publish empty payload to config topic to avoid re-adding
-        await async_remove_discovery_payload(hass, discovery_data)
+        await async_remove_entity_discovery_payload(
+            hass, event.data["entity_id"], discovery_data, registry_entry
+        )
 
 
 class MqttDiscoveryDeviceUpdateMixin(ABC):
@@ -830,7 +873,8 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
             self.async_discovery_update,
         )
-        config_entry.async_on_unload(self._entry_unload)
+        # Tear down before the client disconnects, so subscriptions are not restored
+        hass.data[DATA_MQTT].reload_dispatchers.append(self._entry_unload)
         if device_id is not None:
             self._remove_device_updated = async_track_device_registry_updated_event(
                 hass, device_id, self._async_device_removed
@@ -1062,9 +1106,12 @@ class MqttDiscoveryUpdateMixin(Entity):
         debug_info.add_entity_discovery_data(
             self.hass, self._discovery_data, self.entity_id
         )
-        # Set in case the entity has been removed and is re-added,
-        # for example when changing entity_id
+        # Set in case the entity has been removed and is re-added
         set_discovery_hash(self.hass, discovery_hash)
+        # The entity is loaded, so it is no longer tracked as disabled
+        self.hass.data[DATA_MQTT].discovery_discovered_and_disabled.pop(
+            discovery_hash, None
+        )
         self._remove_discovery_updated = async_dispatcher_connect(
             self.hass,
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
@@ -1249,7 +1296,12 @@ class MqttDiscoveryUpdateMixin(Entity):
 
             # Clear the discovery topic so the entity is not
             # rediscovered after a restart
-            await async_remove_discovery_payload(self.hass, self._discovery_data)
+            await async_remove_entity_discovery_payload(
+                self.hass,
+                self.entity_id,
+                self._discovery_data,
+                self.registry_entry,
+            )
 
     @callback
     def _async_teardown_discovery_on_remove(self) -> None:
@@ -1258,13 +1310,28 @@ class MqttDiscoveryUpdateMixin(Entity):
         Registered via async_on_remove in async_prepare_to_add_to_hass so it also
         runs on the abort path, where async_will_remove_from_hass is never called.
         When the add is aborted while the entity is already registered (e.g. a
-        disabled entity), a registry hook is installed so the retained discovery
-        topic is cleared if the entity is later removed from the registry.
+        disabled entity), or when the entity is removed because it was disabled,
+        a registry hook is installed so the retained discovery topic is cleared
+        if the entity is later removed from the registry.
         """
         if TYPE_CHECKING:
             assert self._discovery_data is not None
-        if not self._added_to_hass and self.registry_entry is not None:
+        if self.registry_entry is not None and (
+            not self._added_to_hass or self.registry_entry.disabled
+        ):
             discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
+            if self.registry_entry.disabled:
+                # Allow the disabled entity to be removed via MQTT discovery
+                self.hass.data[DATA_MQTT].discovery_discovered_and_disabled[
+                    discovery_hash
+                ] = DiscoveredDisabledEntity(
+                    (
+                        self.registry_entry.domain,
+                        DOMAIN,
+                        self.registry_entry.unique_id,
+                    ),
+                    self._discovery_data,
+                )
             self._registry_hooks[discovery_hash] = (
                 async_track_entity_registry_updated_event(
                     self.hass,
@@ -1273,6 +1340,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                         async_clear_discovery_topic_if_entity_removed,
                         self.hass,
                         self._discovery_data,
+                        self.registry_entry,
                     ),
                 )
             )
@@ -1557,6 +1625,7 @@ class MqttEntity(
 
         # Allow a disabled entity and device registry
         # to be cleaned up via MQTT discovery
+        existing_entry: er.RegistryEntry | None = None
         if existing_entity_id := entity_registry.async_get_entity_id(
             entity_platform, DOMAIN, self.unique_id
         ):
@@ -1566,13 +1635,14 @@ class MqttEntity(
         # or for entries that are disabled in the registry,
         # so they can be removed with an empty discovery payload
         if (
-            existing_entity_id is None
-            or (existing_entry and existing_entry.disabled_by is not None)
-        ) and not self._config[CONF_ENABLED_BY_DEFAULT]:
+            existing_entity_id is None and not self._config[CONF_ENABLED_BY_DEFAULT]
+        ) or (existing_entry and existing_entry.disabled_by is not None):
             mqtt_data = self.hass.data[DATA_MQTT]
             mqtt_data.discovery_discovered_and_disabled[
                 discovery_data[ATTR_DISCOVERY_HASH]
-            ] = (entity_platform, DOMAIN, self.unique_id)
+            ] = DiscoveredDisabledEntity(
+                (entity_platform, DOMAIN, self.unique_id), discovery_data
+            )
 
     @final
     @override
@@ -1650,6 +1720,20 @@ class MqttEntity(
         )
         await super().async_will_remove_from_hass()
         debug_info.remove_entity_data(self.hass, self.entity_id)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move debug info and subscriptions to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        debug_info.rename_entity_data(self.hass, old_entity_id, self.entity_id)
+        for sub_state in (
+            self._sub_state,
+            self._attributes_sub_state,
+            self._availability_sub_state,
+        ):
+            for sub in sub_state.values():
+                sub.entity_id = self.entity_id
 
     async def async_publish_with_config(
         self, topic: str, payload: PublishPayloadType

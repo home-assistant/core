@@ -35,7 +35,7 @@ class EngieBeRuntimeData:
 type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:
     """Set up ENGIE Belgium from a config entry."""
 
     async def _persist_tokens(access_token: str, refresh_token: str) -> None:
@@ -88,9 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

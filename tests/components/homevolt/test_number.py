@@ -105,30 +105,34 @@ async def test_set_number_value(
     assert state.state == str(float(value))
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_number_unknown_value(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_homevolt_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an absent manual parameter has an unknown state."""
     mock_homevolt_client.schedule["setpoint"] = None
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await init_integration.runtime_data.async_request_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(SETPOINT_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_numbers_unavailable_without_writable_manual_schedule(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_homevolt_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test parameter writes are unavailable for non-manual schedules."""
     mock_homevolt_client.writable_battery_parameters = frozenset()
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await init_integration.runtime_data.async_request_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(SETPOINT_ENTITY_ID)
     assert state is not None

@@ -5,7 +5,8 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from homeassistant.components.python_script import DOMAIN, FOLDER, execute
+from homeassistant.components.python_script.const import DOMAIN, FOLDER
+from homeassistant.components.python_script.helpers import execute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -36,11 +37,11 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.python_script.open",
+            "homeassistant.components.python_script.helpers.open",
             mock_open(read_data="fake source"),
             create=True,
         ),
-        patch("homeassistant.components.python_script.execute") as mock_ex,
+        patch("homeassistant.components.python_script.helpers.execute") as mock_ex,
     ):
         await hass.services.async_call(DOMAIN, "hello", {"some": "data"}, blocking=True)
 
@@ -513,7 +514,7 @@ time.sleep(2)
 time.sleep(5)
 """
 
-    with patch("homeassistant.components.python_script.time.sleep"):
+    with patch("homeassistant.components.python_script.helpers.time.sleep"):
         hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -544,7 +545,7 @@ output = {"result": f"hello {data.get('name', 'World')}"}
     """
 
     with patch(
-        "homeassistant.components.python_script.open",
+        "homeassistant.components.python_script.helpers.open",
         mock_open(read_data=source),
         create=True,
     ):
@@ -588,7 +589,7 @@ no_output = {"result": f"hello {data.get('name', 'World')}"}
     """
 
     with patch(
-        "homeassistant.components.python_script.open",
+        "homeassistant.components.python_script.helpers.open",
         mock_open(read_data=source),
         create=True,
     ):
@@ -628,7 +629,7 @@ output = f"hello {data.get('name', 'World')}"
 
     with (
         patch(
-            "homeassistant.components.python_script.open",
+            "homeassistant.components.python_script.helpers.open",
             mock_open(read_data=source),
             create=True,
         ),
