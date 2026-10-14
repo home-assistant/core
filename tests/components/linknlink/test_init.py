@@ -56,7 +56,9 @@ async def test_setup_and_unload(
     subscription_class.assert_called_once()
     subscription.start.assert_awaited_once()
     subscription.wait_confirmed.assert_awaited_once_with(60.0)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.model == DISPLAY_MODEL
     sensor_id = entity_registry.async_get_entity_id(
