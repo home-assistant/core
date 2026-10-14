@@ -298,8 +298,6 @@ class IcloudAccount:
         first_status: dict[str, Any] | None = None
         for device in devices:
             status = device.status(DEVICE_STATUS_SET)
-            if first_status is None:
-                first_status = status
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
 
@@ -312,6 +310,11 @@ class IcloudAccount:
                 # starts reporting it properly.
                 _LOGGER.warning("Skipping iCloud device with no id or name")
                 continue
+
+            # After the skip above, so the pending check below never reads the
+            # status of a device that was just rejected.
+            if first_status is None:
+                first_status = status
 
             if (
                 status[DEVICE_BATTERY_STATUS] == "Unknown"

@@ -434,6 +434,40 @@ async def test_device_without_identity_is_skipped(
     assert hass.states.get("sensor.iphone_battery").state == "80"
 
 
+async def test_pending_check_ignores_a_skipped_device(hass: HomeAssistant) -> None:
+    """Test that the pending-device retry does not read a device that was skipped.
+
+    The first device iCloud lists has no id and is still loading, so it is
+    skipped. Reading its status for the pending check would schedule a retry
+    for a device that was never stored, when the one that was is online.
+    """
+    skipped = {**_located_device_status(0.8), "id": None, "deviceStatus": "203"}
+    online = _located_device_status(0.8)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service_instance = MagicMock()
+        service_instance.requires_2fa = False
+        service_instance.devices = MockDevicesWithLocation(
+            USER_INFO, [StrictAppleDevice(skipped), StrictAppleDevice(online)]
+        )
+        service_mock.return_value = service_instance
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    assert list(account.devices) == ["device1"]
+    # A pending first device would have shortened the interval to 15 seconds.
+    assert account.fetch_interval != 0.25
+
+
 async def test_polling_resumes_after_2fa_challenge(
     hass: HomeAssistant,
     polling_service: tuple[MagicMock, dict],
