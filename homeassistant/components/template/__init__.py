@@ -66,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass,
             DOMAIN,
             f"composite_device_id_{entry.entry_id}",
+            config_entry_id=entry.entry_id,
             data={"entry_id": entry.entry_id},
             is_fixable=True,
             severity=ir.IssueSeverity.WARNING,
@@ -94,11 +95,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_unload_platforms_or_raise(
         entry, (entry.options["template_type"],)
     )
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle removal of a config entry."""
-    ir.async_delete_issue(hass, DOMAIN, f"composite_device_id_{entry.entry_id}")
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:

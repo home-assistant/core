@@ -7,7 +7,10 @@ from nrgkick_api import (
     NRGkickAuthenticationError,
     NRGkickCommandRejectedError,
     NRGkickConnectionError,
+    NRGkickHTTPError,
     NRGkickInvalidResponseError,
+    NRGkickTimeoutError,
+    NRGkickUnreachableError,
 )
 from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE
 import pytest
@@ -130,16 +133,14 @@ async def test_charge_switch_rejected_by_device(
         (NRGkickAuthenticationError("Unauthorized"), "authentication_error", None),
         (NRGkickAPIDisabledError("API disabled"), "json_api_disabled", None),
         (NRGkickInvalidResponseError("Bad payload"), "invalid_response", None),
+        (NRGkickTimeoutError("Timed out"), "timeout", None),
+        (NRGkickUnreachableError("Connection refused"), "unreachable", None),
         (
-            NRGkickConnectionError("Connection refused"),
-            "communication_error",
-            {"error": "Connection refused"},
+            NRGkickHTTPError("Internal Server Error", status=500),
+            "http_error",
+            {"status": "500"},
         ),
-        (
-            TimeoutError("Request timed out"),
-            "communication_error",
-            {"error": "Request timed out"},
-        ),
+        (NRGkickConnectionError("Server disconnected"), "communication_error", None),
     ],
 )
 async def test_charge_switch_api_errors(

@@ -272,7 +272,9 @@ async def test_account_not_found_issue_deleted_on_removal(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, "account_not_found_123456")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
