@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from typing import Any, override
+import asyncio
 
 from homewizard_energy import (
     HomeWizardEnergy,
@@ -333,7 +334,8 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
         energy_api = HomeWizardEnergyV1(ip_address)
 
     try:
-        return await energy_api.device()
+        async with asyncio.timeout(10):
+            return await energy_api.device()
 
     except DisabledError as ex:
         raise RecoverableError(
@@ -344,6 +346,10 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
         LOGGER.error("API version unsuppored")
         raise AbortFlow("unsupported_api_version") from ex
 
+    except TimeoutError as ex:
+        raise RecoverableError(
+            "Timeout while connecting to device", "network_error"
+        ) from ex    
     except RequestError as ex:
         raise RecoverableError(
             "Device unreachable or unexpected response", "network_error"
@@ -374,9 +380,12 @@ async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | Non
     uuid = await instance_id.async_get(hass)
 
     try:
-        return await api.get_token(f"home-assistant#{uuid[:6]}")
+        async with asyncio.timeout(35):
+            return await api.get_token(f"home-assistant#{uuid[:6]}")
     except DisabledError:
         return None
+    except TimeoutError:
+        return None        
     finally:
         await api.close()
 
