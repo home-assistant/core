@@ -113,7 +113,7 @@
   },
   "services": {
     "get_minute_forecast": {
-      "description": "Retrieves the precipitation forecast (nowcast) for up to 6 hours, in 2- or 15-minute segments depending on the location. Unlike the cached forecasts, every call makes a live request to the Google Weather API and counts toward your quota.",
+      "description": "Retrieves the precipitation forecast (nowcast) for up to 6 hours. Unlike the cached forecasts, every call makes a live request to the Google Weather API and counts toward your quota.",
       "name": "Get minute forecast"
     }
   }
