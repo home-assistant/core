@@ -2,8 +2,8 @@
 
 from unittest.mock import call
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import pulses_to_data
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
