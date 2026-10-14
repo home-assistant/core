@@ -3,8 +3,8 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -91,7 +91,7 @@ async def test_source_select(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "dvd"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -165,7 +165,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 1.0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_SET,
@@ -208,7 +208,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is False
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_MUTE,
@@ -412,7 +412,7 @@ async def test_play_media(hass: HomeAssistant) -> None:
     )
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is not None
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -459,7 +459,7 @@ async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.SEEK
     assert not mock_media_seek.called
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_SEEK,

@@ -34,6 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+_CONTINUOUS_VENTILATION_STATES = {
+    VentilationState.CNT1,
+    VentilationState.CNT2,
+    VentilationState.CNT3,
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class DucoSensorEntityDescription(SensorEntityDescription):
@@ -85,7 +91,9 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda node: (
             dt_util.utc_from_timestamp(node.ventilation.time_state_end)
-            if node.ventilation and node.ventilation.time_state_end != 0
+            if node.ventilation
+            and node.ventilation.state not in _CONTINUOUS_VENTILATION_STATES
+            and node.ventilation.time_state_end != 0
             else None
         ),
         node_types=VENTILATION_CAPABLE_NODE_TYPES,
@@ -277,7 +285,7 @@ async def async_setup_entry(
             if node.node_id not in known_nodes:
                 if node.general.node_type == NodeType.UNKNOWN:
                     # Do not add the node to known_nodes so that it is re-evaluated
-                    # on every coordinator update. This allows entities to be
+                    # when coordinator data changes. This allows entities to be
                     # created automatically once a firmware update or library
                     # update adds support for the device type.
                     _LOGGER.debug(

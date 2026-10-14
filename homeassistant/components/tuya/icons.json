@@ -83,6 +83,9 @@
       "near_detection": {
         "default": "mdi:signal-distance-variant"
       },
+      "speed": {
+        "default": "mdi:speedometer"
+      },
       "temperature": {
         "default": "mdi:thermometer"
       },
@@ -135,6 +138,9 @@
       },
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
+      },
+      "pump_mode": {
+        "default": "mdi:pump"
       },
       "record_mode": {
         "default": "mdi:record-rec"

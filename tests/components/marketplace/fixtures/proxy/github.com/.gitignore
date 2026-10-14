@@ -1,0 +1,6 @@
+# The root .gitignore drops every directory named tags (ctags), which would
+# leave out the recorded archives of the tags the catalog names
+!/hacs-test-org/integration-basic/archive/refs/tags/
+!/hacs-test-org/plugin-basic/archive/refs/tags/
+!/hacs-test-org/template-basic/archive/refs/tags/
+!/hacs-test-org/theme-basic/archive/refs/tags/

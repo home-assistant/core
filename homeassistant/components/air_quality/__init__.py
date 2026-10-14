@@ -49,6 +49,25 @@ PROP_TO_ATTR: Final[dict[str, str]] = {
     "sulphur_dioxide": ATTR_SO2,
 }
 
+__all__ = [
+    "ATTR_AQI",
+    "ATTR_CO",
+    "ATTR_CO2",
+    "ATTR_N2O",
+    "ATTR_NO",
+    "ATTR_NO2",
+    "ATTR_OZONE",
+    "ATTR_PM_0_1",
+    "ATTR_PM_2_5",
+    "ATTR_PM_10",
+    "ATTR_SO2",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "AirQualityEntity",
+]
+
+
 # mypy: disallow-any-generics
 
 

@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -17,7 +18,7 @@ type RuuviGatewayConfigEntry = ConfigEntry[RuuviGatewayRuntimeData]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: RuuviGatewayConfigEntry
-) -> bool:
+) -> None:
     """Set up Ruuvi Gateway from a config entry."""
     coordinator = RuuviGatewayUpdateCoordinator(hass, entry, _LOGGER)
     scanner, unload_scanner = async_connect_scanner(hass, entry, coordinator)
@@ -26,11 +27,17 @@ async def async_setup_entry(
         scanner=scanner,
     )
     entry.async_on_unload(unload_scanner)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: RuuviGatewayConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: RuuviGatewayConfigEntry
+) -> None:
+    """Remove a config entry."""
+    if mac_address := entry.unique_id:
+        async_remove_scanner(hass, mac_address.upper())

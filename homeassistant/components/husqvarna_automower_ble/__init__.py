@@ -23,7 +23,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> None:
     """Set up Husqvarna Autoconnect Bluetooth from a config entry."""
     if CONF_PIN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -104,13 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: HusqvarnaCoordinator = entry.runtime_data
-        await coordinator.async_shutdown()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator: HusqvarnaCoordinator = entry.runtime_data
+    await coordinator.async_shutdown()

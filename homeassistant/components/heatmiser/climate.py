@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from heatmiserv3 import connection, heatmiser
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -29,18 +29,23 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_THERMOSTATS = "tstats"
 
-TSTATS_SCHEMA = vol.Schema(
-    vol.All(
-        cv.ensure_list,
-        [{vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}],
+TSTATS_SCHEMA = probatio.Schema(
+    probatio.All(
+        probatio.EnsureList(),
+        [
+            {
+                probatio.Required(CONF_ID): cv.positive_int,
+                probatio.Required(CONF_NAME): cv.string,
+            }
+        ],
     )
 )
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_THERMOSTATS, default=[]): TSTATS_SCHEMA,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT): cv.string,
+        probatio.Optional(CONF_THERMOSTATS, default=[]): TSTATS_SCHEMA,
     }
 )
 
@@ -94,8 +99,8 @@ class HeatmiserV3Thermostat(ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        self._attr_target_temperature = int(temperature)
-        self.therm.set_target_temp(self._attr_target_temperature)
+        self._attr_native_target_temperature = int(temperature)
+        self.therm.set_target_temp(self._attr_native_target_temperature)
 
     def update(self) -> None:
         """Get the latest data."""
@@ -104,13 +109,13 @@ class HeatmiserV3Thermostat(ClimateEntity):
             _LOGGER.error("Failed to update device %s", self.name)
             return
         self.dcb = self.therm.read_dcb()
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             UnitOfTemperature.CELSIUS
             if (self.therm.get_temperature_format() == "C")
             else UnitOfTemperature.FAHRENHEIT
         )
-        self._attr_current_temperature = int(self.therm.get_floor_temp())
-        self._attr_target_temperature = int(self.therm.get_target_temp())
+        self._attr_native_current_temperature = int(self.therm.get_floor_temp())
+        self._attr_native_target_temperature = int(self.therm.get_target_temp())
         self._attr_hvac_mode = (
             HVACMode.OFF
             if (int(self.therm.get_current_state()) == 0)

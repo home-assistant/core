@@ -20,12 +20,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry as dr,
     entity_registry as er,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.redact import partial_redact
 
 from .const import (
     CONF_CITY,
@@ -63,7 +65,7 @@ def async_get_cloud_api_update_interval(
 
     LOGGER.debug(
         "Leveling API key usage (%s): %s consumers, %s minutes between updates",
-        api_key,
+        partial_redact(api_key),
         num_consumers,
         minutes_between_api_calls,
     )
@@ -157,12 +159,14 @@ def _standardize_geography_config_entry(
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> None:
     """Set up AirVisual as config entry."""
     if CONF_API_KEY not in entry.data:
-        # If this is a migrated AirVisual Pro entry, there's no actual setup to do;
-        # that will be handled by the `airvisual_pro` domain:
-        return False
+        # Migrated AirVisual Pro entries are set up by the `airvisual_pro` domain
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migrated_to_airvisual_pro",
+        )
 
     _standardize_geography_config_entry(hass, entry)
 
@@ -186,10 +190,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -343,19 +345,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) 
 
     LOGGER.info("Migration to version %s successful", version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> None:
     """Unload an AirVisual config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok and CONF_API_KEY in entry.data:
+    if CONF_API_KEY in entry.data:
         # Re-calculate the update interval period for any remaining consumers of
         # this API key:
         async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
-
-    return unload_ok
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) -> None:
