@@ -845,6 +845,54 @@ async def test_contracts_retry_finishing_while_unloading_adds_no_entities(
     )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_contracts_retry_epex_refresh_during_unload_adds_no_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an EPEX refresh finishing during unload adds no entities."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    epex_coordinator = mock_config_entry.runtime_data.epex
+    assert epex_coordinator is not None
+    epex_coordinator.data = None
+
+    release_epex = asyncio.Event()
+
+    def _dynamic_contracts(_ban: str) -> EnergyContractsResponse:
+        return build_contracts(dynamic=True)
+
+    async def _slow_epex(*args, **kwargs):
+        await release_epex.wait()
+        return build_epex_payload(*args, **kwargs)
+
+    client.async_get_energy_contracts.side_effect = _dynamic_contracts
+    client.async_get_epex_prices.side_effect = _slow_epex
+
+    freezer.tick(CONTRACTS_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_config_entry.mock_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS)
+    release_epex.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+
 async def test_contracts_retry_resolving_fixed_shuts_down_epex(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

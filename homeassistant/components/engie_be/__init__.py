@@ -177,6 +177,8 @@ def _async_start_tariff_retry(
             households[ban].is_dynamic = is_dynamic
         if any(results):
             await epex.async_request_refresh()
+            if entry.state is not ConfigEntryState.LOADED:
+                return  # type: ignore[unreachable]
             for notify in runtime_data.epex_ready_callbacks:
                 notify()
         if any(household.is_dynamic is None for household in households.values()):

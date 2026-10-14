@@ -697,9 +697,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -738,7 +736,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels EPEX next hour price',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
@@ -755,9 +752,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -796,7 +791,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels EPEX next quarter-hourly price',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
