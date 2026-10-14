@@ -69,7 +69,7 @@ env:
     tests/components/recorder
     tests/components/sensor
   UV_CACHE_DIR: /tmp/uv-cache
-  APT_CACHE_VERSION: 1
+  APT_CACHE_VERSION: 2
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
