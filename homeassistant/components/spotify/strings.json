@@ -40,7 +40,7 @@
       "message": "Spotify media not found: {media_content_type} / {media_content_id}"
     },
     "missing_scopes": {
-      "message": "The Spotify access token is missing required permissions, please reauthenticate"
+      "message": "The Spotify access token is missing required permissions. Please reauthenticate"
     },
     "token_refresh_failed": {
       "message": "An error occurred while refreshing the Spotify access token: {error}"
