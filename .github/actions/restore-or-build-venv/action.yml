@@ -78,7 +78,7 @@ runs:
         packages: >-
           bluez
           ffmpeg
-          libturbojpeg
+          libturbojpeg0
           libxml2-utils
           libavcodec-dev
           libavdevice-dev

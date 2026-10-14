@@ -409,7 +409,7 @@ jobs:
         timeout-minutes: 10
         uses: $/.github/actions/cache-apt-packages
         with:
-          packages: libturbojpeg
+          packages: libturbojpeg0
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python and restore venv
         id: python
@@ -800,7 +800,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
       - name: Set up Python and restore venv
@@ -896,7 +896,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1035,7 +1035,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libmariadb-dev-compat
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
@@ -1177,7 +1177,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1312,7 +1312,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1452,7 +1452,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
