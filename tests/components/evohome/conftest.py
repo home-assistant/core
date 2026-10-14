@@ -112,7 +112,7 @@ def mock_make_request(install: str) -> Callable:
         if url.startswith("location/"):
             if "installationInfo" in url:  # /v2/location/installationInfo?userId={id}
                 return user_locations_config_fixture(install)
-            if "status" in url:  # /v2/location/{id}/status
+            if "status" in url:  # location/{id}/status
                 return location_status_fixture(install, url.split("/")[1])
 
         elif "schedule" in url:
