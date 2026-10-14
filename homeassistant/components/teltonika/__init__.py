@@ -25,7 +25,7 @@ PLATFORMS = [Platform.SENSOR]
 type TeltonikaConfigEntry = ConfigEntry[TeltonikaDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> None:
     """Set up Teltonika from a config entry."""
     host = entry.data[CONF_HOST]
     username = entry.data[CONF_USERNAME]
@@ -57,12 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.client.close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.client.close()

@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 class BesenCoordinator(DataUpdateCoordinator[BesenData]):
     """Coordinate Besen state updates."""
 
+    config_entry: BesenConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -79,6 +81,8 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         """Publish a client state update."""
 
         self.async_set_updated_data(data)
+        if data.auth_failed:
+            self.config_entry.async_start_reauth(self.hass)
 
     async def async_start_charging(self) -> None:
         """Start charging."""
@@ -89,6 +93,16 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         """Stop charging."""
 
         await self._async_run_command(self.client.async_stop_charging())
+
+    async def async_set_charge_amps(self, amps: int) -> None:
+        """Set the charging current."""
+
+        await self._async_run_command(self.client.async_set_charge_amps(amps))
+
+    async def async_set_temperature_unit(self, unit: str) -> None:
+        """Set the charger display temperature unit."""
+
+        await self._async_run_command(self.client.async_set_temperature_unit(unit))
 
     async def _async_run_command(self, command: Awaitable[None]) -> None:
         """Run a charger command and translate command failures."""

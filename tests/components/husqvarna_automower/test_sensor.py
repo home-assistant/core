@@ -13,6 +13,7 @@ from aioautomower.model import (
     WorkArea,
     WorkAreaType,
 )
+from aioautomower.model.model_mower import UNKNOWN_ERROR
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -286,9 +287,11 @@ async def test_error_sensor(
     for state, error_key, expected_state in (
         (MowerStates.IN_OPERATION, None, "no_error"),
         (MowerStates.ERROR, "can_error", "can_error"),
+        (MowerStates.ERROR, "destination_blocked", "destination_blocked"),
         (MowerStates.ERROR, None, MowerStates.ERROR.lower()),
         (MowerStates.ERROR_AT_POWER_UP, None, MowerStates.ERROR_AT_POWER_UP.lower()),
         (MowerStates.FATAL_ERROR, None, MowerStates.FATAL_ERROR.lower()),
+        (MowerStates.ERROR, UNKNOWN_ERROR, STATE_UNKNOWN),
     ):
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].mower.error_key = error_key
@@ -297,6 +300,7 @@ async def test_error_sensor(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.garden_test_mower_1_error")
+        assert state is not None
         assert state.state == expected_state
 
 

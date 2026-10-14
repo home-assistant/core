@@ -109,6 +109,13 @@ SEARCHABLE_MASS_MEDIA_TYPES = [
 # an artist holds nothing else we can search or browse
 ARTIST_MASS_MEDIA_TYPES = [MASSMediaType.ALBUM, MASSMediaType.TRACK]
 
+# the items that async_search_media can search inside
+SEARCH_WITHIN_MASS_MEDIA_TYPES = (
+    MASSMediaType.ALBUM,
+    MASSMediaType.ARTIST,
+    MASSMediaType.PLAYLIST,
+)
+
 MEDIA_CONTENT_TYPE_FLAC = "audio/flac"
 THUMB_SIZE = 200
 SORT_NAME = "sort_name"
@@ -474,6 +481,7 @@ def build_item(
         title=title,
         can_play=True,
         can_expand=can_expand,
+        can_search=item.media_type in SEARCH_WITHIN_MASS_MEDIA_TYPES,
         thumbnail=img_url,
     )
 

@@ -1,10 +1,10 @@
 {
   "domain": "collection_image",
-  "name": "Collection Image",
+  "name": "Collection image",
   "codeowners": ["@karwosts"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/collection_image",
   "integration_type": "service",
   "iot_class": "calculated",
-  "quality_scale": "bronze"
+  "quality_scale": "silver"
 }

@@ -1,6 +1,6 @@
 """Provides device actions for lights."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     async_get_entity_registry_entry_or_raise,
@@ -41,9 +41,9 @@ TYPE_FLASH = "flash"
 
 _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_TYPE): vol.In(
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_TYPE): probatio.In(
             [
                 *toggle_entity.DEVICE_ACTION_TYPES,
                 TYPE_BRIGHTNESS_INCREASE,
@@ -51,8 +51,8 @@ _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
                 TYPE_FLASH,
             ]
         ),
-        vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT,
-        vol.Optional(ATTR_FLASH): VALID_FLASH,
+        probatio.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT,
+        probatio.Optional(ATTR_FLASH): VALID_FLASH,
     }
 )
 
@@ -134,7 +134,7 @@ async def async_get_actions(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}
@@ -150,9 +150,9 @@ async def async_get_action_capabilities(
     extra_fields: VolDictType = {}
 
     if brightness_supported(supported_color_modes):
-        extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
+        extra_fields[probatio.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
     if supported_features & LightEntityFeature.FLASH:
-        extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
+        extra_fields[probatio.Optional(ATTR_FLASH)] = VALID_FLASH
 
-    return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
+    return {"extra_fields": probatio.Schema(extra_fields)} if extra_fields else {}

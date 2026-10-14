@@ -149,8 +149,10 @@ class HueTemperatureSensor(HueSensorBase):
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
+        if self.resource.temperature.value is None:
+            return None
         return round(self.resource.temperature.value, 1)
 
 

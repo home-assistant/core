@@ -1,7 +1,40 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'active_faults': list([
+    ]),
+    'address_masks': dict({
+      '1024': 0,
+      '1088': 0,
+      '1152': 0,
+      '1280': 0,
+      '1408': 0,
+      '1472': 0,
+      '1536': 0,
+      '1600': 0,
+      '1664': 0,
+      '1728': 0,
+      '4096': 0,
+      '4160': 0,
+      '4352': 0,
+      '4480': 0,
+    }),
     'inverter_type': 1537,
+    'link': dict({
+      'stats': dict({
+        'answered': 45,
+        'failures': dict({
+        }),
+        'median': float,
+        'p95': float,
+        'requests': 45,
+        'slowest': float,
+      }),
+      'tuning': dict({
+        'connect_delay': 0.0,
+        'spacing': 0.0,
+      }),
+    }),
     'model': '4.4 KTLX-G3',
     'raw': dict({
       'holding': dict({
@@ -152,6 +185,7 @@
         '1682': 0,
         '1683': 0,
         '1773': 0,
+        '4106': 0,
         '4131': 0,
         '4132': 0,
         '4356': 0,
@@ -159,14 +193,17 @@
         '4358': 0,
       }),
     }),
+    'read_error': None,
     'readings_components': list([
       'state',
       'grid',
       'pv_1_2',
       'energy',
+      'meter_energy',
     ]),
     'serial_number': '**REDACTED**',
     'settings_components': list([
+      'rtc_sync',
       'feed_in',
       'remote',
       'active_power_control',
