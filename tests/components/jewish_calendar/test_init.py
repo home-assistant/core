@@ -2,8 +2,9 @@
 
 import pytest
 
-from homeassistant.components.jewish_calendar.const import DOMAIN
+from homeassistant.components.jewish_calendar.const import CONF_DAILY_EVENTS, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,3 +43,24 @@ async def test_migrate_unique_id(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == f"{config_entry.entry_id}-{new_key}"
+
+
+async def test_migrate_daily_events_tset_hakohavim(hass: HomeAssistant) -> None:
+    """Test the daily events option migration of the nightfall event."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=3,
+        data={CONF_LANGUAGE: "en"},
+        options={CONF_DAILY_EVENTS: ["date", "shkia", "tset_hakohavim_tsom"]},
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 4
+    assert config_entry.options[CONF_DAILY_EVENTS] == [
+        "date",
+        "shkia",
+        "tset_hakohavim",
+    ]

@@ -524,3 +524,109 @@ async def test_abort_discovery_flow_with_user_flow(hass: HomeAssistant) -> None:
 
         # Verify the discovery flow was aborted
         assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test Nanoleaf reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_NAME,
+        data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+            return_value=_mock_nanoleaf(TEST_OTHER_HOST),
+        ) as mock_nanoleaf,
+        patch(
+            "homeassistant.components.nanoleaf.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_OTHER_HOST}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_nanoleaf.call_args.args[1:] == (TEST_OTHER_HOST, TEST_TOKEN)
+    assert entry.data == {CONF_HOST: TEST_OTHER_HOST, CONF_TOKEN: TEST_TOKEN}
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        pytest.param(Unavailable, "cannot_connect", id="unavailable"),
+        pytest.param(InvalidToken, "invalid_token", id="invalid_token"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant, error: type[Exception], expected_error: str
+) -> None:
+    """Test Nanoleaf reconfigure flow errors and recovery."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_NAME,
+        data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+            return_value=_mock_nanoleaf(TEST_OTHER_HOST, get_info_error=error),
+        ) as mock_nanoleaf,
+        patch(
+            "homeassistant.components.nanoleaf.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_OTHER_HOST}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"] == {"base": expected_error}
+
+        mock_nanoleaf.return_value.get_info.side_effect = None
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_OTHER_HOST}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert entry.data == {CONF_HOST: TEST_OTHER_HOST, CONF_TOKEN: TEST_TOKEN}
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test Nanoleaf reconfigure flow aborts for a different device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="Other Nanoleaf",
+        data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(TEST_OTHER_HOST),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_OTHER_HOST}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+    assert entry.data == {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN}

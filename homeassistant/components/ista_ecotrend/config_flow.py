@@ -126,6 +126,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="unique_id_mismatch")
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(

@@ -95,6 +95,10 @@ async def test_time_server_write_format(
     # Verify telegrams are written
     for address, expected_value in expected_telegrams.items():
         await knx.assert_write(address, expected_value)
+    # unset group addresses are not stored
+    await client.send_json_auto_id({"type": "knx/get_time_server_config"})
+    res = await client.receive_json()
+    assert res["result"] == config
     # Verify read responses work
     for address, expected_value in expected_telegrams.items():
         await knx.receive_read(address)

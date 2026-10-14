@@ -49,7 +49,7 @@ class ElevenLabsData:
 type ElevenLabsConfigEntry = ConfigEntry[ElevenLabsData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> None:
     """Set up ElevenLabs text-to-speech from a config entry."""
     entry.async_on_unload(entry.add_update_listener(update_listener))
     httpx_client = get_async_client(hass)
@@ -72,12 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(
@@ -89,7 +87,7 @@ async def update_listener(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ElevenLabsConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry to new format."""
 
     _LOGGER.debug(
@@ -120,5 +118,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True  # already up to date

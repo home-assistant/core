@@ -70,7 +70,7 @@
               "bluetooth_communication_with_charging_station_failed": "[%key:component::husqvarna_automower::entity::sensor::error::state::bluetooth_communication_with_charging_station_failed%]",
               "bluetooth_settings_changed": "[%key:component::husqvarna_automower::entity::sensor::error::state::bluetooth_settings_changed%]",
               "boundary_wire_problem": "[%key:component::husqvarna_automower::entity::sensor::error::state::boundary_wire_problem%]",
-              "camera_lens_blocked": "[%key:component::husqvarna_automower::entity::sensor::error::state::camera_lens_wet%]",
+              "camera_lens_blocked": "[%key:component::husqvarna_automower::entity::sensor::error::state::camera_lens_blocked%]",
               "camera_lens_wet": "[%key:component::husqvarna_automower::entity::sensor::error::state::camera_lens_wet%]",
               "can_error": "[%key:component::husqvarna_automower::entity::sensor::error::state::can_error%]",
               "cellular_settings_changed": "[%key:component::husqvarna_automower::entity::sensor::error::state::cellular_settings_changed%]",

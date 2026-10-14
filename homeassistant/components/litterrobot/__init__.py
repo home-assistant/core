@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: LitterRobotConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -88,10 +88,9 @@ async def async_migrate_entry(
         entry.version,
         entry.minor_version,
     )
-    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> None:
     """Set up Litter-Robot from a config entry."""
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
 
@@ -107,15 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: LitterRobotConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     await entry.runtime_data.account.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

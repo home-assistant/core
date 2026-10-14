@@ -1,5 +1,4 @@
 """Support for Actions on Google Assistant Smart Home Control."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import probatio
 
@@ -103,8 +102,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     if DOMAIN not in yaml_config:
         return True
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CONFIG] = yaml_config[DOMAIN]
+    hass.data[DATA_CONFIG] = yaml_config[DOMAIN]
 
     if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
         async_setup_services(hass)
@@ -120,10 +118,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Set up from a config entry."""
 
-    config: ConfigType = {**hass.data[DOMAIN][DATA_CONFIG]}
+    config: ConfigType = hass.data[DATA_CONFIG].copy()
 
     if entry.source == SOURCE_IMPORT:
         # if project was changed, remove entry a new will be setup
@@ -157,5 +155,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
         google_config.async_enable_report_state()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True

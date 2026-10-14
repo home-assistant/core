@@ -795,11 +795,11 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock) -> None:
 
 
 async def test_ssdp_exception(hass: HomeAssistant) -> None:
-    """Test starting a flow from discovery but no device found."""
+    """Test starting a flow from discovery but setup fails later."""
     with (
         patch(
             "homeassistant.components.fritz.config_flow.FritzConnection",
-            side_effect=FritzConnectionException,
+            side_effect=[MagicMock(), FritzConnectionException],
         ),
         patch(
             "homeassistant.components.fritz.config_flow.socket.gethostbyname",
@@ -822,6 +822,26 @@ async def test_ssdp_exception(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm"
+
+
+async def test_ssdp_not_supported(hass: HomeAssistant) -> None:
+    """Test discovery is aborted when the router does not provide TR-064."""
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=FritzConnectionException,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
 
 
 async def test_options_flow(hass: HomeAssistant, fc_class_mock) -> None:
