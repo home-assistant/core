@@ -310,7 +310,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         device_type=(
             device_types.AirPurifier,
-            device_types.BasicVideoPlayer,
             device_types.CastingVideoPlayer,
             device_types.CookSurface,
             device_types.Cooktop,

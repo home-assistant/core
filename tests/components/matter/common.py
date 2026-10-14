@@ -54,6 +54,7 @@ FIXTURES = [
     "inovelli_vtm31",
     "longan_link_thermostat",
     "mock_air_purifier",
+    "mock_basic_video_player",
     "mock_battery_storage",
     "mock_chime",
     "mock_closure_covering_lift",
