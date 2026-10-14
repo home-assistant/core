@@ -329,7 +329,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
 
         Only used by the generic entity update service.
         """
-        await self.coordinator.async_request_refresh()
+        await super().async_update()
 
         for forecast_type in ("twice_daily", "hourly"):
             if (coordinator := self.forecast_coordinators[forecast_type]) is not None:

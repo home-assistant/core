@@ -669,6 +669,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 return
 
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self) -> None:
         """Update the entity."""
         LOGGER.info(
@@ -706,6 +707,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
             self._attr_name = cast(str, entry.original_name)
 
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self) -> None:
         """Update the entity."""
         LOGGER.info(

@@ -84,6 +84,7 @@ class SwitchbotEntity(
         return await super().async_added_to_hass()
 
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self) -> None:
         """Update the entity.
 
