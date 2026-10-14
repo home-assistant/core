@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aiolinknlink import UltraClient, UltraError, UltraSession
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -12,9 +12,9 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_PORT, DISPLAY_MODEL, DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
