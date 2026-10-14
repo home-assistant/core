@@ -51,6 +51,26 @@ result = await hass.config_entries.flow.async_init(
             "homeassistant.components.test_integration.config_flow",
             id="integration_code",
         ),
+        pytest.param(
+            """
+result = await hass.config_entries.subentries.async_init(
+    (entry.entry_id, "subentry"),
+    context={"source": config_entries.SOURCE_RECONFIGURE, "subentry_id": "abc"},
+)
+""",
+            TEST_MODULE,
+            id="subentry_flow",
+        ),
+        pytest.param(
+            """
+source = "reauth" if reauth else "reconfigure"
+result = await hass.config_entries.flow.async_init(
+    DOMAIN, context={"source": source}
+)
+""",
+            TEST_MODULE,
+            id="ambiguous_alias",
+        ),
     ],
 )
 def test_no_warning(
@@ -106,4 +126,48 @@ result = await hass.config_entries.flow.async_init(
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-test-flow-start-helper"
+    assert messages[0].args == (helper,)
+
+
+@pytest.mark.parametrize(
+    ("code", "helper"),
+    [
+        pytest.param(
+            """
+source = "reauth"
+result = await hass.config_entries.flow.async_init(
+    DOMAIN, context={"source": source}
+)
+""",
+            "start_reauth_flow",
+            id="alias",
+        ),
+        pytest.param(
+            """
+async def test_flows(flow_type):
+    if flow_type == "reauth":
+        source = "reauth"
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}
+        )
+    else:
+        source = "reconfigure"
+""",
+            "start_reauth_flow",
+            id="alias_in_branch",
+        ),
+    ],
+)
+def test_warning_alias(
+    linter: UnittestLinter,
+    flow_checker: FlowStartHelpersChecker,
+    code: str,
+    helper: str,
+) -> None:
+    """Test that a source assigned to a local name is resolved."""
+    root_node = astroid.parse(code, TEST_MODULE)
+    walk_checker(linter, flow_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
     assert messages[0].args == (helper,)

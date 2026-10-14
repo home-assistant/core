@@ -9,7 +9,7 @@ build the same context Home Assistant uses at runtime.
 """
 
 from astroid import nodes
-from pylint.checkers import BaseChecker
+from pylint.checkers import BaseChecker, utils
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import parse_module
@@ -24,9 +24,9 @@ _LITERALS = dict(_SOURCES.values())
 def _get_helper(node: nodes.NodeNG) -> str | None:
     """Return the helper replacing the given source value, if any."""
     match node:
-        case nodes.Name(name=name) | nodes.Attribute(attrname=name):
-            if name in _SOURCES:
-                return _SOURCES[name][1]
+        case nodes.Name(name=name) | nodes.Attribute(attrname=name) if name in _SOURCES:
+            return _SOURCES[name][1]
+    match utils.safe_infer(node, compare_constants=True):
         case nodes.Const(value=str() as value):
             return _LITERALS.get(value)
     return None
@@ -77,6 +77,8 @@ class FlowStartHelpersChecker(BaseChecker):
         if not (
             isinstance(node.func, nodes.Attribute)
             and node.func.attrname == "async_init"
+            and isinstance(node.func.expr, nodes.Attribute)
+            and node.func.expr.attrname == "flow"
         ):
             return
         if (helper := _get_source_helper(node)) is None:
