@@ -80,15 +80,17 @@ async def test_setup_relations_auth_error_starts_reauth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
+@pytest.mark.parametrize("method", ["async_get_prices", "async_get_service_point"])
 async def test_setup_prices_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
+    method: str,
 ) -> None:
-    """Test an auth error on the initial prices fetch starts reauth."""
-    mock_engie_client.return_value.async_get_prices.side_effect = (
-        EngieBeAuthenticationError("boom")
-    )
+    """Test an auth error on the initial prices refresh starts reauth."""
+    getattr(
+        mock_engie_client.return_value, method
+    ).side_effect = EngieBeAuthenticationError("boom")
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

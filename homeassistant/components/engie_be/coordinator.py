@@ -168,6 +168,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 return_exceptions=True,
             )
             for ean, service_point_result in zip(new_eans, service_points, strict=True):
+                if isinstance(service_point_result, EngieBeAuthenticationError):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN, translation_key="invalid_auth"
+                    ) from service_point_result
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",
