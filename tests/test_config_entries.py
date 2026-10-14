@@ -10697,28 +10697,46 @@ async def test_set_unique_id_or_abort_mismatch(
 
 
 @pytest.mark.parametrize(
-    ("raise_on_progress", "expected_reason"),
-    [(True, "already_in_progress"), (False, "success")],
+    ("source", "raise_on_progress", "expected_reason"),
+    [
+        (config_entries.SOURCE_USER, None, "success"),
+        (config_entries.SOURCE_USER, True, "already_in_progress"),
+        (config_entries.SOURCE_IMPORT, None, "already_in_progress"),
+        (config_entries.SOURCE_IMPORT, False, "success"),
+    ],
 )
 async def test_set_unique_id_or_abort_raise_on_progress(
     hass: HomeAssistant,
-    raise_on_progress: bool,
+    source: str,
+    raise_on_progress: bool | None,
     expected_reason: str,
 ) -> None:
-    """Test async_set_unique_id_or_abort passes raise_on_progress through."""
+    """Test user flows take precedence over a discovery flow in progress."""
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(config_entries.ConfigFlow):
         VERSION = 1
 
+        async def async_step_zeroconf(self, discovery_info):
+            """Test zeroconf step."""
+            await self.async_set_unique_id("unique")
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(self, user_input=None):
+            """Test confirm step."""
+            return self.async_show_form(step_id="confirm")
+
         async def async_step_user(self, user_input=None):
             """Test user step."""
-            await self.async_set_unique_id("unique")
-            return self.async_show_form(step_id="user")
+            return await self._async_step_create()
 
         async def async_step_import(self, import_data):
             """Test import step."""
+            return await self._async_step_create()
+
+        async def _async_step_create(self):
+            """Set the unique ID."""
             await self.async_set_unique_id_or_abort(
                 "unique", raise_on_progress=raise_on_progress
             )
@@ -10726,10 +10744,10 @@ async def test_set_unique_id_or_abort_raise_on_progress(
 
     with mock_config_flow("test", TestFlow):
         await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_USER}
+            "test", context={"source": config_entries.SOURCE_ZEROCONF}, data={}
         )
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_IMPORT}, data={}
+            "test", context={"source": source}, data={}
         )
 
     assert result["type"] is FlowResultType.ABORT
