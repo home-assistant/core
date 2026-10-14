@@ -52,7 +52,17 @@ STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-CONDITION_SCHEMA = probatio.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
+CONDITION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "is_position": POSITION_CONDITION_SCHEMA,
+        "is_tilt_position": POSITION_CONDITION_SCHEMA,
+        "is_open": STATE_CONDITION_SCHEMA,
+        "is_closed": STATE_CONDITION_SCHEMA,
+        "is_opening": STATE_CONDITION_SCHEMA,
+        "is_closing": STATE_CONDITION_SCHEMA,
+    },
+)
 
 
 async def async_get_conditions(

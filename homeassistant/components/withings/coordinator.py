@@ -25,7 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from . import WithingsConfigEntry
@@ -84,7 +84,10 @@ class WithingsDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             return await self._internal_update_data()
         except (WithingsUnauthorizedError, WithingsAuthenticationFailedError) as exc:
-            raise ConfigEntryAuthFailed from exc
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from exc
 
     @abstractmethod
     async def _internal_update_data(self) -> _DataT:

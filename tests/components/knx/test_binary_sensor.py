@@ -6,6 +6,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.knx.const import (
     CONF_CONTEXT_TIMEOUT,
     CONF_IGNORE_INTERNAL_STATE,
@@ -14,8 +15,11 @@ from homeassistant.components.knx.const import (
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
 )
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import BinarySensorSchema
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_OFF,
@@ -386,3 +390,95 @@ async def test_binary_sensor_ui_load(knx: KNXTestKit) -> None:
     await knx.setup_integration(config_store_fixture="config_store_binarysensor.json")
     await knx.assert_read("3/2/21", response=True, ignore_order=True)
     knx.assert_state("binary_sensor.test", STATE_ON)
+
+
+@pytest.fixture
+def load_knxproj_dpt1(
+    project_data: dict[str, Any], hass_storage: dict[str, Any]
+) -> None:
+    """Load the project fixture extended by group addresses with DPT 1 sub-types."""
+    template = project_data["group_addresses"]["0/1/0"]
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            **project_data,
+            "group_addresses": {
+                **project_data["group_addresses"],
+                "1/0/5": {
+                    **template,
+                    "address": "1/0/5",
+                    "raw_address": 2053,
+                    "name": "Window",
+                    "dpt": {"main": 1, "sub": 19},
+                },
+                "1/0/18": {
+                    **template,
+                    "address": "1/0/18",
+                    "raw_address": 2066,
+                    "name": "Presence",
+                    "dpt": {"main": 1, "sub": 18},
+                },
+            },
+        },
+    }
+
+
+@pytest.mark.usefixtures("load_knxproj_dpt1")
+@pytest.mark.parametrize(
+    ("entity_config", "device_class"),
+    [
+        pytest.param(
+            {CONF_STATE_ADDRESS: "1/0/5"},
+            BinarySensorDeviceClass.OPENING,
+            id="dpt_default",
+        ),
+        pytest.param(
+            {CONF_STATE_ADDRESS: "1/0/5", CONF_DEVICE_CLASS: "window"},
+            BinarySensorDeviceClass.WINDOW,
+            id="configured_overrides_dpt_default",
+        ),
+        pytest.param(
+            {CONF_STATE_ADDRESS: "0/0/1"},  # DPT 1.001 has no default device class
+            None,
+            id="no_dpt_default",
+        ),
+        pytest.param(
+            {CONF_STATE_ADDRESS: "5/5/5"},  # not in project
+            None,
+            id="unknown_group_address",
+        ),
+    ],
+)
+async def test_binary_sensor_device_class_from_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_config: dict[str, Any],
+    device_class: BinarySensorDeviceClass | None,
+) -> None:
+    """Test the default device class is derived from the project DPT."""
+    await knx.setup_integration(
+        {
+            BinarySensorSchema.PLATFORM: [
+                {CONF_NAME: "test", CONF_SYNC_STATE: False, **entity_config}
+            ]
+        }
+    )
+    state = hass.states.get("binary_sensor.test")
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+
+@pytest.mark.usefixtures("load_knxproj_dpt1")
+async def test_binary_sensor_ui_device_class_from_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test the default device class of a UI entity is derived from the project DPT."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BINARY_SENSOR,
+        entity_data={"name": "test"},
+        knx_data={"ga_sensor": {"state": "1/0/18"}, "sync_state": False},
+    )
+    state = hass.states.get("binary_sensor.test")
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.OCCUPANCY

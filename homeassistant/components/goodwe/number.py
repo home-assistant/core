@@ -130,6 +130,12 @@ class InverterNumberEntity(NumberEntity):
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
+        # Larger inverters can export more than the default maximum; inverter
+        # families that don't report their rated power leave it at 0
+        if description.native_unit_of_measurement == UnitOfPower.WATT:
+            self._attr_native_max_value = max(
+                description.native_max_value, inverter.rated_power
+            )
 
     async def async_update(self) -> None:
         """Get the current value from inverter."""

@@ -572,6 +572,9 @@
       "dryer_mode": {
         "name": "Dryer mode"
       },
+      "dryer_progress": {
+        "name": "Progress"
+      },
       "energy_difference": {
         "name": "Energy difference"
       },
@@ -986,6 +989,9 @@
       "washer_mode": {
         "name": "Washer mode"
       },
+      "washer_progress": {
+        "name": "[%key:component::smartthings::entity::sensor::dryer_progress::name%]"
+      },
       "washer_sub_completion_time": {
         "name": "Upper washer completion time"
       },
@@ -1017,6 +1023,9 @@
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
+      },
+      "washer_sub_progress": {
+        "name": "Upper washer progress"
       },
       "water_consumption": {
         "name": "Water consumption"
@@ -1153,6 +1162,27 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with SmartThings failed"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while communicating with SmartThings: {error}"
+    },
+    "create_subscription_error": {
+      "message": "Could not create a new SmartThings subscription: {error}"
+    },
+    "delete_subscription_error": {
+      "message": "Could not delete the old SmartThings subscription: {error}"
+    },
+    "dishwasher_machine_state": {
+      "message": "Can only be changed when the dishwasher machine state is {machine_state}"
+    },
+    "missing_token": {
+      "message": "The configuration entry is missing a token, please reauthenticate"
+    },
+    "option_not_supported": {
+      "message": "Option is not supported by the selected cycle"
+    },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
     }

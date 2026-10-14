@@ -1,11 +1,15 @@
 """The my-PV integration for Home Assistant."""
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
@@ -20,7 +24,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> None:
     """Set up my-PV from a config entry."""
 
     device = MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
@@ -36,6 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
             translation_domain=DOMAIN,
             translation_key="auth_error",
         ) from exc
+    except MyPVDeviceNotSupportedError as exc:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_device",
+        ) from exc
 
     coordinator = MyPVCoordinator(hass, entry, device)
 
@@ -49,12 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_disconnect()

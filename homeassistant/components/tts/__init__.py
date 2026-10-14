@@ -37,7 +37,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -405,6 +405,7 @@ async def _async_convert_audio(
         if retcode != 0:
             assert process.stderr
             stderr_data = await process.stderr.read()
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(stderr_data.decode())
             raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
@@ -511,6 +512,18 @@ class ResultStream:
         return asyncio.Future()
 
     @callback
+    def _async_mark_used(self) -> None:
+        """Keep the stream available now that its result is about to be used.
+
+        A pipeline creates its stream when the run starts, for example before
+        waiting for a wake word, which can be longer ago than the memory cache
+        keeps an unused stream around.
+        """
+        self.last_used = monotonic()
+        self._manager.token_to_stream[self.token] = self
+        self._manager.token_to_stream_cleanup.schedule()
+
+    @callback
     def async_set_message(self, message: str) -> None:
         """Set message to be generated.
 
@@ -518,6 +531,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -536,6 +550,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -563,6 +578,7 @@ class ResultStream:
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
+        self._async_mark_used()
         self._override_media_path = Path(media_path)
 
     @property
@@ -798,7 +814,11 @@ class SpeechManager:
             or engine_instance.supported_languages is None
             or language not in engine_instance.supported_languages
         ):
-            raise HomeAssistantError(f"Language '{language}' not supported")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="language_not_supported",
+                translation_placeholders={"language": str(language)},
+            )
 
         options = options or {}
         supported_options = engine_instance.supported_options or []
@@ -818,7 +838,11 @@ class SpeechManager:
                 invalid_opts.append(option_name)
 
         if invalid_opts:
-            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_options",
+                translation_placeholders={"options": ", ".join(invalid_opts)},
+            )
 
         return language, merged_options
 
@@ -848,7 +872,11 @@ class SpeechManager:
     ) -> ResultStream:
         """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
@@ -890,7 +918,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
@@ -927,7 +959,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
@@ -1097,7 +1133,12 @@ class SpeechManager:
 
             if data is None or extension is None:
                 raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
+                    translation_domain=DOMAIN,
+                    translation_key="no_tts_audio",
+                    translation_placeholders={
+                        "engine": str(engine_instance.name),
+                        "message": message,
+                    },
                 )
 
             async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:
@@ -1196,7 +1237,9 @@ class SpeechManager:
         try:
             tts_file = mutagen.File(data_bytes)
             if tts_file is not None:
-                if not tts_file.tags:
+                # An ID3 tag with no frames is falsy but present, and adding
+                # another one raises.
+                if tts_file.tags is None:
                     tts_file.add_tags()
                 tts_file.tags.add(TPE1(encoding=Encoding.UTF8, text=artist))  # type: ignore[no-untyped-call]
                 tts_file.tags.add(TALB(encoding=Encoding.UTF8, text=album))  # type: ignore[no-untyped-call]

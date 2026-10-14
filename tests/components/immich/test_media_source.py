@@ -640,6 +640,9 @@ async def test_media_view(
             "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail/image/jpeg",
         )
         assert isinstance(result, web.Response)
+    mock_immich.assets.async_view_asset.assert_awaited_with(
+        "2e94c203-50aa-4ad2-8e29-56dd74e0eff4", "thumbnail", edited=True
+    )
     with patch.object(tempfile, "tempdir", tmp_path):
         result = await view.get(
             request,

@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> None:
     """Set up Sonos from a config entry."""
     _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
     soco_reset()
@@ -152,20 +152,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> boo
         hass, entry, data, hosts
     )
     await manager.setup_platforms_and_discovery()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: SonosConfigEntry
-) -> bool:
+) -> None:
     """Unload a Sonos config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
-    soco_reset()
-    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+        soco_reset()
+        _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
 
 
 class SonosDiscoveryManager:

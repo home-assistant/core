@@ -11,16 +11,10 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UpbConfigEntry
-from .const import UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
 from .entity import UpbAttachedEntity
-
-SERVICE_LIGHT_FADE_START = "light_fade_start"
-SERVICE_LIGHT_FADE_STOP = "light_fade_stop"
-SERVICE_LIGHT_BLINK = "light_blink"
 
 
 async def async_setup_entry(
@@ -34,18 +28,6 @@ async def async_setup_entry(
     unique_id = config_entry.entry_id
     async_add_entities(
         UpbLight(upb.devices[dev], unique_id, upb) for dev in upb.devices
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_LIGHT_FADE_START, UPB_BRIGHTNESS_RATE_SCHEMA, "async_light_fade_start"
-    )
-    platform.async_register_entity_service(
-        SERVICE_LIGHT_FADE_STOP, None, "async_light_fade_stop"
-    )
-    platform.async_register_entity_service(
-        SERVICE_LIGHT_BLINK, UPB_BLINK_RATE_SCHEMA, "async_light_blink"
     )
 
 

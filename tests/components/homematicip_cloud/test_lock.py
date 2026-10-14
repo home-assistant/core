@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homematicip.base.enums import LockState as HomematicLockState, MotorState
+from homematicip.connection.rest_connection import RestResult
 import pytest
 
 from homeassistant.components.lock import LockEntityFeature, LockState
@@ -72,7 +73,9 @@ async def test_hmip_doorlockdrive(
 
 
 async def test_hmip_doorlockdrive_handle_errors(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test HomematicipDoorLockDrive."""
     entity_id = "lock.haustuer"
@@ -83,17 +86,15 @@ async def test_hmip_doorlockdrive_handle_errors(
     )
     with patch(
         "homematicip.device.DoorLockDrive.set_lock_state_async",
-        return_value={
-            "errorCode": "INVALID_NUMBER_PARAMETER_VALUE",
-            "minValue": 0.0,
-            "maxValue": 1.01,
-        },
+        return_value=RestResult(
+            status=400, text='{"errorCode": "CLIENT_ACCESS_DENIED"}'
+        ),
     ):
         get_and_check_entity_basics(
             hass, mock_hap, entity_id, entity_name, device_model
         )
 
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError, match="CLIENT_ACCESS_DENIED"):
             await hass.services.async_call(
                 "lock",
                 "open",
@@ -101,7 +102,7 @@ async def test_hmip_doorlockdrive_handle_errors(
                 blocking=True,
             )
 
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError, match="CLIENT_ACCESS_DENIED"):
             await hass.services.async_call(
                 "lock",
                 "lock",
@@ -109,10 +110,12 @@ async def test_hmip_doorlockdrive_handle_errors(
                 blocking=True,
             )
 
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError, match="CLIENT_ACCESS_DENIED"):
             await hass.services.async_call(
                 "lock",
                 "unlock",
                 {"entity_id": entity_id},
                 blocking=True,
             )
+
+    assert '{"errorCode": "CLIENT_ACCESS_DENIED"}' in caplog.text
