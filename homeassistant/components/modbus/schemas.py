@@ -549,7 +549,15 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.All(
             probatio.EnsureList(),
             [
-                probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
+                probatio.TaggedUnion(
+                    CONF_TYPE,
+                    {
+                        SERIAL: SERIAL_SCHEMA,
+                        TCP: ETHERNET_SCHEMA,
+                        UDP: ETHERNET_SCHEMA,
+                        RTUOVERTCP: ETHERNET_SCHEMA,
+                    },
+                ),
             ],
         ),
     },

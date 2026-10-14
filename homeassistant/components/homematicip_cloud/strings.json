@@ -46,6 +46,9 @@
       "cloud_connection": {
         "name": "Cloud connection"
       },
+      "heating": {
+        "name": "Heating"
+      },
       "raining": {
         "name": "Raining"
       }

@@ -1,5 +1,7 @@
 """Test the Nmap Tracker config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
@@ -22,6 +24,24 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+USER_INPUT = {
+    CONF_HOSTS_LIST: ["3.3.3.3"],
+    CONF_HOME_INTERVAL: 3,
+    CONF_OPTIONS: DEFAULT_OPTIONS,
+    CONF_HOSTS_EXCLUDE: ["4.4.4.4"],
+    CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
+}
+
+
+@contextmanager
+def _patch_setup_entry() -> Generator[None]:
+    """Patch the Nmap Tracker entry setup."""
+    with patch(
+        "homeassistant.components.nmap_tracker.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -130,6 +150,14 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_HOSTS_LIST: "invalid_hosts"}
 
+    with _patch_setup_entry():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test duplicate host list."""
@@ -192,6 +220,14 @@ async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_HOSTS_EXCLUDE: "invalid_hosts"}
 
+    with _patch_setup_entry():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     "mac_excludes",
@@ -222,6 +258,14 @@ async def test_form_invalid_mac_excludes(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_MAC_EXCLUDE: "invalid_hosts"}
+
+    with _patch_setup_entry():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

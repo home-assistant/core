@@ -299,6 +299,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Call parameter
         hmdevice.actionNodeData(param, True, channel)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_VIRTUALKEY,
@@ -326,6 +328,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for hub in entities:
             hub.hm_set_variable(name, value)
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_SET_VARIABLE_VALUE,
@@ -337,6 +340,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Service to reconnect all HomeMatic hubs."""
         homematic.reconnect()
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_RECONNECT,
@@ -375,6 +379,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hmdevice.setValue(param, value, channel)
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_SET_DEVICE_VALUE,
@@ -422,6 +427,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         homematic.putParamset(interface, address, paramset_key, paramset, rx_mode)
 
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(
         DOMAIN,
         SERVICE_PUT_PARAMSET,

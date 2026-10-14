@@ -5,13 +5,13 @@ from pydexcom.errors import AccountError, SessionError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_SERVER, DOMAIN, PLATFORMS, SERVER_OUS
 from .coordinator import DexcomConfigEntry, DexcomCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> None:
     """Set up Dexcom from a config entry."""
     try:
         dexcom = await hass.async_add_executor_job(
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bo
             )
         )
     except AccountError as error:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="account_error",
         ) from error
@@ -38,9 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

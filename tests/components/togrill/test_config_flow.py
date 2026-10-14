@@ -76,6 +76,7 @@ async def test_user_selection_ignored(
         user_input={"address": TOGRILL_SERVICE_INFO.address},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
 
 
 async def test_failed_connect(

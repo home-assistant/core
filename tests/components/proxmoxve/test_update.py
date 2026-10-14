@@ -2,16 +2,19 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import AUDIT_PERMISSIONS, MERGED_PERMISSIONS, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "update.pve1_software_update"
@@ -121,6 +124,38 @@ async def test_update_unavailable_on_permission_change(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the update entity is unavailable while the coordinator update fails."""
+    mock_proxmox_client.access.permissions.get.return_value = MERGED_PERMISSIONS
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    mock_proxmox_client.nodes.get.side_effect = requests.exceptions.ConnectionError
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_proxmox_client.nodes.get.side_effect = None
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_update_up_to_date(

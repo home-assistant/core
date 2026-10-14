@@ -306,7 +306,7 @@ def init_controller(data: Mapping[str, Any]) -> FibaroController:
     return FibaroController(client, info, data[CONF_IMPORT_PLUGINS])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
     """Set up the Fibaro Component.
 
     The unique id of the config entry is the serial number of the home center.
@@ -340,16 +340,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("Shutting down Fibaro connection")
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    entry.runtime_data.disconnect()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        entry.runtime_data.disconnect()
 
 
 async def async_remove_config_entry_device(
