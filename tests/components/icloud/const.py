@@ -69,3 +69,17 @@ DEVICE = {
     "lowPowerMode": False,
     "location": None,
 }
+
+DEVICE_2 = {
+    "id": "device2",
+    "name": "iPad",
+    "deviceStatus": "200",
+    "batteryStatus": "Charging",
+    "batteryLevel": 0.5,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": None,
+}
