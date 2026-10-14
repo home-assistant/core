@@ -68,7 +68,9 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: done
+    comment: Devices that leave the account can be deleted from the device page. Devices the cloud still reports cannot.
 
   # Platinum
   async-dependency: todo
