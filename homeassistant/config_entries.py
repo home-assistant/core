@@ -58,6 +58,12 @@ from .helpers import (
     storage,
 )
 from .helpers.debounce import Debouncer
+from .helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.discovery_flow import DiscoveryKey
 from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
@@ -242,15 +248,13 @@ class ConfigEntryDisabler(StrEnum):
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
-# Deprecated: Connection classes
-# These aren't used anymore since 2021.6.0
-# Mainly here not to break custom integrations.
-CONN_CLASS_CLOUD_PUSH = "cloud_push"
-CONN_CLASS_CLOUD_POLL = "cloud_poll"
-CONN_CLASS_LOCAL_PUSH = "local_push"
-CONN_CLASS_LOCAL_POLL = "local_poll"
-CONN_CLASS_ASSUMED = "assumed"
-CONN_CLASS_UNKNOWN = "unknown"
+# Connection classes aren't used anymore since 2021.6.0
+_DEPRECATED_CONN_CLASS_CLOUD_PUSH = DeprecatedConstant("cloud_push", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_CLOUD_POLL = DeprecatedConstant("cloud_poll", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_LOCAL_PUSH = DeprecatedConstant("local_push", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_LOCAL_POLL = DeprecatedConstant("local_poll", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_ASSUMED = DeprecatedConstant("assumed", None, "2027.5.0")
+_DEPRECATED_CONN_CLASS_UNKNOWN = DeprecatedConstant("unknown", None, "2027.5.0")
 
 
 class ConfigError(HomeAssistantError):
@@ -1489,6 +1493,7 @@ class ConfigEntry[_DataT = Any]:
             hass,
             HOMEASSISTANT_DOMAIN,
             issue_id,
+            config_entry_id=self.entry_id,
             data={"flow_id": result["flow_id"]},
             is_fixable=False,
             issue_domain=self.domain,
@@ -2433,6 +2438,7 @@ class ConfigEntries:
 
         dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
+        ir.async_get(self.hass).async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
@@ -2560,6 +2566,7 @@ class ConfigEntries:
                     self.hass,
                     HOMEASSISTANT_DOMAIN,
                     issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     is_persistent=True,
                     severity=ir.IssueSeverity.WARNING,
@@ -4472,3 +4479,11 @@ def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None
     ):
         if "flow_id" in progress_flow:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+
+# These can be removed if no deprecated constants are in this module anymore
+__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = functools.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

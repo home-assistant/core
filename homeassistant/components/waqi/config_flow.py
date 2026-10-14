@@ -1,5 +1,6 @@
 """Config flow for World Air Quality Index (WAQI) integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -34,6 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MAP = "map"
 
+API_KEY_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
+
 
 async def get_by_station_number(
     client: WAQIClient, station_number: int
@@ -65,6 +70,21 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_STATION: StationFlowHandler}
 
+    async def _async_validate_api_key(self, api_key: str) -> dict[str, str]:
+        """Validate the API key."""
+        client = WAQIClient(session=async_get_clientsession(self.hass))
+        client.authenticate(api_key)
+        try:
+            await client.get_by_ip()
+        except WAQIAuthenticationError:
+            return {"base": "invalid_auth"}
+        except WAQIConnectionError:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -73,18 +93,9 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
-            client = WAQIClient(session=async_get_clientsession(self.hass))
-            client.authenticate(user_input[CONF_API_KEY])
-            try:
-                await client.get_by_ip()
-            except WAQIAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except WAQIConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (
+                errors := await self._async_validate_api_key(user_input[CONF_API_KEY])
+            ):
                 return self.async_create_entry(
                     title="World Air Quality Index",
                     data={
@@ -94,9 +105,46 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
-            ),
+            data_schema=API_KEY_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            # Skips the entry being reauthenticated, so re-entering its key is allowed
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
+            if not (
+                errors := await self._async_validate_api_key(user_input[CONF_API_KEY])
+            ):
+                reauth_entry = self._get_reauth_entry()
+                # A loaded entry is reloaded by its update listener when data changes
+                reload = (
+                    reauth_entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                    or not reauth_entry.update_listeners
+                )
+                result = self.async_update_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=API_KEY_SCHEMA,
             errors=errors,
         )
 

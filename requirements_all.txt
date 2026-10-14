@@ -203,7 +203,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.13.0
+aioaquarite==0.13.1
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -650,7 +650,7 @@ azure-kusto-data[aio]==4.5.1
 azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==7.10.0
+azure-servicebus==7.15.0
 
 # homeassistant.components.azure_storage
 azure-storage-blob==12.24.0
@@ -728,7 +728,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.15
+boschshcpy==0.6.20
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -1583,6 +1583,9 @@ lxml==6.1.2
 # homeassistant.components.lyngdorf
 lyngdorf==2.2.1
 
+# homeassistant.components.marantz_rs232
+marantz-rs232==2.1.0
+
 # homeassistant.components.matrix
 matrix-nio==0.26.0
 
@@ -2288,6 +2291,9 @@ pygtfs==0.1.11
 
 # homeassistant.components.hvv_departures
 pygti==1.1.1
+
+# homeassistant.components.hase_iq
+pyhaseiq==0.2.1
 
 # homeassistant.components.version
 pyhaversion==22.8.0
@@ -3566,7 +3572,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.1
+zinvolt==1.1.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
