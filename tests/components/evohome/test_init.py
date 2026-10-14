@@ -183,15 +183,15 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
 
 
-@pytest.mark.parametrize("install", ["sys_004"])
 @pytest.mark.parametrize(
-    "config",
+    ("install", "config"),
     [
         pytest.param(
+            install,
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: "password", CONF_LOCATION_IDX: i},
-            id=f"location_idx_{i}",
+            id=f"{install}-location_idx_{i}",
         )
-        for i in (1, 2)
+        for install, i in (("sys_004", 1), ("sys_004", 2), ("sys_006", 1))
     ],
 )
 @pytest.mark.usefixtures("evohome")

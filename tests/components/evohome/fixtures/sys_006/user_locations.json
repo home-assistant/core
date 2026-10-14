@@ -120,8 +120,8 @@
       "locationType": "Residential",
       "useDaylightSaveSwitching": true,
       "timeZone": {
-        "timeZoneId": "NewYork",
-        "displayName": "(UTC-01:00) Brussels, Copenhagen, Madrid, Paris",
+        "timeZoneId": "AzoresStandardTime",
+        "displayName": "(UTC-01:00) Azores",
         "offsetMinutes": -60,
         "currentOffsetMinutes": -60,
         "supportsDaylightSaving": true
