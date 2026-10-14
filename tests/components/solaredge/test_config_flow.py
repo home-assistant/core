@@ -20,7 +20,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 NAME = "solaredge site 1 2 3"
 
@@ -440,6 +440,59 @@ async def test_reconfigure_flow_web_login_and_errors(
     await hass.async_block_till_done()
 
     assert entry.title == NAME
+    assert entry.data == {
+        CONF_SITE_ID: SITE_ID,
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+    }
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_flow_removes_credentials(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_web_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test credentials can be removed via the reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=NAME,
+        data={
+            CONF_SITE_ID: SITE_ID,
+            CONF_API_KEY: API_KEY,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+
+    schema = result["data_schema"].schema
+    api_schema = schema[CONF_SECTION_API_AUTH].schema.schema
+    web_schema = schema[CONF_SECTION_WEB_AUTH].schema.schema
+    assert get_schema_suggested_value(api_schema, CONF_API_KEY) == API_KEY
+    assert get_schema_suggested_value(web_schema, CONF_USERNAME) == USERNAME
+    assert get_schema_suggested_value(web_schema, CONF_PASSWORD) == PASSWORD
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: ""},
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        },
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    await hass.async_block_till_done()
+
     assert entry.data == {
         CONF_SITE_ID: SITE_ID,
         CONF_USERNAME: USERNAME,
