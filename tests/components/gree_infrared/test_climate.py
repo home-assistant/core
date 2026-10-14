@@ -2005,3 +2005,215 @@ async def test_power_services_preserve_last_active_mode(
     assert off_command.power is False
     assert on_command.power is True
     assert on_command.mode == GreeAcMode.COOL
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [
+        {
+            CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY],
+            CONF_MODEL: MODEL_YAP1F,
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize("initial_mode", [GreeAcMode.COOL, GreeAcMode.HEAT])
+@pytest.mark.parametrize(
+    ("method", "args", "kwargs"),
+    [
+        pytest.param("async_set_option", ("turbo", True), {}, id="turbo"),
+        pytest.param("async_set_option", ("light", False), {}, id="light"),
+        pytest.param("async_set_option", ("sleep", False), {}, id="sleep"),
+        pytest.param("async_set_option", ("ifeel", True), {}, id="ifeel"),
+        pytest.param("async_set_fresh_air", ("level_1",), {}, id="fresh_air"),
+        pytest.param("async_set_timer_hours", (1.0,), {}, id="timer"),
+        pytest.param("async_set_swing_v_position", (2,), {}, id="vertical_vane"),
+        pytest.param("async_set_swing_mode", ("on",), {}, id="vertical_swing"),
+        pytest.param("async_set_swing_h_position", (3,), {}, id="horizontal_vane"),
+        pytest.param(
+            "async_set_swing_horizontal_mode", ("on",), {}, id="horizontal_swing"
+        ),
+        pytest.param(
+            "async_set_hvac_mode", (HVACMode.DRY,), {}, id="mode_clears_flags"
+        ),
+        pytest.param(
+            "async_set_temperature",
+            (),
+            {"temperature": 25, "hvac_mode": HVACMode.DRY},
+            id="temperature_clears_flags",
+        ),
+        pytest.param(
+            "async_set_temperature", (), {"temperature": 25}, id="temperature"
+        ),
+        pytest.param("async_set_fahrenheit", (False,), {}, id="scale"),
+        pytest.param("async_set_display_temp", (3,), {}, id="display_temperature"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_cancelled_send_restores_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+    initial_mode: GreeAcMode,
+    method: str,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
+) -> None:
+    """Cancellation retains options, wire setpoint and the existing timer expiry."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                model=GreeAcModel.YAP1F,
+                mode=initial_mode,
+                temperature=74,
+                fahrenheit=True,
+                sleep=True,
+                econo=True,
+                absence=True,
+                timer_hours=0.5,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_fan_mode(FAN_LOW)
+    expected_frame = mock_infrared_emitter_entity.send_command_calls[
+        -1
+    ].get_raw_timings()
+    previous_data = climate.extra_restore_state_data.as_dict()
+    previous_attributes = dict(hass.states.get(_CLIMATE_ENTITY_ID).attributes)
+    previous_deadline = climate._timer_deadline
+    assert previous_deadline is not None
+    started = asyncio.Event()
+
+    async def blocked_send(command: GreeAcCommand) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        task = hass.async_create_task(getattr(climate, method)(*args, **kwargs))
+        await started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    assert climate.extra_restore_state_data.as_dict() == previous_data
+    assert climate._timer_deadline == previous_deadline
+    assert dict(hass.states.get(_CLIMATE_ENTITY_ID).attributes) == previous_attributes
+
+    # A later full-state send must not transmit any cancelled value.
+    await climate.async_set_fan_mode(FAN_LOW)
+    assert (
+        mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings()
+        == expected_frame
+    )
+    assert mock_infrared_emitter_entity.send_command_calls[-1].temperature == 74
+    sends = len(mock_infrared_emitter_entity.send_command_calls)
+    freezer.move_to(previous_deadline)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    assert len(mock_infrared_emitter_entity.send_command_calls) == sends
+
+
+@pytest.mark.parametrize(
+    "platforms", [[Platform.CLIMATE, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]]
+)
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_climate_rename_preserves_sibling_controls(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Registry rename reattaches the owner used by all sibling control platforms."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    entity_registry.async_update_entity(
+        _CLIMATE_ENTITY_ID, new_entity_id="climate.renamed_gree_ac"
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(_CLIMATE_ENTITY_ID) is None
+    assert hass.states.get("climate.renamed_gree_ac").state == HVACMode.COOL
+
+    for entity_id in (
+        "number.gree_ac_timer",
+        "select.gree_ac_fresh_air",
+        "switch.gree_ac_turbo",
+    ):
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {ATTR_ENTITY_ID: "number.gree_ac_timer", "value": 0.5},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: "select.gree_ac_fresh_air", "option": "level_1"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.gree_ac_turbo"},
+        blocking=True,
+    )
+    assert hass.states.get("number.gree_ac_timer").state == "0.5"
+    assert hass.states.get("select.gree_ac_fresh_air").state == "level_1"
+    assert hass.states.get("switch.gree_ac_turbo").state == "on"
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 3
+    command = mock_infrared_emitter_entity.send_command_calls[-1]
+    assert command.timer_hours == 0.5
+    assert command.fresh_air == 1
+    assert command.turbo
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.usefixtures("init_integration")
+async def test_cancelled_timer_replacement_preserves_expiry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The old timer expires after cancellation without another successful send."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    deadline = climate._timer_deadline
+    assert deadline is not None
+    sends = len(mock_infrared_emitter_entity.send_command_calls)
+    started = asyncio.Event()
+
+    async def blocked_send(command: GreeAcCommand) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        task = hass.async_create_task(climate.async_set_timer_hours(1.0))
+        await started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    freezer.move_to(deadline)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    assert climate._timer_deadline is None
+    assert len(mock_infrared_emitter_entity.send_command_calls) == sends
