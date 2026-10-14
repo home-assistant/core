@@ -292,6 +292,22 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            "eco",
+            {"one": "eco", "two": "electric"},
+            {},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {},
+        ),
+        (
             "weather",
             {"condition": "{{ states('weather.one') }}"},
             "sunny",
@@ -505,6 +521,18 @@ async def test_config_flow(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",
@@ -846,6 +874,23 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+            None,
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            {"operation_mode": "{{ states('water_heater.two') }}"},
+            ["eco", "electric"],
+            {"one": "eco", "two": "electric"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            "operation_mode",
             None,
         ),
         (
@@ -1850,6 +1895,18 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",
