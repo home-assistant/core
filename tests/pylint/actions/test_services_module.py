@@ -122,14 +122,6 @@ async def async_setup(hass, config):
         ),
         pytest.param(
             """
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-""",
-            "homeassistant.components.test_integration.sensor",
-            id="reload_service_in_platform",
-        ),
-        pytest.param(
-            """
 async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service("my_action", {}, "async_method")

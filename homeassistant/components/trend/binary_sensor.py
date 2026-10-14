@@ -108,8 +108,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the trend sensors."""
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     entities = []

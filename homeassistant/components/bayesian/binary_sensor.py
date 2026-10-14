@@ -232,8 +232,6 @@ async def async_setup_platform(
         config[CONF_NAME],
         len(config.get(CONF_OBSERVATIONS, [])),
     )
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)

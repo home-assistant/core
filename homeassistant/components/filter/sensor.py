@@ -187,8 +187,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up the template sensors."""
 
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name: str | None = config.get(CONF_NAME)

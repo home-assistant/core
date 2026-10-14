@@ -64,8 +64,6 @@ async def async_get_service(
         learn_more_url="https://www.home-assistant.io/integrations/telegram_bot#notifiers",
     )
 
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     chat_id = config.get(CONF_CHAT_ID)
     return TelegramNotificationService(hass, chat_id)

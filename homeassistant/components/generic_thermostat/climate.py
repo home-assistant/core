@@ -162,8 +162,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up the generic thermostat platform."""
 
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_config(
         hass, config, config.get(CONF_UNIQUE_ID), async_add_entities
