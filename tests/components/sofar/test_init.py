@@ -467,6 +467,37 @@ async def test_setup_takes_the_type_once_the_masks_answer(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_keeps_meter_sensors_of_an_unsettled_type(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a silent restart keeps meter sensors before the masks answer."""
+    entry = _unrecognized_entry(mock_connection)
+    unit = mock_connection.for_unit(1)
+    declare_pv_in_masks(unit)
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    entry.add_to_hass(hass)
+    meter_sensors = [
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{MOCK_UNRECOGNIZED_SERIAL}_{key}",
+            config_entry=entry,
+        ).entity_id
+        for key in METER_ENERGY_KEYS
+    ]
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert all(
+        entity_registry.async_get(entity_id) is not None for entity_id in meter_sensors
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_setup_while_asleep_keeps_the_device_versions(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
