@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: RoombaConfigEntry
-) -> bool:
+) -> None:
     """Set the config entry up."""
     roomba = await async_create_roomba(
         hass,
@@ -58,8 +58,6 @@ async def async_setup_entry(
     config_entry.runtime_data = RoombaData(roomba, config_entry.data[CONF_BLID])
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 async def async_create_roomba(
@@ -110,15 +108,10 @@ async def async_disconnect_or_timeout(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: RoombaConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        await async_disconnect_or_timeout(hass, roomba=config_entry.runtime_data.roomba)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    await async_disconnect_or_timeout(hass, roomba=config_entry.runtime_data.roomba)
 
 
 def roomba_reported_state(roomba: RoombaClient) -> dict[str, Any]:

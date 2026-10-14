@@ -59,7 +59,7 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -86,7 +86,7 @@ rules:
       This integration does not have entities with device classes.
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: exempt

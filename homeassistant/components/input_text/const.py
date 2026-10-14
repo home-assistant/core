@@ -16,6 +16,11 @@ CONF_VALUE: Final = "value"
 ATTR_VALUE: Final = CONF_VALUE
 SERVICE_SET_VALUE: Final = "set_value"
 
+CONF_INITIAL = "initial"
+CONF_MIN = "min"
+CONF_MAX = "max"
+CONF_PATTERN = "pattern"
+
 
 class InputTextEntityStateAttribute(StrEnum):
     """State attributes for input text entities."""

@@ -207,9 +207,27 @@ async def test_browsing_not_loaded_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing with an unloaded config entry."""
-    with pytest.raises(BrowseError, match="Invalid Spotify account specified"):
+    with pytest.raises(BrowseError) as exc_info:
         await async_browse_media(
             hass,
             "spotify://artist",
             f"spotify://{mock_config_entry.entry_id}/spotify:artist:0TnOYISbd1XYRBk9myaseg",
+        )
+    assert exc_info.value.translation_key == "invalid_account"
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_spotify")
+async def test_browsing_unknown_media_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing an unknown media type."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(
+        BrowseError, match="Spotify media not found: unknown / spotify:unknown:1234"
+    ):
+        await async_browse_media(
+            hass,
+            "spotify://unknown",
+            f"spotify://{mock_config_entry.entry_id}/spotify:unknown:1234",
         )

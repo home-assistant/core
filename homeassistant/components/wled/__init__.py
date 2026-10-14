@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> None:
     """Set up WLED from a config entry."""
     entry.runtime_data = WLEDDataUpdateCoordinator(hass, entry=entry)
     await entry.runtime_data.async_config_entry_first_refresh()
@@ -55,27 +55,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> None:
     """Unload WLED config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
 
-        # Ensure disconnected and cleanup stop sub. Cleared once called, as the
-        # WebSocket listener also cleans it up when the disconnect ends it.
-        await coordinator.wled.disconnect()
-        if coordinator.unsub:
-            coordinator.unsub()
-            coordinator.unsub = None
-
-    return unload_ok
+    # Ensure disconnected and cleanup stop sub. Cleared once called, as the
+    # WebSocket listener also cleans it up when the disconnect ends it.
+    await coordinator.wled.disconnect()
+    if coordinator.unsub:
+        coordinator.unsub()
+        coordinator.unsub = None
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: WLEDConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -133,5 +129,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

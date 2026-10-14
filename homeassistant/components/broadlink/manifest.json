@@ -38,6 +38,6 @@
   "documentation": "https://www.home-assistant.io/integrations/broadlink",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["broadlink"],
-  "requirements": ["python-broadlink==1.0.6"]
+  "loggers": ["broadlink_async"],
+  "requirements": ["broadlink-async==1.1.0"]
 }

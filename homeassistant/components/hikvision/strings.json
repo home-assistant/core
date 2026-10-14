@@ -84,6 +84,9 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
+      "temperature_alarm": {
+        "name": "Temperature alarm"
+      },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },

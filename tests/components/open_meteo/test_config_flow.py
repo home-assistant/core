@@ -51,9 +51,10 @@ async def test_flow_cannot_connect(
     mock_open_meteo.forecast.side_effect = OpenMeteoConnectionError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_ZONE: ENTITY_ID_HOME},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ZONE: ENTITY_ID_HOME}
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -73,9 +74,10 @@ async def test_flow_cannot_connect(
 async def test_flow_zone_not_found(hass: HomeAssistant) -> None:
     """Test the flow shows an error for a zone that does not exist."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_ZONE: "zone.gone"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ZONE: "zone.gone"}
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -97,9 +99,10 @@ async def test_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_ZONE: ENTITY_ID_HOME},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ZONE: ENTITY_ID_HOME}
     )
 
     assert result.get("type") is FlowResultType.ABORT

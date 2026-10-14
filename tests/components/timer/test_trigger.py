@@ -12,6 +12,8 @@ from homeassistant.components.timer import (
     ATTR_FINISHES_AT,
     ATTR_LAST_TRANSITION,
     DOMAIN,
+)
+from homeassistant.components.timer.const import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
