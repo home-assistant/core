@@ -203,6 +203,38 @@ async def test_failing_schedule_keeps_directive_granted(
     assert coordinator.data.schedules == {}
 
 
+async def test_unavailable_schedule_logged_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a directive schedule logs once when it goes unavailable and recovers."""
+    resource, schedule = _directive_fixture()
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
+    mock_webhook_client.get_directive_data = AsyncMock(
+        side_effect=ClientError("upstream failed")
+    )
+
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data.schedules == {}
+    assert caplog.text.count(f"EnergyID directive {DIRECTIVE_ID} is unavailable") == 1
+
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert set(coordinator.data.schedules) == {DIRECTIVE_ID}
+    assert f"EnergyID directive {DIRECTIVE_ID} is available again" in caplog.text
+
+
 async def test_access_denied_means_no_directives(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
