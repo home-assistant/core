@@ -543,7 +543,6 @@ async def _async_setup_themes(
     if dark_theme_name == DEFAULT_THEME or dark_theme_name in hass.data[DATA_THEMES]:
         hass.data[DATA_DEFAULT_DARK_THEME] = dark_theme_name
 
-
 @callback
 @lru_cache(maxsize=1)
 def _async_render_index_cached(template: jinja2.Template, **kwargs: Any) -> str:

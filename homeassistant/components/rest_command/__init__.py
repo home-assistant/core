@@ -274,6 +274,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ) from err
 
         # register services
+        # Cannot be moved: action names come from the configuration
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             name,
@@ -284,6 +286,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for name, command_config in config[DOMAIN].items():
         async_register_rest_command(name, command_config)
 
+    # Should be adjusted to register actions in async_setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=probatio.Schema({})
     )

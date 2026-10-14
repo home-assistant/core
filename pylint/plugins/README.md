@@ -151,6 +151,8 @@ Every check has a code following the
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 | `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
+| `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
+| `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
 
 ## `home_assistant_logger` checker
 
@@ -942,6 +944,24 @@ caught too, as are calls to the conventional `async_setup_services` helper
 from `services.py`.
 
 See the [action-setup quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup).
+
+
+## `home_assistant_actions_services_module` checker
+
+Detects actions registered outside the integration's `services.py`.
+
+### `W7452`: `home-assistant-action-registered-outside-services-module`
+
+Actions should be registered in `services.py`, from `async_setup_services`
+(called from `async_setup`) or `setup_services` (called from a synchronous
+`setup`). Module-level functions in `services.py` that are called from these
+functions may register actions too.
+
+### `W7453`: `home-assistant-invalid-setup-services`
+
+`async_setup_services` should be a synchronous function decorated with
+`@callback`, and `setup_services` a synchronous function that is not, since
+it runs in the executor. Both should only take `hass`.
 
 
 ## `home_assistant_exception_translations` checker
