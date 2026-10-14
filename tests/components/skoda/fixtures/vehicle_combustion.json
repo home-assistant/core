@@ -1,0 +1,26 @@
+{
+  "vehicle": {
+    "name": "Octavia",
+    "vin": "TMBJM7NP2M1TMP511",
+    "licensePlate": "1AB 2345",
+    "odometer": {
+      "mileageInKm": 54210,
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "fuelStatus": {
+      "carType": "GASOLINE",
+      "totalRangeInKm": 620,
+      "primaryEngineRange": {
+        "engineType": "GASOLINE",
+        "currentFuelLevelInPercent": 77,
+        "remainingRangeInKm": 620
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "auxiliaryHeating": {
+      "state": "VENTILATION",
+      "startMode": "VENTILATION",
+      "durationInSeconds": 600
+    }
+  }
+}

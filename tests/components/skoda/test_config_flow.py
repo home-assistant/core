@@ -1,7 +1,6 @@
 """Test the Škoda config flow."""
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from probatio import to_field_list
 import pytest
@@ -31,9 +30,6 @@ USER_INPUT = {
     CONF_API_KEY: API_KEY,
 }
 
-VEHICLE_WITH_NAME = SimpleNamespace(vehicle=SimpleNamespace(name="Superb"))
-VEHICLE_WITHOUT_NAME = SimpleNamespace(vehicle=SimpleNamespace(name=None))
-
 
 async def _init_flow(hass: HomeAssistant) -> ConfigFlowResult:
     """Start the user config flow."""
@@ -49,20 +45,6 @@ async def _configure_flow(
     return await hass.config_entries.flow.async_configure(
         flow_id, USER_INPUT if user_input is None else user_input
     )
-
-
-def _patch_get_vehicle(
-    request: pytest.FixtureRequest, *, side_effect=None, return_value=None
-) -> AsyncMock:
-    """Mock OpenAPIClient.get_vehicle, unpatched automatically after the test."""
-    mock = AsyncMock(side_effect=side_effect, return_value=return_value)
-    patcher = patch(
-        "homeassistant.components.skoda.config_flow.OpenAPIClient.get_vehicle",
-        mock,
-    )
-    patcher.start()
-    request.addfinalizer(patcher.stop)
-    return mock
 
 
 async def test_form_shown(hass: HomeAssistant) -> None:
@@ -92,17 +74,14 @@ async def test_user_form_masks_api_key(hass: HomeAssistant) -> None:
     assert _serialized_api_key_field(result)["selector"]["text"]["type"] == "password"
 
 
-async def test_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, request: pytest.FixtureRequest
-) -> None:
+@pytest.mark.usefixtures("mock_skoda_client")
+async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test successful flow with a vehicle that reports its name."""
-    _patch_get_vehicle(request, return_value=VEHICLE_WITH_NAME)
-
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Škoda Superb"
+    assert result["title"] == "Škoda Enyaq Coupé"
     assert result["data"] == {
         CONF_VIN: VIN,
         CONF_API_KEY: API_KEY,
@@ -113,10 +92,10 @@ async def test_success(
 async def test_success_without_vehicle_name(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    request: pytest.FixtureRequest,
+    mock_skoda_client: AsyncMock,
 ) -> None:
     """Test successful flow falls back to the VIN when the name is missing."""
-    _patch_get_vehicle(request, return_value=VEHICLE_WITHOUT_NAME)
+    mock_skoda_client.get_vehicle.return_value.vehicle.name = None
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -137,12 +116,9 @@ async def test_invalid_vin_length(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_VIN: "invalid_vin_length"}
 
 
-async def test_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, request: pytest.FixtureRequest
-) -> None:
+@pytest.mark.usefixtures("mock_skoda_client", "mock_setup_entry")
+async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test that the same VIN cannot be configured twice."""
-    _patch_get_vehicle(request, return_value=VEHICLE_WITH_NAME)
-
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -182,10 +158,10 @@ async def test_api_errors(
     exception: Exception,
     expected_error: str,
     mock_setup_entry: AsyncMock,
-    request: pytest.FixtureRequest,
+    mock_skoda_client: AsyncMock,
 ) -> None:
     """Test API failures show an error and the flow recovers on retry."""
-    mock = _patch_get_vehicle(request, side_effect=[exception, VEHICLE_WITH_NAME])
+    mock_skoda_client.get_vehicle.side_effect = exception
 
     result = await _init_flow(hass)
     result = await _configure_flow(hass, result["flow_id"])
@@ -193,9 +169,10 @@ async def test_api_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    mock_skoda_client.get_vehicle.side_effect = None
     result = await _configure_flow(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Škoda Superb"
-    assert mock.await_count == 2
+    assert result["title"] == "Škoda Enyaq Coupé"
+    assert mock_skoda_client.get_vehicle.await_count == 2
     assert len(mock_setup_entry.mock_calls) == 1

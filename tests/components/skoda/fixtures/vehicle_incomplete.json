@@ -1,0 +1,26 @@
+{
+  "vehicle": {
+    "name": "Superb",
+    "vin": "TMBJM7NP2M1TMP511",
+    "charging": {
+      "isVehicleInSavedLocation": false,
+      "status": {
+        "state": "CHARGING"
+      }
+    },
+    "fuelStatus": {
+      "carType": "HYBRID",
+      "primaryEngineRange": {
+        "engineType": "ELECTRIC"
+      }
+    },
+    "airConditioning": {
+      "state": "COOLING"
+    },
+    "auxiliaryHeating": {
+      "state": "HEATING",
+      "durationInSeconds": 1200,
+      "carCapturedTimestamp": "not-a-timestamp"
+    }
+  }
+}

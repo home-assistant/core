@@ -1,6 +1,6 @@
 """Test the Škoda integration setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from skoda_public_api.api_layer.exceptions import (
@@ -11,18 +11,18 @@ from skoda_public_api.api_layer.exceptions import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_vehicle: AsyncMock,
+    mock_skoda_client: AsyncMock,
 ) -> None:
     """Test a successful setup and unload of the config entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -51,17 +51,13 @@ async def test_setup_and_unload(
 async def test_setup_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
     exception: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test errors during the first refresh set the expected entry state."""
-    mock_config_entry.add_to_hass(hass)
+    mock_skoda_client.get_vehicle.side_effect = exception
 
-    with patch(
-        "homeassistant.components.skoda.OpenAPIClient.get_vehicle",
-        side_effect=exception,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
