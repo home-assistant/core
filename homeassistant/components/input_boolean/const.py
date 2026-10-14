@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 DOMAIN: Final = "input_boolean"
 
+CONF_INITIAL = "initial"
+
 DATA_INPUT_BOOLEAN: HassKey[InputBooleanData] = HassKey(DOMAIN)
 
 
