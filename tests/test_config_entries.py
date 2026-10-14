@@ -4069,6 +4069,76 @@ async def test_entry_disable_succeed(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_entry_disable_hides_issues(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test disabling an entry hides its issues without removing them."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="comp")
+    other_entry.add_to_hass(hass)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    events_on_unload: list[int] = []
+
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        events_on_unload.append(len(events))
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    for issue_id, config_entry_id in (
+        ("entry_issue", entry.entry_id),
+        ("other_entry_issue", other_entry.entry_id),
+    ):
+        ir.async_create_issue(
+            hass,
+            "comp",
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="abc",
+        )
+    issue_registry.async_ignore("comp", "entry_issue", True)
+    issue = issue_registry.async_get_issue("comp", "entry_issue")
+    other_issue = issue_registry.async_get_issue("comp", "other_entry_issue")
+    assert not issue_registry.async_is_hidden(issue)
+    events.clear()
+
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "comp", "issue_id": "entry_issue"}
+    ]
+    # The frontend is told to refresh before the entry is unloaded
+    assert events_on_unload == [1]
+    assert issue_registry.async_get_issue("comp", "entry_issue") == issue
+    assert issue_registry.async_is_hidden(issue)
+    assert not issue_registry.async_is_hidden(other_issue)
+
+    events.clear()
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "comp", "issue_id": "entry_issue"}
+    ]
+    assert issue_registry.async_get_issue("comp", "entry_issue") == issue
+    assert not issue_registry.async_is_hidden(issue)
+
+
 async def test_entry_disable_entity_state(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,

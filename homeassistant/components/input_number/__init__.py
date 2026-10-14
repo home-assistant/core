@@ -6,8 +6,10 @@ from typing import override
 
 import probatio
 
+from homeassistant.components.number import DEVICE_CLASS_UNITS, DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (  # noqa: F401
     ATTR_MODE,
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
@@ -61,6 +63,17 @@ def _cv_input_number(cfg):
         raise probatio.Invalid(
             f"Initial value {state} not in range {minimum}-{maximum}"
         )
+    # Remove when number entities enforce valid units for their device class
+    if (
+        (device_class := cfg.get(CONF_DEVICE_CLASS)) is not None
+        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (unit := cfg.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        valid_units = sorted(str(valid) if valid else "no unit" for valid in units)
+        raise probatio.Invalid(
+            f"Unit of measurement '{unit}' is not valid for device class "
+            f"'{device_class}'; expected one of {valid_units}"
+        )
     return cfg
 
 
@@ -74,6 +87,7 @@ STORAGE_FIELDS: VolDictType = {
     ),
     probatio.Optional(CONF_ICON): cv.icon,
     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
         [MODE_BOX, MODE_SLIDER]
     ),
@@ -93,6 +107,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     ),
                     probatio.Optional(CONF_ICON): cv.icon,
                     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
                     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
