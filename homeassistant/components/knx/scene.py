@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, SceneConf
+from .const import KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -24,8 +24,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SceneSchema
-from .storage.const import CONF_ENTITY, CONF_GA_SCENE
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import KnxEntityData, SceneKnxConfig
 
 
 async def async_setup_entry(
@@ -51,7 +50,9 @@ async def async_setup_entry(
             KnxYamlScene(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.SCENE):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.SCENE, SceneKnxConfig
+    ):
         entities.extend(
             KnxUiScene(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -108,18 +109,18 @@ class KnxUiScene(_KnxScene, KnxUiEntity):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        config: ConfigType,
+        config: KnxEntityData[SceneKnxConfig],
     ) -> None:
         """Initialize KNX scene."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config.knx
         self._device = XknxScene(
             xknx=knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
-            group_address=knx_conf.get_write(CONF_GA_SCENE),
-            scene_number=knx_conf.get(SceneConf.SCENE_NUMBER),
+            name=config.entity.xknx_name,
+            group_address=knx_conf.ga_scene.write,
+            scene_number=knx_conf.scene_number,
         )

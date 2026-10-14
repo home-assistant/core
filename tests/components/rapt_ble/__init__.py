@@ -26,3 +26,29 @@ COMPLETE_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
+V2_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address=RAPT_MAC,
+    rssi=-70,
+    manufacturer_data={
+        16722: b"PT\x02\x00\x01\xc1m&\x14\x92kD\x7fR\xc91\xc9\x02-)\x97?F",
+        17739: b"G20220612_050156_81c6d14",
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+V2_NO_VELOCITY_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address=RAPT_MAC,
+    rssi=-70,
+    manufacturer_data={
+        16722: b"PT\x02\x00\x00\x00\x00\x00\x00\x94\x8bD|\xb9\xf64E\x02b&w*\xac",
+        17739: b"G20220612_050156_81c6d14",
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)

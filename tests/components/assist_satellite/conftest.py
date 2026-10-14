@@ -47,10 +47,8 @@ class MockAssistSatellite(AssistSatelliteEntity):
         """Initialize the mock entity."""
         self._attr_unique_id = ulid_hex()
         self._attr_device_info = DeviceInfo(
-            {
-                "name": name,
-                "identifiers": {(TEST_DOMAIN, self._attr_unique_id)},
-            }
+            name=name,
+            identifiers={(TEST_DOMAIN, self._attr_unique_id)},
         )
         self._attr_name = name
         self._attr_supported_features = features

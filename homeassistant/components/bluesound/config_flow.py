@@ -3,17 +3,16 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyblu import Player, SyncStatus
 from pyblu.errors import PlayerUnreachableError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
-from .media_player import DEFAULT_PORT
+from .const import DEFAULT_PORT, DOMAIN
 from .utils import format_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,10 +63,10 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=11000): int,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 }
             ),
         )

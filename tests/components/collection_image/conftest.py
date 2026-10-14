@@ -13,9 +13,13 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     MOCK_MEDIA_DIR_URI_1,
+    MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
     MOCK_MEDIA_IMAGE_URI_1,
+    MOCK_MEDIA_IMAGE_URI_2,
+    MOCK_MEDIA_IMAGE_URI_3,
+    MOCK_MEDIA_IMAGE_URI_4,
     TEST_IMAGE,
 )
 from .helpers import directory, image
@@ -39,7 +43,9 @@ class MediaSourceMocks:
 
     config_flow_browse: AsyncMock
     image_browse: AsyncMock
+    diagnostics_browse: AsyncMock
     resolve: AsyncMock
+    diagnostics_resolve: AsyncMock
 
 
 @pytest.fixture
@@ -60,6 +66,11 @@ def config_entry() -> MockConfigEntry:
 @pytest.fixture
 def media_source_state() -> MediaSourceState:
     """Return default configurable responses for the media-source mock."""
+    generic_resolve = PlayMedia(
+        url="",
+        mime_type="image/png",
+        path=TEST_IMAGE,
+    )
     return MediaSourceState(
         browse_results={
             MOCK_MEDIA_DIR_URI_1: directory(
@@ -74,6 +85,12 @@ def media_source_state() -> MediaSourceState:
                 ),
                 image(MOCK_MEDIA_IMAGE_URI_1),
             ),
+            MOCK_MEDIA_DIR_URI_2: directory(
+                "Three pictures",
+                image(MOCK_MEDIA_IMAGE_URI_2),
+                image(MOCK_MEDIA_IMAGE_URI_3),
+                image(MOCK_MEDIA_IMAGE_URI_4),
+            ),
             MOCK_MEDIA_DIR_URI_EMPTY: directory("Empty folder"),
         },
         browse_exceptions={
@@ -82,11 +99,10 @@ def media_source_state() -> MediaSourceState:
             )
         },
         resolve_results={
-            MOCK_MEDIA_IMAGE_URI_1: PlayMedia(
-                url="",
-                mime_type="image/png",
-                path=TEST_IMAGE,
-            ),
+            MOCK_MEDIA_IMAGE_URI_1: generic_resolve,
+            MOCK_MEDIA_IMAGE_URI_2: generic_resolve,
+            MOCK_MEDIA_IMAGE_URI_3: generic_resolve,
+            MOCK_MEDIA_IMAGE_URI_4: generic_resolve,
         },
     )
 
@@ -138,12 +154,22 @@ def mock_media_source(
             new=AsyncMock(side_effect=browse_side_effect),
         ) as image_browse,
         patch(
+            "homeassistant.components.collection_image.diagnostics.async_browse_media",
+            new=AsyncMock(side_effect=browse_side_effect),
+        ) as diagnostics_browse,
+        patch(
             "homeassistant.components.collection_image.image.async_resolve_media",
             new=AsyncMock(side_effect=resolve_side_effect),
         ) as resolve,
+        patch(
+            "homeassistant.components.collection_image.diagnostics.async_resolve_media",
+            new=AsyncMock(side_effect=resolve_side_effect),
+        ) as diagnostics_resolve,
     ):
         yield MediaSourceMocks(
             config_flow_browse=config_flow_browse,
             image_browse=image_browse,
+            diagnostics_browse=diagnostics_browse,
             resolve=resolve,
+            diagnostics_resolve=diagnostics_resolve,
         )

@@ -1,7 +1,7 @@
 """Fixtures for the OpenGarage integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -31,10 +31,16 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_opengarage() -> Generator[MagicMock]:
     """Return a mocked OpenGarage client."""
-    with patch(
-        "homeassistant.components.opengarage.opengarage.OpenGarage",
-        autospec=True,
-    ) as client_mock:
+    with (
+        patch(
+            "homeassistant.components.opengarage.opengarage.OpenGarage",
+            autospec=True,
+        ) as client_mock,
+        patch(
+            "homeassistant.components.opengarage.config_flow.opengarage.OpenGarage",
+            new=client_mock,
+        ),
+    ):
         client = client_mock.return_value
         client.device_url = "http://1.1.1.1:80"
         client.update_state.return_value = {
@@ -56,3 +62,12 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.opengarage.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup

@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID
@@ -86,12 +86,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_unique_id(

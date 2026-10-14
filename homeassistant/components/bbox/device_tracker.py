@@ -5,8 +5,8 @@ from datetime import timedelta
 import logging
 from typing import override
 
+import probatio
 import pybbox
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -26,7 +26,7 @@ DEFAULT_HOST = "192.168.1.254"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
+    {probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 

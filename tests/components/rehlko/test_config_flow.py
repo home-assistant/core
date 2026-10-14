@@ -201,6 +201,7 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_rehlko: AsyncMock) -> No
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_SUBJECT
 
 
 async def test_dhcp_discovery_already_set_up(

@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import override
 
 from openerz_api.main import OpenERZConnector
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -23,9 +23,9 @@ CONF_WASTE_TYPE = "waste_type"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ZIP): cv.positive_int,
-        vol.Required(CONF_WASTE_TYPE, default="waste"): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ZIP): cv.positive_int,
+        probatio.Required(CONF_WASTE_TYPE, default="waste"): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
