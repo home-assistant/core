@@ -5,36 +5,10 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to the receiver.",
-      "sensor_already_configured": "This sensor is already configured.",
-      "unknown": "Unexpected error occurred.",
-      "value_type_required": "Select at least temperature or humidity."
+      "unknown": "Unexpected error occurred."
     },
     "step": {
-      "add_sensor": {
-        "data": {
-          "battery": "Reports battery state",
-          "expire_after": "Clear value after (seconds)",
-          "friendly_name": "Name",
-          "humidity": "Reports humidity",
-          "id": "Sensor ID",
-          "temperature": "Reports temperature"
-        },
-        "data_description": {
-          "battery": "Whether the sensor reports battery state.",
-          "expire_after": "Seconds without an update before the sensor value is cleared.",
-          "friendly_name": "The name used for the sensor.",
-          "humidity": "Whether the sensor reports humidity.",
-          "id": "The sensor identifier.",
-          "temperature": "Whether the sensor reports temperature."
-        }
-      },
-      "add_sensor_or_finish": {
-        "menu_options": {
-          "add_sensor": "Add another sensor",
-          "finish": "Finish setup"
-        }
-      },
-      "update_receiver": {
+      "reconfigure": {
         "data": {
           "baud": "Baud rate",
           "datarate": "Data rate",
