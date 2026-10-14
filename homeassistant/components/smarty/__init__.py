@@ -14,7 +14,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> None:
     """Set up the Smarty environment from a config entry."""
 
     coordinator = SmartyCoordinator(hass, entry)
@@ -25,9 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

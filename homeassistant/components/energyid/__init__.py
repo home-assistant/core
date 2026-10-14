@@ -15,7 +15,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
@@ -46,7 +50,7 @@ DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
     """Set up EnergyID from a config entry."""
     session = async_get_clientsession(hass)
     client = WebhookClient(
@@ -138,8 +142,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         "Starting EnergyID background sync for '%s'",
         client.device_name,
     )
-
-    return True
 
 
 async def config_entry_update_listener(
@@ -371,7 +373,7 @@ def _async_handle_state_change(
     client.get_or_create_sensor(energyid_key).update(value, new_state.last_updated)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
 
@@ -406,7 +408,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
             except Exception:
                 _LOGGER.exception("Error closing EnergyID client for %s", entry.title)
             del entry.runtime_data
-    except Exception:
-        _LOGGER.exception("Error during async_unload_entry for %s", entry.title)
-        return False
-    return True
+    except Exception as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unload_failed",
+        ) from err

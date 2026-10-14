@@ -39,7 +39,7 @@ TIMEOUT_API = 30
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TradfriConfigEntry,
-) -> bool:
+) -> None:
     """Create a gateway."""
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
@@ -119,16 +119,11 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TradfriConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TradfriConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.factory.shutdown()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.factory.shutdown()
 
 
 @callback
@@ -172,7 +167,7 @@ def remove_stale_devices(
             device_registry.async_remove_device(device_entry.id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug(
         "Migrating Tradfri configuration from version %s.%s",
@@ -191,8 +186,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True
 
 
 def migrate_config_entry_and_identifiers(

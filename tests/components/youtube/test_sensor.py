@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 from . import MockYouTube
 from .conftest import ComponentSetup
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor(
@@ -124,7 +124,9 @@ async def test_sensor_updating(
 
 
 async def test_sensor_reauth_trigger(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
 ) -> None:
     """Test reauth is triggered after a refresh error."""
     mock = await setup_integration()
@@ -146,6 +148,8 @@ async def test_sensor_reauth_trigger(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
+    assert config_entry.runtime_data.last_exception.translation_key == "auth_failed"
+
     flows = hass.config_entries.flow.async_progress()
 
     assert len(flows) == 1
@@ -156,7 +160,9 @@ async def test_sensor_reauth_trigger(
 
 
 async def test_sensor_unavailable(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
 ) -> None:
     """Test update failed."""
     mock = await setup_integration()
@@ -174,6 +180,8 @@ async def test_sensor_unavailable(
     future = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
+
+    assert config_entry.runtime_data.last_exception.translation_key == "update_error"
 
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state.state == "unavailable"
