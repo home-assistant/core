@@ -361,9 +361,10 @@ async def test_action_error(
     data: dict[str, Any],
     translation_key: str,
 ) -> None:
-    """Test API errors are raised as translated errors."""
+    """Test API errors are raised as translated errors and data is still refreshed."""
     mock_lyric.update_thermostat.side_effect = LyricException("error")
     mock_lyric.update_fan.side_effect = LyricException("error")
+    mock_lyric.get_locations.reset_mock()
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -374,3 +375,4 @@ async def test_action_error(
         )
 
     assert err.value.translation_key == translation_key
+    mock_lyric.get_locations.assert_awaited_once()
