@@ -26,7 +26,7 @@ DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> None:
     """Set up IQVIA as config entry."""
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -75,9 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IqviaConfigEntry) -> None:
     """Unload an OpenUV config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

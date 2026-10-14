@@ -38,8 +38,10 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
-    unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
+    schema = to_openapi(
+        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
+    )
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     tool_spec = FunctionDefinition(
@@ -60,7 +62,9 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(
+                {"data": content.result.data, "error": content.result.error}
+            ),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -174,19 +178,23 @@ class LiteLLMEntity(CoordinatorEntity[LiteLLMDataUpdateCoordinator]):
             except (openai.AuthenticationError, openai.PermissionDeniedError) as err:
                 # Re-check so the proxy is marked unavailable for the auth failure.
                 await coordinator.async_request_refresh()
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
             except openai.APIConnectionError as err:
                 coordinator.mark_connection_error()
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
             except openai.OpenAIError as err:
                 # Reachable but the request failed; keep the entity available.
                 coordinator.async_set_updated_data(None)
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
             if not result.choices:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("API returned empty choices")
                 raise HomeAssistantError("API returned empty response")
 

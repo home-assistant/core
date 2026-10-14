@@ -64,6 +64,23 @@
       "filter_alarm": {
         "name": "Filter alarm"
       }
+    },
+    "sensor": {
+      "air_filter_operating_time": {
+        "name": "Air filter operating time"
+      },
+      "cooling_regulation": {
+        "name": "Cooling regulation"
+      },
+      "electric_heater_regulation": {
+        "name": "Electric heater regulation"
+      },
+      "heat_exchanger_regulation": {
+        "name": "Heat exchanger regulation"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      }
     }
   },
   "issues": {

@@ -50,6 +50,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
             CONF_LOCAL_ACCESS_TOKEN: "token",
             CONF_WEBHOOK_ID: WEBHOOK_ID,
         }
+        assert result2["result"].unique_id == "0000-0000"
 
 
 async def test_flow_already_configured(
@@ -114,6 +115,16 @@ async def test_config_flow_errors(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == error
     assert len(mock_tedee.get_local_bridge.mock_calls) == 1
+
+    mock_tedee.get_local_bridge.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(

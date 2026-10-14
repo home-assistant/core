@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -20,6 +21,12 @@ CONFIG_INPUT = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
 }
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="192.168.1.100",
+    hostname="oven_88_e7_12_1f_53_fc",
+    macaddress="88e7121f53fc",
+)
 
 
 def assert_successful_user_flow(
@@ -260,6 +267,62 @@ async def test_no_appliances_flow(
     )
 
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+
+
+async def test_dhcp_flow(
+    hass: HomeAssistant,
+    region: tuple[str, Region],
+    brand: tuple[str, Brand],
+    mock_whirlpool_setup_entry: MagicMock,
+) -> None:
+    """Test that DHCP discovery leads to the user step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+
+
+async def test_dhcp_already_configured(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery aborts when an account is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_INPUT, unique_id="test-username"
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_already_in_progress(hass: HomeAssistant) -> None:
+    """Test that discovering multiple appliances results in a single flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.101",
+            hostname="washer_88_e7_12_aa_bb_cc",
+            macaddress="88e712aabbcc",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
 
 
 @pytest.mark.usefixtures("mock_whirlpool_setup_entry")

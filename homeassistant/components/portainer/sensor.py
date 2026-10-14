@@ -138,6 +138,28 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         options=["healthy", "unhealthy", "starting"],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Docker reports 0001-01-01 as the start time of a container that never started.
+    PortainerContainerSensorEntityDescription(
+        key="container_started_at",
+        translation_key="container_started_at",
+        value_fn=lambda data: (
+            started_at
+            if (state := data.container_inspect.state)
+            and state.started_at
+            and (started_at := dt_util.parse_datetime(state.started_at))
+            and started_at.year > 1
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_restart_count",
+        translation_key="container_restart_count",
+        value_fn=lambda data: data.container_inspect.restart_count,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
         translation_key="memory_limit",

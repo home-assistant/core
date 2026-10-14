@@ -138,7 +138,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Initiate Sensibo Climate."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             UnitOfTemperature.CELSIUS
             if self.device_data.temp_unit == "C"
             else UnitOfTemperature.FAHRENHEIT
@@ -178,20 +178,20 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.device_data.temp:
             return TemperatureConverter.convert(
                 self.device_data.temp,
                 UnitOfTemperature.CELSIUS,
-                self.temperature_unit,
+                self.native_temperature_unit,
             )
         return None
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return temperature unit."""
+    def native_temperature_unit(self) -> str:
+        """Return the native temperature unit."""
         return (
             UnitOfTemperature.CELSIUS
             if self.device_data.temp_unit == "C"
@@ -200,7 +200,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.device_data.target_temp
 
@@ -262,7 +262,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature: float = kwargs[ATTR_TEMPERATURE]
-        if temperature == self.target_temperature:
+        if temperature == self.native_target_temperature:
             return
 
         new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)

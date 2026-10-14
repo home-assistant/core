@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from ouman_eh_800_api import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 import pytest
 
@@ -110,19 +111,34 @@ async def test_setup_error(
     assert len(reauth_flows) == expected_reauth_flows
 
 
+@pytest.mark.parametrize(
+    ("failing_method", "error"),
+    [
+        pytest.param(
+            "get_values",
+            OumanClientCommunicationError("Timeout connecting to device"),
+            id="values_communication_error",
+        ),
+        pytest.param(
+            "get_is_l1_summer_function_active",
+            OumanClientError("Unexpected response from waterinfol1 request"),
+            id="summer_function_unexpected_response",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_update_failed(
     hass: HomeAssistant,
     mock_ouman_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    failing_method: str,
+    error: Exception,
 ) -> None:
     """Test that entities become unavailable when a data update fails."""
     entity_id = "sensor.ouman_eh_800_outside_temperature"
     assert hass.states.get(entity_id).state == "0.4"
 
-    mock_ouman_client.get_values.side_effect = OumanClientCommunicationError(
-        "Timeout connecting to device"
-    )
+    getattr(mock_ouman_client, failing_method).side_effect = error
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

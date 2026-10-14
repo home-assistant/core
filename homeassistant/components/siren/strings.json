@@ -45,6 +45,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_tone": {
+      "message": "Invalid tone specified for entity {entity_id}: {tone}, check the available_tones attribute for valid tones to pass in."
+    }
+  },
   "services": {
     "toggle": {
       "description": "Toggles a siren on/off.",

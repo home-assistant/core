@@ -1,6 +1,6 @@
 """The tests for the SamsungTV remote platform."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from samsungtvws.encrypted.remote import SamsungTVEncryptedCommand
@@ -103,8 +103,8 @@ async def test_send_command_service(
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_turn_on_wol(hass: HomeAssistant) -> None:
-    """Test turn on."""
+async def test_turn_on_without_turnon_with_mac(hass: HomeAssistant) -> None:
+    """Test turn on fails even when a MAC address is configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRYDATA_WEBSOCKET,
@@ -113,14 +113,12 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.samsungtv.entity.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
-        await hass.async_block_till_done()
-    assert mock_send_magic_packet.called
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "service_unsupported"
 
 
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:

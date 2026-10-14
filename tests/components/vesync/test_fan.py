@@ -354,3 +354,52 @@ async def test_oscillation_success(
         await hass.async_block_till_done()
         method_mock.assert_called_once()
         update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("device_name", "entity_id", "details", "expected_percentage"),
+    [
+        (
+            "Air Purifier Vital 200S",
+            "fan.air_purifier_vital_200s",
+            {"workMode": "pet", "fanSpeedLevel": 3},
+            75,
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "fan.air_purifier_vital_200s",
+            {"workMode": "auto", "fanSpeedLevel": 2},
+            50,
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "fan.air_purifier_vital_200s",
+            {"workMode": "sleep", "fanSpeedLevel": 255},
+            None,
+        ),
+        (
+            "Air Purifier 200s",
+            "fan.air_purifier_200s",
+            {"mode": "sleep", "level": 3},
+            None,
+        ),
+    ],
+)
+async def test_percentage_in_preset_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+    entity_id: str,
+    details: dict[str, int | str],
+    expected_percentage: int | None,
+) -> None:
+    """Test the running level is reported in presets only where the API has it."""
+    mock_devices_response(aioclient_mock, device_name, details_override=details)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PERCENTAGE] == expected_percentage

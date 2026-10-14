@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from pyicloud.exceptions import PyiCloudConnectionException
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -99,6 +100,11 @@ class MockDevicesContainer:
         """Initialize with userinfo and list of device objects."""
         self.user_info = userinfo
         self._devices = devices
+        self.refresh_calls: list[bool] = []
+
+    def refresh(self, locate: bool = False) -> None:
+        """Record refresh calls made by the account."""
+        self.refresh_calls.append(locate)
 
     def __iter__(self):
         """Iterate returns device objects (each must have .status(...))."""
@@ -130,7 +136,41 @@ def mock_icloud_service_fixture():
         service_instance.requires_2fa = False
 
         service_mock.return_value = service_instance
-        yield service_instance
+        yield service_mock
+
+
+async def test_setup_connection_error(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test a transport failure during setup asks for a retry."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    account = IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=PyiCloudConnectionException(reason="Connection error"),
+        ),
+        pytest.raises(ConfigEntryNotReady) as err,
+    ):
+        account.setup()
+
+    assert err.value.translation_key == "cannot_connect"
 
 
 async def test_setup_success_with_devices(
@@ -165,3 +205,14 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+    # The account polls devices itself, so pyicloud's own Find My monitor is disabled.
+    assert mock_icloud_service.call_args.kwargs["refresh_interval"] is None
+    # The FindMyiPhoneServiceManager constructor just located every device, so
+    # the first update must read that fresh data without a second active locate.
+    assert mock_icloud_service.return_value.devices.refresh_calls == []
+    assert "device1" in account.devices
+
+    # Later updates request a fresh GPS fix on every poll.
+    with patch.object(account, "_schedule_next_fetch"):
+        account.update_devices()
+    assert mock_icloud_service.return_value.devices.refresh_calls == [True]

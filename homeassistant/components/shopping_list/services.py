@@ -1,11 +1,10 @@
 """Support for shopping list services."""
 
-import logging
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .common import NoMatchingShoppingListItem, _get_shopping_data
@@ -23,12 +22,10 @@ from .const import (
     SERVICE_SORT,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
-SERVICE_LIST_SCHEMA = vol.Schema({})
-SERVICE_SORT_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
+SERVICE_ITEM_SCHEMA = probatio.Schema({probatio.Required(ATTR_NAME): cv.string})
+SERVICE_LIST_SCHEMA = probatio.Schema({})
+SERVICE_SORT_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
 )
 
 
@@ -47,9 +44,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         try:
             item = [item for item in data.items if item["name"] == name][0]
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except IndexError:
-            _LOGGER.error("Removing of item failed: %s cannot be found", name)
+        except IndexError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"name": name},
+            ) from err
         else:
             await data.async_remove(str(item["id"]))
 
@@ -58,9 +58,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         name = call.data[ATTR_NAME]
         try:
             await _get_shopping_data(hass).async_complete(name)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except NoMatchingShoppingListItem:
-            _LOGGER.error("Completing of item failed: %s cannot be found", name)
+        except NoMatchingShoppingListItem as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"name": name},
+            ) from err
 
     async def incomplete_item_service(call: ServiceCall) -> None:
         """Mark the first item with matching `name` as incomplete."""
@@ -69,9 +72,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         try:
             item = [item for item in data.items if item["name"] == name][0]
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except IndexError:
-            _LOGGER.error("Restoring of item failed: %s cannot be found", name)
+        except IndexError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"name": name},
+            ) from err
         else:
             await data.async_update(str(item["id"]), {"name": name, "complete": False})
 

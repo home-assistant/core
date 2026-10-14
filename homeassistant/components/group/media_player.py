@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from contextlib import suppress
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -75,9 +75,9 @@ DEFAULT_NAME = "Media Group"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(MEDIA_PLAYER_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(MEDIA_PLAYER_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -259,8 +259,10 @@ class MediaPlayerGroup(MediaPlayerEntity):
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
             self.async_update_supported_features(entity_id, new_state)
-        async_track_state_change_event(
-            self.hass, self._entities, self.async_on_state_change
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entities, self.async_on_state_change
+            )
         )
         self.async_update_group_state()
         self.async_write_ha_state()

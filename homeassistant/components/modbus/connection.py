@@ -34,6 +34,27 @@ DATA_MODBUS_CONNECTIONS: HassKey[dict[ModbusEndpoint, _SharedConnection]] = Hass
 )
 
 
+def _canonical(params: ModbusParams) -> ModbusParams:
+    """Return the params in the form the link is actually built from.
+
+    RTU and ASCII frame a serial line, so `ModbusTcpParams` carrying one builds
+    the serial link over a `socket://` device that `ModbusSerialParams` names
+    directly. Both spellings of that link have to reach the same connection.
+    """
+    if not isinstance(params, ModbusTcpParams) or params.framer not in ("rtu", "ascii"):
+        return params
+    # An IPv6 literal is bracketed, or its own colons read as the port separator.
+    host = f"[{params.host}]" if ":" in params.host else params.host
+    return ModbusSerialParams(
+        device=f"socket://{host}:{params.port}",
+        framer=params.framer,
+        # The line speed modbus-connection gives a socket-carried serial framing.
+        # It is fast enough to land on tmodbus's 1.75 ms inter-frame gap floor,
+        # which any value at or above 19200 baud also gets.
+        baudrate=115200,
+    )
+
+
 @dataclass
 class _SharedConnection:
     """A connection and the units held on it."""
@@ -77,6 +98,7 @@ def _async_acquire(
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
     """
+    params = _canonical(params)
     endpoint = params.endpoint
     connections = hass.data.setdefault(DATA_MODBUS_CONNECTIONS, {})
     if (shared := connections.get(endpoint)) is None:
