@@ -25,7 +25,7 @@ CONF_DEVICE_NAMES = "device_names"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Optional(CONF_DEVICE_ID): cv.string,
         probatio.Optional(CONF_DEVICE_IDS): cv.string,
         probatio.Optional(CONF_DEVICE_NAMES): cv.string,

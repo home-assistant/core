@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 import errno
-from functools import partial
 import logging
 import socket
 from typing import Any, override
@@ -22,6 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -38,6 +38,17 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     device: blk.Device
+
+    @override
+    @callback
+    def async_remove(self) -> None:
+        """Close the device's socket when the flow ends, however it ends.
+
+        The device created for the flow is only used to probe and
+        authenticate; the config entry builds its own.
+        """
+        if (device := getattr(self, "device", None)) is not None:
+            self.hass.async_create_task(device.aclose())
 
     async def async_set_device(
         self, device: blk.Device, raise_on_progress: bool = True
@@ -56,6 +67,10 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             device.mac.hex(), raise_on_progress=raise_on_progress
         )
+        # A probe replaced after a failed auth() has an open endpoint.
+        previous = getattr(self, "device", None)
+        if previous is not None and previous is not device:
+            await previous.aclose()
         self.device = device
 
         self.context["title_placeholders"] = {
@@ -75,7 +90,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         try:
-            device = await self.hass.async_add_executor_job(blk.hello, host)
+            device = await blk.hello(host)
 
         except NetworkTimeoutError:
             return self.async_abort(reason="cannot_connect")
@@ -103,8 +118,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
             try:
-                hello = partial(blk.hello, host, timeout=timeout)
-                device = await self.hass.async_add_executor_job(hello)
+                device = await blk.hello(host, timeout=timeout)
 
             except NetworkTimeoutError:
                 errors["base"] = "cannot_connect"
@@ -162,7 +176,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         try:
-            await self.hass.async_add_executor_job(device.auth)
+            await device.auth()
 
         except AuthenticationError:
             errors["base"] = "invalid_auth"
@@ -252,7 +266,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         elif user_input["unlock"]:
             try:
-                await self.hass.async_add_executor_job(device.set_lock, False)
+                await device.set_lock(False)
 
             except NetworkTimeoutError as err:
                 errors["base"] = "cannot_connect"

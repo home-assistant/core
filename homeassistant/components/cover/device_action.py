@@ -40,12 +40,23 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         probatio.Required(CONF_TYPE): probatio.In(POSITION_ACTION_TYPES),
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Optional("position", default=0): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=100)
+            probatio.Coerce(int), probatio.Percentage()
         ),
     }
 )
 
-_ACTION_SCHEMA = probatio.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "open": CMD_ACTION_SCHEMA,
+        "close": CMD_ACTION_SCHEMA,
+        "stop": CMD_ACTION_SCHEMA,
+        "open_tilt": CMD_ACTION_SCHEMA,
+        "close_tilt": CMD_ACTION_SCHEMA,
+        "set_position": POSITION_ACTION_SCHEMA,
+        "set_tilt_position": POSITION_ACTION_SCHEMA,
+    },
+)
 
 
 async def async_validate_action_config(
@@ -106,7 +117,7 @@ async def async_get_action_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(ATTR_POSITION, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 )
             }
         )

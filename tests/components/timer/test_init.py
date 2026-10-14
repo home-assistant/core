@@ -50,7 +50,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
@@ -426,7 +426,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
         ATTR_LAST_TRANSITION: "cancelled",
     }
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CHANGE,
@@ -453,8 +453,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond duration",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 beyond its duration",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -464,8 +464,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
         )
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Not possible to change timer timer.test1 to negative time remaining",
+        ServiceValidationError,
+        match="Cannot change timer timer.test1 to a negative remaining time",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -522,8 +522,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     }
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Timer timer.test1 is not running, only active timers can be changed",
+        ServiceValidationError,
+        match="Timer timer.test1 is not running. Only active timers can be changed",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1096,6 +1096,36 @@ async def test_ws_delete(
     state = hass.states.get(timer_entity_id)
     assert state is None
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
+
+
+async def test_ws_delete_running_timer(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+) -> None:
+    """Test deleting a running timer does not fire the finished event."""
+    assert await storage_setup()
+    timer_entity_id = f"{DOMAIN}.{DOMAIN}_from_storage"
+    events = async_capture_events(hass, EVENT_TIMER_FINISHED)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_START,
+        {CONF_ENTITY_ID: timer_entity_id, CONF_DURATION: 10},
+        blocking=True,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 6, "type": f"{DOMAIN}/delete", f"{DOMAIN}_id": "from_storage"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    assert not events
 
 
 async def test_update(

@@ -4,8 +4,6 @@
       "already_configured": "UniFi Network site is already configured",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "configuration_updated": "Configuration updated",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown_site_id": "Previously configured UniFi Network site can no longer be found"
     },
     "error": {
@@ -201,6 +199,9 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "unload_failed": {
+      "message": "Failed to unload UniFi Network"
     }
   },
   "options": {

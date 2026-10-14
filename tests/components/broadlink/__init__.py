@@ -1,7 +1,10 @@
 """Tests for the Broadlink integration."""
 
 from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+import inspect
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import broadlink as blk
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -100,7 +103,45 @@ BROADLINK_DEVICES = {
         10024,
         5,
     ),
+    "Study": (
+        "192.168.0.17",
+        "34ea34b61d2f",
+        "RM5 plus",
+        "Broadlink",
+        "RM5PLUS",
+        0x5224,
+        57,
+        5,
+    ),
 }
+
+
+def _async_api_methods() -> frozenset[str]:
+    """Names of every coroutine method on any device class in the library."""
+    names: set[str] = set()
+    for _, cls in inspect.getmembers(blk, inspect.isclass):
+        if issubclass(cls, blk.Device):
+            names.update(
+                name for name, _ in inspect.getmembers(cls, inspect.iscoroutinefunction)
+            )
+    return frozenset(names)
+
+
+ASYNC_API_METHODS = _async_api_methods()
+
+
+def mock_api_base() -> MagicMock:
+    """Return a mock device whose coroutine methods await to plain mocks.
+
+    Attributes such as ``host`` and ``mac`` stay ordinary values; every
+    method that is a coroutine on the real library becomes an ``AsyncMock``
+    returning a ``MagicMock``, so code that reads the result (``data.get``)
+    does not receive another coroutine.
+    """
+    mock_api = MagicMock()
+    for name in ASYNC_API_METHODS:
+        setattr(mock_api, name, AsyncMock(return_value=MagicMock()))
+    return mock_api
 
 
 @dataclass
@@ -160,7 +201,7 @@ class BroadlinkDevice:
 
     def get_mock_api(self):
         """Return a mock device (API)."""
-        mock_api = MagicMock()
+        mock_api = mock_api_base()
         mock_api.name = self.name
         mock_api.host = (self.host, 80)
         mock_api.mac = bytes.fromhex(self.mac)

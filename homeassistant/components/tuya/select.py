@@ -126,6 +126,12 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaSelectEntityDescription(
+            key=DPCode.MODE,
+            translation_key="pump_mode",
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaSelectEntityDescription(
             key=DPCode.SPRAY_MODE,
@@ -191,6 +197,13 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
         ),
+        TuyaSelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+    ),
+    DeviceCategory.MJJ: (
         TuyaSelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,

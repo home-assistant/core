@@ -113,7 +113,7 @@ PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
                 "stations in a specific area pr sensor. "
                 "Please only configure station or area."
             ),
-        ): probatio.All(cv.ensure_list, [cv.string]),
+        ): probatio.All(probatio.EnsureList(), [cv.string]),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
     }

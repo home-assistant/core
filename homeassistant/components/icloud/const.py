@@ -9,10 +9,12 @@ ATTRIBUTION = "Data provided by Apple iCloud"
 CONF_WITH_FAMILY = "with_family"
 CONF_MAX_INTERVAL = "max_interval"
 CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
+CONF_INCLUDE_COMPLETED = "include_completed"
 
 DEFAULT_WITH_FAMILY = False
 DEFAULT_MAX_INTERVAL = 30  # min
 DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
+DEFAULT_INCLUDE_COMPLETED = False
 
 # to store the cookie
 STORAGE_KEY = DOMAIN

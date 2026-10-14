@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> None:
     """Set up Miele from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -72,13 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

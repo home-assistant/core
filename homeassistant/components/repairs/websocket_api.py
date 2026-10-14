@@ -72,7 +72,15 @@ def ws_ignore_issue(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    ir.async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
+    issue_registry = ir.async_get(hass)
+    if not issue_registry.async_get_issue(msg["domain"], msg["issue_id"]):
+        connection.send_error(
+            msg["id"],
+            "unknown_issue",
+            f"Issue '{msg['issue_id']}' not found",
+        )
+        return
+    issue_registry.async_ignore(msg["domain"], msg["issue_id"], msg["ignore"])
 
     connection.send_result(msg["id"])
 
@@ -104,7 +112,7 @@ def ws_list_issues(
             "translation_placeholders": issue.translation_placeholders,
         }
         for issue in issue_registry.issues.values()
-        if issue.active
+        if issue.active and not issue_registry.async_is_hidden(issue)
     ]
     connection.send_result(msg["id"], {"issues": issues})
 
