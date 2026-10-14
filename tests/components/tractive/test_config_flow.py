@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import aiohttp
 import aiotractive
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.tractive.const import DOMAIN
@@ -449,4 +450,103 @@ async def test_reauthentication_unique_id_mismatch(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "unique_id_mismatch"
     assert old_entry.data == USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test Tractive reconfiguration."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="USERID")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "email")
+        == USER_INPUT["email"]
+    )
+
+    with (
+        patch("aiotractive.api.API.user_id", return_value="USERID"),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            NEW_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == NEW_USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (aiotractive.exceptions.UnauthorizedError, "invalid_auth"),
+        (aiotractive.exceptions.TractiveError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant, side_effect: type[Exception] | Exception, error: str
+) -> None:
+    """Test Tractive reconfiguration errors and recovery."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="USERID")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch("aiotractive.api.API.user_id", side_effect=side_effect):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            NEW_USER_INPUT,
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {"base": error}
+
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            NEW_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    assert entry.data == NEW_USER_INPUT
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test Tractive reconfiguration with credentials of a different account."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="USERID")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("aiotractive.api.API.user_id", return_value="USERID_DIFFERENT"),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            OTHER_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+    assert entry.data == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 0
