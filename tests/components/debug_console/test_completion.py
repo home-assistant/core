@@ -135,6 +135,15 @@ async def test_complete_no_modules(
 
 
 SIGNATURE_SETUP = """
+import functools
+
+def inner(alpha, beta=2):
+    \"\"\"Do the inner thing.\"\"\"
+
+@functools.wraps(inner)
+def decorated(*args, **kwargs):
+    pass
+
 class Thing:
     def method(self, entity_id: str, *values: int, force: bool = False, **extra) -> str:
         \"\"\"Do the thing.
@@ -202,6 +211,28 @@ METHOD_SIGNATURE = {
         ),
         pytest.param("min(", None, id="no_signature"),
         pytest.param(
+            "decorated(",
+            {
+                "name": "decorated",
+                "parameters": ["alpha", "beta=2"],
+                "active": 0,
+                "returns": None,
+                "doc": "Do the inner thing.",
+            },
+            id="decorated",
+        ),
+        pytest.param(
+            "Thing(",
+            {
+                "name": "Thing",
+                "parameters": [],
+                "active": None,
+                "returns": None,
+                "doc": "",
+            },
+            id="class",
+        ),
+        pytest.param(
             "len(",
             {
                 "name": "len",
@@ -263,6 +294,26 @@ async def test_signature(
             {"type": "debug_console/signature", "code": "with_default("},
             id="signature_default",
         ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "callable_tr"},
+            id="complete_global_callable",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "sneaky.method("},
+            id="signature_descriptor_subclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "sneaky.method.x"},
+            id="complete_descriptor_subclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "wraps_trap("},
+            id="signature_wrapped_callable",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "WithMetaclass("},
+            id="signature_metaclass",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -304,8 +355,31 @@ class Default:
 def with_default(value=Default()):
     pass
 
+class SneakyStaticMethod(staticmethod):
+    def __get__(self, instance, owner):
+        ran.append("descriptor subclass")
+        return super().__get__(instance, owner)
+
+class Sneaky:
+    method = SneakyStaticMethod(lambda: None)
+
+class Metaclass(type):
+    @property
+    def __signature__(cls):
+        ran.append("metaclass")
+
+class WithMetaclass(metaclass=Metaclass):
+    pass
+
 trap = Trap()
 callable_trap = CallableTrap()
+sneaky = Sneaky()
+
+import functools
+
+@functools.wraps(callable_trap)
+def wraps_trap(*args, **kwargs):
+    pass
 """,
     )
 
@@ -357,16 +431,25 @@ async def test_import_completion_does_not_import(
     assert result["matches"] == expected
 
 
-async def test_complete_limited(websocket_client: MockHAClientWebSocket) -> None:
+@pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        pytest.param("thing.al", ["thing.alpha"], id="attribute"),
+        pytest.param("has", ["hass"], id="global"),
+    ],
+)
+async def test_complete_limited(
+    websocket_client: MockHAClientWebSocket, line: str, expected: list[str]
+) -> None:
     """Test completion stops at the maximum number of matches."""
     await async_execute(websocket_client, COMPLETION_SETUP)
 
     with patch("homeassistant.components.debug_console.completion.MAX_COMPLETIONS", 1):
         result = await async_send(
-            websocket_client, {"type": "debug_console/complete", "code": "thing.al"}
+            websocket_client, {"type": "debug_console/complete", "code": line}
         )
 
-    assert result["matches"] == ["thing.alpha"]
+    assert result["matches"] == expected
 
 
 async def test_signature_hides_object_defaults(

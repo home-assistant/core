@@ -4,6 +4,7 @@ All of this runs while typing, so it never runs user code: no properties,
 descriptors, __getattr__, or __dir__, and no importing modules.
 """
 
+from abc import ABCMeta
 from annotationlib import Format
 import builtins
 from collections.abc import Iterable
@@ -12,12 +13,12 @@ from functools import cache
 from importlib.machinery import PathFinder
 import inspect
 from itertools import pairwise
+import keyword
 import pkgutil
 import re
-import rlcompleter
 import sys
 import types
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 
@@ -45,7 +46,6 @@ _SAFE_DEFAULT_TYPES = (type(None), bool, int, float, complex, str, bytes)
 
 # Callables whose signature inspect can read without running user code.
 _SIGNATURE_TYPES = (
-    type,
     types.FunctionType,
     types.BuiltinFunctionType,
     types.MethodType,
@@ -54,6 +54,9 @@ _SIGNATURE_TYPES = (
     types.MethodWrapperType,
     types.ClassMethodDescriptorType,
 )
+
+# Metaclasses of classes whose signature inspect can read safely.
+_STANDARD_METACLASSES = (type, ABCMeta)
 
 # Descriptors that only bind functions, so binding them runs no user code.
 _SAFE_DESCRIPTORS = (
@@ -113,7 +116,9 @@ def signature_hint(namespace: dict[str, Any], code: str) -> dict[str, Any] | Non
 
     parameters = list(signature.parameters.values())
     active = _active_parameter(parameters, call.arguments)
-    doc = inspect.getdoc(_resolve(namespace, call.callee)) or ""
+    # Not inspect.getdoc, which also searches classes when the doc is missing.
+    doc = _resolve(namespace, call.callee).__doc__
+    doc = inspect.cleandoc(doc) if isinstance(doc, str) else ""
 
     return {
         "name": call.callee.rpartition(".")[2],
@@ -192,10 +197,10 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
         if not from_class or not hasattr(type(static), "__get__"):
             # Plain values, including those in the __dict__ of an instance.
             value = static
-        elif isinstance(static, _SAFE_DESCRIPTORS):
+        elif type(static) in _SAFE_DESCRIPTORS:
             instance = None if value is owner else value
             value = static.__get__(instance, owner)  # pylint: disable=unnecessary-dunder-call
-        elif isinstance(static, types.MemberDescriptorType) and value is not owner:
+        elif type(static) is types.MemberDescriptorType and value is not owner:
             value = static.__get__(value, owner)  # pylint: disable=unnecessary-dunder-call
         else:
             return _MISSING
@@ -204,21 +209,39 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
 
 
 def _signature(namespace: dict[str, Any], callee: str) -> inspect.Signature | None:
-    """Return the signature of a callable, or None if it has none.
-
-    Only for functions, methods, and classes: for other callable objects,
-    inspect reads attributes like __signature__, which can be properties.
-    """
-    if (target := _resolve(namespace, callee)) is _MISSING or not isinstance(
-        target, _SIGNATURE_TYPES
+    """Return the signature of a callable, or None if it has none."""
+    if (target := _resolve(namespace, callee)) is _MISSING or not _has_safe_signature(
+        target
     ):
         return None
 
+    # Decorated functions show the signature of what they wrap, as long as that
+    # is safe to read too.
+    target = inspect.unwrap(
+        target,
+        # Only called for wrappers, which have __wrapped__.
+        stop=lambda wrapper: not _has_safe_signature(cast(Any, wrapper).__wrapped__),
+    )
+
     try:
         # As strings, as evaluating annotations can fail or import things.
-        return inspect.signature(target, annotation_format=Format.STRING)
+        return inspect.signature(
+            target, annotation_format=Format.STRING, follow_wrapped=False
+        )
     except TypeError, ValueError:
         return None
+
+
+def _has_safe_signature(value: Any) -> bool:
+    """Return if inspect can read the signature without running user code.
+
+    For other callable objects, and classes with a metaclass of their own,
+    inspect reads attributes like __signature__, which can be properties.
+    """
+    if isinstance(value, type):
+        return type(value) in _STANDARD_METACLASSES
+
+    return type(value) in _SIGNATURE_TYPES
 
 
 def _format_parameter(parameter: inspect.Parameter) -> str:
@@ -253,12 +276,12 @@ def _active_parameter(
     parameters: list[inspect.Parameter], arguments: list[str]
 ) -> inspect.Parameter | None:
     """Return the parameter the argument being typed goes to."""
-    if keyword := _KEYWORD_ARGUMENT.match(arguments[-1]):
+    if keyword_argument := _KEYWORD_ARGUMENT.match(arguments[-1]):
         return next(
             (
                 parameter
                 for parameter in parameters
-                if parameter.name == keyword["name"]
+                if parameter.name == keyword_argument["name"]
                 or parameter.kind is inspect.Parameter.VAR_KEYWORD
             ),
             None,
@@ -327,7 +350,7 @@ def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
 
     expression, dot, prefix = token.rpartition(".")
     if not dot:
-        return rlcompleter.Completer(namespace).global_matches(token)
+        return _complete_global(namespace, token)
 
     if (value := _resolve(namespace, expression)) is _MISSING:
         return []
@@ -342,6 +365,28 @@ def _complete_namespace(namespace: dict[str, Any], token: str) -> list[str]:
         matches.append(f"{expression}.{name}{call}")
         if len(matches) >= MAX_COMPLETIONS:
             break
+
+    return matches
+
+
+def _complete_global(namespace: dict[str, Any], prefix: str) -> list[str]:
+    """Return completions for a name: keywords, then names, then builtins.
+
+    Like rlcompleter, but without reading signatures of callables, which can
+    run code of the user.
+    """
+    matches = [word for word in keyword.kwlist if word.startswith(prefix)]
+    seen: set[str] = set()
+
+    for names in (namespace, vars(builtins)):
+        for name, value in names.items():
+            if name in seen or not _is_completion(name, prefix):
+                continue
+
+            seen.add(name)
+            matches.append(f"{name}(" if callable(value) else name)
+            if len(matches) >= MAX_COMPLETIONS:
+                return matches
 
     return matches
 
