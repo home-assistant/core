@@ -178,7 +178,7 @@ async def test_api_can_trigger_reauth(
     monzo.user_account.accounts.side_effect = AuthorisationExpiredError()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     flows = hass.config_entries.flow.async_progress()
 
     assert len(flows) == 1

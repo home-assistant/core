@@ -11,16 +11,47 @@ from victron_mqtt import (
 )
 from victron_mqtt.testing import finalize_injection, inject_message
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.victron_gx import async_remove_config_entry_device
 from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
 
 from .const import MOCK_INSTALLATION_ID
 
 from tests.common import MockConfigEntry
+
+LEGACY_SENSOR_UNIQUE_ID = (
+    f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_max_set_current"
+)
+LEGACY_SENSOR_ENTITY_ID = "sensor.ev_charging_station_maximum_set_current"
+DEPRECATED_SENSOR_ISSUE_ID = f"deprecated_sensor_{LEGACY_SENSOR_UNIQUE_ID}"
+
+
+def _register_legacy_sensor(
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    *,
+    disabled: bool = False,
+) -> None:
+    """Register a legacy EV charger sensor."""
+    entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        LEGACY_SENSOR_UNIQUE_ID,
+        suggested_object_id="ev_charging_station_maximum_set_current",
+        config_entry=config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER if disabled else None,
+    )
+    assert entry.entity_id == LEGACY_SENSOR_ENTITY_ID
 
 
 @pytest.fixture
@@ -33,6 +64,110 @@ def mock_victron_hub_library():
         hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_lib.return_value = hub_instance
         yield mock_lib
+
+
+@pytest.mark.usefixtures("mock_victron_hub_library")
+async def test_legacy_evcharger_sensor_creates_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an enabled legacy sensor remains and creates a repair."""
+    mock_config_entry.add_to_hass(hass)
+    _register_legacy_sensor(entity_registry, mock_config_entry)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(LEGACY_SENSOR_ENTITY_ID) is not None
+    assert hass.states.get(LEGACY_SENSOR_ENTITY_ID) is None
+    issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_SENSOR_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_sensor"
+    assert issue.translation_placeholders == {"entity_id": LEGACY_SENSOR_ENTITY_ID}
+
+
+@pytest.mark.usefixtures("mock_victron_hub_library")
+async def test_legacy_evcharger_sensor_repair_lists_uses(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair lists automations and scripts using the legacy sensor."""
+    mock_config_entry.add_to_hass(hass)
+    _register_legacy_sensor(entity_registry, mock_config_entry)
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "Test automation",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": LEGACY_SENSOR_ENTITY_ID,
+                },
+                "action": [],
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        SCRIPT_DOMAIN,
+        {
+            SCRIPT_DOMAIN: {
+                "test_script": {
+                    "sequence": {
+                        "action": "homeassistant.turn_on",
+                        "target": {"entity_id": LEGACY_SENSOR_ENTITY_ID},
+                    }
+                }
+            }
+        },
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(LEGACY_SENSOR_ENTITY_ID) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_SENSOR_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_sensor_in_use"
+    placeholders = issue.translation_placeholders
+    assert placeholders is not None
+    assert "automation.test_automation" in placeholders["items"]
+    assert "/config/script/edit/test_script" in placeholders["items"]
+
+
+@pytest.mark.usefixtures("mock_victron_hub_library")
+async def test_disabled_legacy_evcharger_sensor_is_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled legacy sensor and its repair are removed."""
+    mock_config_entry.add_to_hass(hass)
+    _register_legacy_sensor(entity_registry, mock_config_entry, disabled=True)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DEPRECATED_SENSOR_ISSUE_ID,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_sensor",
+        translation_placeholders={
+            "entity_id": LEGACY_SENSOR_ENTITY_ID,
+        },
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(LEGACY_SENSOR_ENTITY_ID) is None
+    assert hass.states.get(LEGACY_SENSOR_ENTITY_ID) is None
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_SENSOR_ISSUE_ID) is None
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")

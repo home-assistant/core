@@ -1,8 +1,11 @@
 """Tests for the Freebox init."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from unittest.mock import ANY, Mock
 
+from aiohttp import ClientError
+from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
@@ -43,6 +46,40 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
 
     assert router.call_count == 1
     assert router().open.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [HttpRequestError("Boom"), ClientError("Boom"), TimeoutError],
+)
+@pytest.mark.parametrize(
+    "failing_call",
+    [
+        pytest.param(lambda api: api.open, id="open"),
+        pytest.param(lambda api: api.system.get_config, id="get_config"),
+        pytest.param(lambda api: api.lan.get_interfaces, id="get_interfaces"),
+    ],
+)
+async def test_setup_retries_when_the_router_cannot_be_reached(
+    hass: HomeAssistant,
+    router: Mock,
+    error: Exception,
+    failing_call: Callable[[Mock], Mock],
+) -> None:
+    """Test that setup is retried when the router cannot be reached."""
+    failing_call(router()).side_effect = error
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
@@ -167,6 +204,26 @@ async def test_unique_id_migration(
     assert (
         entity_registry.async_get_entity_id(platform, DOMAIN, new_unique_id) is not None
     )
+
+
+async def test_unique_id_migration_cannot_connect(
+    hass: HomeAssistant, router: Mock
+) -> None:
+    """Test migration is retried when the router cannot be reached."""
+    router.return_value.open.side_effect = HttpRequestError("Boom")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == f"Failed to connect to the Freebox router at {MOCK_HOST}"
+    assert entry.version == 1
 
 
 @pytest.mark.usefixtures("router")

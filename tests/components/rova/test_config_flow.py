@@ -31,10 +31,9 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     assert result.get("step_id") == "user"
 
     # test with all information provided
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ZIP_CODE: ZIP_CODE,
             CONF_HOUSE_NUMBER: HOUSE_NUMBER,
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
@@ -47,6 +46,9 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     assert data[CONF_ZIP_CODE] == ZIP_CODE
     assert data[CONF_HOUSE_NUMBER] == HOUSE_NUMBER
     assert data[CONF_HOUSE_NUMBER_SUFFIX] == HOUSE_NUMBER_SUFFIX
+    assert (
+        result["result"].unique_id == f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}"
+    )
 
 
 async def test_error_if_not_rova_area(
@@ -106,9 +108,15 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_ZIP_CODE: ZIP_CODE,
             CONF_HOUSE_NUMBER: HOUSE_NUMBER,
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,

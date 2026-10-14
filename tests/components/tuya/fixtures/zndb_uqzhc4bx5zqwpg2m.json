@@ -1,0 +1,74 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "多路计量有线demo26082501",
+  "category": "zndb",
+  "product_id": "uqzhc4bx5zqwpg2m",
+  "product_name": "多路计量有线demo26082501",
+  "online": true,
+  "sub": false,
+  "time_zone": "+8:00",
+  "active_time": "2026-09-03T02:02:14+00:00",
+  "create_time": "2026-09-03T02:02:14+00:00",
+  "update_time": "2026-09-03T02:02:14+00:00",
+  "function": {
+    "event_clear": {
+      "code": "event_clear",
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "phase_s1": {
+      "type": "String",
+      "value": {}
+    },
+    "meter_id": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "imei_imsi": {
+      "type": "Json",
+      "value": {}
+    },
+    "supply_frequency": {
+      "type": "Integer",
+      "value": {
+        "unit": "Hz",
+        "min": 0,
+        "max": 9999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "ct_ration": {
+      "type": "Raw",
+      "value": {}
+    },
+    "event_clear": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "online_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["online", "offline"]
+      }
+    }
+  },
+  "status": {
+    "phase_s1": "020F08FD00D26400254C0000000000004D00",
+    "meter_id": "",
+    "imei_imsi": "",
+    "supply_frequency": 0,
+    "ct_ration": "",
+    "event_clear": false,
+    "online_state": "online"
+  },
+  "set_up": false,
+  "support_local": true
+}

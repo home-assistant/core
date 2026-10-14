@@ -4,12 +4,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
-)
 
 from . import api
-from .const import DOMAIN, FitbitScope
+from .const import FitbitScope
 from .coordinator import FitbitConfigEntry, FitbitData, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import config_from_entry_data
@@ -17,19 +14,13 @@ from .model import config_from_entry_data
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> None:
     """Set up fitbit from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     fitbit_api = api.OAuthFitbitApi(
         hass, session, unit_system=entry.data.get("unit_system")
@@ -51,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

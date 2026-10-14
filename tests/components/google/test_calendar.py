@@ -1556,6 +1556,7 @@ async def test_working_location_get_events(
                     "summary": "Home",
                     "description": "test event",
                     "location": "Test Cases",
+                    "status": "confirmed",
                 },
                 {
                     "start": "2026-08-25",
@@ -1563,6 +1564,7 @@ async def test_working_location_get_events(
                     "summary": "Office",
                     "description": "test event",
                     "location": "Test Cases",
+                    "status": "confirmed",
                 },
                 {
                     "start": "2026-08-31",
@@ -1570,6 +1572,7 @@ async def test_working_location_get_events(
                     "summary": "Home",
                     "description": "test event",
                     "location": "Test Cases",
+                    "status": "confirmed",
                 },
             ]
         }
@@ -1652,6 +1655,7 @@ async def test_working_location_ignore_availability_false(
                     "summary": "Home",
                     "description": "test event",
                     "location": "Test Cases",
+                    "status": "confirmed",
                 }
             ]
         }
@@ -1778,3 +1782,37 @@ async def test_calendar_background_color(
     entity = entity_registry.async_get("calendar.test_calendar")
     assert entity is not None
     assert entity.options.get("calendar", {}).get("color") == expected_color
+
+
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
+@pytest.mark.parametrize(
+    ("event_status", "expected_status"),
+    [
+        pytest.param({"status": "tentative"}, "tentative", id="tentative"),
+        pytest.param({"status": "confirmed"}, "confirmed", id="confirmed"),
+        # The Google API documents confirmed as the default for an omitted
+        # status and gcal_sync applies it, so it is never reported as unset.
+        pytest.param({}, "confirmed", id="defaults_to_confirmed"),
+    ],
+    # Cancelled is not covered: in the Google API it means deleted rather than
+    # called off, and gcal_sync drops those events when building the timeline,
+    # so they never reach the integration.
+)
+async def test_http_api_event_status(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items: ApiResult,
+    component_setup: ComponentSetup,
+    event_status: dict[str, str],
+    expected_status: str,
+) -> None:
+    """Test that the event status is returned by the API."""
+    mock_events_list_items([{**TEST_EVENT, **upcoming(), **event_status}])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status

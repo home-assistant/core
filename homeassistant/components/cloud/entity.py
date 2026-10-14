@@ -42,8 +42,7 @@ from openai.types.responses.response_input_param import (
     ImageGenerationCall as ImageGenerationCallParam,
 )
 from openai.types.responses.response_output_item import ImageGenerationCall
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
@@ -85,7 +84,7 @@ def _convert_content_to_param(
                 and content.tool_call_id in web_search_calls
             ):
                 web_search_call = web_search_calls.pop(content.tool_call_id)
-                web_search_call["status"] = content.tool_result.get(
+                web_search_call["status"] = content.result.data.get(
                     "status", "completed"
                 )
                 messages.append(cast("ResponseInputItemParam", web_search_call))
@@ -94,7 +93,12 @@ def _convert_content_to_param(
                     {
                         "type": "function_call_output",
                         "call_id": content.tool_call_id,
-                        "output": json_dumps(content.tool_result),
+                        "output": json_dumps(
+                            {
+                                "data": content.result.data,
+                                "error": content.result.error,
+                            }
+                        ),
                     }
                 )
             continue
@@ -168,7 +172,11 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ToolParam:
     """Format a Home Assistant tool for the OpenAI Responses API."""
-    parameters = to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    parameters = probatio.to_openapi(
+        tool.parameters,
+        custom_serializer=custom_serializer,
+        openapi_version="3.1.0",
+    )
 
     spec: FunctionToolParam = {
         "type": "function",
@@ -207,14 +215,15 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
 
 
 def _format_structured_output(
-    schema: vol.Schema, llm_api: llm.APIInstance | None
+    schema: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = to_openapi(
+    result: dict[str, Any] = probatio.to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
+        openapi_version="3.1.0",
     )
 
     _ensure_schema_constraints(result)
@@ -224,16 +233,23 @@ def _format_structured_output(
 
 def _ensure_schema_constraints(schema: dict[str, Any]) -> None:
     """Ensure generated schemas match the Responses API expectations."""
-    schema_type = schema.get("type")
+    for keyword in ("anyOf", "oneOf", "allOf", "prefixItems"):
+        if isinstance(branches := schema.get(keyword), list):
+            for branch in branches:
+                if isinstance(branch, dict):
+                    _ensure_schema_constraints(branch)
 
-    if schema_type == "object":
+    schema_type = schema.get("type")
+    schema_types = schema_type if isinstance(schema_type, list) else [schema_type]
+
+    if "object" in schema_types:
         schema.setdefault("additionalProperties", False)
         properties = schema.get("properties")
         if isinstance(properties, dict):
             for property_schema in properties.values():
                 if isinstance(property_schema, dict):
                     _ensure_schema_constraints(property_schema)
-    elif schema_type == "array":
+    if "array" in schema_types:
         items = schema.get("items")
         if isinstance(items, dict):
             _ensure_schema_constraints(items)
@@ -315,7 +331,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "role": "tool_result",
                     "tool_call_id": event.item.id,
                     "tool_name": "web_search_call",
-                    "tool_result": {"status": event.item.status},
+                    "result": llm.ToolResult(
+                        data={"status": event.item.status},
+                        error=event.item.status == "failed",
+                    ),
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, LLMResponseImageOutputItem):
@@ -556,7 +575,7 @@ class BaseCloudLLMEntity(Entity):
         type: Literal["ai_task", "conversation"],
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate a response for the chat log."""
 

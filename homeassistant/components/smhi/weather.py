@@ -159,7 +159,13 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
 
         data: list[Forecast] = []
 
-        for forecast in forecast_data[1:]:
+        # The library repeats the current conditions as the first entry of the
+        # daily and twice daily forecasts, so those start one entry in. It does
+        # not do that for the hourly forecast, where the first entry is the
+        # forecast for the current hour.
+        forecasts = forecast_data if forecast_type == "hourly" else forecast_data[1:]
+
+        for forecast in forecasts:
             condition = CONDITION_MAP.get(forecast["symbol"])
             if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
                 self.hass, forecast["valid_time"]

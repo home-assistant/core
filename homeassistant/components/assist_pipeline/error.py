@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from homeassistant.exceptions import HomeAssistantError
 
 if TYPE_CHECKING:
-    from .pipeline import PipelineStage
+    from .models import PipelineStage
 
 
 class PipelineError(HomeAssistantError):

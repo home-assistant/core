@@ -12,8 +12,6 @@ from homeassistant.components.plex.const import (
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
-    DOMAIN,
-    SERVERS,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -34,9 +32,7 @@ async def test_new_users_available(
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
 
-    server_id = mock_plex_server.machine_identifier
-
-    monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
+    monitored_users = mock_plex_server.option_monitored_users
 
     ignored_users = [x for x in monitored_users if not monitored_users[x]["enabled"]]
     assert len(monitored_users) == 1
@@ -70,10 +66,8 @@ async def test_new_ignored_users_available(
     await wait_for_debouncer(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    server_id = mock_plex_server.machine_identifier
-
     active_sessions = mock_plex_server._plex_server.sessions()
-    monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
+    monitored_users = mock_plex_server.option_monitored_users
     ignored_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
 
     assert len(monitored_users) == 1
@@ -100,8 +94,6 @@ async def test_network_error_during_refresh(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_plex_server
 ) -> None:
     """Test network failures during refreshes."""
-    server_id = mock_plex_server.machine_identifier
-    loaded_server = hass.data[DOMAIN][SERVERS][server_id]
     active_sessions = mock_plex_server._plex_server.sessions()
 
     await wait_for_debouncer(hass)
@@ -110,7 +102,7 @@ async def test_network_error_during_refresh(
     assert sensor.state == str(len(active_sessions))
 
     with patch("plexapi.server.PlexServer.clients", side_effect=RequestException):
-        await loaded_server._async_update_platforms()
+        await mock_plex_server._async_update_platforms()
         await hass.async_block_till_done()
 
     assert (
