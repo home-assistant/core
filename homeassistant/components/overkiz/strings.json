@@ -157,6 +157,30 @@
           "verylow": "[%key:common::state::very_low%]"
         }
       },
+      "pass_apc_cooling_profile": {
+        "state": {
+          "absence": "[%key:common::state::not_home%]",
+          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "derogation": "[%key:component::overkiz::entity::sensor::pass_apc_heating_profile::state::derogation%]",
+          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "external_setpoint": "[%key:component::overkiz::entity::sensor::pass_apc_heating_profile::state::external_setpoint%]",
+          "frost_protection": "[%key:component::overkiz::entity::climate::overkiz::state_attributes::preset_mode::state::frost_protection%]",
+          "manual": "[%key:common::state::manual%]",
+          "stop": "[%key:common::state::off%]"
+        }
+      },
+      "pass_apc_heating_profile": {
+        "state": {
+          "absence": "[%key:common::state::not_home%]",
+          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "derogation": "Override",
+          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "external_setpoint": "External setpoint",
+          "frost_protection": "[%key:component::overkiz::entity::climate::overkiz::state_attributes::preset_mode::state::frost_protection%]",
+          "manual": "[%key:common::state::manual%]",
+          "stop": "[%key:common::state::off%]"
+        }
+      },
       "priority_lock_originator": {
         "state": {
           "external_gateway": "External gateway",

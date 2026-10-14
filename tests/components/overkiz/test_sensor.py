@@ -9,7 +9,7 @@ from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -55,12 +55,20 @@ YUTAKI = FixtureDevice(
     "sensor.my_house_yutaki_outdoor_ambient_temperature",
 )
 
+# Atlantic Pass APC zone exposing its heating and cooling profiles
+ZONE_CONTROL_ZONE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch_zone_control.json",
+    "io://1234-1234-5752/960379#2",
+    "sensor.my_home_zone_control_living_room_heating_profile",
+)
+
 SNAPSHOT_FIXTURES = [
     TEMPERATURE_SENSOR,
     TEMPERATURE_SENSOR_LOCAL,
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
     YUTAKI,
+    ZONE_CONTROL_ZONE,
 ]
 
 
@@ -158,6 +166,60 @@ async def test_sensor_battery_level_state_update(
 
     state = hass.states.get(HEATING_BATTERY.entity_id)
     assert state.state == "42"
+
+
+@pytest.mark.parametrize(
+    ("heating_profile", "cooling_profile", "expected_heating", "expected_cooling"),
+    [
+        ("comfort", "eco", "comfort", "eco"),
+        ("frostprotection", "manu", "frost_protection", "manual"),
+        ("externalSetpoint", "derogation", "external_setpoint", "derogation"),
+        ("unsupported", "stop", STATE_UNKNOWN, "stop"),
+    ],
+)
+async def test_sensor_pass_apc_profile_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    heating_profile: str,
+    cooling_profile: str,
+    expected_heating: str,
+    expected_cooling: str,
+) -> None:
+    """Test event-driven state update for the Pass APC zone profile sensors."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+
+    heating_entity_id = ZONE_CONTROL_ZONE.entity_id
+    cooling_entity_id = heating_entity_id.replace("heating", "cooling")
+    assert hass.states.get(heating_entity_id).state == "stop"
+    assert hass.states.get(cooling_entity_id).state == "stop"
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ZONE_CONTROL_ZONE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.IO_PASS_APC_HEATING_PROFILE.value,
+                        "type": 3,
+                        "value": heating_profile,
+                    },
+                    {
+                        "name": OverkizState.IO_PASS_APC_COOLING_PROFILE.value,
+                        "type": 3,
+                        "value": cooling_profile,
+                    },
+                ],
+            )
+        ],
+    )
+
+    assert hass.states.get(heating_entity_id).state == expected_heating
+    assert hass.states.get(cooling_entity_id).state == expected_cooling
 
 
 async def test_sensor_unavailability(
