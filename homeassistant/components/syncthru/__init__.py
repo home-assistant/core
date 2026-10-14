@@ -12,7 +12,7 @@ from .coordinator import SyncThruConfigEntry, SyncthruCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> None:
     """Set up config entry."""
 
     coordinator = SyncthruCoordinator(hass, entry)
@@ -27,9 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> 
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

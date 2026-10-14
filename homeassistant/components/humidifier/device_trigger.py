@@ -56,10 +56,13 @@ HUMIDIFIER_TRIGGER_SCHEMA = probatio.All(
 )
 
 TRIGGER_SCHEMA = probatio.All(
-    probatio.Any(
-        CURRENT_TRIGGER_SCHEMA,
-        HUMIDIFIER_TRIGGER_SCHEMA,
-        toggle_entity.TRIGGER_SCHEMA,
+    probatio.TaggedUnion(
+        CONF_TYPE,
+        {
+            "current_humidity_changed": CURRENT_TRIGGER_SCHEMA,
+            "target_humidity_changed": HUMIDIFIER_TRIGGER_SCHEMA,
+        },
+        default=toggle_entity.TRIGGER_SCHEMA,
     ),
     probatio.Schema(
         {probatio.Required(CONF_DOMAIN): DOMAIN}, extra=probatio.ALLOW_EXTRA

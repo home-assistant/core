@@ -17,7 +17,12 @@ import probatio
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .const import DATA_COMPONENT, DOMAIN, AssistSatelliteEntityFeature
@@ -147,8 +152,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
             satellite_entity_id
         )
         if satellite_entity is None:
-            raise HomeAssistantError(
-                f"Invalid Assist satellite entity id: {satellite_entity_id}"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_entity_id",
+                translation_placeholders={"entity_id": satellite_entity_id},
             )
 
         satellite_entity.async_set_context(call.context)
@@ -166,7 +173,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         answer = await satellite_entity.async_internal_ask_question(**ask_question_args)
 
         if answer is None:
-            raise HomeAssistantError("No answer from satellite")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_answer",
+            )
 
         return asdict(answer)
 
