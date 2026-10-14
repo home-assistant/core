@@ -305,6 +305,64 @@ async def test_scan_serial_ports_usb(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_usb_vendor_specific_interface(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A vendor-specific interface gets the `-portN` suffix of a usb-serial driver."""
+    _mock_identities(
+        mock_client,
+        [
+            SerialProxyIdentity(
+                instance=0,
+                source=SerialProxyIdentitySource.USB,
+                flags=SerialProxyIdentityFlag.CONNECTED,
+                manufacturer="Nabu Casa",
+                product="SkyConnect v1.0",
+                serial_number="9e2adbd75b8beb119fe564a0f320645d",
+                usb=UsbDeviceDescriptor(
+                    vendor_id=0x10C4,
+                    product_id=0xEA60,
+                    bcd_device=0x0100,
+                    interface_number=0,
+                    interface_class=0xFF,
+                    port_number=0,
+                ),
+            )
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES[:1]},
+    )
+
+    url = str(
+        serial_proxy.build_url(
+            device.entry.entry_id,
+            port_udev_id=(
+                "usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d"
+                "-if00-port0"
+            ),
+        )
+    )
+    assert _async_scan_serial_ports(hass) == [
+        USBDevice(
+            device=url,
+            resolved_device=url,
+            vid="10C4",
+            pid="EA60",
+            serial_number="9e2adbd75b8beb119fe564a0f320645d",
+            manufacturer="Nabu Casa",
+            description="SkyConnect v1.0",
+            bcd_device=0x0100,
+            interface_description=None,
+            interface_num=0,
+        )
+    ]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_scan_serial_ports_identity_without_usb_descriptor(
     hass: HomeAssistant,
     mock_client: APIClient,

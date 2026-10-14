@@ -45,6 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+USB_CLASS_VENDOR_SPEC = 0xFF
+
+
 def _identity_port_info(identity: SerialProxyIdentity) -> SerialPortInfo:
     """Describe the device behind a serial proxy port."""
     # Must agree with serialx's `identity_port_info` so both compute the same
@@ -62,6 +65,13 @@ def _identity_port_info(identity: SerialProxyIdentity) -> SerialPortInfo:
         bcd_device=identity.usb.bcd_device if has_usb else None,
         interface_description=None,
         interface_num=identity.usb.interface_number if has_usb else None,
+        # A vendor-specific interface is bound through a chip driver, which numbers its
+        # ports; a class interface (CDC ACM) is bound by the class driver itself
+        port_number=(
+            identity.usb.port_number
+            if has_usb and identity.usb.interface_class == USB_CLASS_VENDOR_SPEC
+            else None
+        ),
     )
 
 
