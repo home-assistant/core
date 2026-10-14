@@ -1,7 +1,6 @@
 """Tests for the proprietary Eve Thermo schedule status decoder."""
 
 import base64
-
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
