@@ -459,8 +459,9 @@ async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) 
     image_data = await image.async_get_image(hass, "image.test")
     assert image_data == image.Image(content_type="image/jpeg", content=b"Test")
 
-    with pytest.raises(HomeAssistantError, match="not found"):
+    with pytest.raises(HomeAssistantError, match="not found") as exc_info:
         await image.async_get_image(hass, "image.unknown")
+    assert exc_info.value.translation_key == "entity_not_found"
 
 
 async def test_get_image_cancelled(

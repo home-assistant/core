@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry."""
 
     if entry.version == 1:
@@ -81,12 +81,10 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
-    return True
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Set up Forecast.Solar from a config entry."""
     plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
     if not plane_subentries:
@@ -110,8 +108,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
@@ -122,6 +118,6 @@ async def _async_update_listener(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

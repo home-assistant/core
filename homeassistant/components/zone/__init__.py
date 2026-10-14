@@ -401,7 +401,7 @@ def _home_conf(hass: HomeAssistant) -> dict:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Set up zone as config entry."""
     data = dict(config_entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
@@ -413,14 +413,11 @@ async def async_setup_entry(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Will be called once we remove it."""
-    return True
 
 
 class Zone(collection.CollectionEntity):

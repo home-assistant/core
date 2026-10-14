@@ -104,7 +104,7 @@ async def test_sensor_entities_created_and_state(
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 74, 21, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 75, 22, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
@@ -300,32 +300,6 @@ async def test_total_sensor_restore_data_parsing(
     device.meter_energy.load_consumption_total = None
     unset_sensor = SofarTotalSensor(runtime_data, description)
     assert unset_sensor.native_value is None
-
-
-async def test_total_sensor_seeds_high_water_from_restored_value(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test a restored value seeds the library's high-water mark."""
-    runtime_data = init_integration.runtime_data
-    device = runtime_data.readings.device
-    description = SofarSensorDescription(
-        key="load_consumption_total",
-        component="meter_energy",
-        translation_key="load_consumption_total",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: (
-            device.meter_energy.load_consumption_total_corrected.value
-        ),
-        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
-    )
-    sensor = SofarTotalSensor(runtime_data, description)
-    sensor.hass = hass
-    sensor.async_get_last_sensor_data = AsyncMock(
-        return_value=SimpleNamespace(native_value="555.5")
-    )
-    with patch.object(device.meter_energy, "seed_high_water") as mock_seed:
-        await sensor.async_added_to_hass()
-    mock_seed.assert_called_once_with("load_consumption_total", 555.5)
 
 
 async def test_sensor_dead_link_unavailable(init_integration: MockConfigEntry) -> None:

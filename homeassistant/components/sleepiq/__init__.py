@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> None:
     """Set up the SleepIQ config entry."""
     conf = entry.data
     email = conf[CONF_USERNAME]
@@ -119,12 +119,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 _FIRMNESS_CONTROL = "firmness control"

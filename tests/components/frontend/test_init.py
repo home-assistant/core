@@ -21,7 +21,6 @@ from homeassistant.components.frontend import (
     CONF_THEMES,
     CONFIG_SCHEMA,
     DATA_PANELS,
-    DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
@@ -31,6 +30,7 @@ from homeassistant.components.frontend import (
     async_remove_panel,
     remove_extra_js_url,
 )
+from homeassistant.components.frontend.helpers import DEFAULT_THEME_COLOR
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
