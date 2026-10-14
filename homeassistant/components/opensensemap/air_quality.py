@@ -163,6 +163,7 @@ async def async_setup_entry(
         DOMAIN,
         issue_id,
         breaks_in_ha_version=AIR_QUALITY_DEPRECATION_BREAKS_IN_VERSION,
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key=translation_key,

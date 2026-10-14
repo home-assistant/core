@@ -91,10 +91,17 @@ async def test_new_detected(
         DESCRIPTION_NORMALIZED,
     ) in caplog.record_tuples
 
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id="under_voltage_detected",
     )
+    assert issue
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "under_voltage_detected") is None
 
 
 async def test_setup(

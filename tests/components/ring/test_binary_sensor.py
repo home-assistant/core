@@ -248,3 +248,8 @@ async def test_binary_sensor_exists_with_deprecation(
     assert (
         issue_registry.async_get_issue(DOMAIN, issue_id) is not None
     ) == entity_has_automations
+    assert all(
+        issue.config_entry_id == mock_config_entry.entry_id
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    )

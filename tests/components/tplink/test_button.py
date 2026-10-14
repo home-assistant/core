@@ -273,6 +273,7 @@ async def test_button_exists_with_deprecation(
     assert (entity is None) == entity_disabled
     assert (hass.states.get(entity_id) is None) == entity_disabled
 
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert (
-        issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+        issue is not None and issue.config_entry_id == config_entry.entry_id
     ) == entity_has_automations

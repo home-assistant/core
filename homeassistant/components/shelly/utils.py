@@ -627,6 +627,7 @@ def async_create_issue_unsupported_firmware(
             "device_name": entry.title,
             "ip_address": entry.data[CONF_HOST],
         },
+        config_entry_id=entry.entry_id,
     )
 
 
@@ -1150,6 +1151,7 @@ async def async_manage_coiot_issues_task(
                 "device_name": device.name,
                 "ip_address": device.ip_address,
             },
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -1168,6 +1170,7 @@ async def async_manage_coiot_issues_task(
             "ip_address": device.ip_address,
         },
         data={"entry_id": entry.entry_id},
+        config_entry_id=entry.entry_id,
     )
 
 

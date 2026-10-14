@@ -1,6 +1,6 @@
 """Test the System Bridge integration."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from systembridgeconnector.exceptions import (
@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
@@ -194,6 +194,29 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
 
         assert result is False
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unsupported_version_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_version: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an unsupported version creates an issue linked to the entry."""
+    mock_version.check_supported.return_value = False
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_id = f"system_bridge_{mock_config_entry.entry_id}_unsupported_version"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(

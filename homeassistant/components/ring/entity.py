@@ -153,6 +153,7 @@ def async_check_create_deprecated(
                 "platform": platform,
                 "new_platform": deprecated_info.new_platform,
             },
+            config_entry_id=entity_entry.config_entry_id,
         )
     return True
 

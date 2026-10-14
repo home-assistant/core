@@ -92,6 +92,13 @@ async def test_air_quality_kept_when_enabled(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_air_quality"
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_air_quality_{mock_config_entry.entry_id}"
+    )
 
 
 @pytest.mark.usefixtures("mock_opensensemap_api")

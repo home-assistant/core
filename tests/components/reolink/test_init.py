@@ -1214,10 +1214,14 @@ async def test_password_too_long_repair_issue(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        DOMAIN,
-        f"password_too_long_{config_entry.entry_id}",
-    ) in issue_registry.issues
+    issue_id = f"password_too_long_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_new_device_discovered(

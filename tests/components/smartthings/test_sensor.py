@@ -178,12 +178,14 @@ async def test_create_issue_with_items(
     """Test issue for automation/script using deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
         unique_id,
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     assert await async_setup_component(
@@ -230,6 +232,7 @@ async def test_create_issue_with_items(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_{issue_string}_scripts"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -344,12 +347,14 @@ async def test_create_issue(
     """Test issue for automation/script using deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
         unique_id,
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -358,6 +363,7 @@ async def test_create_issue(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_{issue_string}"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,

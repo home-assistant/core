@@ -372,6 +372,14 @@ async def test_coordinator_migration(
     issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
+        is None
+    )
 
 
 @pytest.mark.parametrize(
