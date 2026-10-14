@@ -392,6 +392,21 @@ async def test_a_device_gaining_a_battery_gets_its_battery_sensor(
     assert battery_sensors() != []
 
 
+async def test_a_battery_level_that_is_absent_is_not_zero(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a battery iCloud gives no level for is not shown as empty."""
+    account = await _set_up_with(hass, mock_store, DEVICE)
+    device = account.devices[DEVICE["id"]]
+    assert device.battery_level == 80
+
+    status = {key: value for key, value in DEVICE.items() if key != "batteryLevel"}
+    await hass.async_add_executor_job(device.update, status)
+
+    assert device.battery_level is None
+
+
 async def test_a_device_losing_its_battery_stops_reporting_a_level(
     hass: HomeAssistant,
     mock_store: Mock,
@@ -422,6 +437,8 @@ async def test_a_device_losing_its_battery_stops_reporting_a_level(
     [
         pytest.param(None, id="no-location"),
         pytest.param({"latitude": 60.2, "longitude": None}, id="half-a-location"),
+        pytest.param({"latitude": 60.2}, id="missing-longitude"),
+        pytest.param({}, id="empty-location"),
     ],
 )
 async def test_a_device_that_stops_sharing_its_location_reads_unknown(

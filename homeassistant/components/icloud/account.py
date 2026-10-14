@@ -226,7 +226,7 @@ class IcloudAccount:
             # the tracker platform and the battery sensors, and each skips
             # what it cannot use. Only a device reporting neither is of no
             # use to either.
-            device_location = status[DEVICE_LOCATION]
+            device_location = status.get(DEVICE_LOCATION)
             has_location = (
                 bool(device_location)
                 and device_location.get(DEVICE_LOCATION_LATITUDE) is not None
@@ -460,7 +460,7 @@ class IcloudDevice:
 
         self._battery_status = self._status[DEVICE_BATTERY_STATUS]
         self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
-        device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
+        device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL)
         if self._battery_status != "Unknown" and device_battery_level is not None:
             # The battery sensor is created from the new-device signal, and a
             # device kept for its location alone was added without one.
@@ -481,12 +481,12 @@ class IcloudDevice:
 
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.
+        location = self._status.get(DEVICE_LOCATION)
         if (
-            self._status[DEVICE_LOCATION]
-            and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE] is not None
-            and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LONGITUDE] is not None
+            location
+            and location.get(DEVICE_LOCATION_LATITUDE) is not None
+            and location.get(DEVICE_LOCATION_LONGITUDE) is not None
         ):
-            location = self._status[DEVICE_LOCATION]
             # Stored before it is announced: this runs off the event loop, so
             # the listener can read the device before the assignment lands,
             # find no location, skip it and never be told again.
