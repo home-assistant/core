@@ -49,9 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Entry unique_id, pet name, birthday, chip_id, instagram_username should be redacted.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Tractive is a cloud service.
