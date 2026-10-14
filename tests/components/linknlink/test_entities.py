@@ -2,12 +2,11 @@
 
 from dataclasses import replace
 from datetime import timedelta
-
-from freezegun.api import FrozenDateTimeFactory
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolinknlink import UltraConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.linknlink.const import ENVIRONMENT_UPDATE_INTERVAL
