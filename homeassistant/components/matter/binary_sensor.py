@@ -3,12 +3,14 @@
 import base64
 import binascii
 from dataclasses import dataclass
-
-from chip import ChipUtility
-from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterObjectFieldDescriptor
 from typing import TYPE_CHECKING, cast, override
 
+from chip import ChipUtility
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import (
+    ClusterAttributeDescriptor,
+    ClusterObjectFieldDescriptor,
+)
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.client.models import device_types
