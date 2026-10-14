@@ -142,7 +142,8 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         ):
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
             if (
-                self.coordinator.data.current_movie is None
+                self.coordinator.data.current_mode != "movie"
+                or self.coordinator.data.current_movie is None
                 or int(movie_id) != self.coordinator.data.current_movie
             ):
                 await self.client.interview()
