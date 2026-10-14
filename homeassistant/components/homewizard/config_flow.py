@@ -1,8 +1,8 @@
 """Config flow for HomeWizard."""
 
+import asyncio
 from collections.abc import Mapping
 from typing import Any, override
-import asyncio
 
 from homewizard_energy import (
     HomeWizardEnergy,
@@ -349,7 +349,7 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
     except TimeoutError as ex:
         raise RecoverableError(
             "Timeout while connecting to device", "network_error"
-        ) from ex    
+        ) from ex
     except RequestError as ex:
         raise RecoverableError(
             "Device unreachable or unexpected response", "network_error"
@@ -385,7 +385,7 @@ async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | Non
     except DisabledError:
         return None
     except TimeoutError:
-        return None        
+        return None
     finally:
         await api.close()
 

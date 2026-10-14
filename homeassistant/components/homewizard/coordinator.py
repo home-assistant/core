@@ -1,7 +1,7 @@
 """Update coordinator for HomeWizard."""
 
-from typing import override
 import asyncio
+from typing import override
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
@@ -86,7 +86,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         except TimeoutError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="communication_error"
-            ) from ex        
+            ) from ex
         except RequestError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="communication_error"
