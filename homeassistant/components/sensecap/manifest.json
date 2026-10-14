@@ -1,0 +1,17 @@
+{
+  "domain": "sensecap",
+  "name": "SenseCAP",
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "dependencies": ["lorawan"],
+  "documentation": "https://www.home-assistant.io/integrations/sensecap",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "lorawan": [
+    ["chirpstack", 744],
+    ["tts", "sensecap"]
+  ],
+  "quality_scale": "bronze",
+  "requirements": ["sensecap-lorawan==0.1.0"],
+  "single_config_entry": true
+}

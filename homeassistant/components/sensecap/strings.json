@@ -1,0 +1,13 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Set up SenseCAP S2101 temperature and humidity sensors and S2102 light sensors from your LoRaWAN connections."
+      }
+    }
+  }
+}
