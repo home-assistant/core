@@ -4,8 +4,8 @@ from collections.abc import Awaitable, Callable
 from contextlib import suppress
 import logging
 
-import broadlink as blk
-from broadlink.exceptions import (
+import broadlink_async as blk
+from broadlink_async.exceptions import (
     AuthenticationError,
     AuthorizationError,
     BroadlinkException,
