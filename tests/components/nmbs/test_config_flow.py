@@ -18,18 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-DUMMY_DATA_IMPORT: dict[str, Any] = {
-    "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
-    "STAT_BRUSSELS_CENTRAL": "Brussel-Centraal/Bruxelles-Central",
-    "STAT_BRUSSELS_SOUTH": "Brussel-Zuid/Bruxelles-Midi",
-}
-
-DUMMY_DATA_ALTERNATIVE_IMPORT: dict[str, Any] = {
-    "STAT_BRUSSELS_NORTH": "Brussels-North",
-    "STAT_BRUSSELS_CENTRAL": "Brussels-Central",
-    "STAT_BRUSSELS_SOUTH": "Brussels-South/Brussels-Midi",
-}
-
 DUMMY_DATA: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "BE.NMBS.008812005",
     "STAT_BRUSSELS_CENTRAL": "BE.NMBS.008813003",
