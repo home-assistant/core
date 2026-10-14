@@ -1,5 +1,6 @@
 """Tests for the SolarEdge config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientError, ClientResponseError
@@ -448,11 +449,42 @@ async def test_reconfigure_flow_web_login_and_errors(
     assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        pytest.param(
+            {
+                CONF_SECTION_API_AUTH: {CONF_API_KEY: ""},
+                CONF_SECTION_WEB_AUTH: {
+                    CONF_USERNAME: USERNAME,
+                    CONF_PASSWORD: PASSWORD,
+                },
+            },
+            {
+                CONF_SITE_ID: SITE_ID,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+            id="clear_api_key",
+        ),
+        pytest.param(
+            {
+                CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+                CONF_SECTION_WEB_AUTH: {CONF_USERNAME: "", CONF_PASSWORD: ""},
+            },
+            {CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+            id="clear_web_login",
+        ),
+    ],
+)
 async def test_reconfigure_flow_removes_credentials(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    solaredge_api: Mock,
     solaredge_web_api: AsyncMock,
     mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
     """Test credentials can be removed via the reconfigure flow."""
     entry = MockConfigEntry(
@@ -479,23 +511,12 @@ async def test_reconfigure_flow_removes_credentials(
     assert get_schema_suggested_value(web_schema, CONF_PASSWORD) == PASSWORD
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_SECTION_API_AUTH: {CONF_API_KEY: ""},
-            CONF_SECTION_WEB_AUTH: {
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
-            },
-        },
+        result["flow_id"], user_input
     )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reconfigure_successful"
 
     await hass.async_block_till_done()
 
-    assert entry.data == {
-        CONF_SITE_ID: SITE_ID,
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
-    }
+    assert entry.data == expected_data
     assert mock_setup_entry.call_count == 1
