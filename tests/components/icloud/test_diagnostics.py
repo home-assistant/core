@@ -100,7 +100,7 @@ async def test_diagnostics_redacts_sensitive_data(
 
     device_diagnostics = entry_diagnostics["devices"][0]
     assert device_diagnostics["id"] == REDACTED
-    assert device_diagnostics["name"] == REDACTED
+    assert device_diagnostics["name"] == "iPhone de John"
     assert device_diagnostics["prsId"] == REDACTED
     assert device_diagnostics["location"]["latitude"] == REDACTED
     assert device_diagnostics["location"]["longitude"] == REDACTED
@@ -115,7 +115,7 @@ async def test_diagnostics_redacts_sensitive_data(
     device_only_diagnostics = await get_diagnostics_for_device(
         hass, hass_client, devices_config_entry, device
     )
-    assert device_only_diagnostics["name"] == REDACTED
+    assert device_only_diagnostics["name"] == "iPhone de John"
     assert device_only_diagnostics["location"]["latitude"] == REDACTED
 
 
