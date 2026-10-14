@@ -15,9 +15,8 @@ from lorawan_connection import (
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.util.hass_dict import HassKey
-
-from .models import LoRaWANDiscoveryInfo
 
 type ConnectionChange = tuple[str, Connection | None]
 

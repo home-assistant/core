@@ -18,14 +18,12 @@ from lorawan_connection import (
 from lorawan_connection.mock import MockConnection
 import pytest
 
-from homeassistant.components.lorawan import (
-    LoRaWANDiscoveryInfo,
-    async_register_connection,
-)
+from homeassistant.components.lorawan import async_register_connection
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 

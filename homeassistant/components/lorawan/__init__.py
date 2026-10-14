@@ -3,6 +3,7 @@
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_lorawan
 
@@ -10,7 +11,6 @@ from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connec
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
 from .entity import LoRaWANEntity
-from .models import LoRaWANDiscoveryInfo
 
 __all__ = [
     "DeviceManager",
