@@ -176,9 +176,14 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     @adb_decorator()
     async def _adb_screencap(self) -> bytes | None:
         """Take a screen capture from the device."""
-        encoded = await self.aftv.adb_shell("screencap | gzip -1 | base64")
-        if not isinstance(encoded, str) or not encoded.strip():
+        encoded = await self.aftv.adb_shell(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null; "
+            "then screencap | gzip -1 | base64; fi"
+        )
+        if not isinstance(encoded, str):
             return None
+        if not encoded.strip():
+            return await self.aftv.adb_screencap()  # type: ignore[no-any-return]
         try:
             image = await self.hass.async_add_executor_job(
                 _encode_raw_screencap, encoded

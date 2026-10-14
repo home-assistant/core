@@ -878,7 +878,10 @@ async def test_get_image_http(
         patchers.PATCH_SCREENCAP as patch_screen_cap,
     ):
         await async_update_entity(hass, entity_id)
-        patch_raw.assert_awaited_once_with("screencap | gzip -1 | base64")
+        patch_raw.assert_awaited_once_with(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null; "
+            "then screencap | gzip -1 | base64; fi"
+        )
         patch_screen_cap.assert_not_called()
 
     media_player_name = "media_player." + slugify(
@@ -926,7 +929,10 @@ async def test_get_image_http(
     ):
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
-        patch_raw.assert_awaited_once_with("screencap | gzip -1 | base64")
+        patch_raw.assert_awaited_once_with(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null; "
+            "then screencap | gzip -1 | base64; fi"
+        )
         patch_screen_cap.assert_not_called()
 
 
@@ -1311,3 +1317,23 @@ async def test_raw_screencap_failure_keeps_connection(
     assert state.state != STATE_UNAVAILABLE
     assert legacy_capture.call_count == legacy_calls
     assert bool(state.attributes.get("entity_picture")) == bool(legacy_calls)
+
+
+async def test_raw_screencap_without_shell_utilities(hass: HomeAssistant) -> None:
+    """Keep screenshots working on devices without gzip or base64."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=""),
+        patchers.PATCH_SCREENCAP as legacy_capture,
+    ):
+        await async_update_entity(hass, entity_id)
+    legacy_capture.assert_awaited_once()
+    assert hass.states.get(entity_id).attributes["entity_picture"]
