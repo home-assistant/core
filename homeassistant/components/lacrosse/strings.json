@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::lacrosse::config::error::cannot_connect%]",
+      "unknown": "[%key:component::lacrosse::config::error::unknown%]"
     },
     "error": {
       "cannot_connect": "Unable to connect to the receiver.",
@@ -100,6 +102,10 @@
     "deprecated_yaml": {
       "description": "[%key:component::homeassistant::issues::deprecated_yaml::description%]",
       "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Your {integration_title} YAML configuration could not be imported because the receiver at {device} could not be opened. YAML configuration is deprecated and will be removed in Home Assistant 2027.4.0. Check that the receiver is connected, the serial device path and baud rate in your YAML configuration are correct, and no other application is using the port. Then restart Home Assistant to retry the import. Alternatively, remove the LaCrosse sensor platform configuration from YAML and set up the integration in Settings > Devices & services.",
+      "title": "Unable to import {integration_title} YAML configuration"
     }
   }
 }
