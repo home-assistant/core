@@ -1,0 +1,108 @@
+# serializer version: 1
+# name: test_hmip_heating_output_sensor[binary_sensor.bwth_1_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.bwth_1_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating',
+    'unique_id': '3014F7110000000000000055_2_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_heating_output_sensor[binary_sensor.bwth_1_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BWTH 1 Heating',
+      'id': '3014F7110000000000000055',
+      'is_group': False,
+      'model_type': 'HmIP-BWTH',
+      'rssi_device': -76,
+      'rssi_peer': -77,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bwth_1_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_hmip_heating_output_sensor[binary_sensor.home_cloud_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud connection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:access-point-network',
+    'original_name': 'Cloud connection',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_connection',
+    'unique_id': '00000000-0000-0000-0000-000000000001_cloud_connection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_heating_output_sensor[binary_sensor.home_cloud_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Cloud connection',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
