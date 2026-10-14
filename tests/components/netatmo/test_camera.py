@@ -116,7 +116,6 @@ async def test_monitoring_component(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     await hass.async_block_till_done()
 
-    # Check initial state
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
@@ -313,7 +312,6 @@ async def test_monitoring_component_failure(
 
         await hass.async_block_till_done()
 
-        # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
@@ -734,7 +732,6 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
         assert (
@@ -922,7 +919,6 @@ async def test_doorbell_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
         assert (
@@ -1045,7 +1041,6 @@ async def test_camera_webhook_consistency(
 
         calls = fake_post_hits
 
-        # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
