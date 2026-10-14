@@ -1615,7 +1615,7 @@ async def test_setup_creates_entities_per_management_point(
         ) -> None:
             """Initialize the test entity."""
             self._attr_unique_id = f"{device.id}_{embedded_id}_{setpoint}"
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
             self._attr_hvac_mode = HVACMode.HEAT
             self._attr_hvac_modes = [HVACMode.OFF]
 

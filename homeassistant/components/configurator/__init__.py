@@ -198,6 +198,8 @@ class Configurator:
         self._requests: dict[
             str, tuple[str, list[dict[str, str]], ConfiguratorCallback | None]
         ] = {}
+        # Deprecated integration, to be removed in 2027.10
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_admin_service(
             hass,
             DOMAIN,

@@ -109,13 +109,17 @@ def infer_image_type(content: bytes) -> str | None:
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
-    with suppress(asyncio.CancelledError, TimeoutError, ImageContentTypeError):
+    with suppress(TimeoutError, ImageContentTypeError):
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
                 return Image(content_type, image_bytes)
 
-    raise HomeAssistantError("Unable to get image")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="image_unavailable",
+        translation_placeholders={"entity_id": image_entity.entity_id},
+    )
 
 
 async def async_get_image(
@@ -127,7 +131,11 @@ async def async_get_image(
     component = hass.data[DATA_COMPONENT]
 
     if (image := component.get_entity(entity_id)) is None:
-        raise HomeAssistantError(f"Image entity {entity_id} not found")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="entity_not_found",
+            translation_placeholders={"entity_id": entity_id},
+        )
 
     return await _async_get_image(image, timeout)
 

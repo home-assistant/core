@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from python_qube_heatpump import QubeDeviceInfo
@@ -17,6 +17,22 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import DEVICE_INFO
 
 from tests.common import MockConfigEntry
+
+
+def patch_answering_hosts(*hosts: str):
+    """Patch the config flow's Modbus client so only ``hosts`` answer."""
+
+    def client(host: str, port: int) -> MagicMock:
+        mock = MagicMock()
+        mock.connect = AsyncMock(return_value=host in hosts)
+        mock.async_verify_device = AsyncMock(return_value=True)
+        mock.close = AsyncMock()
+        return mock
+
+    return patch(
+        "homeassistant.components.hr_energy_qube.config_flow.QubeClient",
+        side_effect=client,
+    )
 
 
 @pytest.mark.parametrize(
@@ -127,14 +143,12 @@ async def test_already_configured(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured_by_unique_id(
-    hass: HomeAssistant,
-    mock_qube_client: MagicMock,
-    mock_device_info: AsyncMock,
+    hass: HomeAssistant, mock_device_info: AsyncMock
 ) -> None:
-    """Test re-adding the same controller under a new host updates the entry."""
+    """Test re-adding a controller that moved to a new host updates the entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "qube.local", CONF_PORT: 502},
+        data={CONF_HOST: "192.168.5.100", CONF_PORT: 502},
         unique_id=DEVICE_INFO.uuid,
     )
     entry.add_to_hass(hass)
@@ -143,14 +157,43 @@ async def test_already_configured_by_unique_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "1.2.3.4"},
-    )
+    with patch_answering_hosts("1.2.3.4"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4"},
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 502}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_second_qube_with_the_same_uuid(
+    hass: HomeAssistant, mock_device_info: AsyncMock
+) -> None:
+    """Test a second Qube reporting a configured uuid is added without it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.5.100", CONF_PORT: 502},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    entry.add_to_hass(hass)
+    mock_device_info.return_value = DEVICE_INFO
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch_answering_hosts("192.168.5.100", "192.168.5.208"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.5.208"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+    assert result["result"].unique_id is None
+    assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
 
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
@@ -235,13 +278,46 @@ async def test_zeroconf_updates_host(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
-    )
+    with patch_answering_hosts():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data == {CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+
+
+@pytest.mark.parametrize(
+    ("other_host", "answering"),
+    [
+        pytest.param(None, ("192.168.5.100",), id="old_address_answers"),
+        pytest.param("192.168.5.208", (), id="address_of_other_entry"),
+    ],
+)
+async def test_zeroconf_other_qube_with_the_same_uuid(
+    hass: HomeAssistant, other_host: str | None, answering: tuple[str, ...]
+) -> None:
+    """Test an announcement from another Qube with the same uuid moves nothing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.5.100", CONF_PORT: 502},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    entry.add_to_hass(hass)
+    if other_host:
+        MockConfigEntry(
+            domain=DOMAIN, data={CONF_HOST: other_host, CONF_PORT: 502}
+        ).add_to_hass(hass)
+
+    with patch_answering_hosts(*answering):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
 
 
 @pytest.mark.parametrize(

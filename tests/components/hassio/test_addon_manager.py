@@ -10,6 +10,7 @@ from aiohasupervisor import (
     AddonNotSupportedHomeAssistantVersionError,
     AddonNotSupportedMachineTypeError,
     SupervisorError,
+    SupervisorNotFoundError,
 )
 from aiohasupervisor.models import AddonsOptions, Discovery, PartialBackupOptions
 import pytest
@@ -148,6 +149,41 @@ async def test_get_addon_info(
         state=addon_state,
         update_available=False,
         version="1.0.0",
+    )
+
+
+async def test_get_addon_info_detached(
+    addon_manager: AddonManager,
+    addon_installed: AsyncMock,
+    addon_store_info: AsyncMock,
+) -> None:
+    """Test get addon info when addon is installed but removed from the store."""
+    addon_store_info.side_effect = SupervisorNotFoundError
+    assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=True,
+        hostname="core-test-addon",
+        options={},
+        state=AddonState.NOT_RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+
+async def test_get_addon_info_not_in_store(
+    addon_manager: AddonManager,
+    addon_info: AsyncMock,
+    addon_store_info: AsyncMock,
+) -> None:
+    """Test get addon info when addon is neither installed nor in the store."""
+    addon_store_info.side_effect = SupervisorNotFoundError
+    addon_info.side_effect = SupervisorNotFoundError
+    assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=False,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
     )
 
 
