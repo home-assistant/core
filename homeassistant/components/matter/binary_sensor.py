@@ -99,7 +99,7 @@ def _eve_thermo_schedule_enabled(value: object) -> bool | None:
     if isinstance(value, str):
         try:
             data = base64.b64decode(value, validate=True)
-        except (ValueError, binascii.Error):
+        except ValueError, binascii.Error:
             return None
     elif isinstance(value, bytes):
         data = value
