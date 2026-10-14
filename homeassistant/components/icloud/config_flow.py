@@ -183,10 +183,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self._username,
             self._password,
             storage_path,
-            True,
-            None,
-            self._with_family,
+            with_family=self._with_family,
             authenticate=False,
+            refresh_interval=None,
         )
         api.session.clear_persistence()
         try:

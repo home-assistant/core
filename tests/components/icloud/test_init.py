@@ -669,10 +669,13 @@ async def test_reauth_login_challenged_asks_for_a_code(
         USERNAME, Mock(spec=Response)
     )
 
+    fresh_logins: list[dict] = []
+
     def build_service(*args, **kwargs):
         """Reject the stored session, challenge the fresh login."""
         if kwargs.get("authenticate", True):
             raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        fresh_logins.append(kwargs)
         return challenged_api
 
     with patch(
@@ -683,6 +686,9 @@ async def test_reauth_login_challenged_asks_for_a_code(
             flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
         )
 
+    # The service is discarded once the entry exists, so it must not start
+    # pyicloud's background Find My monitor.
+    assert [login["refresh_interval"] for login in fresh_logins] == [None]
     # The challenged session is kept rather than reported as a failure.
     challenged_api.session.clear_persistence.assert_called_once()
     assert result["type"] is FlowResultType.FORM
