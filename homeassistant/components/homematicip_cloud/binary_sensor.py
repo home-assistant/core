@@ -11,7 +11,7 @@ from homematicip.base.enums import (
     SmokeDetectorAlarmType,
     WindowState,
 )
-from homematicip.base.functionalChannels import MultiModeInputChannel
+from homematicip.base.functionalChannels import FunctionalChannel, MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
@@ -29,6 +29,7 @@ from homematicip.device import (
     ShutterContactMagnetic,
     SmokeDetector,
     TiltVibrationSensor,
+    WallMountedThermostatPro,
     WaterSensor,
     WeatherSensor,
     WeatherSensorPlus,
@@ -49,7 +50,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channel_index_by_type, smoke_detector_channel_data_exists
+from .helpers import (
+    get_channel_index_by_type,
+    get_channels_from_device,
+    smoke_detector_channel_data_exists,
+)
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -90,12 +95,16 @@ def _always_exists(_device: Device) -> bool:
 class HmipBinarySensorDescription[_DeviceT: Device](BinarySensorEntityDescription):
     """Describe a simple HomematicIP binary sensor."""
 
-    value_fn: Callable[[_DeviceT], bool]
+    value_fn: Callable[[_DeviceT], bool | None] = lambda _: None
+    # for values that live on the channel instead of the device
+    channel_value_fn: Callable[[FunctionalChannel], bool | None] | None = None
     exists_fn: Callable[[_DeviceT], bool] = _always_exists
     # Required: contributes to unique_id via {device.id}_{channel}_{key}. An
     # implicit default would silently lean on get_channel_index()'s fallback
     # and create a migration footgun.
     channel: int
+    # for devices whose channel does not sit at the position `channel` names
+    channel_type: FunctionalChannelType | None = None
 
 
 MOTION_SENSOR_DESCRIPTIONS: tuple[
@@ -185,6 +194,36 @@ MAINS_FAILURE_SENSOR_DESCRIPTIONS: tuple[
     ),
 )
 
+
+def _heating_output_enabled(device: Device) -> bool:
+    return any(
+        channel.internalSwitchOutputEnabled
+        for channel in get_channels_from_device(
+            device, FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
+        )
+    )
+
+
+def _heating_output_on(channel: FunctionalChannel) -> bool | None:
+    if channel.valvePosition is None:
+        return None
+    return channel.valvePosition > 0
+
+
+WALL_THERMOSTAT_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[WallMountedThermostatPro],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="heating",
+        translation_key="heating",
+        channel_value_fn=_heating_output_on,
+        exists_fn=_heating_output_enabled,
+        channel=1,
+        channel_type=FunctionalChannelType.INTERNAL_SWITCH_CHANNEL,
+    ),
+)
+
 BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
     key="battery",
     device_class=BinarySensorDeviceClass.BATTERY,
@@ -205,6 +244,7 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
     (WaterSensor,): WATER_SENSOR_DESCRIPTIONS,
     (RainSensor, WeatherSensorPlus, WeatherSensorPro): RAIN_SENSOR_DESCRIPTIONS,
     (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
+    (WallMountedThermostatPro,): WALL_THERMOSTAT_DESCRIPTIONS,
 }
 
 
@@ -297,13 +337,6 @@ async def async_setup_entry(
             entities.append(HomematicipShutterContact(hap, device, True))
         if isinstance(device, Device):
             entities.extend(_create_simple_binary_sensors(hap, device))
-        entities.extend(
-            HomematicipHeatingOutputSensor(hap, device, channel.index)
-            for channel in device.functionalChannels
-            if channel.functionalChannelType
-            == FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
-            and channel.internalSwitchOutputEnabled
-        )
 
         if _is_full_flush_lock_controller(device):
             entities.append(HomematicipFullFlushLockControllerLocked(hap, device))
@@ -335,10 +368,16 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
         description: HmipBinarySensorDescription[_DeviceT],
     ) -> None:
         """Initialize the described binary sensor."""
+        channel_real_index = (
+            get_channel_index_by_type(device, description.channel_type)
+            if description.channel_type is not None
+            else None
+        )
         super().__init__(
             hap,
             device,
             channel=description.channel,
+            channel_real_index=channel_real_index,
             feature_id=description.key,
             use_description_name=True,
         )
@@ -346,9 +385,13 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether the binary sensor is on."""
-        return self.entity_description.value_fn(self._device)
+        description = self.entity_description
+        if description.channel_value_fn is not None:
+            channel = self.functional_channel
+            return description.channel_value_fn(channel) if channel else None
+        return description.value_fn(self._device)
 
 
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
@@ -635,31 +678,6 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
             state_attr[ATTR_TODAY_SUNSHINE_DURATION] = today_sunshine_duration
 
         return state_attr
-
-
-class HomematicipHeatingOutputSensor(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the heating output of a HomematicIP wall thermostat."""
-
-    _attr_translation_key = "heating"
-
-    def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
-        """Initialize the heating output sensor."""
-        super().__init__(
-            hap,
-            device,
-            channel=channel,
-            channel_real_index=channel,
-            feature_id="heating",
-            use_description_name=True,
-        )
-
-    @property
-    @override
-    def is_on(self) -> bool | None:
-        """Return true if the output is switched on."""
-        if (valve_position := self.get_channel_or_raise().valvePosition) is None:
-            return None
-        return valve_position > 0
 
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorEntity):
