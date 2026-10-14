@@ -103,7 +103,7 @@ def mock_make_request(install: str) -> Callable:
         if url == "accountInfo":  # v1, accountInfo
             return {}  # will throw a KeyError -> BadApiResponseError
 
-        if url.startswith("locations/"):  # v1, locations?userId={id}&allData=True
+        if url.startswith("locations"):  # v1, locations?userId={id}&allData=True
             return []  # user has no locations
 
         if url == "userAccount":  # v2, userAccount
