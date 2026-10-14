@@ -137,8 +137,8 @@ class TeslaFleetSeatHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
         self._attr_available = self.entity_description.available_fn(self)
         value = self._value
-        # Defensive clamp: Tesla could report a level outside the modeled
-        # range, so map it to the nearest known option rather than erroring.
+        # Tesla reports levels above the highest option (for example 4) and
+        # "SNA" (signal not available) instead of a level.
         if isinstance(value, int):
             options = self._attr_options
             self._attr_current_option = options[max(0, min(value, len(options) - 1))]
@@ -187,8 +187,8 @@ class TeslaFleetWheelHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
 
         value = self._value
-        # Defensive clamp: Tesla could report a level outside the modeled
-        # range, so map it to the nearest known option rather than erroring.
+        # Tesla reports levels above the highest option (for example 4) and
+        # "SNA" (signal not available) instead of a level.
         if isinstance(value, int):
             options = self._attr_options
             self._attr_current_option = options[max(0, min(value, len(options) - 1))]
