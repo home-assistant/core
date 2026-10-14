@@ -70,5 +70,13 @@
         "name": "Played"
       }
     }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication with NYT Games failed. Please reauthenticate."
+    },
+    "update_error": {
+      "message": "An error occurred while fetching data from NYT Games: {error}"
+    }
   }
 }

@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -60,9 +60,16 @@ class NYTGamesCoordinator(DataUpdateCoordinator[NYTGamesData]):
             stats_data = await self.client.get_latest_stats()
             connections_data = await self.client.get_connections()
         except NYTGamesAuthenticationError as error:
-            raise ConfigEntryAuthFailed(error) from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from error
         except NYTGamesError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
         return NYTGamesData(
             wordle=stats_data.wordle,
             spelling_bee=stats_data.spelling_bee,
