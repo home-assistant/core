@@ -5,15 +5,11 @@ import binascii
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast, override
 
-from chip import ChipUtility
 from chip.clusters import Objects as clusters
-from chip.clusters.ClusterObjects import (
-    ClusterAttributeDescriptor,
-    ClusterObjectFieldDescriptor,
-)
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.client.models import device_types
+from matter_server.common.custom_clusters import EveCluster
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -66,30 +62,6 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
         self._attr_is_on = value
 
 
-# Eve Thermo reports its local schedule state inside a proprietary binary blob.
-# This descriptor is not included in the Python custom cluster definitions yet.
-@dataclass
-class EveThermoScheduleConfig(ClusterAttributeDescriptor):  # type: ignore[misc]
-    """Proprietary Eve Thermo configuration attribute."""
-
-    @ChipUtility.classproperty  # type: ignore[untyped-decorator]
-    def cluster_id(cls) -> int:  # noqa: N805
-        """Return the Eve vendor cluster ID."""
-        return 0x130AFC01
-
-    @ChipUtility.classproperty  # type: ignore[untyped-decorator]
-    def attribute_id(cls) -> int:  # noqa: N805
-        """Return the Eve configuration attribute ID."""
-        return 0x130A0000
-
-    @ChipUtility.classproperty  # type: ignore[untyped-decorator]
-    def attribute_type(cls) -> ClusterObjectFieldDescriptor:  # noqa: N805
-        """Describe the configuration as a byte string."""
-        return ClusterObjectFieldDescriptor(Type=bytes)
-
-    value: bytes = b""
-
-
 def _eve_thermo_schedule_enabled(value: object) -> bool | None:
     """Decode the observed Eve Thermo 20EBP1701 schedule bit.
 
@@ -124,7 +96,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=_eve_thermo_schedule_enabled,
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(EveThermoScheduleConfig,),
+        required_attributes=(EveCluster.Attributes.GetConfig,),
         vendor_id=(4874,),
         device_type=(device_types.Thermostat,),
     ),
