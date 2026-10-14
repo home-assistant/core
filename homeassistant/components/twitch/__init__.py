@@ -2,17 +2,10 @@
 
 from typing import cast
 
-from aiohttp.client_exceptions import ClientError
 from twitchAPI.twitch import Twitch
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2Implementation,
     OAuth2Session,
@@ -23,21 +16,14 @@ from .const import OAUTH_SCOPES, PLATFORMS
 from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Set up Twitch from a config entry."""
     implementation = cast(
         LocalOAuth2Implementation,
         await async_get_config_entry_implementation(hass, entry),
     )
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            "OAuth session is not valid, reauth required"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
     client = Twitch(
@@ -54,10 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Unload Twitch config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

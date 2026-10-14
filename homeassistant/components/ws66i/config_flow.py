@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyws66i import WS66i, get_ws66i
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -39,9 +39,9 @@ SOURCES = [
     CONF_SOURCE_6,
 ]
 
-OPTIONS_SCHEMA = {vol.Optional(source): str for source in SOURCES}
+OPTIONS_SCHEMA = {probatio.Optional(source): str for source in SOURCES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_IP_ADDRESS): str})
 
 FIRST_ZONE = 11
 
@@ -136,8 +136,8 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 @callback
 def _key_for_source(
     index: int, source: str, previous_sources: dict[str, str]
-) -> vol.Required:
-    return vol.Required(
+) -> probatio.Required:
+    return probatio.Required(
         source, description={"suggested_value": previous_sources[str(index)]}
     )
 
@@ -164,7 +164,7 @@ class Ws66iOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(options),
+            data_schema=probatio.Schema(options),
         )
 
 

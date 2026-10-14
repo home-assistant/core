@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "hacs.json",
+  "path": "hacs.json",
+  "content": "ewogICAgIm5hbWUiOiAiUHJveHkgbWFuaWZlc3QiCn0=",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs-test-org/integration-basic-custom/contents/hacs.json",
+  "git_url": "https://api.github.com/repos/hacs-test-org/integration-basic-custom/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs-test-org/integration-basic-custom/blob/master/hacs.json",
+  "download_url": "https://raw.githubusercontent.com/hacs-test-org/integration-basic-custom/master/hacs.json",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs-test-org/integration-basic-custom/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs-test-org/integration-basic-custom/contents/hacs.json",
+    "html": "https://github.com/hacs-test-org/integration-basic-custom/blob/master/hacs.json"
+  }
+}

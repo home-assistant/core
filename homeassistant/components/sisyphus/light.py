@@ -90,14 +90,14 @@ class SisyphusLight(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Put the table to sleep."""
         await self._table.sleep()
-        _LOGGER.debug("Sisyphus table %s: sleep")
+        _LOGGER.debug("Sisyphus table %s: sleep", self._name)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Wake up the table if necessary, optionally changes brightness."""
         if not self.is_on:
             await self._table.wakeup()
-            _LOGGER.debug("Sisyphus table %s: wakeup")
+            _LOGGER.debug("Sisyphus table %s: wakeup", self._name)
 
         if "brightness" in kwargs:
             await self._table.set_brightness(kwargs["brightness"] / 255.0)

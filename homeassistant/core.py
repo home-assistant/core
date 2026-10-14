@@ -41,8 +41,8 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
 
 from . import util
 from .const import (
@@ -212,6 +212,14 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)  # noqa: B010
     return func
+
+
+@callback
+def async_noop() -> None:
+    """Do nothing; use instead of `lambda: None` where a callback is expected.
+
+    For example, as the unsubscribe function when nothing was subscribed.
+    """
 
 
 def is_callback(func: Callable[..., Any]) -> bool:
@@ -1728,8 +1736,9 @@ class EventBus:
 
             frame.report_usage(
                 "calls `async_listen` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1798,8 +1807,9 @@ class EventBus:
 
             frame.report_usage(
                 "calls `async_listen_once` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -2692,7 +2702,7 @@ class ServiceRegistry:
             [ServiceCall],
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: probatio.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
@@ -2924,7 +2934,7 @@ class ServiceRegistry:
         if handler.schema:
             try:
                 processed_data: dict[str, Any] = handler.schema(service_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
                     domain,

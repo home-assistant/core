@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Any, cast, override
 
-from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import CLIMATE
 
 from homeassistant.components.humidifier import (
@@ -120,7 +120,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
-        device: ComelitSerialBridgeObject,
+        device: ComelitDeviceObject,
         config_entry_entry_id: str,
         active_mode: HumidifierComelitMode,
         active_action: HumidifierAction,
