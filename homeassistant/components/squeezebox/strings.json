@@ -77,6 +77,18 @@
         "description": "{desc}",
         "title": "Edit additional connection information"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password from LMS Advanced Security.",
+          "username": "The username from LMS Advanced Security."
+        },
+        "description": "The LMS at {host} rejected the credentials. Enter the current credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "menu_options": {
           "edit": "Enter configuration manually",
