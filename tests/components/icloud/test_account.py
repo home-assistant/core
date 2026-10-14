@@ -964,10 +964,10 @@ async def test_a_failed_setup_retry_keeps_the_account_polling(
     again. Whatever that raises must not escape into the event loop, which
     would stop the account polling for good; it is logged and retried.
 
-    keep_alive() is called directly: advancing time would also run the
-    calendar and Reminders coordinators, which start a reauth flow of their own
-    for an account with no session, and a poll leaves the login to the user
-    once one is outstanding.
+    keep_alive() is called directly with no reauth flow reported pending: the
+    calendar and Reminders coordinators start one of their own for an account
+    with no session, at a point that depends on timing, and a poll leaves the
+    login to the user once one is outstanding.
     """
     del polling_service  # only the patched service class is needed here
 
@@ -988,6 +988,7 @@ async def test_a_failed_setup_retry_keeps_the_account_polling(
             side_effect=Exception("boom"),
         ),
         patch.object(account, "_schedule_next_fetch") as schedule,
+        patch.object(account, "_reauth_pending", return_value=False),
     ):
         await hass.async_add_executor_job(account.keep_alive)
 
@@ -996,7 +997,10 @@ async def test_a_failed_setup_retry_keeps_the_account_polling(
     schedule.assert_called_once()
 
     # The next poll builds the session once iCloud lets it.
-    with patch.object(account, "_schedule_next_fetch"):
+    with (
+        patch.object(account, "_schedule_next_fetch"),
+        patch.object(account, "_reauth_pending", return_value=False),
+    ):
         await hass.async_add_executor_job(account.keep_alive)
 
     assert account.api is not None
