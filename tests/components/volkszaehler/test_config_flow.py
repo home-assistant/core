@@ -319,16 +319,25 @@ async def test_reconfigure(
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_MIDDLEWARE)
+        is True
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "new-host", CONF_PORT: 9080},
+        {CONF_HOST: "new-host", CONF_PORT: 9080, CONF_MIDDLEWARE: False},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {CONF_HOST: "new-host", CONF_PORT: 9080}
+    assert mock_config_entry.data == {
+        CONF_HOST: "new-host",
+        CONF_PORT: 9080,
+        CONF_MIDDLEWARE: False,
+    }
     assert mock_api.get_data.call_count == 1
+    assert mock_api.call_args.kwargs["middleware"] is False
     await hass.async_block_till_done()
     assert mock_setup_entry.await_count == 1
 
