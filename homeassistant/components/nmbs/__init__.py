@@ -24,7 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NMBSConfigEntry) -> None
         station_response = await api_client.get_stations()
         if station_response is None:
             raise ConfigEntryNotReady(
-                "Unable to fetch the NMBS station list; the iRail API is unavailable"
+                translation_domain=DOMAIN,
+                translation_key="station_list_unavailable",
             )
         hass.data[NMBS_STATION_DATA] = station_response.stations
 

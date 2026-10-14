@@ -67,7 +67,10 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         station_from = _find_station(hass, entry.data[CONF_STATION_FROM])
         station_to = _find_station(hass, entry.data[CONF_STATION_TO])
         if station_from is None or station_to is None:
-            raise ConfigEntryError("A configured station no longer exists")
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="station_not_found",
+            )
         self.station_from = station_from
         self.station_to = station_to
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
