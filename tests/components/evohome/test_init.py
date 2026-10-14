@@ -9,12 +9,14 @@ from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import CONF_LOCATION_IDX, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_post_request, setup_evohome
+from .const import USERNAME
 
 _MSG_429 = (
     "You have exceeded the server's API rate limit. Wait a while "
@@ -179,6 +181,32 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+
+@pytest.mark.parametrize("install", ["sys_004"])
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "password", CONF_LOCATION_IDX: i},
+            id=f"location_idx_{i}",
+        )
+        for i in (1, 2)
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_setup_non_default_location(
+    hass: HomeAssistant,
+    ctl_id: str,
+    zone_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setup of a location other than the first of a multi-location account."""
+
+    assert hass.states.get(ctl_id) is not None
+    assert hass.states.get(zone_id) is not None
+
+    assert sorted(hass.states.async_entity_ids()) == snapshot
 
 
 _STALE_ISSUES = {  # issue_id: translation_key
