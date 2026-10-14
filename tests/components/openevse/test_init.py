@@ -1,5 +1,6 @@
 """Tests for the OpenEVSE integration."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
@@ -116,6 +117,7 @@ async def test_setup_entry_missing_serial(
 
 async def test_sensor_state_change_pushes_data(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_charger: MagicMock,
 ) -> None:
     """Test state changes to configured sensor entities push data to OpenEVSE."""
@@ -144,6 +146,40 @@ async def test_sensor_state_change_pushes_data(
             "invert_grid": True,
         },
     )
+    push_event = asyncio.Event()
+
+    def _sync_mock(mock_method: AsyncMock) -> None:
+        orig = mock_method.side_effect
+
+        async def _wrapper(*args, **kwargs):
+            try:
+                if isinstance(orig, type) and issubclass(orig, BaseException):
+                    raise orig
+                if isinstance(orig, BaseException):
+                    raise orig
+                if callable(orig):
+                    return await orig(*args, **kwargs)
+                return None
+            finally:
+                push_event.set()
+
+        mock_method.side_effect = _wrapper
+
+    for method in (
+        mock_charger.self_production,
+        mock_charger.grid_voltage,
+        mock_charger.set_shaper_live_pwr,
+        mock_charger.soc,
+        mock_charger.home_battery,
+    ):
+        _sync_mock(method)
+
+    async def _wait_for_push() -> None:
+        async with asyncio.timeout(1):
+            await push_event.wait()
+        push_event.clear()
+
+    freezer.move_to("2026-10-14 12:00:00+00:00")
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -151,66 +187,66 @@ async def test_sensor_state_change_pushes_data(
     assert config_entry.state is ConfigEntryState.LOADED
 
     hass.states.async_set("sensor.grid_power", "2.5", {"unit_of_measurement": "kW"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.self_production.assert_called_with(grid=2500, solar=None, invert=True)
 
     hass.states.async_set("sensor.solar_power", "1800", {"unit_of_measurement": "W"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.self_production.assert_called_with(grid=None, solar=1800, invert=False)
 
     hass.states.async_set("sensor.grid_voltage", "240.4")
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.grid_voltage.assert_called_with(voltage=240)
 
     hass.states.async_set("sensor.grid_voltage", "0.24", {"unit_of_measurement": "kV"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.grid_voltage.assert_called_with(voltage=240)
 
     hass.states.async_set("sensor.shaper_power", "5000", {"unit_of_measurement": "W"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.set_shaper_live_pwr.assert_called_with(power=5000)
 
     hass.states.async_set("sensor.car_battery", "80")
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=None, time_to_full=None
     )
 
     hass.states.async_set("sensor.car_range", "220")
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=220, time_to_full=None
     )
 
     hass.states.async_set("sensor.car_range", "100", {"unit_of_measurement": "mi"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=161, time_to_full=None
     )
 
     hass.states.async_set("sensor.car_eta", "3600")
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=161, time_to_full=3600
     )
 
     eta_dt = dt_util.utcnow() + timedelta(seconds=1800)
     hass.states.async_set("sensor.car_eta", eta_dt.isoformat())
-    await hass.async_block_till_done()
-    assert mock_charger.soc.call_args.kwargs["time_to_full"] in (1799, 1800, 1801)
+    await _wait_for_push()
+    assert mock_charger.soc.call_args.kwargs["time_to_full"] == 1800
 
     hass.states.async_set("sensor.car_eta", "30", {"unit_of_measurement": "min"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
     assert mock_charger.soc.call_args.kwargs["time_to_full"] == 1800
 
     hass.states.async_set("sensor.home_battery_soc", "95")
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.home_battery.assert_called_with(soc=95, power=None)
 
     hass.states.async_set(
         "sensor.home_battery_power", "3200", {"unit_of_measurement": "W"}
     )
-    await hass.async_block_till_done()
+    await _wait_for_push()
     mock_charger.home_battery.assert_called_with(soc=95, power=3200)
 
     mock_charger.grid_voltage.reset_mock()
@@ -220,27 +256,34 @@ async def test_sensor_state_change_pushes_data(
     mock_charger.grid_voltage.assert_not_called()
 
     mock_charger.soc.side_effect = UnsupportedFeature
+    _sync_mock(mock_charger.soc)
     hass.states.async_set("sensor.car_battery", "85")
-    await hass.async_block_till_done()
+    await _wait_for_push()
 
     mock_charger.self_production.side_effect = TimeoutError
+    _sync_mock(mock_charger.self_production)
     hass.states.async_set("sensor.grid_power", "3000", {"unit_of_measurement": "W"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
 
     mock_charger.self_production.side_effect = ServerTimeoutError
+    _sync_mock(mock_charger.self_production)
     hass.states.async_set("sensor.grid_power", "3100", {"unit_of_measurement": "W"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
 
     mock_charger.self_production.side_effect = ParseJSONError
+    _sync_mock(mock_charger.self_production)
     hass.states.async_set("sensor.grid_power", "3200", {"unit_of_measurement": "W"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
 
     mock_charger.self_production.side_effect = ValueError("Invalid value")
+    _sync_mock(mock_charger.self_production)
     hass.states.async_set("sensor.grid_power", "3300", {"unit_of_measurement": "W"})
-    await hass.async_block_till_done()
+    await _wait_for_push()
 
     mock_charger.self_production.side_effect = AuthenticationError
+    _sync_mock(mock_charger.self_production)
     hass.states.async_set("sensor.grid_power", "3400", {"unit_of_measurement": "W"})
+    await _wait_for_push()
     await hass.async_block_till_done()
     assert any(
         flow["context"]["source"] == SOURCE_REAUTH
@@ -258,6 +301,23 @@ async def test_sensor_startup_replay_and_coalescing(
     mock_charger.set_shaper_live_pwr = AsyncMock()
     mock_charger.soc = AsyncMock()
     mock_charger.home_battery = AsyncMock()
+
+    push_event = asyncio.Event()
+
+    def _sync_mock(mock_method: AsyncMock) -> None:
+        async def _wrapper(*args, **kwargs):
+            push_event.set()
+
+        mock_method.side_effect = _wrapper
+
+    for method in (
+        mock_charger.self_production,
+        mock_charger.grid_voltage,
+        mock_charger.set_shaper_live_pwr,
+        mock_charger.soc,
+        mock_charger.home_battery,
+    ):
+        _sync_mock(method)
 
     hass.states.async_set("sensor.car_battery", "75")
     hass.states.async_set("sensor.car_range", "150")
@@ -278,6 +338,10 @@ async def test_sensor_startup_replay_and_coalescing(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    async with asyncio.timeout(1):
+        await push_event.wait()
+    push_event.clear()
+
     mock_charger.soc.assert_called_with(
         battery_level=75, battery_range=150, time_to_full=None
     )
@@ -288,6 +352,9 @@ async def test_sensor_startup_replay_and_coalescing(
     hass.states.async_set("sensor.grid_power", "2000", {"unit_of_measurement": "W"})
     hass.states.async_set("sensor.grid_power", "3000", {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
+
+    async with asyncio.timeout(1):
+        await push_event.wait()
 
     assert mock_charger.self_production.call_count == 1
     mock_charger.self_production.assert_called_once_with(
