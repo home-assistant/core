@@ -518,13 +518,22 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
 
     @callback
     def _handle_timer_expiry(self, now: datetime) -> None:
-        """Clear expired timer state and publish the number's new value."""
+        """Queue timer cleanup behind any in-flight command."""
         self._timer_expiry_unsub = None
-        if self._timer_deadline is None or now < self._timer_deadline:
-            return
-        self._timer_deadline = None
-        self._state.timer_hours = None
-        self._state.async_notify_switches()
+        config_entry = self.platform.config_entry
+        assert config_entry is not None
+        config_entry.async_create_background_task(
+            self.hass, self._async_handle_timer_expiry(), "gree_infrared_timer_expiry"
+        )
+
+    async def _async_handle_timer_expiry(self) -> None:
+        """Publish expiry only after pending state has committed or rolled back."""
+        async with self._state.command_lock:
+            if self._timer_deadline is None or dt_util.utcnow() < self._timer_deadline:
+                return
+            self._timer_deadline = None
+            self._state.timer_hours = None
+            self._state.async_notify_switches()
 
     async def _async_send_state(
         self, hvac_mode: HVACMode, temp: int, fan_mode: str
@@ -745,26 +754,31 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     @override
     async def async_turn_on(self) -> None:
         """Resume the last active mode instead of selecting a heating default."""
-        await self.async_set_hvac_mode(self._last_active_hvac_mode)
+        async with self._state.command_lock:
+            await self._async_set_hvac_mode_locked(self._last_active_hvac_mode)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         async with self._state.command_lock:
-            cleared = self._clear_sleep_on_mode_change(hvac_mode)
-            try:
-                await self._async_send_state(
-                    hvac_mode,
-                    int(self._attr_native_target_temperature or MIN_TEMP),
-                    self._attr_fan_mode or FAN_AUTO,
-                )
-            except Exception:
-                for option, value in cleared.items():
-                    setattr(self._state, option, value)
-                raise
-            self._attr_hvac_mode = hvac_mode
-            self.async_write_ha_state()
-            self._state.async_notify_switches()
+            await self._async_set_hvac_mode_locked(hvac_mode)
+
+    async def _async_set_hvac_mode_locked(self, hvac_mode: HVACMode) -> None:
+        """Set HVAC mode while holding the shared command lock."""
+        cleared = self._clear_sleep_on_mode_change(hvac_mode)
+        try:
+            await self._async_send_state(
+                hvac_mode,
+                int(self._attr_native_target_temperature or MIN_TEMP),
+                self._attr_fan_mode or FAN_AUTO,
+            )
+        except Exception:
+            for option, value in cleared.items():
+                setattr(self._state, option, value)
+            raise
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
+        self._state.async_notify_switches()
 
     @override
     async def async_turn_on(self) -> None:

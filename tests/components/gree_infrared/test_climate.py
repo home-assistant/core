@@ -992,6 +992,92 @@ async def test_timer_expiry_updates_number_without_another_command(
     assert hass.states.get(entity_id).state == "0.0"
 
 
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("hvac_modes", [[HVACMode.COOL, HVACMode.HEAT]])
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_uses_remote_mode_received_while_waiting(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Turning on preserves a remote mode queued ahead of the command."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate._state.command_lock.acquire()
+    try:
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(
+                timings=GreeAcCommand(
+                    mode=GreeAcMode.HEAT, power=False, temperature=24
+                ).get_raw_timings()
+            )
+        )
+        await asyncio.sleep(0)
+        turn_on_task = hass.async_create_task(climate.async_turn_on())
+        await asyncio.sleep(0)
+    finally:
+        climate._state.command_lock.release()
+    await turn_on_task
+    await hass.async_block_till_done()
+
+    command = GreeAcCommand.from_raw_timings(
+        mock_infrared_emitter_entity.send_command_calls[-1].get_raw_timings()
+    )
+    assert command is not None
+    assert command.power
+    assert command.mode is GreeAcMode.HEAT
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == HVACMode.HEAT
+
+
+@pytest.mark.parametrize(
+    "platforms", [[Platform.CLIMATE, Platform.NUMBER, Platform.SWITCH]]
+)
+@pytest.mark.parametrize(
+    "extra_entry_data",
+    [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_timer_expiry_during_failed_option_send(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Timer expiry cannot publish an option whose transmission later fails."""
+    climate = mock_config_entry.runtime_data.climate
+    assert climate is not None
+    await climate.async_set_hvac_mode(HVACMode.COOL)
+    await climate.async_set_timer_hours(0.5)
+    deadline = climate._timer_deadline
+    assert deadline is not None
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_send(command: Any) -> None:
+        started.set()
+        await release.wait()
+        raise HomeAssistantError("send failed")
+
+    with patch.object(mock_infrared_emitter_entity, "async_send_command", blocked_send):
+        option_task = hass.async_create_task(climate.async_set_option("turbo", True))
+        await started.wait()
+        freezer.move_to(deadline)
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        release.set()
+        with pytest.raises(HomeAssistantError):
+            await option_task
+
+    await hass.async_block_till_done()
+    assert not climate._state.turbo
+    assert hass.states.get("switch.gree_ac_turbo").state == "off"
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_timer_deadline_matches_quantized_duration_after_state_send(
     mock_config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
