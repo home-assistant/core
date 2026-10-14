@@ -468,11 +468,16 @@ class IcloudDevice:
                     # than the place the device has since left.
                     self._location = None
                 else:
-                    if self._location is None:
+                    # Stored before it is announced: this runs off the event
+                    # loop, so the listener can read the device before the
+                    # assignment lands, find no location, skip it and never be
+                    # told again.
+                    announce = self._location is None
+                    self._location = location
+                    if announce:
                         dispatcher_send(
                             self._account.hass, self._account.signal_device_new
                         )
-                    self._location = location
 
     def _is_stale(self, location: dict[str, Any]) -> bool:
         """Return whether a location fix is too old to be trusted.
@@ -504,13 +509,18 @@ class IcloudDevice:
             return False
 
         timestamp = location.get(DEVICE_LOCATION_TIMESTAMP)
-        if not isinstance(timestamp, int | float):
+        if isinstance(timestamp, bool) or not isinstance(timestamp, int | float):
             # Without a time there is nothing to judge the fix by, and one that
             # is not a number cannot be read as one.
             return False
 
-        # iCloud reports the fix time in milliseconds.
-        age = utcnow() - datetime.fromtimestamp(timestamp / 1000, tz=UTC)
+        try:
+            # iCloud reports the fix time in milliseconds.
+            fixed_at = datetime.fromtimestamp(timestamp / 1000, tz=UTC)
+        except OverflowError, OSError, ValueError:
+            # NaN, infinity and values outside the range of a date.
+            return False
+        age = utcnow() - fixed_at
         return age.total_seconds() > self._account.max_interval * 60 * 1.5
 
     def play_sound(self) -> None:

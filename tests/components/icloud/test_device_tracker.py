@@ -1,6 +1,7 @@
 """Tests for the iCloud device tracker."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -145,11 +146,49 @@ async def test_cached_location_without_a_timestamp_is_kept(
     assert state.attributes[ATTR_LONGITUDE] == 2.0
 
 
+async def test_recovered_location_is_stored_before_it_is_announced(
+    hass: HomeAssistant,
+    locating_service: tuple,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the new-device signal is sent once the location can be read.
+
+    The poll runs off the event loop and the signal is handled on it, so a
+    listener that finds no location skips the device and is never told again.
+    """
+    _, status = locating_service
+    await setup_account(hass)
+    status["location"] = location(
+        is_old=True, age=timedelta(minutes=DEFAULT_MAX_INTERVAL * 3)
+    )
+    await next_fetch(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+    account = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    (device,) = account.devices.values()
+    seen: list[object] = []
+
+    def record(hass: HomeAssistant, signal: str, *args: object) -> None:
+        if signal == account.signal_device_new:
+            seen.append(device.location)
+
+    status["location"] = location(is_old=False, age=timedelta(seconds=30))
+    with patch("homeassistant.components.icloud.account.dispatcher_send", record):
+        await next_fetch(hass, freezer)
+
+    assert seen == [device.location]
+    assert device.location is not None
+
+
 @pytest.mark.parametrize(
     "timestamp",
     [
         pytest.param(None, id="null"),
         pytest.param("not-a-number", id="not_a_number"),
+        pytest.param(True, id="bool"),
+        pytest.param(float("nan"), id="nan"),
+        pytest.param(float("inf"), id="infinity"),
+        pytest.param(1e30, id="out_of_range"),
     ],
 )
 async def test_cached_location_with_an_unusable_timestamp_is_kept(
