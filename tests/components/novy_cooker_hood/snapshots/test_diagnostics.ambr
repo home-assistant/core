@@ -4,12 +4,13 @@
     'config_entry': dict({
       'data': dict({
         'code': 1,
+        'transmitter': 'radio_frequency.test_rf_transmitter',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'novy_cooker_hood',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
