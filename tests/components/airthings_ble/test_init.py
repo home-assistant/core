@@ -639,7 +639,7 @@ async def test_connectivity_mode_issue_details(
         DOMAIN, f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}"
     )
     assert issue is not None
-    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert not issue.is_fixable
     assert issue.is_persistent
     assert issue.translation_key == translation_key
@@ -841,7 +841,7 @@ async def test_existing_connectivity_mode_issue_kept_when_setup_fails(
         config_entry_id=entry.entry_id,
         is_fixable=False,
         is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
+        severity=ir.IssueSeverity.ERROR,
         translation_key="connectivity_smartlink",
         translation_placeholders=placeholders,
     )
