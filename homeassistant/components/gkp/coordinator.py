@@ -229,8 +229,8 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
         self.hub_coordinator = hub_coordinator
         self.fast_polling_until: float | None = None
 
-        self.unsubscribe_hub_listener = hub_coordinator.async_add_listener(
-            self._handle_hub_update
+        config_entry.async_on_unload(
+            hub_coordinator.async_add_listener(self._handle_hub_update)
         )
 
     def _handle_hub_update(self) -> None:
