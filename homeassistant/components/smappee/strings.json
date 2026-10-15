@@ -31,6 +31,10 @@
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
+      "reauth_confirm": {
+        "description": "The Smappee integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "zeroconf_confirm": {
         "description": "Do you want to add the Smappee device with serial number `{serialnumber}` to Home Assistant?",
         "title": "Discovered Smappee device"

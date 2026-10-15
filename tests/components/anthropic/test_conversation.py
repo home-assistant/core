@@ -216,8 +216,8 @@ async def test_device(
     assert device is not None
     assert device.name == "Claude conversation"
     assert device.manufacturer == "Anthropic"
-    assert device.model == "Claude Haiku 4.5"
-    assert device.model_id == "claude-haiku-4-5-20251001"
+    assert device.model == "Claude Haiku 5.5"
+    assert device.model_id == "claude-haiku-5-5"
     assert device.entry_type == dr.DeviceEntryType.SERVICE
 
 
@@ -1205,6 +1205,14 @@ async def test_extended_thinking(
                 CONF_THINKING_EFFORT: "none",
             },
             id="no_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-haiku-5-5",
+                CONF_THINKING_EFFORT: "none",
+            },
+            id="haiku_5_5",
         ),
     ],
 )

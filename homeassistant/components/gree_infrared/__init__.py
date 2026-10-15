@@ -108,7 +108,7 @@ class GreeIrRuntimeData:
 type GreeIrConfigEntry = ConfigEntry[GreeIrRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> None:
     """Set up Gree IR from a config entry."""
     configured_modes = tuple(
         HA_MODE_TO_LIB[HVACMode(mode)]
@@ -119,9 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bo
         ac_state=GreeAcState(mode=configured_modes[0]),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> None:
     """Unload a Gree IR config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

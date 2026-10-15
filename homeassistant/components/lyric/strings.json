@@ -99,6 +99,9 @@
     "failed_to_set_preset_mode": {
       "message": "Failed to set preset mode"
     },
+    "failed_to_set_room_priority": {
+      "message": "Failed to set room priority"
+    },
     "failed_to_set_temperature": {
       "message": "Failed to set temperature"
     },

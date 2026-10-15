@@ -78,6 +78,27 @@ async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
     assert not hasattr(entry, "runtime_data")
 
 
+async def test_unload_entry_failed(
+    hass: HomeAssistant, mock_bridge_setup: Mock
+) -> None:
+    """Test unloading fails when the bridge cannot be reset."""
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+
+    entry.runtime_data = mock_bridge_setup
+    mock_bridge_setup.async_reset = AsyncMock(return_value=False)
+
+    assert not await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+    assert entry.reason == "Failed to unload the Hue bridge"
+
+
 async def test_setting_unique_id(hass: HomeAssistant, mock_bridge_setup) -> None:
     """Test we set unique ID if not set yet."""
     entry = MockConfigEntry(

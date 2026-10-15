@@ -73,6 +73,9 @@
     "lock_failed": {
       "message": "Failed to lock the door. Lock {lock_id}"
     },
+    "no_locks": {
+      "message": "The bridge does not report any paired locks"
+    },
     "open_failed": {
       "message": "Failed to unlatch the door. Lock {lock_id}"
     },

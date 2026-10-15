@@ -41,6 +41,12 @@
       "lamp_life": {
         "default": "mdi:progress-wrench"
       },
+      "last_command_source": {
+        "default": "mdi:ray-start-arrow"
+      },
+      "last_command_source_with_channel_name": {
+        "default": "mdi:ray-start-arrow"
+      },
       "left_slot_level": {
         "default": "mdi:bottle-tonic-outline"
       },
@@ -119,6 +125,9 @@
   "services": {
     "get_kvs_value": {
       "service": "mdi:import"
+    },
+    "set_cover_position_and_tilt": {
+      "service": "mdi:window-shutter-cog"
     },
     "set_kvs_value": {
       "service": "mdi:export"

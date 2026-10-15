@@ -28,8 +28,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
@@ -430,14 +435,34 @@ async def test_attr_group_members(
     ]
 
 
+@pytest.mark.parametrize(
+    ("renamed_entity_id", "leader_entity_id", "follower_entity_id"),
+    [
+        pytest.param(
+            "media_player.player_name1111",
+            "media_player.renamed",
+            "media_player.player_name2222",
+            id="leader",
+        ),
+        pytest.param(
+            "media_player.player_name2222",
+            "media_player.player_name1111",
+            "media_player.renamed",
+            id="follower",
+        ),
+    ],
+)
 async def test_attr_group_members_after_entity_id_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_config_entry: None,
     setup_config_entry_secondary: None,
     player_mocks: PlayerMocks,
+    renamed_entity_id: str,
+    leader_entity_id: str,
+    follower_entity_id: str,
 ) -> None:
-    """Test the leader's group members follow its entity_id change."""
+    """Test the leader's group members follow an entity_id change of a member."""
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
         followers=[PairedPlayer("2.2.2.2", 11000)],
@@ -445,28 +470,37 @@ async def test_attr_group_members_after_entity_id_change(
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
     await hass.async_block_till_done()
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    state_reports: list[Event[EventStateReportedData]] = []
+
+    @callback
+    def _is_renamed(data: EventStateReportedData) -> bool:
+        return data["entity_id"] == "media_player.renamed"
+
+    @callback
+    def _capture_report(event: Event[EventStateReportedData]) -> None:
+        state_reports.append(event)
+
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, _capture_report, event_filter=_is_renamed
+    )
 
     entity_registry.async_update_entity(
-        "media_player.player_name1111", new_entity_id="media_player.renamed_leader"
+        renamed_entity_id, new_entity_id="media_player.renamed"
     )
     await hass.async_block_till_done()
 
-    attr_group_members = hass.states.get("media_player.renamed_leader").attributes.get(
+    attr_group_members = hass.states.get(leader_entity_id).attributes.get(
         ATTR_GROUP_MEMBERS
     )
-    assert attr_group_members == [
-        "media_player.renamed_leader",
-        "media_player.player_name2222",
-    ]
-    # The state is written once under the new entity_id, already re-keyed
+    assert attr_group_members == [leader_entity_id, follower_entity_id]
+    # The renamed player's state is written once under the new entity_id; a
+    # repeated identical write would be a state report
     assert [
-        (
-            event.data["old_state"],
-            event.data["new_state"].attributes[ATTR_GROUP_MEMBERS],
-        )
+        event.data["old_state"]
         for event in state_changes
-        if event.data["entity_id"] == "media_player.renamed_leader"
-    ] == [(None, ["media_player.renamed_leader", "media_player.player_name2222"])]
+        if event.data["entity_id"] == "media_player.renamed"
+    ] == [None]
+    assert not state_reports
 
 
 async def test_join_players(

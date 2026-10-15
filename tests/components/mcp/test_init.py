@@ -31,6 +31,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
 
 from .conftest import TEST_API_NAME
 
@@ -823,6 +824,29 @@ async def test_sse_client_does_not_build_ssl_context(
 
     assert not mock_load_certs.called
     await client.aclose()
+
+
+async def test_streamable_http_client_closed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test the httpx client passed to the streamable HTTP transport.
+
+    It identifies as Home Assistant and is closed once the client exits.
+    """
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    http_client = mock_http_streamable_client.call_args.kwargs["http_client"]
+    assert isinstance(http_client, httpx2.AsyncClient)
+    assert http_client.headers["User-Agent"] == SERVER_SOFTWARE
+    assert http_client.is_closed
 
 
 async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:

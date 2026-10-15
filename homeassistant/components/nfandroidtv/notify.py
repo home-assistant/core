@@ -10,8 +10,10 @@ import probatio
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
-from homeassistant.components import camera, image
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -142,15 +144,8 @@ async def _resolve_media(hass: HomeAssistant, media_source: dict[str, Any]) -> b
     """Resolve media from a media source."""
     media_content_id: str = media_source["media_content_id"]
 
-    if media_content_id.startswith("media-source://camera/"):
-        entity_id = media_content_id.removeprefix("media-source://camera/")
-        snapshot = await camera.async_get_image(hass, entity_id)
-        return snapshot.content
-
-    if media_content_id.startswith("media-source://image/"):
-        entity_id = media_content_id.removeprefix("media-source://image/")
-        img = await image.async_get_image(hass, entity_id)
-        return img.content
+    if media_image := await async_get_media_image(hass, media_content_id):
+        return media_image.content
 
     media = await async_resolve_media(hass, media_content_id, None)
 

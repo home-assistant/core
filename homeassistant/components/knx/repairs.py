@@ -24,7 +24,9 @@ from .const import (
     DOMAIN,
     REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
     REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
+    REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+    REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     KNXConfigEntryData,
 )
@@ -48,9 +50,9 @@ async def async_create_fix_flow(
     raise ValueError(f"unknown repair {issue_id}")
 
 
-###########################
-# Entity store schema issue
-###########################
+#################################
+# Config store validation issues
+#################################
 
 
 @callback
@@ -74,6 +76,44 @@ def async_create_entity_validation_issue(
             "platform": platform,
             "entities": "\n".join(f"- {unique_id}" for unique_id in unique_ids),
         },
+    )
+
+
+@callback
+def async_create_expose_validation_issue(
+    hass: HomeAssistant, entity_ids: list[str]
+) -> None:
+    """Create a repair issue for invalid expose configurations in the config store."""
+    _LOGGER.error(
+        "Invalid KNX expose configuration in storage. These exposes were not set up: %s",
+        ", ".join(entity_ids),
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
+        translation_placeholders={
+            "entities": "\n".join(f"- {entity_id}" for entity_id in entity_ids),
+        },
+    )
+
+
+@callback
+def async_create_time_server_validation_issue(hass: HomeAssistant) -> None:
+    """Create a repair issue for an invalid time server configuration."""
+    _LOGGER.error(
+        "Invalid KNX time server configuration in storage. The time server was not started"
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
     )
 
 
