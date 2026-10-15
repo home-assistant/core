@@ -11,9 +11,10 @@ from kaco_rs485 import AsyncBus, BusError, InverterState, KacoRs485Client, statu
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_ADDRESSES, DOMAIN, LOGGER
 
 # Between cycles, not between requests — the library paces those itself.
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -31,7 +32,6 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
         hass: HomeAssistant,
         entry: KacoRs485ConfigEntry,
         port: str,
-        addresses: list[int],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -42,10 +42,31 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
             update_interval=SCAN_INTERVAL,
         )
         self._bus = AsyncBus(port)
-        self._addresses = addresses
-        self._client = KacoRs485Client(self._bus, addresses)
+        self._addresses: list[int] = []
+        self._client = KacoRs485Client(self._bus, [])
         self._opened = False
         self._reported_dark: dict[int, bool] = {}
+
+    def _enabled_addresses(self) -> list[int]:
+        """Return the addresses whose device has not been disabled.
+
+        One inverter costs a request pair and the pacing gaps around it, so a
+        disabled one is dropped from the cycle rather than merely hidden: on a
+        shared wire that time is what the others need.
+        """
+        registry = dr.async_get(self.hass)
+        return [
+            address
+            for address in self.config_entry.data[CONF_ADDRESSES]
+            if (
+                device := registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self.config_entry.entry_id}_{address}"),
+                    self.config_entry.entry_id,
+                )
+            )
+            is None
+            or not device.disabled
+        ]
 
     async def _async_open(self) -> None:
         """Open the bus."""
@@ -60,6 +81,10 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
 
     @override
     async def _async_update_data(self) -> dict[int, InverterState]:
+        if (addresses := self._enabled_addresses()) != self._addresses:
+            self._addresses = addresses
+            self._client = KacoRs485Client(self._bus, addresses)
+
         # Every inverter disabled: holding the port would keep another master
         # off a bus nobody is reading.
         if not self._addresses:

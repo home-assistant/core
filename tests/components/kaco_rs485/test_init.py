@@ -128,8 +128,6 @@ async def test_a_disabled_inverter_is_dropped_from_the_poll_cycle(
         _device(device_registry, init_integration, 2).id,
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
 
     assert await _polled(hass, init_integration, mock_bus) == {1, 4}
 
@@ -146,8 +144,6 @@ async def test_disabling_every_inverter_releases_the_port(
             _device(device_registry, init_integration, address).id,
             disabled_by=dr.DeviceEntryDisabler.USER,
         )
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
 
     assert await _polled(hass, init_integration, mock_bus) == set()
     assert not mock_bus.opened
