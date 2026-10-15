@@ -1,5 +1,6 @@
 """Connection session."""
 
+import asyncio
 from collections import deque
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
@@ -67,6 +68,7 @@ class ActiveConnection:
 
     __slots__ = (
         "_raw_send_message",
+        "_state_diff_flush_handle",
         "binary_handlers",
         "can_coalesce",
         "handlers",
@@ -101,6 +103,10 @@ class ActiveConnection:
         self.hass = hass
         self._raw_send_message = send_message
         self.pending_state_diff_batches: deque[StateDiffBatchFlush] = deque()
+        # The one drain scheduled for the end of the current iteration, kept so that a
+        # flush which empties the queue early does not leave the next change
+        # scheduling another behind it.
+        self._state_diff_flush_handle: asyncio.Handle | None = None
         # Everything leaves through _async_send_message so that changes a subscription
         # has collected but not yet sent go first. Those are flushed from the event
         # loop, so without this a handler that changed state and then sent its result
@@ -134,6 +140,20 @@ class ActiveConnection:
         self._raw_send_message(message)
 
     @callback
+    def _async_flush_state_diff_batches_soon(self) -> None:
+        """Run the drain scheduled for the end of this iteration."""
+        self._state_diff_flush_handle = None
+        self.async_flush_state_diff_batches()
+
+    @callback
+    def _async_schedule_state_diff_flush(self) -> None:
+        """Arrange one drain for the end of this iteration, if none is pending."""
+        if self._state_diff_flush_handle is None:
+            self._state_diff_flush_handle = self.hass.loop.call_soon(
+                self._async_flush_state_diff_batches_soon
+            )
+
+    @callback
     def async_flush_state_diff_batches(self) -> None:
         """Send what subscriptions have collected, in the order they collected it.
 
@@ -147,10 +167,9 @@ class ActiveConnection:
         finally:
             if batches:
                 # One batch raising must not stop the rest: the loop reports it, but
-                # nothing would schedule another drain, and async_add_pending_state_
-                # diff_batch only schedules one when the queue is empty - so what is
-                # left would sit unsent until some later message happened to flush it.
-                self.hass.loop.call_soon(self.async_flush_state_diff_batches)
+                # the drain this ran from has already been taken, so without this what
+                # is left would sit unsent until some later message flushed it.
+                self._async_schedule_state_diff_flush()
 
     @callback
     def async_add_pending_state_diff_batch(self, flush: StateDiffBatchFlush) -> None:
@@ -160,8 +179,7 @@ class ActiveConnection:
         that a batch forced to send early cannot overtake a change another
         subscription collected before it.
         """
-        if not self.pending_state_diff_batches:
-            self.hass.loop.call_soon(self.async_flush_state_diff_batches)
+        self._async_schedule_state_diff_flush()
         self.pending_state_diff_batches.append(flush)
 
     @callback
@@ -355,6 +373,11 @@ class ActiveConnection:
                     "Error unsubscribing from subscription: %s", unsub
                 )
         self.subscriptions.clear()
+        if self._state_diff_flush_handle is not None:
+            # Every subscription has just dropped what it collected, so the drain has
+            # nothing left to do and need not outlive the connection.
+            self._state_diff_flush_handle.cancel()
+            self._state_diff_flush_handle = None
         self.send_message = self._connect_closed_error
         current_request.set(None)
         current_connection.set(None)

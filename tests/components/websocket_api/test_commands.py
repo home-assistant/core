@@ -4221,6 +4221,64 @@ async def test_a_flush_that_raises_does_not_strand_the_batches_behind_it(
     await hass.async_block_till_done()
 
 
+async def test_subscribe_entities_schedules_one_flush_per_iteration(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """A flush that empties the queue early does not leave another drain per change.
+
+    The drain scheduled for the end of the iteration is not cancelled by a flush that
+    runs before it, so scheduling whenever the queue is empty would leave one per
+    change, all but the first finding nothing to do.
+    """
+    handlers = hass.data[DOMAIN]
+    subscribe_entities, schema = handlers["subscribe_entities"]
+    connections: list[ActiveConnection] = []
+
+    @callback
+    def capture_connection(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        """Record the connection, so its scheduling can be observed."""
+        connections.append(connection)
+        subscribe_entities(hass, connection, msg)
+
+    handlers["subscribe_entities"] = (capture_connection, schema)
+    try:
+        await websocket_client.send_json_auto_id({"type": "subscribe_entities"})
+        msg = await websocket_client.receive_json()
+        assert msg["success"]
+        msg = await websocket_client.receive_json()
+        assert msg["event"] == {"a": {}}
+    finally:
+        handlers["subscribe_entities"] = (subscribe_entities, schema)
+
+    connection = connections[0]
+    drain = connection._async_flush_state_diff_batches_soon
+    original_call_soon = hass.loop.call_soon
+    scheduled = 0
+
+    def counting_call_soon(callback, *args, **kwargs):
+        """Count only the drains, not everything else the loop schedules."""
+        nonlocal scheduled
+        if callback == drain:
+            scheduled += 1
+        return original_call_soon(callback, *args, **kwargs)
+
+    changes = 256
+    with patch.object(hass.loop, "call_soon", counting_call_soon):
+        # One entity, so every change after the first forces a flush that empties the
+        # queue, and all of them land in the same iteration.
+        for index in range(changes):
+            hass.states.async_set("light.one", f"state_{index}")
+
+    assert scheduled == 1, f"{scheduled} drains scheduled for {changes} changes"
+
+    await hass.async_block_till_done()
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
 async def test_subscribe_entities_batch_survives_one_unserializable_change(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
