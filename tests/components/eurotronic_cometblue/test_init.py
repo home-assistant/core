@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from bleak.exc import BleakError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -55,3 +56,37 @@ async def test_setup_retries_when_device_not_found(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "aa:bb:cc:dd:ee:ff: mock reachability reason" in caplog.text
+
+
+async def test_setup_retries_when_device_info_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when device info cannot be retrieved."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.eurotronic_cometblue.AsyncCometBlue.get_device_info_async",
+        side_effect=BleakError("connection failed"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_get_device_info"
+
+
+async def test_setup_fails_when_pin_is_incorrect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails when the device does not accept the PIN."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.eurotronic_cometblue.AsyncCometBlue.get_battery_async",
+        side_effect=TimeoutError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "incorrect_pin"

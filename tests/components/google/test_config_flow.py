@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import time
 from typing import Any
@@ -46,7 +46,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 CODE_CHECK_INTERVAL = 1
-CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
+CODE_CHECK_ALARM_TIMEDELTA = dt.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
 OAUTH2_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
 OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
@@ -63,14 +63,14 @@ async def setup_app_creds(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def code_expiration_delta() -> datetime.timedelta:
+async def code_expiration_delta() -> dt.timedelta:
     """Fixture for code expiration time, defaulting to the future."""
-    return datetime.timedelta(minutes=3)
+    return dt.timedelta(minutes=3)
 
 
 @pytest.fixture
 async def mock_code_flow(
-    code_expiration_delta: datetime.timedelta,
+    code_expiration_delta: dt.timedelta,
 ) -> AsyncYieldFixture[Mock]:
     """Fixture for initiating OAuth flow."""
     with patch(
@@ -132,7 +132,7 @@ async def primary_calendar(
     )
 
 
-async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
+async def fire_alarm(hass: HomeAssistant, point_in_time: dt.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
@@ -235,7 +235,7 @@ async def test_timeout_error(
         assert result.get("reason") == "timeout_connect"
 
 
-@pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(seconds=50)])
+@pytest.mark.parametrize("code_expiration_delta", [dt.timedelta(seconds=50)])
 async def test_expired_after_exchange(
     hass: HomeAssistant,
     mock_code_flow: Mock,
@@ -261,7 +261,7 @@ async def test_expired_after_exchange(
         side_effect=FlowExchangeError(),
     ):
         now = utcnow()
-        await fire_alarm(hass, now + datetime.timedelta(seconds=65))
+        await fire_alarm(hass, now + dt.timedelta(seconds=65))
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])

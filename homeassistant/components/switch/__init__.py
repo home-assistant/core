@@ -7,10 +7,11 @@ from typing import override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -19,12 +20,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
-    DATA_COMPONENT,
-    DEVICE_CLASSES_SCHEMA,
-    DOMAIN,
-    SwitchDeviceClass,
-)
+from .const import DATA_COMPONENT, DEVICE_CLASSES_SCHEMA, DOMAIN, SwitchDeviceClass
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +34,22 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
+
+__all__ = [
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_OFF",
+    "STATE_ON",
+    "SwitchDeviceClass",
+    "SwitchEntity",
+    "SwitchEntityDescription",
+]
 
 # mypy: disallow-any-generics
 

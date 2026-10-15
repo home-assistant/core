@@ -7,14 +7,14 @@ from typing import final, override
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TIME  # noqa: F401
+from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE  # noqa: F401
+from .const import DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,13 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-__all__ = ["DOMAIN", "TimeEntity", "TimeEntityDescription"]
+__all__ = [
+    "ATTR_TIME",
+    "DOMAIN",
+    "SERVICE_SET_VALUE",
+    "TimeEntity",
+    "TimeEntityDescription",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
