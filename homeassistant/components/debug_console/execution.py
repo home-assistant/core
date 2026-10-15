@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
 
-from .inspection import MAX_STRING_LENGTH, USER_CODE_ERRORS, describe
+from .inspection import MAX_STRING_LENGTH, USER_CODE_ERRORS, class_name, describe
 
 if TYPE_CHECKING:
     from .session import ConsoleSession
@@ -37,6 +37,8 @@ class _OutputCapture:
 
 
 _OUTPUT_CAPTURE: ContextVar[_OutputCapture] = ContextVar("debug_console_output")
+
+_EXCEPTION_TRACEBACK = vars(BaseException)["__traceback__"]
 
 # Statements with an indented block, which the Python REPL ends at an empty line.
 _COMPOUND_STATEMENTS = (
@@ -118,8 +120,16 @@ async def async_execute(
         output["logs_truncated"] = True
 
     if error is not None:
+        try:
+            report = _capture_exception(error)
+        except USER_CODE_ERRORS:
+            output["error"] = f"<{class_name(error)} that failed to format>"
+            return output
+
         # Formatting reads the source of each frame from disk.
-        output["error"] = await hass.async_add_executor_job(_format_exception, error)
+        output["error"] = await hass.async_add_executor_job(
+            lambda: "".join(report.format())
+        )
         return output
 
     return {**output, "result": description}
@@ -208,10 +218,15 @@ async def _async_run(code_object: CodeType, namespace: dict[str, Any]) -> Any:
     return result
 
 
-def _format_exception(err: BaseException) -> str:
-    """Format an exception, hiding the frames of the console machinery itself."""
-    tb = err.__traceback__
+def _capture_exception(err: BaseException) -> traceback.TracebackException:
+    """Capture an exception to report, hiding the frames of the console itself.
+
+    Capturing runs code of the exception, like its __str__, so it happens here,
+    in the event loop. The source of each frame is only read when formatting.
+    """
+    # Its own traceback, as an exception can replace __traceback__ too.
+    tb = _EXCEPTION_TRACEBACK.__get__(err)  # pylint: disable=unnecessary-dunder-call
     while tb is not None and tb.tb_frame.f_code.co_filename != CONSOLE_FILENAME:
         tb = tb.tb_next
 
-    return "".join(traceback.format_exception(type(err), err, tb))
+    return traceback.TracebackException(type(err), err, tb, lookup_lines=False)

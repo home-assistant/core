@@ -174,6 +174,40 @@ async def test_syntax_error(websocket_client: MockHAClientWebSocket) -> None:
     assert "SyntaxError" in result["error"]
 
 
+@pytest.mark.parametrize(
+    ("hook", "error"),
+    [
+        pytest.param(
+            "@property\n    def __traceback__(self):\n        raise SystemExit",
+            "Sneaky: oops",
+            id="traceback",
+        ),
+        pytest.param(
+            "def __str__(self):\n        raise SystemExit",
+            "Sneaky: <exception str() failed>",
+            id="str",
+        ),
+        pytest.param(
+            "@property\n    def __notes__(self):\n        raise SystemExit",
+            "<Sneaky that failed to format>",
+            id="notes",
+        ),
+    ],
+)
+async def test_error_that_fails_to_format(
+    websocket_client: MockHAClientWebSocket, hook: str, error: str
+) -> None:
+    """Test an exception running code while it is formatted stays contained."""
+    result = await async_execute(
+        websocket_client,
+        f"class Sneaky(Exception):\n    {hook}\n\nraise Sneaky('oops')",
+    )
+    assert error in result["error"]
+
+    result = await async_execute(websocket_client, "1 + 1")
+    assert result["result"] == {"type": "number", "value": "2"}
+
+
 async def test_syntax_error_runs_nothing(
     websocket_client: MockHAClientWebSocket,
 ) -> None:
