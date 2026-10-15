@@ -1,6 +1,6 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
@@ -103,7 +103,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
         category="Category 1",
         location="Location 1",
         attribution="Attribution 1",
-        publication_date=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        publication_date=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         council_area="Council Area 1",
         status="Status 1",
         entry_type="Type 1",
@@ -146,9 +146,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_CATEGORY: "Category 1",
                 ATTR_LOCATION: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
-                ),
+                ATTR_PUBLICATION_DATE: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
                 ATTR_FIRE: True,
                 ATTR_COUNCIL_AREA: "Council Area 1",
                 ATTR_STATUS: "Status 1",
