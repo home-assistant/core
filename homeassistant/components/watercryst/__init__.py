@@ -58,9 +58,7 @@ type WatercrystConfigEntry = ConfigEntry[RuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> bool:
     """Set up a WATERCryst BIOCAT device from a config entry."""
 
-    key: str = entry.data[CONF_API_KEY]
-    auth = AsyncAuth(client=get_async_client(hass), api_key=key)
-    client = AsyncApiClient(auth=auth)
+    client = AsyncApiClient(auth=AsyncAuth(client=get_async_client(hass), api_key=entry.data[CONF_API_KEY]))
 
     try:
         info = await client.get_device_info()
