@@ -1,6 +1,7 @@
 """Tests for the iCloud account."""
 
 from datetime import timedelta
+import itertools
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -16,7 +17,7 @@ from pyicloud.services.findmyiphone import AppleDevice
 import pytest
 from requests import Response
 
-from homeassistant.components.icloud.account import IcloudAccount
+from homeassistant.components.icloud.account import IcloudAccount, IcloudDevice
 from homeassistant.components.icloud.const import (
     ATTR_BATTERY,
     ATTR_LOW_POWER_MODE,
@@ -32,13 +33,14 @@ from homeassistant.components.icloud.device_tracker import IcloudTrackerEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.storage import Store
 
 from .const import (
@@ -508,6 +510,51 @@ async def test_a_device_that_stops_sharing_its_location_reads_unknown(
     state = hass.states.get(tracker)
     assert state.state == STATE_UNKNOWN
     assert ATTR_LATITUDE not in state.attributes
+
+
+async def test_a_location_cleared_during_a_state_write_does_not_change_it(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that one state write is made from one location.
+
+    The poll clears a location from the executor while the event loop may be
+    writing the state, and the state write reads the coordinates and the
+    accuracy one after the other. A location that is gone after the first read
+    must not leave the rest of the write with half a fix, which can come out as
+    not_home instead of unknown.
+    """
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = MockDevicesContainer(
+            USER_INFO, [MockAppleDevice(DEVICE_WITHOUT_BATTERY)]
+        )
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        account = config_entry.runtime_data
+        [tracker] = hass.states.async_entity_ids("device_tracker")
+
+        with patch.object(
+            IcloudDevice,
+            "location",
+            new_callable=PropertyMock,
+            side_effect=itertools.chain([LOCATION], itertools.repeat(None)),
+        ):
+            async_dispatcher_send(hass, account.signal_device_update)
+            await hass.async_block_till_done()
+
+    state = hass.states.get(tracker)
+    assert state.attributes[ATTR_LATITUDE] == LOCATION["latitude"]
+    assert state.attributes[ATTR_LONGITUDE] == LOCATION["longitude"]
 
 
 @pytest.mark.parametrize(
