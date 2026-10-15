@@ -181,6 +181,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for new credentials."""
         entry = self._get_reauth_entry()
+        self.context["title_placeholders"] = {"host": entry.data[CONF_HOST]}
         errors: dict[str, str] = {}
 
         if user_input is not None:
