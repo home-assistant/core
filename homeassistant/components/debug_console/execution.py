@@ -157,23 +157,25 @@ async def _async_execute(code: str, namespace: dict[str, Any]) -> Any:
         tree.body.pop()
         last_expression = ast.Expression(last_statement.value)
 
-    await _async_run(
-        compile(tree, CONSOLE_FILENAME, "exec", flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT),
-        namespace,
+    # Compile both first, so code that does not compile changes nothing.
+    statements = compile(
+        tree, CONSOLE_FILENAME, "exec", flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT
     )
-
-    if last_expression is None:
-        return None
-
-    return await _async_run(
-        compile(
+    expression = None
+    if last_expression is not None:
+        expression = compile(
             last_expression,
             CONSOLE_FILENAME,
             "eval",
             flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT,
-        ),
-        namespace,
-    )
+        )
+
+    await _async_run(statements, namespace)
+
+    if expression is None:
+        return None
+
+    return await _async_run(expression, namespace)
 
 
 async def _async_run(code_object: CodeType, namespace: dict[str, Any]) -> Any:

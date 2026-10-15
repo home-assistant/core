@@ -171,6 +171,18 @@ async def test_syntax_error(websocket_client: MockHAClientWebSocket) -> None:
     assert "SyntaxError" in result["error"]
 
 
+async def test_syntax_error_runs_nothing(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test code that fails to compile at the last expression runs nothing."""
+    # A top level yield parses, but only fails when compiled.
+    result = await async_execute(websocket_client, "changed = True\nyield 1")
+    assert "SyntaxError" in result["error"]
+
+    result = await async_execute(websocket_client, "'changed' in globals()")
+    assert result["result"] == {"type": "boolean", "value": False}
+
+
 async def test_concurrent_executions_keep_their_output(
     websocket_client: MockHAClientWebSocket,
 ) -> None:
