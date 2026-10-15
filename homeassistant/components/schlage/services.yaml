@@ -28,6 +28,16 @@ add_code:
       default: true
       selector:
         boolean:
+    start_datetime:
+      required: false
+      example: "2024-12-25 18:00:00"
+      selector:
+        datetime:
+    end_datetime:
+      required: false
+      example: "2024-12-26 08:00:00"
+      selector:
+        datetime:
 
 delete_code:
   target:
