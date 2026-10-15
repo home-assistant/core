@@ -1,10 +1,12 @@
 """The cert_expiry component."""
 
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
+from .const import CONF_CA_CERTIFICATES
 from .coordinator import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
+from .helper import async_get_ssl_context
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -14,7 +16,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
 
-    coordinator = CertExpiryDataUpdateCoordinator(hass, entry, host, port)
+    ssl_context = await async_get_ssl_context(
+        hass,
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, True),
+        ca_certificates=entry.data.get(CONF_CA_CERTIFICATES, ""),
+    )
+    coordinator = CertExpiryDataUpdateCoordinator(hass, entry, host, port, ssl_context)
 
     entry.runtime_data = coordinator
 

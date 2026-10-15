@@ -6,9 +6,10 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_CA_CERTIFICATES
 from .coordinator import CertExpiryConfigEntry
 
-TO_REDACT = {CONF_HOST, "name", "title", "unique_id"}
+TO_REDACT = {CONF_CA_CERTIFICATES, CONF_HOST, "name", "title", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
