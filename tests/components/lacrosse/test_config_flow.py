@@ -432,7 +432,8 @@ async def test_update_sensor(
     assert all(
         "unique_id" not in sensor for sensor in subentry.data["sensors"].values()
     )
-    assert "friendly_name" not in subentry.data["sensors"]["7_temperature"]
+    assert "friendly_name" not in subentry.data["sensors"][f"{sensor_id}_temperature"]
+    assert subentry.data["sensors"][f"{sensor_id}_temperature"]["id"] == 7
     updated_device = device_registry.async_get(device.id)
     assert updated_device.identifiers == {(DOMAIN, "/dev/ttyUSB0_7")}
     assert updated_device.name_by_user == "My sensor"
@@ -504,10 +505,102 @@ async def test_update_sensor_remove_type(
         result["flow_id"], TEMPERATURE_SENSOR
     )
     assert result["reason"] == "reconfigure_successful"
-    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == {
-        "outdoor_temperature"
-    }
+    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == {"1_temperature"}
     assert entity_registry.async_get(humidity.entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("sensor_id", "new_id", "expected_battery_key"),
+    [
+        pytest.param(1, 1, "outdoor_battery", id="old-friendly-name-same-id"),
+        pytest.param(1, 7, "outdoor_battery", id="old-friendly-name-new-id"),
+        pytest.param(2, 2, "2_battery", id="old-sensor-id-same-id"),
+        pytest.param(2, 7, "2_battery", id="old-sensor-id-new-id"),
+    ],
+)
+@pytest.mark.parametrize("friendly_name", ["Renamed", ""])
+async def test_update_sensor_preserves_entity_keys(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    sensor_id: int,
+    expected_battery_key: str,
+    new_id: int,
+    friendly_name: str,
+) -> None:
+    """Test retained and added types keep the original naming basis."""
+    subentry = config_entry.subentries[f"sensor_{sensor_id}"]
+    entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{sensor_id}_temperature",
+        config_entry=config_entry,
+        config_subentry_id=subentry.subentry_id,
+    )
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            **TEMPERATURE_SENSOR,
+            "id": new_id,
+            "friendly_name": friendly_name,
+            "battery": True,
+        },
+    )
+
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data["sensors"] == {
+        f"{sensor_id}_temperature": {
+            "id": new_id,
+            "type": "temperature",
+            "friendly_name": friendly_name,
+            "expire_after": 300,
+        },
+        expected_battery_key: {
+            "id": new_id,
+            "type": "battery",
+            "friendly_name": friendly_name,
+            "expire_after": 300,
+        },
+    }
+    assert entity_registry.async_get(entity.entity_id) == entity
+
+
+async def test_update_sensor_new_type_unique_key(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test added sensor types do not reuse another subentry's entity key."""
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "sensor"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {**TEMPERATURE_SENSOR, "id": 3, "battery": True},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    other_subentry = next(
+        subentry
+        for subentry in config_entry.subentries.values()
+        if subentry.unique_id == "3"
+    )
+    original_data = dict(other_subentry.data)
+
+    result = await config_entry.start_subentry_reconfigure_flow(hass, "sensor_1")
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {**TEMPERATURE_SENSOR, "id": 7, "friendly_name": "Renamed", "battery": True},
+    )
+
+    assert result["reason"] == "reconfigure_successful"
+    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == {
+        "1_temperature",
+        "outdoor_battery_2",
+    }
+    assert other_subentry.data == original_data
 
 
 async def test_add_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

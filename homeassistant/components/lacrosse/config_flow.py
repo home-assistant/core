@@ -450,40 +450,42 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                 errors["base"] = error
             else:
                 details = _sensor_details(user_input)
-                existing_keys = {
-                    configured_key
-                    for subentry in entry.subentries.values()
-                    for configured_key, configured in subentry.data[
-                        CONF_SENSORS
-                    ].items()
-                    if configured[CONF_ID] != sensor[CONF_ID]
+                updated = {
+                    key: {**details, CONF_TYPE: configured[CONF_TYPE]}
+                    for key, configured in sensors.items()
+                    if user_input[configured[CONF_TYPE]]
                 }
-                updated: dict[str, dict[str, Any]] = {}
-                for sensor_type in selected:
-                    key = ensure_unique_string(
-                        sensor_entity_key(
-                            new_id,
-                            sensor_type,
-                            details.get(CONF_FRIENDLY_NAME),
-                        ),
-                        existing_keys,
-                    )
-                    updated[key] = {
-                        **details,
-                        CONF_TYPE: sensor_type.key,
-                    }
                 entity_registry = er.async_get(self.hass)
-                removed_ids = {
-                    key
-                    for key, sensor in sensors.items()
-                    if sensor[CONF_TYPE]
-                    not in {sensor_type.key for sensor_type in selected}
-                }
+                removed_ids = sensors.keys() - updated.keys()
                 for entity in er.async_entries_for_config_entry(
                     entity_registry, entry.entry_id
                 ):
                     if entity.unique_id in removed_ids:
                         entity_registry.async_remove(entity.entity_id)
+                existing_keys = {
+                    configured_key
+                    for subentry in entry.subentries.values()
+                    for configured_key in subentry.data[CONF_SENSORS]
+                }
+                for sensor_type in selected:
+                    if any(
+                        configured[CONF_TYPE] == sensor_type.key
+                        for configured in updated.values()
+                    ):
+                        continue
+                    key = ensure_unique_string(
+                        sensor_entity_key(
+                            sensor[CONF_ID],
+                            sensor_type,
+                            sensor.get(CONF_FRIENDLY_NAME),
+                        ),
+                        existing_keys,
+                    )
+                    existing_keys.add(key)
+                    updated[key] = {
+                        **details,
+                        CONF_TYPE: sensor_type.key,
+                    }
                 receiver = entry.data[CONF_DEVICE]
                 device_registry = dr.async_get(self.hass)
                 name = user_input.get(CONF_FRIENDLY_NAME)
