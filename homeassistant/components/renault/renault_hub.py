@@ -14,13 +14,6 @@ from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -201,11 +194,11 @@ class RenaultHub:
         await vehicle.async_initialise()
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            identifiers=vehicle.device_info[ATTR_IDENTIFIERS],
-            manufacturer=vehicle.device_info[ATTR_MANUFACTURER],
-            name=vehicle.device_info[ATTR_NAME],
-            model=vehicle.device_info[ATTR_MODEL],
-            model_id=vehicle.device_info[ATTR_MODEL_ID],
+            identifiers=vehicle.device_info.identifiers,
+            manufacturer=vehicle.device_info.manufacturer,
+            name=vehicle.device_info.name,
+            model=vehicle.device_info.model,
+            model_id=vehicle.device_info.model_id,
             sw_version=None,  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle
