@@ -45,15 +45,14 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if user_input is not None:
-            transmitter_entity_id = user_input[CONF_TRANSMITTER]
             registry = er.async_get(self.hass)
-            entity_entry = registry.async_get(transmitter_entity_id)
+            entity_entry = registry.async_get(user_input[CONF_TRANSMITTER])
             assert entity_entry is not None
             await self.async_set_unique_id(entity_entry.id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title="Honeywell String Lights",
-                data={CONF_TRANSMITTER: transmitter_entity_id},
+                data={CONF_TRANSMITTER: entity_entry.entity_id},
             )
 
         return self.async_show_form(
