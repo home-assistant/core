@@ -73,7 +73,6 @@ rules:
       Rejected App ID or App secret uses the reauthentication flow.
       A used-up Open Platform monthly quota is not fixable inside Home Assistant and is reported in diagnostics.
   stale-devices: todo
-
   # Platinum
   async-dependency: todo
   inject-websession: todo
