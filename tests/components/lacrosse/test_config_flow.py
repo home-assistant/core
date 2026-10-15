@@ -1,5 +1,7 @@
 """Tests for the LaCrosse config flow."""
 
+import asyncio
+from threading import Event
 from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
@@ -137,6 +139,7 @@ async def test_user_flow(
     assert result["data"] == {**RECEIVER_DATA, "frequency": expected_frequency}
     assert type(result["data"]["frequency"]) is int
     entry = result["result"]
+    assert entry.unique_id == RECEIVER_DATA["device"]
     assert not entry.subentries
     mock_setup_entry.assert_called_once()
 
@@ -245,6 +248,68 @@ async def test_duplicate_receiver(
 
 
 @pytest.mark.parametrize(
+    ("first_source", "second_source"),
+    [
+        pytest.param(
+            config_entries.SOURCE_USER, config_entries.SOURCE_USER, id="user-user"
+        ),
+        pytest.param(
+            config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT, id="user-import"
+        ),
+        pytest.param(
+            config_entries.SOURCE_IMPORT, config_entries.SOURCE_USER, id="import-user"
+        ),
+    ],
+)
+async def test_overlapping_receiver_flows(
+    hass: HomeAssistant, first_source: str, second_source: str
+) -> None:
+    """Test overlapping flows reserve the resolved receiver before opening it."""
+    validation_started = asyncio.Event()
+    validation_release = Event()
+    resolved_device = "/dev/serial/by-id/receiver"
+
+    def open_receiver() -> None:
+        hass.loop.call_soon_threadsafe(validation_started.set)
+        assert validation_release.wait(timeout=10)
+
+    with (
+        patch(
+            "homeassistant.components.lacrosse.config_flow.usb.get_serial_by_id",
+            return_value=resolved_device,
+        ),
+        patch(
+            "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse.return_value.open",
+            side_effect=open_receiver,
+        ) as mock_open,
+    ):
+        first_flow = hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": first_source},
+                data=dict(RECEIVER_DATA),
+            )
+        )
+        try:
+            await validation_started.wait()
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": second_source},
+                data={**RECEIVER_DATA, "device": "/dev/ttyUSB1"},
+            )
+            assert result["type"] is FlowResultType.ABORT
+            assert result["reason"] == "already_in_progress"
+            mock_open.assert_called_once()
+        finally:
+            validation_release.set()
+            first_result = await first_flow
+
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
+    assert first_result["result"].unique_id == resolved_device
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
     ("receiver_data", "expected_device"),
     [
         pytest.param({"baud": 57600}, "/dev/ttyUSB0", id="default-device"),
@@ -285,6 +350,7 @@ async def test_import_flow(
     assert type(result["data"]["frequency"]) is int
     assert "sensors" not in result["data"]
     entry = result["result"]
+    assert entry.unique_id == expected_device
     assert {subentry.unique_id for subentry in entry.subentries.values()} == {"34", "9"}
     heating = next(
         subentry for subentry in entry.subentries.values() if subentry.unique_id == "34"

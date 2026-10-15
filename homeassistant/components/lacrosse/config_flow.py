@@ -227,6 +227,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_TOGGLE_INTERVAL: import_config.get(CONF_TOGGLE_INTERVAL),
             CONF_TOGGLE_MASK: import_config.get(CONF_TOGGLE_MASK),
         }
+        await self.async_set_unique_id(resolved_device)
         self._async_abort_entries_match({CONF_DEVICE: resolved_device})
         if error := await _async_test_connection(self.hass, entry_input):
             async_create_issue(
@@ -282,6 +283,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_DEVICE] = await self.hass.async_add_executor_job(
                 usb.get_serial_by_id, user_input[CONF_DEVICE]
             )
+            await self.async_set_unique_id(user_input[CONF_DEVICE])
             self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
             data = _receiver_data(user_input)
             if error := await _async_test_connection(self.hass, data):
