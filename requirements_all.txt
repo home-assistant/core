@@ -2326,7 +2326,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2026.10.0
+pyicloud==2026.10.1
 
 # homeassistant.components.imou
 pyimouapi==1.4.0
