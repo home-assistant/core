@@ -139,6 +139,25 @@ class RpcCuryIntensityNumber(RpcNumber):
         )
 
 
+class RpcLedStripNumber(RpcNumber):
+    """Represent a RPC LED strip effect option entity."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # Only reported for effects that use the option
+        return super().available and self.entity_description.sub_key in self.status
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        await self.call_rpc(
+            "LedStrip.Set",
+            {"id": self._id, self.entity_description.sub_key: round(value)},
+        )
+
+
 class RpcBluTrvNumber(RpcNumber):
     """Represent a RPC BluTrv number."""
 
@@ -329,6 +348,20 @@ RPC_NUMBERS: Final = {
             and right.get("vial", {}).get("level", -1) != -1
         ),
         entity_class=RpcCuryIntensityNumber,
+    ),
+    "ledstrip_speed": RpcNumberDescription(
+        key="ledstrip",
+        sub_key="speed",
+        translation_key="effect_speed",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        method="call_rpc",
+        supported=lambda _: True,
+        entity_category=EntityCategory.CONFIG,
+        entity_class=RpcLedStripNumber,
     ),
 }
 
