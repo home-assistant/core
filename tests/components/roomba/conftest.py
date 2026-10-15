@@ -4,10 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from roombapy import Roomba
+from roombapy import RoombaClient
 
-from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
-from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
+from homeassistant.components.roomba.const import CONF_BLID, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -22,10 +22,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_BLID: "blid123",
             CONF_PASSWORD: "pass123",
         },
-        options={
-            CONF_CONTINUOUS: True,
-            CONF_DELAY: 10,
-        },
         unique_id="blid123",
     )
 
@@ -33,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_roomba() -> Generator[AsyncMock]:
     """Build a fixture for the 17Track API."""
-    mock_roomba = AsyncMock(spec=Roomba, autospec=True)
+    mock_roomba = AsyncMock(spec=RoombaClient, autospec=True)
     mock_roomba.master_state = {
         "state": {
             "reported": {
@@ -54,13 +50,13 @@ def mock_roomba() -> Generator[AsyncMock]:
             }
         }
     }
-    mock_roomba.roomba_connected = True
+    mock_roomba.connected = True
     mock_roomba.current_state = "Charging"
     mock_roomba.error_code = 0
     mock_roomba.error_message = None
 
     with patch(
-        "homeassistant.components.roomba.RoombaFactory.create_roomba",
+        "homeassistant.components.roomba.RoombaClient",
         return_value=mock_roomba,
     ):
         yield mock_roomba

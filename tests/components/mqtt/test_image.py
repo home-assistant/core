@@ -709,7 +709,11 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry, image.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
+        hass,
+        mqtt_mock_entry,
+        image.DOMAIN,
+        DEFAULT_CONFIG,
+        ["test_topic", "avty-topic"],
     )
 
 

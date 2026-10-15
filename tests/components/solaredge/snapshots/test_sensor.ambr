@@ -152,7 +152,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_power',
+    'translation_key': None,
     'unique_id': '1a2b3c4d5e6f7g8h_BAT001_battery_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })

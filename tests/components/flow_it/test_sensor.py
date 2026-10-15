@@ -1,15 +1,16 @@
 """Test Flow-it sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.flow_it.coordinator import FlowItCoordinator
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 INDOOR_AIR_QUALITY_ENTITY_ID = "sensor.001122334455_indoor_air_quality"
 INDOOR_AIR_TEMPERATURE_ENTITY_ID = "sensor.001122334455_indoor_air_temperature"
@@ -64,6 +65,7 @@ async def test_sensor_update(
     hass: HomeAssistant,
     mock_flow_it: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor state updates via coordinator."""
     with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SENSOR]):
@@ -75,9 +77,9 @@ async def test_sensor_update(
     assert state.state == "100"
 
     mock_flow_it.return_value.state.data.mode.iaq = 250
-    coordinator: FlowItCoordinator = mock_config_entry.runtime_data.coordinator
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(INDOOR_AIR_QUALITY_ENTITY_ID)
     assert state

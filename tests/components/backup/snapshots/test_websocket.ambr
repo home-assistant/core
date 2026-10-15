@@ -3,6 +3,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4327,6 +4329,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4346,6 +4350,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4357,6 +4363,8 @@
   dict({
     'id': 3,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4376,6 +4384,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4431,6 +4441,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4442,6 +4454,8 @@
   dict({
     'id': 3,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4461,6 +4475,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4516,6 +4532,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4527,6 +4545,8 @@
   dict({
     'id': 3,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4582,6 +4602,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4632,6 +4654,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4643,6 +4667,8 @@
   dict({
     'id': 3,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4693,6 +4719,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4752,6 +4780,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4763,6 +4793,8 @@
   dict({
     'id': 3,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4818,6 +4850,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'The backup agent is unreachable.',
       }),
@@ -4830,6 +4864,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4885,6 +4921,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'The backup agent is unreachable.',
       }),
@@ -4897,6 +4935,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -4959,6 +4999,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -4970,6 +5012,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5025,6 +5069,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
     }),
@@ -5036,6 +5082,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5091,6 +5139,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'Boom!',
       }),
@@ -5103,6 +5153,8 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5158,6 +5210,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'Boom!',
       }),
@@ -5170,6 +5224,167 @@
   dict({
     'id': 2,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+            dict({
+              'name': 'Test add-on',
+              'slug': 'test_addon',
+              'version': '1.0.0',
+            }),
+          ]),
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+          'failed_folders': list([
+            'ssl',
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'with_automatic_settings': True,
+        }),
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect3-storage_data0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_error_translations': dict({
+        'test.remote': dict({
+          'translation_domain': 'backup',
+          'translation_key': 'agent_operation_failed',
+          'translation_placeholders': None,
+        }),
+      }),
+      'agent_errors': dict({
+        'test.remote': 'Backup operation failed',
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect3-storage_data0].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_error_translations': dict({
+      }),
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+          ]),
+          'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'with_automatic_settings': True,
+        }),
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect3-storage_data1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_error_translations': dict({
+        'test.remote': dict({
+          'translation_domain': 'backup',
+          'translation_key': 'agent_operation_failed',
+          'translation_placeholders': None,
+        }),
+      }),
+      'agent_errors': dict({
+        'test.remote': 'Backup operation failed',
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect3-storage_data1].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5232,6 +5447,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backup': None,
@@ -5244,6 +5461,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backup': dict({
@@ -5291,6 +5510,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backup': dict({
@@ -5338,6 +5559,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backup': None,
@@ -5350,6 +5573,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backup': dict({
@@ -5401,6 +5626,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backup': None,
@@ -5413,6 +5640,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'The backup agent is unreachable.',
       }),
@@ -5461,6 +5690,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'Oops',
       }),
@@ -5509,8 +5740,65 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'Boom!',
+      }),
+      'backup': dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
+        'agents': dict({
+          'backup.local': dict({
+            'protected': False,
+            'size': 0,
+          }),
+        }),
+        'backup_id': 'abc123',
+        'database_included': True,
+        'date': '1970-01-01T00:00:00.000Z',
+        'extra_metadata': dict({
+          'instance_id': 'our_uuid',
+          'with_automatic_settings': True,
+        }),
+        'failed_addons': list([
+        ]),
+        'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
+        ]),
+        'folders': list([
+          'media',
+          'share',
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
+        'name': 'Test',
+        'with_automatic_settings': True,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_details_with_errors[side_effect3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_error_translations': dict({
+        'test.remote': dict({
+          'translation_domain': 'backup',
+          'translation_key': 'agent_operation_failed',
+          'translation_placeholders': None,
+        }),
+      }),
+      'agent_errors': dict({
+        'test.remote': 'Backup operation failed',
       }),
       'backup': dict({
         'addons': list([
@@ -5782,6 +6070,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5837,6 +6127,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5892,6 +6184,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -5951,6 +6245,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
       }),
       'backups': list([
@@ -6037,6 +6333,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'The backup agent is unreachable.',
       }),
@@ -6093,6 +6391,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'Oops',
       }),
@@ -6149,8 +6449,196 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_error_translations': dict({
+      }),
       'agent_errors': dict({
         'test.remote': 'Boom!',
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+          ]),
+          'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'with_automatic_settings': True,
+        }),
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_info_with_errors[side_effect3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_error_translations': dict({
+        'test.remote': dict({
+          'translation_domain': 'backup',
+          'translation_key': 'agent_operation_failed',
+          'translation_placeholders': None,
+        }),
+      }),
+      'agent_errors': dict({
+        'test.remote': 'Backup operation failed',
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+          ]),
+          'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'with_automatic_settings': True,
+        }),
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_info_with_errors[side_effect4]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_error_translations': dict({
+      }),
+      'agent_errors': dict({
+        'test.remote': '',
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_addons': list([
+          ]),
+          'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'with_automatic_settings': True,
+        }),
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_info_with_errors[side_effect5]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_error_translations': dict({
+        'test.remote': dict({
+          'translation_domain': 'test',
+          'translation_key': 'custom_error',
+          'translation_placeholders': dict({
+            'attempts': '3',
+          }),
+        }),
+      }),
+      'agent_errors': dict({
+        'test.remote': 'custom_error',
       }),
       'backups': list([
         dict({

@@ -640,6 +640,15 @@ class EnergyCostSensor(SensorEntity):
         self._update_cost()
         self.async_write_ha_state()
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the stat ID stored for the frontend."""
+        super().async_entity_id_changed(old_entity_id)
+        self.hass.data[DOMAIN]["cost_sensors"][
+            self._config[self._adapter.stat_energy_key]
+        ] = self.entity_id
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""

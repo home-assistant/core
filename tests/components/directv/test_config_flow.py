@@ -69,6 +69,16 @@ async def test_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    with patch("homeassistant.components.directv.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_ssdp_cannot_connect(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -240,6 +250,7 @@ async def test_full_user_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
+    assert result["result"].unique_id == RECEIVER_ID
 
 
 async def test_full_ssdp_flow_implementation(
@@ -267,3 +278,4 @@ async def test_full_ssdp_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
+    assert result["result"].unique_id == RECEIVER_ID

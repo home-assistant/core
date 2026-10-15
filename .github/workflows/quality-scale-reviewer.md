@@ -249,8 +249,9 @@ Read these files instead of calling GitHub for the same data:
   before selecting rules.
 - `/tmp/gh-aw/agent/rules/<rule>.md`: the full documentation of every rule.
   Read a rule's file only after selecting that rule in Step 4.
-- `/tmp/gh-aw/agent/pr-diff.patch`: the full unified diff. Navigate it with
-  `grep` and hunk headers rather than reading it whole.
+- `/tmp/gh-aw/agent/pr-diff.patch`: the unified diff, without test snapshot
+  (`.ambr`) files. Navigate it with `grep` and hunk headers rather than
+  reading it whole.
 - `/tmp/gh-aw/agent/pr-meta.json`: number, title, body, head SHA, base
   branch, and change counts.
 - `/tmp/gh-aw/agent/domains.txt`: integration domains touched by the PR that

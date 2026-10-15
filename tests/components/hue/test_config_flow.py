@@ -296,6 +296,13 @@ async def test_flow_link_unknown_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "linking"}
 
+    with patch.object(config_flow, "create_app_key", return_value="123456789"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_link_button_not_pressed(hass: HomeAssistant) -> None:
     """Test config flow ."""
@@ -320,6 +327,13 @@ async def test_flow_link_button_not_pressed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "register_failed"}
+
+    with patch.object(config_flow, "create_app_key", return_value="123456789"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_link_cannot_connect(hass: HomeAssistant) -> None:

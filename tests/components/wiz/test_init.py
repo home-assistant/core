@@ -1,6 +1,6 @@
 """Tests for wiz integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.wiz.const import DOMAIN
@@ -33,7 +33,7 @@ async def test_setup_retry(hass: HomeAssistant) -> None:
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
         await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=15))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=15))
         await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.LOADED
 

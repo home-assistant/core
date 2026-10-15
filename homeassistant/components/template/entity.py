@@ -40,6 +40,32 @@ class EntityTemplate:
     none_on_template_error: bool
 
 
+class _TemplateStateFromEntity(TemplateStateFromEntityId):
+    """Template state of an entity which follows changes of its entity_id."""
+
+    __slots__ = ("_entity",)
+
+    # pylint: disable-next=super-init-not-called
+    def __init__(self, hass: HomeAssistant, entity: Entity) -> None:
+        """Initialize template state."""
+        self._hass = hass
+        self._collect = True
+        self._entity = entity
+        self._cache: dict[str, Any] = {}
+
+    @property
+    @override
+    def _entity_id(self) -> str:  # type: ignore[override]
+        """Return the current entity_id of the entity."""
+        return self._entity.entity_id
+
+    @property
+    @override
+    def entity_id(self) -> str:  # type: ignore[override]
+        """Return the current entity_id of the entity."""
+        return self._entity.entity_id
+
+
 class AbstractTemplateEntity(Entity):
     """Actions linked to a template entity."""
 
@@ -245,14 +271,8 @@ class AbstractTemplateEntity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up scripts when removing from Home Assistant."""
-        if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
-            # Entity ID not changed, unload scripts as they will not be reused.
-            for action_script in self._action_scripts.values():
-                await action_script.async_unload()
-        else:
-            # Entity ID changed, just stop scripts
-            for action_script in self._action_scripts.values():
-                await action_script.async_stop()
+        for action_script in self._action_scripts.values():
+            await action_script.async_unload()
 
     async def async_run_script(
         self,
@@ -266,7 +286,7 @@ class AbstractTemplateEntity(Entity):
             run_variables = {}
         await script.async_run(
             run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                "this": _TemplateStateFromEntity(self.hass, self),
                 **self._render_script_variables(),
                 **run_variables,
             },

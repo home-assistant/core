@@ -162,6 +162,13 @@ async def test_connection_error_sas(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
 
+    mock_get_eventhub_properties.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        SAS_CONFIG.copy(),
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error_message"),
@@ -197,6 +204,13 @@ async def test_connection_error_cs(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
+
+    mock_from_connection_string.return_value.get_eventhub_properties.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CS_CONFIG.copy(),
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant, entry: MockConfigEntry) -> None:
