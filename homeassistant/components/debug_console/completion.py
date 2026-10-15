@@ -31,6 +31,7 @@ from .inspection import (
     is_descriptor,
     preview,
     static_attribute,
+    static_lookup,
 )
 
 MAX_COMPLETIONS = 200
@@ -204,21 +205,18 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
 
     # Without getattr(), as properties, descriptors, and __getattr__ run code.
     for attribute in attributes:
-        static = static_attribute(value, attribute, _MISSING)
-        if static is _MISSING:
+        if (found := static_lookup(value, attribute)) is None:
             return _MISSING
 
-        owner = value if is_class(value) else type(value)
-        from_class = static is static_attribute(owner, attribute, _MISSING)
-        if not from_class or not is_descriptor(static):
+        static = found.attribute
+        if found.owner is None or not is_descriptor(static):
             # Plain values, including those in the __dict__ of an instance.
             value = static
         elif has_type(static, _SAFE_DESCRIPTORS):
-            instance = None if value is owner else value
-            value = static.__get__(instance, owner)  # pylint: disable=unnecessary-dunder-call
-        elif type(static) is types.MemberDescriptorType and value is not owner:
+            value = static.__get__(found.instance, found.owner)  # pylint: disable=unnecessary-dunder-call
+        elif type(static) is types.MemberDescriptorType and found.instance is not None:
             try:
-                value = static.__get__(value, owner)  # pylint: disable=unnecessary-dunder-call
+                value = static.__get__(found.instance, found.owner)  # pylint: disable=unnecessary-dunder-call
             except AttributeError:
                 # A slot that is not set yet.
                 return _MISSING
@@ -571,7 +569,13 @@ def _package_locations(name: str) -> list[str] | None:
     """
     if (module := sys.modules.get(name)) is not None:
         locations = (instance_dict(module) or {}).get("__path__")
-        return None if locations is None else list(locations)
+        if locations is None:
+            return None
+
+        # Only a plain list, as a package can set an iterable of its own. Others,
+        # like those of namespace packages, are looked up like any package.
+        if type(locations) is list:
+            return [location for location in locations if type(location) is str]
 
     parent = name.rpartition(".")[0]
     search_path = None

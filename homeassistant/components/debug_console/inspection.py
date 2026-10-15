@@ -10,6 +10,7 @@ from collections.abc import (
     Sized,
 )
 from contextlib import suppress
+from dataclasses import dataclass
 from itertools import islice
 import reprlib
 import traceback
@@ -218,8 +219,33 @@ def static_attribute(value: Any, name: str, default: Any = None) -> Any:
     """Return an attribute as stored, without running any code to get it.
 
     Like inspect.getattr_static, which still goes through a __getattribute__
-    of the metaclass when looking at classes. Data descriptors of the class
-    win over the instance, like they do for getattr.
+    of the metaclass when looking at classes.
+    """
+    if (found := static_lookup(value, name)) is None:
+        return default
+
+    return found.attribute
+
+
+@dataclass(slots=True, frozen=True)
+class StaticLookup:
+    """An attribute as stored, and what getattr() would bind it to.
+
+    Without an owner, the attribute is stored on the instance itself, and
+    getattr() returns it as is. Otherwise its __get__ gets the instance, which
+    is None for an attribute of a class, and the owner.
+    """
+
+    attribute: Any
+    instance: Any = None
+    owner: type | None = None
+
+
+def static_lookup(value: Any, name: str) -> StaticLookup | None:
+    """Look up an attribute like getattr(), without running any code.
+
+    Data descriptors of the class win over the instance, and attributes of a
+    metaclass apply to its classes, like they do for getattr.
     """
     if is_class(value):
         found = _class_attribute(value, name, _NOT_FOUND)
@@ -227,18 +253,24 @@ def static_attribute(value: Any, name: str, default: Any = None) -> Any:
         if from_metaclass is not _NOT_FOUND and (
             found is _NOT_FOUND or _is_data_descriptor(from_metaclass)
         ):
-            return from_metaclass
+            return StaticLookup(from_metaclass, value, type(value))
 
-        return default if found is _NOT_FOUND else found
+        if found is _NOT_FOUND:
+            return None
+
+        return StaticLookup(found, None, value)
 
     from_class = _class_attribute(type(value), name, _NOT_FOUND)
     if from_class is not _NOT_FOUND and _is_data_descriptor(from_class):
-        return from_class
+        return StaticLookup(from_class, value, type(value))
 
     if (attributes := instance_dict(value)) is not None and name in attributes:
-        return attributes[name]
+        return StaticLookup(attributes[name])
 
-    return default if from_class is _NOT_FOUND else from_class
+    if from_class is _NOT_FOUND:
+        return None
+
+    return StaticLookup(from_class, value, type(value))
 
 
 def _class_attribute(cls: type, name: str, default: Any) -> Any:
@@ -279,7 +311,13 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
     if not has_type(descriptor, (GetSetDescriptorType, MemberDescriptorType)):
         return None
 
-    return descriptor.__get__(value, type(value))  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call
+    attributes = descriptor.__get__(value, type(value))  # pylint: disable=unnecessary-dunder-call
+    if type(attributes) is not dict:
+        # Code can set a subclass of dict, with methods of its own. Its items
+        # view reads the dict underneath.
+        attributes = dict(dict.items(attributes))
+
+    return attributes
 
 
 def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:

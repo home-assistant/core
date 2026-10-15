@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from pathlib import Path
 import sys
+import types
 from typing import Any
 from unittest.mock import patch
 
@@ -72,6 +73,9 @@ shadowed.__dict__["value"] = thing
         ),
         pytest.param(
             "empty_holder.inner.al", "empty_holder.inner.al", [], id="unset_slot"
+        ),
+        pytest.param(
+            "Thing.nothing.al", "Thing.nothing.al", [], id="missing_attribute"
         ),
         pytest.param("thing.getter.up", "thing.getter.up", [], id="through_property"),
         pytest.param(
@@ -198,6 +202,21 @@ resigned.__signature__ = inspect.Signature(
     [inspect.Parameter("only", inspect.Parameter.POSITIONAL_OR_KEYWORD)]
 )
 
+class Registry(type):
+    def lookup(cls, key):
+        pass
+
+class Registered(metaclass=Registry):
+    pass
+
+class Plain:
+    def act(self, value):
+        pass
+
+# Functions stored on an instance are not bound, like for getattr.
+plain = Plain()
+plain.act = Plain.act
+
 class WithNew:
     def __new__(cls, value):
         return super().__new__(cls)
@@ -320,6 +339,28 @@ METHOD_SIGNATURE = {
                 "doc": "Do the inner thing.",
             },
             id="wrapper_signature",
+        ),
+        pytest.param(
+            "Registered.lookup(",
+            {
+                "name": "lookup",
+                "parameters": ["key"],
+                "active": 0,
+                "returns": None,
+                "doc": "",
+            },
+            id="metaclass_method",
+        ),
+        pytest.param(
+            "plain.act(",
+            {
+                "name": "act",
+                "parameters": ["self", "value"],
+                "active": 0,
+                "returns": None,
+                "doc": "",
+            },
+            id="function_on_instance",
         ),
         pytest.param(
             "WithNew(",
@@ -518,6 +559,14 @@ async def test_signature(
             id="signature_annotation_format",
         ),
         pytest.param(
+            {"type": "debug_console/complete", "code": "loud_dict_holder.al"},
+            id="complete_dict_subclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "loud_dict_holder.alpha.re"},
+            id="resolve_dict_subclass",
+        ),
+        pytest.param(
             {"type": "debug_console/signature", "code": "text_signature_trap("},
             id="signature_text_signature",
         ),
@@ -702,6 +751,33 @@ import inspect
 def loud_annotation(value):
     pass
 
+class LoudDict(dict):
+    def __bool__(self):
+        ran.append("dict bool")
+        return True
+
+    def __contains__(self, key):
+        ran.append("dict contains")
+        return super().__contains__(key)
+
+    def __getitem__(self, key):
+        ran.append("dict getitem")
+        return super().__getitem__(key)
+
+    def __iter__(self):
+        ran.append("dict iter")
+        return super().__iter__()
+
+    def keys(self):
+        ran.append("dict keys")
+        return super().keys()
+
+class LoudDictHolder:
+    pass
+
+loud_dict_holder = LoudDictHolder()
+loud_dict_holder.__dict__ = LoudDict(alpha=1)
+
 class Truthy:
     def __bool__(self):
         ran.append("bool")
@@ -773,6 +849,7 @@ def probe_package(tmp_path: Path) -> Generator[str]:
         pytest.param(
             "import debug_console_probe.plain.inner.x", [], id="not_a_package"
         ),
+        pytest.param("import json.decoder.x", [], id="imported_module"),
     ],
 )
 @pytest.mark.usefixtures("probe_package")
@@ -785,6 +862,29 @@ async def test_import_completion_does_not_import(
     )
 
     assert result["matches"] == expected
+
+
+async def test_import_completion_with_path_of_its_own(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test completing a submodule never iterates a path a package set itself."""
+    iterated = []
+
+    class LoudPath(list[str]):
+        def __iter__(self):
+            iterated.append(True)
+            return super().__iter__()
+
+    package = types.ModuleType("debug_console_loud")
+    package.__path__ = LoudPath()
+    with patch.dict(sys.modules, {"debug_console_loud": package}):
+        result = await async_send(
+            websocket_client,
+            {"type": "debug_console/complete", "code": "import debug_console_loud.x"},
+        )
+
+    assert result["matches"] == []
+    assert not iterated
 
 
 @pytest.mark.parametrize(
