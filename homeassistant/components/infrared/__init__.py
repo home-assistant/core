@@ -3,6 +3,8 @@
 from datetime import timedelta
 import logging
 
+from infrared_protocols.commands import Command as InfraredCommand
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -11,7 +13,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
-    InfraredCommand,
     InfraredDeviceClass,
     InfraredEmitterEntity,
     InfraredEmitterEntityDescription,
