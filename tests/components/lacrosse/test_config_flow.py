@@ -235,7 +235,10 @@ async def test_duplicate_receiver(
 ) -> None:
     """Test that a receiver can only be configured once."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=RECEIVER_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECEIVER_DATA
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -292,6 +295,46 @@ async def test_import_flow(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(SerialException, "cannot_connect", id="cannot-connect"),
+        pytest.param(RuntimeError, "unknown", id="unexpected-error"),
+    ],
+)
+async def test_import_flow_receiver_error(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_setup_entry: AsyncMock,
+    exception: type[Exception],
+    reason: str,
+) -> None:
+    """Test failed YAML imports create a repair issue without creating an entry."""
+    with patch(
+        "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse.return_value.open",
+        side_effect=exception("unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=RECEIVER_DATA,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert not hass.config_entries.async_entries(DOMAIN)
+    mock_setup_entry.assert_not_called()
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
+    assert issue.translation_placeholders == {
+        "device": RECEIVER_DATA["device"],
+        "integration_title": "LaCrosse",
+    }
 
 
 @pytest.mark.parametrize("receiver_device", ["/dev/ttyUSB0", "/dev/manual_receiver"])
@@ -403,7 +446,7 @@ async def test_update_sensor(
     entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        f"{sensor_id}_temperature",
+        f"{config_entry.entry_id}_{sensor_id}_temperature",
         config_entry=config_entry,
         config_subentry_id=subentry.subentry_id,
         device_id=device.id,
@@ -493,10 +536,17 @@ async def test_update_sensor_remove_type(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test deselecting a type removes its entity registry entry."""
+    temperature = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{config_entry.entry_id}_1_temperature",
+        config_entry=config_entry,
+        config_subentry_id="sensor_1",
+    )
     humidity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        "1_humidity",
+        f"{config_entry.entry_id}_1_humidity",
         config_entry=config_entry,
         config_subentry_id="sensor_1",
     )
@@ -507,6 +557,7 @@ async def test_update_sensor_remove_type(
     assert result["reason"] == "reconfigure_successful"
     assert set(config_entry.subentries["sensor_1"].data["sensors"]) == {"1_temperature"}
     assert entity_registry.async_get(humidity.entity_id) is None
+    assert entity_registry.async_get(temperature.entity_id) == temperature
 
 
 @pytest.mark.parametrize(
@@ -533,7 +584,7 @@ async def test_update_sensor_preserves_entity_keys(
     entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        f"{sensor_id}_temperature",
+        f"{config_entry.entry_id}_{sensor_id}_temperature",
         config_entry=config_entry,
         config_subentry_id=subentry.subentry_id,
     )

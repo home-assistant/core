@@ -121,8 +121,9 @@ def _add_sensors(
     for device, device_config in config[CONF_SENSORS].items():
         _LOGGER.debug("%s %s", device, device_config)
 
-        sensor_class = TYPE_CLASSES[device_config[CONF_TYPE]]
-        name = device_config.get(CONF_FRIENDLY_NAME) or device
+        typ: str = device_config[CONF_TYPE]
+        sensor_class = TYPE_CLASSES[typ]
+        name: str = device_config.get(CONF_FRIENDLY_NAME, device)
         expire_after: int | None = device_config.get(
             CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER
         )
@@ -188,7 +189,9 @@ class LaCrosseSensor(SensorEntity):
             name=sensor_device_name(config),
         )
 
-        lacrosse.register_callback(int(config[CONF_ID]), self._callback_lacrosse, None)
+        lacrosse.register_callback(
+            int(self._config[CONF_ID]), self._callback_lacrosse, None
+        )
 
     @override
     async def async_will_remove_from_hass(self) -> None:

@@ -245,6 +245,24 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_TOGGLE_INTERVAL: import_config.get(CONF_TOGGLE_INTERVAL),
             CONF_TOGGLE_MASK: import_config.get(CONF_TOGGLE_MASK),
         }
+        self._async_abort_entries_match({CONF_DEVICE: resolved_device})
+        if error := await _async_test_connection(self.hass, entry_input):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_cannot_connect",
+                breaks_in_ha_version="2027.4.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
+                translation_placeholders={
+                    "device": resolved_device,
+                    "integration_title": "LaCrosse",
+                },
+            )
+            return self.async_abort(reason=error)
+
         sensors: dict[str, dict[str, Any]] = {}
         for slug, sensor_config in import_config.get(CONF_SENSORS, {}).items():
             sensor_input = dict(sensor_config)
@@ -266,7 +284,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-        self._async_abort_entries_match({CONF_DEVICE: entry_input[CONF_DEVICE]})
         return self.async_create_entry(
             title=entry_input[CONF_DEVICE],
             data=entry_input,
@@ -456,7 +473,9 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     if user_input[configured[CONF_TYPE]]
                 }
                 entity_registry = er.async_get(self.hass)
-                removed_ids = sensors.keys() - updated.keys()
+                removed_ids = {
+                    f"{entry.entry_id}_{key}" for key in sensors.keys() - updated.keys()
+                }
                 for entity in er.async_entries_for_config_entry(
                     entity_registry, entry.entry_id
                 ):
