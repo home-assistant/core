@@ -42,9 +42,7 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            key = user_input[CONF_API_KEY]
-            auth = AsyncAuth(client=get_async_client(self.hass), api_key=key)
-            client = AsyncApiClient(auth=auth)
+            client = AsyncApiClient(auth=AsyncAuth(client=get_async_client(self.hass), api_key=user_input[CONF_API_KEY]))
 
             try:
                 info = await client.get_device_info()
