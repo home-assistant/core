@@ -3,8 +3,7 @@
 import logging
 from typing import Any
 
-import aiohttp
-from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
+from rotarex_dimes_srg_api import InvalidAuth, RotarexApi, RotarexConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,12 +36,16 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            api = RotarexApi(async_get_clientsession(self.hass))
+            api = RotarexApi(
+                async_get_clientsession(self.hass),
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+            )
             try:
-                await api.login(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+                await api.login()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except aiohttp.ClientError:
+            except RotarexConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -52,7 +55,9 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 # their account email address
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=NAME, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",

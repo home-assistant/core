@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 
-from rotarex_dimes_srg_api import RotarexTank
+from rotarex_dimes_srg_api import RotarexSyncData
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,21 +22,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RotarexConfigEntry
 from .const import DOMAIN
-from .coordinator import RotarexDataUpdateCoordinator, RotarexTankData
+from .coordinator import RotarexDataUpdateCoordinator
 
-
-def get_tank_name(tank: RotarexTank) -> str:
-    """Return a user-friendly name for the tank."""
-    if tank.name:
-        return tank.name
-    return f"Tank {tank.guid}"
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
 class RotarexTankSensorEntityDescription(SensorEntityDescription):
     """Entity description for Rotarex tank sensors."""
 
-    value_fn: Callable[[RotarexTankData], float | datetime | None]
+    value_fn: Callable[[RotarexSyncData], float | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
@@ -45,23 +41,15 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         translation_key="level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: (
-            data.latest_sync.level if data.latest_sync is not None else None
-        ),
+        value_fn=lambda sync: sync.level,
     ),
     RotarexTankSensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: (
-            data.latest_sync.battery if data.latest_sync is not None else None
-        ),
-    ),
-    RotarexTankSensorEntityDescription(
-        key="last_sync",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.latest_sync_dt,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda sync: sync.battery,
     ),
 )
 
@@ -75,11 +63,9 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        [
-            RotarexTankSensor(coordinator, tank_id, description)
-            for tank_id in coordinator.data
-            for description in SENSOR_DESCRIPTIONS
-        ]
+        RotarexTankSensor(coordinator, tank_id, description)
+        for tank_id in coordinator.data
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
@@ -101,30 +87,24 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         self._tank_id = tank_id
         self._attr_unique_id = f"{tank_id}_{description.key}"
 
-        tank_data = coordinator.data[tank_id]
+        tank = coordinator.data[tank_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, tank_id)},
-            name=get_tank_name(tank_data.tank),
+            name=tank.name or f"Tank {tank_id}",
             manufacturer="Rotarex",
             model="DIMES SRG",
         )
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        tank_data = self.coordinator.data.get(self._tank_id)
-        return (
-            super().available
-            and tank_data is not None
-            and tank_data.latest_sync is not None
-        )
+        """Return True if the tank is still reported and has synchronized data."""
+        tank = self.coordinator.data.get(self._tank_id)
+        return super().available and tank is not None and tank.latest_sync is not None
 
     @property
-    def native_value(self) -> float | datetime | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        tank_data = self.coordinator.data.get(self._tank_id)
-        return (
-            self.entity_description.value_fn(tank_data)
-            if tank_data is not None
-            else None
-        )
+        latest_sync = self.coordinator.data[self._tank_id].latest_sync
+        if TYPE_CHECKING:
+            assert latest_sync is not None
+        return self.entity_description.value_fn(latest_sync)

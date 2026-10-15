@@ -1,28 +1,45 @@
 """Test the Rotarex sensors."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock
 
-from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from rotarex_dimes_srg_api import (
+    InvalidAuth,
+    RotarexConnectionError,
+    RotarexSyncData,
+    RotarexTank,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.rotarex.sensor import RotarexTankSensor
+from homeassistant.components.rotarex.coordinator import SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+pytestmark = pytest.mark.usefixtures("mock_rotarex_api")
+
+
+async def _refresh(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Let the coordinator poll again."""
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 async def test_all_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_rotarex_api: AsyncMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all sensor entities match snapshots."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -30,92 +47,103 @@ async def test_all_entities(
 async def test_devices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_rotarex_api: AsyncMock,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test device info matches snapshot."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test a device is created for each tank."""
+    await setup_integration(hass, mock_config_entry)
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device_entries
+    assert len(device_entries) == 2
     for device_entry in device_entries:
         assert device_entry == snapshot(name=f"{device_entry.name}-device")
 
 
-async def test_sensor_uses_latest_sync(
+async def test_tank_without_name(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test sensors report the most recent synchronization data."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Tank 1 has two syncs: 2024-01-01 and 2024-01-02.
-    # The level sensor must use the latest (2024-01-02) value.
-    level_state = hass.states.get("sensor.tank_1_level")
-    assert level_state
-    assert level_state.state == "70.0"  # from 2024-01-02, not 75.5 from 2024-01-01
-
-    # The timestamp sensor must also reflect the latest sync.
-    ts_state = hass.states.get("sensor.tank_1_timestamp")
-    assert ts_state
-    assert ts_state.state == "2024-01-02T20:00:00+00:00"
-
-
-async def test_tank_without_name_uses_guid(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_rotarex_api: AsyncMock,
-) -> None:
-    """Test that a tank without a name falls back to 'Tank <guid>'."""
+    """Test a tank without a name is named after its GUID."""
     mock_rotarex_api.fetch_tanks.return_value = [
         RotarexTank(
             guid="no-name-guid",
-            name="",
+            name=None,
             synch_datas=[
                 RotarexSyncData(
-                    synch_date="2024-03-01T08:00:00Z",
-                    level=42.0,
-                    battery=77.0,
-                ),
+                    synch_date=datetime(2024, 3, 1, 8, 0), level=42.0, battery=77.0
+                )
             ],
         )
     ]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    level_state = hass.states.get("sensor.tank_no_name_guid_level")
-    assert level_state is not None
-    assert level_state.state == "42.0"
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.tank_no_name_guid_level")
+    assert state
+    assert state.state == "42.0"
 
 
-async def test_sensor_native_value_none_when_tank_disappears(
+async def test_tank_without_sync_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test native_value returns None when tank disappears from coordinator data."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test sensors of a tank that never synchronized are unavailable."""
+    mock_rotarex_api.fetch_tanks.return_value = [
+        RotarexTank(guid="new-tank-guid", name="New tank", synch_datas=[])
+    ]
 
-    # Grab the level sensor entity for tank1 directly
-    coordinator = mock_config_entry.runtime_data
-    sensor_component = hass.data["entity_components"]["sensor"]
-    tank1_sensor = sensor_component.get_entity("sensor.tank_1_level")
-    assert isinstance(tank1_sensor, RotarexTankSensor)
+    await setup_integration(hass, mock_config_entry)
 
-    # Remove tank1 from coordinator data to simulate disappearance
-    coordinator.data.pop("tank1-guid", None)
+    state = hass.states.get("sensor.new_tank_level")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-    # native_value must return None when tank is absent
-    assert tank1_sensor.native_value is None
+
+@pytest.mark.parametrize("exception", [InvalidAuth, RotarexConnectionError])
+async def test_update_error_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rotarex_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    exception: type[Exception],
+) -> None:
+    """Test sensors become unavailable on update errors and recover."""
+    await setup_integration(hass, mock_config_entry)
+    assert (state := hass.states.get("sensor.tank_1_level"))
+    assert state.state == "70.0"
+
+    mock_rotarex_api.fetch_tanks.side_effect = exception
+    await _refresh(hass, freezer)
+
+    assert (state := hass.states.get("sensor.tank_1_level"))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_rotarex_api.fetch_tanks.side_effect = None
+    await _refresh(hass, freezer)
+
+    assert (state := hass.states.get("sensor.tank_1_level"))
+    assert state.state == "70.0"
+
+
+async def test_tank_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rotarex_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors become unavailable when a tank is no longer reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_rotarex_api.fetch_tanks.return_value = (
+        mock_rotarex_api.fetch_tanks.return_value[1:]
+    )
+    await _refresh(hass, freezer)
+
+    assert (state := hass.states.get("sensor.tank_1_level"))
+    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get("sensor.tank_2_level"))
+    assert state.state == "50.0"

@@ -1,62 +1,50 @@
-# tests/components/rotarex/test_config_flow.py
 """Test the Rotarex config flow."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import aiohttp
 import pytest
-from rotarex_dimes_srg_api import InvalidAuth
+from rotarex_dimes_srg_api import InvalidAuth, RotarexConnectionError
 
-from homeassistant import config_entries
-from homeassistant.components.rotarex.const import DOMAIN, NAME
+from homeassistant.components.rotarex.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_rotarex_api")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+USER_INPUT = {CONF_EMAIL: "Test@Example.com", CONF_PASSWORD: "test_password"}
 
 
-@pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.rotarex.async_setup_entry", return_value=True
-    ) as mock:
-        yield mock
-
-
-async def test_form(hass: HomeAssistant, mock_rotarex_api: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_form(
+    hass: HomeAssistant, mock_rotarex_api: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the full user flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
+        result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"] == {
-        CONF_EMAIL: "test@example.com",
-        CONF_PASSWORD: "test_password",
-    }
+    assert result["title"] == "Test@Example.com"
+    assert result["data"] == USER_INPUT
     assert result["result"].unique_id == "test@example.com"
-    assert mock_rotarex_api.login.call_count >= 1
+    mock_rotarex_api.login.assert_awaited_once()
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
         (InvalidAuth, "invalid_auth"),
-        (aiohttp.ClientError, "cannot_connect"),
+        (RotarexConnectionError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -68,38 +56,37 @@ async def test_form_errors(
 ) -> None:
     """Test we handle errors and can recover."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     mock_rotarex_api.login.side_effect = exception
-
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    # Verify we can recover by submitting valid credentials
     mock_rotarex_api.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
+        result["flow_id"], USER_INPUT
     )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_rotarex_api")
 async def test_form_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test we handle already configured."""
+    """Test we abort when the account is already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
