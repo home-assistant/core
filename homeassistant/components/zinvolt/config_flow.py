@@ -4,7 +4,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import jwt
 import probatio
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltAuthenticationError, ZinvoltError
@@ -37,6 +36,7 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
             token = await client.login(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
+            user_id = client.get_user_id()
         except ZinvoltAuthenticationError:
             errors["base"] = "invalid_auth"
         except ZinvoltError:
@@ -45,9 +45,7 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            # The user ID is the 'sub' field of the JWT token
-            decoded_token = jwt.decode(token, options={"verify_signature": False})
-            await self.async_set_unique_id(decoded_token["sub"])
+            await self.async_set_unique_id(user_id)
             return token
         return None
 
@@ -93,6 +91,30 @@ class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, {CONF_EMAIL: reauth_entry.title}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None and (
+            token := await self._async_login(user_input, errors)
+        ):
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                title=user_input[CONF_EMAIL],
+                data_updates={CONF_ACCESS_TOKEN: token},
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, {CONF_EMAIL: reconfigure_entry.title}
             ),
             errors=errors,
         )

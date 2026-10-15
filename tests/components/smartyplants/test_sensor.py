@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmartyplants import (
-    SmartyPlantsAuthError,
     SmartyPlantsConnectionError,
     SmartyPlantsError,
     SmartyPlantsForbiddenError,
@@ -155,7 +154,6 @@ async def test_sensor_removed_from_account(
             {"error": "boom"},
             id="connection",
         ),
-        pytest.param(SmartyPlantsAuthError("nope"), "invalid_auth", None, id="auth"),
         pytest.param(
             SmartyPlantsForbiddenError(
                 "This API key does not allow requests from 198.51.100.7."

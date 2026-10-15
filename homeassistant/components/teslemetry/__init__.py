@@ -27,6 +27,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
@@ -317,19 +318,12 @@ async def _async_resolve_vehicle_api(
     vin: str,
     vehicle_name: str,
     cloud_vehicle: Vehicle,
-) -> Vehicle | VehicleRouter:
-    """Return the API a vehicle's platforms should call."""
-    subentry = next(
-        (
-            subentry
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
-            and subentry.data.get(CONF_VIN) == vin
-        ),
-        None,
-    )
-    if subentry is None or not (address := subentry.data.get(CONF_ADDRESS)):
-        return cloud_vehicle
+    subentry: ConfigSubentry | None,
+) -> tuple[Vehicle | VehicleRouter, VehicleBluetooth | None]:
+    """Return the API a vehicle's platforms should call, and its Bluetooth backend."""
+    if subentry is None:
+        return cloud_vehicle, None
+    address: str = subentry.data[CONF_ADDRESS]
 
     # A bad BLE key file for one vehicle must not tear down the whole entry.
     try:
@@ -341,7 +335,7 @@ async def _async_resolve_vehicle_api(
             vin,
             exc_info=True,
         )
-        return cloud_vehicle
+        return cloud_vehicle, None
     # disable keep alive to allow vehicles to sleep
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
@@ -386,8 +380,11 @@ async def _async_resolve_vehicle_api(
         # Always fail over: the cloud signs with its own key, so it can still succeed.
         return True
 
-    return VehicleRouter(
-        bluetooth_vehicle, cloud_vehicle, health=_in_range, on_result=_on_result
+    return (
+        VehicleRouter(
+            bluetooth_vehicle, cloud_vehicle, health=_in_range, on_result=_on_result
+        ),
+        bluetooth_vehicle,
     )
 
 
@@ -737,12 +734,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
-            vehicle_api = await _async_resolve_vehicle_api(
+            # Pairing always stores an address, so the subentry is the Bluetooth switch.
+            ble_subentry = next(
+                (
+                    subentry
+                    for subentry in entry.subentries.values()
+                    if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+                    and subentry.data.get(CONF_VIN) == vin
+                ),
+                None,
+            )
+            ble_address: str | None = (
+                ble_subentry.data[CONF_ADDRESS] if ble_subentry else None
+            )
+            vehicle_api, ble_api = await _async_resolve_vehicle_api(
                 hass,
                 entry,
                 vin,
                 product["display_name"] or vin,
                 vehicle,
+                ble_subentry,
             )
 
             vehicles.append(
@@ -756,6 +767,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
+                    ble_address=ble_address,
+                    ble_api=ble_api,
                 )
             )
 
@@ -1153,10 +1166,10 @@ def async_setup_energy_device(
         if (part_name := component.get("part_name")) and part_name != "Unknown":
             models.add(part_name)
     if models:
-        energysite.device["model"] = ", ".join(sorted(models))
+        energysite.device.model = ", ".join(sorted(models))
 
     if version := data.get("version"):
-        energysite.device["sw_version"] = version
+        energysite.device.sw_version = version
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, **energysite.device
