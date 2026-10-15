@@ -18,14 +18,14 @@ rules:
     status: exempt
     comment: The integration does not provide conditions.
   docs-high-level-description:
-    status: todo
-    comment: Pending the home-assistant.io documentation PR.
+    status: done
+    comment: Documentation draft https://github.com/baracudaz/home-assistant-docs/pull/1
   docs-installation-instructions:
-    status: todo
-    comment: Pending the home-assistant.io documentation PR.
+    status: done
+    comment: Documentation draft https://github.com/baracudaz/home-assistant-docs/pull/1
   docs-removal-instructions:
-    status: todo
-    comment: Pending the home-assistant.io documentation PR.
+    status: done
+    comment: Documentation draft https://github.com/baracudaz/home-assistant-docs/pull/1
   docs-triggers:
     status: exempt
     comment: The integration does not provide triggers.
