@@ -2,8 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_lorawan_connections": "Please first configure your LoRaWAN backend and make sure it is connected, then add SenseCAP.",
-      "no_supported_devices": "No supported SenseCAP devices were found. Add a SenseCAP S2101 or S2102 to an application exposed by your LoRaWAN backend, then try again.",
+      "no_lorawan_connections": "[%key:component::lorawan::common::no_lorawan_connections%]",
+      "no_supported_devices": "[%key:component::lorawan::common::no_supported_devices%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
