@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -534,7 +534,7 @@ class HomeAssistantHTTP:
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now)
-            .not_valid_after(now + datetime.timedelta(days=30))
+            .not_valid_after(now + dt.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,

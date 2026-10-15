@@ -4,7 +4,8 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.input_datetime import CONF_HAS_DATE, CONF_HAS_TIME, DOMAIN
+from homeassistant.components.input_datetime import DOMAIN
+from homeassistant.components.input_datetime.const import CONF_HAS_DATE, CONF_HAS_TIME
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_EDITABLE
 from homeassistant.core import HomeAssistant

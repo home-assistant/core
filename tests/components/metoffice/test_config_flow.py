@@ -1,6 +1,6 @@
 """Test the MetOffice config flow."""
 
-import datetime
+import datetime as dt
 import json
 from unittest.mock import MagicMock, patch
 
@@ -182,7 +182,7 @@ async def test_form_unknown_error(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_reauth_flow(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,

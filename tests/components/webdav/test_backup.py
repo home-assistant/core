@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.webdav.backup import async_register_backup_agents_listener
 from homeassistant.components.webdav.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
@@ -387,6 +388,12 @@ async def test_raises_on_403(
     assert response["result"]["agent_errors"] == {
         f"{DOMAIN}.{mock_config_entry.entry_id}": "Authentication error"
     }
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
