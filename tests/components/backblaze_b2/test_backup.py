@@ -1,13 +1,13 @@
 """Backblaze B2 backup agent tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from io import StringIO
 import json
 import logging
 import threading
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2.exception import B2Error
@@ -15,6 +15,7 @@ import pytest
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.backblaze_b2.const import (
@@ -480,6 +481,32 @@ async def test_metadata_file_invalid_json_during_list(
         response = await client.receive_json()
 
     assert response["success"]
+
+
+async def test_upload_progress(hass: HomeAssistant) -> None:
+    """Test that upload progress from the B2 worker threads is reported."""
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"\0" * 20000
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_BACKUP,
+        on_progress=on_progress,
+    )
+
+    # The mocked upload reads the stream in 8192 byte chunks
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=8192),
+        call(bytes_uploaded=16384),
+        call(bytes_uploaded=20000),
+    ]
 
 
 async def test_upload_with_cleanup_and_logging(

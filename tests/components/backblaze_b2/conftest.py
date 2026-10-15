@@ -259,15 +259,18 @@ def b2_fixture():
             file_name,
             content_type=None,
             file_info=None,
+            *,
+            progress_listener,
         ):
             """Mock upload_unbound_stream for backup uploads."""
-            # Read all data from the stream
+            # Read all data from the stream, reporting progress like b2sdk does
             data = b""
             while True:
                 chunk = stream_reader.read(8192)
                 if not chunk:
                     break
                 data += chunk
+                progress_listener.bytes_completed(len(data))
 
             stream = io.BytesIO(data)
             stream.seek(0)
