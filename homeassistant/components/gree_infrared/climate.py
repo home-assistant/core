@@ -1,9 +1,9 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
 from collections.abc import Callable
-from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 from typing import Any, Self, override
 
 from infrared_protocols.commands.gree_ac import (
@@ -119,6 +119,8 @@ DISPLAY_TEMP_OPTIONS = ["off", "setpoint", "indoor", "outdoor"]
 # The YAP1F remote cancels sleep when the mode changes or the unit is turned
 # off, and sleep cannot be enabled in auto or fan-only modes.
 SLEEP_BLOCKED_HVAC_MODES = (HVACMode.AUTO, HVACMode.FAN_ONLY)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True)
@@ -317,9 +319,10 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Clear the shared climate owner on unload."""
+        """Flush staged changes, then clear the shared climate owner."""
         await super().async_will_remove_from_hass()
         self._cancel_timer_expiry()
+        await self._state.async_unload_coalesced_flush(self._async_flush_coalesced)
         if self._state.climate is self:
             self._state.climate = None
             self._state.async_notify_switches()
@@ -554,47 +557,49 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-    async def _async_send_state(
-        self,
-        hvac_mode: HVACMode,
-        temp: int,
-        fan_mode: str,
-        *,
-        options: dict[str, Any] | None = None,
-        preserve_received_temperature: bool = True,
-    ) -> None:
-        """Send a full-state frame for the given target state."""
-        power = hvac_mode is not HVACMode.OFF
-        active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
-        pending = copy(self._state)
-        for key, value in (options or {}).items():
-            setattr(pending, key, value)
-        command = self._build_command(
-            active_hvac_mode,
-            power,
-            temp,
-            fan_mode,
-            state=pending,
-            reset_timer=options is not None and "timer_hours" in options,
-            preserve_received_temperature=preserve_received_temperature,
-        )
-        try:
-            await self._send_command(command)
-        except HomeAssistantError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="send_failed"
-            ) from err
-        for key, value in (options or {}).items():
-            setattr(self._state, key, value)
-        self._state.timer_hours = command.timer_hours
-        self._timer_deadline = (
-            dt_util.utcnow() + timedelta(hours=command.timer_hours)
-            if command.timer_hours is not None
-            else None
-        )
-        self._schedule_timer_expiry()
-        if power:
-            self._last_active_hvac_mode = hvac_mode
+    async def _async_flush_coalesced(self) -> None:
+        """Send one frame with the final staged state after a quiet window."""
+        state = self._state
+        async with state.command_lock:
+            self._reconcile_overdue_timer_locked()
+            hvac_mode = self._attr_hvac_mode
+            reset_timer = state.pending_timer_reset
+            explicit_temp = state.pending_explicit_temp
+            state.pending_timer_reset = False
+            state.pending_explicit_temp = False
+            state.coalesce_dirty = False
+            if hvac_mode is None:
+                return
+            power = hvac_mode is not HVACMode.OFF
+            active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
+            command = self._build_command(
+                active_hvac_mode,
+                power,
+                int(self._attr_target_temperature or MIN_TEMP),
+                self._attr_fan_mode or FAN_AUTO,
+                reset_timer=reset_timer,
+                preserve_received_temperature=not explicit_temp,
+            )
+            try:
+                await self._send_command(command)
+            except HomeAssistantError as err:
+                _LOGGER.warning(
+                    "Coalesced Gree IR send failed; keeping staged state: %s", err
+                )
+                return
+            state.timer_hours = command.timer_hours
+            self._timer_deadline = (
+                dt_util.utcnow() + timedelta(hours=command.timer_hours)
+                if command.timer_hours is not None
+                else None
+            )
+            self._schedule_timer_expiry()
+            if explicit_temp:
+                self._received_fahrenheit_temperature = None
+            if power:
+                self._last_active_hvac_mode = hvac_mode
+            self.async_write_ha_state()
+            state.async_notify_switches()
 
     def _options_for_mode(self, new_hvac_mode: HVACMode) -> dict[str, bool]:
         """Build option cancellations without publishing unconfirmed values."""
@@ -610,19 +615,17 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             options["absence"] = False
         return options
 
-    async def _async_set_options_locked(self, options: dict[str, Any]) -> None:
-        """Commit options only after the active unit's command succeeds."""
+    def _stage_options_locked(self, options: dict[str, Any]) -> None:
+        """Apply option flags and schedule one frame when the unit is active."""
+        for key, value in options.items():
+            setattr(self._state, key, value)
         hvac_mode = self._attr_hvac_mode
         if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-            await self._async_send_state(
-                hvac_mode,
-                int(self._attr_target_temperature or MIN_TEMP),
-                self._attr_fan_mode or FAN_AUTO,
-                options=options,
+            if "timer_hours" in options:
+                self._state.pending_timer_reset = True
+            self._state.async_schedule_coalesced_flush(
+                self.hass, self._async_flush_coalesced
             )
-        else:
-            for key, value in options.items():
-                setattr(self._state, key, value)
 
     async def async_set_option(self, option: str, value: bool) -> None:
         """Set an option flag and send the updated state when active."""
@@ -673,7 +676,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 raise ServiceValidationError(
                     translation_domain=DOMAIN, translation_key="absence_not_available"
                 )
-            await self._async_set_options_locked({option: value})
+            self._stage_options_locked({option: value})
             self._state.async_notify_switches()
 
     async def async_set_fresh_air(self, option: str) -> None:
@@ -685,9 +688,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-            await self._async_set_options_locked(
-                {"fresh_air": int(_HA_FRESH_AIR_TO_LIB[option])}
-            )
+            self._stage_options_locked({"fresh_air": int(_HA_FRESH_AIR_TO_LIB[option])})
             self._state.async_notify_switches()
 
     async def async_set_timer_hours(self, timer_hours: float | None) -> None:
@@ -701,14 +702,12 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-            hvac_mode = self._attr_hvac_mode
-            if hvac_mode is not None:
-                await self._async_send_state(
-                    hvac_mode,
-                    int(self._attr_target_temperature or MIN_TEMP),
-                    self._attr_fan_mode or FAN_AUTO,
-                    options={"timer_hours": timer_hours},
-                )
+            self._state.timer_hours = timer_hours
+            self._state.pending_timer_reset = True
+            self._state.async_schedule_coalesced_flush(
+                self.hass, self._async_flush_coalesced
+            )
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     async def async_set_swing_v_position(self, position: int | None) -> None:
@@ -734,7 +733,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             options: dict[str, Any] = {"swing_v_position": position}
             if position is not None:
                 options["swing_v"] = False
-            await self._async_set_options_locked(options)
+            self._stage_options_locked(options)
             self._attr_swing_mode = SWING_ON if self._state.swing_v else SWING_OFF
             self.async_write_ha_state()
             self._state.async_notify_switches()
@@ -755,7 +754,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-            await self._async_set_hvac_mode_locked(self._last_active_hvac_mode)
+            self._stage_hvac_mode_locked(self._last_active_hvac_mode)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -763,19 +762,18 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-            await self._async_set_hvac_mode_locked(hvac_mode)
+            self._stage_hvac_mode_locked(hvac_mode)
 
-    async def _async_set_hvac_mode_locked(self, hvac_mode: HVACMode) -> None:
-        """Set HVAC mode while holding the shared command lock."""
-        await self._async_send_state(
-            hvac_mode,
-            int(self._attr_native_target_temperature or MIN_TEMP),
-            self._attr_fan_mode or FAN_AUTO,
-            options=self._options_for_mode(hvac_mode),
-        )
+    def _stage_hvac_mode_locked(self, hvac_mode: HVACMode) -> None:
+        """Stage an HVAC mode change while holding the shared command lock."""
+        for key, value in self._options_for_mode(hvac_mode).items():
+            setattr(self._state, key, value)
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
         self._state.async_notify_switches()
+        self._state.async_schedule_coalesced_flush(
+            self.hass, self._async_flush_coalesced
+        )
 
     @override
     async def async_turn_on(self) -> None:
@@ -790,25 +788,21 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
 
             temp = round(kwargs[ATTR_TEMPERATURE])
             hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
-            cleared: dict[str, bool] = {}
             if hvac_mode is not None:
                 self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
-                cleared = self._options_for_mode(hvac_mode)
+                for key, value in self._options_for_mode(hvac_mode).items():
+                    setattr(self._state, key, value)
             effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
-
-            if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
-                await self._async_send_state(
-                    effective_mode,
-                    temp,
-                    self._attr_fan_mode or FAN_AUTO,
-                    options=cleared,
-                    preserve_received_temperature=False,
-                )
-            self._received_fahrenheit_temperature = None
             if hvac_mode is not None:
                 self._attr_hvac_mode = hvac_mode
-
             self._attr_native_target_temperature = float(temp)
+            if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
+                self._state.pending_explicit_temp = True
+                self._state.async_schedule_coalesced_flush(
+                    self.hass, self._async_flush_coalesced
+                )
+            else:
+                self._received_fahrenheit_temperature = None
             self.async_write_ha_state()
             self._state.async_notify_switches()
 
@@ -818,14 +812,12 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
+            self._attr_fan_mode = fan_mode
             hvac_mode = self._attr_hvac_mode
             if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-                await self._async_send_state(
-                    hvac_mode,
-                    int(self._attr_native_target_temperature or MIN_TEMP),
-                    fan_mode,
+                self._state.async_schedule_coalesced_flush(
+                    self.hass, self._async_flush_coalesced
                 )
-            self._attr_fan_mode = fan_mode
             self.async_write_ha_state()
             self._state.async_notify_switches()
 
@@ -836,7 +828,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-            await self._async_set_options_locked(
+            self._stage_options_locked(
                 {"swing_v": swing_mode == SWING_ON, "swing_v_position": None}
             )
             self._attr_swing_mode = swing_mode
@@ -853,7 +845,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self._reconcile_overdue_timer_locked()
 
             swing_h = swing_horizontal_mode == SWING_ON
-            await self._async_set_options_locked(
+            self._stage_options_locked(
                 {"swing_h": swing_h, "swing_h_position": int(swing_h)}
             )
             self._attr_swing_horizontal_mode = swing_horizontal_mode
@@ -870,7 +862,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         async with self._state.command_lock:
             self._reconcile_overdue_timer_locked()
 
-            await self._async_set_options_locked(
+            self._stage_options_locked(
                 {"swing_h_position": position, "swing_h": position != 0}
             )
             self._attr_swing_horizontal_mode = SWING_ON if position else SWING_OFF
@@ -891,7 +883,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         await self._async_set_yap1f_field("fahrenheit", fahrenheit)
 
     async def _async_set_yap1f_field(self, key: str, value: Any) -> None:
-        """Set and send one YAP1F command field."""
+        """Stage one YAP1F command field for the next coalesced frame."""
         if not self._is_yap1f:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="unsupported_yap1f_field"
@@ -900,9 +892,10 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self._reconcile_overdue_timer_locked()
 
             previous = getattr(self._state, key)
-            await self._async_set_options_locked({key: value})
+            self._stage_options_locked({key: value})
             if key == "fahrenheit" and value != previous:
-                self._received_fahrenheit_temperature = None
+                self._state.pending_explicit_temp = True
+            self.async_write_ha_state()
             self._state.async_notify_switches()
 
     def _build_command(
