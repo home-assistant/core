@@ -1,6 +1,6 @@
 """Platform for Schlage lock integration."""
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any, override
 
 from pyschlage.code import (
@@ -213,10 +213,8 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
                 "fri": schedule.days_of_week.fri,
                 "sat": schedule.days_of_week.sat,
             },
-            "start_hour": schedule.start_hour,
-            "start_minute": schedule.start_minute,
-            "end_hour": schedule.end_hour,
-            "end_minute": schedule.end_minute,
+            "start_time": time(schedule.start_hour, schedule.start_minute).isoformat(),
+            "end_time": time(schedule.end_hour, schedule.end_minute).isoformat(),
         }
 
     @staticmethod

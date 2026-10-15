@@ -1,11 +1,17 @@
 """Test schlage lock."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import probatio
-from pyschlage.code import AccessCode
+from pyschlage.code import (
+    AccessCode,
+    DaysOfWeek,
+    MultiRecurringSchedule,
+    RecurringSchedule,
+)
 from pyschlage.exceptions import Error as SchlageError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -449,6 +455,116 @@ async def test_get_codes_service(
         "lock.vault_door": {
             "1": {"name": "user1", "code": "1234"},
             "2": {"name": "user2", "code": "5678"},
+        }
+    }
+
+
+_WEEKDAY_DAYS = DaysOfWeek(
+    sun=False, mon=True, tue=False, wed=True, thu=False, fri=True, sat=False
+)
+_EXPECTED_WEEKDAY_DAYS = {
+    "sun": False,
+    "mon": True,
+    "tue": False,
+    "wed": True,
+    "thu": False,
+    "fri": True,
+    "sat": False,
+}
+
+_WEEKEND_DAYS = DaysOfWeek(
+    sun=True, mon=False, tue=False, wed=False, thu=False, fri=False, sat=True
+)
+_EXPECTED_WEEKEND_DAYS = {
+    "sun": True,
+    "mon": False,
+    "tue": False,
+    "wed": False,
+    "thu": False,
+    "fri": False,
+    "sat": True,
+}
+
+_MORNING_WINDOW = RecurringSchedule(
+    days_of_week=_WEEKDAY_DAYS,
+    start_hour=8,
+    start_minute=5,
+    end_hour=18,
+    end_minute=30,
+)
+
+_EVENING_WINDOW = RecurringSchedule(
+    days_of_week=_WEEKEND_DAYS,
+    start_hour=20,
+    start_minute=0,
+    end_hour=22,
+    end_minute=45,
+)
+
+_EXPECTED_MORNING_WINDOW = {
+    "days_of_week": _EXPECTED_WEEKDAY_DAYS,
+    "start_time": "08:05:00",
+    "end_time": "18:30:00",
+}
+
+_EXPECTED_EVENING_WINDOW = {
+    "days_of_week": _EXPECTED_WEEKEND_DAYS,
+    "start_time": "20:00:00",
+    "end_time": "22:45:00",
+}
+
+
+@pytest.mark.parametrize(
+    ("schedule", "expected_schedule"),
+    [
+        pytest.param(
+            _MORNING_WINDOW,
+            {"type": "recurring", **_EXPECTED_MORNING_WINDOW},
+            id="recurring",
+        ),
+        pytest.param(
+            MultiRecurringSchedule(_MORNING_WINDOW, _EVENING_WINDOW),
+            {
+                "type": "multi_recurring",
+                "windows": [_EXPECTED_MORNING_WINDOW, _EXPECTED_EVENING_WINDOW],
+            },
+            id="multi-recurring-two-windows",
+        ),
+    ],
+)
+async def test_get_codes_service_schedule_time_values(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    schedule: MultiRecurringSchedule | RecurringSchedule,
+    expected_schedule: dict[str, Any],
+) -> None:
+    """Test get_codes combines recurring hour and minute into time values."""
+    mock_lock.access_codes = {
+        "1": AccessCode(
+            name="user1", code="1234", access_code_id="1", schedule=schedule
+        )
+    }
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_CODES,
+        service_data={
+            "entity_id": "lock.vault_door",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert response == {
+        "lock.vault_door": {
+            "1": {
+                "name": "user1",
+                "code": "1234",
+                "access_code_id": "1",
+                "schedule": expected_schedule,
+            }
         }
     }
 
