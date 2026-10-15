@@ -157,34 +157,6 @@ async def test_hmip_alarm_control_panel_activation_failed(
         )
 
 
-def _blocked(*channels: str) -> Mock:
-    """Build the reply of a refused activation.
-
-    Entries are device ids, optionally with a channel index appended.
-    """
-    return Mock(
-        success=False,
-        json={
-            "channelActivationProblems": {
-                channel if ":" in channel else f"{channel}:1": ["WINDOW_OPEN"]
-                for channel in channels
-            }
-        },
-    )
-
-
-async def _async_refuse_arming(hass: HomeAssistant, home: Mock, blocked: Mock) -> None:
-    """Run the refused arming attempt the user bases the decision on."""
-    home.set_security_zones_activation_async.return_value = blocked
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "alarm_control_panel",
-            "alarm_arm_away",
-            {"entity_id": "alarm_control_panel.hmip_alarm_control_panel"},
-            blocking=True,
-        )
-
-
 async def test_hmip_alarm_control_panel_removal_removes_home_callback(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

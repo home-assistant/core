@@ -97,12 +97,12 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         result = await self._home.set_security_zones_activation_async(
             internal, external
         )
-        # the access point does not push a refusal, so the reply is published here
         problems = sorted(
             label.strip()
             for label in self._home.get_security_zone_activation_problems(result)
         )
-        self._hap.async_set_arming_problems(problems)
+        # the access point does not push a refusal, so the reply is published here
+        self._hap.async_set_arming_blocked(bool(problems))
         # a request-based panel answers 200 without arming when a sensor blocks it
         if result.success and not problems:
             return

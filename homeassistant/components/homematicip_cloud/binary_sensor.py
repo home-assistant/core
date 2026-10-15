@@ -49,7 +49,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_BLOCKING_DEVICES, DOMAIN, SIGNAL_ARMING_PROBLEMS
+from .const import DOMAIN, SIGNAL_ARMING_BLOCKED
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import (
@@ -441,41 +441,34 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
 class HomematicipArmingBlockedSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of a refused arming attempt of the alarm control panel."""
 
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "arming_blocked"
+    entity_description = BinarySensorEntityDescription(
+        key="arming_blocked",
+        translation_key="arming_blocked",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the arming blocked sensor."""
-        super().__init__(hap, hap.home, feature_id="arming_blocked")
+        super().__init__(
+            hap,
+            hap.home,
+            feature_id=self.entity_description.key,
+            use_description_name=True,
+        )
 
     @property
     @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        # Merges into the existing HAP device registered in __init__.py.
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._home.id)},
-            name=self._home.label or "",
-        )
+        # the access point is registered before the platforms are set up
+        return DeviceInfo(identifiers={(DOMAIN, self._home.id)})
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if the last arming attempt was refused."""
-        return bool(self._hap.arming_problems)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the devices that refused the last arming attempt."""
-        return {ATTR_BLOCKING_DEVICES: self._hap.arming_problems}
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Sensor is always available."""
-        return True
+        return self._hap.arming_blocked
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -484,7 +477,7 @@ class HomematicipArmingBlockedSensor(HomematicipGenericEntity, BinarySensorEntit
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_ARMING_PROBLEMS.format(self._hap.config_entry.entry_id),
+                SIGNAL_ARMING_BLOCKED.format(self._hap.config_entry.entry_id),
                 self.async_write_ha_state,
             )
         )

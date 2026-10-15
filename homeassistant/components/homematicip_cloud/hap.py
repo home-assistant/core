@@ -30,7 +30,7 @@ from .const import (
     HMIPC_NAME,
     HMIPC_PIN,
     PLATFORMS,
-    SIGNAL_ARMING_PROBLEMS,
+    SIGNAL_ARMING_BLOCKED,
 )
 from .errors import HmipcConnectionError
 
@@ -130,14 +130,14 @@ class HomematicipHAP:
         self._get_state_task: asyncio.Task | None = None
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
-        self.arming_problems: list[str] = []
+        self.arming_blocked = False
 
     @callback
-    def async_set_arming_problems(self, problems: list[str]) -> None:
-        """Publish the devices that refused the last arming attempt."""
-        self.arming_problems = problems
+    def async_set_arming_blocked(self, blocked: bool) -> None:
+        """Publish whether the last arming attempt was refused."""
+        self.arming_blocked = blocked
         async_dispatcher_send(
-            self.hass, SIGNAL_ARMING_PROBLEMS.format(self.config_entry.entry_id)
+            self.hass, SIGNAL_ARMING_BLOCKED.format(self.config_entry.entry_id)
         )
 
     async def async_setup(self, tries: int = 0) -> bool:

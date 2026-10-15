@@ -25,12 +25,8 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_WATER_LEVEL_DETECTED,
     ATTR_WINDOW_STATE,
     SIMPLE_BINARY_SENSOR_DESCRIPTIONS,
-    HomematicipArmingBlockedSensor,
 )
-from homeassistant.components.homematicip_cloud.const import (
-    ATTR_BLOCKING_DEVICES,
-    DOMAIN,
-)
+from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_EVENT_DELAY,
     ATTR_GROUP_MEMBER_UNREACHABLE,
@@ -173,82 +169,37 @@ async def test_hmip_home_cloud_connection_sensor(
 
 
 async def test_hmip_arming_blocked_sensor(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test HomematicipArmingBlockedSensor."""
-    entity_id = "binary_sensor.home_arming_blocked"
-    alarm_entity_id = "alarm_control_panel.hmip_alarm_control_panel"
-    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_groups=["EXTERNAL", "INTERNAL"]
-    )
-    home = mock_hap.home
-
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_OFF
-    assert ha_state.attributes[ATTR_BLOCKING_DEVICES] == []
-
-    home.set_security_zones_activation_async.return_value = Mock(
-        success=False,
-        json={
-            "channelActivationProblems": {
-                "3014F7110000000000000005:1": ["WINDOW_OPEN"],
-                "3014F7110000000000000001:1": ["WINDOW_OPEN"],
-            }
-        },
-    )
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "alarm_control_panel",
-            "alarm_arm_away",
-            {"entity_id": alarm_entity_id},
-            blocking=True,
+    """Test the arming blocked sensor of the access point."""
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=[], test_groups=[]
         )
 
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_ON
-    assert ha_state.attributes[ATTR_BLOCKING_DEVICES] == ["Fenster", "Wohnzimmer"]
-
-    home.set_security_zones_activation_async.return_value = Mock(success=True, json={})
-    await hass.services.async_call(
-        "alarm_control_panel",
-        "alarm_disarm",
-        {"entity_id": alarm_entity_id},
-        blocking=True,
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
     )
 
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_OFF
-    assert ha_state.attributes[ATTR_BLOCKING_DEVICES] == []
 
-
-async def test_hmip_arming_blocked_sensor_entity_id_change(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    default_mock_hap_factory: HomeFactory,
+async def test_hmip_arming_blocked_sensor_follows_arming(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
-    """Test a renamed arming blocked sensor keeps following refusals in place."""
+    """Test the arming blocked sensor follows the replies of the alarm panel."""
     entity_id = "binary_sensor.home_arming_blocked"
-    new_entity_id = "binary_sensor.renamed"
     alarm_entity_id = "alarm_control_panel.hmip_alarm_control_panel"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_groups=["EXTERNAL", "INTERNAL"]
     )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
     home = mock_hap.home
-
-    with patch.object(
-        HomematicipArmingBlockedSensor,
-        "async_added_to_hass",
-        autospec=True,
-        side_effect=HomematicipArmingBlockedSensor.async_added_to_hass,
-    ) as mock_added_to_hass:
-        entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
-        await hass.async_block_till_done()
-
-    # The entity_id is changed in place, the entity is not added again
-    mock_added_to_hass.assert_not_called()
-    assert hass.states.get(entity_id) is None
-    assert hass.states.get(new_entity_id).state == STATE_OFF
-
     home.set_security_zones_activation_async.return_value = Mock(
         success=False,
         json={
@@ -262,7 +213,16 @@ async def test_hmip_arming_blocked_sensor_entity_id_change(
             {"entity_id": alarm_entity_id},
             blocking=True,
         )
-    assert hass.states.get(new_entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    home.set_security_zones_activation_async.return_value = Mock(success=True, json={})
+    await hass.services.async_call(
+        "alarm_control_panel",
+        "alarm_disarm",
+        {"entity_id": alarm_entity_id},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_hmip_acceleration_sensor(
