@@ -457,8 +457,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             )
         if self._timer_deadline is not None:
             if self._timer_deadline <= dt_util.utcnow():
-                self._timer_deadline = None
-                self._state.timer_hours = None
+                self._expire_timer_power()
             else:
                 self._schedule_timer_expiry()
         self._state.async_notify_switches()
@@ -525,6 +524,17 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             self.hass, self._async_handle_timer_expiry(), "gree_infrared_timer_expiry"
         )
 
+    def _expire_timer_power(self) -> None:
+        """Clear an overdue timer and flip assumed HVAC power without transmitting."""
+        self._cancel_timer_expiry()
+        self._timer_deadline = None
+        self._state.timer_hours = None
+        self._attr_hvac_mode = (
+            self._last_active_hvac_mode
+            if self._attr_hvac_mode is HVACMode.OFF
+            else HVACMode.OFF
+        )
+
     def _reconcile_overdue_timer_locked(self) -> None:
         """Apply overdue timer power transition while holding the command lock.
 
@@ -535,14 +545,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         """
         if self._timer_deadline is None or dt_util.utcnow() < self._timer_deadline:
             return
-        self._cancel_timer_expiry()
-        self._timer_deadline = None
-        self._state.timer_hours = None
-        self._attr_hvac_mode = (
-            self._last_active_hvac_mode
-            if self._attr_hvac_mode is HVACMode.OFF
-            else HVACMode.OFF
-        )
+        self._expire_timer_power()
         self.async_write_ha_state()
         self._state.async_notify_switches()
 

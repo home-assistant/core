@@ -1154,6 +1154,51 @@ async def test_expired_restored_timer_starts_off(
     assert hass.states.get("number.gree_ac_timer").state == "0.0"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.NUMBER]])
+@pytest.mark.parametrize(
+    ("restored_hvac_mode", "expected_hvac_mode"),
+    [
+        # Off-timer: the unit was on in COOL and the timer turned it off while stopped.
+        (HVACMode.COOL, HVACMode.OFF),
+        # On-timer: the unit was off and the timer turned it on while stopped.
+        (HVACMode.OFF, HVACMode.COOL),
+    ],
+)
+async def test_expired_restored_timer_applies_power_without_send(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    freezer: FrozenDateTimeFactory,
+    platforms: list[Platform],
+    restored_hvac_mode: HVACMode,
+    expected_hvac_mode: HVACMode,
+) -> None:
+    """A restored timer that expired while stopped flips power without a frame."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(_CLIMATE_ENTITY_ID, restored_hvac_mode, {ATTR_TEMPERATURE: 24.0}),
+                {
+                    "last_active_hvac_mode": HVACMode.COOL.value,
+                    "timer_hours": 0.5,
+                    "timer_deadline": "2024-01-01T11:30:00+00:00",
+                },
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(_CLIMATE_ENTITY_ID).state == expected_hvac_mode
+    assert hass.states.get("number.gree_ac_timer").state == "0.0"
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 0
+
+
 @pytest.mark.parametrize(
     "extra_entry_data",
     [{CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT], CONF_MODEL: MODEL_YAP1F}],
