@@ -8,6 +8,7 @@ from pyliebherrhomeapi import LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
+    LiebherrTimeoutError,
 )
 
 from homeassistant.const import CONF_API_KEY, Platform
@@ -33,7 +34,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> None:
     """Set up Liebherr from a config entry."""
     # Create shared API client
     client = LiebherrClient(
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="invalid_api_key",
         ) from err
-    except LiebherrConnectionError as err:
+    except (LiebherrConnectionError, LiebherrTimeoutError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
@@ -87,7 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         """Scan for new devices added to the account."""
         try:
             devices = await client.get_devices()
-        except LiebherrAuthenticationError, LiebherrConnectionError:
+        except (
+            LiebherrAuthenticationError,
+            LiebherrConnectionError,
+            LiebherrTimeoutError,
+        ):
             _LOGGER.debug("Failed to scan for new devices")
             return
         except Exception:
@@ -142,9 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

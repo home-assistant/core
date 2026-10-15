@@ -1,13 +1,11 @@
 # Describes the format for available Envisalink services.
 
 alarm_keypress:
+  target:
+    entity:
+      integration: envisalink
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: envisalink
-          domain: alarm_control_panel
     keypress:
       required: true
       example: "*71"

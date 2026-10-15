@@ -6,7 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
-from httpx import ConnectTimeout, HTTPStatusError, ProtocolError, RequestError, Response
+from httpx2 import (
+    ConnectTimeout,
+    HTTPStatusError,
+    ProtocolError,
+    RequestError,
+    Response,
+)
 import pytest
 from pythonxbox.api.provider.smartglass.models import SmartglassConsoleList
 from pythonxbox.common.exceptions import AuthenticationException

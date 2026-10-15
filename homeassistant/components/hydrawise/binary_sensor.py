@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-import probatio
 from pydrawise import Controller, Zone
 
 from homeassistant.components.binary_sensor import (
@@ -14,13 +13,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
-from .const import SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
 from .coordinator import HydrawiseConfigEntry
-from .entity import HydrawiseEntity
+from .entity import HydrawiseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -70,15 +66,6 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
     ),
 )
 
-SCHEMA_START_WATERING: VolDictType = {
-    probatio.Optional("duration"): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=1440)
-    ),
-}
-SCHEMA_SUSPEND: VolDictType = {
-    probatio.Required("until"): cv.datetime,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -127,26 +114,6 @@ async def async_setup_entry(
     coordinators.main.new_controllers_callbacks.append(_add_new_controllers)
     coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_RESUME,
-        None,
-        "resume",
-        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
-    )
-    platform.async_register_entity_service(
-        SERVICE_START_WATERING,
-        SCHEMA_START_WATERING,
-        "start_watering",
-        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
-    )
-    platform.async_register_entity_service(
-        SERVICE_SUSPEND,
-        SCHEMA_SUSPEND,
-        "suspend",
-        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
-    )
-
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     """A sensor implementation for Hydrawise device."""
@@ -176,16 +143,19 @@ class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
 
     zone: Zone
 
+    @exception_handler
     async def start_watering(self, duration: int | None = None) -> None:
         """Start watering in the irrigation zone."""
         await self.coordinator.api.start_zone(
             self.zone, custom_run_duration=int((duration or 0) * 60)
         )
 
+    @exception_handler
     async def suspend(self, until: datetime) -> None:
         """Suspend automatic watering in the irrigation zone."""
         await self.coordinator.api.suspend_zone(self.zone, until=until)
 
+    @exception_handler
     async def resume(self) -> None:
         """Resume automatic watering in the irrigation zone."""
         await self.coordinator.api.resume_zone(self.zone)

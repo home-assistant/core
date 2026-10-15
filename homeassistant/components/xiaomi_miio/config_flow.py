@@ -55,7 +55,7 @@ DEVICE_MODEL_CONFIG = probatio.Schema(
 DEVICE_CLOUD_CONFIG = probatio.Schema(
     {
         probatio.Optional(CONF_CLOUD_USERNAME): str,
-        probatio.Optional(CONF_CLOUD_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_CLOUD_PASSWORD)): str,
         probatio.Optional(
             CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY
         ): probatio.In(SERVER_COUNTRY_CODES),

@@ -546,6 +546,7 @@ async def test_initiate_backup(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -800,6 +801,7 @@ async def test_initiate_backup_with_agent_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": backups_info,
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -905,6 +907,7 @@ async def test_initiate_backup_with_agent_error(
     assert len(backups_response) == 4
     assert new_expected_backup_data in backups_response
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1375,6 +1378,7 @@ async def test_initiate_backup_non_agent_upload_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1471,6 +1475,7 @@ async def test_initiate_backup_with_task_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1563,6 +1568,7 @@ async def test_initiate_backup_file_error_upload_to_agents(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -1686,6 +1692,7 @@ async def test_initiate_backup_file_error_create_backup(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2425,6 +2432,7 @@ async def test_receive_backup_agent_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": backups_info,
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2508,6 +2516,7 @@ async def test_receive_backup_agent_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": backups_info,
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2559,6 +2568,7 @@ async def test_receive_backup_non_agent_upload_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2667,6 +2677,7 @@ async def test_receive_backup_file_write_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2759,6 +2770,7 @@ async def test_receive_backup_read_tar_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -2920,6 +2932,7 @@ async def test_receive_backup_file_read_error(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -3729,6 +3742,7 @@ async def test_initiate_backup_per_agent_encryption(
     assert result["success"] is True
     assert result["result"] == {
         "backups": [],
+        "agent_error_translations": {},
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -3893,6 +3907,7 @@ async def test_restore_progress_after_restart(
     result = await ws_client.receive_json()
     assert result["success"] is True
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -3919,6 +3934,7 @@ async def test_restore_progress_after_restart_fail_to_remove(
     result = await ws_client.receive_json()
     assert result["success"] is True
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -3982,6 +3998,7 @@ async def test_manager_not_blocked_after_restore(
     result = await ws_client.receive_json()
     assert result["success"] is True
     assert result["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {},
         "backups": [],
         "last_attempted_automatic_backup": None,

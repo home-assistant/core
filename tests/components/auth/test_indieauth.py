@@ -77,6 +77,8 @@ def test_client_id_hostname() -> None:
     """Test we enforce valid hostname."""
     assert indieauth._parse_client_id("http://www.home-assistant.io/")
     assert indieauth._parse_client_id("http://[::1]")
+    assert indieauth._parse_client_id("http://[::1]:8123/")
+    assert indieauth._parse_client_id("http://[fe80::1]:8123/")
     assert indieauth._parse_client_id("http://127.0.0.1")
     assert indieauth._parse_client_id("http://10.0.0.0")
     assert indieauth._parse_client_id("http://10.255.255.255")
@@ -93,6 +95,18 @@ def test_client_id_hostname() -> None:
         assert indieauth._parse_client_id("http://172.32.0.0/")
     with pytest.raises(ValueError):
         assert indieauth._parse_client_id("http://192.167.0.0/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://8.8.8.8:8123/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://[2001:db8::1]/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://[2001:db8::1]:8123/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("https:///callback")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://:8123/")
 
 
 def test_parse_url_lowercase_host() -> None:
@@ -409,6 +423,196 @@ async def test_verify_redirect_uri_unparsable(hass: HomeAssistant) -> None:
     """Test an unparsable requested redirect uri is rejected without raising."""
     assert not await indieauth.verify_redirect_uri(
         hass, "https://example.com/client", "https://["
+    )
+
+
+@pytest.mark.parametrize(
+    ("client_id", "registered_uri", "redirect_uri"),
+    [
+        pytest.param(
+            "https://chatgpt.com/oauth/codex/example/client.json",
+            "http://127.0.0.1/callback/example",
+            "http://127.0.0.1:37545/callback/example",
+            id="codex",
+        ),
+        pytest.param(
+            "https://claude.ai/oauth/claude-code-client-metadata",
+            "http://localhost/callback",
+            "http://localhost:59019/callback",
+            id="claude-code",
+        ),
+        pytest.param(
+            "https://example.com/client",
+            "http://[::1]/callback",
+            "http://[::1]:12345/callback",
+            id="ipv6",
+        ),
+        pytest.param(
+            "https://example.com/client",
+            "http://127.0.0.1:12345/callback?client=example",
+            "http://127.0.0.1:54321/callback?client=example",
+            id="registered-port-and-query",
+        ),
+        pytest.param(
+            "https://example.com/client",
+            "HTTP://localhost/callback",
+            "HTTP://localhost:12345/callback",
+            id="uppercase-scheme",
+        ),
+        pytest.param(
+            "https://example.com/client",
+            "HtTp://localhost:12345/callback",
+            "HtTp://localhost:54321/callback",
+            id="mixed-case-scheme",
+        ),
+    ],
+)
+async def test_verify_redirect_uri_metadata_loopback(
+    hass: HomeAssistant,
+    mock_session: AiohttpClientMocker,
+    client_id: str,
+    registered_uri: str,
+    redirect_uri: str,
+) -> None:
+    """Allow native clients to choose the port of a registered loopback callback."""
+    mock_session.get(
+        client_id,
+        json={"client_id": client_id, "redirect_uris": [registered_uri]},
+    )
+
+    assert not await indieauth.verify_redirect_uri(hass, client_id, redirect_uri)
+    assert await indieauth.verify_redirect_uri(
+        hass, client_id, redirect_uri, allow_loopback_port_change=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("registered_uri", "redirect_uri"),
+    [
+        pytest.param(
+            "http://localhost/callback", "http://localhost:12345/other", id="path"
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:12345/callback?other=1",
+            id="query",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:12345/callback?",
+            id="empty-query",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:12345/callback#",
+            id="fragment",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:12345/call%62ack",
+            id="encoding",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:12345/call\nback",
+            id="newline",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            " http://localhost:12345/callback",
+            id="leading-space",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://local\nhost:12345/callback",
+            id="host-newline",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:12345/Callback",
+            id="path-case",
+        ),
+        pytest.param(
+            "http://localhost/callback", "https://localhost:12345/callback", id="scheme"
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "HTTP://localhost:12345/callback",
+            id="requested-scheme-case-differs",
+        ),
+        pytest.param(
+            "HTTP://localhost/callback",
+            "http://localhost:12345/callback",
+            id="registered-scheme-case-differs",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://127.0.0.1:12345/callback",
+            id="different-loopback-host",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost.example.com:12345/callback",
+            id="hostname-suffix",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://user@localhost:12345/callback",
+            id="userinfo",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:invalid/callback",
+            id="invalid-port",
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "http://localhost:65536/callback",
+            id="port-out-of-range",
+        ),
+        pytest.param(
+            "http://localhost/callback", "http://localhost:0/callback", id="zero-port"
+        ),
+        pytest.param(
+            "http://localhost/callback", "http://localhost:/callback", id="empty-port"
+        ),
+        pytest.param(
+            "https://localhost/callback",
+            "https://localhost:12345/callback",
+            id="https-loopback",
+        ),
+        pytest.param(
+            "http://192.168.1.1/callback",
+            "http://192.168.1.1:12345/callback",
+            id="private-ip",
+        ),
+        pytest.param(
+            "http://other.com/callback",
+            "http://other.com:12345/callback",
+            id="remote-host",
+        ),
+        pytest.param(
+            "http://[::1]/callback",
+            "http://[::2]:12345/callback",
+            id="non-loopback-ipv6",
+        ),
+    ],
+)
+async def test_verify_redirect_uri_metadata_loopback_rejected(
+    hass: HomeAssistant,
+    mock_session: AiohttpClientMocker,
+    registered_uri: str,
+    redirect_uri: str,
+) -> None:
+    """Only the port of an HTTP loopback callback may differ."""
+    client_id = "https://example.com/client"
+    mock_session.get(
+        client_id,
+        json={"client_id": client_id, "redirect_uris": [registered_uri]},
+    )
+
+    assert not await indieauth.verify_redirect_uri(
+        hass, client_id, redirect_uri, allow_loopback_port_change=True
     )
 
 

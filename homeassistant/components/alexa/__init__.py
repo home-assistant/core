@@ -58,7 +58,7 @@ SMART_HOME_SCHEMA = probatio.Schema(
             probatio.Lower, probatio.In(VALID_ENDPOINTS)
         ),
         probatio.Optional(CONF_CLIENT_ID): cv.string,
-        probatio.Optional(CONF_CLIENT_SECRET): cv.string,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
         probatio.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): probatio.In(
             CONF_SUPPORTED_LOCALES
         ),

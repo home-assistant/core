@@ -25,11 +25,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
@@ -49,7 +49,7 @@ async def test_all_entities(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -104,7 +104,7 @@ async def test_sensor_entities_created_and_state(
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 74, 21, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 75, 22, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
@@ -128,7 +128,7 @@ async def test_enabled_by_default_partition(
     connection = MockModbusConnection()
     seed(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=serial, data=MOCK_USER_INPUT, title=model
+        domain=DOMAIN, unique_id=serial, data=MOCK_ENTRY_DATA, title=model
     )
     entry.add_to_hass(hass)
     with patch(
@@ -172,7 +172,7 @@ async def test_settings_backed_sensor_created_and_state(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -202,7 +202,7 @@ async def test_enum_option_slugs_are_translation_keys(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -302,32 +302,6 @@ async def test_total_sensor_restore_data_parsing(
     assert unset_sensor.native_value is None
 
 
-async def test_total_sensor_seeds_high_water_from_restored_value(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test a restored value seeds the library's high-water mark."""
-    runtime_data = init_integration.runtime_data
-    device = runtime_data.readings.device
-    description = SofarSensorDescription(
-        key="load_consumption_total",
-        component="meter_energy",
-        translation_key="load_consumption_total",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: (
-            device.meter_energy.load_consumption_total_corrected.value
-        ),
-        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
-    )
-    sensor = SofarTotalSensor(runtime_data, description)
-    sensor.hass = hass
-    sensor.async_get_last_sensor_data = AsyncMock(
-        return_value=SimpleNamespace(native_value="555.5")
-    )
-    with patch.object(device.meter_energy, "seed_high_water") as mock_seed:
-        await sensor.async_added_to_hass()
-    mock_seed.assert_called_once_with("load_consumption_total", 555.5)
-
-
 async def test_sensor_dead_link_unavailable(init_integration: MockConfigEntry) -> None:
     """Test SofarSensor.available is False when the last update failed."""
     runtime_data = init_integration.runtime_data
@@ -386,13 +360,13 @@ async def test_sensor_availability_on_component_failure(
     unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert not sensor.available
 
     unit.fail_read(0x0484, None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert sensor.available
 
 

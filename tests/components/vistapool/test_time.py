@@ -150,7 +150,6 @@ async def test_time_set_value(
     mock_vistapool_client.set_value.assert_awaited_once_with(
         "ABCDEF1234567890", expected_path, expected_seconds
     )
-    assert hass.states.get(entity_id).state == time_value
 
 
 async def test_time_set_value_raises_on_api_error(

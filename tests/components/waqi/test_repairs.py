@@ -34,6 +34,10 @@ async def test_station_not_found_fix_flow(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        'The measuring station "de Jongweg, Utrecht" can no longer be found'
+        " by the World Air Quality Index API"
+    )
 
     issue_id = f"station_not_found_{subentry_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)

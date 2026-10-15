@@ -149,9 +149,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 # Service call validation schemas
 VALID_TRANSITION = probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255))
-VALID_BRIGHTNESS_PCT = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=0, max=100)
-)
+VALID_BRIGHTNESS_PCT = probatio.All(probatio.Coerce(float), probatio.Percentage())
 VALID_BRIGHTNESS_STEP = probatio.All(
     probatio.Coerce(int), probatio.Clamp(min=-255, max=255)
 )
@@ -176,7 +174,7 @@ LIGHT_TURN_ON_SCHEMA: VolDictType = {
         probatio.ExactSequence(
             (
                 probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
-                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Percentage()),
             )
         ),
     ),

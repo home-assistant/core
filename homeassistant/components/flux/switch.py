@@ -79,7 +79,7 @@ PLATFORM_SCHEMA = probatio.Schema(
             probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
         probatio.Optional(CONF_BRIGHTNESS): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=255)
+            probatio.Coerce(int), probatio.Byte()
         ),
         probatio.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
         probatio.Optional(CONF_MODE, default=DEFAULT_MODE): probatio.Any(
@@ -175,6 +175,8 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
+    # Cannot be moved: action names come from the configuration
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 

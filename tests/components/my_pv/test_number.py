@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import (
+    MyPVAuthenticationError,
+    MyPVConnectionError,
+    MyPVTooManyRequestsError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -145,6 +149,7 @@ async def test_number_set_value_returns_false(
     [
         (MyPVConnectionError(), HomeAssistantError),
         (MyPVAuthenticationError(), ConfigEntryAuthFailed),
+        (MyPVTooManyRequestsError(), HomeAssistantError),
     ],
 )
 async def test_number_set_value_raises_error(

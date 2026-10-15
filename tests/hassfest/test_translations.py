@@ -251,6 +251,7 @@ SAMPLE_STRINGS = {
         },
         "deprecated_yaml": {
             "title": "Deprecated YAML configuration",
+            "short_title": "Deprecated YAML",
             "description": "YAML configuration is deprecated, please use the UI",
         },
     },

@@ -55,6 +55,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
+    assert result["result"].unique_id == "1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -103,6 +104,7 @@ async def test_full_flow_reauth(hass: HomeAssistant, mock_tado_api: MagicMock) -
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
+    assert result["result"].unique_id == "1"
 
 
 async def test_auth_timeout(
@@ -294,6 +296,7 @@ async def test_show_progress_polling(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1"
 
 
 async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:

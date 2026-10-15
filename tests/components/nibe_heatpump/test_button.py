@@ -1,8 +1,10 @@
 """Test the Nibe Heat Pump buttons."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from nibe.coil import CoilData
 from nibe.coil_groups import UNIT_COILGROUPS
 from nibe.heatpump import Model
@@ -18,6 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import async_add_model
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -80,3 +84,40 @@ async def test_reset_button(
     coil: CoilData = args.args[0]
     assert coil.coil.address == unit.alarm_reset
     assert coil.value == 1
+
+
+async def test_reset_button_unavailable_on_update_failure(
+    hass: HomeAssistant,
+    coils: dict[int, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reset button becomes unavailable when a coordinator update fails."""
+    entity_id = "button.s320_reset_alarm"
+    unit = UNIT_COILGROUPS[Model.S320.series]["main"]
+    coils[unit.alarm_reset] = 0
+    coils[unit.alarm] = 100
+
+    await async_add_model(hass, Model.S320)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    # A missing value makes the read raise ReadException.
+    coils[unit.alarm] = None
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    coils[unit.alarm] = 100
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN

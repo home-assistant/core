@@ -22,7 +22,7 @@ DOMAIN = "eufy"
 DEVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ADDRESS): cv.string,
-        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
         probatio.Required(CONF_TYPE): cv.string,
         probatio.Optional(CONF_NAME): cv.string,
     }

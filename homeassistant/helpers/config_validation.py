@@ -180,15 +180,15 @@ CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
 )
 
 # Home Assistant types
-byte = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=255))
-small_float = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=1))
-positive_int = probatio.All(probatio.Coerce(int), probatio.Range(min=0))
-positive_float = probatio.All(probatio.Coerce(float), probatio.Range(min=0))
+byte = probatio.All(probatio.Coerce(int), probatio.Byte())
+small_float = probatio.All(probatio.Coerce(float), probatio.SmallFloat())
+positive_int = probatio.All(probatio.Coerce(int), probatio.NonNegative())
+positive_float = probatio.All(probatio.Coerce(float), probatio.NonNegative())
 latitude = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=-90, max=90), msg="invalid latitude"
+    probatio.Coerce(float), probatio.Latitude(), msg="invalid latitude"
 )
 longitude = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=-180, max=180), msg="invalid longitude"
+    probatio.Coerce(float), probatio.Longitude(), msg="invalid longitude"
 )
 gps = probatio.ExactSequence([latitude, longitude])
 sun_event = probatio.All(
@@ -1552,19 +1552,15 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     validated = key_dependency("for", "state")(validated)
 
     if CONF_FOR in validated:
-        # `for` is anchored to the entity's last_changed, which only reflects a
-        # single current state. It therefore can't track an attribute, multiple
-        # states, or a state resolved from another entity.
+        # `for` is anchored to the entity's last_changed, so it can't track an
+        # attribute or a state resolved from another entity. With a list of
+        # states, the entity must stay in one of them for the whole duration.
         if CONF_ATTRIBUTE in validated:
             raise probatio.Invalid("Cannot use 'for' with an attribute")
-        state = validated[CONF_STATE]
-        # A single-element list is just that one state; unwrap it so the
-        # input-entity check below also rejects `state: [input_select.x]`.
-        if isinstance(state, list):
-            if len(state) != 1:
-                raise probatio.Invalid("Cannot use 'for' with a list of states")
-            state = state[0]
-        if INPUT_ENTITY_ID.match(state):
+        states = validated[CONF_STATE]
+        if not isinstance(states, list):
+            states = [states]
+        if any(INPUT_ENTITY_ID.match(state) for state in states):
             raise probatio.Invalid(
                 "Cannot use 'for' with a state referencing an entity"
             )

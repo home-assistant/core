@@ -32,7 +32,7 @@ type GdacsConfigEntry = ConfigEntry[GdacsFeedEntityManager]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GdacsConfigEntry
-) -> bool:
+) -> None:
     """Set up the GDACS component as config entry."""
     radius = config_entry.data[CONF_RADIUS]
     if hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -44,13 +44,12 @@ async def async_setup_entry(
     config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GdacsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GdacsConfigEntry) -> None:
     """Unload an GDACS component config entry."""
     await entry.runtime_data.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class GdacsFeedEntityManager:

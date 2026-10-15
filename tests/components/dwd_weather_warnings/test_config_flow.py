@@ -168,6 +168,7 @@ async def test_config_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_dwdwfsapi")
 async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     """Test error scenarios during the configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -197,3 +198,10 @@ async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "ambiguous_identifier"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
