@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-EXPECTED_SCOPE = "oidc profile email offline_access"
+EXPECTED_SCOPE = "openid profile email offline_access"
 
 
 def _vehicle(vehicle_id: int, name: str) -> AbrpVehicle:

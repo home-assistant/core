@@ -60,7 +60,7 @@ class AbetterrouteplannerFlowHandler(
         """Handle a successful OAuth2 authorization.
 
         The entry is bound to the id_token's subject, so a missing or malformed
-        id_token — one the ``oidc`` scope guarantees — aborts rather than
+        id_token — one the ``openid`` scope guarantees — aborts rather than
         binding the entry to an unverified account. An empty garage aborts too:
         the garage is only re-read at setup, so such an entry would load green
         and stay empty until a manual reload.
