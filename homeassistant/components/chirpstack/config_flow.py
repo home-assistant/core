@@ -121,9 +121,6 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(self._input[CONF_TENANT_ID])
                 self._abort_if_unique_id_configured()
-                self._async_abort_entries_match(
-                    {CONF_TENANT_ID: self._input[CONF_TENANT_ID]}
-                )
                 return await self.async_step_applications()
         if errors.get("base") == "invalid_auth":
             return self._show_user_form(errors)
