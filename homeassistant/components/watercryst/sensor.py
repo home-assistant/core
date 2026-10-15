@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, override
 
-from pyocat.models import MeasurementResponse, StateResponse
+from pyocat.models import MeasurementResponse, MlState, ModeId, StateResponse
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,40 +37,14 @@ class WatercrystSensorEntityDescription[DataT](SensorEntityDescription):
     value_fn: Callable[[DataT], StateType | datetime]
 
 
-MODES = {
-    "ER": "error_mode",
-    "FS": "fail_safe",
-    "LS": "leakage_protection",
-    "MC": "manual_control",
-    "RS": "rinse",
-    "ST": "self_test",
-    "TD": "thermal_disinfection",
-    "UD": "update",
-    "WO": "water_off",
-    "WT": "water_treatment",
-}
-
-ML_STATES = {
-    "cancelled": "cancelled",
-    "failure-pressure-drop": "failure_pressure_drop",
-    "failure-start-pressure": "failure_start_pressure",
-    "failure-unknown": "failure_unknown",
-    "failure-water-tap": "failure_water_tap",
-    "idle": "idle",
-    "leakage": "leakage",
-    "running": "running",
-    "success": "success",
-}
-
-
 STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
     WatercrystSensorEntityDescription[StateResponse](
         key="mode.id",
         translation_key="mode_id",
         device_class=SensorDeviceClass.ENUM,
-        options=list(MODES.values()),
+        options=[mode.value for mode in ModeId],
         value_fn=lambda data: (
-            MODES.get(data.mode.id) if data.mode and data.mode.id else None
+            data.mode.id.value if data.mode and data.mode.id else None
         ),
     ),
     WatercrystSensorEntityDescription[StateResponse](
@@ -100,9 +74,9 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         key="ml_state",
         translation_key="ml_state",
         device_class=SensorDeviceClass.ENUM,
-        options=list(ML_STATES.values()),
+        options=[state.value for state in MlState],
         supported_fn=lambda data: data.has_leakage_protection_system,
-        value_fn=lambda data: ML_STATES.get(data.ml_state) if data.ml_state else None,
+        value_fn=lambda data: data.ml_state.value if data.ml_state else None,
     ),
 ]
 
