@@ -2200,6 +2200,30 @@ async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> Non
         CONF_ADDRESS: ADDRESS,
     }
 
+    info = _discovered_info()
+    info.address = NEW_ADDRESS
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(_mock_vehicle(on_whitelist=True)),
+        ),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry.subentry_id].data == {
+        CONF_VIN: VIN,
+        CONF_ADDRESS: NEW_ADDRESS,
+    }
+
 
 SITE_ID = 123456
 WALL_CONNECTOR_SITE_ID = 555555
