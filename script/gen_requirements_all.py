@@ -11,6 +11,9 @@ import sys
 import tomllib
 from typing import Any
 
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
+
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
 
@@ -384,7 +387,33 @@ def gather_modules() -> dict[str, list[str]] | None:
         print("Errors while importing: ", ", ".join(errors))
         return None
 
-    return reqs
+    return merge_requirement_extras(reqs)
+
+
+def merge_requirement_extras(reqs: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Merge requirements that only differ in extras into one requirement."""
+    grouped: dict[tuple[str, str, str], list[str]] = {}
+    for req in reqs:
+        requirement = Requirement(req)
+        key = (
+            canonicalize_name(requirement.name),
+            str(requirement.specifier),
+            str(requirement.marker),
+        )
+        grouped.setdefault(key, []).append(req)
+
+    merged: dict[str, list[str]] = {}
+    for group in grouped.values():
+        if len(group) == 1:
+            merged[group[0]] = reqs[group[0]]
+            continue
+        requirement = Requirement(group[0])
+        for req in group[1:]:
+            requirement.extras |= Requirement(req).extras
+        merged[str(requirement)] = sorted(
+            {package for req in group for package in reqs[req]}
+        )
+    return merged
 
 
 def gather_entity_platform_requirements() -> set[str]:

@@ -49,3 +49,26 @@ def test_requirement_override_markers() -> None:
             gen_requirements_all.process_action_requirement("other==1.0", "pytest")
             == "other==1.0"
         )
+
+
+def test_merge_requirement_extras() -> None:
+    """Test requirements that only differ in extras are merged."""
+    reqs = {
+        "lorawan-connection[chirpstack]==1.0.0": ["homeassistant.components.a"],
+        "lorawan-connection==1.0.0": ["homeassistant.components.b"],
+        "lorawan_connection[ttn]==1.0.0": ["homeassistant.components.c"],
+        "other[b,a]==2.0.0": ["homeassistant.components.a"],
+        "pinned==1.0.0": ["homeassistant.components.a"],
+        "pinned==2.0.0": ["homeassistant.components.b"],
+    }
+    assert gen_requirements_all.merge_requirement_extras(reqs) == {
+        "lorawan-connection[chirpstack,ttn]==1.0.0": [
+            "homeassistant.components.a",
+            "homeassistant.components.b",
+            "homeassistant.components.c",
+        ],
+        # Requirements without a merge keep their original form
+        "other[b,a]==2.0.0": ["homeassistant.components.a"],
+        "pinned==1.0.0": ["homeassistant.components.a"],
+        "pinned==2.0.0": ["homeassistant.components.b"],
+    }
