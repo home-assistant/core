@@ -179,10 +179,24 @@ wraps_itself.__wrapped__ = wraps_itself
 
 import inspect
 
+# Annotations of an explicit signature are not read as strings.
 class Signed:
     __signature__ = inspect.Signature(
-        [inspect.Parameter("given", inspect.Parameter.POSITIONAL_OR_KEYWORD)]
+        [
+            inspect.Parameter(
+                "given", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=int
+            )
+        ],
+        return_annotation=int,
     )
+
+@functools.wraps(inner)
+def resigned(*args, **kwargs):
+    pass
+
+resigned.__signature__ = inspect.Signature(
+    [inspect.Parameter("only", inspect.Parameter.POSITIONAL_OR_KEYWORD)]
+)
 
 class WithNew:
     def __new__(cls, value):
@@ -295,6 +309,17 @@ METHOD_SIGNATURE = {
                 "doc": "",
             },
             id="class_signature",
+        ),
+        pytest.param(
+            "resigned(",
+            {
+                "name": "resigned",
+                "parameters": ["only"],
+                "active": 0,
+                "returns": None,
+                "doc": "Do the inner thing.",
+            },
+            id="wrapper_signature",
         ),
         pytest.param(
             "WithNew(",
@@ -484,6 +509,14 @@ async def test_signature(
             {"type": "debug_console/signature", "code": "function_signature_trap("},
             id="signature_function_signature",
         ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "holds_equal.item.x"},
+            id="complete_metaclass_equality",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "loud_annotation("},
+            id="signature_annotation_format",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -626,6 +659,44 @@ def function_signature_trap(argument):
     pass
 
 function_signature_trap.__signature__ = masked
+
+class EqualToEverything(type):
+    def __eq__(cls, other):
+        ran.append("metaclass eq")
+        return True
+
+    __hash__ = type.__hash__
+
+class EqualDescriptor(metaclass=EqualToEverything):
+    def __get__(self, instance, owner):
+        ran.append("equal descriptor")
+
+class HoldsEqual:
+    item = EqualDescriptor()
+
+holds_equal = HoldsEqual()
+
+class Loud:
+    def __format__(self, spec):
+        ran.append("format")
+        return "loud"
+
+    def __str__(self):
+        ran.append("str")
+        return "loud"
+
+import inspect
+
+def loud_annotation(value):
+    pass
+
+loud_annotation.__signature__ = inspect.Signature(
+    [
+        inspect.Parameter(
+            "value", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Loud()
+        )
+    ]
+)
 bound_trap = types.MethodType(callable_trap, object())
 
 # Creating the classes above may run their hooks already.

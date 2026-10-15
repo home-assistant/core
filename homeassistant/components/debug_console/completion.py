@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from .inspection import (
     class_dict,
     class_mro,
+    has_type,
     instance_dict,
     is_class,
     is_descriptor,
@@ -141,9 +142,7 @@ def signature_hint(namespace: dict[str, Any], code: str) -> dict[str, Any] | Non
         "name": call.callee.rpartition(".")[2],
         "parameters": [_format_parameter(parameter) for parameter in parameters],
         "active": None if active is None else parameters.index(active),
-        "returns": None
-        if signature.return_annotation is inspect.Signature.empty
-        else signature.return_annotation,
+        "returns": _annotation(signature.return_annotation),
         "doc": doc.partition("\n")[0],
     }
 
@@ -214,7 +213,7 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
         if not from_class or not is_descriptor(static):
             # Plain values, including those in the __dict__ of an instance.
             value = static
-        elif type(static) in _SAFE_DESCRIPTORS:
+        elif has_type(static, _SAFE_DESCRIPTORS):
             instance = None if value is owner else value
             value = static.__get__(instance, owner)  # pylint: disable=unnecessary-dunder-call
         elif type(static) is types.MemberDescriptorType and value is not owner:
@@ -261,6 +260,8 @@ def _unwrap(target: Any) -> Any:
     seen = {id(target)}
     while (
         not is_class(target)
+        # A wrapper can give its own signature, which inspect then uses too.
+        and static_attribute(target, "__signature__", _MISSING) is _MISSING
         and (wrapped := static_attribute(target, "__wrapped__", _MISSING))
         is not _MISSING
         and _has_safe_signature(wrapped)
@@ -282,7 +283,7 @@ def _has_safe_signature(value: Any) -> bool:
     inspect reads attributes like __signature__, which can be properties.
     """
     if is_class(value):
-        return type(value) in _STANDARD_METACLASSES and all(
+        return has_type(value, _STANDARD_METACLASSES) and all(
             _has_safe_constructors(class_dict(cls)) for cls in class_mro(value)
         )
 
@@ -293,7 +294,7 @@ def _has_safe_signature(value: Any) -> bool:
     if type(value) is types.FunctionType:
         return _has_plain_signature_attributes(instance_dict(value) or {})
 
-    return type(value) in _SIGNATURE_TYPES
+    return has_type(value, _SIGNATURE_TYPES)
 
 
 def _has_plain_signature_attributes(attributes: Mapping[str, Any]) -> bool:
@@ -302,7 +303,7 @@ def _has_plain_signature_attributes(attributes: Mapping[str, Any]) -> bool:
     It reads both with getattr(), which runs a descriptor stored there.
     """
     return (
-        type(attributes.get("__signature__")) in (type(None), inspect.Signature)
+        has_type(attributes.get("__signature__"), (type(None), inspect.Signature))
         and "__partialmethod__" not in attributes
     )
 
@@ -320,10 +321,10 @@ def _has_safe_constructors(attributes: Mapping[str, Any]) -> bool:
         if (constructor := attributes.get(name)) is None:
             continue
 
-        if type(constructor) in (staticmethod, classmethod):
+        if has_type(constructor, (staticmethod, classmethod)):
             constructor = constructor.__func__
 
-        if type(constructor) in _BUILTIN_CONSTRUCTOR_TYPES:
+        if has_type(constructor, _BUILTIN_CONSTRUCTOR_TYPES):
             continue
 
         if not _is_plain_function(constructor):
@@ -347,21 +348,29 @@ def _format_parameter(parameter: inspect.Parameter) -> str:
     elif parameter.kind is inspect.Parameter.VAR_KEYWORD:
         text = f"**{text}"
 
-    if parameter.annotation is not inspect.Parameter.empty:
-        text = f"{text}: {parameter.annotation}"
+    annotation = _annotation(parameter.annotation)
+    if annotation is not None:
+        text = f"{text}: {annotation}"
 
     if parameter.default is not inspect.Parameter.empty:
-        separator = (
-            " = " if parameter.annotation is not inspect.Parameter.empty else "="
-        )
+        separator = " = " if annotation is not None else "="
         text = f"{text}{separator}{_format_default(parameter.default)}"
 
     return text
 
 
+def _annotation(annotation: Any) -> str | None:
+    """Return an annotation, if it is a string.
+
+    Annotations are read as strings, except those of an explicit __signature__,
+    which can be any object; formatting that could run its code.
+    """
+    return annotation if type(annotation) is str else None
+
+
 def _format_default(value: Any) -> str:
     """Format a default value, without running a __repr__ of the user."""
-    if type(value) in _SAFE_DEFAULT_TYPES:
+    if has_type(value, _SAFE_DEFAULT_TYPES):
         return preview(value)
 
     return "…"

@@ -1,7 +1,14 @@
 """Describe values for the Debug console, and inspect them on request."""
 
 import builtins
-from collections.abc import Iterator, Mapping, Sequence, Set as AbstractSet, Sized
+from collections.abc import (
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+    Set as AbstractSet,
+    Sized,
+)
 from contextlib import suppress
 from itertools import islice
 import reprlib
@@ -117,7 +124,7 @@ def describe(session: ConsoleSession, value: Any) -> dict[str, Any]:
     if type(value) is bool:
         return {"type": "boolean", "value": value}
 
-    if type(value) in (int, float):
+    if has_type(value, (int, float)):
         # As a string, as JSON cannot hold big integers, infinity or NaN.
         return {"type": "number", "value": repr(value)}
 
@@ -173,6 +180,15 @@ def get_attribute(session: ConsoleSession, value: Any, name: str) -> dict[str, A
         return {"value": describe(session, getattr(value, name))}
     except USER_CODE_ERRORS as err:
         return {"error": "".join(traceback.format_exception_only(err))}
+
+
+def has_type(value: Any, types: Iterable[type]) -> bool:
+    """Return if the type of a value is exactly one of these, without running code.
+
+    Unlike a type in a tuple, which compares with ==, and a metaclass can
+    change what that does.
+    """
+    return any(type(value) is allowed for allowed in types)
 
 
 def is_class(value: Any) -> TypeGuard[type]:
@@ -260,7 +276,7 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
     else:
         return None
 
-    if type(descriptor) not in (GetSetDescriptorType, MemberDescriptorType):
+    if not has_type(descriptor, (GetSetDescriptorType, MemberDescriptorType)):
         return None
 
     return descriptor.__get__(value, type(value))  # type: ignore[no-any-return]  # pylint: disable=unnecessary-dunder-call

@@ -237,6 +237,29 @@ Thing()
     }
 
 
+async def test_describe_with_metaclass_equality(
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test a class equal to everything does not pass for a number."""
+    result = await async_execute(
+        websocket_client,
+        """
+class EqualToEverything(type):
+    def __eq__(cls, other):
+        return True
+
+    __hash__ = type.__hash__
+
+class Thing(metaclass=EqualToEverything):
+    pass
+
+Thing()
+""",
+    )
+
+    assert result["result"]["type"] == "object"
+
+
 async def test_preview_of_large_bytes(websocket_client: MockHAClientWebSocket) -> None:
     """Test previews of large bytes only represent the start."""
     result = await async_execute(websocket_client, "b'x' * 1_000_000")
