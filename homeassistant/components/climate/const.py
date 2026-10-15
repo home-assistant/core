@@ -189,6 +189,7 @@ class ClimateEntityStateAttribute(
     PRESET_MODE = "preset_mode"
     SWING_MODE = "swing_mode"
     SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 class ClimateEntityFeature(IntFlag):

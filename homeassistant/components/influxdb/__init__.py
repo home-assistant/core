@@ -338,6 +338,14 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
 
+        # InfluxDB reserves "time"; leave the valid "time_str" field unchanged.
+        fields = json[INFLUX_CONF_FIELDS]
+        if INFLUX_CONF_TIME in fields:
+            key = f"{INFLUX_CONF_TIME}_"
+            while key in fields:
+                key = f"{key}_"
+            fields[key] = fields.pop(INFLUX_CONF_TIME)
+
         json[INFLUX_CONF_TAGS].update(tags)
 
         return json
@@ -530,7 +538,7 @@ async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
         async_create_deprecated_yaml_issue(hass)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Set up InfluxDB from a config entry."""
     data = entry.data
 
@@ -575,17 +583,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
 
     entry.runtime_data = influx_thread
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Unload a config entry."""
     influx_thread = entry.runtime_data
 
     # Run shutdown in the executor so the event loop isn't blocked
     await hass.async_add_executor_job(influx_thread.shutdown)
-
-    return True
 
 
 class InfluxThread(threading.Thread):

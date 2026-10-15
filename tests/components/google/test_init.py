@@ -1,7 +1,7 @@
 """The tests for the Google Calendar component."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import http
 import re
 import time
@@ -15,8 +15,8 @@ import probatio
 import pytest
 
 from homeassistant.components.google import DOMAIN
-from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
+from homeassistant.components.google.services import SERVICE_CREATE_EVENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
@@ -41,7 +41,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
 type HassApi = Callable[[], Awaitable[dict[str, Any]]]
@@ -168,6 +168,7 @@ async def test_calendar_yaml_missing_required_fields(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -182,6 +183,7 @@ async def test_invalid_calendar_yaml(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 async def test_calendar_yaml_error(
@@ -429,13 +431,13 @@ async def test_add_event_invalid_params(
     [
         (
             {"in": {"days": 3}},
-            datetime.timedelta(days=3),
-            datetime.timedelta(days=4),
+            dt.timedelta(days=3),
+            dt.timedelta(days=4),
         ),
         (
             {"in": {"weeks": 1}},
-            datetime.timedelta(days=7),
-            datetime.timedelta(days=8),
+            dt.timedelta(days=7),
+            dt.timedelta(days=8),
         ),
     ],
     ids=["in_days", "in_weeks"],
@@ -448,8 +450,8 @@ async def test_add_event_date_in_x(
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
     date_fields: dict[str, Any],
-    start_timedelta: datetime.timedelta,
-    end_timedelta: datetime.timedelta,
+    start_timedelta: dt.timedelta,
+    end_timedelta: dt.timedelta,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[[dict[str, Any]], Awaitable[None]],
     freezer: FrozenDateTimeFactory,
@@ -464,7 +466,7 @@ async def test_add_event_date_in_x(
     # (the test timezone). This ensures dt_util.now().date() returns June 14
     # while a naive datetime.now().date() would return June 15 in UTC.
     freezer.move_to("2025-06-15 03:00:00+00:00")
-    today = datetime.date(2025, 6, 14)
+    today = dt.date(2025, 6, 14)
     start_date = today + start_timedelta
     end_date = today + end_timedelta
 
@@ -501,7 +503,7 @@ async def test_add_event_date(
 
     now = utcnow()
     today = now.date()
-    end_date = today + datetime.timedelta(days=2)
+    end_date = today + dt.timedelta(days=2)
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -540,7 +542,7 @@ async def test_add_event_date_time(
     assert await component_setup()
 
     start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
-    delta = datetime.timedelta(days=3, hours=3)
+    delta = dt.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
     aioclient_mock.clear_requests()
@@ -603,7 +605,7 @@ async def test_unsupported_create_event(
     assert await component_setup()
 
     start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
-    delta = datetime.timedelta(days=3, hours=3)
+    delta = dt.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
     entity_id = "calendar.backyard_light"
 
@@ -670,7 +672,7 @@ async def test_add_event_location(
 
     now = utcnow()
     today = now.date()
-    end_date = today + datetime.timedelta(days=2)
+    end_date = today + dt.timedelta(days=2)
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -697,7 +699,7 @@ async def test_add_event_location(
 @pytest.mark.parametrize(
     "config_entry_token_expiry",
     [
-        (datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
+        (dt.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
         (utcnow().replace(tzinfo=None).timestamp()),
     ],
     ids=["max_timestamp", "timestamp_naive"],

@@ -1,6 +1,7 @@
 """Tests for the LinkPlay media player."""
 
 from collections.abc import AsyncGenerator
+import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -13,8 +14,9 @@ from linkplay.bridge import (
 from linkplay.consts import API_ENDPOINT, LoopMode, PlayingStatus
 import pytest
 
-from homeassistant.components.linkplay.const import DOMAIN, SHARED_DATA
+from homeassistant.components.linkplay.const import DOMAIN, SHARED_DATA_KEY
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
@@ -26,10 +28,14 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_JOIN,
     RepeatMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_HOST,
+    EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -39,17 +45,20 @@ from homeassistant.const import (
     SERVICE_REPEAT_SET,
     STATE_PLAYING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
-from .conftest import HOST, mock_lp_aiohttp_client
+from .conftest import HOST, HOST_REENTRY, mock_lp_aiohttp_client
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 
 ENTITY_ID = "media_player.smart_zone_1_54b9"
 LEADER_ENTITY_ID = "media_player.leader"
 LEADER_UUID = "FF31F09E-5001-FBDE-0546-2DBFFF31F0AA"
+RENAMED_ENTITY_ID = "media_player.renamed"
 
 
 @pytest.fixture
@@ -90,7 +99,7 @@ async def leader_player(
         leader.player = player
         leader.device = AsyncMock(spec=LinkPlayDevice)
         leader.device.uuid = LEADER_UUID
-        hass.data[DOMAIN][SHARED_DATA].entity_to_bridge[LEADER_ENTITY_ID] = LEADER_UUID
+        hass.data[SHARED_DATA_KEY].entity_to_bridge[LEADER_ENTITY_ID] = LEADER_UUID
 
         bridge = mock_config_entry.runtime_data.bridge
         bridge.multiroom = LinkPlayMultiroom(leader)
@@ -163,3 +172,137 @@ async def test_follower_transport_commands_go_to_leader(
     )
 
     getattr(leader_player, method).assert_awaited_once_with(*method_args)
+
+
+@pytest.mark.usefixtures("leader_player")
+async def test_group_members_follow_renamed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test group members report the new entity_id after a rename."""
+    entity_to_bridge = hass.data[SHARED_DATA_KEY].entity_to_bridge
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    state_reports: list[Event[EventStateReportedData]] = []
+
+    @callback
+    def _is_renamed(data: EventStateReportedData) -> bool:
+        return data["entity_id"] == RENAMED_ENTITY_ID
+
+    @callback
+    def _capture_report(event: Event[EventStateReportedData]) -> None:
+        state_reports.append(event)
+
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, _capture_report, event_filter=_is_renamed
+    )
+
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    assert set(entity_to_bridge) == {LEADER_ENTITY_ID, RENAMED_ENTITY_ID}
+    state = hass.states.get(RENAMED_ENTITY_ID)
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [
+        LEADER_ENTITY_ID,
+        RENAMED_ENTITY_ID,
+    ]
+    # The state is written once under the new entity_id, already re-keyed; a
+    # repeated identical write would be a state report
+    assert [
+        (
+            event.data["old_state"],
+            event.data["new_state"].attributes[ATTR_GROUP_MEMBERS],
+        )
+        for event in state_changes
+        if event.data["entity_id"] == RENAMED_ENTITY_ID
+    ] == [(None, [LEADER_ENTITY_ID, RENAMED_ENTITY_ID])]
+    assert not state_reports
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert set(entity_to_bridge) == {LEADER_ENTITY_ID}
+
+
+@pytest.mark.usefixtures("leader_player")
+async def test_join_renamed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test joining resolves a renamed player by its new entity_id only."""
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
+    await hass.async_block_till_done()
+    bridge = mock_config_entry.runtime_data.bridge
+
+    with (
+        patch.object(LinkPlayMultiroom, "add_follower") as mock_add_follower,
+        patch.object(hass.data[SHARED_DATA_KEY].controller, "discover_multirooms"),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: RENAMED_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [RENAMED_ENTITY_ID],
+            },
+            blocking=True,
+        )
+        mock_add_follower.assert_awaited_once_with(bridge)
+
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                MEDIA_PLAYER_DOMAIN,
+                SERVICE_JOIN,
+                {ATTR_ENTITY_ID: RENAMED_ENTITY_ID, ATTR_GROUP_MEMBERS: [ENTITY_ID]},
+                blocking=True,
+            )
+
+
+async def test_group_members_follow_renamed_group_member(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test group members report the new entity_id of another renamed player."""
+    leader_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Leader",
+        data={CONF_HOST: HOST_REENTRY},
+        unique_id=LEADER_UUID,
+    )
+    status = await async_load_fixture(hass, "getStatusEx.json", DOMAIN)
+    leader_status = json.loads(status) | {"uuid": LEADER_UUID, "DeviceName": "Leader"}
+    with (
+        mock_lp_aiohttp_client() as mock_session,
+        patch.object(LinkPlayMultiroom, "update_status", return_value=None),
+    ):
+        for host, host_status in (
+            (HOST, status),
+            (HOST_REENTRY, json.dumps(leader_status)),
+        ):
+            for endpoint in (f"https://{host}", f"http://{host}"):
+                mock_session.get(
+                    API_ENDPOINT.format(endpoint, "getPlayerStatusEx"),
+                    text=await async_load_fixture(hass, "getPlayerEx.json", DOMAIN),
+                )
+                mock_session.get(
+                    API_ENDPOINT.format(endpoint, "getStatusEx"), text=host_status
+                )
+
+        await setup_integration(hass, mock_config_entry)
+        await setup_integration(hass, leader_config_entry)
+
+        follower = mock_config_entry.runtime_data.bridge
+        follower.multiroom = LinkPlayMultiroom(leader_config_entry.runtime_data.bridge)
+        follower.multiroom.followers = [follower]
+        await async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [LEADER_ENTITY_ID, ENTITY_ID]
+
+    entity_registry.async_update_entity(
+        LEADER_ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [RENAMED_ENTITY_ID, ENTITY_ID]

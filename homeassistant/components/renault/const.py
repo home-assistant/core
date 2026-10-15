@@ -10,6 +10,7 @@ DOMAIN = "renault"
 class RenaultConfigurationKeys:
     """Configuration keys."""
 
+    DEVICE_IDS: Final = "device_ids"
     KAMEREON_ACCOUNT_ID: Final = "kamereon_account_id"
     LOCALE: Final = "locale"
     LOGIN_TOKEN: Final = "login_token"

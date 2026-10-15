@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -55,7 +55,7 @@ async def _advance_coordinator_time(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_system_refresh_failure_marks_entities_unavailable(
@@ -191,7 +191,7 @@ async def test_light_service_calls_update_entity_state(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_setup_login_retry_exceptions(
@@ -237,7 +237,7 @@ async def test_setup_login_unauthorized(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_setup_systems_exception(
@@ -352,7 +352,7 @@ async def test_setup_no_systems_recognized(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_setup_devices_exception(

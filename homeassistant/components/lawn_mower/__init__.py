@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     DATA_COMPONENT,
     DOMAIN,
     SERVICE_DOCK,
@@ -31,6 +31,21 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
+
+__all__ = [
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_DOCK",
+    "SERVICE_PAUSE",
+    "SERVICE_START_MOWING",
+    "SERVICE_STOP",
+    "LawnMowerActivity",
+    "LawnMowerEntity",
+    "LawnMowerEntityEntityDescription",
+    "LawnMowerEntityFeature",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

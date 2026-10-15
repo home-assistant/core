@@ -1,6 +1,6 @@
 """Coordinator for the Anthropic integration."""
 
-import datetime
+import datetime as dt
 from functools import partial
 from typing import override
 
@@ -15,8 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-UPDATE_INTERVAL_CONNECTED = datetime.timedelta(hours=12)
-UPDATE_INTERVAL_DISCONNECTED = datetime.timedelta(minutes=1)
+UPDATE_INTERVAL_CONNECTED = dt.timedelta(hours=12)
+UPDATE_INTERVAL_DISCONNECTED = dt.timedelta(minutes=1)
 
 type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 
@@ -127,6 +127,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
         return anthropic.types.ModelInfo(
             type="model",
             id=model_id,
-            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            lifecycle="retired",
+            created_at=dt.datetime(1970, 1, 1, tzinfo=dt.UTC),
             display_name=alias,
         ), False

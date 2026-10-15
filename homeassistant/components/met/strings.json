@@ -20,6 +20,9 @@
     }
   },
   "exceptions": {
+    "no_home_location": {
+      "message": "No home location has been set"
+    },
     "update_failed": {
       "message": "Update of data from the web site failed: {error}"
     }

@@ -1,0 +1,337 @@
+# serializer version: 1
+# name: test_entity_and_device[no_unique_id][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'kodi',
+          '01JZ8Y6K9QW3X5V7T2R4P6N8M0',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Kodi',
+      'model': None,
+      'model_id': None,
+      'name': 'name',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_entity_and_device[no_unique_id][media_player.name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'kodi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 186303>,
+    'translation_key': 'media_player',
+    'unique_id': '01JZ8Y6K9QW3X5V7T2R4P6N8M0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device[no_unique_id][media_player.name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_and_device[unique_id][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'kodi',
+          '11111111-1111-1111-1111-111111111111',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Kodi',
+      'model': None,
+      'model_id': None,
+      'name': 'name',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_entity_and_device[unique_id][media_player.name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'kodi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 186303>,
+    'translation_key': 'media_player',
+    'unique_id': '11111111-1111-1111-1111-111111111111',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device[unique_id][media_player.name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_idle_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'sdr',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_state_attributes[episode]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'dolbyvision',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: '',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: dict({
+        'imdb': 'tt0000002',
+        'tmdb': '1000002',
+        'tvdb': '1000003',
+      }),
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.TVSHOW: 'tvshow'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 5400,
+      <MediaPlayerEntityStateAttribute.MEDIA_EPISODE: 'media_episode'>: 7,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 4205,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2026, 1, 1, 12, 0, 10, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_SEASON: 'media_season'>: 3,
+      <MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE: 'media_series_title'>: 'Show title',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Episode title',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.8,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_state_attributes[first_of_two_players]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'dolbyvision',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: '',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: dict({
+        'imdb': 'tt0000001',
+        'tmdb': '1000001',
+      }),
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MOVIE: 'movie'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 5400,
+      <MediaPlayerEntityStateAttribute.MEDIA_EPISODE: 'media_episode'>: -1,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 4205,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2026, 1, 1, 12, 0, 10, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_SEASON: 'media_season'>: -1,
+      <MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE: 'media_series_title'>: '',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Movie title',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.8,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_state_attributes[live_channel]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'sdr',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 123456789,
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.VIDEO: 'video'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 4205,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2026, 1, 1, 12, 0, 10, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Current programme',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.8,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_state_attributes[movie]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'dolbyvision',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: '',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: dict({
+        'imdb': 'tt0000001',
+        'tmdb': '1000001',
+      }),
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MOVIE: 'movie'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 5400,
+      <MediaPlayerEntityStateAttribute.MEDIA_EPISODE: 'media_episode'>: -1,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 4205,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2026, 1, 1, 12, 0, 10, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_SEASON: 'media_season'>: -1,
+      <MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE: 'media_series_title'>: '',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Movie title',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.8,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_state_attributes[song]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'sdr',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST: 'media_album_artist'>: 'Album artist',
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Album',
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Artist',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 5400,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 4205,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2026, 1, 1, 12, 0, 10, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Song title',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.8,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_websocket_stop[websocket]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dynamic_range': 'sdr',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'name',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 186303>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

@@ -74,9 +74,123 @@ async def test_create_auth_system_generated_user(
     assert result["error"]["code"] == "system_generated"
 
 
-async def test_create_auth_user_already_credentials() -> None:
+async def test_create_auth_user_already_credentials(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
     """Test we can't create auth for user with pre-existing credentials."""
-    # assert False
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": user.id,
+            "username": "test-user2",
+            "password": "test-pass",
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"], result
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": user.id,
+            "username": "test-user3",
+            "password": "test-pass",
+        }
+    )
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "credentials_exist"
+    assert len(user.credentials) == 1
+
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user3", "test-pass")
+
+
+async def test_create_auth_concurrent(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test concurrent creates for the same user attach only one credential."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": username,
+                "password": "test-pass",
+            }
+        )
+
+    results = {
+        result["id"]: result
+        for result in (await client.receive_json(), await client.receive_json())
+    }
+    assert results[5]["success"], results[5]
+    assert not results[6]["success"], results[6]
+    assert results[6]["error"]["code"] == "credentials_exist"
+    assert len(user.credentials) == 1
+
+
+async def test_create_auth_owner_not_owner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test an admin that is not the owner can't add credentials to the owner."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": hass_owner_user.id,
+            "username": "test-user2",
+            "password": "test-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "unauthorized"
+    assert len(hass_owner_user.credentials) == 0
+
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
+async def test_create_auth_owner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    owner_access_token: str,
+) -> None:
+    """Test the owner can add credentials to itself."""
+    client = await hass_ws_client(hass, owner_access_token)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": hass_owner_user.id,
+            "username": "test-user2",
+            "password": "test-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    assert len(hass_owner_user.credentials) == 1
 
 
 async def test_create_auth_unknown_user(

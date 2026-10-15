@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pyzonneplan import (
     Account,
+    BatteryInstallation,
     ConsumerPrices,
     ElectricityChart,
     GasChart,
@@ -72,6 +73,9 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
     )
     client.async_get_gas_chart.return_value = GasChart.from_dict(
         load_json_object_fixture("get_gas_chart_days.json", DOMAIN)
+    )
+    client.async_get_battery.return_value = BatteryInstallation.from_dict(
+        load_json_object_fixture("get_battery_installation.json", DOMAIN)
     )
 
     with (

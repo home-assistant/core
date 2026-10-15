@@ -102,7 +102,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 [
                     probatio.Schema(
                         {
-                            probatio.Required(CONF_API_KEY): cv.string,
+                            probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
                             probatio.Required(CONF_HOST): cv.string,
                             probatio.Optional(CONF_SSL, default=False): cv.boolean,
                             probatio.Optional(CONF_PORT, default=80): probatio.Port(),
@@ -159,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> None:
     """Set up OctoPrint from a config entry."""
     if CONF_VERIFY_SSL not in entry.data:
         data = {**entry.data, CONF_VERIFY_SSL: True}
@@ -201,9 +201,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

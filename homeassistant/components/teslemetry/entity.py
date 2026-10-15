@@ -161,6 +161,7 @@ class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
     api: EnergySite | EnergySiteRouter
+    coordinator: TeslemetryEnergySiteInfoCoordinator
 
     def __init__(
         self,
@@ -193,6 +194,10 @@ class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
         self._attr_device_info = data.device
 
         super().__init__(data.history_coordinator, key)
+
+    @override
+    async def async_update(self) -> None:
+        """Keep the streamed totals; the stream is their only source."""
 
 
 class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):

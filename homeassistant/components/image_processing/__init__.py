@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     DATA_COMPONENT,
     DOMAIN,
-    SERVICE_SCAN,  # noqa: F401
+    SERVICE_SCAN,
     ImageProcessingDeviceClass,
     ImageProcessingEntityStateAttribute,
 )
@@ -63,11 +63,34 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
             probatio.EnsureList(), [SOURCE_SCHEMA]
         ),
         probatio.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): probatio.All(
-            probatio.Coerce(float), probatio.Range(min=0, max=100)
+            probatio.Coerce(float), probatio.Percentage()
         ),
     }
 )
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
+
+__all__ = [
+    "ATTR_AGE",
+    "ATTR_CONFIDENCE",
+    "ATTR_FACES",
+    "ATTR_GENDER",
+    "ATTR_GLASSES",
+    "ATTR_MOTION",
+    "ATTR_TOTAL_FACES",
+    "CONF_CONFIDENCE",
+    "DEFAULT_CONFIDENCE",
+    "DOMAIN",
+    "EVENT_DETECT_FACE",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SCAN",
+    "FaceInformation",
+    "ImageProcessingDeviceClass",
+    "ImageProcessingEntity",
+    "ImageProcessingEntityDescription",
+    "ImageProcessingEntityStateAttribute",
+    "ImageProcessingFaceEntity",
+]
 
 
 class FaceInformation(TypedDict, total=False):

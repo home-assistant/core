@@ -254,6 +254,7 @@ async def test_select_image(
     assert args[1] == MOCK_MEDIA_IMAGE_URI_2
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+    assert state.attributes["current_media_id"] == MOCK_MEDIA_IMAGE_URI_2
 
 
 async def test_select_image_invalid_media_type(
@@ -287,3 +288,4 @@ async def test_select_image_invalid_media_type(
     assert args[1] == MOCK_MEDIA_IMAGE_URI_2
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state == STATE_UNKNOWN
+    assert state.attributes["current_media_id"] == MOCK_MEDIA_IMAGE_URI_2
