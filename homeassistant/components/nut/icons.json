@@ -73,6 +73,12 @@
       "input_sensitivity": {
         "default": "mdi:information-outline"
       },
+      "input_source": {
+        "default": "mdi:transit-connection-variant"
+      },
+      "input_source_preferred": {
+        "default": "mdi:transit-connection-variant"
+      },
       "input_transfer_reason": {
         "default": "mdi:information-outline"
       },
