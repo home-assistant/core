@@ -1329,7 +1329,10 @@ async def test_second_owner_cancel_during_notification_join_reaps_child(
                 assert caught.value is source_error
                 assert owner.exception() is source_error
             assert source_closed.is_set()
-            assert processes[0].returncode is not None  # Before harness kill.
+            wait_task = tasks["tts_ffmpeg_wait"]
+            assert wait_task in ffmpeg_ready._background_tasks or wait_task.done()
+            assert await asyncio.wait_for(asyncio.shield(wait_task), 3) == -9
+            assert processes[0].returncode == -9  # Before harness kill.
             assert tasks["tts_ffmpeg_conversion"].done()
             cleanup_task = tasks["tts_ffmpeg_cleanup"]
             assert cleanup_task in ffmpeg_ready._background_tasks
