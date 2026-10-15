@@ -300,6 +300,10 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
 
     A class can replace __dict__ with a property, which is then left alone.
     """
+    # A class keeps its attributes behind a read only view.
+    if is_class(value):
+        return dict(class_dict(value))
+
     # Only the class of the instance counts, not the class of that class.
     for cls in class_mro(type(value)):
         if "__dict__" in (attributes := class_dict(cls)):

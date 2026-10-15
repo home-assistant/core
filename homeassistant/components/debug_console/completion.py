@@ -5,7 +5,6 @@ descriptors, __getattr__, or __dir__, and no importing modules.
 """
 
 from abc import ABCMeta
-from annotationlib import Format
 import builtins
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -70,6 +69,10 @@ _BUILTIN_CONSTRUCTOR_TYPES = (
     types.WrapperDescriptorType,
     types.MethodDescriptorType,
 )
+
+# Flag of classes written in Python, which can have a __text_signature__ from
+# their docstring.
+_HEAP_TYPE = 1 << 9
 
 # Metaclasses of classes whose signature inspect can read safely.
 _STANDARD_METACLASSES = (type, ABCMeta)
@@ -233,15 +236,92 @@ def _signature(namespace: dict[str, Any], callee: str) -> inspect.Signature | No
     ):
         return None
 
-    target = _unwrap(target)
-
     try:
-        # As strings, as evaluating annotations can fail or import things.
-        return inspect.signature(
-            target, annotation_format=Format.STRING, follow_wrapped=False
-        )
+        return _read_signature(_unwrap(target))
     except TypeError, ValueError:
         return None
+
+
+def _read_signature(target: Any) -> inspect.Signature:
+    """Read the signature of a callable that passed _has_safe_signature.
+
+    Not inspect.signature for functions and classes: it evaluates annotations,
+    even as strings, and the defaults of a __text_signature__. Both can run any
+    code. Their signature comes from a copy of the function without those.
+    """
+    if type(explicit := static_attribute(target, "__signature__")) is (
+        inspect.Signature
+    ):
+        return explicit
+
+    if type(target) is types.MethodType:
+        return _without_first_parameter(_read_signature(target.__func__))
+
+    if type(target) is types.FunctionType:
+        return inspect.signature(_without_annotations(target), follow_wrapped=False)
+
+    if is_class(target):
+        # Like inspect: the first __new__ or __init__ written in Python.
+        for cls in class_mro(target):
+            attributes = class_dict(cls)
+            for name in ("__new__", "__init__"):
+                constructor = attributes.get(name)
+                if (
+                    type(constructor) is staticmethod
+                    or type(constructor) is classmethod
+                ):
+                    constructor = constructor.__func__
+
+                if type(constructor) is types.FunctionType:
+                    return _without_first_parameter(_read_signature(constructor))
+
+        # Otherwise, that of the first class written in C, which has no
+        # annotations, nor a __text_signature__ from code of the user.
+        target = next(cls for cls in class_mro(target) if not _is_heap_type(cls))
+
+    # Callables written in C.
+    return inspect.signature(target, follow_wrapped=False)
+
+
+def _without_annotations(function: types.FunctionType) -> types.FunctionType:
+    """Return a copy of a function, with only the annotations stored as text.
+
+    Others are evaluated on request, by its __annotate__, which runs code.
+    """
+    copy = types.FunctionType(
+        function.__code__,
+        function.__globals__,
+        function.__name__,
+        function.__defaults__,
+        function.__closure__,
+        function.__kwdefaults__,
+    )
+
+    if function.__annotate__ is None:
+        copy.__annotations__ = {
+            name: annotation
+            for name, annotation in dict.items(function.__annotations__)
+            if type(name) is str and type(annotation) is str
+        }
+
+    return copy
+
+
+def _without_first_parameter(signature: inspect.Signature) -> inspect.Signature:
+    """Return a signature without the parameter that binding fills in."""
+    parameters = list(signature.parameters.values())
+    if parameters and parameters[0].kind in (
+        inspect.Parameter.POSITIONAL_ONLY,
+        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+    ):
+        parameters = parameters[1:]
+
+    return signature.replace(parameters=parameters)
+
+
+def _is_heap_type(cls: type) -> bool:
+    """Return if a class is written in Python, not in C."""
+    return bool(cls.__flags__ & _HEAP_TYPE)
 
 
 def _unwrap(target: Any) -> Any:

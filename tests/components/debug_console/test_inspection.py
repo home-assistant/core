@@ -74,6 +74,11 @@ thing
             [{"key": "value", "getter": True}],
             id="property_over_instance",
         ),
+        pytest.param(
+            "class Thing:\n    value = 1\n\nThing",
+            [{"key": "value", "value": {"type": "number", "value": "1"}}],
+            id="class",
+        ),
     ],
 )
 async def test_inspect(

@@ -75,6 +75,9 @@ shadowed.__dict__["value"] = thing
             "empty_holder.inner.al", "empty_holder.inner.al", [], id="unset_slot"
         ),
         pytest.param(
+            "Thing.al", "Thing.al", ["Thing.alpha", "Thing.alps("], id="class"
+        ),
+        pytest.param(
             "Thing.nothing.al", "Thing.nothing.al", [], id="missing_attribute"
         ),
         pytest.param("thing.getter.up", "thing.getter.up", [], id="through_property"),
@@ -217,6 +220,12 @@ class Plain:
 plain = Plain()
 plain.act = Plain.act
 
+# Annotations stored as text, like with `from __future__ import annotations`.
+def stringly(value, other=1):
+    pass
+
+stringly.__annotations__ = {"value": "int", "other": "int", "return": "str"}
+
 class WithNew:
     def __new__(cls, value):
         return super().__new__(cls)
@@ -245,15 +254,11 @@ thing = Thing()
 """
 
 
+# Without annotations: getting those runs code, as they are evaluated lazily.
 METHOD_SIGNATURE = {
     "name": "method",
-    "parameters": [
-        "entity_id: str",
-        "*values: int",
-        "force: bool = False",
-        "**extra",
-    ],
-    "returns": "str",
+    "parameters": ["entity_id", "*values", "force=False", "**extra"],
+    "returns": None,
     "doc": "Do the thing.",
 }
 
@@ -339,6 +344,17 @@ METHOD_SIGNATURE = {
                 "doc": "Do the inner thing.",
             },
             id="wrapper_signature",
+        ),
+        pytest.param(
+            "stringly(",
+            {
+                "name": "stringly",
+                "parameters": ["value: int", "other: int = 1"],
+                "active": 0,
+                "returns": "str",
+                "doc": "",
+            },
+            id="text_annotations",
         ),
         pytest.param(
             "Registered.lookup(",
@@ -567,6 +583,14 @@ async def test_signature(
             id="resolve_dict_subclass",
         ),
         pytest.param(
+            {"type": "debug_console/signature", "code": "evaluated_annotation("},
+            id="signature_annotation",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "evaluated_annotation(v"},
+            id="keywords_annotation",
+        ),
+        pytest.param(
             {"type": "debug_console/signature", "code": "text_signature_trap("},
             id="signature_text_signature",
         ),
@@ -778,6 +802,17 @@ class LoudDictHolder:
 loud_dict_holder = LoudDictHolder()
 loud_dict_holder.__dict__ = LoudDict(alpha=1)
 
+class AnnotationTrap:
+    @property
+    def state(self):
+        ran.append("annotation")
+        return int
+
+annotation_trap = AnnotationTrap()
+
+def evaluated_annotation(value: annotation_trap.state):
+    pass
+
 class Truthy:
     def __bool__(self):
         ran.append("bool")
@@ -862,6 +897,45 @@ async def test_import_completion_does_not_import(
     )
 
     assert result["matches"] == expected
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            "def target(value):\n    pass\n\n"
+            "target.__text_signature__ = '(value=debug_console_trap.holder.state)'",
+            id="function",
+        ),
+        pytest.param(
+            'class target:\n    """target(value=debug_console_trap.holder.state)\n'
+            '--\n\n"""',
+            id="class",
+        ),
+    ],
+)
+async def test_signature_does_not_evaluate_text_signature(
+    websocket_client: MockHAClientWebSocket, code: str
+) -> None:
+    """Test the defaults in a text signature are not evaluated while typing."""
+    evaluated = []
+
+    class Holder:
+        @property
+        def state(self) -> int:
+            evaluated.append(True)
+            return 1
+
+    module = types.ModuleType("debug_console_trap")
+    module.holder = Holder()  # type: ignore[attr-defined]
+    await async_execute(websocket_client, code)
+
+    with patch.dict(sys.modules, {"debug_console_trap": module}):
+        await async_send(
+            websocket_client, {"type": "debug_console/signature", "code": "target("}
+        )
+
+    assert not evaluated
 
 
 async def test_import_completion_with_path_of_its_own(
