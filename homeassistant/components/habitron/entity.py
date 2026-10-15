@@ -49,3 +49,16 @@ class HabitronEntity(CoordinatorEntity[HbtnCoordinator]):
         ``(DOMAIN, uid)`` -- the hub, the router or a module.
         """
         return DeviceInfo(identifiers={(DOMAIN, self._module.uid)})
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Whether the entity's owner can be reached.
+
+        A router reporting a system error cannot reach its modules, so their
+        readings are stale. The router's own and the hub's readings still come
+        in, and they are what shows the fault, so those stay available.
+        """
+        return super().available and (
+            not isinstance(self._module, Module) or self.coordinator.router.sys_ok
+        )

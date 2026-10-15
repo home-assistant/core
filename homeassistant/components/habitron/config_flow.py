@@ -477,16 +477,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_mac_address"
                 else:
                     await self.async_set_unique_id(unique_id)
+                    stored_host = await self._async_stored_host(host_input)
                     # Before the abort below, which raises: a user re-entering a
                     # hub whose entry is still retrying is asking for it to be
                     # tried now, and ``_abort_if_unique_id_configured`` only
-                    # bypasses the backoff for discovery sources.
+                    # bypasses the backoff for discovery sources. The host is
+                    # written first, as the reload starts eagerly and would
+                    # otherwise dial the old address.
                     if (
                         known
                         := self.hass.config_entries.async_entry_for_domain_unique_id(
                             DOMAIN, unique_id
                         )
-                    ) is not None:
+                    ) is not None and (
+                        known.state is config_entries.ConfigEntryState.SETUP_RETRY
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            known, data={**known.data, CONF_HOST: stored_host}
+                        )
                         self._async_schedule_reload_if_retrying(known)
                     # Re-entering a known hub at a new address updates the
                     # stored host, so a DHCP change does not leave the entry on
@@ -495,7 +503,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # adding it by hand is how un-ignoring works, and the new
                     # entry replaces it.
                     self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: await self._async_stored_host(host_input)},
+                        updates={CONF_HOST: stored_host},
                         reload_on_update=False,
                     )
                     if (

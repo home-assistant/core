@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_MAC, MOCK_NAME, MOCK_UDN, MOCK_UID
 
@@ -164,6 +165,27 @@ async def test_async_remove_config_entry_device(
         name="Sub module",
     )
     assert await async_remove_config_entry_device(hass, entry, other_device) is True
+
+
+async def test_remove_device_is_refused_while_the_entry_is_not_loaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Without a loaded entry there is no bus model to check the device against.
+
+    Core drops ``runtime_data`` on unload, but the device page still offers the
+    removal.
+    """
+    entry = setup_integration
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "gone-module-uid")},
+    )
+
+    assert await async_remove_config_entry_device(hass, entry, device) is False
 
 
 async def test_unload_entry_returns_false_when_platform_unload_fails(
@@ -383,9 +405,8 @@ async def test_concurrent_legacy_entries_of_one_hub_load_only_once(
     for entry in entries:
         entry.add_to_hass(hass)
 
-    await asyncio.gather(
-        *(hass.config_entries.async_setup(entry.entry_id) for entry in entries)
-    )
+    # Loading the integration sets up all its entries concurrently.
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert [entry.state for entry in entries] == [

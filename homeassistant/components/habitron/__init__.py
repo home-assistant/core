@@ -1,5 +1,6 @@
 """The Habitron integration."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -85,6 +86,10 @@ async def async_remove_config_entry_device(
     live devices and must not be deleted by hand; only a device whose uid no
     longer exists on the bus (a leftover of a removed module) may be removed.
     """
+    # Without a loaded entry there is no bus model to check presence against,
+    # and core has already dropped the runtime data.
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return False
     coordinator = config_entry.runtime_data
     present_uids = {coordinator.uid, coordinator.router.uid}
     present_uids.update(module.uid for module in coordinator.router.modules)

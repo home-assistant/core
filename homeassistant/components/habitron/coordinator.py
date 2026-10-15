@@ -20,6 +20,7 @@ from habitron_client import (
     async_refresh_system,
     get_host_ip,
     get_own_ip,
+    normalise_mac,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -73,11 +74,13 @@ class HbtnData:
 
     With ``always_update=False`` the fan-out happens only when this differs
     from the previous tick, so anything no member notification carries has to
-    be in here -- which is why the host state travels beside the bus CRC.
+    be in here -- which is why the host state and the router's health travel
+    beside the bus CRC.
     """
 
     crc: int
     host_readings_ok: bool
+    sys_ok: bool
 
 
 class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
@@ -268,6 +271,11 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         address, the check that no other entry already owns this identity, and
         moving the entry onto it.
 
+        An entry already keyed by a MAC is never moved onto another one: a
+        different MAC at the stored address is a different hub that DHCP has
+        handed this address to, and adopting it would register that hub's
+        devices and clean up the entry's own as stale.
+
         The entry is moved right after the check, with no await in between: a
         second entry for the same hub that is set up concurrently -- two entries
         carried over from the custom integration under a serial and a host
@@ -279,6 +287,23 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
             # from here would give every device the same blank identifier.
             self.hub.uid = self.entry.unique_id or self.entry.entry_id
             _LOGGER.debug("Hub reported no usable MAC; using %s as uid", self.uid)
+
+        if (
+            self._uid_from_mac
+            and (stored := normalise_mac(self.entry.unique_id or "")) is not None
+            and stored != self.uid
+        ):
+            # Retried rather than failed: the hub may get its address back, and
+            # a discovery at its new address updates the entry and reloads it.
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="wrong_hub",
+                translation_placeholders={
+                    "host": self.host,
+                    "expected": stored,
+                    "found": self.uid,
+                },
+            )
 
         # Before the first registry write: if another entry already owns this
         # hub, its devices and entities are keyed by this very uid, so going on
@@ -449,7 +474,11 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         # hub-diag hiccup must not mark every entity unavailable.
         await self._async_update_host()
         self._update_router_issue()
-        return HbtnData(crc=self.crc, host_readings_ok=self.host_readings_ok)
+        return HbtnData(
+            crc=self.crc,
+            host_readings_ok=self.host_readings_ok,
+            sys_ok=self.router.sys_ok,
+        )
 
     async def _async_update_host(self) -> None:
         """Refresh the hub's own host readings.

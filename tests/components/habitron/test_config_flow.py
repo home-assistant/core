@@ -21,6 +21,7 @@ from homeassistant.components.habitron.config_flow import (
     validate_input,
 )
 from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.components.habitron.coordinator import HbtnCoordinator
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -1707,3 +1708,49 @@ async def test_user_flow_reloads_a_retrying_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_user_flow_retry_reload_dials_the_corrected_address(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """The reload of a retrying entry connects to the address just entered.
+
+    The reload task starts eagerly, so the host has to be stored before it is
+    scheduled, or setup dials the old address once more.
+    """
+    dialed: list[str] = []
+
+    async def _connect_and_build(coordinator: HbtnCoordinator) -> None:
+        dialed.append(coordinator.entry.data[CONF_HOST])
+        raise OSError("hub not reachable")
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UID,
+        version=ConfigFlow.VERSION,
+        minor_version=ConfigFlow.MINOR_VERSION,
+        data={CONF_HOST: "192.168.1.99"},
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.habitron.coordinator."
+        "HbtnCoordinator._async_connect_and_build",
+        new=_connect_and_build,
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert dialed == ["192.168.1.99", MOCK_HOST]

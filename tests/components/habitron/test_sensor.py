@@ -51,7 +51,7 @@ from homeassistant.components.habitron.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -998,3 +998,65 @@ async def test_member_updates_reach_states_while_the_bus_crc_is_unchanged(
     assert hass.states.get(entity_ids["rt_1_voltage_0"]).state == "5.2"
     assert hass.states.get(entity_ids[f"{MOCK_UID}_memory_usage"]).state == "55.0"
     assert hass.states.get(entity_ids[f"{MOCK_UID}_cpu_load"]).state == "80.0"
+
+
+async def test_router_fault_makes_only_module_entities_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
+) -> None:
+    """A router system error cuts off its modules, but not itself or the hub.
+
+    The fault changes neither the bus CRC nor the host readings, so the router
+    health has to be part of the coordinator data for the entities to notice.
+    """
+    hub = SmartHub(uid=MOCK_UID, host_valid=True)
+    hub.diags = [Diagnostic(name="CPU load", nmbr=0, type=1, value=10.0)]
+    module = SmartController(
+        uid="MOD-1", addr=1, typ=b"\x01\x03", name="Controller", area=1
+    )
+    module.sensors = [Sensor(name="Temperature", nmbr=0, type=1, value=21.5)]
+    router = Router(uid="rt_1", name="Router")
+    router.modules = [module]
+    router.areas = [Area(nmbr=1, name="Living")]
+    router.voltages = [Diagnostic(name="Voltage 5V", nmbr=0, type=1, value=5.0)]
+
+    await setup_with_model(router, hub)
+    entity_registry.async_update_entity(
+        entity_registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_UID}_cpu_load"),
+        disabled_by=None,
+    )
+    module_sensor = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "MOD-1_temperature"
+    )
+    router_sensor = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "rt_1_voltage_0"
+    )
+
+    async def _poll(sys_ok: bool) -> None:
+        async def _refresh_system(*_: object, **__: object) -> int:
+            router.sys_ok = sys_ok
+            return 4711
+
+        with (
+            patch(
+                "homeassistant.components.habitron.coordinator.async_refresh_system",
+                new=_refresh_system,
+            ),
+            patch(
+                "homeassistant.components.habitron.coordinator.async_refresh_hub",
+                new=AsyncMock(),
+            ),
+        ):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    await _poll(sys_ok=False)
+    assert hass.states.get(module_sensor).state == STATE_UNAVAILABLE
+    assert hass.states.get(router_sensor).state == "5.0"
+
+    await _poll(sys_ok=True)
+    assert hass.states.get(module_sensor).state == "21.5"
+    assert hass.states.get(router_sensor).state == "5.0"

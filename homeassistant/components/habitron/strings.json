@@ -117,6 +117,9 @@
     },
     "update_timeout": {
       "message": "Timeout fetching system status from SmartHub."
+    },
+    "wrong_hub": {
+      "message": "The hub at {host} reports the MAC address {found}, but this entry belongs to the hub with MAC address {expected}. Retrying until that hub is reachable again."
     }
   },
   "issues": {

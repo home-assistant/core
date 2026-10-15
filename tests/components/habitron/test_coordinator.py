@@ -388,6 +388,25 @@ async def test_resolve_uid_moves_the_entry_onto_the_mac(
     assert entry.unique_id == expected
 
 
+async def test_resolve_uid_refuses_a_different_hub_at_the_stored_address(
+    hass: HomeAssistant,
+) -> None:
+    """An entry keyed by one MAC is never moved onto another hub's MAC.
+
+    DHCP can hand the stored address to a different hub. Adopting its MAC would
+    register that hub's devices and clean up the entry's own as stale.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="112233445566")
+    entry.add_to_hass(hass)
+    coord = HbtnCoordinator(hass, entry)
+    coord.host = MOCK_HOST
+    coord.hub = _hub()
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        coord._resolve_uid()
+    assert exc_info.value.translation_key == "wrong_hub"
+    assert entry.unique_id == "112233445566"
+
+
 async def test_uid_falls_back_to_the_entry(hass: HomeAssistant) -> None:
     """A hub reporting no usable address still needs one identity.
 
