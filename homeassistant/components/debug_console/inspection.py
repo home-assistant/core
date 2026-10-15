@@ -207,11 +207,11 @@ def class_mro(cls: type) -> tuple[type, ...]:
 
 def class_dict(cls: type) -> dict[str, Any]:
     """Return the attributes a class defines itself, without running code."""
-    return _with_string_names(_CLASS_DICT.__get__(cls).items())  # pylint: disable=unnecessary-dunder-call
+    return with_string_names(_CLASS_DICT.__get__(cls).items())  # pylint: disable=unnecessary-dunder-call
 
 
-def _with_string_names(items: Iterable[tuple[Any, Any]]) -> dict[str, Any]:
-    """Return attributes, keeping only those with a name that is a str.
+def with_string_names(items: Iterable[tuple[Any, Any]]) -> dict[str, Any]:
+    """Return names and their values, keeping only names that are a str.
 
     A name can be a subclass of str, whose own __hash__, __eq__, and other
     methods would run when comparing or matching it.
@@ -327,7 +327,7 @@ def instance_dict(value: Any) -> dict[str, Any] | None:
     # Code can set a subclass of dict, with methods of its own. Its items view
     # reads the dict underneath.
     attributes = descriptor.__get__(value, type(value))  # pylint: disable=unnecessary-dunder-call
-    return _with_string_names(dict.items(attributes))
+    return with_string_names(dict.items(attributes))
 
 
 def _iter_children(value: Any) -> Iterator[tuple[str, Any]]:

@@ -31,6 +31,7 @@ from .inspection import (
     preview,
     static_attribute,
     static_lookup,
+    with_string_names,
 )
 
 MAX_COMPLETIONS = 200
@@ -194,10 +195,10 @@ def _resolve(namespace: dict[str, Any], expression: str) -> Any:
     """Resolve a dotted name without running any code, or return _MISSING."""
     first, *attributes = expression.split(".")
 
-    if first in namespace:
-        value = namespace[first]
-    elif hasattr(builtins, first):
-        value = getattr(builtins, first)
+    for names in _global_names(namespace):
+        if first in names:
+            value = names[first]
+            break
     else:
         return _MISSING
 
@@ -305,7 +306,7 @@ def _without_annotations(function: types.FunctionType) -> types.FunctionType:
 
     keyword_defaults = function.__kwdefaults__
     if keyword_defaults is not None:
-        keyword_defaults = dict(dict.items(keyword_defaults))
+        keyword_defaults = with_string_names(dict.items(keyword_defaults))
 
     copy = types.FunctionType(
         function.__code__,
@@ -595,13 +596,9 @@ def _complete_global(namespace: dict[str, Any], prefix: str) -> list[str]:
     matches = [word for word in keyword.kwlist if word.startswith(prefix)]
     seen: set[str] = set()
 
-    for names in (namespace, vars(builtins)):
+    for names in _global_names(namespace):
         for name, value in names.items():
-            # Code can store a subclass of str as a name, like in globals().
-            if type(name) is not str or name in seen:
-                continue
-
-            if not _is_completion(name, prefix):
+            if name in seen or not _is_completion(name, prefix):
                 continue
 
             seen.add(name)
@@ -610,6 +607,18 @@ def _complete_global(namespace: dict[str, Any], prefix: str) -> list[str]:
                 return matches
 
     return matches
+
+
+def _global_names(namespace: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    """Return the names of the console, then the builtins, as plain strings.
+
+    Code can store a subclass of str as a name, like in globals(), whose own
+    __hash__ and __eq__ would run when looking up or matching names.
+    """
+    return (
+        with_string_names(dict.items(namespace)),
+        instance_dict(builtins) or {},
+    )
 
 
 def _static_names(value: Any) -> set[str]:

@@ -595,6 +595,14 @@ async def test_signature(
             id="resolve_colliding_name",
         ),
         pytest.param(
+            {"type": "debug_console/complete", "code": "colliding_global.de"},
+            id="resolve_colliding_global",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "colliding_function("},
+            id="signature_colliding_global",
+        ),
+        pytest.param(
             {"type": "debug_console/signature", "code": "doc_method("},
             id="signature_method_doc",
         ),
@@ -840,9 +848,25 @@ class LoudName(str):
         return super().startswith(prefix, *args)
 
 class CollidingName(LoudName):
+    def __new__(cls, value, collides_with):
+        name = super().__new__(cls, value)
+        name.collides_with = collides_with
+        return name
+
     def __hash__(self):
         ran.append("name hash")
-        return hash("beta")
+        return hash(self.collides_with)
+
+# Stored first, so looking up the names they collide with compares them.
+globals()[CollidingName("decoy", "colliding_global")] = 1
+globals()[CollidingName("decoy", "colliding_function")] = 1
+class CollidingTarget:
+    detail = 1
+
+colliding_global = CollidingTarget()
+
+def colliding_function(value):
+    pass
 
 globals()[LoudName("loud_name")] = 1
 
@@ -851,7 +875,7 @@ class NamedHolder:
 
 named_holder = NamedHolder()
 named_holder.__dict__[LoudName("loud_attribute")] = 1
-named_holder.__dict__[CollidingName("gamma")] = 1
+named_holder.__dict__[CollidingName("gamma", "beta")] = 1
 named_holder.beta = 1
 
 class DocTrap:
@@ -889,7 +913,7 @@ def defaults_trap(alpha, beta=1, *, charlie=2):
     pass
 
 defaults_trap.__defaults__ = LoudTuple((1,))
-defaults_trap.__kwdefaults__ = LoudKeywordDefaults(charlie=2)
+defaults_trap.__kwdefaults__ = LoudKeywordDefaults({LoudName("charlie"): 2})
 
 class AnnotationTrap:
     @property
