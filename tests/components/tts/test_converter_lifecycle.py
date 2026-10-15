@@ -633,7 +633,8 @@ async def test_child_exit_while_source_held_is_not_success(
         process = await spawn_os(
             sys.executable,
             "-c",
-            f"import sys; sys.stderr.write('exit detail'); sys.exit({exit_code})",
+            "import sys; sys.stdin.buffer.read(1); "
+            f"sys.stderr.write('exit detail'); sys.exit({exit_code})",
             **kwargs,
         )
         processes.append(process)
