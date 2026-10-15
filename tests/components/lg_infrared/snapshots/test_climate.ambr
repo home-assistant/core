@@ -69,7 +69,7 @@
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 553>,
+    'supported_features': <ClimateEntityFeature: 937>,
     'translation_key': 'lg_ac',
     'unique_id': '01JTEST0000000000000000000_climate',
     'unit_of_measurement': None,
@@ -98,7 +98,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 553>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 937>,
       <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
       <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
         'off',
