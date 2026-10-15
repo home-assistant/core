@@ -540,7 +540,7 @@ class XiaomiAirHumidifierJsqs(XiaomiAirHumidifier):
             self._device.set_mode,  # type: ignore[attr-defined]
             AirhumidifierJsqsOperationMode.Auto,
         ):
-            self._mode = 3
+            self._mode = AirhumidifierJsqsOperationMode.Auto.value
             self.async_write_ha_state()
 
     @override
