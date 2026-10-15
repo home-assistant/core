@@ -32,9 +32,7 @@ from .coordinator import (
     WatercrystStateUpdateCoordinator,
 )
 
-_PLATFORMS: list[Platform] = [
-    Platform.SENSOR
-]
+_PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 @dataclass
@@ -58,7 +56,9 @@ type WatercrystConfigEntry = ConfigEntry[RuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> bool:
     """Set up a WATERCryst BIOCAT device from a config entry."""
 
-    client = AsyncApiClient(auth=AsyncAuth(client=get_async_client(hass), api_key=entry.data[CONF_API_KEY]))
+    client = AsyncApiClient(
+        auth=AsyncAuth(client=get_async_client(hass), api_key=entry.data[CONF_API_KEY])
+    )
 
     try:
         info = await client.get_device_info()
@@ -124,4 +124,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
