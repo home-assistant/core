@@ -517,6 +517,18 @@ async def test_signature(
             {"type": "debug_console/signature", "code": "loud_annotation("},
             id="signature_annotation_format",
         ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "text_signature_trap("},
+            id="signature_text_signature",
+        ),
+        pytest.param(
+            {"type": "debug_console/signature", "code": "parameter_trap("},
+            id="signature_parameter_subclass",
+        ),
+        pytest.param(
+            {"type": "debug_console/complete", "code": "parameter_trap(v"},
+            id="keywords_parameter_subclass",
+        ),
     ],
 )
 async def test_typing_runs_no_attribute_code(
@@ -689,6 +701,29 @@ import inspect
 
 def loud_annotation(value):
     pass
+
+class Truthy:
+    def __bool__(self):
+        ran.append("bool")
+        return False
+
+def text_signature_trap(value):
+    pass
+
+text_signature_trap.__text_signature__ = Truthy()
+
+class LoudParameter(inspect.Parameter):
+    @property
+    def kind(self):
+        ran.append("parameter")
+        return inspect.Parameter.POSITIONAL_OR_KEYWORD
+
+def parameter_trap(value):
+    pass
+
+parameter_trap.__signature__ = inspect.Signature(
+    [LoudParameter("value", inspect.Parameter.POSITIONAL_OR_KEYWORD)]
+)
 
 loud_annotation.__signature__ = inspect.Signature(
     [

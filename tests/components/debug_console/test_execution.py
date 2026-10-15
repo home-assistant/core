@@ -128,6 +128,9 @@ async def test_print_to_file(websocket_client: MockHAClientWebSocket) -> None:
         pytest.param("for x in []:\n    pass\n", False, id="block_end"),
         pytest.param("for x in []:\n    pass\n    ", False, id="block_end_indent"),
         pytest.param("def", False, id="syntax_error"),
+        pytest.param("foo(\n    1)", False, id="multiline_call"),
+        pytest.param("if True:\n    x = (\n        1)", True, id="call_in_block"),
+        pytest.param("    # comment", False, id="comment_only"),
     ],
 )
 async def test_check_complete(

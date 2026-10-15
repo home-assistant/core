@@ -38,6 +38,22 @@ class _OutputCapture:
 
 _OUTPUT_CAPTURE: ContextVar[_OutputCapture] = ContextVar("debug_console_output")
 
+# Statements with an indented block, which the Python REPL ends at an empty line.
+_COMPOUND_STATEMENTS = (
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.With,
+    ast.AsyncWith,
+    ast.Try,
+    ast.TryStar,
+    ast.Match,
+    ast.FunctionDef,
+    ast.AsyncFunctionDef,
+    ast.ClassDef,
+)
+
 
 def is_incomplete(code: str) -> bool:
     """Return if the code needs more input, using the rules of the Python REPL."""
@@ -51,8 +67,13 @@ def is_incomplete(code: str) -> bool:
         return False
 
     # Like the Python REPL, an indented block continues until an empty line.
+    # Only a block: the last line of a call can be indented too.
     last_line = code.rsplit("\n", 1)[-1]
-    return last_line[:1].isspace() and bool(last_line.strip())
+    if not last_line[:1].isspace() or not last_line.strip():
+        return False
+
+    statements = ast.parse(code, CONSOLE_FILENAME, "exec").body
+    return bool(statements) and isinstance(statements[-1], _COMPOUND_STATEMENTS)
 
 
 async def async_execute(

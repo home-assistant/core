@@ -298,13 +298,29 @@ def _has_safe_signature(value: Any) -> bool:
 
 
 def _has_plain_signature_attributes(attributes: Mapping[str, Any]) -> bool:
-    """Return if inspect can read __signature__ and __partialmethod__ safely.
+    """Return if inspect can read the signature attributes of a callable safely.
 
-    It reads both with getattr(), which runs a descriptor stored there.
+    It reads them with getattr(), which runs a descriptor stored there, and
+    checks if __text_signature__ is true, which can run its __bool__.
     """
     return (
-        has_type(attributes.get("__signature__"), (type(None), inspect.Signature))
+        _is_plain_signature(attributes.get("__signature__"))
+        and has_type(attributes.get("__text_signature__"), (type(None), str))
         and "__partialmethod__" not in attributes
+    )
+
+
+def _is_plain_signature(signature: Any) -> bool:
+    """Return if an explicit signature holds nothing that can run code.
+
+    Its parameters can be subclasses, with properties of their own.
+    """
+    if signature is None:
+        return True
+
+    return type(signature) is inspect.Signature and all(
+        type(parameter) is inspect.Parameter and type(parameter.name) is str
+        for parameter in signature.parameters.values()
     )
 
 
