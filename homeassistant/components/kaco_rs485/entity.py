@@ -43,7 +43,6 @@ class KacoRs485Entity(CoordinatorEntity[KacoRs485Coordinator]):
             name=_device_name(address, model),
             manufacturer=MANUFACTURER,
             model=model,
-            # No serial_number: xi units answer command `s` with zero bytes.
             sw_version=recorded.get(CONF_SW_VERSION) or None,
         )
 
