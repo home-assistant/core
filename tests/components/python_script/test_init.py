@@ -26,7 +26,8 @@ async def test_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         res = await async_setup_component(hass, DOMAIN, {})
@@ -369,7 +370,8 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         res = await async_setup_component(hass, DOMAIN, {})
@@ -388,7 +390,8 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
@@ -425,7 +428,8 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts1
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts1,
         ),
         patch(
             "homeassistant.components.python_script.os.path.exists", return_value=True
@@ -479,7 +483,8 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts2
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts2,
         ),
         patch(
             "homeassistant.components.python_script.os.path.exists", return_value=True
@@ -535,7 +540,8 @@ async def test_execute_with_output(
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -579,7 +585,8 @@ async def test_execute_no_output(
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -618,7 +625,8 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await async_setup_component(hass, DOMAIN, {})
