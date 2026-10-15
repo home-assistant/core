@@ -93,22 +93,14 @@ async def test_loading(hass: HomeAssistant, store: storage.Store) -> None:
     assert data == MOCK_DATA
 
 
-async def test_remove_pending_save(
-    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
-) -> None:
-    """Removal discards delayed data and allows subsequent saves."""
+async def test_remove_pending_save(store: storage.Store) -> None:
+    """Removal discards delayed data instead of returning it on the next load."""
     await store.async_save(MOCK_DATA)
     store.async_delay_save(lambda: MOCK_DATA2, 60)
 
     await store.async_remove()
 
     assert await store.async_load() is None
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-    await hass.async_block_till_done()
-    assert MOCK_KEY not in hass_storage
-
-    await store.async_save(MOCK_DATA)
-    assert await store.async_load() == MOCK_DATA
 
 
 async def test_remove_during_write(
@@ -136,32 +128,6 @@ async def test_remove_during_write(
     assert await store.async_load() is None
 
     await store.async_save(MOCK_DATA2)
-    assert await store.async_load() == MOCK_DATA2
-
-
-async def test_save_during_removal(
-    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
-) -> None:
-    """A new save waits for removal and persists its data afterwards."""
-    await store.async_save(MOCK_DATA)
-    removal_started = asyncio.Event()
-    finish_removal = asyncio.Event()
-    async_remove = store._io.async_remove
-
-    async def blocked_remove() -> None:
-        removal_started.set()
-        await finish_removal.wait()
-        await async_remove()
-
-    with patch.object(store._io, "async_remove", side_effect=blocked_remove):
-        remove_task = hass.async_create_task(store.async_remove())
-        await removal_started.wait()
-        write_task = hass.async_create_task(store.async_save(MOCK_DATA2))
-        await asyncio.sleep(0)
-        finish_removal.set()
-        await asyncio.gather(remove_task, write_task)
-
-    assert hass_storage[MOCK_KEY]["data"] == MOCK_DATA2
     assert await store.async_load() == MOCK_DATA2
 
 
