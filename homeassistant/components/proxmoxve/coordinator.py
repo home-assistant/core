@@ -81,6 +81,11 @@ def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
     )
 
 
+def proxmox_node_url(coordinator: ProxmoxCoordinator, node: str) -> URL:
+    """Return the URL of a Proxmox VE node."""
+    return proxmox_base_url(coordinator).with_fragment(f"v1:0:=node/{node}")
+
+
 def node_device_info(
     coordinator: ProxmoxCoordinator, node_data: ProxmoxNodeData
 ) -> dr.DeviceInfo:
@@ -91,9 +96,7 @@ def node_device_info(
         },
         name=node_data.node.get("node", str(node_data.node["id"])),
         model="Node",
-        configuration_url=proxmox_base_url(coordinator).with_fragment(
-            f"v1:0:=node/{node_data.node['node']}"
-        ),
+        configuration_url=proxmox_node_url(coordinator, node_data.node["node"]),
     )
 
 

@@ -13,7 +13,7 @@ from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -> None:
     """Set up Coolmaster from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -46,8 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -
     entry.runtime_data = coordinator
     await _async_migrate_unique_ids(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def _async_migrate_unique_ids(
@@ -85,9 +83,9 @@ async def _async_migrate_unique_ids(
             dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -> None:
     """Unload a Coolmaster config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

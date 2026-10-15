@@ -61,4 +61,5 @@ class AcaiaButton(AcaiaEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Handle the button press."""
+        # aioacaia queues button commands, so enqueueing cannot fail.
         await self.entity_description.press_fn(self._scale)

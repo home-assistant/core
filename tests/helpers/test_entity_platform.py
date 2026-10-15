@@ -8,9 +8,9 @@ import types
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
@@ -1524,6 +1524,42 @@ async def test_device_info_called(
     assert device.via_device_id == via.id
 
 
+@pytest.mark.parametrize(
+    "device_info",
+    [
+        pytest.param({}, id="dict"),
+        pytest.param(dr.DeviceInfo(), id="device_info"),
+    ],
+)
+async def test_device_info_empty(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device_info: dict[str, Any] | dr.DeviceInfo,
+) -> None:
+    """Test an entity with an empty device info is added without a device."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([MockEntity(unique_id="abcd", device_info=device_info)])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+
+
 async def test_device_info_not_overrides(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -2192,9 +2228,9 @@ async def test_register_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         expected_message = (
@@ -2209,8 +2245,8 @@ async def test_register_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         entity_platform.async_register_entity_service(

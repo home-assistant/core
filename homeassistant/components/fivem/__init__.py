@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FiveMConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FiveMConfigEntry) -> None:
     """Set up FiveM from a config entry."""
     _LOGGER.debug(
         "Create FiveM server instance for '%s:%s'",
@@ -36,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FiveMConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FiveMConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FiveMConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

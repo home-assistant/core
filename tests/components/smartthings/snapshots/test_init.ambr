@@ -162,7 +162,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'IKEA of Sweden',
     'model': None,
     'model_id': None,
     'name': 'aq-sensor-3-ikea',
@@ -376,7 +376,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'CentraLite',
     'model': None,
     'model_id': None,
     'name': 'Dimmer Debian',
@@ -410,7 +410,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'Visonic',
     'model': None,
     'model_id': None,
     'name': '.Front Door Open/Closed Sensor',
@@ -1824,7 +1824,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': '_TZE284_chbyv06x',
     'model': None,
     'model_id': None,
     'name': 'Gas Detector',
@@ -1918,7 +1918,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': '_TZE200_rxntag7i',
     'model': None,
     'model_id': None,
     'name': 'Thermostat Küche',
@@ -2132,7 +2132,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'IKEA of Sweden',
     'model': None,
     'model_id': None,
     'name': 'Kitchen IKEA KADRILJ Window blind',
@@ -2226,7 +2226,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'IKEA of Sweden',
     'model': None,
     'model_id': None,
     'name': 'IKEA Plug Powermeter',
@@ -2350,7 +2350,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'LUMI',
     'model': None,
     'model_id': None,
     'name': 'Outdoor Temp',
@@ -2414,7 +2414,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'SmartThings',
     'model': None,
     'model_id': None,
     'name': 'Deck Door',
@@ -2538,7 +2538,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'LEDVANCE',
     'model': None,
     'model_id': None,
     'name': 'Arlo Beta Basestation',
@@ -2872,7 +2872,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
+    'manufacturer': 'Yale',
     'model': None,
     'model_id': None,
     'name': 'Basement Door Lock',

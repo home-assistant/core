@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client
@@ -19,7 +19,7 @@ class IqviaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = vol.Schema({vol.Required(CONF_ZIP_CODE): str})
+        self.data_schema = probatio.Schema({probatio.Required(CONF_ZIP_CODE): str})
 
     @override
     async def async_step_user(

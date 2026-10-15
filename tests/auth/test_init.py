@@ -3,12 +3,12 @@
 from datetime import timedelta
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import jwt
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -43,7 +43,7 @@ def mock_hass(hass: HomeAssistant) -> HomeAssistant:
 
 async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
     """Test get auth providers."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -84,7 +84,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
 
 async def test_auth_manager_from_config_auth_modules(mock_hass) -> None:
     """Test get auth modules."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -576,6 +576,17 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
 
     with pytest.raises(ValueError):
         await manager.async_deactivate_user(owner)
+
+
+async def test_cannot_remove_owner(mock_hass: HomeAssistant) -> None:
+    """Test that we cannot remove the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    owner = MockUser(is_owner=True).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_remove_user(owner)
+
+    assert await manager.async_get_user(owner.id) is owner
 
 
 async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:
@@ -1119,6 +1130,22 @@ async def test_async_remove_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def test_async_remove_user_revokes_refresh_tokens(hass: HomeAssistant) -> None:
+    """Test removing a user revokes its refresh tokens."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser(is_owner=False).add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    access_token = manager.async_create_access_token(refresh_token)
+    revoked = Mock()
+    manager.async_register_revoke_token_callback(refresh_token.id, revoked)
+
+    await manager.async_remove_user(user)
+
+    revoked.assert_called_once_with()
+    assert manager.async_get_refresh_token(refresh_token.id) is None
+    assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_async_remove_user_fail_if_remove_credential_fails(

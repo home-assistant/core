@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import pyversasense as pyv
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -27,8 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "versasense"
 
 # Validation of the user's configuration
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_HOST): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

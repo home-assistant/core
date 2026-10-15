@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyisy.constants import ES_CONNECTED
 from pyisy.nodes import Node
 import pytest
 
@@ -42,6 +43,7 @@ def mock_isy():
     mock.networking.nobjs = []
     mock.clock = MagicMock()
     mock.websocket = MagicMock()
+    mock.websocket.status = ES_CONNECTED
     mock.conf = {
         "name": "Skynet ISY",
         "model": "IoX",
