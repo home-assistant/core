@@ -192,7 +192,7 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         super().__init__(coordinator, key, attribute, description)
 
         self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
-        self._blu_trv_name = cast(str, self._attr_device_info["name"])
+        self._blu_trv_name = cast(str, self._attr_device_info.name)
 
         update_coordinator = coordinator.config_entry.runtime_data.rpc_blu_trv_update
 

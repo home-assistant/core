@@ -77,6 +77,8 @@ def test_client_id_hostname() -> None:
     """Test we enforce valid hostname."""
     assert indieauth._parse_client_id("http://www.home-assistant.io/")
     assert indieauth._parse_client_id("http://[::1]")
+    assert indieauth._parse_client_id("http://[::1]:8123/")
+    assert indieauth._parse_client_id("http://[fe80::1]:8123/")
     assert indieauth._parse_client_id("http://127.0.0.1")
     assert indieauth._parse_client_id("http://10.0.0.0")
     assert indieauth._parse_client_id("http://10.255.255.255")
@@ -93,6 +95,18 @@ def test_client_id_hostname() -> None:
         assert indieauth._parse_client_id("http://172.32.0.0/")
     with pytest.raises(ValueError):
         assert indieauth._parse_client_id("http://192.167.0.0/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://8.8.8.8:8123/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://[2001:db8::1]/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://[2001:db8::1]:8123/")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("https:///callback")
+    with pytest.raises(ValueError):
+        assert indieauth._parse_client_id("http://:8123/")
 
 
 def test_parse_url_lowercase_host() -> None:
