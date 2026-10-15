@@ -135,6 +135,7 @@ async def test_load_entry_fails_due_to_generic_exception(
 
     assert hmip_config_entry.runtime_data
     assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert hmip_config_entry.reason == "Error connecting with HomematicIP Cloud"
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

@@ -141,9 +141,6 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     translation_key="invalid_api_key",
                 ) from err
             except TankerkoenigRateLimitError as err:
-                _LOGGER.warning(
-                    "API rate limit reached, consider to increase polling interval"
-                )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="rate_limit_reached",

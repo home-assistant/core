@@ -246,6 +246,7 @@ async def test_dhcp_can_finish(
         CONF_MODEL: panel_model.name,
         **config_flow_data,
     }
+    assert result["result"].unique_id == serial_number
 
 
 @pytest.mark.parametrize(

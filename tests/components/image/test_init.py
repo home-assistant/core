@@ -1,5 +1,6 @@
 """The tests for the image component."""
 
+import asyncio
 import errno
 from http import HTTPStatus
 import ssl
@@ -462,6 +463,26 @@ async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) 
         await image.async_get_image(hass, "image.unknown")
 
 
+async def test_get_image_cancelled(
+    hass: HomeAssistant, mock_image_platform: None
+) -> None:
+    """Test cancelling fetching an image propagates the cancellation."""
+    started = asyncio.Event()
+
+    async def _async_image() -> bytes:
+        started.set()
+        await asyncio.Event().wait()
+        return b"Test"
+
+    with patch.object(MockImageEntity, "async_image", side_effect=_async_image):
+        task = hass.async_create_task(image.async_get_image(hass, "image.test"))
+        await started.wait()
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+
 async def test_snapshot_service(hass: HomeAssistant) -> None:
     """Test snapshot service."""
     mopen = mock_open()
@@ -554,23 +575,27 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     [
         (
             OSError(errno.EACCES, "Permission denied"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+            "Cannot write /test/snapshot.jpg: permission denied$",
         ),
         (
             OSError(errno.EPERM, "Operation not permitted"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+            "Cannot write /test/snapshot.jpg: permission denied$",
         ),
         (
             OSError(errno.ENOSPC, "No space left on device"),
-            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
+            "Cannot write /test/snapshot.jpg: no space left on the device$",
         ),
         (
             OSError(errno.EROFS, "Read-only file system"),
-            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
+            "Cannot write /test/snapshot.jpg: the file system is read-only$",
+        ),
+        (
+            FileNotFoundError(errno.ENOENT, "No such file or directory"),
+            "Cannot write /test/snapshot.jpg: the folder does not exist$",
         ),
         (
             OSError(errno.EIO, "Input/output error"),
-            "Cannot write image to /test/snapshot.jpg$",
+            "Cannot write /test/snapshot.jpg$",
         ),
     ],
 )

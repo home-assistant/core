@@ -70,6 +70,17 @@
       }
     },
     "sensor": {
+      "backup_power_capacity": {
+        "name": "Backup power capacity"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging",
+          "operative": "Operative"
+        }
+      },
       "current_electricity_price": {
         "name": "Current electricity price"
       },
@@ -83,6 +94,12 @@
       },
       "current_sustainability_score": {
         "name": "Current sustainability score"
+      },
+      "cycle_count": {
+        "name": "Charge cycles"
+      },
+      "earned_today": {
+        "name": "Earned today"
       },
       "electricity_cost_this_month": {
         "name": "Electricity cost this month"
@@ -112,6 +129,12 @@
       "electricity_produced_this_month": {
         "name": "Electricity returned this month"
       },
+      "energy_charged_today": {
+        "name": "Energy charged today"
+      },
+      "energy_discharged_today": {
+        "name": "Energy discharged today"
+      },
       "gas_cost_this_month": {
         "name": "Gas cost this month"
       },
@@ -127,6 +150,14 @@
       "highest_electricity_price_tomorrow": {
         "name": "Highest electricity price tomorrow"
       },
+      "inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "charging": "[%key:component::zonneplan::entity::sensor::battery_state::state::charging%]",
+          "discharging": "[%key:component::zonneplan::entity::sensor::battery_state::state::discharging%]",
+          "operative": "[%key:component::zonneplan::entity::sensor::battery_state::state::operative%]"
+        }
+      },
       "lowest_electricity_price_today": {
         "name": "Lowest electricity price today"
       },
@@ -135,6 +166,9 @@
       },
       "next_hour_electricity_price": {
         "name": "Next hour electricity price"
+      },
+      "total_earned": {
+        "name": "Total earned"
       }
     }
   },

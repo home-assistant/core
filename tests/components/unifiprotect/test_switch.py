@@ -141,11 +141,16 @@ async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
 
 async def test_switch_setup_no_perm(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
     doorbell: Camera,
 ) -> None:
-    """Test switch entity setup for light devices."""
+    """A read-only local user only gets the light status light switch.
+
+    It writes through the API key; the other switches still use private
+    setters and stay behind PermRequired.WRITE.
+    """
 
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
@@ -153,7 +158,10 @@ async def test_switch_setup_no_perm(
 
     await init_entry(hass, ufp, [light, doorbell])
 
-    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
+    assert_entity_counts(hass, Platform.SWITCH, 1, 1)
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{light.mac}_status_light"
+    )
 
 
 async def test_switch_setup_light(
@@ -1139,6 +1147,15 @@ async def test_switch_sense_public_switches_ignore_local_permissions(
         hass, Platform.SWITCH, sensor_all, description
     )
     assert entity_registry.async_get(entity_id) is None
+
+    # The removed read-only mirrors of the migrated switches are not created.
+    for key in ("motion_enabled", "temperature", "humidity", "light", "alarm"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{sensor_all.mac}_{key}"
+            )
+            is None
+        ), key
 
 
 _SMART_KEYS = {key for key, _, _ in CAMERA_SWITCHES_DETECTION_READ}

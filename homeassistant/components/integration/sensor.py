@@ -34,6 +34,7 @@ from homeassistant.core import (
     EventStateReportedData,
     HomeAssistant,
     State,
+    async_noop,
     callback,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -345,7 +346,7 @@ class IntegrationSensor(RestoreSensor):
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
             else max_sub_interval
         )
-        self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
+        self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = async_noop
         self._last_integration_time: datetime = dt_util.utcnow()
         self._last_integration_trigger = _IntegrationTrigger.StateEvent
         self._attr_suggested_display_precision = round_digits or 2

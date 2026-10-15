@@ -355,7 +355,15 @@ async def async_get_custom_components(
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        comps = await hass.async_add_executor_job(_get_custom_components, hass)
+        try:
+            comps = await hass.async_add_executor_job(_get_custom_components, hass)
+        except BaseException as err:
+            if hass.data.get(DATA_CUSTOM_COMPONENTS) is future:
+                del hass.data[DATA_CUSTOM_COMPONENTS]
+            future.set_exception(err)
+            # Retrieve the exception even when there are no concurrent callers.
+            future.exception()
+            raise
 
         # A cache cleared during the scan asks for a newer scan, this one
         # must not put its older result back.

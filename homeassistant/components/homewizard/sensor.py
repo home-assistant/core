@@ -666,7 +666,6 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="uptime",
-        translation_key="uptime",
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

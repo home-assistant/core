@@ -60,7 +60,7 @@ def _make_device(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
-) -> bool:
+) -> None:
     """Set up Mitsubishi Comfort from a config entry."""
     session = async_get_clientsession(hass)
     account = MitsubishiCloudAccount(
@@ -193,22 +193,20 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Only after a successful unload: a failed unload leaves the entry
-        # active, so its addressless devices still need the repair.
-        ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
-        await asyncio.gather(
-            *(c.device.close() for c in entry.runtime_data.values()),
-            return_exceptions=True,
-        )
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Only after a successful unload: a failed unload leaves the entry
+    # active, so its addressless devices still need the repair.
+    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
+    await asyncio.gather(
+        *(c.device.close() for c in entry.runtime_data.values()),
+        return_exceptions=True,
+    )
 
 
 async def async_remove_entry(

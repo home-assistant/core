@@ -2,15 +2,17 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pysaj
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.saj.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("connection_method", ["ethernet", "wifi"], indirect=True)
@@ -47,6 +49,33 @@ async def test_setup_entry_auth_failed(
     mock_pysaj_saj.read.side_effect = pysaj.UnauthorizedException("Auth failed")
     entry = await setup_integration(hass, mock_config_entry)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+
+
+@pytest.mark.parametrize("connection_method", ["wifi"], indirect=True)
+async def test_update_auth_failed_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pysaj_saj: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth error during a scheduled refresh starts a reauth flow."""
+    entry = await setup_integration(hass, mock_config_entry)
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_pysaj_saj.read.side_effect = pysaj.UnauthorizedException("Auth failed")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
 @pytest.mark.parametrize(

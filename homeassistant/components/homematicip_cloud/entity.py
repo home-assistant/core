@@ -179,6 +179,14 @@ class HomematicipGenericEntity(Entity):
         )
 
     @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the service lookup entry to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._hap.hmip_device_by_entity_id.pop(old_entity_id, None)
+        self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
+
+    @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
         """Handle device state changes."""
         # Don't update disabled entities

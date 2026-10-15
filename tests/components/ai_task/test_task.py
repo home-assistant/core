@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,7 +14,6 @@ from homeassistant.components.ai_task import (
     async_generate_image,
 )
 from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
-from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.components.llm import AssistAPI
 from homeassistant.const import STATE_UNKNOWN
@@ -194,13 +193,13 @@ async def test_generate_data_mixed_attachments(
     """Test generating data with both camera and regular media source attachments."""
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=Image(content_type="image/jpeg", content=b"fake_camera_jpeg"),
-        ) as mock_get_camera_image,
-        patch(
-            "homeassistant.components.image.async_get_image",
-            return_value=Image(content_type="image/jpeg", content=b"fake_image_jpeg"),
-        ) as mock_get_image_image,
+            "homeassistant.components.media_source.async_get_media_image",
+            side_effect=[
+                media_source.MediaImage(b"fake_camera_jpeg", "image/jpeg"),
+                media_source.MediaImage(b"fake_image_jpeg", "image/jpeg"),
+                None,
+            ],
+        ) as mock_get_media_image,
         patch(
             "homeassistant.components.media_source.async_resolve_media",
             return_value=media_source.PlayMedia(
@@ -232,8 +231,11 @@ async def test_generate_data_mixed_attachments(
         )
 
     # Verify both methods were called
-    mock_get_camera_image.assert_called_once_with(hass, "camera.front_door")
-    mock_get_image_image.assert_called_once_with(hass, "image.floorplan")
+    assert mock_get_media_image.call_args_list == [
+        call(hass, "media-source://camera/camera.front_door"),
+        call(hass, "media-source://image/image.floorplan"),
+        call(hass, "media-source://media_player/video.mp4"),
+    ]
     mock_resolve_media.assert_called_once_with(
         hass, "media-source://media_player/video.mp4", None
     )

@@ -39,6 +39,7 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
         """Handle errors from async call."""
         result = await func(self, *args, **kwargs)
         if is_error_response(result):
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Error while execute function %s: %s",
                 __name__,

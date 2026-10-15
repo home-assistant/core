@@ -47,6 +47,7 @@ from homeassistant.helpers.typing import VolDictType
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
+    DriverNotReadyError,
     async_get_node_from_device_id,
     async_get_node_from_entity_id,
     async_get_nodes_from_area_id,
@@ -332,9 +333,21 @@ class ZWaveServices:
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
-            val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
-            )
+            try:
+                val[const.ATTR_NODES] = async_get_nodes_from_targets(
+                    self._hass,
+                    val,
+                    self._ent_reg,
+                    self._dev_reg,
+                    _LOGGER,
+                    raise_on_driver_not_ready=True,
+                )
+            except DriverNotReadyError as err:
+                # Not a validation error, so continue_on_error can tolerate it
+                raise HomeAssistantError(
+                    translation_domain=const.DOMAIN,
+                    translation_key="driver_not_ready",
+                ) from err
             return val
 
         @callback

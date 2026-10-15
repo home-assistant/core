@@ -228,8 +228,9 @@ async def test_subentry_recommended(
     }
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_unsupported_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the subentry form giving error about models not supported."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -261,6 +262,21 @@ async def test_subentry_unsupported_model(
     }
     assert suggested.get(CONF_RECOMMENDED) is False
     assert suggested.get(CONF_CHAT_MODEL) == "o1-mini"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-5",
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"], {}
+    )
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(
@@ -612,7 +628,9 @@ async def test_subentry_unsupported_reasoning_effort(
         ),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -632,6 +650,26 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_key": "bla",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -1738,15 +1776,36 @@ async def test_reconfigure_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_config_entry.data[CONF_API_KEY] == "bla"
 
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        ("assist", ["assist"], ["assist"]),
-        (["assist"], ["assist"], ["assist"]),
-        ("non-existent", [], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        ("assist", ["assist"], ["assist", "homeassistant"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        ("non-existent", [], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(

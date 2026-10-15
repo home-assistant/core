@@ -11,6 +11,7 @@ from homeassistant.components.radio_frequency import DATA_COMPONENT, DOMAIN as R
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TRANSMITTER_ENTITY_ID
@@ -30,7 +31,9 @@ async def _start_user_flow(hass: HomeAssistant) -> dict:
 
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful user flow creates an entry."""
     result = await _start_user_flow(hass)
@@ -61,10 +64,16 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KlikAanKlikUit ID 123456 CH 1"
     assert result["data"] == user_input
+    assert (
+        result["result"].unique_id
+        == f"{entity_registry.async_get(TRANSMITTER_ENTITY_ID).id}_123456_1_0"
+    )
 
 
 async def test_user_flow_retry_learn(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the user can retry pairing when the device does not respond."""
     result = await _start_user_flow(hass)
@@ -101,6 +110,10 @@ async def test_user_flow_retry_learn(
         result["flow_id"], user_input={"device_responded": True}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["result"].unique_id
+        == f"{entity_registry.async_get(TRANSMITTER_ENTITY_ID).id}_123456_1_0"
+    )
 
 
 async def test_unique_id_already_configured(

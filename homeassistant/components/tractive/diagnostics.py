@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import TractiveConfigEntry
+from .coordinator import TractiveConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_EMAIL, "title", "_id"}
 
@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "config_entry": config_entry.as_dict(),
-            "trackables": [item.trackable for item in trackables],
+            "trackables": [item.pet_details for item in trackables],
         },
         TO_REDACT,
     )

@@ -18,7 +18,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -63,17 +67,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version == 1:
         new_data = {key: value for key, value in entry.data.items() if key != "tls"}
         new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> None:
     """Set up the ISY 994 integration."""
     isy_config = entry.data
     isy_options = entry.options
@@ -97,8 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
-        LOGGER.error("The ISY/IoX host value in configuration is invalid")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_host",
+        )
 
     # Connect to ISY controller.
     isy = ISY(
@@ -192,8 +196,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
 
-    return True
-
 
 @callback
 def _async_get_or_create_isy_device_in_registry(
@@ -235,14 +237,13 @@ def _create_service_device_info(
     return device_info
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    LOGGER.debug("ISY Stopping Event Stream and automatic updates")
-    entry.runtime_data.root.websocket.stop()
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+        entry.runtime_data.root.websocket.stop()
 
 
 async def async_remove_config_entry_device(

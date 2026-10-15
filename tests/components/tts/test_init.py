@@ -2451,6 +2451,29 @@ def test_write_tags_adds_tag_to_untagged_audio() -> None:
     assert tags["TIT2"].text == ["There is someone at the door."]
 
 
+def test_write_tags_fills_empty_id3_tag() -> None:
+    """Test audio arriving with an ID3 tag holding no frames gets the frames."""
+    data = b"ID3\x04\x00\x00\x00\x00\x00\x00" + load_fixture_bytes(
+        "untagged.mp3", DOMAIN
+    )
+    assert not mutagen.File(io.BytesIO(data)).tags
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.count(b"ID3") == 1
+    tags = mutagen.File(io.BytesIO(tagged)).tags
+    assert tags["TPE1"].text == ["en"]
+    assert tags["TALB"].text == ["Test"]
+    assert tags["TIT2"].text == ["There is someone at the door."]
+
+
 def test_write_tags_overwrites_id3v1_metadata() -> None:
     """Test audio arriving with only an ID3v1 trailer gets the frames rewritten."""
     data = load_fixture_bytes("id3v1.mp3", DOMAIN)

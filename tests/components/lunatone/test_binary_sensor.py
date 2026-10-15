@@ -4,16 +4,18 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import ScanLineState, ScanState
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lunatone.coordinator import DEFAULT_SCAN_UPDATE_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -44,6 +46,7 @@ async def test_sensor_value_update(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Lunatone DALI scan status value update."""
     scan_states = iter(
@@ -70,8 +73,9 @@ async def test_sensor_value_update(
     assert all(entity.state == STATE_OFF for entity in entities)
     assert coordinator.update_interval == timedelta(seconds=10)
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entities = hass.states.async_all(Platform.BINARY_SENSOR)
     assert entities[0].state == STATE_ON
@@ -79,8 +83,9 @@ async def test_sensor_value_update(
     assert entities[2].state == STATE_OFF
     assert coordinator.update_interval == timedelta(seconds=1)
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entities = hass.states.async_all(Platform.BINARY_SENSOR)
     assert all(entity.state == STATE_OFF for entity in entities)

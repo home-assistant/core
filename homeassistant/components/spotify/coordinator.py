@@ -163,8 +163,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                         )
                         self._playlist = None
                         self._checked_playlist_id = None
-        if current.is_playing and current.progress_ms is not None:
-            assert current.item is not None
+        if (
+            current.is_playing
+            and current.progress_ms is not None
+            and current.item is not None
+        ):
             time_left = timedelta(
                 milliseconds=current.item.duration_ms - current.progress_ms
             )

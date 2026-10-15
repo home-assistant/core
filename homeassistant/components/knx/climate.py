@@ -49,34 +49,20 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import ClimateSchema
-from .storage.const import (
-    CONF_GA_ACTIVE,
-    CONF_GA_CONTROLLER_MODE,
-    CONF_GA_CONTROLLER_STATUS,
-    CONF_GA_FAN_SPEED,
-    CONF_GA_FAN_SWING,
-    CONF_GA_FAN_SWING_HORIZONTAL,
-    CONF_GA_HEAT_COOL,
-    CONF_GA_HUMIDITY_CURRENT,
-    CONF_GA_ON_OFF,
-    CONF_GA_OP_MODE_COMFORT,
-    CONF_GA_OP_MODE_ECO,
-    CONF_GA_OP_MODE_PROTECTION,
-    CONF_GA_OP_MODE_STANDBY,
-    CONF_GA_OPERATION_MODE,
-    CONF_GA_SETPOINT_SHIFT,
-    CONF_GA_TEMPERATURE_CURRENT,
-    CONF_GA_TEMPERATURE_TARGET,
-    CONF_GA_VALVE,
-    CONF_IGNORE_AUTO_MODE,
-    CONF_TARGET_TEMPERATURE,
-)
 from .storage.entity_store_schema import (
+    ClimateKnxConfig,
+    ClimateSetpointShift,
+    ClimateTargetTemperature,
     ConfClimateFanSpeedMode,
     ConfSetpointShiftMode,
     KnxEntityData,
 )
-from .storage.util import ConfigExtractor
+from .storage.knx_selector import (
+    GroupAddressConfig,
+    state_and_passive,
+    write_address,
+    write_and_passive,
+)
 
 ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
@@ -105,7 +91,9 @@ async def async_setup_entry(
             KnxYamlClimate(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.CLIMATE):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.CLIMATE, ClimateKnxConfig
+    ):
         entities.extend(
             KnxUiClimate(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -209,108 +197,101 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     )
 
 
-def _create_climate_ui(xknx: XKNX, conf: ConfigExtractor, name: str) -> XknxClimate:
+def _create_climate_ui(xknx: XKNX, conf: ClimateKnxConfig, name: str) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX from UI config."""
-    sync_state = conf.get(CONF_SYNC_STATE)
     op_modes: list[str | HVACOperationMode] = list(HVACOperationMode)
-    if conf.get(CONF_IGNORE_AUTO_MODE):
+    if conf.ignore_auto_mode:
         op_modes.remove(HVACOperationMode.AUTO)
 
     climate_mode = XknxClimateMode(
         xknx,
         name=f"{name} Mode",
-        group_address_operation_mode=conf.get_write(CONF_GA_OPERATION_MODE),
-        group_address_operation_mode_state=conf.get_state_and_passive(
-            CONF_GA_OPERATION_MODE
+        group_address_operation_mode=write_address(conf.ga_operation_mode),
+        group_address_operation_mode_state=state_and_passive(conf.ga_operation_mode),
+        group_address_operation_mode_comfort=write_and_passive(
+            conf.ga_operation_mode_comfort
         ),
-        group_address_operation_mode_comfort=conf.get_write_and_passive(
-            CONF_GA_OP_MODE_COMFORT
+        group_address_operation_mode_economy=write_and_passive(
+            conf.ga_operation_mode_economy
         ),
-        group_address_operation_mode_economy=conf.get_write_and_passive(
-            CONF_GA_OP_MODE_ECO
+        group_address_operation_mode_protection=write_and_passive(
+            conf.ga_operation_mode_protection
         ),
-        group_address_operation_mode_protection=conf.get_write_and_passive(
-            CONF_GA_OP_MODE_PROTECTION
+        group_address_operation_mode_standby=write_and_passive(
+            conf.ga_operation_mode_standby
         ),
-        group_address_operation_mode_standby=conf.get_write_and_passive(
-            CONF_GA_OP_MODE_STANDBY
+        group_address_controller_status=write_address(conf.ga_controller_status),
+        group_address_controller_status_state=state_and_passive(
+            conf.ga_controller_status
         ),
-        group_address_controller_status=conf.get_write(CONF_GA_CONTROLLER_STATUS),
-        group_address_controller_status_state=conf.get_state_and_passive(
-            CONF_GA_CONTROLLER_STATUS
-        ),
-        group_address_controller_mode=conf.get_write(CONF_GA_CONTROLLER_MODE),
-        group_address_controller_mode_state=conf.get_state_and_passive(
-            CONF_GA_CONTROLLER_MODE
-        ),
-        group_address_heat_cool=conf.get_write(CONF_GA_HEAT_COOL),
-        group_address_heat_cool_state=conf.get_state_and_passive(CONF_GA_HEAT_COOL),
-        sync_state=sync_state,
+        group_address_controller_mode=write_address(conf.ga_controller_mode),
+        group_address_controller_mode_state=state_and_passive(conf.ga_controller_mode),
+        group_address_heat_cool=write_address(conf.ga_heat_cool),
+        group_address_heat_cool_state=state_and_passive(conf.ga_heat_cool),
+        sync_state=conf.sync_state,
         operation_modes=op_modes,
     )
 
+    target = conf.target_temperature
+    setpoint_shift: GroupAddressConfig | None = None
     sps_mode = None
-    if _sps_dpt := conf.get_dpt(CONF_TARGET_TEMPERATURE, CONF_GA_SETPOINT_SHIFT):
-        sps_mode = (
-            SetpointShiftMode.DPT6010
-            if _sps_dpt == ConfSetpointShiftMode.COUNT
-            else SetpointShiftMode.DPT9002
-        )
-    _fan_speed_dpt = conf.get_dpt(CONF_GA_FAN_SPEED)
+    setpoint_shift_max: float = 6
+    setpoint_shift_min: float = -6
+    min_temp: float | None = None
+    max_temp: float | None = None
+    match target:
+        case ClimateSetpointShift():
+            setpoint_shift = target.ga_setpoint_shift
+            sps_mode = (
+                SetpointShiftMode.DPT6010
+                if setpoint_shift.dpt == ConfSetpointShiftMode.COUNT
+                else SetpointShiftMode.DPT9002
+            )
+            setpoint_shift_max = target.setpoint_shift_max
+            setpoint_shift_min = target.setpoint_shift_min
+        case ClimateTargetTemperature():
+            min_temp = target.min_temp
+            max_temp = target.max_temp
+
     fan_speed_mode = (
         FanSpeedMode.STEP
-        if _fan_speed_dpt == ConfClimateFanSpeedMode.STEPS
+        if conf.ga_fan_speed is not None
+        and conf.ga_fan_speed.dpt == ConfClimateFanSpeedMode.STEPS
         else FanSpeedMode.PERCENT
     )
 
     return XknxClimate(
         xknx,
         name=name,
-        group_address_temperature=conf.get_state_and_passive(
-            CONF_GA_TEMPERATURE_CURRENT
+        group_address_temperature=state_and_passive(conf.ga_temperature_current),
+        group_address_target_temperature=target.ga_temperature_target.write,
+        group_address_target_temperature_state=state_and_passive(
+            target.ga_temperature_target
         ),
-        group_address_target_temperature=conf.get_write(
-            CONF_TARGET_TEMPERATURE, CONF_GA_TEMPERATURE_TARGET
-        ),
-        group_address_target_temperature_state=conf.get_state_and_passive(
-            CONF_TARGET_TEMPERATURE, CONF_GA_TEMPERATURE_TARGET
-        ),
-        group_address_setpoint_shift=conf.get_write(
-            CONF_TARGET_TEMPERATURE, CONF_GA_SETPOINT_SHIFT
-        ),
-        group_address_setpoint_shift_state=conf.get_state_and_passive(
-            CONF_TARGET_TEMPERATURE, CONF_GA_SETPOINT_SHIFT
-        ),
+        group_address_setpoint_shift=write_address(setpoint_shift),
+        group_address_setpoint_shift_state=state_and_passive(setpoint_shift),
         setpoint_shift_mode=sps_mode,
-        setpoint_shift_max=conf.get(
-            CONF_TARGET_TEMPERATURE, ClimateConf.SETPOINT_SHIFT_MAX, default=6
-        ),
-        setpoint_shift_min=conf.get(
-            CONF_TARGET_TEMPERATURE, ClimateConf.SETPOINT_SHIFT_MIN, default=-6
-        ),
-        temperature_step=conf.get(
-            CONF_TARGET_TEMPERATURE, ClimateConf.TEMPERATURE_STEP, default=0.1
-        ),
-        group_address_on_off=conf.get_write(CONF_GA_ON_OFF),
-        group_address_on_off_state=conf.get_state_and_passive(CONF_GA_ON_OFF),
-        on_off_invert=conf.get(ClimateConf.ON_OFF_INVERT, default=False),
-        group_address_active_state=conf.get_state_and_passive(CONF_GA_ACTIVE),
-        group_address_command_value_state=conf.get_state_and_passive(CONF_GA_VALVE),
-        sync_state=sync_state,
-        min_temp=conf.get(CONF_TARGET_TEMPERATURE, ClimateConf.MIN_TEMP),
-        max_temp=conf.get(CONF_TARGET_TEMPERATURE, ClimateConf.MAX_TEMP),
+        setpoint_shift_max=setpoint_shift_max,
+        setpoint_shift_min=setpoint_shift_min,
+        temperature_step=target.temperature_step,
+        group_address_on_off=write_address(conf.ga_on_off),
+        group_address_on_off_state=state_and_passive(conf.ga_on_off),
+        on_off_invert=conf.on_off_invert,
+        group_address_active_state=state_and_passive(conf.ga_active),
+        group_address_command_value_state=state_and_passive(conf.ga_valve),
+        sync_state=conf.sync_state,
+        min_temp=min_temp,
+        max_temp=max_temp,
         mode=climate_mode,
-        group_address_fan_speed=conf.get_write(CONF_GA_FAN_SPEED),
-        group_address_fan_speed_state=conf.get_state_and_passive(CONF_GA_FAN_SPEED),
+        group_address_fan_speed=write_address(conf.ga_fan_speed),
+        group_address_fan_speed_state=state_and_passive(conf.ga_fan_speed),
         fan_speed_mode=fan_speed_mode,
-        group_address_humidity_state=conf.get_state_and_passive(
-            CONF_GA_HUMIDITY_CURRENT
-        ),
-        group_address_swing=conf.get_write(CONF_GA_FAN_SWING),
-        group_address_swing_state=conf.get_state_and_passive(CONF_GA_FAN_SWING),
-        group_address_horizontal_swing=conf.get_write(CONF_GA_FAN_SWING_HORIZONTAL),
-        group_address_horizontal_swing_state=conf.get_state_and_passive(
-            CONF_GA_FAN_SWING_HORIZONTAL
+        group_address_humidity_state=state_and_passive(conf.ga_humidity_current),
+        group_address_swing=write_address(conf.ga_fan_swing),
+        group_address_swing_state=state_and_passive(conf.ga_fan_swing),
+        group_address_horizontal_swing=write_address(conf.ga_fan_swing_horizontal),
+        group_address_horizontal_swing_state=state_and_passive(
+            conf.ga_fan_swing_horizontal
         ),
     )
 
@@ -700,7 +681,10 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
     _device: XknxClimate
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[ClimateKnxConfig],
     ) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(
@@ -708,14 +692,14 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config.knx)
+        knx_conf = config.knx
         self._device = _create_climate_ui(
             knx_module.xknx, knx_conf, config.entity.xknx_name
         )
 
-        default_hvac_mode = HVACMode(knx_conf.get(ClimateConf.DEFAULT_CONTROLLER_MODE))
-        fan_max_step = knx_conf.get(ClimateConf.FAN_MAX_STEP)
-        fan_zero_mode = knx_conf.get(ClimateConf.FAN_ZERO_MODE)
+        default_hvac_mode = HVACMode(knx_conf.default_controller_mode)
+        fan_max_step = knx_conf.fan_max_step
+        fan_zero_mode = knx_conf.fan_zero_mode
         self._init_from_device_config(
             device=self._device,
             default_hvac_mode=default_hvac_mode,

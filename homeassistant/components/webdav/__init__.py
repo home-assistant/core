@@ -22,7 +22,7 @@ type WebDavConfigEntry = ConfigEntry[Client]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> None:
     """Set up WebDAV from a config entry."""
     client = async_create_client(
         hass=hass,
@@ -69,9 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
             listener()
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> None:
     """Unload a WebDAV config entry."""
-    return True

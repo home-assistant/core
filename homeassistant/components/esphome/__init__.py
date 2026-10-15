@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Set up the esphome component."""
     host: str = entry.data[CONF_HOST]
     password: str | None = entry.data[CONF_PASSWORD]
@@ -117,17 +117,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     )
     await manager.async_start()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Unload an esphome config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data.loaded_platforms
     )
-    if unload_ok:
-        await cleanup_instance(entry)
-    return unload_ok
+    await cleanup_instance(entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:

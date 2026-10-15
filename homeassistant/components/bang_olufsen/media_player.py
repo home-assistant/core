@@ -196,6 +196,17 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
                 )
             )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Replace the own entity_id in the group members."""
+        super().async_entity_id_changed(old_entity_id)
+        if self._attr_group_members and old_entity_id in self._attr_group_members:
+            self._attr_group_members = [
+                self.entity_id if member == old_entity_id else member
+                for member in self._attr_group_members
+            ]
+
     async def _initialize(self) -> None:
         """Initialize connection dependent variables."""
 

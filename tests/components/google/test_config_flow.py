@@ -170,6 +170,7 @@ async def test_full_flow_application_creds(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == EMAIL_ADDRESS
+    assert result["result"].unique_id == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -322,6 +323,7 @@ async def test_exchange_error(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == EMAIL_ADDRESS
+    assert result["result"].unique_id == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -429,6 +431,7 @@ async def test_multiple_config_entries(
         )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "another-email@example.com"
+    assert result["result"].unique_id == "another-email@example.com"
     assert len(mock_setup.mock_calls) == 1
 
     entries = hass.config_entries.async_entries(DOMAIN)

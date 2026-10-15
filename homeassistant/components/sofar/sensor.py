@@ -12,7 +12,14 @@ from sofar_modbus.modern.device import (
     PV_STRING_COMPONENTS,
     SofarInverter,
 )
-from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
+from sofar_modbus.modern.enums import (
+    BatConfigCellType,
+    BatConfigProtocol,
+    FeedinLimitationMode,
+    PassiveModeTimeoutAction,
+    SyncRtcResult,
+    SystemState,
+)
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -64,11 +71,7 @@ async def async_setup_entry(
     def _async_add_wired_packs() -> None:
         """Add a pack's sensors the first time it reports a voltage."""
         wired = runtime_data.wired_packs
-        new = {
-            number
-            for number in BATTERY_STRING_COMPONENTS
-            if number not in wired and runtime_data.pack_is_wired(number)
-        }
+        new = runtime_data.readings.device.wired_battery_strings - wired
         if not new:
             return
         wired.update(new)
@@ -135,8 +138,6 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         except ValueError, TypeError:
             return
         self._attr_native_value = val
-        if (total_fn := self.entity_description.total_fn) is not None:
-            total_fn(self.coordinator.device).seed(val)
 
     @property
     @override
@@ -318,16 +319,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="state",
         translation_key="system_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "waiting",
-            "checking",
-            "grid_connected",
-            "emergency_power_supply",
-            "recoverable_fault",
-            "permanent_fault",
-            "upgrading",
-            "self_charging",
-        ],
+        options=[state.name.lower() for state in SystemState],
         value_fn=lambda device: device.state.system_state,
     ),
     SofarSensorDescription(
@@ -1432,21 +1424,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="battery_config_id",
         translation_key="bat_config_protocol",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "first_flight_built_in_bms_default",
-            "pie_energy_protocol_pylon",
-            "first_flight_protocol_general",
-            "amass",
-            "lg",
-            "alphaess",
-            "catl",
-            "weco",
-            "fronus",
-            "ems",
-            "nilar",
-            "bts_5k",
-            "move_for",
-        ],
+        options=[protocol.name.lower() for protocol in BatConfigProtocol],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config_id.bat_config_protocol,
@@ -1565,15 +1543,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="battery_config",
         translation_key="bat_config_cell_type",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "lead_acid",
-            "lithium_iron_phosphate",
-            "ternary",
-            "lithium_titanate",
-            "agm",
-            "gel",
-            "flooded",
-        ],
+        options=[cell_type.name.lower() for cell_type in BatConfigCellType],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config.bat_config_cell_type,
@@ -1611,17 +1581,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="rtc_sync",
         translation_key="sync_rtc_result",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "successful",
-            "operation_in_progress",
-            "enabled_discharging",
-            "disabled",
-            "operation_failed_controller_refused_to_respond",
-            "operation_failed_no_response_from_the_controller",
-            "operation_failed_current_function_disabled",
-            "operation_failed_parameter_access_failed",
-            "operation_failed_input_parameters_incorrect",
-        ],
+        options=[result.name.lower() for result in SyncRtcResult],
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.rtc_sync.sync_rtc_result,
     ),

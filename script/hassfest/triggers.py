@@ -158,7 +158,6 @@ NON_MIGRATED_INTEGRATIONS = {
     "tag",
     "template",
     "webhook",
-    "webostv",
     "zone",
 }
 

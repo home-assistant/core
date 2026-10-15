@@ -240,6 +240,16 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
+# graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
+# (used by pydrawise) still imports
+# https://github.com/home-assistant/core/issues/184918
+graphql-core<3.3
+
+# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# https://github.com/home-assistant/core/issues/185645
+# https://github.com/c-ares/c-ares/pull/1256
+pycares==5.0.1
+
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
 # https://github.com/xolox/python-coloredlogs -> unmaintained

@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
@@ -132,8 +133,8 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
 
         if self.preset_mode == PRESET_AWAY:
             raise ServiceValidationError(
-                "Cannot adjust TRV remotely, manually"
-                " disable 'holiday' mode on TRV first"
+                translation_domain=DOMAIN,
+                translation_key="cannot_adjust_during_holiday",
             )
 
         await self.coordinator.send_command(
@@ -157,10 +158,16 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         """Set new target preset mode."""
 
         if self.preset_modes and preset_mode not in self.preset_modes:
-            raise ServiceValidationError(f"Unsupported preset_mode '{preset_mode}'")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_preset_mode",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
         if preset_mode in [PRESET_NONE, PRESET_AWAY]:
             raise ServiceValidationError(
-                f"Unable to set preset '{preset_mode}', display only."
+                translation_domain=DOMAIN,
+                translation_key="display_only_preset",
+                translation_placeholders={"preset_mode": preset_mode},
             )
         if preset_mode == PRESET_ECO:
             return await self.async_set_temperature(
@@ -186,7 +193,11 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return await self.async_set_temperature(
                 temperature=self._device_eco_setpoint
             )
-        raise ServiceValidationError(f"Unknown HVAC mode '{hvac_mode}'")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_hvac_mode",
+            translation_placeholders={"hvac_mode": hvac_mode},
+        )
 
     @override
     async def async_turn_on(self) -> None:

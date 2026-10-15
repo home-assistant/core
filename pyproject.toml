@@ -28,7 +28,7 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  "aiohttp==3.14.4",
+  "aiohttp==3.14.5",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.2.0",
@@ -440,13 +440,6 @@ runtime-typing = false
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
 
-[tool.uv]
-# surepy (a surepetcare dependency) carries a stale upper pin on rich (<11) that
-# blocks pytest-codspeed (needs rich>=13.8.1) from resolving in the same
-# environment. rich keeps the Console API surepy uses backwards compatible, so
-# override the pin rather than holding the benchmark tooling back.
-override-dependencies = ["rich>=13.8.1"]
-
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
 # The respx plugin imports httpx before tests/__init__.py can alias it to
@@ -633,7 +626,11 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["homeassistant"]
+# Measure only imported files; pass --cov=homeassistant to also report
+# never-imported files as 0% (one CI bucket does that).
+include = ["homeassistant/*"]
+# --cov=<package> sets source, which overrides include on purpose
+disable_warnings = ["include-ignored"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -650,7 +647,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.9"
+required-version = ">=0.16.10"
 extend-exclude = [
   # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
   "tests/components/marketplace/fixtures/proxy",

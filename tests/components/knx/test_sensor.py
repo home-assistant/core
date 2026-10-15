@@ -391,6 +391,17 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
                 "sync_state": True,
             }
         ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "device_class": "enum",  # options can not be configured
+                "sync_state": True,
+            }
+        ),
     ],
 )
 async def test_sensor_ui_create_attribute_validation(

@@ -18,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.const import ATTR_SUGGESTED_AREA, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -123,10 +123,10 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
+    @callback
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    def _async_subscribe_to_bridge(self) -> None:
+        """Subscribe to occupancy updates from the bridge."""
         self._smartbridge.add_occupancy_subscriber(
             self.device_id, self.async_write_ha_state
         )
@@ -175,9 +175,9 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
         """Return the unique ID of the battery sensor."""
         return f"{super().unique_id}_battery"
 
+    @callback
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
+    def _async_subscribe_to_bridge(self) -> None:
         """Skip bridge subscriptions; the battery sensor is polled."""
 
     async def async_update(self) -> None:

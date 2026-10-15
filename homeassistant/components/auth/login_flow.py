@@ -308,13 +308,18 @@ class LoginFlowBaseView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
+        context = result["context"]
         if not await indieauth.verify_redirect_uri(
-            hass, client_id, result["context"]["redirect_uri"]
+            hass,
+            client_id,
+            context["redirect_uri"],
+            allow_loopback_port_change=bool(context.get("code_challenge"))
+            and context.get("code_challenge_method") == "S256",
         ):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
         result.pop("data")
-        context = result.pop("context")
+        result.pop("context")
 
         result_obj = result.pop("result")
 

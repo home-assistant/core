@@ -90,7 +90,7 @@ def _async_fix_modbus_sensor_unique_ids(
         registry.async_update_entity(entity.entity_id, new_unique_id=unique_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Set up fronius from a config entry."""
     _async_fix_modbus_sensor_unique_ids(hass, entry)
     host = entry.data[CONF_HOST]
@@ -108,10 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> b
 
     entry.runtime_data = solar_net
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.minor_version < 2:
         # add the Modbus port setting
@@ -121,12 +120,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) ->
         # add the Modbus setpoint fallback setting
         data = {CONF_AUTO_REVERT_POWER_LIMIT: False, **entry.data}
         hass.config_entries.async_update_entry(entry, data=data, minor_version=3)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

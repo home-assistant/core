@@ -921,6 +921,56 @@ async def test_clear_custom_components_cache(hass: HomeAssistant) -> None:
         assert mock_get.call_count == 2
 
 
+@pytest.mark.parametrize("error", [OSError, asyncio.CancelledError])
+@pytest.mark.parametrize("waiter_count", [0, 1])
+async def test_get_custom_components_failed_scan(
+    hass: HomeAssistant, error: type[BaseException], waiter_count: int
+) -> None:
+    """A failed scan releases concurrent callers and allows a retry."""
+    loader.async_clear_custom_components_cache(hass)
+    scan: asyncio.Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        owner = asyncio.create_task(loader.async_get_custom_components(hass))
+        await asyncio.sleep(0)
+        waiters = [
+            asyncio.create_task(loader.async_get_custom_components(hass))
+            for _ in range(waiter_count)
+        ]
+        await asyncio.sleep(0)
+        scan.set_exception(error("Scan failed"))
+        results = await asyncio.wait_for(
+            asyncio.gather(owner, *waiters, return_exceptions=True), timeout=1
+        )
+
+    assert all(isinstance(result, error) for result in results)
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+    with patch("homeassistant.loader._get_custom_components", return_value={}) as retry:
+        assert await loader.async_get_custom_components(hass) == {}
+    retry.assert_called_once_with(hass)
+
+
+@pytest.mark.parametrize("error", [OSError, asyncio.CancelledError])
+async def test_get_custom_components_failed_scan_preserves_newer_cache(
+    hass: HomeAssistant, error: type[BaseException]
+) -> None:
+    """A failed older scan must not clear a newer scan's cached result."""
+    loader.async_clear_custom_components_cache(hass)
+    scan: asyncio.Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        owner = asyncio.create_task(loader.async_get_custom_components(hass))
+        await asyncio.sleep(0)
+
+    loader.async_clear_custom_components_cache(hass)
+    with patch("homeassistant.loader._get_custom_components", return_value={}):
+        newer = await loader.async_get_custom_components(hass)
+
+    scan.set_exception(error("Scan failed"))
+    with pytest.raises(error):
+        await owner
+
+    assert hass.data[loader.DATA_CUSTOM_COMPONENTS] is newer
+
+
 async def test_clear_custom_components_cache_without_a_cache(
     hass: HomeAssistant,
 ) -> None:

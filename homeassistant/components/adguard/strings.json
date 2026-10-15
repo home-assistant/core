@@ -91,6 +91,9 @@
     }
   },
   "exceptions": {
+    "action_failed": {
+      "message": "AdGuard Home could not complete the action: {error}"
+    },
     "authentication_failed": {
       "message": "AdGuard Home rejected the credentials. Please reauthenticate with a valid username and password."
     },
@@ -105,6 +108,9 @@
     },
     "error_while_turn_on": {
       "message": "An error occurred while turning on AdGuard Home switch."
+    },
+    "update_failed": {
+      "message": "An error occurred while updating AdGuard Home: {error}"
     }
   },
   "services": {

@@ -619,6 +619,7 @@ async def test_discover_flow_one_device_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
     assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["result"].unique_id == MOCK_DISC_DEV1[MAC_ADDRESS]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -697,6 +698,7 @@ async def test_discover_flow_multiple_devices_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
     assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["result"].unique_id == MOCK_DISC_DEV1[MAC_ADDRESS]
 
 
 async def test_discover_flow_with_existing_device(
@@ -764,6 +766,7 @@ async def test_discover_flow_discovery_exceptions(
     assert result["reason"] == reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_configure_device_flow_exceptions(
     hass: HomeAssistant,
     mock_discovery_method: AsyncMock,
@@ -810,6 +813,27 @@ async def test_configure_device_flow_exceptions(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    valid_data = DetectDeviceData(
+        fw_major=8,
+        mac=MOCK_DISC_DEV1[MAC_ADDRESS],
+        hostname=MOCK_DISC_DEV1[HOSTNAME],
+    )
+
+    with patch(
+        "homeassistant.components.airos.config_flow.async_get_firmware_data",
+        new=AsyncMock(return_value=valid_data),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: DEFAULT_USERNAME,
+                CONF_PASSWORD: "test-password",
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_ip_changed_updates_entry(
@@ -931,6 +955,7 @@ async def test_manual_flow_retries_with_legacy_tls(
     legacy_session.close.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_validate_raise_on_attempted_legacy(
     hass: HomeAssistant,
     mock_async_get_firmware_data: AsyncMock,
@@ -975,3 +1000,10 @@ async def test_validate_raise_on_attempted_legacy(
         verify_ssl=MOCK_CONFIG[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
     )
     legacy_session.close.assert_awaited_once()
+
+    mock_async_get_firmware_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
