@@ -661,6 +661,27 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
     return value
 
 
+def _validate_heat_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
+    """Validate that a heat meter is not used by another gas or heat source.
+
+    Cost sensors are tracked per meter, and a meter used twice would count
+    the same consumption twice.
+    """
+    heat_stats = Counter(
+        source["stat_energy_from"] for source in value if source["type"] == "heat"
+    )
+    gas_stats = {
+        source["stat_energy_from"] for source in value if source["type"] == "gas"
+    }
+    for stat_id, count in heat_stats.items():
+        if count > 1 or stat_id in gas_stats:
+            raise probatio.Invalid(
+                f"Heat meter {stat_id} is used in multiple gas or heat sources"
+            )
+
+    return value
+
+
 ENERGY_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         [
@@ -679,6 +700,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
     ),
     check_type_limits,
     _validate_grid_stat_uniqueness,
+    _validate_heat_stat_uniqueness,
 )
 
 DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(

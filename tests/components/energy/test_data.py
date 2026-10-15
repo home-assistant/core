@@ -1222,3 +1222,44 @@ async def test_heat_source_in_energy_source_schema() -> None:
         "name": "District heating",
     }
     assert ENERGY_SOURCE_SCHEMA([source]) == [source]
+
+
+def _heat_or_gas_source(source_type: str, stat_id: str) -> dict[str, Any]:
+    """Return a heat or gas source for a meter."""
+    return {
+        "type": source_type,
+        "stat_energy_from": stat_id,
+        "stat_cost": None,
+        "entity_energy_price": None,
+        "number_energy_price": 0.5,
+    }
+
+
+@pytest.mark.parametrize(
+    "other_type",
+    [
+        pytest.param("gas", id="gas"),
+        pytest.param("heat", id="heat"),
+    ],
+)
+async def test_heat_meter_used_twice_is_rejected(other_type: str) -> None:
+    """Test that a heat meter can't be used by another gas or heat source."""
+    with pytest.raises(
+        probatio.Invalid,
+        match="Heat meter sensor.meter is used in multiple gas or heat sources",
+    ):
+        ENERGY_SOURCE_SCHEMA(
+            [
+                _heat_or_gas_source("heat", "sensor.meter"),
+                _heat_or_gas_source(other_type, "sensor.meter"),
+            ]
+        )
+
+
+async def test_heat_and_gas_with_different_meters_are_accepted() -> None:
+    """Test that heat and gas sources with different meters are accepted."""
+    sources = [
+        _heat_or_gas_source("heat", "sensor.heat_meter"),
+        _heat_or_gas_source("gas", "sensor.gas_meter"),
+    ]
+    assert ENERGY_SOURCE_SCHEMA(sources) == sources
