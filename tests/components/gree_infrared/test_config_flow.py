@@ -1,6 +1,7 @@
 """Tests for the Gree Infrared config flow."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
 
@@ -16,7 +17,7 @@ from homeassistant.components.gree_infrared.const import (
     MODEL_YAP1F,
 )
 from homeassistant.components.infrared import DATA_COMPONENT
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -262,3 +263,33 @@ async def test_user_flow_form_serialized_by_rest_api(
         CONF_MODEL,
     }
     assert fields[CONF_GENERIC_OPTIONS]["selector"] == {"boolean": {}}
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+@pytest.mark.parametrize("model", [MODEL_YAP1F, MODEL_GENERIC])
+async def test_reconfigure_model(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, model: str
+) -> None:
+    """Changing the remote profile preserves the entry and its IR bindings."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_MODEL: model}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {**original_data, CONF_MODEL: model}
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    reload.assert_awaited_once_with(mock_config_entry.entry_id)
