@@ -143,7 +143,11 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             translation_key=CONF_MODEL,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
-                    )
+                    ),
+                    probatio.Optional(
+                        CONF_GENERIC_OPTIONS,
+                        default=entry.data.get(CONF_GENERIC_OPTIONS, False),
+                    ): BooleanSelector(),
                 }
             ),
         )
