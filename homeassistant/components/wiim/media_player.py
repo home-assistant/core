@@ -46,7 +46,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, DOMAIN, LOGGER, WiimConfigEntry
+from .const import DATA_WIIM, DOMAIN, LOGGER, SIGNAL_DEVICE_UPDATED, WiimConfigEntry
 from .entity import WiimBaseEntity
 from .models import WiimData
 
@@ -403,6 +403,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.name or self.unique_id,
         )
         self._attr_available = self._device.available
+
+        if write_state:
+            async_dispatcher_send(
+                self.hass, SIGNAL_DEVICE_UPDATED.format(self._device.udn)
+            )
 
         if not self._attr_available:
             self._attr_state = None

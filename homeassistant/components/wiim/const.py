@@ -15,11 +15,13 @@ if TYPE_CHECKING:
 type WiimConfigEntry = ConfigEntry[WiimDevice]
 
 DOMAIN: Final = "wiim"
+SIGNAL_DEVICE_UPDATED: Final = "wiim_device_updated_{}"
 LOGGER = logging.getLogger(__package__)
 DATA_WIIM: HassKey[WiimData] = HassKey(DOMAIN)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.MEDIA_PLAYER,
+    Platform.SELECT,
 ]
 
 UPNP_PORT = 49152
