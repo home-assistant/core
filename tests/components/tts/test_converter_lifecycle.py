@@ -1374,12 +1374,39 @@ async def test_second_owner_cancel_during_notification_join_reaps_child(
         await gen.aclose()
 
 
-@pytest.mark.parametrize("wait_order", ["pending", "completed"])
+@pytest.mark.parametrize(
+    ("wait_order", "force_cancel"),
+    [("pending", False), ("completed", False), ("pending", True)],
+    ids=["pending", "completed", "pending-cancel-first"],
+)
 async def test_failed_exhausted_close_keeps_known_child_diagnostic(
-    ffmpeg_ready: HomeAssistant, caplog: pytest.LogCaptureFixture, wait_order: str
+    ffmpeg_ready: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    wait_order: str,
+    force_cancel: bool,
 ) -> None:
     """Actual exit 7 is primary even when its original owned wait is pending."""
-    source = _FailingExhaustedClose()
+
+    class ContinuingFailedClose(_FailingExhaustedClose):
+        """This priority case raises its close error even after writer cancellation."""
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.close_cancelled = asyncio.Event()
+            self.close_failure_raised = asyncio.Event()
+
+        async def aclose(self) -> None:
+            self.close_entered.set()
+            while not self.release_close.is_set():
+                try:
+                    await self.release_close.wait()
+                except asyncio.CancelledError:
+                    self.close_cancelled.set()
+            self.closed.set()
+            self.close_failure_raised.set()
+            raise self.failure
+
+    source = ContinuingFailedClose()
     spawn_os = asyncio.create_subprocess_exec
     processes = []
     owner = None
@@ -1407,6 +1434,10 @@ async def test_failed_exhausted_close_keeps_known_child_diagnostic(
             if (
                 current := asyncio.current_task()
             ) and current.get_name() == "tts_ffmpeg_wait":
+                if force_cancel:
+                    # Delay only this test notification until actual teardown
+                    # has cancelled the writer inside its still-held aclose.
+                    await asyncio.wait_for(source.close_cancelled.wait(), 3)
                 wait_entered.set()
                 if wait_order == "pending":
                     await release_wait.wait()
@@ -1431,12 +1462,22 @@ async def test_failed_exhausted_close_keeps_known_child_diagnostic(
             assert processes[0].returncode == 7
             assert wait_task.done() is (wait_order == "completed")
             assert source.pulls == 2 and not source.closed.is_set()
+            assert not source.close_failure_raised.is_set()
+            if force_cancel:
+                assert source.close_cancelled.is_set()
+                assert captured["tts_ffmpeg_conversion"].cancelling()
             source.release_close.set()
+            await asyncio.wait_for(source.close_failure_raised.wait(), 3)
             with pytest.raises(
                 HomeAssistantError, match="Unexpected error while running ffmpeg"
             ):
                 await _observe(owner)
             assert source.closed.is_set()
+            writer_task = captured["tts_ffmpeg_conversion"]
+            await asyncio.wait({writer_task}, timeout=3)
+            assert writer_task.done() and not writer_task.cancelled()
+            assert source.close_failure_raised.is_set()
+            assert writer_task.exception() is source.failure
             assert any(
                 "known child failure" in record.message for record in caplog.records
             )
