@@ -85,10 +85,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
             self._addresses = addresses
             self._client = KacoRs485Client(self._bus, addresses)
 
-        # Every inverter disabled: holding the port would keep another master
-        # off a bus nobody is reading.
         if not self._addresses:
-            await self.async_close()
             return {}
 
         # A proxy can vanish and take the port with it; reopen instead.
