@@ -627,12 +627,14 @@ class BackupManager:
 
             # Tell listeners which agents this backup is uploaded to.
             _emit_upload_progress()
-            await agent.async_upload_backup(
-                open_stream=open_stream_func,
-                backup=_backup,
-                on_progress=on_upload_progress,
-            )
-            upload_progress_debouncer.async_cancel()
+            try:
+                await agent.async_upload_backup(
+                    open_stream=open_stream_func,
+                    backup=_backup,
+                    on_progress=on_upload_progress,
+                )
+            finally:
+                upload_progress_debouncer.async_cancel()
             self.async_on_backup_event(
                 UploadBackupEvent(
                     manager_state=self.state,

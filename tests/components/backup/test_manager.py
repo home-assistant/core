@@ -4257,3 +4257,43 @@ async def test_upload_progress_replayed_on_subscribe(
 
     assert manager.state == BackupManagerState.IDLE
     assert manager.last_upload_events == {}
+
+
+@pytest.mark.usefixtures("generate_backup_id")
+async def test_upload_progress_dropped_after_failed_upload(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that buffered progress of a failed upload is not sent later."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    manager = hass.data[DATA_MANAGER]
+
+    async def upload_and_fail(**kwargs: Any) -> None:
+        """Report progress, buffering the second report, and then fail."""
+        on_progress = kwargs["on_progress"]
+        on_progress(bytes_uploaded=100)
+        on_progress(bytes_uploaded=500)
+        raise BackupAgentError("Boom!")
+
+    mock_agents["test.remote"].async_upload_backup.side_effect = upload_and_fail
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": ["test.remote"]}
+        )
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        await hass.async_block_till_done()
+
+    assert manager.state == BackupManagerState.IDLE
+
+    events: list[Any] = []
+    manager.async_subscribe_events(events.append)
+    # Let the debounce cooldown pass
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+
+    assert events == []
+    assert manager.last_upload_events == {}
