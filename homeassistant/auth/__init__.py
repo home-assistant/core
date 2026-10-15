@@ -138,6 +138,17 @@ class AuthManagerFlowManager(
         return await auth_provider.async_login_flow(context)
 
     @override
+    async def async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> AuthFlowResult:
+        """Continue a login flow unless it has expired."""
+        if (flow := self._progress.get(flow_id)) is not None and cast(
+            LoginFlow, flow
+        ).created_at < dt_util.utcnow() - LOGIN_FLOW_EXPIRATION:
+            self.async_abort(flow_id)
+        return await super().async_configure(flow_id, user_input)
+
+    @override
     async def async_finish_flow(
         self,
         flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],

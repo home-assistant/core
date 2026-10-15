@@ -639,3 +639,34 @@ async def test_login_flow_limit(
     resp = await client.post("/auth/login_flow", json=payload)
     assert resp.status == HTTPStatus.OK
     assert len(hass.auth.login_flow.async_progress()) == 1
+
+
+async def test_login_flow_expired(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an expired login flow can't be continued."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert hass.auth.login_flow.async_progress() == []
