@@ -155,7 +155,6 @@ def sensor_device_name(config: ConfigType) -> str:
 class LaCrosseSensor(SensorEntity):
     """Implementation of a Lacrosse sensor."""
 
-    _attr_should_poll = False
     _temperature: float | None = None
     _humidity: int | None = None
     _low_battery: bool | None = None
@@ -213,11 +212,14 @@ class LaCrosseSensor(SensorEntity):
     ) -> None:
         """Handle a function that is called from pylacrosse with new values."""
         if self._expire_after is not None and self._expire_after > 0:
+            # Reset old trigger
             if self._expiration_trigger:
                 self._expiration_trigger()
                 self._expiration_trigger = None
 
+            # Set new trigger
             expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
+
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self.value_is_expired, expiration_at
             )

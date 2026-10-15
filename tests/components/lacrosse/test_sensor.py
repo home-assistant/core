@@ -179,7 +179,7 @@ def test_sensor_registers_callback_when_created(hass: HomeAssistant) -> None:
         {"id": 1},
     )
 
-    assert sensor.should_poll is False
+    assert sensor.should_poll is True
     receiver.register_callback.assert_called_once_with(
         1, sensor._callback_lacrosse, None
     )
