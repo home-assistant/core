@@ -48,9 +48,9 @@
         },
         "data_description": {
           "api_key": "A ChirpStack API key with access to your tenant. A read-only key cannot send device commands.",
-          "endpoint": "ChirpStack gRPC address, including http:// or https:// and its port."
+          "endpoint": "ChirpStack server address, including http:// or https:// and its port."
         },
-        "description": "Connect to your ChirpStack server using its gRPC API.",
+        "description": "Connect to your ChirpStack server.",
         "title": "Connect to ChirpStack"
       }
     }
