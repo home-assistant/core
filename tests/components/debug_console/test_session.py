@@ -1,5 +1,9 @@
 """Tests for the sessions of the Debug console."""
 
+import threading
+from typing import Any
+from unittest.mock import patch
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -246,6 +250,42 @@ async def test_code_disabling_the_console(
 
     assert result["result"] == {"type": "boolean", "value": True}
     assert setup_integration.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_disabling_stops_reporting_an_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test disabling the console while an error is reported stops that too."""
+    reading = threading.Event()
+    release = threading.Event()
+
+    def _slow_read_sources(report: Any) -> None:
+        reading.set()
+        release.wait(5)
+
+    with patch(
+        "homeassistant.components.debug_console.execution._read_sources",
+        _slow_read_sources,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "debug_console/execute",
+                "session_id": SESSION_ID,
+                "code": "raise ValueError('nope')",
+            }
+        )
+        assert await hass.async_add_executor_job(reading.wait, 5)
+
+        try:
+            assert await hass.config_entries.async_unload(setup_integration.entry_id)
+        finally:
+            release.set()
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "execution_stopped"
 
 
 async def test_disabling_waits_for_cleanup(

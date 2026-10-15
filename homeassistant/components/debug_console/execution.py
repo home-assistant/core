@@ -83,13 +83,28 @@ async def async_execute(
     hass: HomeAssistant, session: ConsoleSession, code: str
 ) -> dict[str, Any]:
     """Execute code in a session, returning what it printed and its result."""
+    execution = asyncio.current_task()
+    assert execution is not None
+
+    # Until it is reported too, as reporting an error runs code of it, which
+    # has to stop when the console does.
+    session.executions.add(execution)
+    try:
+        return await _async_execute_and_report(hass, session, code, execution)
+    finally:
+        session.executions.discard(execution)
+
+
+async def _async_execute_and_report(
+    hass: HomeAssistant,
+    session: ConsoleSession,
+    code: str,
+    execution: asyncio.Task[Any],
+) -> dict[str, Any]:
+    """Execute code, and report what it printed and its result or error."""
     # Each execution runs in its own task, so this does not leak into others.
     capture = _OutputCapture()
     capture_token = _OUTPUT_CAPTURE.set(capture)
-
-    execution = asyncio.current_task()
-    assert execution is not None
-    session.executions.add(execution)
 
     error: BaseException | None = None
     description: dict[str, Any] | None = None
@@ -108,7 +123,6 @@ async def async_execute(
     except USER_CODE_ERRORS as err:
         error = err
     finally:
-        session.executions.discard(execution)
         capture.closed = True
         _OUTPUT_CAPTURE.reset(capture_token)
 
