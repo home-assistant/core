@@ -223,14 +223,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     def _serialize_schedule(
         schedule: MultiRecurringSchedule | TemporarySchedule | RecurringSchedule | None,
     ) -> dict[str, Any] | None:
-        """Serialize a pyschlage schedule to a dict, or ``None`` for ``None`` input.
-
-        A ``TemporarySchedule`` is serialized with ``"type": "temporary"`` and ISO 8601
-        datetime strings for ``start_datetime`` and ``end_datetime``.  Recurring shapes
-        are serialized from pyschlage attributes (``days_of_week`` booleans,
-        ``start_hour``, ``start_minute``, ``end_hour``, ``end_minute``), with
-        ``"type"`` set to ``"recurring"`` or ``"multi_recurring"`` as appropriate.
-        """
+        """Serialize a pyschlage schedule."""
         if isinstance(schedule, TemporarySchedule):
             return {
                 "type": "temporary",
