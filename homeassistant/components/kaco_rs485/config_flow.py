@@ -10,7 +10,7 @@ from typing import Any, override
 
 from kaco_rs485 import AsyncBus, BusError
 from kaco_rs485.discovery import ALL_ADDRESSES, Discovered, ScanResult, scan
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -61,7 +61,9 @@ class KacoRs485ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_PORT): SerialPortSelector()}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_PORT): SerialPortSelector()}
+            ),
             errors=errors,
         )
 
