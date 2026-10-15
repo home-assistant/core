@@ -12,7 +12,7 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -36,18 +36,21 @@ _OWN_TYPE_DOMAINS = {AUTOMATION_DOMAIN, SCRIPT_DOMAIN, SCENE_DOMAIN}
 _INSTRUCTIONS = (
     f"Each type shows at most {_LIMIT} results. To get the next results of one "
     "type, call this tool again with the same query, set type to that type, "
-    f"and set offset to {_LIMIT}."
+    "and set offset to its next_offset."
 )
 
-type _Item = tuple[str, str | None, Iterable[str], Iterable[str]]
-"""ID, display name, names and other fields of an item that can be found."""
+type _Item = tuple[str, str | None, Iterable[str], Iterable[str], Iterable[str]]
+"""ID, display name, names, aliases and other fields of an item."""
 
 
-def _rank(query: str, names: Iterable[str], other: Iterable[str]) -> int | None:
+def _rank(
+    query: str, names: Iterable[str], aliases: Iterable[str], other: Iterable[str]
+) -> int | None:
     """Return the rank of an item for the query, or None if it does not match.
 
-    Rank 0 is an exact name match, rank 1 a partial name match and rank 2 a
-    match on another field. The other fields are only read when no name matches.
+    Rank 0 is an exact name match, rank 1 an exact alias match, rank 2 a
+    partial name match and rank 3 a partial alias match or a match on another
+    field. Each field is only read when it can still improve the rank.
     """
     rank = None
     for name in names:
@@ -55,9 +58,15 @@ def _rank(query: str, names: Iterable[str], other: Iterable[str]) -> int | None:
         if folded == query:
             return 0
         if query in folded:
-            rank = 1
+            rank = 2
+    for alias in aliases:
+        folded = alias.casefold()
+        if folded == query:
+            return 1
+        if rank is None and query in folded:
+            rank = 3
     if rank is None and any(query in value.casefold() for value in other):
-        rank = 2
+        rank = 3
     return rank
 
 
@@ -66,13 +75,25 @@ def _set(*values: str | None) -> Iterator[str]:
     return (value for value in values if value)
 
 
-def _entity_other(
+def _entity_aliases(
     hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
 ) -> Iterator[str]:
-    """Yield the other fields of an entity."""
-    yield entity_id
+    """Yield the aliases of an entity."""
     if entry := ent_reg.async_get(entity_id):
         yield from er.async_get_entity_aliases(hass, entry)
+
+
+def _entity_item(
+    hass: HomeAssistant, ent_reg: er.EntityRegistry, state: State
+) -> _Item:
+    """Return the item for an entity."""
+    return (
+        state.entity_id,
+        state.name,
+        (state.name,),
+        _entity_aliases(hass, ent_reg, state.entity_id),
+        (state.entity_id,),
+    )
 
 
 def _entities(hass: HomeAssistant) -> Iterator[_Item]:
@@ -80,12 +101,7 @@ def _entities(hass: HomeAssistant) -> Iterator[_Item]:
     ent_reg = er.async_get(hass)
     for state in hass.states.async_all():
         if state.domain not in _OWN_TYPE_DOMAINS:
-            yield (
-                state.entity_id,
-                state.name,
-                (state.name,),
-                _entity_other(hass, ent_reg, state.entity_id),
-            )
+            yield _entity_item(hass, ent_reg, state)
 
 
 def _devices(hass: HomeAssistant) -> Iterator[_Item]:
@@ -98,6 +114,7 @@ def _devices(hass: HomeAssistant) -> Iterator[_Item]:
             device.id,
             device.name_by_user or device.name,
             _set(device.name_by_user, device.name),
+            (),
             # Child devices have no model or manufacturer.
             _set(device.model, device.manufacturer)
             if isinstance(device, dr.DeviceEntry)
@@ -108,19 +125,20 @@ def _devices(hass: HomeAssistant) -> Iterator[_Item]:
 def _areas(hass: HomeAssistant) -> Iterator[_Item]:
     """Yield the areas."""
     for area in ar.async_get(hass).async_list_areas():
-        yield area.id, area.name, (area.name,), area.aliases
+        yield area.id, area.name, (area.name,), area.aliases, ()
 
 
 def _labels(hass: HomeAssistant) -> Iterator[_Item]:
     """Yield the labels."""
     for label in lr.async_get(hass).async_list_labels():
-        yield label.label_id, label.name, (label.name,), ()
+        yield label.label_id, label.name, (label.name,), (), ()
 
 
 def _domain_entities(domain: str, hass: HomeAssistant) -> Iterator[_Item]:
     """Yield the entities of a domain."""
+    ent_reg = er.async_get(hass)
     for state in hass.states.async_all(domain):
-        yield state.entity_id, state.name, (state.name,), (state.entity_id,)
+        yield _entity_item(hass, ent_reg, state)
 
 
 _ITEMS: dict[str, Callable[[HomeAssistant], Iterator[_Item]]] = {
@@ -145,8 +163,8 @@ def _search(
 
     def matches() -> Iterator[tuple[int, str, str, str | None]]:
         nonlocal total
-        for item_id, name, names, other in items:
-            if (rank := _rank(query, names, other)) is not None:
+        for item_id, name, names, aliases, other in items:
+            if (rank := _rank(query, names, aliases, other)) is not None:
                 total += 1
                 yield rank, (name or "").casefold(), item_id, name
 
@@ -171,13 +189,16 @@ class SearchTool(Tool):
         {
             probatio.Required(
                 "query", description="Text to find, case-insensitive."
-            ): probatio.All(str, probatio.Length(min=1)),
+            ): probatio.All(str, probatio.NonEmpty()),
             probatio.Optional(
                 "type", description="Return only results of this type."
             ): probatio.In(list(_ITEMS)),
             probatio.Optional(
                 "offset",
-                description="Number of results to skip. Requires type.",
+                description=(
+                    "Number of results to skip. Requires type. Use the "
+                    "next_offset of the previous result."
+                ),
                 default=0,
             ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
         }
@@ -205,8 +226,11 @@ class SearchTool(Tool):
             total, results = _search(_ITEMS[type_](hass), query, offset)
             if not total:
                 continue
-            has_more = has_more or total > _LIMIT
-            result[type_] = {"total": total, "results": results}
+            group: JsonObjectType = {"total": total, "results": results}
+            if (next_offset := offset + _LIMIT) < total:
+                group["next_offset"] = next_offset
+                has_more = True
+            result[type_] = group
 
         if item_type is None and has_more:
             result["instructions"] = _INSTRUCTIONS

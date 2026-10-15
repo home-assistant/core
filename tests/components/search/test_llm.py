@@ -113,6 +113,12 @@ async def setup_items(
     )
     entity_registry.async_update_entity(lamp.entity_id, aliases=["Counter light"])
     hass.states.async_set(lamp.entity_id, "off", {ATTR_FRIENDLY_NAME: "Lamp"})
+    hass.states.async_set(
+        "light.counter_strip", "off", {ATTR_FRIENDLY_NAME: "Counter light strip"}
+    )
+    entity_registry.async_update_entity(
+        "automation.kitchen_lights", aliases=["Cooking lights"]
+    )
 
     return {
         search_item_ids["device"]: "<sensor device>",
@@ -128,7 +134,7 @@ def _ordered(data: JsonObjectType, device_ids: dict[str, str]) -> JsonValueType:
     """
     return {
         key: {
-            "total": group["total"],
+            **group,
             "results": [
                 [device_ids.get(item_id, item_id), name]
                 for item_id, name in group["results"].items()
@@ -167,7 +173,9 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"query": "kitchen", "type": "device"}, id="device_model"),
         pytest.param({"query": "acme", "type": "device"}, id="device_manufacturer"),
         pytest.param({"query": "cooking", "type": "area"}, id="area_alias"),
-        pytest.param({"query": "counter"}, id="entity_alias"),
+        pytest.param({"query": "counter light"}, id="exact_alias"),
+        pytest.param({"query": "counter"}, id="partial_alias"),
+        pytest.param({"query": "cooking lights"}, id="automation_alias"),
         pytest.param({"query": "kitchen_lights"}, id="entity_id"),
         pytest.param({"query": "nothing"}, id="no_match"),
     ],
