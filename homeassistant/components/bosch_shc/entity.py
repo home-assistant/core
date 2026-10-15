@@ -82,7 +82,7 @@ class SHCEntity(SHCBaseEntity):
         if hub := dr.async_get(hass).async_get_device_by_identifier(
             (DOMAIN, device.root_device_id), entry_id
         ):
-            device_info["via_device_id"] = hub.id
+            device_info.via_device_id = hub.id
         self._attr_device_info = device_info
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 

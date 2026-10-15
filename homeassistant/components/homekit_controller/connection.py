@@ -674,7 +674,7 @@ class HKDevice:
             device_info = self.device_info_for_accessory(accessory)
 
             if accessory.aid != 1 and bridge_device_id is not None:
-                device_info["via_device_id"] = bridge_device_id
+                device_info.via_device_id = bridge_device_id
 
             device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,

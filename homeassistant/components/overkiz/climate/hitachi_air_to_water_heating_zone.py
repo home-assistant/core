@@ -62,7 +62,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         super().__init__(device_url, coordinator)
 
         if self._attr_device_info:
-            self._attr_device_info["manufacturer"] = "Hitachi"
+            self._attr_device_info.manufacturer = "Hitachi"
 
         if "Zone2" in self.device.controllable_name:
             self._auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE2
