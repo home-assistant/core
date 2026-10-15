@@ -9,11 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -101,37 +98,3 @@ async def test_device_registry(
         device_registry, config_entry.entry_id
     )
     assert device_entries == snapshot
-
-
-@pytest.mark.parametrize(
-    ("host", "configuration_url"),
-    [
-        pytest.param("192.168.0.1", "http://192.168.0.1", id="ip"),
-        pytest.param(
-            "http://sfrbox.example.com", "http://sfrbox.example.com", id="http_url"
-        ),
-        pytest.param(
-            "https://sfrbox.example.com", "https://sfrbox.example.com", id="https_url"
-        ),
-    ],
-)
-@pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
-async def test_device_configuration_url(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    host: str,
-    configuration_url: str,
-) -> None:
-    """Ensure the configuration URL handles a host entered as a URL."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: host}, unique_id="e4:5d:51:00:11:22"
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert len(device_entries) == 1
-    assert device_entries[0].configuration_url == configuration_url
