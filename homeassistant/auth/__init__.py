@@ -25,6 +25,7 @@ from . import auth_store, jwt_wrapper, models
 from .const import (
     ACCESS_TOKEN_EXPIRATION,
     GROUP_ID_ADMIN,
+    LOGIN_FLOW_EVICTION_INTERVAL,
     LOGIN_FLOW_EXPIRATION,
     MAX_LOGIN_FLOWS,
     REFRESH_TOKEN_EXPIRATION,
@@ -49,6 +50,10 @@ class InvalidAuthError(Exception):
 
 class InvalidProvider(Exception):
     """Authentication provider not found."""
+
+
+class TooManyRequestsError(Exception):
+    """Raised when too many login flows are in progress."""
 
 
 async def auth_manager_from_config(
@@ -114,6 +119,7 @@ class AuthManagerFlowManager(
         """Init auth manager flows."""
         super().__init__(hass)
         self.auth_manager = auth_manager
+        self._next_eviction = dt_util.utcnow()
 
     @override
     async def async_create_flow(
@@ -124,14 +130,27 @@ class AuthManagerFlowManager(
         data: dict[str, Any] | None = None,
     ) -> LoginFlow[Any]:
         """Create a login flow."""
-        expired = dt_util.utcnow() - LOGIN_FLOW_EXPIRATION
+        now = dt_util.utcnow()
+        expired = now - LOGIN_FLOW_EXPIRATION
         for flow in list(self._progress.values()):
             if cast(LoginFlow, flow).created_at < expired:
                 self.async_abort(flow.flow_id)
-        # Abort the oldest flow instead of refusing new ones, so flooding
-        # can't lock everyone out of logging in.
         if len(self._progress) >= MAX_LOGIN_FLOWS:
-            self.async_abort(next(iter(self._progress)))
+            # Flows waiting for MFA passed a password check, so a flood can't
+            # create them. Evicting at most one other flow per interval lets new
+            # logins in without pushing out the ones in progress.
+            evictable = next(
+                (
+                    flow
+                    for flow in self._progress.values()
+                    if cast(LoginFlow, flow).user is None
+                ),
+                None,
+            )
+            if evictable is None or now < self._next_eviction:
+                raise TooManyRequestsError
+            self._next_eviction = now + LOGIN_FLOW_EVICTION_INTERVAL
+            self.async_abort(evictable.flow_id)
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {handler_key}")

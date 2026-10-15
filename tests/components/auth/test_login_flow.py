@@ -8,7 +8,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.auth.const import LOGIN_FLOW_EXPIRATION
+from homeassistant.auth.const import LOGIN_FLOW_EVICTION_INTERVAL, LOGIN_FLOW_EXPIRATION
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
@@ -633,6 +633,21 @@ async def test_login_flow_limit(
     assert [
         flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
     ] == flow_ids[1:]
+
+    # Only one flow is evicted per interval.
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.TOO_MANY_REQUESTS
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[1:]
+
+    freezer.tick(LOGIN_FLOW_EVICTION_INTERVAL)
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    flow_ids.append((await resp.json())["flow_id"])
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[2:]
 
     # Expired flows are aborted when the next flow is created.
     freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))

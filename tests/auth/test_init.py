@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jwt
 import probatio
 import pytest
@@ -14,11 +15,16 @@ from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     EVENT_USER_UPDATED,
     InvalidAuthError,
+    TooManyRequestsError,
     auth_store,
     const as auth_const,
     models as auth_models,
 )
-from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
+from homeassistant.auth.const import (
+    GROUP_ID_ADMIN,
+    LOGIN_FLOW_EVICTION_INTERVAL,
+    MFA_SESSION_EXPIRATION,
+)
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
@@ -878,6 +884,67 @@ async def test_login_with_auth_module(mock_hass) -> None:
     assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
+
+
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 2)
+async def test_login_flow_limit_keeps_mfa_flows(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test flows waiting for MFA are not evicted when the limit is reached."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="insecure_example",
+            auth_provider_id=None,
+            data={"username": "test-user"},
+            is_new=False,
+        )
+    )
+
+    async def async_init_mfa_flow() -> str:
+        step = await manager.login_flow.async_init(("insecure_example", None))
+        step = await manager.login_flow.async_configure(
+            step["flow_id"], {"username": "test-user", "password": "test-pass"}
+        )
+        assert step["step_id"] == "mfa"
+        return step["flow_id"]
+
+    mfa_flow_id = await async_init_mfa_flow()
+    await manager.login_flow.async_init(("insecure_example", None))
+
+    # The flow that didn't reach MFA is evicted instead of the older MFA flow.
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        mfa_flow_id,
+        step["flow_id"],
+    ]
+
+    freezer.tick(LOGIN_FLOW_EVICTION_INTERVAL)
+    await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "test-user", "password": "test-pass"}
+    )
+
+    # Nothing can be evicted when all flows are waiting for MFA.
+    with pytest.raises(TooManyRequestsError):
+        await manager.login_flow.async_init(("insecure_example", None))
 
 
 async def test_login_with_multi_auth_module(mock_hass) -> None:
