@@ -114,8 +114,6 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except SFRBoxAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except SFRBoxError:
-                errors["base"] = "cannot_connect"
             else:
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
