@@ -136,6 +136,8 @@ class _KnxEntityBase(Entity):
     _knx_module: KNXModule
     _device: XknxDevice
 
+    _knx_entity_identifier: KnxEntityIdentifier | None = None
+
     @property
     @override
     def available(self) -> bool:
@@ -158,10 +160,14 @@ class _KnxEntityBase(Entity):
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
         if uid := self.unique_id:
-            self._knx_module.entity_identifiers[self._device] = KnxEntityIdentifier(
+            self._knx_entity_identifier = KnxEntityIdentifier(
                 platform=self.platform_data.domain,
                 unique_id=uid,
                 ui=isinstance(self, KnxUiEntity),
+            )
+            self._knx_module.add_to_group_address_entities(
+                group_addresses=self._device.group_addresses(),
+                identifier=self._knx_entity_identifier,
             )
 
         # super call needed to have methods of multi-inherited classes called
@@ -180,7 +186,11 @@ class _KnxEntityBase(Entity):
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_remove(self._device)
-        self._knx_module.entity_identifiers.pop(self._device, None)
+        if self._knx_entity_identifier:
+            self._knx_module.remove_from_group_address_entities(
+                group_addresses=self._device.group_addresses(),
+                identifier=self._knx_entity_identifier,
+            )
 
 
 class KnxYamlEntity(_KnxEntityBase):
