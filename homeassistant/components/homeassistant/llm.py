@@ -27,11 +27,13 @@ from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
     ToolResult,
 )
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
+from .const import DOMAIN
 from .exposed_entities import async_should_expose
 
 # Domains bucketed out of the exposed-entity overview.
@@ -64,10 +66,9 @@ DYNAMIC_CONTEXT_PROMPT = (
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
-    "    3.  Use the tool's response** to answer the"
-    " user accurately"
-    ' (e.g., "The temperature outside is'
-    ' [value from tool].").\n'
+    "    3.  Use the tool's response to answer the"
+    " user accurately, stating the actual value or"
+    " state it returned.\n"
     "For general knowledge questions not about the"
     " home: Answer truthfully from internal"
     " knowledge.\n"
@@ -217,6 +218,7 @@ class GetLiveContextTool(Tool):
     """
 
     name = "homeassistant__GetLiveContext"
+    title = "Get live context"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"
@@ -234,6 +236,8 @@ class GetLiveContextTool(Tool):
         "Prefer filtering by domain when searching"
         " for multiple devices of the same type."
     )
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
     parameters = probatio.Schema(
         {
             probatio.Optional(

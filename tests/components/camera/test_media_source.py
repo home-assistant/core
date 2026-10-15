@@ -99,7 +99,7 @@ async def test_resolving(hass: HomeAssistant) -> None:
     hass.config.components.add("stream")
 
     with patch(
-        "homeassistant.components.camera.media_source._async_stream_endpoint_url",
+        "homeassistant.components.camera.media_source.async_stream_endpoint_url",
         return_value="http://example.com/stream",
     ):
         item = await media_source.async_resolve_media(
@@ -146,6 +146,41 @@ async def test_resolving_errors(hass: HomeAssistant) -> None:
         await media_source.async_resolve_media(
             hass, "media-source://camera/camera.demo_camera", None
         )
-    assert (
-        str(exc_info.value) == "camera.demo_camera does not support play stream service"
-    )
+    assert str(exc_info.value) == "Camera camera.demo_camera does not support streaming"
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_get_media_image(hass: HomeAssistant) -> None:
+    """Test getting a snapshot of a camera."""
+    assert await media_source.async_get_media_image(
+        hass, "media-source://camera/camera.demo_camera"
+    ) == media_source.MediaImage(b"Test", "image/jpg")
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_get_media_image_non_existing_camera(hass: HomeAssistant) -> None:
+    """Test getting a snapshot of a non existing camera."""
+    with pytest.raises(
+        media_source.Unresolvable,
+        match="Could not resolve media item: camera.non_existing",
+    ):
+        await media_source.async_get_media_image(
+            hass, "media-source://camera/camera.non_existing"
+        )
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_get_media_image_camera_off(hass: HomeAssistant) -> None:
+    """Test getting a snapshot of a camera that is off."""
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.is_on",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        pytest.raises(
+            media_source.Unresolvable, match="Camera camera.demo_camera is off"
+        ),
+    ):
+        await media_source.async_get_media_image(
+            hass, "media-source://camera/camera.demo_camera"
+        )

@@ -1,7 +1,7 @@
-"""Common fixtures for the Sofar Inverter Modbus tests."""
+"""Fixtures for the Sofar integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection.mock import MockModbusConnection
 import pytest
@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
+from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed_pv_inverter
 
 from tests.common import MockConfigEntry
 
@@ -35,29 +35,35 @@ def mock_connection() -> MockModbusConnection:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock a Sofar Inverter Modbus config entry."""
+    """Mock a Sofar config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_MODEL,
     )
+
+
+@pytest.fixture
+def mock_get_unit(mock_connection: MockModbusConnection) -> Generator[MagicMock]:
+    """Hand out units on the mock connection when the entry sets up."""
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ) as mock_get_unit:
+        yield mock_get_unit
 
 
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connection: MockModbusConnection,
+    mock_get_unit: MagicMock,
 ) -> MockConfigEntry:
-    """Set up the Sofar Inverter Modbus integration for testing."""
+    """Set up the Sofar integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
     return mock_config_entry

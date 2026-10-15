@@ -1,7 +1,6 @@
 """Data update coordinator for the Duco integration."""
 
 import asyncio
-from contextlib import suppress
 from dataclasses import dataclass, replace
 import logging
 from typing import cast, override
@@ -73,6 +72,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            always_update=False,
         )
         self.client = client
         self._configured_node_names = {}
@@ -87,6 +87,12 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         # Keep an older read from publishing after this write completes.
         async with self._request_lock:
             await self.client.async_set_ventilation_state(node_id, state)
+            await self._async_refresh_node(node_id)
+
+    async def async_set_node_identify(self, node_id: int, identify: bool) -> None:
+        """Set and refresh a node's identify state."""
+        async with self._request_lock:
+            await self.client.async_set_node_identify(node_id, identify)
             await self._async_refresh_node(node_id)
 
     async def _async_refresh_node(self, node_id: int) -> None:
@@ -213,59 +219,39 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             )
             _LOGGER.warning(
                 "Could not fetch Duco node actions; %s",
-                "keeping previous select discovery data"
+                "keeping previous action discovery data"
                 if previous_data is not None
-                else "starting with empty select discovery data",
+                else "starting with empty action discovery data",
                 exc_info=err,
             )
 
-        # LAN info only backs the diagnostic RSSI sensor, so failures on this
-        # supplemental endpoint, including connection failures, should not make
-        # the primary node entities unavailable.
+        # The overview only backs supplemental entities, so failures preserve
+        # known values where possible without making primary entities unavailable.
         rssi_wifi = self.data.rssi_wifi if self.data else None
-        try:
-            lan_info = await self.client.async_get_lan_info()
-        except DucoError as err:
-            _LOGGER.debug("Could not fetch Duco LAN info", exc_info=err)
-        else:
-            rssi_wifi = lan_info.rssi_wifi
-
-        # Diagnostics only back optional binary sensors. Preserve known components
-        # but mark their data unavailable without failing the shared coordinator.
         diagnostics_were_available = (
             self.data is None or self.data.diagnostics_available
         )
-        diagnostics_available = True
+        diagnostics_available = False
         diagnostics_error: DucoError | None = None
         diagnostic_subsystems = self.data.diagnostic_subsystems if self.data else {}
-        try:
-            diagnostic_info = await self.client.async_get_diagnostics_info()
-        except DucoError as err:
-            diagnostics_available = False
-            diagnostics_error = err
-        else:
-            diagnostic_subsystems = {
-                diagnostic.component: diagnostic.status
-                for diagnostic in diagnostic_info.diagnostic_subsystems
-            }
-
-        # Heat recovery info only backs the optional filter timer sensor, so
-        # failures on this supplemental endpoint should not make the primary
-        # node entities unavailable. A None result leaves the sensor absent
-        # but keeps the helper pollable so data can appear on a later refresh.
         time_filter_remain = None
-        with suppress(DucoError):
-            time_filter_remain = await self.client.async_get_time_filter_remaining()
-
         ventilation_temperatures = (
             self.data.ventilation_temperatures if self.data else None
         )
         try:
-            ventilation_temperatures = (
-                await self.client.async_get_ventilation_temperature_info()
-            )
+            info_overview = await self.client.async_get_info_overview()
         except DucoError as err:
-            _LOGGER.debug("Could not fetch Duco ventilation temperatures", exc_info=err)
+            diagnostics_error = err
+            _LOGGER.debug("Could not fetch Duco info overview", exc_info=err)
+        else:
+            rssi_wifi = info_overview.rssi_wifi
+            diagnostics_available = True
+            diagnostic_subsystems = {
+                diagnostic.component: diagnostic.status
+                for diagnostic in info_overview.diagnostic_subsystems
+            }
+            time_filter_remain = info_overview.time_filter_remain
+            ventilation_temperatures = info_overview.ventilation_temperatures
 
         bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget] = {}
         try:

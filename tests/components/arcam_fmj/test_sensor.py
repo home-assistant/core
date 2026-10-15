@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
-from arcam.fmj import IncomingVideoAspectRatio, IncomingVideoColorspace
+from arcam.fmj.codecs import IncomingVideoAspectRatio, IncomingVideoColorspace
 from arcam.fmj.state import IncomingAudioConfig, IncomingAudioFormat, State
 import pytest
 from syrupy.assertion import SnapshotAssertion

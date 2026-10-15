@@ -23,6 +23,7 @@
         'labels': list([
         ]),
         'name': None,
+        'next_name_part': 'device',
         'options': dict({
           'conversation': dict({
             'should_expose': False,

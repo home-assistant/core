@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Node"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_NODES): probatio.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_NODES): probatio.All(probatio.EnsureList(), [cv.string])}
 )
 
 

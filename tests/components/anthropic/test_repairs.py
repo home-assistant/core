@@ -1,13 +1,44 @@
 """Tests for the Anthropic repairs flow."""
 
 from types import SimpleNamespace
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
+from anthropic import (
+    APIConnectionError,
+    APIError,
+    APITimeoutError,
+    InternalServerError,
+    NotFoundError,
+)
 from anthropic.pagination import AsyncPage
+from anthropic.types import ModelInfo
+from httpx2 import Request, Response
+import pytest
 
-from homeassistant.components.anthropic.const import CONF_CHAT_MODEL, DOMAIN
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
+    CONF_MAX_TOKENS,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
+    DOMAIN,
+)
+from homeassistant.components.anthropic.coordinator import model_alias
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -20,12 +51,28 @@ from tests.components.repairs import process_repair_fix_flow, start_repair_fix_f
 from tests.typing import ClientSessionGenerator
 
 
+def _copy_model_info(model_id: str) -> ModelInfo:
+    """Return an independent copy of the live model metadata."""
+    return next(
+        model for model in model_list if model_alias(model.id) == model_alias(model_id)
+    ).model_copy(deep=True)
+
+
+def _model_info_without_thinking() -> ModelInfo:
+    """Return metadata for a model without thinking support."""
+    model_info = _copy_model_info("claude-haiku-4-5")
+    assert model_info.capabilities
+    model_info.capabilities.thinking.supported = False
+    model_info.capabilities.thinking.types.enabled.supported = False
+    return model_info
+
+
 def _make_entry(
     hass: HomeAssistant,
     *,
     title: str,
     api_key: str,
-    subentries_data: list[dict[str, Any]],
+    subentries_data: list[ConfigSubentryData],
 ) -> MockConfigEntry:
     """Create a config entry with subentries and runtime data."""
     entry = MockConfigEntry(
@@ -189,7 +236,7 @@ async def test_repair_flow_no_deprecated_models(
         api_key="key-one",
         subentries_data=[
             {
-                "data": {CONF_CHAT_MODEL: "claude-sonnet-4-5"},
+                "data": {CONF_CHAT_MODEL: "claude-sonnet-4-6"},
                 "subentry_type": "conversation",
                 "title": "Conversation One",
                 "unique_id": None,
@@ -214,3 +261,428 @@ async def test_repair_flow_no_deprecated_models(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+
+@pytest.mark.parametrize(
+    "cached_model_count",
+    [
+        pytest.param(1, id="listed_model"),
+        pytest.param(0, id="custom_model"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("model", "model_info", "model_options", "expected_options"),
+    [
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="opus_5_5",
+        ),
+        pytest.param(
+            "claude-fable-5",
+            _copy_model_info("claude-fable-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="fable_5",
+        ),
+        pytest.param(
+            "claude-fable-5-1",
+            _copy_model_info("claude-fable-5-1"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="fable_5_1",
+        ),
+        pytest.param(
+            "claude-opus-5-5-20260921",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="versioned_opus_5_5",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="sonnet_5_5",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5-20260928",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="versioned_sonnet_5_5",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_EFFORT: "none"},
+            id="haiku_5_5",
+        ),
+        pytest.param(
+            "claude-haiku-5-5-20261007",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_EFFORT: "none"},
+            id="versioned_haiku_5_5",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_EFFORT: "high"},
+            id="adaptive_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-6",
+            _copy_model_info("claude-opus-4-6"),
+            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_EFFORT: "none"},
+            id="optional_thinking",
+        ),
+        pytest.param(
+            "claude-opus-4-6-20260204",
+            _copy_model_info("claude-opus-4-6"),
+            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_EFFORT: "none"},
+            id="versioned_optional_thinking",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="nonadaptive_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5-20251101",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="versioned_nonadaptive_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_EFFORT: "high"},
+            id="valid_nonadaptive_effort",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            _copy_model_info("claude-haiku-4-5"),
+            {CONF_THINKING_EFFORT: "none"},
+            {},
+            id="no_effort_support",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_EFFORT: "high"},
+            id="adaptive_removes_manual_budget",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            id="manual_thinking_budget_and_effort",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            _copy_model_info("claude-haiku-4-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_BUDGET: 4096},
+            id="manual_thinking_without_effort",
+        ),
+        pytest.param(
+            "claude-haiku-4-5",
+            _model_info_without_thinking(),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {},
+            id="unsupported_thinking",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5").model_copy(
+                update={"capabilities": None}, deep=True
+            ),
+            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {},
+            id="unknown_capabilities",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "max"},
+            {},
+            id="unsupported_max_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_EFFORT: "xhigh"},
+            {},
+            id="unsupported_xhigh_effort",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_TOOL_SEARCH: True},
+            {CONF_TOOL_SEARCH: True},
+            id="supported_tool_search",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_TOOL_SEARCH: True},
+            {},
+            id="unsupported_tool_search",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {},
+            {},
+            id="unrelated_options",
+        ),
+    ],
+)
+async def test_repair_flow_model_options(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cached_model_count: int,
+    subentry_type: str,
+    model: str,
+    model_info: ModelInfo,
+    model_options: dict[str, int | str | bool],
+    expected_options: dict[str, int | str | bool],
+) -> None:
+    """Reconcile stored model options against the selected model's capabilities."""
+    preserved_options = {
+        CONF_MAX_TOKENS: 8192,
+        CONF_CODE_EXECUTION: True,
+        CONF_WEB_SEARCH: True,
+        CONF_WEB_SEARCH_MAX_USES: 3,
+        CONF_WEB_SEARCH_USER_LOCATION: True,
+        CONF_WEB_SEARCH_CITY: "San Francisco",
+        CONF_WEB_SEARCH_REGION: "California",
+        CONF_WEB_SEARCH_COUNTRY: "US",
+        CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        CONF_WEB_FETCH: True,
+        CONF_WEB_FETCH_MAX_USES: 7,
+    }
+    entry = _make_entry(
+        hass,
+        title="Claude",
+        api_key="key",
+        subentries_data=[
+            {
+                "data": {
+                    CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
+                    **preserved_options,
+                    **model_options,
+                },
+                "subentry_type": subentry_type,
+                "title": "Conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.runtime_data.client.models.list.return_value = AsyncPage(
+        data=[model_info][:cached_model_count]
+    )
+    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
+        return_value=model_info
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "model_deprecated",
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="model_deprecated",
+    )
+    await _setup_repairs(hass)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await process_repair_fix_flow(
+        client,
+        result["flow_id"],
+        json={CONF_CHAT_MODEL: model},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert _get_subentry(entry, subentry_type).data == {
+        CONF_CHAT_MODEL: model,
+        **preserved_options,
+        **expected_options,
+    }
+    assert (
+        retrieve.await_args_list
+        == [call(model, timeout=10.0)][: 1 - cached_model_count]
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            APITimeoutError(request=Request("GET", "https://api.anthropic.com")),
+            id="timeout",
+        ),
+        pytest.param(
+            APIConnectionError(request=Request("GET", "https://api.anthropic.com")),
+            id="connection_error",
+        ),
+        pytest.param(
+            NotFoundError(
+                "Model not found",
+                response=Response(
+                    404, request=Request("GET", "https://api.anthropic.com")
+                ),
+                body=None,
+            ),
+            id="not_found",
+        ),
+        pytest.param(
+            InternalServerError(
+                "Server unavailable",
+                response=Response(
+                    500, request=Request("GET", "https://api.anthropic.com")
+                ),
+                body=None,
+            ),
+            id="server_error",
+        ),
+    ],
+)
+async def test_repair_flow_model_lookup_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    error: APIError,
+) -> None:
+    """Keep the current repair available for retry when model lookup fails."""
+    conversation_data = {
+        CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
+        CONF_THINKING_EFFORT: "none",
+        CONF_MAX_TOKENS: 4096,
+    }
+    task_data = {CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"}
+    entry = _make_entry(
+        hass,
+        title="Claude",
+        api_key="key",
+        subentries_data=[
+            {
+                "data": conversation_data,
+                "subentry_type": "conversation",
+                "title": "Conversation",
+                "unique_id": None,
+            },
+            {
+                "data": task_data,
+                "subentry_type": "ai_task_data",
+                "title": "AI task",
+                "unique_id": None,
+            },
+        ],
+    )
+    entry.runtime_data.client.models.list.return_value = AsyncPage(data=[])
+    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
+        side_effect=[
+            error,
+            next(model for model in model_list if model.id == "claude-opus-5-5"),
+            _copy_model_info("claude-haiku-4-5"),
+        ]
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "model_deprecated",
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="model_deprecated",
+    )
+    await _setup_repairs(hass)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    flow_id = result["flow_id"]
+    placeholders = result["description_placeholders"]
+    result = await process_repair_fix_flow(
+        client,
+        flow_id,
+        json={CONF_CHAT_MODEL: "claude-opus-5-5"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["flow_id"] == flow_id
+    assert result["step_id"] == "init"
+    assert result["errors"] == {CONF_CHAT_MODEL: "api_error"}
+    assert result["description_placeholders"] == {
+        **placeholders,
+        "message": error.message,
+    }
+    model_field = next(
+        field for field in result["data_schema"] if field["name"] == CONF_CHAT_MODEL
+    )
+    assert model_field["description"]["suggested_value"] == "claude-opus-5-5"
+    assert _get_subentry(entry, "conversation").data == conversation_data
+    assert _get_subentry(entry, "ai_task_data").data == task_data
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    retrieve.assert_awaited_once_with("claude-opus-5-5", timeout=10.0)
+
+    result = await process_repair_fix_flow(
+        client,
+        flow_id,
+        json={CONF_CHAT_MODEL: "claude-opus-5-5"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["flow_id"] == flow_id
+    assert not result["errors"]
+    assert result["description_placeholders"] == {
+        "entry_name": entry.title,
+        "model": "claude-3-5-haiku-20241022",
+        "subentry_name": "AI task",
+        "subentry_type": "AI task",
+        "retirement_date": "February 19th, 2026",
+    }
+    assert _get_subentry(entry, "conversation").data == {
+        CONF_CHAT_MODEL: "claude-opus-5-5",
+        CONF_MAX_TOKENS: 4096,
+    }
+    assert _get_subentry(entry, "ai_task_data").data == task_data
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert retrieve.await_count == 2
+    entry.runtime_data.client.models.list.assert_awaited_once_with(timeout=10.0)
+
+    result = await process_repair_fix_flow(
+        client,
+        flow_id,
+        json={CONF_CHAT_MODEL: "claude-haiku-4-5"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert _get_subentry(entry, "ai_task_data").data == {
+        CONF_CHAT_MODEL: "claude-haiku-4-5"
+    }
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert retrieve.await_count == 3
+    retrieve.assert_awaited_with("claude-haiku-4-5", timeout=10.0)

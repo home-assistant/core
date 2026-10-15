@@ -1,6 +1,6 @@
 """Tests for the Xbox media source platform."""
 
-from httpx import HTTPStatusError, RequestError, Response, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, Response, TimeoutException
 import pytest
 from pythonxbox.api.provider.people.models import PeopleResponse
 from syrupy.assertion import SnapshotAssertion

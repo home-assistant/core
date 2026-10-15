@@ -1,12 +1,14 @@
 """Tests for the sensors provided by the Tailscale integration."""
 
-from homeassistant.components.binary_sensor import (
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.tailscale.const import DOMAIN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
-    BinarySensorDeviceClass,
+    EntityCategory,
 )
-from homeassistant.components.tailscale.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 

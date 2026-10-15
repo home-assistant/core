@@ -1,7 +1,7 @@
 """Test the Holiday config flow."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from holidays import UNOFFICIAL
@@ -53,6 +53,41 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         "province": "BW",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_subdivisions_without_aliases(hass: HomeAssistant) -> None:
+    """Test the province options fall back to the plain subdivisions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch("holidays.HolidayBase.get_subdivision_aliases", return_value={}):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_COUNTRY: "DE",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    province_selector = result["data_schema"].schema[CONF_PROVINCE]
+    assert "BW" in province_selector.config["options"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "BW",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Germany, BW"
+    assert result["data"] == {
+        "country": "DE",
+        "province": "BW",
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
