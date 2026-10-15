@@ -68,25 +68,7 @@ async def test_user_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_NAME
     assert result["data"] == MOCK_CONFIG_DATA
-
-
-async def test_user_flow_cannot_connect(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """A failing connect probe surfaces ``cannot_connect``."""
-    mock_habitron_client.return_value = (False, "")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_CONFIG_DATA,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["result"].unique_id == MOCK_UID
 
 
 async def test_user_flow_recovers_after_an_error(
@@ -609,6 +591,7 @@ async def test_user_step_can_reconfigure_an_ignored_hub(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_UID
 
 
 async def test_user_step_unignores_a_mac_keyed_hub(
@@ -674,6 +657,7 @@ async def test_ssdp_no_host(
     [
         (HabitronTimeoutError("timeout"), "cannot_connect"),
         (ConnectionRefusedError("refused"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
     ],
 )
 async def test_user_flow_exception_mapping(
@@ -683,7 +667,7 @@ async def test_user_flow_exception_mapping(
     exception: Exception,
     expected: str,
 ) -> None:
-    """Connection errors map to expected form errors."""
+    """Probe errors map to form errors, and the flow recovers afterwards."""
     mock_habitron_client.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
@@ -695,6 +679,14 @@ async def test_user_flow_exception_mapping(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected}
+
+    mock_habitron_client.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_validate_input_local_loopback_rewrites_host(
@@ -1094,61 +1086,46 @@ async def test_ssdp_discovery_confirm_host_error_retries(
     assert result["step_id"] == "discovery_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_user_flow_host_not_found_via_validate_input(
+
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        (HostNotFound("dns"), "host_not_found"),
+        (ValueError("totally unexpected"), "unknown"),
+    ],
+)
+async def test_user_flow_validate_input_errors(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
+    exception: Exception,
+    expected: str,
 ) -> None:
-    """A HostNotFound raised from validate_input maps to ``host_not_found``."""
-
+    """Errors from validate_input map to form errors, and the flow recovers."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
         "homeassistant.components.habitron.config_flow.validate_input",
-        side_effect=HostNotFound("dns"),
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_CONFIG_DATA
         )
-    assert result["errors"] == {"base": "host_not_found"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected}
 
-
-async def test_user_flow_truly_unknown_exception_maps_to_unknown(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """An exception type the user step does not know surfaces as ``unknown``."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch(
-        "homeassistant.components.habitron.config_flow.validate_input",
-        side_effect=ValueError("totally unexpected"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG_DATA
-        )
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_user_flow_unexpected_exception_maps_to_unknown(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """An unexpected error from the probe propagates and surfaces as ``unknown``."""
-    mock_habitron_client.side_effect = RuntimeError("boom")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_CONFIG_DATA
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_prefills_host_from_discovery(
@@ -1398,6 +1375,15 @@ async def test_user_flow_without_a_mac_reports_it_on_the_form(
     assert result["errors"] == {"base": "no_mac_address"}
     assert not hass.config_entries.async_entries(DOMAIN)
 
+    # After a hub software update the same input works.
+    mock_hub_mac.return_value = MOCK_UID
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_UID
+
 
 async def test_ssdp_flow_without_a_mac_is_aborted(
     hass: HomeAssistant,
@@ -1629,6 +1615,7 @@ async def test_user_flow_adds_a_different_hub_at_a_recycled_address(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "112233445566"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
