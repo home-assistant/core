@@ -25,7 +25,7 @@ class Entity(CoordinatorEntity[Coordinator]):
     @override
     def device_info(self) -> DeviceInfo:
         """Return hardware identity and firmware version."""
-        d = self.coordinator.data
+        d = self.coordinator.data.snapshot
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.client.credentials.uuid)},
             manufacturer="Terrestream",

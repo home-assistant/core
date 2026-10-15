@@ -71,7 +71,7 @@ class Sensor(Entity, SensorEntity):
         if self._cancel_expiry:
             self._cancel_expiry()
             self._cancel_expiry = None
-        remaining = self.coordinator.client.measurement_remaining(self.key)
+        remaining = self.coordinator.data.measurement_remaining(self.key)
         if remaining > 0:
             self._cancel_expiry = async_call_later(self.hass, remaining, self._expire)
 
@@ -103,12 +103,13 @@ class Sensor(Entity, SensorEntity):
     @override
     def available(self) -> bool:
         """Require both a successful poll and a fresh measurement."""
-        return super().available and self.coordinator.client.measurement_available(
-            self.key
+        return (
+            super().available
+            and self.coordinator.data.measurement_remaining(self.key) > 0
         )
 
     @property
     @override
     def native_value(self) -> float | int | None:
         """Return the cached value; availability is evaluated by Home Assistant."""
-        return self.coordinator.data["measurements"][self.key].get("value")
+        return self.coordinator.data.snapshot["measurements"][self.key].get("value")

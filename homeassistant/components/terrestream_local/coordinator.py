@@ -1,5 +1,7 @@
 """Retrieve local measurements and maintain the controller lease."""
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import time
@@ -20,7 +22,19 @@ _LOGGER = logging.getLogger(__name__)
 type TerrestreamConfigEntry = ConfigEntry[TerrestreamCoordinator]
 
 
-class TerrestreamCoordinator(DataUpdateCoordinator[Snapshot]):
+@dataclass(frozen=True, slots=True)
+class TerrestreamData:
+    """A single published snapshot and its acquisition deadlines."""
+
+    snapshot: Snapshot
+    deadlines: Mapping[str, float]
+
+    def measurement_remaining(self, key: str) -> float:
+        """Count elapsed time against this snapshot's original lifetime."""
+        return max(0.0, self.deadlines.get(key, 0.0) - time.monotonic())
+
+
+class TerrestreamCoordinator(DataUpdateCoordinator[TerrestreamData]):
     """Poll the sensor without extending acquisition freshness."""
 
     def __init__(
@@ -38,9 +52,18 @@ class TerrestreamCoordinator(DataUpdateCoordinator[Snapshot]):
         self._next_clock = 0.0
 
     @override
-    async def _async_update_data(self) -> Snapshot:
+    async def _async_update_data(self) -> TerrestreamData:
         try:
-            data = await self.client.refresh()
+            snapshot = await self.client.refresh()
+            # Commands may refresh the client's mutable snapshot while awaiting I/O.
+            now = time.monotonic()
+            data = TerrestreamData(
+                snapshot=snapshot,
+                deadlines={
+                    key: now + self.client.measurement_remaining(key)
+                    for key in snapshot["measurements"]
+                },
+            )
             if time.monotonic() >= self._next_clock:
                 await self.client.command(
                     "time", epoch=int(time.time()), uncertainty_ms=1000
