@@ -18,6 +18,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "solaredge_modbus",
     "tonewinner",
     "upb",
+    "velbus",
     "zha",
 ]
 
